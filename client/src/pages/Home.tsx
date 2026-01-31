@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film } from "lucide-react";
+import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator } from "lucide-react";
 import PersonasSection from "@/components/PersonasSection";
 import PlanejamentoSection from "@/components/PlanejamentoSection";
 import RoteiroSection from "@/components/RoteiroSection";
@@ -18,6 +18,9 @@ import TresRoteirosTikTokInvernoSection from "@/components/TresRoteirosTikTokInv
 import PlanoStoriesSemanSection from "@/components/PlanoStoriesSemanSection";
 import Stories42Section from "@/components/Stories42Section";
 import AnaliseAdsSection from "@/components/AnaliseAdsSection";
+import DashboardMonitoramentoSection from "@/components/DashboardMonitoramentoSection";
+import GeradorRelatorioSection from "@/components/GeradorRelatorioSection";
+import CalculadoraOrcamentoSection from "@/components/CalculadoraOrcamentoSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -76,7 +79,7 @@ export default function Home() {
       {/* Main Content */}
       <section className="container py-12">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-14 mb-8 bg-slate-100 p-1 overflow-x-auto">
+          <TabsList className="grid w-full grid-cols-17 mb-8 bg-slate-100 p-1 overflow-x-auto">
             <TabsTrigger value="personas" className="flex items-center gap-2 text-xs sm:text-sm">
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Personas</span>
@@ -136,6 +139,18 @@ export default function Home() {
             <TabsTrigger value="ads-analise" className="flex items-center gap-2 text-xs sm:text-sm">
               <TrendingUp className="w-4 h-4" />
               <span className="hidden sm:inline">Análise Ads</span>
+            </TabsTrigger>
+            <TabsTrigger value="dashboard" className="flex items-center gap-2 text-xs sm:text-sm">
+              <Activity className="w-4 h-4" />
+              <span className="hidden sm:inline">Dashboard</span>
+            </TabsTrigger>
+            <TabsTrigger value="relatorio" className="flex items-center gap-2 text-xs sm:text-sm">
+              <FileText className="w-4 h-4" />
+              <span className="hidden sm:inline">Relatório</span>
+            </TabsTrigger>
+            <TabsTrigger value="calculadora" className="flex items-center gap-2 text-xs sm:text-sm">
+              <Calculator className="w-4 h-4" />
+              <span className="hidden sm:inline">Calculadora</span>
             </TabsTrigger>
           </TabsList>
 
@@ -197,6 +212,18 @@ export default function Home() {
 
           <TabsContent value="ads-analise" className="space-y-6">
             <AnaliseAdsSection />
+          </TabsContent>
+
+          <TabsContent value="dashboard" className="space-y-6">
+            <DashboardMonitoramentoSection />
+          </TabsContent>
+
+          <TabsContent value="relatorio" className="space-y-6">
+            <GeradorRelatorioSection />
+          </TabsContent>
+
+          <TabsContent value="calculadora" className="space-y-6">
+            <CalculadoraOrcamentoSection />
           </TabsContent>
         </Tabs>
       </section>
