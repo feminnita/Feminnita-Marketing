@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator } from "lucide-react";
+import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save } from "lucide-react";
 import PersonasSection from "@/components/PersonasSection";
 import PlanejamentoSection from "@/components/PlanejamentoSection";
 import RoteiroSection from "@/components/RoteiroSection";
@@ -21,6 +21,9 @@ import AnaliseAdsSection from "@/components/AnaliseAdsSection";
 import DashboardMonitoramentoSection from "@/components/DashboardMonitoramentoSection";
 import GeradorRelatorioSection from "@/components/GeradorRelatorioSection";
 import CalculadoraOrcamentoSection from "@/components/CalculadoraOrcamentoSection";
+import GoogleAnalyticsSection from "@/components/GoogleAnalyticsSection";
+import ExportarCalendarioSection from "@/components/ExportarCalendarioSection";
+import TemplatesReutilizaveisSection from "@/components/TemplatesReutilizaveisSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -79,7 +82,7 @@ export default function Home() {
       {/* Main Content */}
       <section className="container py-12">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-17 mb-8 bg-slate-100 p-1 overflow-x-auto">
+          <TabsList className="grid w-full grid-cols-20 mb-8 bg-slate-100 p-1 overflow-x-auto">
             <TabsTrigger value="personas" className="flex items-center gap-2 text-xs sm:text-sm">
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Personas</span>
@@ -151,6 +154,18 @@ export default function Home() {
             <TabsTrigger value="calculadora" className="flex items-center gap-2 text-xs sm:text-sm">
               <Calculator className="w-4 h-4" />
               <span className="hidden sm:inline">Calculadora</span>
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2 text-xs sm:text-sm">
+              <TrendingUp className="w-4 h-4" />
+              <span className="hidden sm:inline">Analytics</span>
+            </TabsTrigger>
+            <TabsTrigger value="calendario" className="flex items-center gap-2 text-xs sm:text-sm">
+              <Calendar className="w-4 h-4" />
+              <span className="hidden sm:inline">Calendário</span>
+            </TabsTrigger>
+            <TabsTrigger value="templates" className="flex items-center gap-2 text-xs sm:text-sm">
+              <Save className="w-4 h-4" />
+              <span className="hidden sm:inline">Templates</span>
             </TabsTrigger>
           </TabsList>
 
@@ -224,6 +239,18 @@ export default function Home() {
 
           <TabsContent value="calculadora" className="space-y-6">
             <CalculadoraOrcamentoSection />
+          </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-6">
+            <GoogleAnalyticsSection />
+          </TabsContent>
+
+          <TabsContent value="calendario" className="space-y-6">
+            <ExportarCalendarioSection />
+          </TabsContent>
+
+          <TabsContent value="templates" className="space-y-6">
+            <TemplatesReutilizaveisSection />
           </TabsContent>
         </Tabs>
       </section>
