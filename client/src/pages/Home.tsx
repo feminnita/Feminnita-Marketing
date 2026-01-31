@@ -45,6 +45,9 @@ import BibliotecaTemplatesSection from "@/components/BibliotecaTemplatesSection"
 import IntegracaoWhatsAppAPISection from "@/components/IntegracaoWhatsAppAPISection";
 import DashboardPerformanceRealtimeSection from "@/components/DashboardPerformanceRealtimeSection";
 import SistemaCuponsPromocoesSection from "@/components/SistemaCuponsPromocoesSection";
+import BarraBuscaAbas from "@/components/BarraBuscaAbas";
+import MenuFavoritosAbas from "@/components/MenuFavoritosAbas";
+import GeracaoVideosIASection from "@/components/GeracaoVideosIASection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -102,6 +105,14 @@ export default function Home() {
 
       {/* Main Content */}
       <section className="container py-12">
+        <div className="mb-6 space-y-4">
+          <div className="flex gap-4 items-start">
+            <div className="flex-1">
+              <BarraBuscaAbas onSelectTab={setActiveTab} />
+            </div>
+            <MenuFavoritosAbas onSelectTab={setActiveTab} />
+          </div>
+        </div>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="flex w-full mb-8 bg-slate-100 p-2 overflow-x-auto gap-2 flex-nowrap scroll-smooth">
             <TabsTrigger value="personas" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
@@ -272,6 +283,10 @@ export default function Home() {
               <Ticket className="w-4 h-4" />
               <span className="hidden sm:inline">Cupons</span>
             </TabsTrigger>
+            <TabsTrigger value="videos-ia" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Video className="w-4 h-4" />
+              <span className="hidden sm:inline">Vídeos IA</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -440,6 +455,10 @@ export default function Home() {
 
           <TabsContent value="cupons" className="space-y-6">
             <SistemaCuponsPromocoesSection />
+          </TabsContent>
+
+          <TabsContent value="videos-ia" className="space-y-6">
+            <GeracaoVideosIASection />
           </TabsContent>
         </Tabs>
       </section>
