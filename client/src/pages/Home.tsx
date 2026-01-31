@@ -89,6 +89,8 @@ import IntegracaoGoogleAnalytics4Section from "@/components/IntegracaoGoogleAnal
 import DashboardMobileResponsivoSection from "@/components/DashboardMobileResponsivoSection";
 import ExportacaoDadosSection from "@/components/ExportacaoDadosSection";
 import IntegracaoCalendarioGoogleSection from "@/components/IntegracaoCalendarioGoogleSection";
+import SistemaLembretesAutomaticosSection from "@/components/SistemaLembretesAutomaticosSection";
+import SuporteMultiplosCalendariosSection from "@/components/SuporteMultiplosCalendariosSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -493,6 +495,14 @@ export default function Home() {
               <Calendar className="w-4 h-4" />
               <span className="hidden sm:inline">Calendário</span>
             </TabsTrigger>
+            <TabsTrigger value="lembretes" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Bell className="w-4 h-4" />
+              <span className="hidden sm:inline">Lembretes</span>
+            </TabsTrigger>
+            <TabsTrigger value="multiplos" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:inline">Compartilhar</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -829,6 +839,14 @@ export default function Home() {
 
           <TabsContent value="calendario" className="space-y-6">
             <IntegracaoCalendarioGoogleSection />
+          </TabsContent>
+
+          <TabsContent value="lembretes" className="space-y-6">
+            <SistemaLembretesAutomaticosSection />
+          </TabsContent>
+
+          <TabsContent value="multiplos" className="space-y-6">
+            <SuporteMultiplosCalendariosSection />
           </TabsContent>
         </Tabs>
       </section>
