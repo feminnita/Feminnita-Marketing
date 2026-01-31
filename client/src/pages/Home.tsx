@@ -82,6 +82,8 @@ import SistemaAutomacaoPostsSection from "@/components/SistemaAutomacaoPostsSect
 import IntegracaoAdsSection from "@/components/IntegracaoAdsSection";
 import SistemaRecomendacaoConteudoSection from "@/components/SistemaRecomendacaoConteudoSection";
 import ModuloInfluenciadorasSection from "@/components/ModuloInfluenciadorasSection";
+import SistemaRelatoriosMensaisSection from "@/components/SistemaRelatoriosMensaisSection";
+import ModuloTesteABAvancadoSection from "@/components/ModuloTesteABAvancadoSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -458,6 +460,14 @@ export default function Home() {
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Influencers</span>
             </TabsTrigger>
+            <TabsTrigger value="relatorios-mensais" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <FileText className="w-4 h-4" />
+              <span className="hidden sm:inline">Relatórios</span>
+            </TabsTrigger>
+            <TabsTrigger value="testes-ab" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Target className="w-4 h-4" />
+              <span className="hidden sm:inline">Testes A/B</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -766,6 +776,14 @@ export default function Home() {
 
           <TabsContent value="influenciadoras" className="space-y-6">
             <ModuloInfluenciadorasSection />
+          </TabsContent>
+
+          <TabsContent value="relatorios-mensais" className="space-y-6">
+            <SistemaRelatoriosMensaisSection />
+          </TabsContent>
+
+          <TabsContent value="testes-ab" className="space-y-6">
+            <ModuloTesteABAvancadoSection />
           </TabsContent>
         </Tabs>
       </section>
