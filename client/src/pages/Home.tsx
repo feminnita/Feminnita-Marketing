@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap } from "lucide-react";
+import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play } from "lucide-react";
 import PersonasSection from "@/components/PersonasSection";
 import PlanejamentoSection from "@/components/PlanejamentoSection";
 import RoteiroSection from "@/components/RoteiroSection";
@@ -11,6 +11,7 @@ import NovoRoteiroStoriesSection from "@/components/NovoRoteiroStoriesSection";
 import RoteiroTikTokSection from "@/components/RoteiroTikTokSection";
 import IdeiasImagensInstagramSection from "@/components/IdeiasImagensInstagramSection";
 import LegendaPostsSection from "@/components/LegendaPostsSection";
+import RoteiroanunciaTikTokSection from "@/components/RoteiroanunciaTikTokSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -69,7 +70,7 @@ export default function Home() {
       {/* Main Content */}
       <section className="container py-12">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-7 mb-8 bg-slate-100 p-1 overflow-x-auto">
+          <TabsList className="grid w-full grid-cols-8 mb-8 bg-slate-100 p-1 overflow-x-auto">
             <TabsTrigger value="personas" className="flex items-center gap-2 text-xs sm:text-sm">
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Personas</span>
@@ -101,6 +102,10 @@ export default function Home() {
             <TabsTrigger value="legendas" className="flex items-center gap-2 text-xs sm:text-sm">
               <MessageCircle className="w-4 h-4" />
               <span className="hidden sm:inline">Legendas</span>
+            </TabsTrigger>
+            <TabsTrigger value="anuncio" className="flex items-center gap-2 text-xs sm:text-sm">
+              <Play className="w-4 h-4" />
+              <span className="hidden sm:inline">Anúncio</span>
             </TabsTrigger>
           </TabsList>
 
@@ -134,6 +139,10 @@ export default function Home() {
 
           <TabsContent value="legendas" className="space-y-6">
             <LegendaPostsSection />
+          </TabsContent>
+
+          <TabsContent value="anuncio" className="space-y-6">
+            <RoteiroanunciaTikTokSection />
           </TabsContent>
         </Tabs>
       </section>
