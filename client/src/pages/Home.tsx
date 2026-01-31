@@ -84,6 +84,7 @@ import SistemaRecomendacaoConteudoSection from "@/components/SistemaRecomendacao
 import ModuloInfluenciadorasSection from "@/components/ModuloInfluenciadorasSection";
 import SistemaRelatoriosMensaisSection from "@/components/SistemaRelatoriosMensaisSection";
 import ModuloTesteABAvancadoSection from "@/components/ModuloTesteABAvancadoSection";
+import SistemaNotificacoesTempoRealSection from "@/components/SistemaNotificacoesTempoRealSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -468,6 +469,10 @@ export default function Home() {
               <Target className="w-4 h-4" />
               <span className="hidden sm:inline">Testes A/B</span>
             </TabsTrigger>
+            <TabsTrigger value="notificacoes" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Bell className="w-4 h-4" />
+              <span className="hidden sm:inline">Notificações</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -784,6 +789,10 @@ export default function Home() {
 
           <TabsContent value="testes-ab" className="space-y-6">
             <ModuloTesteABAvancadoSection />
+          </TabsContent>
+
+          <TabsContent value="notificacoes" className="space-y-6">
+            <SistemaNotificacoesTempoRealSection />
           </TabsContent>
         </Tabs>
       </section>
