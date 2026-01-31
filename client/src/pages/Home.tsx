@@ -77,6 +77,8 @@ import EstrategiaGrowthViralSection from "@/components/EstrategiaGrowthViralSect
 import CalendarioConteudoOtimizadoSection from "@/components/CalendarioConteudoOtimizadoSection";
 import AnaliseConcorrentesSection from "@/components/AnaliseConcorrentesSection";
 import IntegracaoAPIsSection from "@/components/IntegracaoAPIsSection";
+import DashboardUnificadoSection from "@/components/DashboardUnificadoSection";
+import SistemaAutomacaoPostsSection from "@/components/SistemaAutomacaoPostsSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -433,6 +435,14 @@ export default function Home() {
               <Cloud className="w-4 h-4" />
               <span className="hidden sm:inline">APIs</span>
             </TabsTrigger>
+            <TabsTrigger value="dashboard-unificado" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <BarChart3 className="w-4 h-4" />
+              <span className="hidden sm:inline">Dashboard</span>
+            </TabsTrigger>
+            <TabsTrigger value="automacao-posts" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Zap className="w-4 h-4" />
+              <span className="hidden sm:inline">Automação</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -721,6 +731,14 @@ export default function Home() {
 
           <TabsContent value="apis-integracao" className="space-y-6">
             <IntegracaoAPIsSection />
+          </TabsContent>
+
+          <TabsContent value="dashboard-unificado" className="space-y-6">
+            <DashboardUnificadoSection />
+          </TabsContent>
+
+          <TabsContent value="automacao-posts" className="space-y-6">
+            <SistemaAutomacaoPostsSection />
           </TabsContent>
         </Tabs>
       </section>
