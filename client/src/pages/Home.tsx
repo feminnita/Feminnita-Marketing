@@ -65,6 +65,8 @@ import ExportacaoRelatoriosSection from "@/components/ExportacaoRelatoriosSectio
 import IntegracaoHotjarClaritySection from "@/components/IntegracaoHotjarClaritySection";
 import SistemaLoyaltyPontosSection from "@/components/SistemaLoyaltyPontosSection";
 import ChatbotSuportePushSection from "@/components/ChatbotSuportePushSection";
+import GaleriaLooksPersonasSection from "@/components/GaleriaLooksPersonasSection";
+import ComparadorPersonasSection from "@/components/ComparadorPersonasSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -373,6 +375,14 @@ export default function Home() {
               <MessageCircle className="w-4 h-4" />
               <span className="hidden sm:inline">Chatbot</span>
             </TabsTrigger>
+            <TabsTrigger value="galeria-looks" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Video className="w-4 h-4" />
+              <span className="hidden sm:inline">Galeria Looks</span>
+            </TabsTrigger>
+            <TabsTrigger value="comparador" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <BarChart3 className="w-4 h-4" />
+              <span className="hidden sm:inline">Comparador</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -613,6 +623,14 @@ export default function Home() {
 
           <TabsContent value="chatbot" className="space-y-6">
             <ChatbotSuportePushSection />
+          </TabsContent>
+
+          <TabsContent value="galeria-looks" className="space-y-6">
+            <GaleriaLooksPersonasSection />
+          </TabsContent>
+
+          <TabsContent value="comparador" className="space-y-6">
+            <ComparadorPersonasSection />
           </TabsContent>
         </Tabs>
       </section>
