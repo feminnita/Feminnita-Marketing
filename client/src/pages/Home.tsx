@@ -14,6 +14,7 @@ import LegendaPostsSection from "@/components/LegendaPostsSection";
 import RoteiroanunciaTikTokSection from "@/components/RoteiroanunciaTikTokSection";
 import RoteiroAnuncioFamiliarSection from "@/components/RoteiroAnuncioFamiliarSection";
 import RoteiroInstagramReelsSection from "@/components/RoteiroInstagramReelsSection";
+import TresRoteirosTikTokInvernoSection from "@/components/TresRoteirosTikTokInvernoSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -72,7 +73,7 @@ export default function Home() {
       {/* Main Content */}
       <section className="container py-12">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-10 mb-8 bg-slate-100 p-1 overflow-x-auto">
+          <TabsList className="grid w-full grid-cols-11 mb-8 bg-slate-100 p-1 overflow-x-auto">
             <TabsTrigger value="personas" className="flex items-center gap-2 text-xs sm:text-sm">
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Personas</span>
@@ -116,6 +117,10 @@ export default function Home() {
             <TabsTrigger value="reels" className="flex items-center gap-2 text-xs sm:text-sm">
               <Film className="w-4 h-4" />
               <span className="hidden sm:inline">Reels</span>
+            </TabsTrigger>
+            <TabsTrigger value="tiktok-inverno" className="flex items-center gap-2 text-xs sm:text-sm">
+              <Video className="w-4 h-4" />
+              <span className="hidden sm:inline">TikTok 3x</span>
             </TabsTrigger>
           </TabsList>
 
@@ -161,6 +166,10 @@ export default function Home() {
 
           <TabsContent value="reels" className="space-y-6">
             <RoteiroInstagramReelsSection />
+          </TabsContent>
+
+          <TabsContent value="tiktok-inverno" className="space-y-6">
+            <TresRoteirosTikTokInvernoSection />
           </TabsContent>
         </Tabs>
       </section>
