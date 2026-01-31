@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell, Instagram, BarChart3, Sparkles, Clock, DollarSign, Ticket, Edit, Music, Cloud, MessageSquare, Database, Download, ShoppingCart, Lightbulb, Palette, Brain, Smartphone, CreditCard, Copy } from "lucide-react";
+import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell, Instagram, BarChart3, Sparkles, Clock, DollarSign, Ticket, Edit, Music, Cloud, MessageSquare, Database, Download, ShoppingCart, Lightbulb, Palette, Brain, Smartphone, CreditCard, Copy, TrendingDown } from "lucide-react";
 import PersonasSection from "@/components/PersonasSection";
 import PlanejamentoSection from "@/components/PlanejamentoSection";
 import RoteiroSection from "@/components/RoteiroSection";
@@ -95,6 +95,9 @@ import DashboardROIPersonaSection from "@/components/DashboardROIPersonaSection"
 import FerramentaClonagemCampanhasSection from "@/components/FerramentaClonagemCampanhasSection";
 import { PainelVendasTempoRealSection } from "@/components/PainelVendasTempoRealSection";
 import { SistemaFeedbackClientesSection } from "@/components/SistemaFeedbackClientesSection";
+import { IntegracaoTawkIntercomSection } from "@/components/IntegracaoTawkIntercomSection";
+import { RelatorioCohortAnalysisSection } from "@/components/RelatorioCohortAnalysisSection";
+import { PrevisaoChurnIASection } from "@/components/PrevisaoChurnIASection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -527,6 +530,18 @@ export default function Home() {
               <MessageSquare className="w-4 h-4" />
               <span className="hidden sm:inline">Feedback</span>
             </TabsTrigger>
+            <TabsTrigger value="chat-tawk" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <MessageCircle className="w-4 h-4" />
+              <span className="hidden sm:inline">Chat</span>
+            </TabsTrigger>
+            <TabsTrigger value="cohort" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:inline">Cohort</span>
+            </TabsTrigger>
+            <TabsTrigger value="churn-ia" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <TrendingDown className="w-4 h-4" />
+              <span className="hidden sm:inline">Churn IA</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -891,6 +906,18 @@ export default function Home() {
 
           <TabsContent value="feedback-clientes" className="space-y-6">
             <SistemaFeedbackClientesSection />
+          </TabsContent>
+
+          <TabsContent value="chat-tawk" className="space-y-6">
+            <IntegracaoTawkIntercomSection />
+          </TabsContent>
+
+          <TabsContent value="cohort" className="space-y-6">
+            <RelatorioCohortAnalysisSection />
+          </TabsContent>
+
+          <TabsContent value="churn-ia" className="space-y-6">
+            <PrevisaoChurnIASection />
           </TabsContent>
         </Tabs>
       </section>
