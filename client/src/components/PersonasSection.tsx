@@ -10,6 +10,7 @@ const personas = [
     title: "A Empreendedora Iniciante",
     icon: Sparkles,
     color: "from-amber-500 to-orange-500",
+    image: "/images/persona-carol.png",
     description: "Estudante ou recém-formada buscando renda extra para independência financeira.",
     audience: "Pessoas que buscam primeiro negócio, mães com flexibilidade de horário.",
     contentStyle: "Autêntico e Entusiasmado",
@@ -28,6 +29,7 @@ const personas = [
     title: "A Dona de Loja",
     icon: Target,
     color: "from-blue-500 to-cyan-500",
+    image: "/images/persona-renata.png",
     description: "Dona de loja física ou e-commerce buscando fornecedores confiáveis com qualidade.",
     audience: "Lojistas, revendedores experientes, empreendedores que buscam escala.",
     contentStyle: "Profissional e Informativo",
@@ -46,6 +48,7 @@ const personas = [
     title: "A Líder de Grupo",
     icon: Heart,
     color: "from-rose-500 to-pink-500",
+    image: "/images/persona-vanessa.png",
     description: "Mãe de família que organiza compras coletivas para economizar com amigas e família.",
     audience: "Grupos de compra, famílias grandes, amigas que compram juntas.",
     contentStyle: "Prático e Afetivo",
@@ -64,6 +67,7 @@ const personas = [
     title: "A Trendsetter",
     icon: TrendingUp,
     color: "from-purple-500 to-fuchsia-500",
+    image: "/images/persona-luiza.png",
     description: "Fashionista antenada em tendências que vê o pijama como peça de moda e loungewear.",
     audience: "Jovens, público que valoriza estética, revendedores focados em moda.",
     contentStyle: "Visual e Dinâmico",
@@ -93,6 +97,11 @@ export default function PersonasSection() {
           return (
             <Card key={persona.id} className="border-slate-200 hover:shadow-lg transition-all overflow-hidden">
               <div className={`h-1 bg-gradient-to-r ${persona.color}`} />
+              {persona.image && (
+                <div className="w-full h-64 overflow-hidden bg-slate-100">
+                  <img src={persona.image} alt={persona.name} className="w-full h-full object-cover" />
+                </div>
+              )}
               <CardHeader>
                 <div className="flex items-start justify-between mb-3">
                   <div>
