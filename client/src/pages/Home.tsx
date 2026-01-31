@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save } from "lucide-react";
+import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell } from "lucide-react";
 import PersonasSection from "@/components/PersonasSection";
 import PlanejamentoSection from "@/components/PlanejamentoSection";
 import RoteiroSection from "@/components/RoteiroSection";
@@ -24,6 +24,9 @@ import CalculadoraOrcamentoSection from "@/components/CalculadoraOrcamentoSectio
 import GoogleAnalyticsSection from "@/components/GoogleAnalyticsSection";
 import ExportarCalendarioSection from "@/components/ExportarCalendarioSection";
 import TemplatesReutilizaveisSection from "@/components/TemplatesReutilizaveisSection";
+import IntegracaoZapierSection from "@/components/IntegracaoZapierSection";
+import FeedbackRatingsSection from "@/components/FeedbackRatingsSection";
+import NotificacoesPushSection from "@/components/NotificacoesPushSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -82,7 +85,7 @@ export default function Home() {
       {/* Main Content */}
       <section className="container py-12">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-20 mb-8 bg-slate-100 p-1 overflow-x-auto">
+          <TabsList className="grid w-full grid-cols-23 mb-8 bg-slate-100 p-1 overflow-x-auto">
             <TabsTrigger value="personas" className="flex items-center gap-2 text-xs sm:text-sm">
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Personas</span>
@@ -166,6 +169,18 @@ export default function Home() {
             <TabsTrigger value="templates" className="flex items-center gap-2 text-xs sm:text-sm">
               <Save className="w-4 h-4" />
               <span className="hidden sm:inline">Templates</span>
+            </TabsTrigger>
+            <TabsTrigger value="zapier" className="flex items-center gap-2 text-xs sm:text-sm">
+              <Zap className="w-4 h-4" />
+              <span className="hidden sm:inline">Zapier</span>
+            </TabsTrigger>
+            <TabsTrigger value="ratings" className="flex items-center gap-2 text-xs sm:text-sm">
+              <Star className="w-4 h-4" />
+              <span className="hidden sm:inline">Ratings</span>
+            </TabsTrigger>
+            <TabsTrigger value="notificacoes" className="flex items-center gap-2 text-xs sm:text-sm">
+              <Bell className="w-4 h-4" />
+              <span className="hidden sm:inline">Notif.</span>
             </TabsTrigger>
           </TabsList>
 
@@ -251,6 +266,18 @@ export default function Home() {
 
           <TabsContent value="templates" className="space-y-6">
             <TemplatesReutilizaveisSection />
+          </TabsContent>
+
+          <TabsContent value="zapier" className="space-y-6">
+            <IntegracaoZapierSection />
+          </TabsContent>
+
+          <TabsContent value="ratings" className="space-y-6">
+            <FeedbackRatingsSection />
+          </TabsContent>
+
+          <TabsContent value="notificacoes" className="space-y-6">
+            <NotificacoesPushSection />
           </TabsContent>
         </Tabs>
       </section>
