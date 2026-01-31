@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell, Instagram, BarChart3, Sparkles, Clock, DollarSign } from "lucide-react";
+import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell, Instagram, BarChart3, Sparkles, Clock, DollarSign, Ticket } from "lucide-react";
 import PersonasSection from "@/components/PersonasSection";
 import PlanejamentoSection from "@/components/PlanejamentoSection";
 import RoteiroSection from "@/components/RoteiroSection";
@@ -42,6 +42,9 @@ import ChatIASection from "@/components/ChatIASection";
 import CalendarioConteudoSection from "@/components/CalendarioConteudoSection";
 import RelatoriosAgendadosSection from "@/components/RelatoriosAgendadosSection";
 import BibliotecaTemplatesSection from "@/components/BibliotecaTemplatesSection";
+import IntegracaoWhatsAppAPISection from "@/components/IntegracaoWhatsAppAPISection";
+import DashboardPerformanceRealtimeSection from "@/components/DashboardPerformanceRealtimeSection";
+import SistemaCuponsPromocoesSection from "@/components/SistemaCuponsPromocoesSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -100,7 +103,7 @@ export default function Home() {
       {/* Main Content */}
       <section className="container py-12">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-35 mb-8 bg-slate-100 p-1 overflow-x-auto">
+          <TabsList className="flex w-full mb-8 bg-slate-100 p-1 overflow-x-auto gap-1 flex-wrap">
             <TabsTrigger value="personas" className="flex items-center gap-2 text-xs sm:text-sm">
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Personas</span>
@@ -256,6 +259,18 @@ export default function Home() {
             <TabsTrigger value="biblioteca" className="flex items-center gap-2 text-xs sm:text-sm">
               <Save className="w-4 h-4" />
               <span className="hidden sm:inline">Biblioteca</span>
+            </TabsTrigger>
+            <TabsTrigger value="whatsapp-api" className="flex items-center gap-2 text-xs sm:text-sm">
+              <MessageCircle className="w-4 h-4" />
+              <span className="hidden sm:inline">WhatsApp API</span>
+            </TabsTrigger>
+            <TabsTrigger value="performance" className="flex items-center gap-2 text-xs sm:text-sm">
+              <Activity className="w-4 h-4" />
+              <span className="hidden sm:inline">Performance</span>
+            </TabsTrigger>
+            <TabsTrigger value="cupons" className="flex items-center gap-2 text-xs sm:text-sm">
+              <Ticket className="w-4 h-4" />
+              <span className="hidden sm:inline">Cupons</span>
             </TabsTrigger>
           </TabsList>
 
@@ -413,6 +428,18 @@ export default function Home() {
 
           <TabsContent value="biblioteca" className="space-y-6">
             <BibliotecaTemplatesSection />
+          </TabsContent>
+
+          <TabsContent value="whatsapp-api" className="space-y-6">
+            <IntegracaoWhatsAppAPISection />
+          </TabsContent>
+
+          <TabsContent value="performance" className="space-y-6">
+            <DashboardPerformanceRealtimeSection />
+          </TabsContent>
+
+          <TabsContent value="cupons" className="space-y-6">
+            <SistemaCuponsPromocoesSection />
           </TabsContent>
         </Tabs>
       </section>
