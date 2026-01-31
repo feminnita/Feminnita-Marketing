@@ -76,6 +76,7 @@ import ExportadorRelatoriosPersonaSection from "@/components/ExportadorRelatorio
 import EstrategiaGrowthViralSection from "@/components/EstrategiaGrowthViralSection";
 import CalendarioConteudoOtimizadoSection from "@/components/CalendarioConteudoOtimizadoSection";
 import AnaliseConcorrentesSection from "@/components/AnaliseConcorrentesSection";
+import IntegracaoAPIsSection from "@/components/IntegracaoAPIsSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -428,6 +429,10 @@ export default function Home() {
               <Target className="w-4 h-4" />
               <span className="hidden sm:inline">Concorrentes</span>
             </TabsTrigger>
+            <TabsTrigger value="apis-integracao" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Cloud className="w-4 h-4" />
+              <span className="hidden sm:inline">APIs</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -712,6 +717,10 @@ export default function Home() {
 
           <TabsContent value="concorrentes" className="space-y-6">
             <AnaliseConcorrentesSection />
+          </TabsContent>
+
+          <TabsContent value="apis-integracao" className="space-y-6">
+            <IntegracaoAPIsSection />
           </TabsContent>
         </Tabs>
       </section>
