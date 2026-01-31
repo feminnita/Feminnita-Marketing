@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell } from "lucide-react";
+import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell, Instagram, BarChart3, Sparkles } from "lucide-react";
 import PersonasSection from "@/components/PersonasSection";
 import PlanejamentoSection from "@/components/PlanejamentoSection";
 import RoteiroSection from "@/components/RoteiroSection";
@@ -27,6 +27,9 @@ import TemplatesReutilizaveisSection from "@/components/TemplatesReutilizaveisSe
 import IntegracaoZapierSection from "@/components/IntegracaoZapierSection";
 import FeedbackRatingsSection from "@/components/FeedbackRatingsSection";
 import NotificacoesPushSection from "@/components/NotificacoesPushSection";
+import MetaBusinessSuiteSection from "@/components/MetaBusinessSuiteSection";
+import ABTestingSection from "@/components/ABTestingSection";
+import IAOtimizacaoLegendaSection from "@/components/IAOtimizacaoLegendaSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -85,7 +88,7 @@ export default function Home() {
       {/* Main Content */}
       <section className="container py-12">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-23 mb-8 bg-slate-100 p-1 overflow-x-auto">
+          <TabsList className="grid w-full grid-cols-26 mb-8 bg-slate-100 p-1 overflow-x-auto">
             <TabsTrigger value="personas" className="flex items-center gap-2 text-xs sm:text-sm">
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Personas</span>
@@ -181,6 +184,18 @@ export default function Home() {
             <TabsTrigger value="notificacoes" className="flex items-center gap-2 text-xs sm:text-sm">
               <Bell className="w-4 h-4" />
               <span className="hidden sm:inline">Notif.</span>
+            </TabsTrigger>
+            <TabsTrigger value="meta" className="flex items-center gap-2 text-xs sm:text-sm">
+              <Instagram className="w-4 h-4" />
+              <span className="hidden sm:inline">Meta</span>
+            </TabsTrigger>
+            <TabsTrigger value="abtest" className="flex items-center gap-2 text-xs sm:text-sm">
+              <BarChart3 className="w-4 h-4" />
+              <span className="hidden sm:inline">A/B Test</span>
+            </TabsTrigger>
+            <TabsTrigger value="ia" className="flex items-center gap-2 text-xs sm:text-sm">
+              <Sparkles className="w-4 h-4" />
+              <span className="hidden sm:inline">IA</span>
             </TabsTrigger>
           </TabsList>
 
@@ -278,6 +293,18 @@ export default function Home() {
 
           <TabsContent value="notificacoes" className="space-y-6">
             <NotificacoesPushSection />
+          </TabsContent>
+
+          <TabsContent value="meta" className="space-y-6">
+            <MetaBusinessSuiteSection />
+          </TabsContent>
+
+          <TabsContent value="abtest" className="space-y-6">
+            <ABTestingSection />
+          </TabsContent>
+
+          <TabsContent value="ia" className="space-y-6">
+            <IAOtimizacaoLegendaSection />
           </TabsContent>
         </Tabs>
       </section>
