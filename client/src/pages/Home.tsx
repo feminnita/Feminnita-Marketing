@@ -39,6 +39,9 @@ import ComparativoConcorrentesSection from "@/components/ComparativoConcorrentes
 import IntegracaoWhatsAppSection from "@/components/IntegracaoWhatsAppSection";
 import AtribuicaoVendasSection from "@/components/AtribuicaoVendasSection";
 import ChatIASection from "@/components/ChatIASection";
+import CalendarioConteudoSection from "@/components/CalendarioConteudoSection";
+import RelatoriosAgendadosSection from "@/components/RelatoriosAgendadosSection";
+import BibliotecaTemplatesSection from "@/components/BibliotecaTemplatesSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -242,6 +245,18 @@ export default function Home() {
               <Sparkles className="w-4 h-4" />
               <span className="hidden sm:inline">Chat IA</span>
             </TabsTrigger>
+            <TabsTrigger value="calendario-conteudo" className="flex items-center gap-2 text-xs sm:text-sm">
+              <Calendar className="w-4 h-4" />
+              <span className="hidden sm:inline">Calendário</span>
+            </TabsTrigger>
+            <TabsTrigger value="relatorios" className="flex items-center gap-2 text-xs sm:text-sm">
+              <FileText className="w-4 h-4" />
+              <span className="hidden sm:inline">Relatórios</span>
+            </TabsTrigger>
+            <TabsTrigger value="biblioteca" className="flex items-center gap-2 text-xs sm:text-sm">
+              <Save className="w-4 h-4" />
+              <span className="hidden sm:inline">Biblioteca</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -386,6 +401,18 @@ export default function Home() {
 
           <TabsContent value="chat" className="space-y-6">
             <ChatIASection />
+          </TabsContent>
+
+          <TabsContent value="calendario-conteudo" className="space-y-6">
+            <CalendarioConteudoSection />
+          </TabsContent>
+
+          <TabsContent value="relatorios" className="space-y-6">
+            <RelatoriosAgendadosSection />
+          </TabsContent>
+
+          <TabsContent value="biblioteca" className="space-y-6">
+            <BibliotecaTemplatesSection />
           </TabsContent>
         </Tabs>
       </section>
