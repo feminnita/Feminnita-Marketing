@@ -33,6 +33,9 @@ import IAOtimizacaoLegendaSection from "@/components/IAOtimizacaoLegendaSection"
 import GoogleAdsSection from "@/components/GoogleAdsSection";
 import AgendamentoInteligenteSection from "@/components/AgendamentoInteligenteSection";
 import DashboardROIConsolidadoSection from "@/components/DashboardROIConsolidadoSection";
+import IntegracaoSlackEmailSection from "@/components/IntegracaoSlackEmailSection";
+import PrevisaoVendasSection from "@/components/PrevisaoVendasSection";
+import ComparativoConcorrentesSection from "@/components/ComparativoConcorrentesSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -91,7 +94,7 @@ export default function Home() {
       {/* Main Content */}
       <section className="container py-12">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-29 mb-8 bg-slate-100 p-1 overflow-x-auto">
+          <TabsList className="grid w-full grid-cols-32 mb-8 bg-slate-100 p-1 overflow-x-auto">
             <TabsTrigger value="personas" className="flex items-center gap-2 text-xs sm:text-sm">
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Personas</span>
@@ -211,6 +214,18 @@ export default function Home() {
             <TabsTrigger value="roi" className="flex items-center gap-2 text-xs sm:text-sm">
               <DollarSign className="w-4 h-4" />
               <span className="hidden sm:inline">ROI</span>
+            </TabsTrigger>
+            <TabsTrigger value="slack" className="flex items-center gap-2 text-xs sm:text-sm">
+              <Bell className="w-4 h-4" />
+              <span className="hidden sm:inline">Notif</span>
+            </TabsTrigger>
+            <TabsTrigger value="previsao" className="flex items-center gap-2 text-xs sm:text-sm">
+              <TrendingUp className="w-4 h-4" />
+              <span className="hidden sm:inline">Previsão</span>
+            </TabsTrigger>
+            <TabsTrigger value="concorrentes" className="flex items-center gap-2 text-xs sm:text-sm">
+              <BarChart3 className="w-4 h-4" />
+              <span className="hidden sm:inline">Concorr</span>
             </TabsTrigger>
           </TabsList>
 
@@ -332,6 +347,18 @@ export default function Home() {
 
           <TabsContent value="roi" className="space-y-6">
             <DashboardROIConsolidadoSection />
+          </TabsContent>
+
+          <TabsContent value="slack" className="space-y-6">
+            <IntegracaoSlackEmailSection />
+          </TabsContent>
+
+          <TabsContent value="previsao" className="space-y-6">
+            <PrevisaoVendasSection />
+          </TabsContent>
+
+          <TabsContent value="concorrentes" className="space-y-6">
+            <ComparativoConcorrentesSection />
           </TabsContent>
         </Tabs>
       </section>
