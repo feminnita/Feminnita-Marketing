@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell, Instagram, BarChart3, Sparkles, Clock, DollarSign, Ticket, Edit, Music, Cloud, MessageSquare, Database, Download } from "lucide-react";
+import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell, Instagram, BarChart3, Sparkles, Clock, DollarSign, Ticket, Edit, Music, Cloud, MessageSquare, Database, Download, ShoppingCart, Lightbulb } from "lucide-react";
 import PersonasSection from "@/components/PersonasSection";
 import PlanejamentoSection from "@/components/PlanejamentoSection";
 import RoteiroSection from "@/components/RoteiroSection";
@@ -58,6 +58,9 @@ import IntegracaoGoogleDriveSection from "@/components/IntegracaoGoogleDriveSect
 import FeedbackClientesSection from "@/components/FeedbackClientesSection";
 import RelatorioSemanalSection from "@/components/RelatorioSemanalSection";
 import IntegracaoCRMSection from "@/components/IntegracaoCRMSection";
+import IntegracaoShopifyWooCommerceSection from "@/components/IntegracaoShopifyWooCommerceSection";
+import SistemaRecomendacaoProdutosSection from "@/components/SistemaRecomendacaoProdutosSection";
+import AnalyticsAvancadoFunilSection from "@/components/AnalyticsAvancadoFunilSection";
 import NotificacoesRealtimeSection from "@/components/NotificacoesRealtimeSection";
 import ExportacaoRelatoriosSection from "@/components/ExportacaoRelatoriosSection";
 
@@ -347,6 +350,18 @@ export default function Home() {
               <Sparkles className="w-4 h-4" />
               <span className="hidden sm:inline">Gerador IA</span>
             </TabsTrigger>
+            <TabsTrigger value="shopify" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <ShoppingCart className="w-4 h-4" />
+              <span className="hidden sm:inline">Shopify</span>
+            </TabsTrigger>
+            <TabsTrigger value="recomendacao" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Lightbulb className="w-4 h-4" />
+              <span className="hidden sm:inline">Recomend.</span>
+            </TabsTrigger>
+            <TabsTrigger value="funil-analytics" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <BarChart3 className="w-4 h-4" />
+              <span className="hidden sm:inline">Funil</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -567,6 +582,18 @@ export default function Home() {
 
           <TabsContent value="gerador-ia" className="space-y-6">
             <GeradorConteudoIASection />
+          </TabsContent>
+
+          <TabsContent value="shopify" className="space-y-6">
+            <IntegracaoShopifyWooCommerceSection />
+          </TabsContent>
+
+          <TabsContent value="recomendacao" className="space-y-6">
+            <SistemaRecomendacaoProdutosSection />
+          </TabsContent>
+
+          <TabsContent value="funil-analytics" className="space-y-6">
+            <AnalyticsAvancadoFunilSection />
           </TabsContent>
         </Tabs>
       </section>
