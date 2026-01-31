@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell, Instagram, BarChart3, Sparkles, Clock, DollarSign, Ticket, Edit, Music, Cloud, MessageSquare } from "lucide-react";
+import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell, Instagram, BarChart3, Sparkles, Clock, DollarSign, Ticket, Edit, Music, Cloud, MessageSquare, Database, Download } from "lucide-react";
 import PersonasSection from "@/components/PersonasSection";
 import PlanejamentoSection from "@/components/PlanejamentoSection";
 import RoteiroSection from "@/components/RoteiroSection";
@@ -54,6 +54,9 @@ import AgendadorPublicacaoSection from "@/components/AgendadorPublicacaoSection"
 import IntegracaoGoogleDriveSection from "@/components/IntegracaoGoogleDriveSection";
 import FeedbackClientesSection from "@/components/FeedbackClientesSection";
 import RelatorioSemanalSection from "@/components/RelatorioSemanalSection";
+import IntegracaoCRMSection from "@/components/IntegracaoCRMSection";
+import NotificacoesRealtimeSection from "@/components/NotificacoesRealtimeSection";
+import ExportacaoRelatoriosSection from "@/components/ExportacaoRelatoriosSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -317,6 +320,18 @@ export default function Home() {
               <BarChart3 className="w-4 h-4" />
               <span className="hidden sm:inline">Relatório</span>
             </TabsTrigger>
+            <TabsTrigger value="crm" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Database className="w-4 h-4" />
+              <span className="hidden sm:inline">CRM</span>
+            </TabsTrigger>
+            <TabsTrigger value="notificacoes" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Bell className="w-4 h-4" />
+              <span className="hidden sm:inline">Notif.</span>
+            </TabsTrigger>
+            <TabsTrigger value="exportacao" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">Exportar</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -513,6 +528,18 @@ export default function Home() {
 
           <TabsContent value="relatorio" className="space-y-6">
             <RelatorioSemanalSection />
+          </TabsContent>
+
+          <TabsContent value="crm" className="space-y-6">
+            <IntegracaoCRMSection />
+          </TabsContent>
+
+          <TabsContent value="notificacoes" className="space-y-6">
+            <NotificacoesRealtimeSection />
+          </TabsContent>
+
+          <TabsContent value="exportacao" className="space-y-6">
+            <ExportacaoRelatoriosSection />
           </TabsContent>
         </Tabs>
       </section>
