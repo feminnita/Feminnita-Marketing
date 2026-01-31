@@ -1,25 +1,163 @@
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { Streamdown } from 'streamdown';
+import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Users, Calendar, Video, TrendingUp, Target, Zap } from "lucide-react";
+import PersonasSection from "@/components/PersonasSection";
+import PlanejamentoSection from "@/components/PlanejamentoSection";
+import RoteiroSection from "@/components/RoteiroSection";
+import TendenciasSection from "@/components/TendenciasSection";
 
-/**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Best Practices, Design Guide and Common Pitfalls
- */
 export default function Home() {
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
+  const [activeTab, setActiveTab] = useState("personas");
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <main>
-        {/* Example: lucide-react for icons */}
-        <Loader2 className="animate-spin" />
-        Example Page
-        {/* Example: Streamdown for markdown rendering */}
-        <Streamdown>Any **markdown** content</Streamdown>
-        <Button variant="default">Example Button</Button>
-      </main>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      {/* Header */}
+      <header className="sticky top-0 z-50 border-b border-slate-200/50 bg-white/80 backdrop-blur-md">
+        <div className="container py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">
+                Feminnita
+              </h1>
+              <p className="text-sm text-slate-600 mt-1">Estratégia de Marketing Digital Completa</p>
+            </div>
+            <Badge variant="secondary" className="text-xs">
+              Atacado de Pijamas
+            </Badge>
+          </div>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <section className="container py-12">
+        <div className="bg-gradient-to-r from-rose-50 to-pink-50 rounded-2xl border border-rose-200/50 p-8">
+          <div className="max-w-3xl">
+            <h2 className="text-2xl font-bold text-slate-900 mb-3">
+              Sua Estratégia de Marketing Digital Personalizada
+            </h2>
+            <p className="text-slate-700 leading-relaxed mb-6">
+              Descubra como captar clientes potenciais através de 4 personas de influenciadoras humanizadas, planejamento semanal de conteúdo, roteiros de vídeos para stories e ads, além de análise de tendências virais do TikTok que já venderam milhares de peças.
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-white rounded-lg p-4 border border-rose-100">
+                <Users className="w-5 h-5 text-rose-600 mb-2" />
+                <p className="text-sm font-semibold text-slate-900">4 Personas</p>
+              </div>
+              <div className="bg-white rounded-lg p-4 border border-rose-100">
+                <Calendar className="w-5 h-5 text-rose-600 mb-2" />
+                <p className="text-sm font-semibold text-slate-900">Planejamento Semanal</p>
+              </div>
+              <div className="bg-white rounded-lg p-4 border border-rose-100">
+                <Video className="w-5 h-5 text-rose-600 mb-2" />
+                <p className="text-sm font-semibold text-slate-900">Roteiros de Vídeos</p>
+              </div>
+              <div className="bg-white rounded-lg p-4 border border-rose-100">
+                <TrendingUp className="w-5 h-5 text-rose-600 mb-2" />
+                <p className="text-sm font-semibold text-slate-900">Tendências TikTok</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Main Content */}
+      <section className="container py-12">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-4 mb-8 bg-slate-100 p-1">
+            <TabsTrigger value="personas" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:inline">Personas</span>
+            </TabsTrigger>
+            <TabsTrigger value="planejamento" className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              <span className="hidden sm:inline">Planejamento</span>
+            </TabsTrigger>
+            <TabsTrigger value="roteiros" className="flex items-center gap-2">
+              <Video className="w-4 h-4" />
+              <span className="hidden sm:inline">Roteiros</span>
+            </TabsTrigger>
+            <TabsTrigger value="tendencias" className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              <span className="hidden sm:inline">Tendências</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="personas" className="space-y-6">
+            <PersonasSection />
+          </TabsContent>
+
+          <TabsContent value="planejamento" className="space-y-6">
+            <PlanejamentoSection />
+          </TabsContent>
+
+          <TabsContent value="roteiros" className="space-y-6">
+            <RoteiroSection />
+          </TabsContent>
+
+          <TabsContent value="tendencias" className="space-y-6">
+            <TendenciasSection />
+          </TabsContent>
+        </Tabs>
+      </section>
+
+      {/* Key Insights Section */}
+      <section className="container py-12">
+        <h2 className="text-2xl font-bold text-slate-900 mb-8">Principais Insights</h2>
+        <div className="grid md:grid-cols-3 gap-6">
+          <Card className="border-slate-200 hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Target className="w-5 h-5 text-rose-600" />
+                Público-Alvo Segmentado
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-slate-600">
+                4 personas distintas cobrem todos os segmentos: empreendedoras iniciantes, lojistas experientes, líderes de grupos de compra e trendsetters.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-slate-200 hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Zap className="w-5 h-5 text-rose-600" />
+                Conteúdo Otimizado
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-slate-600">
+                Planejamento semanal com mix de promoções, lançamentos, abastecimento de estoque e engajamento para manter a audiência ativa.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-slate-200 hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <TrendingUp className="w-5 h-5 text-rose-600" />
+                Formatos Virais
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-slate-600">
+                Roteiros baseados em vídeos que já venderam milhares de peças no TikTok: provadores rápidos, transições dinâmicas e ganchos irresistíveis.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-200 bg-slate-50 mt-16">
+        <div className="container py-8">
+          <p className="text-center text-sm text-slate-600">
+            Estratégia de Marketing Digital para Feminnita • Desenvolvida com foco em crescimento e conversão
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

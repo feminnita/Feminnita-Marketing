@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Custom Typography - Fonts loaded from Google Fonts */
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
