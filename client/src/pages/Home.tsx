@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell, Instagram, BarChart3, Sparkles } from "lucide-react";
+import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell, Instagram, BarChart3, Sparkles, Clock, DollarSign } from "lucide-react";
 import PersonasSection from "@/components/PersonasSection";
 import PlanejamentoSection from "@/components/PlanejamentoSection";
 import RoteiroSection from "@/components/RoteiroSection";
@@ -30,6 +30,9 @@ import NotificacoesPushSection from "@/components/NotificacoesPushSection";
 import MetaBusinessSuiteSection from "@/components/MetaBusinessSuiteSection";
 import ABTestingSection from "@/components/ABTestingSection";
 import IAOtimizacaoLegendaSection from "@/components/IAOtimizacaoLegendaSection";
+import GoogleAdsSection from "@/components/GoogleAdsSection";
+import AgendamentoInteligenteSection from "@/components/AgendamentoInteligenteSection";
+import DashboardROIConsolidadoSection from "@/components/DashboardROIConsolidadoSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -88,7 +91,7 @@ export default function Home() {
       {/* Main Content */}
       <section className="container py-12">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-26 mb-8 bg-slate-100 p-1 overflow-x-auto">
+          <TabsList className="grid w-full grid-cols-29 mb-8 bg-slate-100 p-1 overflow-x-auto">
             <TabsTrigger value="personas" className="flex items-center gap-2 text-xs sm:text-sm">
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Personas</span>
@@ -196,6 +199,18 @@ export default function Home() {
             <TabsTrigger value="ia" className="flex items-center gap-2 text-xs sm:text-sm">
               <Sparkles className="w-4 h-4" />
               <span className="hidden sm:inline">IA</span>
+            </TabsTrigger>
+            <TabsTrigger value="googleads" className="flex items-center gap-2 text-xs sm:text-sm">
+              <Target className="w-4 h-4" />
+              <span className="hidden sm:inline">Google Ads</span>
+            </TabsTrigger>
+            <TabsTrigger value="agendamento" className="flex items-center gap-2 text-xs sm:text-sm">
+              <Clock className="w-4 h-4" />
+              <span className="hidden sm:inline">Agenda</span>
+            </TabsTrigger>
+            <TabsTrigger value="roi" className="flex items-center gap-2 text-xs sm:text-sm">
+              <DollarSign className="w-4 h-4" />
+              <span className="hidden sm:inline">ROI</span>
             </TabsTrigger>
           </TabsList>
 
@@ -305,6 +320,18 @@ export default function Home() {
 
           <TabsContent value="ia" className="space-y-6">
             <IAOtimizacaoLegendaSection />
+          </TabsContent>
+
+          <TabsContent value="googleads" className="space-y-6">
+            <GoogleAdsSection />
+          </TabsContent>
+
+          <TabsContent value="agendamento" className="space-y-6">
+            <AgendamentoInteligenteSection />
+          </TabsContent>
+
+          <TabsContent value="roi" className="space-y-6">
+            <DashboardROIConsolidadoSection />
           </TabsContent>
         </Tabs>
       </section>
