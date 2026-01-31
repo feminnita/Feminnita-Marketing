@@ -58,11 +58,13 @@ import IntegracaoGoogleDriveSection from "@/components/IntegracaoGoogleDriveSect
 import FeedbackClientesSection from "@/components/FeedbackClientesSection";
 import RelatorioSemanalSection from "@/components/RelatorioSemanalSection";
 import IntegracaoCRMSection from "@/components/IntegracaoCRMSection";
-import IntegracaoShopifyWooCommerceSection from "@/components/IntegracaoShopifyWooCommerceSection";
 import SistemaRecomendacaoProdutosSection from "@/components/SistemaRecomendacaoProdutosSection";
 import AnalyticsAvancadoFunilSection from "@/components/AnalyticsAvancadoFunilSection";
 import NotificacoesRealtimeSection from "@/components/NotificacoesRealtimeSection";
 import ExportacaoRelatoriosSection from "@/components/ExportacaoRelatoriosSection";
+import IntegracaoHotjarClaritySection from "@/components/IntegracaoHotjarClaritySection";
+import SistemaLoyaltyPontosSection from "@/components/SistemaLoyaltyPontosSection";
+import ChatbotSuportePushSection from "@/components/ChatbotSuportePushSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -350,10 +352,7 @@ export default function Home() {
               <Sparkles className="w-4 h-4" />
               <span className="hidden sm:inline">Gerador IA</span>
             </TabsTrigger>
-            <TabsTrigger value="shopify" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
-              <ShoppingCart className="w-4 h-4" />
-              <span className="hidden sm:inline">Shopify</span>
-            </TabsTrigger>
+
             <TabsTrigger value="recomendacao" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Lightbulb className="w-4 h-4" />
               <span className="hidden sm:inline">Recomend.</span>
@@ -361,6 +360,18 @@ export default function Home() {
             <TabsTrigger value="funil-analytics" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <BarChart3 className="w-4 h-4" />
               <span className="hidden sm:inline">Funil</span>
+            </TabsTrigger>
+            <TabsTrigger value="hotjar" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Activity className="w-4 h-4" />
+              <span className="hidden sm:inline">Hotjar</span>
+            </TabsTrigger>
+            <TabsTrigger value="loyalty" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Star className="w-4 h-4" />
+              <span className="hidden sm:inline">Loyalty</span>
+            </TabsTrigger>
+            <TabsTrigger value="chatbot" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <MessageCircle className="w-4 h-4" />
+              <span className="hidden sm:inline">Chatbot</span>
             </TabsTrigger>
           </TabsList>
 
@@ -584,16 +595,24 @@ export default function Home() {
             <GeradorConteudoIASection />
           </TabsContent>
 
-          <TabsContent value="shopify" className="space-y-6">
-            <IntegracaoShopifyWooCommerceSection />
-          </TabsContent>
-
           <TabsContent value="recomendacao" className="space-y-6">
             <SistemaRecomendacaoProdutosSection />
           </TabsContent>
 
           <TabsContent value="funil-analytics" className="space-y-6">
             <AnalyticsAvancadoFunilSection />
+          </TabsContent>
+
+          <TabsContent value="hotjar" className="space-y-6">
+            <IntegracaoHotjarClaritySection />
+          </TabsContent>
+
+          <TabsContent value="loyalty" className="space-y-6">
+            <SistemaLoyaltyPontosSection />
+          </TabsContent>
+
+          <TabsContent value="chatbot" className="space-y-6">
+            <ChatbotSuportePushSection />
           </TabsContent>
         </Tabs>
       </section>
