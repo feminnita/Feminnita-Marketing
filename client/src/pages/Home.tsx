@@ -88,6 +88,7 @@ import SistemaNotificacoesTempoRealSection from "@/components/SistemaNotificacoe
 import IntegracaoGoogleAnalytics4Section from "@/components/IntegracaoGoogleAnalytics4Section";
 import DashboardMobileResponsivoSection from "@/components/DashboardMobileResponsivoSection";
 import ExportacaoDadosSection from "@/components/ExportacaoDadosSection";
+import IntegracaoCalendarioGoogleSection from "@/components/IntegracaoCalendarioGoogleSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -488,6 +489,10 @@ export default function Home() {
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">Exportar</span>
             </TabsTrigger>
+            <TabsTrigger value="calendario" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Calendar className="w-4 h-4" />
+              <span className="hidden sm:inline">Calendário</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -820,6 +825,10 @@ export default function Home() {
 
           <TabsContent value="exportacao" className="space-y-6">
             <ExportacaoDadosSection />
+          </TabsContent>
+
+          <TabsContent value="calendario" className="space-y-6">
+            <IntegracaoCalendarioGoogleSection />
           </TabsContent>
         </Tabs>
       </section>
