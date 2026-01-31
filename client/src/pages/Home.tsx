@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell, Instagram, BarChart3, Sparkles, Clock, DollarSign, Ticket, Edit, Music, Cloud, MessageSquare, Database, Download, ShoppingCart, Lightbulb } from "lucide-react";
+import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell, Instagram, BarChart3, Sparkles, Clock, DollarSign, Ticket, Edit, Music, Cloud, MessageSquare, Database, Download, ShoppingCart, Lightbulb, Palette } from "lucide-react";
 import PersonasSection from "@/components/PersonasSection";
 import PlanejamentoSection from "@/components/PlanejamentoSection";
 import RoteiroSection from "@/components/RoteiroSection";
@@ -67,6 +67,9 @@ import SistemaLoyaltyPontosSection from "@/components/SistemaLoyaltyPontosSectio
 import ChatbotSuportePushSection from "@/components/ChatbotSuportePushSection";
 import GaleriaLooksPersonasSection from "@/components/GaleriaLooksPersonasSection";
 import ComparadorPersonasSection from "@/components/ComparadorPersonasSection";
+import IntegracaoPinterestCanvaSection from "@/components/IntegracaoPinterestCanvaSection";
+import PerformancePersonaSection from "@/components/PerformancePersonaSection";
+import AssistenteSelecaoPersonaSection from "@/components/AssistenteSelecaoPersonaSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -383,6 +386,18 @@ export default function Home() {
               <BarChart3 className="w-4 h-4" />
               <span className="hidden sm:inline">Comparador</span>
             </TabsTrigger>
+            <TabsTrigger value="pinterest-canva" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Palette className="w-4 h-4" />
+              <span className="hidden sm:inline">Pinterest/Canva</span>
+            </TabsTrigger>
+            <TabsTrigger value="performance" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <TrendingUp className="w-4 h-4" />
+              <span className="hidden sm:inline">Performance</span>
+            </TabsTrigger>
+            <TabsTrigger value="quiz-persona" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Lightbulb className="w-4 h-4" />
+              <span className="hidden sm:inline">Quiz Persona</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -631,6 +646,18 @@ export default function Home() {
 
           <TabsContent value="comparador" className="space-y-6">
             <ComparadorPersonasSection />
+          </TabsContent>
+
+          <TabsContent value="pinterest-canva" className="space-y-6">
+            <IntegracaoPinterestCanvaSection />
+          </TabsContent>
+
+          <TabsContent value="performance" className="space-y-6">
+            <PerformancePersonaSection />
+          </TabsContent>
+
+          <TabsContent value="quiz-persona" className="space-y-6">
+            <AssistenteSelecaoPersonaSection />
           </TabsContent>
         </Tabs>
       </section>
