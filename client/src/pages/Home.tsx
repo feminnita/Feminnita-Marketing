@@ -9,6 +9,7 @@ import RoteiroSection from "@/components/RoteiroSection";
 import TendenciasSection from "@/components/TendenciasSection";
 import NovoRoteiroStoriesSection from "@/components/NovoRoteiroStoriesSection";
 import RoteiroTikTokSection from "@/components/RoteiroTikTokSection";
+import IdeiasImagensInstagramSection from "@/components/IdeiasImagensInstagramSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -92,6 +93,10 @@ export default function Home() {
               <Video className="w-4 h-4" />
               <span className="hidden sm:inline">TikTok</span>
             </TabsTrigger>
+            <TabsTrigger value="imagens" className="flex items-center gap-2 text-xs sm:text-sm">
+              <Video className="w-4 h-4" />
+              <span className="hidden sm:inline">Imagens IG</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -116,6 +121,10 @@ export default function Home() {
 
           <TabsContent value="tiktok" className="space-y-6">
             <RoteiroTikTokSection />
+          </TabsContent>
+
+          <TabsContent value="imagens" className="space-y-6">
+            <IdeiasImagensInstagramSection />
           </TabsContent>
         </Tabs>
       </section>
