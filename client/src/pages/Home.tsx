@@ -93,6 +93,8 @@ import SistemaLembretesAutomaticosSection from "@/components/SistemaLembretesAut
 import SuporteMultiplosCalendariosSection from "@/components/SuporteMultiplosCalendariosSection";
 import DashboardROIPersonaSection from "@/components/DashboardROIPersonaSection";
 import FerramentaClonagemCampanhasSection from "@/components/FerramentaClonagemCampanhasSection";
+import { PainelVendasTempoRealSection } from "@/components/PainelVendasTempoRealSection";
+import { SistemaFeedbackClientesSection } from "@/components/SistemaFeedbackClientesSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -517,6 +519,14 @@ export default function Home() {
               <Copy className="w-4 h-4" />
               <span className="hidden sm:inline">Clonar</span>
             </TabsTrigger>
+            <TabsTrigger value="vendas-realtime" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <DollarSign className="w-4 h-4" />
+              <span className="hidden sm:inline">Vendas</span>
+            </TabsTrigger>
+            <TabsTrigger value="feedback-clientes" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <MessageSquare className="w-4 h-4" />
+              <span className="hidden sm:inline">Feedback</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -873,6 +883,14 @@ export default function Home() {
 
           <TabsContent value="clonagem" className="space-y-6">
             <FerramentaClonagemCampanhasSection />
+          </TabsContent>
+
+          <TabsContent value="vendas-realtime" className="space-y-6">
+            <PainelVendasTempoRealSection />
+          </TabsContent>
+
+          <TabsContent value="feedback-clientes" className="space-y-6">
+            <SistemaFeedbackClientesSection />
           </TabsContent>
         </Tabs>
       </section>
