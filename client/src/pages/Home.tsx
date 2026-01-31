@@ -48,6 +48,9 @@ import SistemaCuponsPromocoesSection from "@/components/SistemaCuponsPromocoesSe
 import BarraBuscaAbas from "@/components/BarraBuscaAbas";
 import MenuFavoritosAbas from "@/components/MenuFavoritosAbas";
 import GeracaoVideosIASection from "@/components/GeracaoVideosIASection";
+import IntegracaoStripeSection from "@/components/IntegracaoStripeSection";
+import AnaliseConorrentesAutomaticoSection from "@/components/AnaliseConorrentesAutomaticoSection";
+import GeradorConteudoIASection from "@/components/GeradorConteudoIASection";
 import IntegracaoCapCutSection from "@/components/IntegracaoCapCutSection";
 import BibliotecaAudiosSection from "@/components/BibliotecaAudiosSection";
 import AgendadorPublicacaoSection from "@/components/AgendadorPublicacaoSection";
@@ -332,6 +335,18 @@ export default function Home() {
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">Exportar</span>
             </TabsTrigger>
+            <TabsTrigger value="stripe" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <DollarSign className="w-4 h-4" />
+              <span className="hidden sm:inline">Stripe</span>
+            </TabsTrigger>
+            <TabsTrigger value="concorrentes-auto" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <TrendingUp className="w-4 h-4" />
+              <span className="hidden sm:inline">Concorr Auto</span>
+            </TabsTrigger>
+            <TabsTrigger value="gerador-ia" className="flex items-center gap-2 text-xs sm:text-m whitespace-nowrap min-w-fit">
+              <Sparkles className="w-4 h-4" />
+              <span className="hidden sm:inline">Gerador IA</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -540,6 +555,18 @@ export default function Home() {
 
           <TabsContent value="exportacao" className="space-y-6">
             <ExportacaoRelatoriosSection />
+          </TabsContent>
+
+          <TabsContent value="stripe" className="space-y-6">
+            <IntegracaoStripeSection />
+          </TabsContent>
+
+          <TabsContent value="concorrentes-auto" className="space-y-6">
+            <AnaliseConorrentesAutomaticoSection />
+          </TabsContent>
+
+          <TabsContent value="gerador-ia" className="space-y-6">
+            <GeradorConteudoIASection />
           </TabsContent>
         </Tabs>
       </section>
