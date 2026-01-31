@@ -103,172 +103,172 @@ export default function Home() {
       {/* Main Content */}
       <section className="container py-12">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="flex w-full mb-8 bg-slate-100 p-1 overflow-x-auto gap-1 flex-wrap">
-            <TabsTrigger value="personas" className="flex items-center gap-2 text-xs sm:text-sm">
+          <TabsList className="flex w-full mb-8 bg-slate-100 p-2 overflow-x-auto gap-2 flex-nowrap scroll-smooth">
+            <TabsTrigger value="personas" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Personas</span>
             </TabsTrigger>
-            <TabsTrigger value="planejamento" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="planejamento" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Calendar className="w-4 h-4" />
               <span className="hidden sm:inline">Planejamento</span>
             </TabsTrigger>
-            <TabsTrigger value="roteiros" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="roteiros" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Video className="w-4 h-4" />
               <span className="hidden sm:inline">Roteiros</span>
             </TabsTrigger>
-            <TabsTrigger value="tendencias" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="tendencias" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <TrendingUp className="w-4 h-4" />
               <span className="hidden sm:inline">Tendencias</span>
             </TabsTrigger>
-            <TabsTrigger value="novos-roteiros" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="novos-roteiros" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Video className="w-4 h-4" />
               <span className="hidden sm:inline">Novos Stories</span>
             </TabsTrigger>
-            <TabsTrigger value="tiktok" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="tiktok" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Video className="w-4 h-4" />
               <span className="hidden sm:inline">TikTok</span>
             </TabsTrigger>
-            <TabsTrigger value="imagens" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="imagens" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Video className="w-4 h-4" />
               <span className="hidden sm:inline">Imagens IG</span>
             </TabsTrigger>
-            <TabsTrigger value="legendas" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="legendas" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <MessageCircle className="w-4 h-4" />
               <span className="hidden sm:inline">Legendas</span>
             </TabsTrigger>
-            <TabsTrigger value="anuncio" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="anuncio" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Play className="w-4 h-4" />
               <span className="hidden sm:inline">Anúncio</span>
             </TabsTrigger>
-            <TabsTrigger value="familiar" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="familiar" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Familiar</span>
             </TabsTrigger>
-            <TabsTrigger value="reels" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="reels" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Film className="w-4 h-4" />
               <span className="hidden sm:inline">Reels</span>
             </TabsTrigger>
-            <TabsTrigger value="tiktok-inverno" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="tiktok-inverno" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Video className="w-4 h-4" />
               <span className="hidden sm:inline">TikTok 3x</span>
             </TabsTrigger>
-            <TabsTrigger value="stories" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="stories" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <MessageCircle className="w-4 h-4" />
               <span className="hidden sm:inline">Stories</span>
             </TabsTrigger>
-            <TabsTrigger value="stories-42" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="stories-42" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <MessageCircle className="w-4 h-4" />
               <span className="hidden sm:inline">42 Stories</span>
             </TabsTrigger>
-            <TabsTrigger value="ads-analise" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="ads-analise" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <TrendingUp className="w-4 h-4" />
               <span className="hidden sm:inline">Análise Ads</span>
             </TabsTrigger>
-            <TabsTrigger value="dashboard" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="dashboard" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Activity className="w-4 h-4" />
               <span className="hidden sm:inline">Dashboard</span>
             </TabsTrigger>
-            <TabsTrigger value="relatorio" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="relatorio" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <FileText className="w-4 h-4" />
               <span className="hidden sm:inline">Relatório</span>
             </TabsTrigger>
-            <TabsTrigger value="calculadora" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="calculadora" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Calculator className="w-4 h-4" />
               <span className="hidden sm:inline">Calculadora</span>
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="analytics" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <TrendingUp className="w-4 h-4" />
               <span className="hidden sm:inline">Analytics</span>
             </TabsTrigger>
-            <TabsTrigger value="calendario" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="calendario" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Calendar className="w-4 h-4" />
               <span className="hidden sm:inline">Calendário</span>
             </TabsTrigger>
-            <TabsTrigger value="templates" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="templates" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Save className="w-4 h-4" />
               <span className="hidden sm:inline">Templates</span>
             </TabsTrigger>
-            <TabsTrigger value="zapier" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="zapier" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Zap className="w-4 h-4" />
               <span className="hidden sm:inline">Zapier</span>
             </TabsTrigger>
-            <TabsTrigger value="ratings" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="ratings" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Star className="w-4 h-4" />
               <span className="hidden sm:inline">Ratings</span>
             </TabsTrigger>
-            <TabsTrigger value="notificacoes" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="notificacoes" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Bell className="w-4 h-4" />
               <span className="hidden sm:inline">Notif.</span>
             </TabsTrigger>
-            <TabsTrigger value="meta" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="meta" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Instagram className="w-4 h-4" />
               <span className="hidden sm:inline">Meta</span>
             </TabsTrigger>
-            <TabsTrigger value="abtest" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="abtest" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <BarChart3 className="w-4 h-4" />
               <span className="hidden sm:inline">A/B Test</span>
             </TabsTrigger>
-            <TabsTrigger value="ia" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="ia" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Sparkles className="w-4 h-4" />
               <span className="hidden sm:inline">IA</span>
             </TabsTrigger>
-            <TabsTrigger value="googleads" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="googleads" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Target className="w-4 h-4" />
               <span className="hidden sm:inline">Google Ads</span>
             </TabsTrigger>
-            <TabsTrigger value="agendamento" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="agendamento" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Clock className="w-4 h-4" />
               <span className="hidden sm:inline">Agenda</span>
             </TabsTrigger>
-            <TabsTrigger value="roi" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="roi" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <DollarSign className="w-4 h-4" />
               <span className="hidden sm:inline">ROI</span>
             </TabsTrigger>
-            <TabsTrigger value="slack" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="slack" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Bell className="w-4 h-4" />
               <span className="hidden sm:inline">Notif</span>
             </TabsTrigger>
-            <TabsTrigger value="previsao" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="previsao" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <TrendingUp className="w-4 h-4" />
               <span className="hidden sm:inline">Previsão</span>
             </TabsTrigger>
-            <TabsTrigger value="concorrentes" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="concorrentes" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <BarChart3 className="w-4 h-4" />
               <span className="hidden sm:inline">Concorr</span>
             </TabsTrigger>
-            <TabsTrigger value="whatsapp" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="whatsapp" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <MessageCircle className="w-4 h-4" />
               <span className="hidden sm:inline">WhatsApp</span>
             </TabsTrigger>
-            <TabsTrigger value="atribuicao" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="atribuicao" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Target className="w-4 h-4" />
               <span className="hidden sm:inline">Vendas</span>
             </TabsTrigger>
-            <TabsTrigger value="chat" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="chat" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Sparkles className="w-4 h-4" />
               <span className="hidden sm:inline">Chat IA</span>
             </TabsTrigger>
-            <TabsTrigger value="calendario-conteudo" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="calendario-conteudo" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Calendar className="w-4 h-4" />
               <span className="hidden sm:inline">Calendário</span>
             </TabsTrigger>
-            <TabsTrigger value="relatorios" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="relatorios" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <FileText className="w-4 h-4" />
               <span className="hidden sm:inline">Relatórios</span>
             </TabsTrigger>
-            <TabsTrigger value="biblioteca" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="biblioteca" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Save className="w-4 h-4" />
               <span className="hidden sm:inline">Biblioteca</span>
             </TabsTrigger>
-            <TabsTrigger value="whatsapp-api" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="whatsapp-api" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <MessageCircle className="w-4 h-4" />
               <span className="hidden sm:inline">WhatsApp API</span>
             </TabsTrigger>
-            <TabsTrigger value="performance" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="performance" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Activity className="w-4 h-4" />
               <span className="hidden sm:inline">Performance</span>
             </TabsTrigger>
-            <TabsTrigger value="cupons" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsTrigger value="cupons" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Ticket className="w-4 h-4" />
               <span className="hidden sm:inline">Cupons</span>
             </TabsTrigger>
