@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell, Instagram, BarChart3, Sparkles, Clock, DollarSign, Ticket, Edit, Music } from "lucide-react";
+import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell, Instagram, BarChart3, Sparkles, Clock, DollarSign, Ticket, Edit, Music, Cloud, MessageSquare } from "lucide-react";
 import PersonasSection from "@/components/PersonasSection";
 import PlanejamentoSection from "@/components/PlanejamentoSection";
 import RoteiroSection from "@/components/RoteiroSection";
@@ -51,6 +51,9 @@ import GeracaoVideosIASection from "@/components/GeracaoVideosIASection";
 import IntegracaoCapCutSection from "@/components/IntegracaoCapCutSection";
 import BibliotecaAudiosSection from "@/components/BibliotecaAudiosSection";
 import AgendadorPublicacaoSection from "@/components/AgendadorPublicacaoSection";
+import IntegracaoGoogleDriveSection from "@/components/IntegracaoGoogleDriveSection";
+import FeedbackClientesSection from "@/components/FeedbackClientesSection";
+import RelatorioSemanalSection from "@/components/RelatorioSemanalSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -302,6 +305,18 @@ export default function Home() {
               <Calendar className="w-4 h-4" />
               <span className="hidden sm:inline">Agendador</span>
             </TabsTrigger>
+            <TabsTrigger value="drive" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Cloud className="w-4 h-4" />
+              <span className="hidden sm:inline">Drive</span>
+            </TabsTrigger>
+            <TabsTrigger value="feedback" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <MessageSquare className="w-4 h-4" />
+              <span className="hidden sm:inline">Feedback</span>
+            </TabsTrigger>
+            <TabsTrigger value="relatorio" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <BarChart3 className="w-4 h-4" />
+              <span className="hidden sm:inline">Relatório</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -486,6 +501,18 @@ export default function Home() {
 
           <TabsContent value="agendador" className="space-y-6">
             <AgendadorPublicacaoSection />
+          </TabsContent>
+
+          <TabsContent value="drive" className="space-y-6">
+            <IntegracaoGoogleDriveSection />
+          </TabsContent>
+
+          <TabsContent value="feedback" className="space-y-6">
+            <FeedbackClientesSection />
+          </TabsContent>
+
+          <TabsContent value="relatorio" className="space-y-6">
+            <RelatorioSemanalSection />
           </TabsContent>
         </Tabs>
       </section>
