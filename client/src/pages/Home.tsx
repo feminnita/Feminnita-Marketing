@@ -7,6 +7,7 @@ import PersonasSection from "@/components/PersonasSection";
 import PlanejamentoSection from "@/components/PlanejamentoSection";
 import RoteiroSection from "@/components/RoteiroSection";
 import TendenciasSection from "@/components/TendenciasSection";
+import NovoRoteiroStoriesSection from "@/components/NovoRoteiroStoriesSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -65,22 +66,26 @@ export default function Home() {
       {/* Main Content */}
       <section className="container py-12">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8 bg-slate-100 p-1">
-            <TabsTrigger value="personas" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-5 mb-8 bg-slate-100 p-1">
+            <TabsTrigger value="personas" className="flex items-center gap-2 text-xs sm:text-sm">
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Personas</span>
             </TabsTrigger>
-            <TabsTrigger value="planejamento" className="flex items-center gap-2">
+            <TabsTrigger value="planejamento" className="flex items-center gap-2 text-xs sm:text-sm">
               <Calendar className="w-4 h-4" />
               <span className="hidden sm:inline">Planejamento</span>
             </TabsTrigger>
-            <TabsTrigger value="roteiros" className="flex items-center gap-2">
+            <TabsTrigger value="roteiros" className="flex items-center gap-2 text-xs sm:text-sm">
               <Video className="w-4 h-4" />
               <span className="hidden sm:inline">Roteiros</span>
             </TabsTrigger>
-            <TabsTrigger value="tendencias" className="flex items-center gap-2">
+            <TabsTrigger value="tendencias" className="flex items-center gap-2 text-xs sm:text-sm">
               <TrendingUp className="w-4 h-4" />
-              <span className="hidden sm:inline">Tendências</span>
+              <span className="hidden sm:inline">Tendencias</span>
+            </TabsTrigger>
+            <TabsTrigger value="novos-roteiros" className="flex items-center gap-2 text-xs sm:text-sm">
+              <Video className="w-4 h-4" />
+              <span className="hidden sm:inline">Novos Stories</span>
             </TabsTrigger>
           </TabsList>
 
@@ -98,6 +103,10 @@ export default function Home() {
 
           <TabsContent value="tendencias" className="space-y-6">
             <TendenciasSection />
+          </TabsContent>
+
+          <TabsContent value="novos-roteiros" className="space-y-6">
+            <NovoRoteiroStoriesSection />
           </TabsContent>
         </Tabs>
       </section>
