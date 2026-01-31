@@ -70,6 +70,12 @@ import ComparadorPersonasSection from "@/components/ComparadorPersonasSection";
 import IntegracaoPinterestCanvaSection from "@/components/IntegracaoPinterestCanvaSection";
 import PerformancePersonaSection from "@/components/PerformancePersonaSection";
 import AssistenteSelecaoPersonaSection from "@/components/AssistenteSelecaoPersonaSection";
+import DashboardTendenciasViraisSection from "@/components/DashboardTendenciasViraisSection";
+import SistemaNotificacoesInteligentesSection from "@/components/SistemaNotificacoesInteligentesSection";
+import ExportadorRelatoriosPersonaSection from "@/components/ExportadorRelatoriosPersonaSection";
+import EstrategiaGrowthViralSection from "@/components/EstrategiaGrowthViralSection";
+import CalendarioConteudoOtimizadoSection from "@/components/CalendarioConteudoOtimizadoSection";
+import AnaliseConcorrentesSection from "@/components/AnaliseConcorrentesSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -398,6 +404,30 @@ export default function Home() {
               <Lightbulb className="w-4 h-4" />
               <span className="hidden sm:inline">Quiz Persona</span>
             </TabsTrigger>
+            <TabsTrigger value="tendencias-virais" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Zap className="w-4 h-4" />
+              <span className="hidden sm:inline">Trends Virais</span>
+            </TabsTrigger>
+            <TabsTrigger value="notificacoes" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Bell className="w-4 h-4" />
+              <span className="hidden sm:inline">Notificações</span>
+            </TabsTrigger>
+            <TabsTrigger value="exportar-relatorios" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <FileText className="w-4 h-4" />
+              <span className="hidden sm:inline">Relatórios</span>
+            </TabsTrigger>
+            <TabsTrigger value="growth-viral" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <TrendingUp className="w-4 h-4" />
+              <span className="hidden sm:inline">Growth Viral</span>
+            </TabsTrigger>
+            <TabsTrigger value="calendario-conteudo" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Calendar className="w-4 h-4" />
+              <span className="hidden sm:inline">Calendário</span>
+            </TabsTrigger>
+            <TabsTrigger value="concorrentes" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Target className="w-4 h-4" />
+              <span className="hidden sm:inline">Concorrentes</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -658,6 +688,30 @@ export default function Home() {
 
           <TabsContent value="quiz-persona" className="space-y-6">
             <AssistenteSelecaoPersonaSection />
+          </TabsContent>
+
+          <TabsContent value="tendencias-virais" className="space-y-6">
+            <DashboardTendenciasViraisSection />
+          </TabsContent>
+
+          <TabsContent value="notificacoes" className="space-y-6">
+            <SistemaNotificacoesInteligentesSection />
+          </TabsContent>
+
+          <TabsContent value="exportar-relatorios" className="space-y-6">
+            <ExportadorRelatoriosPersonaSection />
+          </TabsContent>
+
+          <TabsContent value="growth-viral" className="space-y-6">
+            <EstrategiaGrowthViralSection />
+          </TabsContent>
+
+          <TabsContent value="calendario-conteudo" className="space-y-6">
+            <CalendarioConteudoOtimizadoSection />
+          </TabsContent>
+
+          <TabsContent value="concorrentes" className="space-y-6">
+            <AnaliseConcorrentesSection />
           </TabsContent>
         </Tabs>
       </section>
