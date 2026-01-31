@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell, Instagram, BarChart3, Sparkles, Clock, DollarSign, Ticket, Edit, Music, Cloud, MessageSquare, Database, Download, ShoppingCart, Lightbulb, Palette, Brain, Smartphone } from "lucide-react";
+import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell, Instagram, BarChart3, Sparkles, Clock, DollarSign, Ticket, Edit, Music, Cloud, MessageSquare, Database, Download, ShoppingCart, Lightbulb, Palette, Brain, Smartphone, CreditCard, Copy } from "lucide-react";
 import PersonasSection from "@/components/PersonasSection";
 import PlanejamentoSection from "@/components/PlanejamentoSection";
 import RoteiroSection from "@/components/RoteiroSection";
@@ -91,6 +91,8 @@ import ExportacaoDadosSection from "@/components/ExportacaoDadosSection";
 import IntegracaoCalendarioGoogleSection from "@/components/IntegracaoCalendarioGoogleSection";
 import SistemaLembretesAutomaticosSection from "@/components/SistemaLembretesAutomaticosSection";
 import SuporteMultiplosCalendariosSection from "@/components/SuporteMultiplosCalendariosSection";
+import DashboardROIPersonaSection from "@/components/DashboardROIPersonaSection";
+import FerramentaClonagemCampanhasSection from "@/components/FerramentaClonagemCampanhasSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -503,6 +505,18 @@ export default function Home() {
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Compartilhar</span>
             </TabsTrigger>
+            <TabsTrigger value="roi" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <TrendingUp className="w-4 h-4" />
+              <span className="hidden sm:inline">ROI</span>
+            </TabsTrigger>
+            <TabsTrigger value="stripe" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <CreditCard className="w-4 h-4" />
+              <span className="hidden sm:inline">Stripe</span>
+            </TabsTrigger>
+            <TabsTrigger value="clonagem" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Copy className="w-4 h-4" />
+              <span className="hidden sm:inline">Clonar</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -847,6 +861,18 @@ export default function Home() {
 
           <TabsContent value="multiplos" className="space-y-6">
             <SuporteMultiplosCalendariosSection />
+          </TabsContent>
+
+          <TabsContent value="roi" className="space-y-6">
+            <DashboardROIPersonaSection />
+          </TabsContent>
+
+          <TabsContent value="stripe" className="space-y-6">
+            <IntegracaoStripeSection />
+          </TabsContent>
+
+          <TabsContent value="clonagem" className="space-y-6">
+            <FerramentaClonagemCampanhasSection />
           </TabsContent>
         </Tabs>
       </section>
