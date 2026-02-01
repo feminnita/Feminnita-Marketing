@@ -49,3 +49,61 @@ export const integrations = mysqlTable("integrations", {
 
 export type Integration = typeof integrations.$inferSelect;
 export type InsertIntegration = typeof integrations.$inferInsert;
+
+// Tabela para armazenar webhooks registrados
+export const webhooks = mysqlTable("webhooks", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  plataforma: mysqlEnum("plataforma", [
+    "tray",
+    "google_drive",
+    "meta",
+    "email_marketing",
+    "instagram",
+    "tiktok",
+    "facebook",
+    "whatsapp",
+    "bling",
+  ]).notNull(),
+  webhookUrl: text("webhookUrl").notNull(),
+  webhookSecret: varchar("webhookSecret", { length: 255 }).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  lastTriggered: timestamp("lastTriggered"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Webhook = typeof webhooks.$inferSelect;
+export type InsertWebhook = typeof webhooks.$inferInsert;
+
+// Tabela para armazenar eventos de webhooks
+export const webhookEvents = mysqlTable("webhook_events", {
+  id: int("id").autoincrement().primaryKey(),
+  webhookId: int("webhookId").notNull(),
+  userId: int("userId").notNull(),
+  plataforma: varchar("plataforma", { length: 50 }).notNull(),
+  eventType: varchar("eventType", { length: 100 }).notNull(), // campaign_created, campaign_updated, etc
+  eventData: text("eventData").notNull(), // JSON com dados do evento
+  status: mysqlEnum("status", ["pending", "processed", "failed"]).default("pending").notNull(),
+  retries: int("retries").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  processedAt: timestamp("processedAt"),
+});
+
+export type WebhookEvent = typeof webhookEvents.$inferSelect;
+export type InsertWebhookEvent = typeof webhookEvents.$inferInsert;
+
+// Tabela para armazenar notificações
+export const notifications = mysqlTable("notifications", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  plataforma: varchar("plataforma", { length: 50 }).notNull(),
+  titulo: varchar("titulo", { length: 255 }).notNull(),
+  mensagem: text("mensagem").notNull(),
+  tipo: mysqlEnum("tipo", ["campaign_created", "campaign_updated", "campaign_paused", "campaign_resumed", "error", "success"]).notNull(),
+  isRead: boolean("isRead").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = typeof notifications.$inferInsert;
