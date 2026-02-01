@@ -134,6 +134,9 @@ import { OtimizacaoFunilSection } from '@/components/OtimizacaoFunilSection';
 import { AnaliseSentimentoRedesSociaisSection } from '@/components/AnaliseSentimentoRedesSociaisSection';
 import { RecomendacaoOrcamentoCanalSection } from '@/components/RecomendacaoOrcamentoCanalSection';
 import { IntegracaoCanvaSection } from '@/components/IntegracaoCanvaSection';
+import { PrevisaoDemandaMachineLearningSection } from '@/components/PrevisaoDemandaMachineLearningSection';
+import { AutomacaoRespostasRedesSociaisSection } from '@/components/AutomacaoRespostasRedesSociaisSection';
+import { AnaliseConcorrenciaTempoRealSection } from '@/components/AnaliseConcorrenciaTempoRealSection';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -726,6 +729,18 @@ export default function Home() {
               <Palette className="w-4 h-4" />
               <span className="hidden sm:inline">Canva</span>
             </TabsTrigger>
+            <TabsTrigger value="demanda-ml" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Brain className="w-4 h-4" />
+              <span className="hidden sm:inline">Demanda ML</span>
+            </TabsTrigger>
+            <TabsTrigger value="respostas-ia" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <MessageCircle className="w-4 h-4" />
+              <span className="hidden sm:inline">Respostas IA</span>
+            </TabsTrigger>
+            <TabsTrigger value="concorrencia-tempo-real" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Target className="w-4 h-4" />
+              <span className="hidden sm:inline">Concorrência</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -1250,6 +1265,18 @@ export default function Home() {
 
           <TabsContent value="canva-integracao" className="space-y-6">
             <IntegracaoCanvaSection />
+          </TabsContent>
+
+          <TabsContent value="demanda-ml" className="space-y-6">
+            <PrevisaoDemandaMachineLearningSection />
+          </TabsContent>
+
+          <TabsContent value="respostas-ia" className="space-y-6">
+            <AutomacaoRespostasRedesSociaisSection />
+          </TabsContent>
+
+          <TabsContent value="concorrencia-tempo-real" className="space-y-6">
+            <AnaliseConcorrenciaTempoRealSection />
           </TabsContent>
         </Tabs>
       </section>
