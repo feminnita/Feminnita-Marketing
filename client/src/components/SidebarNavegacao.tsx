@@ -127,14 +127,14 @@ export default function SidebarNavegacao({ onSelectTab, activeTab }: SidebarNave
   })).filter(cat => cat.abas.length > 0 || searchTerm === '');
 
   return (
-    <div className="w-64 bg-gradient-to-b from-amber-50 to-amber-100 border-r border-amber-200 h-screen overflow-y-auto flex flex-col sticky top-0">
+    <div className="w-64 bg-white border-r border-amber-200 h-screen overflow-y-auto flex flex-col sticky top-0">
       {/* Header */}
-      <div className="p-4 border-b border-amber-200 bg-gradient-to-r from-amber-50 to-white">
+      <div className="p-4 border-b border-amber-200 bg-white">
         <div className="flex items-center gap-2 mb-4">
           <div className="w-8 h-8 bg-gradient-to-r from-amber-700 to-amber-600 rounded-lg flex items-center justify-center">
             <Home className="w-4 h-4 text-white" />
           </div>
-          <h2 className="font-bold text-amber-900">Menu</h2>
+          <h2 className="font-bold text-amber-900" style={{color: '#A63D4A'}}>Feminnita</h2>
         </div>
         
         {/* Search */}
@@ -191,7 +191,7 @@ export default function SidebarNavegacao({ onSelectTab, activeTab }: SidebarNave
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t border-amber-200 bg-gradient-to-r from-white to-amber-50 text-xs text-amber-700">
+      <div className="p-4 border-t border-amber-200 bg-white text-xs text-amber-700">
         <p>138 abas disponíveis</p>
       </div>
     </div>

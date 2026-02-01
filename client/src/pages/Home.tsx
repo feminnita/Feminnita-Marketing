@@ -141,6 +141,9 @@ import SidebarNavegacao from '@/components/SidebarNavegacao';
 import RentabilidadeDetalhadaSection from '@/components/RentabilidadeDetalhadaSection';
 import AutomacaoRelatoriosAgendadosSection from '@/components/AutomacaoRelatoriosAgendadosSection';
 import IntegracaoAfiliados from '@/components/IntegracaoAfiliados';
+import MetricasPerformanceRealtimeSection from '@/components/MetricasPerformanceRealtimeSection';
+import NotificacoesInteligenteSection from '@/components/NotificacoesInteligenteSection';
+import ExportarRelatorioSection from '@/components/ExportarRelatorioSection';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -759,6 +762,18 @@ export default function Home() {
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Afiliados</span>
             </TabsTrigger>
+            <TabsTrigger value="metricas-realtime" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <BarChart3 className="w-4 h-4" />
+              <span className="hidden sm:inline">Métricas</span>
+            </TabsTrigger>
+            <TabsTrigger value="notificacoes" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Bell className="w-4 h-4" />
+              <span className="hidden sm:inline">Notificações</span>
+            </TabsTrigger>
+            <TabsTrigger value="exportar-relatorio" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">Exportar</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -1303,6 +1318,18 @@ export default function Home() {
 
           <TabsContent value="afiliados" className="space-y-6">
             <IntegracaoAfiliados />
+          </TabsContent>
+
+          <TabsContent value="metricas-realtime" className="space-y-6">
+            <MetricasPerformanceRealtimeSection />
+          </TabsContent>
+
+          <TabsContent value="notificacoes" className="space-y-6">
+            <NotificacoesInteligenteSection />
+          </TabsContent>
+
+          <TabsContent value="exportar-relatorio" className="space-y-6">
+            <ExportarRelatorioSection />
           </TabsContent>
         </Tabs>
       </section>
