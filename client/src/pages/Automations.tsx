@@ -3,8 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -12,18 +10,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Zap,
-  Plus,
-  Trash2,
-  Edit2,
-  Play,
-  Pause,
-  CheckCircle2,
-  AlertCircle,
-  Clock,
-  Loader2,
-} from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Zap, Trash2, Edit2, Play, CheckCircle } from "lucide-react";
+import { trpc } from "@/lib/trpc";
 
 interface Automation {
   id: string;
@@ -50,13 +39,13 @@ export default function Automations() {
     },
     {
       id: "2",
-      nome: "WhatsApp Grupos VIP",
-      tipo: "whatsapp",
+      nome: "WhatsApp VIP",
+      tipo: "mensagem",
       plataforma: "whatsapp",
-      conteudo: "Promoção exclusiva para VIPs: 30% de desconto!",
-      agendamento: "Toda segunda às 14:00",
+      conteudo: "Olá! Temos uma promoção especial para você 🎉",
+      agendamento: "Terças e Quintas às 14:00",
       status: "ativo",
-      proxima_execucao: "Segunda às 14:00",
+      proxima_execucao: "Terça às 14:00",
     },
   ]);
 
@@ -76,6 +65,50 @@ export default function Automations() {
     agendamento: "",
   });
 
+  // Usar tRPC para criar automação
+  const criarMutation = trpc.automations.criar.useMutation({
+    onSuccess: (result: any) => {
+      setAutomacoes([
+        ...automacoes,
+        {
+          ...result,
+          status: "agendado",
+          proxima_execucao: "Próxima execução: " + formData.agendamento,
+        },
+      ]);
+      resetForm();
+    },
+  });
+
+  // Usar tRPC para executar automação
+  const executarMutation = trpc.automations.executar.useMutation({
+    onSuccess: (result: any) => {
+      alert(result.mensagem);
+    },
+  });
+
+  // Usar tRPC para atualizar automação
+  const atualizarMutation = trpc.automations.atualizar.useMutation({
+    onSuccess: (result: any) => {
+      if (editingId) {
+        setAutomacoes(
+          automacoes.map((a) =>
+            a.id === editingId ? { ...a, ...formData } : a
+          )
+        );
+      }
+      resetForm();
+    },
+  });
+
+  // Usar tRPC para deletar automação
+  const deletarMutation = trpc.automations.deletar.useMutation({
+    onSuccess: (result: any) => {
+      setAutomacoes(automacoes.filter((a) => a.id !== editingId));
+      alert(result.mensagem);
+    },
+  });
+
   const handleAddAutomation = () => {
     if (!formData.nome || !formData.conteudo) {
       alert("Por favor, preencha todos os campos");
@@ -83,41 +116,19 @@ export default function Automations() {
     }
 
     if (editingId) {
-      setAutomacoes(
-        automacoes.map((a) =>
-          a.id === editingId
-            ? {
-                ...a,
-                ...formData,
-                status: "agendado" as const,
-              }
-            : a
-        )
-      );
-      setEditingId(null);
-    } else {
-      setAutomacoes([
-        ...automacoes,
-        {
-          id: Date.now().toString(),
-          ...formData,
-          status: "agendado" as const,
-          proxima_execucao: formData.agendamento,
-        },
-      ]);
-    }
-
-      setFormData({
-        nome: "",
-        tipo: "post" as const,
-        plataforma: "instagram" as const,
-        conteudo: "",
-        agendamento: "",
+      atualizarMutation.mutate({
+        id: editingId,
+        nome: formData.nome,
+        conteudo: formData.conteudo,
+        agendamento: formData.agendamento,
       });
-    setShowForm(false);
+    } else {
+      criarMutation.mutate(formData);
+    }
   };
 
   const handleEdit = (automacao: Automation) => {
+    setEditingId(automacao.id);
     setFormData({
       nome: automacao.nome,
       tipo: automacao.tipo,
@@ -125,103 +136,83 @@ export default function Automations() {
       conteudo: automacao.conteudo,
       agendamento: automacao.agendamento,
     });
-    setEditingId(automacao.id);
     setShowForm(true);
   };
 
   const handleDelete = (id: string) => {
     if (confirm("Tem certeza que deseja deletar esta automação?")) {
-      setAutomacoes(automacoes.filter((a) => a.id !== id));
+      setEditingId(id);
+      deletarMutation.mutate({ id });
     }
   };
 
-  const handleToggleStatus = (id: string) => {
-    setAutomacoes(
-      automacoes.map((a) =>
-        a.id === id
-          ? {
-              ...a,
-              status: a.status === "ativo" ? "pausado" : "ativo",
-            }
-          : a
-      )
-    );
+  const handleExecute = (automacao: Automation) => {
+    executarMutation.mutate({
+      id: automacao.id,
+      plataforma: automacao.plataforma,
+      conteudo: automacao.conteudo,
+    });
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "ativo":
-        return <CheckCircle2 className="w-4 h-4 text-green-500" />;
-      case "pausado":
-        return <AlertCircle className="w-4 h-4 text-yellow-500" />;
-      case "agendado":
-        return <Clock className="w-4 h-4 text-blue-500" />;
-      default:
-        return null;
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case "ativo":
-        return "Ativo";
-      case "pausado":
-        return "Pausado";
-      case "agendado":
-        return "Agendado";
-      default:
-        return status;
-    }
+  const resetForm = () => {
+    setFormData({
+      nome: "",
+      tipo: "post" as const,
+      plataforma: "instagram" as const,
+      conteudo: "",
+      agendamento: "",
+    });
+    setShowForm(false);
+    setEditingId(null);
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Automações de Conteúdo</h1>
-          <p className="text-muted-foreground mt-2">
-            Crie e gerencie automações de publicação em múltiplos canais
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <Zap className="w-8 h-8" />
+            Automações de Conteúdo
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Crie e gerencie automações para publicar conteúdo automaticamente
           </p>
         </div>
         <Button
           onClick={() => {
-            setShowForm(!showForm);
-            setEditingId(null);
-            setFormData({
-              nome: "",
-              tipo: "post",
-              plataforma: "instagram",
-              conteudo: "",
-              agendamento: "",
-            });
+            resetForm();
+            setShowForm(true);
           }}
-          className="gap-2"
+          className="bg-blue-600 hover:bg-blue-700"
         >
-          <Plus className="w-4 h-4" />
-          Nova Automação
+          + Nova Automação
         </Button>
       </div>
 
-      {/* Formulário */}
       {showForm && (
-        <Card>
+        <Card className="border-blue-200 bg-blue-50">
           <CardHeader>
             <CardTitle>
-              {editingId ? "Editar Automação" : "Criar Nova Automação"}
+              {editingId ? "Editar Automação" : "Nova Automação"}
             </CardTitle>
+            <CardDescription>
+              Configure os detalhes da automação de conteúdo
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="nome">Nome da Automação</Label>
-                <Input
-                  id="nome"
-                  placeholder="Ex: Post Instagram Diário"
-                  value={formData.nome}
-                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="nome">Nome da Automação</Label>
+              <Input
+                id="nome"
+                placeholder="Ex: Post Instagram Diário"
+                value={formData.nome}
+                onChange={(e) =>
+                  setFormData({ ...formData, nome: e.target.value })
+                }
+              />
+            </div>
 
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="tipo">Tipo de Conteúdo</Label>
                 <Select
@@ -262,18 +253,6 @@ export default function Automations() {
                   </SelectContent>
                 </Select>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="agendamento">Agendamento</Label>
-                <Input
-                  id="agendamento"
-                  placeholder="Ex: Diariamente às 10:00"
-                  value={formData.agendamento}
-                  onChange={(e) =>
-                    setFormData({ ...formData, agendamento: e.target.value })
-                  }
-                />
-              </div>
             </div>
 
             <div className="space-y-2">
@@ -282,178 +261,101 @@ export default function Automations() {
                 id="conteudo"
                 placeholder="Digite o conteúdo que será publicado..."
                 value={formData.conteudo}
-                onChange={(e) => setFormData({ ...formData, conteudo: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, conteudo: e.target.value })
+                }
                 rows={4}
               />
             </div>
 
-            <div className="flex gap-2 justify-end">
+            <div className="space-y-2">
+              <Label htmlFor="agendamento">Agendamento</Label>
+              <Input
+                id="agendamento"
+                placeholder="Ex: Diariamente às 10:00"
+                value={formData.agendamento}
+                onChange={(e) =>
+                  setFormData({ ...formData, agendamento: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="flex gap-2">
               <Button
+                onClick={handleAddAutomation}
+                className="bg-green-600 hover:bg-green-700"
+                disabled={criarMutation.isPending || atualizarMutation.isPending}
+              >
+                {editingId ? "Atualizar" : "Criar"} Automação
+              </Button>
+              <Button
+                onClick={resetForm}
                 variant="outline"
-                onClick={() => {
-                  setShowForm(false);
-                  setEditingId(null);
-                }}
               >
                 Cancelar
-              </Button>
-              <Button onClick={handleAddAutomation}>
-                {editingId ? "Atualizar" : "Criar"} Automação
               </Button>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Lista de Automações */}
-      <Tabs defaultValue="todas" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="todas">Todas ({automacoes.length})</TabsTrigger>
-          <TabsTrigger value="ativas">
-            Ativas ({automacoes.filter((a) => a.status === "ativo").length})
-          </TabsTrigger>
-          <TabsTrigger value="pausadas">
-            Pausadas ({automacoes.filter((a) => a.status === "pausado").length})
-          </TabsTrigger>
-          <TabsTrigger value="agendadas">
-            Agendadas ({automacoes.filter((a) => a.status === "agendado").length})
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="todas" className="space-y-4">
-          {automacoes.length === 0 ? (
-            <Card>
-              <CardContent className="pt-6 text-center">
-                <Zap className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">
-                  Nenhuma automação criada. Crie uma para começar!
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            automacoes.map((automacao) => (
-              <Card key={automacao.id}>
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(automacao.status)}
-                        <h3 className="font-semibold">{automacao.nome}</h3>
-                        <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-                          {automacao.plataforma}
-                        </span>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{automacao.conteudo}</p>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <span>📅 {automacao.agendamento}</span>
-                        {automacao.proxima_execucao && (
-                          <span>⏰ Próxima: {automacao.proxima_execucao}</span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleToggleStatus(automacao.id)}
-                      >
-                        {automacao.status === "ativo" ? (
-                          <Pause className="w-4 h-4" />
-                        ) : (
-                          <Play className="w-4 h-4" />
-                        )}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(automacao)}
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(automacao.id)}
-                      >
-                        <Trash2 className="w-4 h-4 text-red-500" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </TabsContent>
-
-        <TabsContent value="ativas" className="space-y-4">
-          {automacoes
-            .filter((a) => a.status === "ativo")
-            .map((automacao) => (
-              <Card key={automacao.id}>
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="font-semibold">{automacao.nome}</h3>
-                      <p className="text-sm text-muted-foreground">{automacao.conteudo}</p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleToggleStatus(automacao.id)}
-                    >
-                      <Pause className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-        </TabsContent>
-
-        <TabsContent value="pausadas" className="space-y-4">
-          {automacoes
-            .filter((a) => a.status === "pausado")
-            .map((automacao) => (
-              <Card key={automacao.id}>
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="font-semibold">{automacao.nome}</h3>
-                      <p className="text-sm text-muted-foreground">{automacao.conteudo}</p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleToggleStatus(automacao.id)}
-                    >
-                      <Play className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-        </TabsContent>
-
-        <TabsContent value="agendadas" className="space-y-4">
-          {automacoes
-            .filter((a) => a.status === "agendado")
-            .map((automacao) => (
-              <Card key={automacao.id}>
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="font-semibold">{automacao.nome}</h3>
-                      <p className="text-sm text-muted-foreground">{automacao.conteudo}</p>
-                      <p className="text-xs text-blue-600 mt-2">
-                        Próxima execução: {automacao.proxima_execucao}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-        </TabsContent>
-      </Tabs>
+      <div className="grid gap-4">
+        {automacoes.map((automacao) => (
+          <Card key={automacao.id} className="hover:shadow-lg transition-shadow">
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <CardTitle className="flex items-center gap-2">
+                    {automacao.nome}
+                    {automacao.status === "ativo" && (
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                    )}
+                  </CardTitle>
+                  <CardDescription className="mt-1">
+                    {automacao.tipo} • {automacao.plataforma} • {automacao.agendamento}
+                  </CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleExecute(automacao)}
+                    disabled={executarMutation.isPending}
+                  >
+                    <Play className="w-4 h-4 mr-1" />
+                    Executar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleEdit(automacao)}
+                  >
+                    <Edit2 className="w-4 h-4 mr-1" />
+                    Editar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => handleDelete(automacao.id)}
+                    disabled={deletarMutation.isPending}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-700 mb-3">{automacao.conteudo}</p>
+              <div className="flex items-center justify-between text-xs text-gray-500">
+                <span>Status: {automacao.status}</span>
+                {automacao.proxima_execucao && (
+                  <span>{automacao.proxima_execucao}</span>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }

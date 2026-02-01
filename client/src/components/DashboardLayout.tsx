@@ -32,6 +32,7 @@ const menuItems = [
   { icon: LayoutDashboard, label: "Integrações", path: "/integraciones" },
   { icon: LayoutDashboard, label: "Performance", path: "/performance" },
   { icon: LayoutDashboard, label: "Automações", path: "/automaciones" },
+  { icon: LayoutDashboard, label: "Campanhas", path: "/campanhas" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";

@@ -4,6 +4,7 @@ import Home from "@/pages/Home";
 import Integrations from "@/pages/Integrations";
 import Performance from "@/pages/Performance";
 import Automations from "@/pages/Automations";
+import Campaigns from "@/pages/Campaigns";
 
 export default function App() {
   const [location] = useLocation();
@@ -18,6 +19,8 @@ export default function App() {
         return <Performance />;
       case "/automaciones":
         return <Automations />;
+      case "/campanhas":
+        return <Campaigns />;
       default:
         return <Home />;
     }
