@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell, Instagram, BarChart3, Sparkles, Clock, DollarSign, Ticket, Edit, Music, Cloud, MessageSquare, Database, Download, ShoppingCart, Lightbulb, Palette, Brain, Smartphone, CreditCard, Copy, TrendingDown, Share2, Mail, BookOpen, AlertTriangle } from "lucide-react";
+import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell, Instagram, BarChart3, Sparkles, Clock, DollarSign, Ticket, Edit, Music, Cloud, MessageSquare, Database, Download, ShoppingCart, Lightbulb, Palette, Brain, Smartphone, CreditCard, Copy, TrendingDown, Share2, Mail, BookOpen, AlertTriangle, Heart } from "lucide-react";
 import PersonasSection from "@/components/PersonasSection";
 import PlanejamentoSection from "@/components/PlanejamentoSection";
 import RoteiroSection from "@/components/RoteiroSection";
@@ -131,6 +131,9 @@ import { AnalisesCompetitivaSection } from '@/components/AnalisesCompetitivaSect
 import { GoogleAnalytics4Section } from '@/components/GoogleAnalytics4Section';
 import { SistemaRecomendacaoInteligenteSection } from '@/components/SistemaRecomendacaoInteligenteSection';
 import { OtimizacaoFunilSection } from '@/components/OtimizacaoFunilSection';
+import { AnaliseSentimentoRedesSociaisSection } from '@/components/AnaliseSentimentoRedesSociaisSection';
+import { RecomendacaoOrcamentoCanalSection } from '@/components/RecomendacaoOrcamentoCanalSection';
+import { IntegracaoCanvaSection } from '@/components/IntegracaoCanvaSection';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -711,6 +714,18 @@ export default function Home() {
               <MessageCircle className="w-4 h-4" />
               <span className="hidden sm:inline">WhatsApp</span>
             </TabsTrigger>
+            <TabsTrigger value="sentimento-redes" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Heart className="w-4 h-4" />
+              <span className="hidden sm:inline">Sentimento</span>
+            </TabsTrigger>
+            <TabsTrigger value="orcamento-canais" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <DollarSign className="w-4 h-4" />
+              <span className="hidden sm:inline">Orçamento</span>
+            </TabsTrigger>
+            <TabsTrigger value="canva-integracao" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Palette className="w-4 h-4" />
+              <span className="hidden sm:inline">Canva</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -1223,6 +1238,18 @@ export default function Home() {
 
           <TabsContent value="whatsapp-integracao" className="space-y-6">
             <IntegracaoWhatsAppSection />
+          </TabsContent>
+
+          <TabsContent value="sentimento-redes" className="space-y-6">
+            <AnaliseSentimentoRedesSociaisSection />
+          </TabsContent>
+
+          <TabsContent value="orcamento-canais" className="space-y-6">
+            <RecomendacaoOrcamentoCanalSection />
+          </TabsContent>
+
+          <TabsContent value="canva-integracao" className="space-y-6">
+            <IntegracaoCanvaSection />
           </TabsContent>
         </Tabs>
       </section>
