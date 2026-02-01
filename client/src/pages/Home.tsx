@@ -160,7 +160,7 @@ export default function Home() {
         <div className="container py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold" style={{color: '#A63D4A'}}>
                 Feminnita
               </h1>
               <p className="text-sm text-slate-600 mt-1">Estratégia de Marketing Digital Completa</p>
@@ -174,7 +174,7 @@ export default function Home() {
 
       {/* Hero Section */}
       <section className="container py-12">
-        <div className="bg-gradient-to-r from-rose-50 to-pink-50 rounded-2xl border border-rose-200/50 p-8">
+        <div className="bg-white rounded-2xl border border-amber-200 p-8">
           <div className="max-w-3xl">
             <h2 className="text-2xl font-bold text-slate-900 mb-3">
               Sua Estratégia de Marketing Digital Personalizada
@@ -183,20 +183,20 @@ export default function Home() {
               Descubra como captar clientes potenciais através de 4 personas de influenciadoras humanizadas, planejamento semanal de conteúdo, roteiros de vídeos para stories e ads, além de análise de tendências virais do TikTok que já venderam milhares de peças.
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white rounded-lg p-4 border border-rose-100">
-                <Users className="w-5 h-5 text-rose-600 mb-2" />
+              <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
+                <Users className="w-5 h-5 mb-2" style={{color: '#A63D4A'}} />
                 <p className="text-sm font-semibold text-slate-900">4 Personas</p>
               </div>
-              <div className="bg-white rounded-lg p-4 border border-rose-100">
-                <Calendar className="w-5 h-5 text-rose-600 mb-2" />
+              <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
+                <Calendar className="w-5 h-5 mb-2" style={{color: '#A63D4A'}} />
                 <p className="text-sm font-semibold text-slate-900">Planejamento Semanal</p>
               </div>
-              <div className="bg-white rounded-lg p-4 border border-rose-100">
-                <Video className="w-5 h-5 text-rose-600 mb-2" />
+              <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
+                <Video className="w-5 h-5 mb-2" style={{color: '#A63D4A'}} />
                 <p className="text-sm font-semibold text-slate-900">Roteiros de Vídeos</p>
               </div>
-              <div className="bg-white rounded-lg p-4 border border-rose-100">
-                <TrendingUp className="w-5 h-5 text-rose-600 mb-2" />
+              <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
+                <TrendingUp className="w-5 h-5 mb-2" style={{color: '#A63D4A'}} />
                 <p className="text-sm font-semibold text-slate-900">Tendências TikTok</p>
               </div>
             </div>
