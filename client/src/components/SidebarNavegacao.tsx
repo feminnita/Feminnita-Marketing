@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Search, Home } from 'lucide-react';
+'use client';
+
+import { useState } from 'react';
+import { ChevronDown, ChevronUp, Search, Menu, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 interface AbaItem {
@@ -48,10 +50,9 @@ const categorias: Categoria[] = [
     abas: [
       { id: 'dashboard-exec', label: 'Dashboard Executivo', icon: '📊' },
       { id: 'google-analytics', label: 'Google Analytics 4', icon: '📈' },
-      { id: 'analise-competitiva', label: 'Análise Competitiva', icon: '🏆' },
-      { id: 'concorrencia-tempo-real', label: 'Concorrência Real-time', icon: '⚡' },
-      { id: 'ltv-detalhado', label: 'Lifetime Value', icon: '💰' },
-      { id: 'roi-segmento', label: 'ROI por Segmento', icon: '💵' },
+      { id: 'roi-consolidado', label: 'ROI Consolidado', icon: '💰' },
+      { id: 'performance-persona', label: 'Performance Persona', icon: '👥' },
+      { id: 'metricas-realtime', label: 'Métricas Real-time', icon: '⚡' },
     ],
   },
   {
@@ -59,64 +60,60 @@ const categorias: Categoria[] = [
     icon: '📢',
     abas: [
       { id: 'email-marketing', label: 'Email Marketing', icon: '📧' },
-      { id: 'facebook-ads', label: 'Facebook Ads', icon: 'f' },
-      { id: 'instagram-ads', label: 'Instagram Ads', icon: '📷' },
-      { id: 'tiktok-ads', label: 'TikTok Ads', icon: '🎵' },
-      { id: 'meta-vs-google', label: 'Meta vs Google', icon: '⚖️' },
-      { id: 'whatsapp-integracao', label: 'WhatsApp', icon: '💬' },
+      { id: 'meta-ads', label: 'Meta Ads', icon: '📱' },
+      { id: 'google-ads', label: 'Google Ads', icon: '🔍' },
+      { id: 'whatsapp', label: 'WhatsApp', icon: '💬' },
+      { id: 'automacao-email', label: 'Automação Email', icon: '🤖' },
     ],
   },
   {
     nome: 'Integrações',
     icon: '🔗',
     abas: [
-      { id: 'automacao-bling', label: 'Bling ERP', icon: '📦' },
-      { id: 'integracao-tray', label: 'Tray', icon: '🛒' },
-      { id: 'crm-clientes', label: 'CRM', icon: '👥' },
-      { id: 'apis-integracao', label: 'APIs', icon: '⚙️' },
+      { id: 'bling', label: 'Bling ERP', icon: '📦' },
+      { id: 'tray', label: 'Tray', icon: '🛒' },
+      { id: 'zapier', label: 'Zapier', icon: '⚙️' },
+      { id: 'slack', label: 'Slack', icon: '💼' },
+      { id: 'google-drive', label: 'Google Drive', icon: '☁️' },
     ],
   },
   {
     nome: 'IA & Automação',
     icon: '🤖',
     abas: [
-      { id: 'demanda-ml', label: 'Previsão Demanda ML', icon: '🧠' },
-      { id: 'respostas-ia', label: 'Respostas IA', icon: '💬' },
-      { id: 'recomendacao-ia', label: 'Recomendação IA', icon: '⭐' },
-      { id: 'automacao-segmentacao', label: 'Auto Segmentação', icon: '⚡' },
-      { id: 'previsao-churn', label: 'Previsão Churn', icon: '⚠️' },
+      { id: 'chatbot', label: 'Chatbot IA', icon: '💬' },
+      { id: 'geracao-conteudo', label: 'Geração Conteúdo', icon: '✨' },
+      { id: 'previsao-demanda', label: 'Previsão Demanda', icon: '🔮' },
+      { id: 'recomendacao', label: 'Recomendação', icon: '💡' },
+      { id: 'automacao-respostas', label: 'Respostas IA', icon: '🤖' },
     ],
   },
   {
     nome: 'Relatórios & Exportação',
     icon: '📄',
     abas: [
-      { id: 'relatorios-mensais', label: 'Relatórios Mensais', icon: '📋' },
-      { id: 'google-sheets', label: 'Google Sheets', icon: '📊' },
-      { id: 'manual', label: 'Manual', icon: '📖' },
-      { id: 'relatorio-influenciadores', label: 'Personas ROI', icon: '⭐' },
+      { id: 'relatorio', label: 'Relatórios', icon: '📊' },
+      { id: 'exportar', label: 'Exportar', icon: '📥' },
+      { id: 'crm', label: 'CRM', icon: '👥' },
+      { id: 'afiliados', label: 'Afiliados', icon: '🤝' },
+      { id: 'notificacoes', label: 'Notificações', icon: '🔔' },
     ],
   },
 ];
 
 export default function SidebarNavegacao({ onSelectTab, activeTab }: SidebarNavegacaoProps) {
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
-    new Set(['Personas & Planejamento', 'Análise & Dados'])
+  const [isOpen, setIsOpen] = useState(true);
+  const [expandedCategories, setExpandedCategories] = useState<string[]>(
+    categorias.map(c => c.nome)
   );
   const [searchTerm, setSearchTerm] = useState('');
 
-  const toggleCategory = (categoria: string) => {
-    const newExpanded = new Set(expandedCategories);
-    if (newExpanded.has(categoria)) {
-      newExpanded.delete(categoria);
-    } else {
-      newExpanded.add(categoria);
-    }
-    setExpandedCategories(newExpanded);
-  };
-
-  const handleTabClick = (tabId: string) => {
-    onSelectTab(tabId);
+  const toggleCategory = (categoryName: string) => {
+    setExpandedCategories(prev =>
+      prev.includes(categoryName)
+        ? prev.filter(c => c !== categoryName)
+        : [...prev, categoryName]
+    );
   };
 
   const filteredCategorias = categorias.map(cat => ({
@@ -127,73 +124,158 @@ export default function SidebarNavegacao({ onSelectTab, activeTab }: SidebarNave
   })).filter(cat => cat.abas.length > 0 || searchTerm === '');
 
   return (
-    <div className="w-64 bg-white border-r border-amber-200 h-screen overflow-y-auto flex flex-col sticky top-0">
-      {/* Header */}
-      <div className="p-4 border-b border-amber-200 bg-white">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 bg-gradient-to-r from-amber-700 to-amber-600 rounded-lg flex items-center justify-center">
-            <Home className="w-4 h-4 text-white" />
-          </div>
-          <h2 className="font-bold text-amber-900" style={{color: '#A63D4A'}}>Feminnita</h2>
-        </div>
-        
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-2 top-2.5 w-4 h-4 text-amber-400" />
-          <Input
-            placeholder="Buscar aba..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8 h-8 text-sm border-amber-200 bg-white"
-          />
-        </div>
-      </div>
+    <>
+      {/* Botão Toggle para Mobile/Desktop */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="fixed top-4 left-4 z-50 lg:hidden bg-white border border-amber-200 p-2 rounded-lg hover:bg-amber-50 transition-colors"
+        title={isOpen ? 'Fechar menu' : 'Abrir menu'}
+      >
+        {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+      </button>
 
-      {/* Categorias */}
-      <div className="flex-1 overflow-y-auto p-2">
-        {filteredCategorias.map((categoria) => (
-          <div key={categoria.nome} className="mb-2">
-            <button
-              onClick={() => toggleCategory(categoria.nome)}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-amber-200 transition-colors text-sm font-semibold text-amber-900"
-            >
-              <div className="flex items-center gap-2">
-                <span>{categoria.icon}</span>
-                <span>{categoria.nome}</span>
+      {/* Overlay para Mobile */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`fixed lg:relative top-0 left-0 h-screen bg-white border-r border-amber-200 z-40 transition-all duration-300 ease-in-out ${
+          isOpen ? 'w-64' : 'w-0 lg:w-20'
+        } overflow-hidden`}
+      >
+        <div className="flex flex-col h-full">
+          {/* Header */}
+          <div className="p-4 border-b border-amber-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className={`flex items-center gap-2 transition-opacity ${isOpen ? 'opacity-100' : 'opacity-0'}`}>
+                <span className="text-2xl">🏠</span>
+                <span className="font-bold" style={{ color: '#A63D4A' }}>
+                  Feminnita
+                </span>
               </div>
-              {expandedCategories.has(categoria.nome) ? (
-                <ChevronUp className="w-4 h-4" />
-              ) : (
-                <ChevronDown className="w-4 h-4" />
-              )}
-            </button>
+              <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="hidden lg:block p-1 hover:bg-amber-50 rounded transition-colors"
+                title={isOpen ? 'Retrair' : 'Expandir'}
+              >
+                {isOpen ? (
+                  <ChevronUp className="w-5 h-5" style={{ color: '#A63D4A' }} />
+                ) : (
+                  <ChevronDown className="w-5 h-5" style={{ color: '#A63D4A' }} />
+                )}
+              </button>
+            </div>
 
-            {expandedCategories.has(categoria.nome) && (
-              <div className="ml-2 mt-1 space-y-1">
-                {categoria.abas.map((aba) => (
-                  <button
-                    key={aba.id}
-                    onClick={() => handleTabClick(aba.id)}
-                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
-                      activeTab === aba.id
-                        ? 'bg-amber-200 text-amber-900 font-semibold'
-                        : 'text-amber-700 hover:bg-amber-150'
-                    }`}
-                  >
-                    <span>{aba.icon}</span>
-                    <span>{aba.label}</span>
-                  </button>
+            {/* Search */}
+            {isOpen && (
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 w-4 h-4 text-amber-600" />
+                <Input
+                  placeholder="Buscar aba..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8 py-1 text-sm border-amber-200 focus:border-amber-400"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Categories */}
+          <div className="flex-1 overflow-y-auto">
+            {isOpen ? (
+              <div className="space-y-2 p-4">
+                {filteredCategorias.map((categoria) => (
+                  <div key={categoria.nome}>
+                    <button
+                      onClick={() => toggleCategory(categoria.nome)}
+                      className="w-full flex items-center gap-2 p-2 rounded hover:bg-amber-50 transition-colors text-left"
+                    >
+                      <span className="text-lg">{categoria.icon}</span>
+                      <span className="flex-1 font-medium text-sm" style={{ color: '#A63D4A' }}>
+                        {categoria.nome}
+                      </span>
+                      {expandedCategories.includes(categoria.nome) ? (
+                        <ChevronUp className="w-4 h-4" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4" />
+                      )}
+                    </button>
+
+                    {/* Abas */}
+                    {expandedCategories.includes(categoria.nome) && (
+                      <div className="ml-4 space-y-1 mt-1">
+                        {categoria.abas.map((aba) => (
+                          <button
+                            key={aba.id}
+                            onClick={() => {
+                              onSelectTab(aba.id);
+                              setIsOpen(false);
+                            }}
+                            className={`w-full flex items-center gap-2 p-2 rounded text-sm transition-colors text-left ${
+                              activeTab === aba.id
+                                ? 'bg-amber-100 text-slate-900'
+                                : 'hover:bg-amber-50 text-slate-700'
+                            }`}
+                          >
+                            <span className="text-base">{aba.icon}</span>
+                            <span className="truncate">{aba.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              // Modo Retraído - Apenas Ícones
+              <div className="space-y-2 p-2">
+                {filteredCategorias.map((categoria) => (
+                  <div key={categoria.nome} className="space-y-1">
+                    <button
+                      onClick={() => toggleCategory(categoria.nome)}
+                      className="w-full flex justify-center p-2 rounded hover:bg-amber-50 transition-colors"
+                      title={categoria.nome}
+                    >
+                      <span className="text-xl">{categoria.icon}</span>
+                    </button>
+
+                    {expandedCategories.includes(categoria.nome) && (
+                      <div className="space-y-1">
+                        {categoria.abas.map((aba) => (
+                          <button
+                            key={aba.id}
+                            onClick={() => onSelectTab(aba.id)}
+                            className={`w-full flex justify-center p-2 rounded text-sm transition-colors ${
+                              activeTab === aba.id
+                                ? 'bg-amber-100'
+                                : 'hover:bg-amber-50'
+                            }`}
+                            title={aba.label}
+                          >
+                            <span className="text-base">{aba.icon}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
           </div>
-        ))}
-      </div>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-amber-200 bg-white text-xs text-amber-700">
-        <p>138 abas disponíveis</p>
-      </div>
-    </div>
+          {/* Footer */}
+          {isOpen && (
+            <div className="p-4 border-t border-amber-200 text-xs text-slate-500">
+              <p>138 abas disponíveis</p>
+            </div>
+          )}
+        </div>
+      </aside>
+    </>
   );
 }
