@@ -5,6 +5,9 @@ import { publicProcedure, router } from "./_core/trpc";
 import { blingOAuthRouter } from "./routers/bling-oauth";
 import { blingRouter } from "./routers/bling";
 import { blingSyncRouter } from "./routers/bling-sync";
+import { metaAdsRouter } from "./routers/meta-ads";
+import { googleAdsRouter } from "./routers/google-ads";
+import { whatsappRouter } from "./routers/whatsapp";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -24,6 +27,15 @@ export const appRouter = router({
   blingOAuth: blingOAuthRouter,
   bling: blingRouter,
   blingSync: blingSyncRouter,
+
+  // Meta Ads integration
+  metaAds: metaAdsRouter,
+
+  // Google Ads integration
+  googleAds: googleAdsRouter,
+
+  // WhatsApp integration
+  whatsapp: whatsappRouter,
 
   // TODO: add feature routers here, e.g.
   // todo: router({
