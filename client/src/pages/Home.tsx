@@ -112,6 +112,9 @@ import { IntegracaoInstagramAdsSection } from '@/components/IntegracaoInstagramA
 import { IntegracaoFacebookAdsSection } from '@/components/IntegracaoFacebookAdsSection';
 import { SegmentacaoClientesSection } from '@/components/SegmentacaoClientesSection';
 import { ComparadorEstrategiasABTestingSection } from '@/components/ComparadorEstrategiasABTestingSection';
+import { ComparativoMetaGoogleAdsSection } from '@/components/ComparativoMetaGoogleAdsSection';
+import { AutomacaoSegmentacaoClientesSection } from '@/components/AutomacaoSegmentacaoClientesSection';
+import { RelatorioROISegmentoSection } from '@/components/RelatorioROISegmentoSection';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -612,6 +615,18 @@ export default function Home() {
               <BarChart3 className="w-4 h-4" />
               <span className="hidden sm:inline">Comparador</span>
             </TabsTrigger>
+            <TabsTrigger value="meta-vs-google" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <TrendingUp className="w-4 h-4" />
+              <span className="hidden sm:inline">Meta vs Google</span>
+            </TabsTrigger>
+            <TabsTrigger value="automacao-segmentacao" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Zap className="w-4 h-4" />
+              <span className="hidden sm:inline">Auto Segm.</span>
+            </TabsTrigger>
+            <TabsTrigger value="roi-segmento" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <DollarSign className="w-4 h-4" />
+              <span className="hidden sm:inline">ROI Segm.</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -1044,6 +1059,18 @@ export default function Home() {
 
           <TabsContent value="comparador-ab" className="space-y-6">
             <ComparadorEstrategiasABTestingSection />
+          </TabsContent>
+
+          <TabsContent value="meta-vs-google" className="space-y-6">
+            <ComparativoMetaGoogleAdsSection />
+          </TabsContent>
+
+          <TabsContent value="automacao-segmentacao" className="space-y-6">
+            <AutomacaoSegmentacaoClientesSection />
+          </TabsContent>
+
+          <TabsContent value="roi-segmento" className="space-y-6">
+            <RelatorioROISegmentoSection />
           </TabsContent>
         </Tabs>
       </section>
