@@ -124,6 +124,9 @@ import { RelatorioInfluenciadoresSection } from '@/components/RelatorioInfluenci
 import { PrevisaoChurnSection } from '@/components/PrevisaoChurnSection';
 import { IntegracaoTraySection } from '@/components/IntegracaoTraySection';
 import { RentabilidadeProdutoSection } from '@/components/RentabilidadeProdutoSection';
+import { PrevisaoDemandaSection } from '@/components/PrevisaoDemandaSection';
+import { AutomacaoEmailInteligenteSection } from '@/components/AutomacaoEmailInteligenteSection';
+import { LifetimeValueDetalhadoSection } from '@/components/LifetimeValueDetalhadoSection';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -672,6 +675,18 @@ export default function Home() {
               <DollarSign className="w-4 h-4" />
               <span className="hidden sm:inline">Rentab.</span>
             </TabsTrigger>
+            <TabsTrigger value="previsao-demanda" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <TrendingUp className="w-4 h-4" />
+              <span className="hidden sm:inline">Demanda</span>
+            </TabsTrigger>
+            <TabsTrigger value="automacao-email" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Mail className="w-4 h-4" />
+              <span className="hidden sm:inline">Email</span>
+            </TabsTrigger>
+            <TabsTrigger value="ltv-detalhado" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Target className="w-4 h-4" />
+              <span className="hidden sm:inline">LTV</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -1152,6 +1167,18 @@ export default function Home() {
 
           <TabsContent value="rentabilidade-produto" className="space-y-6">
             <RentabilidadeProdutoSection />
+          </TabsContent>
+
+          <TabsContent value="previsao-demanda" className="space-y-6">
+            <PrevisaoDemandaSection />
+          </TabsContent>
+
+          <TabsContent value="automacao-email" className="space-y-6">
+            <AutomacaoEmailInteligenteSection />
+          </TabsContent>
+
+          <TabsContent value="ltv-detalhado" className="space-y-6">
+            <LifetimeValueDetalhadoSection />
           </TabsContent>
         </Tabs>
       </section>
