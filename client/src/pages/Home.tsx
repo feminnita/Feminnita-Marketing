@@ -36,7 +36,7 @@ import DashboardROIConsolidadoSection from "@/components/DashboardROIConsolidado
 import IntegracaoSlackEmailSection from "@/components/IntegracaoSlackEmailSection";
 import PrevisaoVendasSection from "@/components/PrevisaoVendasSection";
 import ComparativoConcorrentesSection from "@/components/ComparativoConcorrentesSection";
-import IntegracaoWhatsAppSection from "@/components/IntegracaoWhatsAppSection";
+import { IntegracaoWhatsAppSection } from "@/components/IntegracaoWhatsAppSection";
 import AtribuicaoVendasSection from "@/components/AtribuicaoVendasSection";
 import ChatIASection from "@/components/ChatIASection";
 import CalendarioConteudoSection from "@/components/CalendarioConteudoSection";
@@ -130,6 +130,7 @@ import { LifetimeValueDetalhadoSection } from '@/components/LifetimeValueDetalha
 import { AnalisesCompetitivaSection } from '@/components/AnalisesCompetitivaSection';
 import { GoogleAnalytics4Section } from '@/components/GoogleAnalytics4Section';
 import { SistemaRecomendacaoInteligenteSection } from '@/components/SistemaRecomendacaoInteligenteSection';
+import { OtimizacaoFunilSection } from '@/components/OtimizacaoFunilSection';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -702,6 +703,14 @@ export default function Home() {
               <Zap className="w-4 h-4" />
               <span className="hidden sm:inline">Recomendação</span>
             </TabsTrigger>
+            <TabsTrigger value="otimizacao-funil" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <TrendingUp className="w-4 h-4" />
+              <span className="hidden sm:inline">Funil</span>
+            </TabsTrigger>
+            <TabsTrigger value="whatsapp-integracao" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <MessageCircle className="w-4 h-4" />
+              <span className="hidden sm:inline">WhatsApp</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -1206,6 +1215,14 @@ export default function Home() {
 
           <TabsContent value="recomendacao-ia" className="space-y-6">
             <SistemaRecomendacaoInteligenteSection />
+          </TabsContent>
+
+          <TabsContent value="otimizacao-funil" className="space-y-6">
+            <OtimizacaoFunilSection />
+          </TabsContent>
+
+          <TabsContent value="whatsapp-integracao" className="space-y-6">
+            <IntegracaoWhatsAppSection />
           </TabsContent>
         </Tabs>
       </section>
