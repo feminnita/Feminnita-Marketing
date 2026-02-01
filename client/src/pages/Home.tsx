@@ -108,7 +108,10 @@ import { AlertasAutomaticosSection } from "@/components/AlertasAutomaticosSectio
 import { IntegracaoTikTokAdsSection } from "@/components/IntegracaoTikTokAdsSection";
 import { RecomendadorProdutosIASection } from "@/components/RecomendadorProdutosIASection";
 import { ExportacaoGoogleSheetsSection } from "@/components/ExportacaoGoogleSheetsSection";
-import { IntegracaoInstagramAdsSection } from "@/components/IntegracaoInstagramAdsSection";
+import { IntegracaoInstagramAdsSection } from '@/components/IntegracaoInstagramAdsSection';
+import { IntegracaoFacebookAdsSection } from '@/components/IntegracaoFacebookAdsSection';
+import { SegmentacaoClientesSection } from '@/components/SegmentacaoClientesSection';
+import { ComparadorEstrategiasABTestingSection } from '@/components/ComparadorEstrategiasABTestingSection';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -597,6 +600,18 @@ export default function Home() {
               <TrendingUp className="w-4 h-4" />
               <span className="hidden sm:inline">Instagram</span>
             </TabsTrigger>
+            <TabsTrigger value="facebook-ads" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <TrendingUp className="w-4 h-4" />
+              <span className="hidden sm:inline">Facebook</span>
+            </TabsTrigger>
+            <TabsTrigger value="segmentacao" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:inline">Segmentação</span>
+            </TabsTrigger>
+            <TabsTrigger value="comparador-ab" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <BarChart3 className="w-4 h-4" />
+              <span className="hidden sm:inline">Comparador</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -1017,6 +1032,18 @@ export default function Home() {
 
           <TabsContent value="instagram-ads" className="space-y-6">
             <IntegracaoInstagramAdsSection />
+          </TabsContent>
+
+          <TabsContent value="facebook-ads" className="space-y-6">
+            <IntegracaoFacebookAdsSection />
+          </TabsContent>
+
+          <TabsContent value="segmentacao" className="space-y-6">
+            <SegmentacaoClientesSection />
+          </TabsContent>
+
+          <TabsContent value="comparador-ab" className="space-y-6">
+            <ComparadorEstrategiasABTestingSection />
           </TabsContent>
         </Tabs>
       </section>
