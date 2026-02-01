@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell, Instagram, BarChart3, Sparkles, Clock, DollarSign, Ticket, Edit, Music, Cloud, MessageSquare, Database, Download, ShoppingCart, Lightbulb, Palette, Brain, Smartphone, CreditCard, Copy, TrendingDown } from "lucide-react";
+import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell, Instagram, BarChart3, Sparkles, Clock, DollarSign, Ticket, Edit, Music, Cloud, MessageSquare, Database, Download, ShoppingCart, Lightbulb, Palette, Brain, Smartphone, CreditCard, Copy, TrendingDown, Share2, Mail } from "lucide-react";
 import PersonasSection from "@/components/PersonasSection";
 import PlanejamentoSection from "@/components/PlanejamentoSection";
 import RoteiroSection from "@/components/RoteiroSection";
@@ -98,6 +98,9 @@ import { SistemaFeedbackClientesSection } from "@/components/SistemaFeedbackClie
 import { IntegracaoTawkIntercomSection } from "@/components/IntegracaoTawkIntercomSection";
 import { RelatorioCohortAnalysisSection } from "@/components/RelatorioCohortAnalysisSection";
 import { PrevisaoChurnIASection } from "@/components/PrevisaoChurnIASection";
+import { DashboardLTVPersonaSection } from "@/components/DashboardLTVPersonaSection";
+import { ProgramaReferenciaAutomaticoSection } from "@/components/ProgramaReferenciaAutomaticoSection";
+import { IntegracaoEmailMarketingSection } from "@/components/IntegracaoEmailMarketingSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -542,6 +545,18 @@ export default function Home() {
               <TrendingDown className="w-4 h-4" />
               <span className="hidden sm:inline">Churn IA</span>
             </TabsTrigger>
+            <TabsTrigger value="ltv" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <DollarSign className="w-4 h-4" />
+              <span className="hidden sm:inline">LTV</span>
+            </TabsTrigger>
+            <TabsTrigger value="referencia" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Share2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Referência</span>
+            </TabsTrigger>
+            <TabsTrigger value="email" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Mail className="w-4 h-4" />
+              <span className="hidden sm:inline">Email</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -918,6 +933,18 @@ export default function Home() {
 
           <TabsContent value="churn-ia" className="space-y-6">
             <PrevisaoChurnIASection />
+          </TabsContent>
+
+          <TabsContent value="ltv" className="space-y-6">
+            <DashboardLTVPersonaSection />
+          </TabsContent>
+
+          <TabsContent value="referencia" className="space-y-6">
+            <ProgramaReferenciaAutomaticoSection />
+          </TabsContent>
+
+          <TabsContent value="email" className="space-y-6">
+            <IntegracaoEmailMarketingSection />
           </TabsContent>
         </Tabs>
       </section>
