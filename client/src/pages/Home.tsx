@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell, Instagram, BarChart3, Sparkles, Clock, DollarSign, Ticket, Edit, Music, Cloud, MessageSquare, Database, Download, ShoppingCart, Lightbulb, Palette, Brain, Smartphone, CreditCard, Copy, TrendingDown, Share2, Mail, BookOpen } from "lucide-react";
+import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell, Instagram, BarChart3, Sparkles, Clock, DollarSign, Ticket, Edit, Music, Cloud, MessageSquare, Database, Download, ShoppingCart, Lightbulb, Palette, Brain, Smartphone, CreditCard, Copy, TrendingDown, Share2, Mail, BookOpen, AlertTriangle } from "lucide-react";
 import PersonasSection from "@/components/PersonasSection";
 import PlanejamentoSection from "@/components/PlanejamentoSection";
 import RoteiroSection from "@/components/RoteiroSection";
@@ -121,6 +121,9 @@ import { AtribuicaoMulticanalSection } from '@/components/AtribuicaoMulticanalSe
 import { ManualSection } from '@/components/ManualSection';
 import { AutomacaoBlingSection } from '@/components/AutomacaoBlingSection';
 import { RelatorioInfluenciadoresSection } from '@/components/RelatorioInfluenciadoresSection';
+import { PrevisaoChurnSection } from '@/components/PrevisaoChurnSection';
+import { IntegracaoTraySection } from '@/components/IntegracaoTraySection';
+import { RentabilidadeProdutoSection } from '@/components/RentabilidadeProdutoSection';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -657,6 +660,18 @@ export default function Home() {
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Personas</span>
             </TabsTrigger>
+            <TabsTrigger value="previsao-churn" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <AlertTriangle className="w-4 h-4" />
+              <span className="hidden sm:inline">Churn</span>
+            </TabsTrigger>
+            <TabsTrigger value="integracao-tray" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <ShoppingCart className="w-4 h-4" />
+              <span className="hidden sm:inline">Tray</span>
+            </TabsTrigger>
+            <TabsTrigger value="rentabilidade-produto" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <DollarSign className="w-4 h-4" />
+              <span className="hidden sm:inline">Rentab.</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -1125,6 +1140,18 @@ export default function Home() {
 
           <TabsContent value="relatorio-influenciadores" className="space-y-6">
             <RelatorioInfluenciadoresSection />
+          </TabsContent>
+
+          <TabsContent value="previsao-churn" className="space-y-6">
+            <PrevisaoChurnSection />
+          </TabsContent>
+
+          <TabsContent value="integracao-tray" className="space-y-6">
+            <IntegracaoTraySection />
+          </TabsContent>
+
+          <TabsContent value="rentabilidade-produto" className="space-y-6">
+            <RentabilidadeProdutoSection />
           </TabsContent>
         </Tabs>
       </section>
