@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -25,4 +25,27 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+// Tabela para armazenar integrações de plataformas
+export const integrations = mysqlTable("integrations", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  plataforma: mysqlEnum("plataforma", [
+    "tray",
+    "google_drive",
+    "meta",
+    "email_marketing",
+    "instagram",
+    "tiktok",
+    "facebook",
+    "whatsapp",
+    "bling",
+  ]).notNull(),
+  token: text("token").notNull(), // Armazenado criptografado
+  isConnected: boolean("isConnected").default(false).notNull(),
+  lastValidated: timestamp("lastValidated"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Integration = typeof integrations.$inferSelect;
+export type InsertIntegration = typeof integrations.$inferInsert;

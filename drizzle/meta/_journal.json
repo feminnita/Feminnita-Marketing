@@ -8,6 +8,13 @@
       "when": 1769975527363,
       "tag": "0000_wide_vision",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1769984297484,
+      "tag": "0001_same_winter_soldier",
+      "breakpoints": true
     }
   ]
 }

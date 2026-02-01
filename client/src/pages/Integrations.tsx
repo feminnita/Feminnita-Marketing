@@ -3,367 +3,303 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertCircle, CheckCircle2, Loader2, Unlink } from "lucide-react";
-// import { trpc } from "@/lib/trpc";
+import { Plug, CheckCircle, AlertCircle, Trash2, Eye, EyeOff } from "lucide-react";
+import { trpc } from "@/lib/trpc";
+
+interface PlatformIntegration {
+  plataforma: string;
+  nome: string;
+  descricao: string;
+  icon: string;
+  isConnected: boolean;
+  lastValidated?: string;
+}
+
+const PLATAFORMAS: PlatformIntegration[] = [
+  {
+    plataforma: "tray",
+    nome: "Tray",
+    descricao: "Integração com plataforma de e-commerce Tray",
+    icon: "🛍️",
+    isConnected: false,
+  },
+  {
+    plataforma: "google_drive",
+    nome: "Google Drive",
+    descricao: "Sincronize arquivos e documentos do Google Drive",
+    icon: "📁",
+    isConnected: false,
+  },
+  {
+    plataforma: "meta",
+    nome: "Meta (Facebook & Instagram)",
+    descricao: "Gerencie campanhas no Facebook e Instagram",
+    icon: "📱",
+    isConnected: false,
+  },
+  {
+    plataforma: "email_marketing",
+    nome: "Email Marketing",
+    descricao: "Integração com plataforma de email marketing",
+    icon: "📧",
+    isConnected: false,
+  },
+  {
+    plataforma: "instagram",
+    nome: "Instagram",
+    descricao: "Conecte sua conta do Instagram",
+    icon: "📸",
+    isConnected: false,
+  },
+  {
+    plataforma: "tiktok",
+    nome: "TikTok",
+    descricao: "Gerencie sua conta do TikTok",
+    icon: "🎵",
+    isConnected: false,
+  },
+  {
+    plataforma: "facebook",
+    nome: "Facebook",
+    descricao: "Conecte sua página do Facebook",
+    icon: "👍",
+    isConnected: false,
+  },
+  {
+    plataforma: "whatsapp",
+    nome: "WhatsApp Business",
+    descricao: "Integração com WhatsApp Business API",
+    icon: "💬",
+    isConnected: false,
+  },
+  {
+    plataforma: "bling",
+    nome: "Bling ERP",
+    descricao: "Sincronize dados com Bling ERP",
+    icon: "📊",
+    isConnected: false,
+  },
+];
 
 export default function Integrations() {
-  const [loading, setLoading] = useState<Record<string, boolean>>({});
+  const [integracoes, setIntegracoes] = useState<PlatformIntegration[]>(PLATAFORMAS);
+  const [expandedPlatform, setExpandedPlatform] = useState<string | null>(null);
+  const [tokens, setTokens] = useState<Record<string, string>>({});
+  const [validating, setValidating] = useState<Record<string, boolean>>({});
+  const [showToken, setShowToken] = useState<Record<string, boolean>>({});
 
-  // Meta Ads
-  const [metaAccessToken, setMetaAccessToken] = useState("");
-  const [metaConnected, setMetaConnected] = useState(false);
+  const validarConexaoMutation = trpc.integrations.validarConexao.useMutation({
+    onSuccess: (result: any) => {
+      if (result.conectado) {
+        setIntegracoes(
+          integracoes.map((i) =>
+            i.plataforma === result.plataforma
+              ? { ...i, isConnected: true, lastValidated: new Date().toLocaleString() }
+              : i
+          )
+        );
+        alert(result.mensagem);
+      } else {
+        alert(result.mensagem);
+      }
+    },
+    onError: () => {
+      alert("Erro ao validar conexão");
+    },
+  });
 
-  // Google Ads
-  const [googleAccessToken, setGoogleAccessToken] = useState("");
-  const [googleCustomerId, setGoogleCustomerId] = useState("");
-  const [googleConnected, setGoogleConnected] = useState(false);
+  const desconectarMutation = trpc.integrations.desconectar.useMutation({
+    onSuccess: (result: any) => {
+      alert(result.mensagem);
+    },
+  });
 
-  // WhatsApp
-  const [whatsappAccessToken, setWhatsappAccessToken] = useState("");
-  const [whatsappPhoneId, setWhatsappPhoneId] = useState("");
-  const [whatsappConnected, setWhatsappConnected] = useState(false);
-
-  const handleConnectMeta = async () => {
-    if (!metaAccessToken) {
-      alert("Por favor, insira o token de acesso do Meta Ads");
+  const handleValidarConexao = (plataforma: string) => {
+    const token = tokens[plataforma];
+    if (!token) {
+      alert("Por favor, cole o token primeiro");
       return;
     }
 
-    setLoading({ ...loading, meta: true });
-    try {
-      // Aqui você pode testar a conexão com a API
-      // const result = await trpc.metaAds.obterCampanhas.query({...});
-      setMetaConnected(true);
-      alert("Meta Ads conectado com sucesso!");
-    } catch (error) {
-      alert("Falha ao conectar com Meta Ads");
-    } finally {
-      setLoading({ ...loading, meta: false });
-    }
+    setValidating({ ...validating, [plataforma]: true });
+    validarConexaoMutation.mutate({ plataforma: plataforma as any, token });
+    setTimeout(() => setValidating({ ...validating, [plataforma]: false }), 2000);
   };
 
-  const handleConnectGoogle = async () => {
-    if (!googleAccessToken || !googleCustomerId) {
-      alert("Por favor, insira o token e ID do cliente do Google Ads");
-      return;
-    }
-
-    setLoading({ ...loading, google: true });
-    try {
-      setGoogleConnected(true);
-      alert("Google Ads conectado com sucesso!");
-    } catch (error) {
-      alert("Falha ao conectar com Google Ads");
-    } finally {
-      setLoading({ ...loading, google: false });
-    }
-  };
-
-  const handleConnectWhatsApp = async () => {
-    if (!whatsappAccessToken || !whatsappPhoneId) {
-      alert("Por favor, insira o token e ID do telefone do WhatsApp");
-      return;
-    }
-
-    setLoading({ ...loading, whatsapp: true });
-    try {
-      setWhatsappConnected(true);
-      alert("WhatsApp Business conectado com sucesso!");
-    } catch (error) {
-      alert("Falha ao conectar com WhatsApp");
-    } finally {
-      setLoading({ ...loading, whatsapp: false });
+  const handleDesconectar = (plataforma: string) => {
+    if (confirm(`Tem certeza que deseja desconectar ${plataforma}?`)) {
+      desconectarMutation.mutate({ plataforma: plataforma as any });
+      setIntegracoes(
+        integracoes.map((i) =>
+          i.plataforma === plataforma ? { ...i, isConnected: false } : i
+        )
+      );
+      setTokens({ ...tokens, [plataforma]: "" });
     }
   };
 
   return (
-    <div className="space-y-6 p-6">
-      <div>
-        <h1 className="text-3xl font-bold">Integrações</h1>
-        <p className="text-muted-foreground mt-2">
-          Conecte suas plataformas de marketing para automação completa
-        </p>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <Plug className="w-8 h-8" />
+            Integrações de Plataformas
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Conecte suas contas de diferentes plataformas para automação completa
+          </p>
+        </div>
       </div>
 
-      <Tabs defaultValue="meta" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="meta">Meta Ads</TabsTrigger>
-          <TabsTrigger value="google">Google Ads</TabsTrigger>
-          <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
-        </TabsList>
-
-        {/* Meta Ads Tab */}
-        <TabsContent value="meta" className="space-y-4">
-          <Card>
-            <CardHeader>
+      <div className="grid gap-3">
+        {integracoes.map((plataforma) => (
+          <Card
+            key={plataforma.plataforma}
+            className={`cursor-pointer transition-all ${
+              expandedPlatform === plataforma.plataforma
+                ? "border-blue-500 bg-blue-50"
+                : "hover:border-gray-400"
+            }`}
+          >
+            <div
+              onClick={() =>
+                setExpandedPlatform(
+                  expandedPlatform === plataforma.plataforma ? null : plataforma.plataforma
+                )
+              }
+              className="p-4"
+            >
               <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Meta Ads</CardTitle>
-                  <CardDescription>
-                    Conecte sua conta Meta para gerenciar campanhas do Facebook e Instagram
-                  </CardDescription>
+                <div className="flex items-center gap-4">
+                  <span className="text-3xl">{plataforma.icon}</span>
+                  <div>
+                    <h3 className="font-semibold text-lg">{plataforma.nome}</h3>
+                    <p className="text-sm text-gray-600">{plataforma.descricao}</p>
+                  </div>
                 </div>
-                {metaConnected && (
-                  <CheckCircle2 className="w-6 h-6 text-green-500" />
-                )}
+                <div className="flex items-center gap-2">
+                  {plataforma.isConnected ? (
+                    <div className="flex items-center gap-1 text-green-600">
+                      <CheckCircle className="w-5 h-5" />
+                      <span className="text-sm font-semibold">Conectado</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1 text-gray-500">
+                      <AlertCircle className="w-5 h-5" />
+                      <span className="text-sm font-semibold">Desconectado</span>
+                    </div>
+                  )}
+                </div>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {metaConnected ? (
-                <div className="space-y-4">
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium text-green-900">Conectado com sucesso</p>
-                      <p className="text-sm text-green-700">Sua conta Meta Ads está sincronizada</p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setMetaConnected(false);
-                      setMetaAccessToken("");
-                    }}
-                  >
-                    <Unlink className="w-4 h-4 mr-2" />
-                    Desconectar
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium text-blue-900">Como obter seu token</p>
-                      <p className="text-sm text-blue-700">
-                        Acesse{" "}
-                        <a
-                          href="https://developers.facebook.com/apps"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="underline font-medium"
-                        >
-                          Facebook Developers
-                        </a>
-                        , crie uma app e gere um token de acesso
-                      </p>
-                    </div>
-                  </div>
+            </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="meta-token">Token de Acesso</Label>
+            {expandedPlatform === plataforma.plataforma && (
+              <CardContent className="border-t pt-4 space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor={`token-${plataforma.plataforma}`}>
+                    Token / API Key / Access Token
+                  </Label>
+                  <div className="flex gap-2">
                     <Input
-                      id="meta-token"
-                      type="password"
-                      placeholder="Insira seu token de acesso Meta"
-                      value={metaAccessToken}
-                      onChange={(e) => setMetaAccessToken(e.target.value)}
+                      id={`token-${plataforma.plataforma}`}
+                      type={showToken[plataforma.plataforma] ? "text" : "password"}
+                      placeholder="Cole seu token aqui..."
+                      value={tokens[plataforma.plataforma] || ""}
+                      onChange={(e) =>
+                        setTokens({
+                          ...tokens,
+                          [plataforma.plataforma]: e.target.value,
+                        })
+                      }
                     />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() =>
+                        setShowToken({
+                          ...showToken,
+                          [plataforma.plataforma]: !showToken[plataforma.plataforma],
+                        })
+                      }
+                    >
+                      {showToken[plataforma.plataforma] ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </Button>
                   </div>
+                  <p className="text-xs text-gray-500">
+                    Seu token será armazenado de forma segura e criptografada
+                  </p>
+                </div>
 
+                <div className="flex gap-2 flex-wrap">
                   <Button
-                    onClick={handleConnectMeta}
-                    disabled={loading.meta || !metaAccessToken}
-                    className="w-full"
+                    onClick={() => handleValidarConexao(plataforma.plataforma)}
+                    className="bg-blue-600 hover:bg-blue-700"
+                    disabled={validating[plataforma.plataforma] || !tokens[plataforma.plataforma]}
                   >
-                    {loading.meta && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    Conectar Meta Ads
+                    {validating[plataforma.plataforma] ? "Validando..." : "Validar Conexão"}
                   </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
 
-        {/* Google Ads Tab */}
-        <TabsContent value="google" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Google Ads</CardTitle>
-                  <CardDescription>
-                    Conecte sua conta Google Ads para gerenciar campanhas de anúncios
-                  </CardDescription>
+                  {plataforma.isConnected && (
+                    <Button
+                      onClick={() => handleDesconectar(plataforma.plataforma)}
+                      variant="destructive"
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Desconectar
+                    </Button>
+                  )}
                 </div>
-                {googleConnected && (
-                  <CheckCircle2 className="w-6 h-6 text-green-500" />
+
+                {plataforma.lastValidated && (
+                  <p className="text-xs text-green-600">
+                    Última validação: {plataforma.lastValidated}
+                  </p>
                 )}
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {googleConnected ? (
-                <div className="space-y-4">
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium text-green-900">Conectado com sucesso</p>
-                      <p className="text-sm text-green-700">Sua conta Google Ads está sincronizada</p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setGoogleConnected(false);
-                      setGoogleAccessToken("");
-                      setGoogleCustomerId("");
-                    }}
-                  >
-                    <Unlink className="w-4 h-4 mr-2" />
-                    Desconectar
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium text-blue-900">Como obter suas credenciais</p>
-                      <p className="text-sm text-blue-700">
-                        Acesse{" "}
-                        <a
-                          href="https://developers.google.com/google-ads/api"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="underline font-medium"
-                        >
-                          Google Ads API Console
-                        </a>
-                        , crie um projeto e gere suas credenciais
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="google-token">Token de Acesso</Label>
-                    <Input
-                      id="google-token"
-                      type="password"
-                      placeholder="Insira seu token de acesso Google"
-                      value={googleAccessToken}
-                      onChange={(e) => setGoogleAccessToken(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="google-customer">ID do Cliente</Label>
-                    <Input
-                      id="google-customer"
-                      placeholder="Ex: 1234567890"
-                      value={googleCustomerId}
-                      onChange={(e) => setGoogleCustomerId(e.target.value)}
-                    />
-                  </div>
-
-                  <Button
-                    onClick={handleConnectGoogle}
-                    disabled={loading.google || !googleAccessToken || !googleCustomerId}
-                    className="w-full"
-                  >
-                    {loading.google && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    Conectar Google Ads
-                  </Button>
-                </div>
-              )}
-            </CardContent>
+              </CardContent>
+            )}
           </Card>
-        </TabsContent>
+        ))}
+      </div>
 
-        {/* WhatsApp Tab */}
-        <TabsContent value="whatsapp" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>WhatsApp Business</CardTitle>
-                  <CardDescription>
-                    Conecte sua conta WhatsApp para automação de mensagens
-                  </CardDescription>
-                </div>
-                {whatsappConnected && (
-                  <CheckCircle2 className="w-6 h-6 text-green-500" />
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {whatsappConnected ? (
-                <div className="space-y-4">
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium text-green-900">Conectado com sucesso</p>
-                      <p className="text-sm text-green-700">Sua conta WhatsApp está sincronizada</p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setWhatsappConnected(false);
-                      setWhatsappAccessToken("");
-                      setWhatsappPhoneId("");
-                    }}
-                  >
-                    <Unlink className="w-4 h-4 mr-2" />
-                    Desconectar
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium text-blue-900">Como obter suas credenciais</p>
-                      <p className="text-sm text-blue-700">
-                        Acesse{" "}
-                        <a
-                          href="https://developers.facebook.com/docs/whatsapp/cloud-api"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="underline font-medium"
-                        >
-                          WhatsApp Cloud API
-                        </a>
-                        , configure sua conta e gere um token
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="whatsapp-token">Token de Acesso</Label>
-                    <Input
-                      id="whatsapp-token"
-                      type="password"
-                      placeholder="Insira seu token de acesso WhatsApp"
-                      value={whatsappAccessToken}
-                      onChange={(e) => setWhatsappAccessToken(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="whatsapp-phone">ID do Telefone</Label>
-                    <Input
-                      id="whatsapp-phone"
-                      placeholder="Ex: 1234567890"
-                      value={whatsappPhoneId}
-                      onChange={(e) => setWhatsappPhoneId(e.target.value)}
-                    />
-                  </div>
-
-                  <Button
-                    onClick={handleConnectWhatsApp}
-                    disabled={loading.whatsapp || !whatsappAccessToken || !whatsappPhoneId}
-                    className="w-full"
-                  >
-                    {loading.whatsapp && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    Conectar WhatsApp
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <Card className="bg-blue-50 border-blue-200">
+        <CardHeader>
+          <CardTitle className="text-blue-900">Como obter seus tokens?</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm text-blue-800 space-y-3">
+          <div>
+            <strong>Tray:</strong> Acesse Configurações → Integrações → API e copie sua chave
+          </div>
+          <div>
+            <strong>Google Drive:</strong> Use Google Cloud Console para gerar um token OAuth
+          </div>
+          <div>
+            <strong>Meta:</strong> Acesse Meta Business Suite → Configurações → Tokens de acesso
+          </div>
+          <div>
+            <strong>Email Marketing:</strong> Acesse sua plataforma de email e gere uma API Key
+          </div>
+          <div>
+            <strong>Instagram:</strong> Use o Graph API Explorer para gerar tokens
+          </div>
+          <div>
+            <strong>TikTok:</strong> Acesse TikTok for Business → Configurações → API
+          </div>
+          <div>
+            <strong>Facebook:</strong> Use o Graph API Explorer para gerar tokens
+          </div>
+          <div>
+            <strong>WhatsApp:</strong> Configure via Meta Business Suite com seu Business Account
+          </div>
+          <div>
+            <strong>Bling:</strong> Acesse Configurações → Integrações → API e gere um novo token
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
