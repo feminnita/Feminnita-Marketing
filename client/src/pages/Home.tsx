@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell, Instagram, BarChart3, Sparkles, Clock, DollarSign, Ticket, Edit, Music, Cloud, MessageSquare, Database, Download, ShoppingCart, Lightbulb, Palette, Brain, Smartphone, CreditCard, Copy, TrendingDown, Share2, Mail } from "lucide-react";
+import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell, Instagram, BarChart3, Sparkles, Clock, DollarSign, Ticket, Edit, Music, Cloud, MessageSquare, Database, Download, ShoppingCart, Lightbulb, Palette, Brain, Smartphone, CreditCard, Copy, TrendingDown, Share2, Mail, BookOpen } from "lucide-react";
 import PersonasSection from "@/components/PersonasSection";
 import PlanejamentoSection from "@/components/PlanejamentoSection";
 import RoteiroSection from "@/components/RoteiroSection";
@@ -118,6 +118,9 @@ import { RelatorioROISegmentoSection } from '@/components/RelatorioROISegmentoSe
 import { EmailMarketingSection } from '@/components/EmailMarketingSection';
 import { CRMClientesSection } from '@/components/CRMClientesSection';
 import { AtribuicaoMulticanalSection } from '@/components/AtribuicaoMulticanalSection';
+import { ManualSection } from '@/components/ManualSection';
+import { AutomacaoBlingSection } from '@/components/AutomacaoBlingSection';
+import { RelatorioInfluenciadoresSection } from '@/components/RelatorioInfluenciadoresSection';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -642,6 +645,18 @@ export default function Home() {
               <BarChart3 className="w-4 h-4" />
               <span className="hidden sm:inline">Atribuição</span>
             </TabsTrigger>
+            <TabsTrigger value="manual" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <BookOpen className="w-4 h-4" />
+              <span className="hidden sm:inline">Manual</span>
+            </TabsTrigger>
+            <TabsTrigger value="automacao-bling" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Zap className="w-4 h-4" />
+              <span className="hidden sm:inline">Bling</span>
+            </TabsTrigger>
+            <TabsTrigger value="relatorio-influenciadores" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:inline">Personas</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -1098,6 +1113,18 @@ export default function Home() {
 
           <TabsContent value="atribuicao-multichannel" className="space-y-6">
             <AtribuicaoMulticanalSection />
+          </TabsContent>
+
+          <TabsContent value="manual" className="space-y-6">
+            <ManualSection />
+          </TabsContent>
+
+          <TabsContent value="automacao-bling" className="space-y-6">
+            <AutomacaoBlingSection />
+          </TabsContent>
+
+          <TabsContent value="relatorio-influenciadores" className="space-y-6">
+            <RelatorioInfluenciadoresSection />
           </TabsContent>
         </Tabs>
       </section>
