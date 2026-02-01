@@ -127,6 +127,9 @@ import { RentabilidadeProdutoSection } from '@/components/RentabilidadeProdutoSe
 import { PrevisaoDemandaSection } from '@/components/PrevisaoDemandaSection';
 import { AutomacaoEmailInteligenteSection } from '@/components/AutomacaoEmailInteligenteSection';
 import { LifetimeValueDetalhadoSection } from '@/components/LifetimeValueDetalhadoSection';
+import { AnalisesCompetitivaSection } from '@/components/AnalisesCompetitivaSection';
+import { GoogleAnalytics4Section } from '@/components/GoogleAnalytics4Section';
+import { SistemaRecomendacaoInteligenteSection } from '@/components/SistemaRecomendacaoInteligenteSection';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -687,6 +690,18 @@ export default function Home() {
               <Target className="w-4 h-4" />
               <span className="hidden sm:inline">LTV</span>
             </TabsTrigger>
+            <TabsTrigger value="analise-competitiva" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <BarChart3 className="w-4 h-4" />
+              <span className="hidden sm:inline">Competitiva</span>
+            </TabsTrigger>
+            <TabsTrigger value="google-analytics" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <TrendingUp className="w-4 h-4" />
+              <span className="hidden sm:inline">GA4</span>
+            </TabsTrigger>
+            <TabsTrigger value="recomendacao-ia" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Zap className="w-4 h-4" />
+              <span className="hidden sm:inline">Recomendação</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -1179,6 +1194,18 @@ export default function Home() {
 
           <TabsContent value="ltv-detalhado" className="space-y-6">
             <LifetimeValueDetalhadoSection />
+          </TabsContent>
+
+          <TabsContent value="analise-competitiva" className="space-y-6">
+            <AnalisesCompetitivaSection />
+          </TabsContent>
+
+          <TabsContent value="google-analytics" className="space-y-6">
+            <GoogleAnalytics4Section />
+          </TabsContent>
+
+          <TabsContent value="recomendacao-ia" className="space-y-6">
+            <SistemaRecomendacaoInteligenteSection />
           </TabsContent>
         </Tabs>
       </section>
