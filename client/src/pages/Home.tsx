@@ -103,7 +103,7 @@ import { ProgramaReferenciaAutomaticoSection } from "@/components/ProgramaRefere
 import { IntegracaoEmailMarketingSection } from "@/components/IntegracaoEmailMarketingSection";
 import { PrevisaoDemandaIASection } from "@/components/PrevisaoDemandaIASection";
 import { DashboardExecutivoConsolidadoSection } from "@/components/DashboardExecutivoConsolidadoSection";
-import { IntegracaoShopifySection } from "@/components/IntegracaoShopifySection";
+
 import { AlertasAutomaticosSection } from "@/components/AlertasAutomaticosSection";
 import { IntegracaoTikTokAdsSection } from "@/components/IntegracaoTikTokAdsSection";
 import { RecomendadorProdutosIASection } from "@/components/RecomendadorProdutosIASection";
@@ -610,10 +610,7 @@ export default function Home() {
               <BarChart3 className="w-4 h-4" />
               <span className="hidden sm:inline">Dashboard</span>
             </TabsTrigger>
-            <TabsTrigger value="shopify" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
-              <ShoppingCart className="w-4 h-4" />
-              <span className="hidden sm:inline">Shopify</span>
-            </TabsTrigger>
+
             <TabsTrigger value="alertas" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
               <Bell className="w-4 h-4" />
               <span className="hidden sm:inline">Alertas</span>
@@ -1158,10 +1155,6 @@ export default function Home() {
 
           <TabsContent value="dashboard-exec" className="space-y-6">
             <DashboardExecutivoConsolidadoSection />
-          </TabsContent>
-
-          <TabsContent value="shopify" className="space-y-6">
-            <IntegracaoShopifySection />
           </TabsContent>
 
           <TabsContent value="alertas" className="space-y-6">

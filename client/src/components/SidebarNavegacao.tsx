@@ -72,7 +72,6 @@ const categorias: Categoria[] = [
     abas: [
       { id: 'automacao-bling', label: 'Bling ERP', icon: '📦' },
       { id: 'integracao-tray', label: 'Tray', icon: '🛒' },
-      { id: 'shopify', label: 'Shopify', icon: '🛍️' },
       { id: 'crm-clientes', label: 'CRM', icon: '👥' },
       { id: 'apis-integracao', label: 'APIs', icon: '⚙️' },
     ],
@@ -128,24 +127,24 @@ export default function SidebarNavegacao({ onSelectTab, activeTab }: SidebarNave
   })).filter(cat => cat.abas.length > 0 || searchTerm === '');
 
   return (
-    <div className="w-64 bg-gradient-to-b from-slate-50 to-slate-100 border-r border-slate-200 h-screen overflow-y-auto flex flex-col sticky top-0">
+    <div className="w-64 bg-gradient-to-b from-amber-50 to-amber-100 border-r border-amber-200 h-screen overflow-y-auto flex flex-col sticky top-0">
       {/* Header */}
-      <div className="p-4 border-b border-slate-200 bg-white">
+      <div className="p-4 border-b border-amber-200 bg-gradient-to-r from-amber-50 to-white">
         <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 bg-gradient-to-r from-rose-600 to-pink-600 rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-gradient-to-r from-amber-700 to-amber-600 rounded-lg flex items-center justify-center">
             <Home className="w-4 h-4 text-white" />
           </div>
-          <h2 className="font-bold text-slate-900">Menu</h2>
+          <h2 className="font-bold text-amber-900">Menu</h2>
         </div>
         
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-2 top-2.5 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-2 top-2.5 w-4 h-4 text-amber-400" />
           <Input
             placeholder="Buscar aba..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8 h-8 text-sm"
+            className="pl-8 h-8 text-sm border-amber-200 bg-white"
           />
         </div>
       </div>
@@ -156,7 +155,7 @@ export default function SidebarNavegacao({ onSelectTab, activeTab }: SidebarNave
           <div key={categoria.nome} className="mb-2">
             <button
               onClick={() => toggleCategory(categoria.nome)}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-slate-200 transition-colors text-sm font-semibold text-slate-700"
+              className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-amber-200 transition-colors text-sm font-semibold text-amber-900"
             >
               <div className="flex items-center gap-2">
                 <span>{categoria.icon}</span>
@@ -177,8 +176,8 @@ export default function SidebarNavegacao({ onSelectTab, activeTab }: SidebarNave
                     onClick={() => handleTabClick(aba.id)}
                     className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
                       activeTab === aba.id
-                        ? 'bg-rose-100 text-rose-700 font-semibold'
-                        : 'text-slate-600 hover:bg-slate-200'
+                        ? 'bg-amber-200 text-amber-900 font-semibold'
+                        : 'text-amber-700 hover:bg-amber-150'
                     }`}
                   >
                     <span>{aba.icon}</span>
@@ -192,8 +191,8 @@ export default function SidebarNavegacao({ onSelectTab, activeTab }: SidebarNave
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t border-slate-200 bg-white text-xs text-slate-500">
-        <p>136 abas disponíveis</p>
+      <div className="p-4 border-t border-amber-200 bg-gradient-to-r from-white to-amber-50 text-xs text-amber-700">
+        <p>138 abas disponíveis</p>
       </div>
     </div>
   );
