@@ -137,12 +137,21 @@ import { IntegracaoCanvaSection } from '@/components/IntegracaoCanvaSection';
 import { PrevisaoDemandaMachineLearningSection } from '@/components/PrevisaoDemandaMachineLearningSection';
 import { AutomacaoRespostasRedesSociaisSection } from '@/components/AutomacaoRespostasRedesSociaisSection';
 import { AnaliseConcorrenciaTempoRealSection } from '@/components/AnaliseConcorrenciaTempoRealSection';
+import SidebarNavegacao from '@/components/SidebarNavegacao';
+import RentabilidadeDetalhadaSection from '@/components/RentabilidadeDetalhadaSection';
+import AutomacaoRelatoriosAgendadosSection from '@/components/AutomacaoRelatoriosAgendadosSection';
+import IntegracaoAfiliados from '@/components/IntegracaoAfiliados';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+    <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      {/* Sidebar */}
+      <SidebarNavegacao onSelectTab={setActiveTab} activeTab={activeTab} />
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-slate-200/50 bg-white/80 backdrop-blur-md">
         <div className="container py-6">
@@ -741,6 +750,18 @@ export default function Home() {
               <Target className="w-4 h-4" />
               <span className="hidden sm:inline">Concorrência</span>
             </TabsTrigger>
+            <TabsTrigger value="rentabilidade-detalhada" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <DollarSign className="w-4 h-4" />
+              <span className="hidden sm:inline">Rentab. Detalhada</span>
+            </TabsTrigger>
+            <TabsTrigger value="relatorios-agendados" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Clock className="w-4 h-4" />
+              <span className="hidden sm:inline">Relatórios</span>
+            </TabsTrigger>
+            <TabsTrigger value="afiliados" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:inline">Afiliados</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -1278,6 +1299,18 @@ export default function Home() {
           <TabsContent value="concorrencia-tempo-real" className="space-y-6">
             <AnaliseConcorrenciaTempoRealSection />
           </TabsContent>
+
+          <TabsContent value="rentabilidade-detalhada" className="space-y-6">
+            <RentabilidadeDetalhadaSection />
+          </TabsContent>
+
+          <TabsContent value="relatorios-agendados" className="space-y-6">
+            <AutomacaoRelatoriosAgendadosSection />
+          </TabsContent>
+
+          <TabsContent value="afiliados" className="space-y-6">
+            <IntegracaoAfiliados />
+          </TabsContent>
         </Tabs>
       </section>
 
@@ -1337,6 +1370,7 @@ export default function Home() {
           </p>
         </div>
       </footer>
+      </div>
     </div>
   );
 }
