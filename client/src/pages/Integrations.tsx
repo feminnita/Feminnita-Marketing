@@ -96,6 +96,22 @@ const PLATAFORMAS: PlatformIntegration[] = [
     isConnected: false,
     tipo: "apikey",
   },
+  {
+    plataforma: "instagram",
+    nome: "Instagram",
+    descricao: "Conecte sua conta do Instagram",
+    icon: "📸",
+    isConnected: false,
+    tipo: "apikey",
+  },
+  {
+    plataforma: "facebook",
+    nome: "Facebook",
+    descricao: "Conecte sua página do Facebook",
+    icon: "👍",
+    isConnected: false,
+    tipo: "apikey",
+  }
 ];
 
 export default function Integrations() {
@@ -413,6 +429,12 @@ export default function Integrations() {
           </div>
           <div>
             <strong>Canva:</strong> Acesse Canva Developer → Aplicações e gere um token
+          </div>
+          <div>
+            <strong>Instagram:</strong> Use o Graph API Explorer para gerar tokens
+          </div>
+          <div>
+            <strong>Facebook:</strong> Use o Graph API Explorer para gerar tokens
           </div>
         </CardContent>
       </Card>

@@ -2,6 +2,7 @@ import { useLocation, Link } from "wouter";
 import DashboardLayout from "@/components/DashboardLayout";
 import Home from "@/pages/Home";
 import Integrations from "@/pages/Integrations";
+import IntegrationGuide from "@/pages/IntegrationGuide";
 import Performance from "@/pages/Performance";
 import Automations from "@/pages/Automations";
 import Campaigns from "@/pages/Campaigns";
@@ -15,6 +16,8 @@ export default function App() {
         return <Home />;
       case "/integraciones":
         return <Integrations />;
+      case "/integration-guide":
+        return <IntegrationGuide />;
       case "/performance":
         return <Performance />;
       case "/automaciones":

@@ -90,3 +90,130 @@ export async function getUserByOpenId(openId: string) {
 }
 
 // TODO: add feature queries here as your schema grows.
+
+// ============ OAuth Tokens Management ============
+import { oauthTokens, InsertOAuthToken, OAuthToken } from "../drizzle/schema";
+
+export async function saveOAuthToken(
+  userId: number,
+  plataforma: "bling" | "meta" | "tiktok" | "google_drive",
+  token: {
+    accessToken: string;
+    refreshToken?: string;
+    expiresIn?: number;
+    scope?: string;
+    accountInfo?: Record<string, any>;
+  }
+): Promise<OAuthToken> {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  const expiresAt = token.expiresIn
+    ? new Date(Date.now() + token.expiresIn * 1000)
+    : null;
+
+  const values: InsertOAuthToken = {
+    userId,
+    plataforma,
+    accessToken: token.accessToken,
+    refreshToken: token.refreshToken || null,
+    expiresAt,
+    scope: token.scope || null,
+    accountInfo: token.accountInfo ? JSON.stringify(token.accountInfo) : null,
+    isActive: true,
+  };
+
+  // Check if token already exists
+  const existing = await db
+    .select()
+    .from(oauthTokens)
+    .where(
+      eq(oauthTokens.userId, userId) &&
+      eq(oauthTokens.plataforma, plataforma)
+    )
+    .limit(1);
+
+  if (existing.length > 0) {
+    // Update existing token
+    const result = await db
+      .update(oauthTokens)
+      .set(values)
+      .where(
+        eq(oauthTokens.userId, userId) &&
+        eq(oauthTokens.plataforma, plataforma)
+      );
+    return existing[0];
+  } else {
+    // Insert new token
+    await db.insert(oauthTokens).values(values);
+    const result = await db
+      .select()
+      .from(oauthTokens)
+      .where(
+        eq(oauthTokens.userId, userId) &&
+        eq(oauthTokens.plataforma, plataforma)
+      )
+      .limit(1);
+    return result[0];
+  }
+}
+
+export async function getOAuthToken(
+  userId: number,
+  plataforma: "bling" | "meta" | "tiktok" | "google_drive"
+): Promise<OAuthToken | undefined> {
+  const db = await getDb();
+  if (!db) {
+    return undefined;
+  }
+
+  const result = await db
+    .select()
+    .from(oauthTokens)
+    .where(
+      eq(oauthTokens.userId, userId) &&
+      eq(oauthTokens.plataforma, plataforma) &&
+      eq(oauthTokens.isActive, true)
+    )
+    .limit(1);
+
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function deleteOAuthToken(
+  userId: number,
+  plataforma: "bling" | "meta" | "tiktok" | "google_drive"
+): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  await db
+    .update(oauthTokens)
+    .set({ isActive: false })
+    .where(
+      eq(oauthTokens.userId, userId) &&
+      eq(oauthTokens.plataforma, plataforma)
+    );
+}
+
+export async function updateOAuthTokenLastUsed(
+  userId: number,
+  plataforma: "bling" | "meta" | "tiktok" | "google_drive"
+): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    return;
+  }
+
+  await db
+    .update(oauthTokens)
+    .set({ lastUsed: new Date() })
+    .where(
+      eq(oauthTokens.userId, userId) &&
+      eq(oauthTokens.plataforma, plataforma)
+    );
+}

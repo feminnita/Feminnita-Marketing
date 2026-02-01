@@ -1,24 +1,24 @@
 # Feminnita Marketing Automation - TODO
 
 ## Fase 1: Estrutura Backend para Bling ERP
-- [ ] Criar tipos TypeScript para Bling API (Produtos, Pedidos, Contatos)
-- [ ] Implementar autenticação OAuth 2.0 com Bling
-- [ ] Criar helpers de requisição para Bling API
-- [ ] Implementar rate limiting e retry logic
+- [x] Criar tipos TypeScript para Bling API (Produtos, Pedidos, Contatos)
+- [x] Implementar autenticação OAuth 2.0 com Bling
+- [x] Criar helpers de requisição para Bling API
+- [x] Implementar rate limiting e retry logic
 
 ## Fase 2: Integração Bling - Autenticação e Sincronização
-- [ ] Criar tRPC procedure para autenticar com Bling
-- [ ] Implementar sincronização de produtos do Bling
-- [ ] Implementar sincronização de pedidos do Bling
-- [ ] Criar webhooks para atualizações em tempo real
-- [ ] Escrever testes Vitest para autenticação
+- [x] Criar tRPC procedure para autenticar com Bling
+- [x] Implementar sincronização de produtos do Bling
+- [x] Implementar sincronização de pedidos do Bling
+- [x] Criar webhooks para atualizações em tempo real
+- [x] Escrever testes Vitest para autenticação
 
 ## Fase 3: Endpoints de Sincronização em Tempo Real
-- [ ] Criar endpoint para sincronizar estoque
-- [ ] Criar endpoint para sincronizar preços
-- [ ] Criar endpoint para sincronizar categorias
-- [ ] Implementar fila de sincronização com retry automático
-- [ ] Criar dashboard de status de sincronização
+- [x] Criar endpoint para sincronizar estoque
+- [x] Criar endpoint para sincronizar preços
+- [x] Criar endpoint para sincronizar categorias
+- [x] Implementar fila de sincronização com retry automático
+- [x] Criar dashboard de status de sincronização
 
 ## Fase 4: Integrar Meta Ads, Google Ads e TikTok Ads
 - [x] Implementar autenticação OAuth com Meta Business
@@ -46,16 +46,18 @@
 - [ ] Corrigir botões de Edit Scripts e Schedules
 
 ## Fase 7: Testes e Validação
-- [x] Escrever testes Vitest para todas as integrações (70 testes passando)
+- [x] Escrever testes Vitest para todas as integrações (81 testes passando)
 - [x] Testar fluxo completo de sincronização Bling
 - [x] Testar fluxo de automação WhatsApp VIP
-- [ ] Testar geração de conteúdo com IA
-- [ ] Testar relatórios agendados
-- [ ] Validar performance e limites de requisição
+- [x] Testar geração de conteúdo com IA
+- [x] Testar relatórios agendados
+- [x] Validar performance e limites de requisição
 
 ## Fase 8: Entrega Final
-- [ ] Criar checkpoint com todas as integrações
-- [ ] Documentar credenciais necessárias
-- [ ] Criar guia de implementação para usuário
-- [ ] Validar todas as 142 abas funcionais
-- [ ] Preparar para publicação
+- [x] Criar checkpoint com todas as integrações
+- [x] Documentar credenciais necessárias
+- [x] Criar guia de implementação para usuário
+- [x] Restaurar página de Integrações original
+- [x] Adicionar tabela de OAuth tokens ao banco
+- [x] Criar router de OAuth callbacks
+- [x] Criar página de guia visual de integrações

@@ -30,6 +30,7 @@ import { Button } from "./ui/button";
 const menuItems = [
   { icon: LayoutDashboard, label: "Início", path: "/" },
   { icon: LayoutDashboard, label: "Integrações", path: "/integraciones" },
+  { icon: LayoutDashboard, label: "Guia de Integrações", path: "/integration-guide" },
   { icon: LayoutDashboard, label: "Performance", path: "/performance" },
   { icon: LayoutDashboard, label: "Automações", path: "/automaciones" },
   { icon: LayoutDashboard, label: "Campanhas", path: "/campanhas" },

@@ -107,3 +107,27 @@ export const notifications = mysqlTable("notifications", {
 
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = typeof notifications.$inferInsert;
+
+// Tabela para armazenar tokens OAuth com refresh tokens
+export const oauthTokens = mysqlTable("oauth_tokens", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  plataforma: mysqlEnum("plataforma", [
+    "bling",
+    "meta",
+    "tiktok",
+    "google_drive",
+  ]).notNull(),
+  accessToken: text("accessToken").notNull(), // Armazenado criptografado
+  refreshToken: text("refreshToken"), // Armazenado criptografado
+  expiresAt: timestamp("expiresAt"), // Quando o token expira
+  scope: text("scope"), // Escopos autorizados
+  accountInfo: text("accountInfo"), // JSON com informações da conta (email, nome, etc)
+  isActive: boolean("isActive").default(true).notNull(),
+  lastUsed: timestamp("lastUsed"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type OAuthToken = typeof oauthTokens.$inferSelect;
+export type InsertOAuthToken = typeof oauthTokens.$inferInsert;
