@@ -101,6 +101,7 @@ import { PrevisaoChurnIASection } from "@/components/PrevisaoChurnIASection";
 import { DashboardLTVPersonaSection } from "@/components/DashboardLTVPersonaSection";
 import { ProgramaReferenciaAutomaticoSection } from "@/components/ProgramaReferenciaAutomaticoSection";
 import { IntegracaoEmailMarketingSection } from "@/components/IntegracaoEmailMarketingSection";
+import { PrevisaoDemandaIASection } from "@/components/PrevisaoDemandaIASection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -557,6 +558,10 @@ export default function Home() {
               <Mail className="w-4 h-4" />
               <span className="hidden sm:inline">Email</span>
             </TabsTrigger>
+            <TabsTrigger value="previsao" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <TrendingUp className="w-4 h-4" />
+              <span className="hidden sm:inline">Previsão IA</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -945,6 +950,10 @@ export default function Home() {
 
           <TabsContent value="email" className="space-y-6">
             <IntegracaoEmailMarketingSection />
+          </TabsContent>
+
+          <TabsContent value="previsao" className="space-y-6">
+            <PrevisaoDemandaIASection />
           </TabsContent>
         </Tabs>
       </section>
