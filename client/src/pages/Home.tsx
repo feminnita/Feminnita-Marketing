@@ -48,6 +48,7 @@ import SistemaCuponsPromocoesSection from "@/components/SistemaCuponsPromocoesSe
 import BarraBuscaAbas from "@/components/BarraBuscaAbas";
 import MenuFavoritosAbas from "@/components/MenuFavoritosAbas";
 import GeracaoVideosIASection from "@/components/GeracaoVideosIASection";
+import AutomacaoWhatsAppVIPSection from "@/components/AutomacaoWhatsAppVIPSection";
 import IntegracaoStripeSection from "@/components/IntegracaoStripeSection";
 import AnaliseConorrentesAutomaticoSection from "@/components/AnaliseConorrentesAutomaticoSection";
 import GeradorConteudoIASection from "@/components/GeradorConteudoIASection";
@@ -774,6 +775,10 @@ export default function Home() {
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">Exportar</span>
             </TabsTrigger>
+            <TabsTrigger value="whatsapp-vip" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <MessageCircle className="w-4 h-4" />
+              <span className="hidden sm:inline">WhatsApp VIP</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -1330,6 +1335,9 @@ export default function Home() {
 
           <TabsContent value="exportar-relatorio" className="space-y-6">
             <ExportarRelatorioSection />
+          </TabsContent>
+          <TabsContent value="whatsapp-vip" className="space-y-6">
+            <AutomacaoWhatsAppVIPSection />
           </TabsContent>
         </Tabs>
       </section>
