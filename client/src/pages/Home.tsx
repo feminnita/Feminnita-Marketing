@@ -115,6 +115,9 @@ import { ComparadorEstrategiasABTestingSection } from '@/components/ComparadorEs
 import { ComparativoMetaGoogleAdsSection } from '@/components/ComparativoMetaGoogleAdsSection';
 import { AutomacaoSegmentacaoClientesSection } from '@/components/AutomacaoSegmentacaoClientesSection';
 import { RelatorioROISegmentoSection } from '@/components/RelatorioROISegmentoSection';
+import { EmailMarketingSection } from '@/components/EmailMarketingSection';
+import { CRMClientesSection } from '@/components/CRMClientesSection';
+import { AtribuicaoMulticanalSection } from '@/components/AtribuicaoMulticanalSection';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -627,6 +630,18 @@ export default function Home() {
               <DollarSign className="w-4 h-4" />
               <span className="hidden sm:inline">ROI Segm.</span>
             </TabsTrigger>
+            <TabsTrigger value="email-marketing" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Mail className="w-4 h-4" />
+              <span className="hidden sm:inline">Email</span>
+            </TabsTrigger>
+            <TabsTrigger value="crm-clientes" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:inline">CRM</span>
+            </TabsTrigger>
+            <TabsTrigger value="atribuicao-multichannel" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <BarChart3 className="w-4 h-4" />
+              <span className="hidden sm:inline">Atribuição</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -1071,6 +1086,18 @@ export default function Home() {
 
           <TabsContent value="roi-segmento" className="space-y-6">
             <RelatorioROISegmentoSection />
+          </TabsContent>
+
+          <TabsContent value="email-marketing" className="space-y-6">
+            <EmailMarketingSection />
+          </TabsContent>
+
+          <TabsContent value="crm-clientes" className="space-y-6">
+            <CRMClientesSection />
+          </TabsContent>
+
+          <TabsContent value="atribuicao-multichannel" className="space-y-6">
+            <AtribuicaoMulticanalSection />
           </TabsContent>
         </Tabs>
       </section>
