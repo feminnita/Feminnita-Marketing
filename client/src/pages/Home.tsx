@@ -108,6 +108,7 @@ import { AlertasAutomaticosSection } from "@/components/AlertasAutomaticosSectio
 import { IntegracaoTikTokAdsSection } from "@/components/IntegracaoTikTokAdsSection";
 import { RecomendadorProdutosIASection } from "@/components/RecomendadorProdutosIASection";
 import { ExportacaoGoogleSheetsSection } from "@/components/ExportacaoGoogleSheetsSection";
+import { IntegracaoInstagramAdsSection } from "@/components/IntegracaoInstagramAdsSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -592,6 +593,10 @@ export default function Home() {
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">Sheets</span>
             </TabsTrigger>
+            <TabsTrigger value="instagram-ads" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap min-w-fit">
+              <TrendingUp className="w-4 h-4" />
+              <span className="hidden sm:inline">Instagram</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
@@ -1008,6 +1013,10 @@ export default function Home() {
 
           <TabsContent value="google-sheets" className="space-y-6">
             <ExportacaoGoogleSheetsSection />
+          </TabsContent>
+
+          <TabsContent value="instagram-ads" className="space-y-6">
+            <IntegracaoInstagramAdsSection />
           </TabsContent>
         </Tabs>
       </section>
