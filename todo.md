@@ -185,3 +185,12 @@
 - [ ] Testar fluxo completo de cadastro e login
 - [ ] Implementar autenticação de colaboradores com sessão
 - [ ] Adicionar integração GitHub OAuth
+
+
+## Fase 20: Sistema de Gerenciamento de Credenciais OAuth
+- [x] Criar tabela oauth_credentials no banco de dados
+- [x] Implementar router com 5 procedures (save, get, list, delete, validate)
+- [x] Criar página ConfigureCredentials com interface completa
+- [x] Adicionar rota e menu para página de configurar credenciais
+- [x] Implementar testes de banco de dados (6 testes passando)
+- [x] Validar todos os testes passando (138 testes no total)

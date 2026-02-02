@@ -10,6 +10,7 @@ import InfluencersDashboard from "@/pages/InfluencersDashboard";
 import MetaAdsCampaigns from "@/pages/MetaAdsCampaigns";
 import OAuthCredentials from "@/pages/OAuthCredentials";
 import CollaboratorsManagement from "@/pages/CollaboratorsManagement";
+import ConfigureCredentials from "@/pages/ConfigureCredentials";
 
 
 export default function App() {
@@ -37,6 +38,8 @@ export default function App() {
         return <OAuthCredentials />;
       case "/colaboradores":
         return <CollaboratorsManagement />;
+      case "/configurar-credenciais":
+        return <ConfigureCredentials />;
 
       default:
         return <Home />;

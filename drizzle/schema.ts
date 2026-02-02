@@ -270,3 +270,31 @@ export const collaborators = mysqlTable("collaborators", {
 
 export type Collaborator = typeof collaborators.$inferSelect;
 export type InsertCollaborator = typeof collaborators.$inferInsert;
+
+// Tabela para armazenar credenciais OAuth de integrações
+export const oauthCredentials = mysqlTable("oauth_credentials", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  platform: mysqlEnum("platform", [
+    "bling",
+    "canva",
+    "meta",
+    "tiktok",
+    "google_drive",
+    "whatsapp",
+    "email_marketing",
+    "tray",
+  ]).notNull(),
+  clientId: text("clientId"),
+  clientSecret: text("clientSecret"),
+  accessToken: text("accessToken"),
+  refreshToken: text("refreshToken"),
+  expiresAt: timestamp("expiresAt"),
+  isConnected: boolean("isConnected").default(false).notNull(),
+  lastValidated: timestamp("lastValidated"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+
+export type OAuthCredential = typeof oauthCredentials.$inferSelect;
+export type InsertOAuthCredential = typeof oauthCredentials.$inferInsert;

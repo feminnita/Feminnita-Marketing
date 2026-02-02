@@ -34,7 +34,7 @@ const menuItems = [
   { icon: Users, label: "Colaboradores", path: "/colaboradores" },
 
   { icon: LayoutDashboard, label: "Integrações", path: "/integraciones" },
-  { icon: LayoutDashboard, label: "Configurar Credenciais", path: "/oauth-credentials" },
+  { icon: LayoutDashboard, label: "Configurar Credenciais", path: "/configurar-credenciais" },
   { icon: LayoutDashboard, label: "Guia de Integrações", path: "/integration-guide" },
   { icon: LayoutDashboard, label: "Performance", path: "/performance" },
   { icon: LayoutDashboard, label: "Automações", path: "/automaciones" },

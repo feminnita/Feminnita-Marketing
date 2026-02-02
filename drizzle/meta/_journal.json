@@ -50,6 +50,13 @@
       "when": 1770048536274,
       "tag": "0006_orange_medusa",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1770051182351,
+      "tag": "0007_left_blackheart",
+      "breakpoints": true
     }
   ]
 }

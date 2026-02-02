@@ -11,184 +11,155 @@ import {
   Trash2,
   Eye,
   EyeOff,
-  Facebook,
-  Music,
-  HardDrive,
-  Zap,
+  Copy,
   Loader2,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 
-interface PlatformIntegration {
-  plataforma: string;
-  nome: string;
-  descricao: string;
+interface Integration {
+  id: string;
+  name: string;
+  description: string;
   icon: string;
   isConnected: boolean;
   lastValidated?: string;
-  tipo: "oauth" | "apikey";
+  type: "oauth" | "apikey";
 }
 
-const PLATAFORMAS: PlatformIntegration[] = [
-  // OAuth Integrations
+const INTEGRATIONS: Integration[] = [
   {
-    plataforma: "meta",
-    nome: "Meta (Facebook & Instagram)",
-    descricao: "Gerencie campanhas no Facebook e Instagram",
-    icon: "📱",
-    isConnected: false,
-    tipo: "oauth",
-  },
-  {
-    plataforma: "tiktok",
-    nome: "TikTok",
-    descricao: "Gerencie sua conta do TikTok",
-    icon: "🎵",
-    isConnected: false,
-    tipo: "oauth",
-  },
-  {
-    plataforma: "google_drive",
-    nome: "Google Drive",
-    descricao: "Sincronize arquivos e documentos do Google Drive",
-    icon: "📁",
-    isConnected: false,
-    tipo: "oauth",
-  },
-  {
-    plataforma: "bling",
-    nome: "Bling ERP",
-    descricao: "Sincronize dados com Bling ERP",
+    id: "bling",
+    name: "Bling ERP",
+    description: "Sincronize dados com Bling ERP",
     icon: "📊",
     isConnected: false,
-    tipo: "oauth",
-  },
-  // API Key Integrations
-  {
-    plataforma: "tray",
-    nome: "Tray",
-    descricao: "Integração com plataforma de e-commerce Tray",
-    icon: "🛍️",
-    isConnected: false,
-    tipo: "apikey",
+    type: "oauth",
   },
   {
-    plataforma: "email_marketing",
-    nome: "Email Marketing",
-    descricao: "Integração com plataforma de email marketing",
-    icon: "📧",
-    isConnected: false,
-    tipo: "apikey",
-  },
-  {
-    plataforma: "whatsapp",
-    nome: "WhatsApp Business",
-    descricao: "Integração com WhatsApp Business API",
-    icon: "💬",
-    isConnected: false,
-    tipo: "apikey",
-  },
-  {
-    plataforma: "canva",
-    nome: "Canva",
-    descricao: "Integração com Canva para criar designs",
+    id: "canva",
+    name: "Canva",
+    description: "Integração com Canva para criar designs",
     icon: "🎨",
     isConnected: false,
-    tipo: "apikey",
+    type: "apikey",
   },
   {
-    plataforma: "instagram",
-    nome: "Instagram",
-    descricao: "Conecte sua conta do Instagram",
-    icon: "📸",
+    id: "meta",
+    name: "Meta (Facebook & Instagram)",
+    description: "Gerencie campanhas no Facebook e Instagram",
+    icon: "📱",
     isConnected: false,
-    tipo: "apikey",
+    type: "oauth",
   },
   {
-    plataforma: "facebook",
-    nome: "Facebook",
-    descricao: "Conecte sua página do Facebook",
-    icon: "👍",
+    id: "tiktok",
+    name: "TikTok",
+    description: "Gerencie sua conta do TikTok",
+    icon: "🎵",
     isConnected: false,
-    tipo: "apikey",
-  }
+    type: "oauth",
+  },
+  {
+    id: "google_drive",
+    name: "Google Drive",
+    description: "Sincronize arquivos e documentos",
+    icon: "📁",
+    isConnected: false,
+    type: "oauth",
+  },
+  {
+    id: "whatsapp",
+    name: "WhatsApp Business",
+    description: "Integração com WhatsApp Business API",
+    icon: "💬",
+    isConnected: false,
+    type: "apikey",
+  },
+  {
+    id: "email",
+    name: "Email Marketing",
+    description: "Integração com plataforma de email marketing",
+    icon: "📧",
+    isConnected: false,
+    type: "apikey",
+  },
+  {
+    id: "tray",
+    name: "Tray",
+    description: "Integração com plataforma de e-commerce Tray",
+    icon: "🛍️",
+    isConnected: false,
+    type: "apikey",
+  },
 ];
 
 export default function Integrations() {
-  const [integracoes, setIntegracoes] = useState<PlatformIntegration[]>(PLATAFORMAS);
-  const [expandedPlatform, setExpandedPlatform] = useState<string | null>(null);
+  const [integrations, setIntegrations] = useState<Integration[]>(INTEGRATIONS);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [tokens, setTokens] = useState<Record<string, string>>({});
-  const [validating, setValidating] = useState<Record<string, boolean>>({});
   const [showToken, setShowToken] = useState<Record<string, boolean>>({});
-  const [oauthLoading, setOAuthLoading] = useState<Record<string, boolean>>({});
-
-  // OAuth URLs
-  const { data: metaUrl } = trpc.oauthIntegrations.getMetaAuthUrl.useQuery();
-  const { data: tiktokUrl } = trpc.oauthIntegrations.getTikTokAuthUrl.useQuery();
-  const { data: googleDriveUrl } = trpc.oauthIntegrations.getGoogleDriveAuthUrl.useQuery();
-  const { data: blingUrl } = trpc.oauthIntegrations.getBlingAuthUrl.useQuery();
+  const [validating, setValidating] = useState<Record<string, boolean>>({});
 
   const validarConexaoMutation = trpc.integrations.validarConexao.useMutation({
     onSuccess: (result: any) => {
       if (result.conectado) {
-        setIntegracoes(
-          integracoes.map((i) =>
-            i.plataforma === result.plataforma
+        setIntegrations(
+          integrations.map((i) =>
+            i.id === result.plataforma
               ? { ...i, isConnected: true, lastValidated: new Date().toLocaleString() }
               : i
           )
         );
-        alert(result.mensagem);
+        alert(`✅ ${result.plataforma} conectado com sucesso!`);
       } else {
-        alert(result.mensagem);
+        alert(`❌ ${result.mensagem}`);
       }
     },
     onError: () => {
-      alert("Erro ao validar conexão");
+      alert("❌ Erro ao validar conexão");
     },
   });
 
   const desconectarMutation = trpc.integrations.desconectar.useMutation({
     onSuccess: (result: any) => {
-      alert(result.mensagem);
+      alert(`✅ ${result.mensagem}`);
     },
   });
 
-  const handleOAuthConnect = (plataforma: string, url: string | undefined) => {
-    if (!url) {
-      alert("URL de autenticação não disponível");
-      return;
-    }
-    setOAuthLoading({ ...oauthLoading, [plataforma]: true });
-    window.location.href = url;
-  };
-
-  const handleValidarConexao = (plataforma: string) => {
-    const token = tokens[plataforma];
+  const handleValidarConexao = (id: string) => {
+    const token = tokens[id];
     if (!token) {
       alert("Por favor, cole o token primeiro");
       return;
     }
 
-    setValidating({ ...validating, [plataforma]: true });
-    validarConexaoMutation.mutate({ plataforma: plataforma as any, token });
-    setTimeout(() => setValidating({ ...validating, [plataforma]: false }), 2000);
+    setValidating({ ...validating, [id]: true });
+    validarConexaoMutation.mutate({ plataforma: id as any, token });
+    setTimeout(() => setValidating({ ...validating, [id]: false }), 2000);
   };
 
-  const handleDesconectar = (plataforma: string) => {
-    if (confirm(`Tem certeza que deseja desconectar ${plataforma}?`)) {
-      desconectarMutation.mutate({ plataforma: plataforma as any });
-      setIntegracoes(
-        integracoes.map((i) =>
-          i.plataforma === plataforma ? { ...i, isConnected: false } : i
+  const handleDesconectar = (id: string) => {
+    if (confirm(`Tem certeza que deseja desconectar ${id}?`)) {
+      desconectarMutation.mutate({ plataforma: id as any });
+      setIntegrations(
+        integrations.map((i) =>
+          i.id === id ? { ...i, isConnected: false } : i
         )
       );
-      setTokens({ ...tokens, [plataforma]: "" });
+      setTokens({ ...tokens, [id]: "" });
     }
   };
 
-  const oauthPlatforms = integracoes.filter((p) => p.tipo === "oauth");
-  const apikeyPlatforms = integracoes.filter((p) => p.tipo === "apikey");
+  const handleCopyToken = (id: string) => {
+    const token = tokens[id];
+    if (token) {
+      navigator.clipboard.writeText(token);
+      alert("Token copiado para a área de transferência!");
+    }
+  };
+
+  const oauthIntegrations = integrations.filter((p) => p.type === "oauth");
+  const apikeyIntegrations = integrations.filter((p) => p.type === "apikey");
 
   return (
     <div className="space-y-6">
@@ -198,249 +169,289 @@ export default function Integrations() {
             <Plug className="w-8 h-8" />
             Integrações de Plataformas
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-slate-600 mt-2">
             Conecte suas contas de diferentes plataformas para automação completa
           </p>
         </div>
       </div>
 
-      {/* OAuth Integrations Section */}
-      <section>
-        <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-          <Zap className="w-6 h-6" />
-          Conectar com OAuth
+      {/* OAuth Integrations */}
+      <div>
+        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <CheckCircle className="w-5 h-5 text-blue-500" />
+          Integrações OAuth
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {oauthPlatforms.map((plataforma) => (
-            <Card key={plataforma.plataforma} className="hover:shadow-lg transition-shadow">
+          {oauthIntegrations.map((integration) => (
+            <Card key={integration.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl">{plataforma.icon}</span>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-3">
+                    <span className="text-3xl">{integration.icon}</span>
                     <div>
-                      <CardTitle className="text-lg">{plataforma.nome}</CardTitle>
-                      <CardDescription>{plataforma.descricao}</CardDescription>
+                      <CardTitle className="text-lg">{integration.name}</CardTitle>
+                      <CardDescription>{integration.description}</CardDescription>
                     </div>
                   </div>
-                  {plataforma.isConnected ? (
-                    <CheckCircle className="w-6 h-6 text-green-500" />
+                  {integration.isConnected ? (
+                    <Badge className="bg-green-500">Conectado</Badge>
                   ) : (
-                    <AlertCircle className="w-6 h-6 text-gray-400" />
+                    <Badge variant="secondary">Desconectado</Badge>
                   )}
                 </div>
               </CardHeader>
-              <CardContent className="space-y-3">
-                {plataforma.isConnected ? (
-                  <>
-                    <Badge className="bg-green-100 text-green-800">Conectado</Badge>
+              <CardContent>
+                <div className="space-y-3">
+                  {integration.isConnected ? (
+                    <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg border border-green-200">
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <span className="text-sm text-green-900">
+                        Última validação: {integration.lastValidated}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                      <AlertCircle className="w-5 h-5 text-amber-600" />
+                      <span className="text-sm text-amber-900">
+                        Não conectado. Clique em "Conectar" para iniciar.
+                      </span>
+                    </div>
+                  )}
+
+                  {integration.isConnected && (
                     <Button
+                      onClick={() => handleDesconectar(integration.id)}
                       variant="destructive"
+                      size="sm"
                       className="w-full"
-                      onClick={() => handleDesconectar(plataforma.plataforma)}
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
                       Desconectar
                     </Button>
-                  </>
-                ) : (
-                  <Button
-                    className="w-full bg-blue-600 hover:bg-blue-700"
-                    onClick={() => {
-                      if (plataforma.plataforma === "meta") {
-                        handleOAuthConnect(plataforma.plataforma, metaUrl?.url);
-                      } else if (plataforma.plataforma === "tiktok") {
-                        handleOAuthConnect(plataforma.plataforma, tiktokUrl?.url);
-                      } else if (plataforma.plataforma === "google_drive") {
-                        handleOAuthConnect(plataforma.plataforma, googleDriveUrl?.url);
-                      } else if (plataforma.plataforma === "bling") {
-                        handleOAuthConnect(plataforma.plataforma, blingUrl?.url);
-                      }
-                    }}
-                    disabled={oauthLoading[plataforma.plataforma]}
-                  >
-                    {oauthLoading[plataforma.plataforma] ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Redirecionando...
-                      </>
-                    ) : (
-                      `Conectar com ${plataforma.nome}`
-                    )}
-                  </Button>
-                )}
+                  )}
+
+                  {!integration.isConnected && (
+                    <Button
+                      onClick={() => setExpandedId(expandedId === integration.id ? null : integration.id)}
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                    >
+                      Conectar {integration.name}
+                    </Button>
+                  )}
+
+                  {expandedId === integration.id && !integration.isConnected && (
+                    <div className="space-y-2 pt-2 border-t">
+                      <p className="text-xs text-slate-600">
+                        Cole seu token de acesso abaixo:
+                      </p>
+                      <div className="flex gap-2">
+                        <Input
+                          type={showToken[integration.id] ? "text" : "password"}
+                          placeholder="Cole seu token aqui..."
+                          value={tokens[integration.id] || ""}
+                          onChange={(e) =>
+                            setTokens({ ...tokens, [integration.id]: e.target.value })
+                          }
+                          className="flex-1"
+                        />
+                        <Button
+                          onClick={() =>
+                            setShowToken({
+                              ...showToken,
+                              [integration.id]: !showToken[integration.id],
+                            })
+                          }
+                          variant="outline"
+                          size="sm"
+                        >
+                          {showToken[integration.id] ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </Button>
+                      </div>
+                      <Button
+                        onClick={() => handleValidarConexao(integration.id)}
+                        disabled={validating[integration.id]}
+                        className="w-full bg-green-600 hover:bg-green-700"
+                      >
+                        {validating[integration.id] ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Validando...
+                          </>
+                        ) : (
+                          "Validar Conexão"
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
           ))}
         </div>
-      </section>
+      </div>
 
-      {/* API Key Integrations Section */}
-      <section>
-        <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-          <Key className="w-6 h-6" />
-          Conectar com API Key
+      {/* API Key Integrations */}
+      <div>
+        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <AlertCircle className="w-5 h-5 text-amber-500" />
+          Integrações com API Key
         </h2>
-        <div className="grid gap-3">
-          {apikeyPlatforms.map((plataforma) => (
-            <Card
-              key={plataforma.plataforma}
-              className={`cursor-pointer transition-all ${
-                expandedPlatform === plataforma.plataforma
-                  ? "border-blue-500 bg-blue-50"
-                  : "hover:border-gray-400"
-              }`}
-            >
-              <div
-                onClick={() =>
-                  setExpandedPlatform(
-                    expandedPlatform === plataforma.plataforma ? null : plataforma.plataforma
-                  )
-                }
-                className="p-4"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <span className="text-3xl">{plataforma.icon}</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {apikeyIntegrations.map((integration) => (
+            <Card key={integration.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-3">
+                    <span className="text-3xl">{integration.icon}</span>
                     <div>
-                      <h3 className="font-semibold text-lg">{plataforma.nome}</h3>
-                      <p className="text-sm text-gray-600">{plataforma.descricao}</p>
+                      <CardTitle className="text-lg">{integration.name}</CardTitle>
+                      <CardDescription>{integration.description}</CardDescription>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {plataforma.isConnected ? (
-                      <div className="flex items-center gap-1 text-green-600">
-                        <CheckCircle className="w-5 h-5" />
-                        <span className="text-sm font-semibold">Conectado</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1 text-gray-500">
-                        <AlertCircle className="w-5 h-5" />
-                        <span className="text-sm font-semibold">Desconectado</span>
-                      </div>
-                    )}
-                  </div>
+                  {integration.isConnected ? (
+                    <Badge className="bg-green-500">Conectado</Badge>
+                  ) : (
+                    <Badge variant="secondary">Desconectado</Badge>
+                  )}
                 </div>
-              </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {integration.isConnected ? (
+                    <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg border border-green-200">
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <span className="text-sm text-green-900">
+                        Última validação: {integration.lastValidated}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                      <AlertCircle className="w-5 h-5 text-amber-600" />
+                      <span className="text-sm text-amber-900">
+                        Não conectado. Cole sua chave de API.
+                      </span>
+                    </div>
+                  )}
 
-              {expandedPlatform === plataforma.plataforma && (
-                <CardContent className="border-t pt-4 space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor={`token-${plataforma.plataforma}`}>
-                      Token / API Key / Access Token
-                    </Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id={`token-${plataforma.plataforma}`}
-                        type={showToken[plataforma.plataforma] ? "text" : "password"}
-                        placeholder="Cole seu token aqui..."
-                        value={tokens[plataforma.plataforma] || ""}
-                        onChange={(e) =>
-                          setTokens({
-                            ...tokens,
-                            [plataforma.plataforma]: e.target.value,
-                          })
-                        }
-                      />
+                  {integration.isConnected && (
+                    <Button
+                      onClick={() => handleDesconectar(integration.id)}
+                      variant="destructive"
+                      size="sm"
+                      className="w-full"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Desconectar
+                    </Button>
+                  )}
+
+                  {!integration.isConnected && (
+                    <Button
+                      onClick={() => setExpandedId(expandedId === integration.id ? null : integration.id)}
+                      className="w-full bg-amber-600 hover:bg-amber-700"
+                    >
+                      Configurar {integration.name}
+                    </Button>
+                  )}
+
+                  {expandedId === integration.id && !integration.isConnected && (
+                    <div className="space-y-2 pt-2 border-t">
+                      <p className="text-xs text-slate-600">
+                        Cole sua chave de API abaixo:
+                      </p>
+                      <div className="flex gap-2">
+                        <Input
+                          type={showToken[integration.id] ? "text" : "password"}
+                          placeholder="Cole sua chave de API aqui..."
+                          value={tokens[integration.id] || ""}
+                          onChange={(e) =>
+                            setTokens({ ...tokens, [integration.id]: e.target.value })
+                          }
+                          className="flex-1"
+                        />
+                        <Button
+                          onClick={() =>
+                            setShowToken({
+                              ...showToken,
+                              [integration.id]: !showToken[integration.id],
+                            })
+                          }
+                          variant="outline"
+                          size="sm"
+                        >
+                          {showToken[integration.id] ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </Button>
+                        <Button
+                          onClick={() => handleCopyToken(integration.id)}
+                          variant="outline"
+                          size="sm"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                      </div>
                       <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() =>
-                          setShowToken({
-                            ...showToken,
-                            [plataforma.plataforma]: !showToken[plataforma.plataforma],
-                          })
-                        }
+                        onClick={() => handleValidarConexao(integration.id)}
+                        disabled={validating[integration.id]}
+                        className="w-full bg-green-600 hover:bg-green-700"
                       >
-                        {showToken[plataforma.plataforma] ? (
-                          <EyeOff className="w-4 h-4" />
+                        {validating[integration.id] ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Validando...
+                          </>
                         ) : (
-                          <Eye className="w-4 h-4" />
+                          "Validar Chave"
                         )}
                       </Button>
                     </div>
-                    <p className="text-xs text-gray-500">
-                      Seu token será armazenado de forma segura e criptografada
-                    </p>
-                  </div>
-
-                  <div className="flex gap-2 flex-wrap">
-                    <Button
-                      onClick={() => handleValidarConexao(plataforma.plataforma)}
-                      className="bg-blue-600 hover:bg-blue-700"
-                      disabled={
-                        validating[plataforma.plataforma] || !tokens[plataforma.plataforma]
-                      }
-                    >
-                      {validating[plataforma.plataforma] ? "Validando..." : "Validar Conexão"}
-                    </Button>
-
-                    {plataforma.isConnected && (
-                      <Button
-                        onClick={() => handleDesconectar(plataforma.plataforma)}
-                        variant="destructive"
-                      >
-                        <Trash2 className="w-4 h-4 mr-1" />
-                        Desconectar
-                      </Button>
-                    )}
-                  </div>
-
-                  {plataforma.lastValidated && (
-                    <p className="text-xs text-green-600">
-                      Última validação: {plataforma.lastValidated}
-                    </p>
                   )}
-                </CardContent>
-              )}
+                </div>
+              </CardContent>
             </Card>
           ))}
         </div>
-      </section>
+      </div>
 
       {/* Help Section */}
       <Card className="bg-blue-50 border-blue-200">
         <CardHeader>
           <CardTitle className="text-blue-900">Como obter seus tokens?</CardTitle>
         </CardHeader>
-        <CardContent className="text-sm text-blue-800 space-y-3">
-          <div>
-            <strong>Meta (Facebook/Instagram):</strong> Clique em "Conectar com Meta" e autorize
-            sua conta
-          </div>
-          <div>
-            <strong>TikTok:</strong> Clique em "Conectar com TikTok" e autorize sua conta
-          </div>
-          <div>
-            <strong>Google Drive:</strong> Clique em "Conectar com Google Drive" e autorize sua
-            conta
-          </div>
-          <div>
-            <strong>Bling:</strong> Clique em "Conectar com Bling" e autorize sua conta
-          </div>
-          <div>
-            <strong>Tray:</strong> Acesse Configurações → Integrações → API e copie sua chave
-          </div>
-          <div>
+        <CardContent className="text-sm text-blue-900 space-y-2">
+          <p>
+            <strong>Bling ERP:</strong> Acesse sua conta Bling → Configurações → Integrações → Gere um token OAuth
+          </p>
+          <p>
+            <strong>Canva:</strong> Acesse Canva Developer → Aplicações → Crie uma aplicação e gere as credenciais
+          </p>
+          <p>
+            <strong>Meta (Facebook/Instagram):</strong> Acesse Meta Developers → Meus Aplicativos → Crie um app
+          </p>
+          <p>
+            <strong>TikTok:</strong> Acesse TikTok Developer → Crie uma aplicação e gere as credenciais
+          </p>
+          <p>
+            <strong>Google Drive:</strong> Acesse Google Cloud Console → Crie um projeto → Gere credenciais OAuth
+          </p>
+          <p>
+            <strong>WhatsApp Business:</strong> Configure via Meta Business Suite com seu Business Account
+          </p>
+          <p>
             <strong>Email Marketing:</strong> Acesse sua plataforma de email e gere uma API Key
-          </div>
-          <div>
-            <strong>WhatsApp Business:</strong> Configure via Meta Business Suite com seu
-            Business Account
-          </div>
-          <div>
-            <strong>Canva:</strong> Acesse Canva Developer → Aplicações e gere um token
-          </div>
-          <div>
-            <strong>Instagram:</strong> Use o Graph API Explorer para gerar tokens
-          </div>
-          <div>
-            <strong>Facebook:</strong> Use o Graph API Explorer para gerar tokens
-          </div>
+          </p>
+          <p>
+            <strong>Tray:</strong> Acesse Configurações → Integrações → API e copie sua chave
+          </p>
         </CardContent>
       </Card>
     </div>
   );
 }
-
-// Import Key icon
-import { Key } from "lucide-react";

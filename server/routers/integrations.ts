@@ -1,5 +1,5 @@
-import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
+import { protectedProcedure, router } from "../_core/trpc";
 
 export const integrationsRouter = router({
   // Salvar token de integração
