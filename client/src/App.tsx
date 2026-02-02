@@ -8,6 +8,7 @@ import Automations from "@/pages/Automations";
 import Campaigns from "@/pages/Campaigns";
 import InfluencersDashboard from "@/pages/InfluencersDashboard";
 import MetaAdsCampaigns from "@/pages/MetaAdsCampaigns";
+import OAuthCredentials from "@/pages/OAuthCredentials";
 
 
 export default function App() {
@@ -31,6 +32,8 @@ export default function App() {
         return <InfluencersDashboard />;
       case "/meta-ads-campaigns":
         return <MetaAdsCampaigns />;
+      case "/oauth-credentials":
+        return <OAuthCredentials />;
 
       default:
         return <Home />;

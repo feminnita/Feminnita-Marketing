@@ -33,6 +33,7 @@ const menuItems = [
   { icon: TrendingUp, label: "Campanhas Meta Ads", path: "/meta-ads-campaigns" },
 
   { icon: LayoutDashboard, label: "Integrações", path: "/integraciones" },
+  { icon: LayoutDashboard, label: "Configurar Credenciais", path: "/oauth-credentials" },
   { icon: LayoutDashboard, label: "Guia de Integrações", path: "/integration-guide" },
   { icon: LayoutDashboard, label: "Performance", path: "/performance" },
   { icon: LayoutDashboard, label: "Automações", path: "/automaciones" },

@@ -6,7 +6,25 @@ import { z } from "zod";
  * Handles OAuth flows for Meta (Facebook/Instagram), TikTok, and Google Drive
  */
 export const oauthIntegrationsRouter = router({
-  // ============ Meta (Facebook/Instagram) OAuth ============
+  // ============ Save Credentials ============
+  saveCredentials: publicProcedure
+    .input(z.object({
+      platform: z.string(),
+      clientId: z.string(),
+      clientSecret: z.string(),
+      redirectUri: z.string().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      // Salvar credenciais em variáveis de ambiente (em produção, usar banco de dados)
+      process.env[`${input.platform.toUpperCase()}_CLIENT_ID`] = input.clientId;
+      process.env[`${input.platform.toUpperCase()}_CLIENT_SECRET`] = input.clientSecret;
+      
+      return {
+        success: true,
+        message: `Credenciais de ${input.platform} salvas com sucesso`,
+      };
+    }),
+
   getMetaAuthUrl: publicProcedure.query(async () => {
     const clientId = process.env.META_APP_ID;
     const redirectUri = `${process.env.VITE_FRONTEND_FORGE_API_URL}/api/oauth/meta/callback`;

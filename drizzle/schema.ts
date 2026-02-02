@@ -18,7 +18,7 @@ export const users = mysqlTable("users", {
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
 });
 
@@ -44,7 +44,7 @@ export const integrations = mysqlTable("integrations", {
   isConnected: boolean("isConnected").default(false).notNull(),
   lastValidated: timestamp("lastValidated"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
 });
 
 export type Integration = typeof integrations.$inferSelect;
@@ -70,7 +70,7 @@ export const webhooks = mysqlTable("webhooks", {
   isActive: boolean("isActive").default(true).notNull(),
   lastTriggered: timestamp("lastTriggered"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
 });
 
 export type Webhook = typeof webhooks.$inferSelect;
@@ -126,7 +126,7 @@ export const oauthTokens = mysqlTable("oauth_tokens", {
   isActive: boolean("isActive").default(true).notNull(),
   lastUsed: timestamp("lastUsed"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
 });
 
 export type OAuthToken = typeof oauthTokens.$inferSelect;
