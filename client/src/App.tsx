@@ -12,6 +12,7 @@ import OAuthCredentials from "@/pages/OAuthCredentials";
 import CollaboratorsManagement from "@/pages/CollaboratorsManagement";
 import ConfigureCredentials from "@/pages/ConfigureCredentials";
 import LoginSignup from "@/pages/LoginSignup";
+import IntegrationSetup from "@/pages/IntegrationSetup";
 
 
 export default function App() {
@@ -45,6 +46,8 @@ export default function App() {
         return <LoginSignup />;
       case "/signup":
         return <LoginSignup />;
+      case "/configurar-integracao":
+        return <IntegrationSetup />;
 
       default:
         return <Home />;

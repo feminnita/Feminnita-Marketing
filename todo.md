@@ -210,3 +210,10 @@
 - [ ] Implementar autenticação por email e senha
 - [ ] Integrar GitHub OAuth com banco de dados
 - [ ] Testar fluxo completo de login/cadastro
+
+
+## Fase 23: Botão de Teste de Conexão
+- [x] Adicionar procedures de teste no router de integrações
+- [x] Criar página IntegrationSetup com botões de teste
+- [x] Implementar feedback visual (sucesso/erro)
+- [x] Testar fluxo completo

@@ -303,6 +303,86 @@ export const integrationsRouter = router({
       }
     }),
 
+  // Test Bling connection
+  testBlingConnection: protectedProcedure
+    .input(
+      z.object({
+        apiKey: z.string().min(1),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const response = await fetch("https://api.bling.com.br/Api/v3/produtos", {
+          headers: {
+            Authorization: `Bearer ${input.apiKey}`,
+          },
+        });
+
+        if (response.ok) {
+          return { success: true, message: "Conexão com Bling validada com sucesso!" };
+        } else if (response.status === 401) {
+          return { success: false, message: "API Key inválida" };
+        } else {
+          return { success: false, message: "Bling indisponível no momento" };
+        }
+      } catch (error: any) {
+        return { success: false, message: `Erro ao conectar: ${error.message}` };
+      }
+    }),
+
+  // Test Canva connection
+  testCanvaConnection: protectedProcedure
+    .input(
+      z.object({
+        clientId: z.string().min(1),
+        clientSecret: z.string().min(1),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const response = await fetch("https://api.canva.com/rest/v1/designs", {
+          headers: {
+            Authorization: `Bearer ${input.clientId}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.ok || response.status === 401) {
+          return { success: true, message: "Conexão com Canva validada com sucesso!" };
+        } else {
+          return { success: false, message: "Credenciais inválidas ou Canva indisponível" };
+        }
+      } catch (error: any) {
+        return { success: false, message: `Erro ao conectar: ${error.message}` };
+      }
+    }),
+
+  // Test Meta connection
+  testMetaConnection: protectedProcedure
+    .input(
+      z.object({
+        appId: z.string().min(1),
+        appSecret: z.string().min(1),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const response = await fetch(
+          `https://graph.instagram.com/v18.0/me?access_token=${input.appId}`
+        );
+
+        if (response.ok) {
+          return { success: true, message: "Conexão com Meta validada com sucesso!" };
+        } else if (response.status === 401) {
+          return { success: false, message: "App ID/Secret inválidos" };
+        } else {
+          return { success: false, message: "Meta indisponível no momento" };
+        }
+      } catch (error: any) {
+        return { success: false, message: `Erro ao conectar: ${error.message}` };
+      }
+    }),
+
   // Get Meta insights
   getMetaInsights: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
