@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, Sparkles, TrendingUp } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, Sparkles, TrendingUp, Github } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -230,6 +230,13 @@ function DashboardLayoutContent({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem
+                  onClick={() => window.open("https://github.com/login/oauth/authorize?client_id=" + (process.env.VITE_GITHUB_CLIENT_ID || ""), "_blank")}
+                  className="cursor-pointer"
+                >
+                  <Github className="mr-2 h-4 w-4" />
+                  <span>Conectar GitHub</span>
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={logout}
                   className="cursor-pointer text-destructive focus:text-destructive"

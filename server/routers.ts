@@ -26,6 +26,9 @@ import { collaboratorsRouter } from "./routers/collaborators";
 import { oauthCredentialsRouter } from "./routers/oauth-credentials";
 import { canvaIntegrationRouter } from "./routers/canva-integration";
 import { metaIntegrationRouter } from "./routers/meta-integration";
+import { blingRealRouter } from "./routers/bling-real";
+import { canvaRealRouter } from "./routers/canva-real";
+import { metaRealRouter } from "./routers/meta-real";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -78,6 +81,11 @@ export const appRouter = router({
   oauthCredentials: oauthCredentialsRouter,
   canva: router(canvaIntegrationRouter),
   meta: router(metaIntegrationRouter),
+  
+  // Real integrations with actual APIs
+  blingReal: router(blingRealRouter),
+  canvaReal: router(canvaRealRouter),
+  metaReal: router(metaRealRouter),
 
   // TODO: add feature routers here, e.g.
   // todo: router({
