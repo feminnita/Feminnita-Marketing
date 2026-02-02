@@ -140,7 +140,7 @@ export default function CollaboratorsManagement() {
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-50">
                       <SelectItem value="viewer">Visualizador</SelectItem>
                       <SelectItem value="editor">Editor</SelectItem>
                       <SelectItem value="admin">Administrador</SelectItem>
@@ -148,13 +148,34 @@ export default function CollaboratorsManagement() {
                   </Select>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <Button type="submit" style={{ backgroundColor: "#A63D4A" }}>
-                  Criar Colaborador
-                </Button>
-                <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
-                  Cancelar
-                </Button>
+              <div className="space-y-4">
+                <div className="flex gap-2">
+                  <Button type="submit" style={{ backgroundColor: "#A63D4A" }}>
+                    Criar Colaborador
+                  </Button>
+                  <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
+                    Cancelar
+                  </Button>
+                </div>
+                <div className="border-t pt-4">
+                  <p className="text-sm text-slate-600 mb-3">Ou conecte com GitHub:</p>
+                  <Button 
+                    type="button"
+                    variant="outline"
+                    className="w-full gap-2 border-slate-300 hover:bg-slate-50"
+                    onClick={() => {
+                      const clientId = "YOUR_GITHUB_CLIENT_ID";
+                      const redirectUri = `${window.location.origin}/auth/github/callback`;
+                      const scope = "user:email";
+                      const state = Math.random().toString(36).substring(7);
+                      sessionStorage.setItem("github_oauth_state", state);
+                      window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&state=${state}`;
+                    }}
+                  >
+                    <Github className="w-4 h-4" />
+                    Conectar com GitHub
+                  </Button>
+                </div>
               </div>
             </form>
           </CardContent>

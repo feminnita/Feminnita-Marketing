@@ -197,12 +197,12 @@
 
 
 ## Fase 21: Sincronização Bling, Canva e Meta
-- [ ] Corrigir botão de salvar contas na página de Influenciadoras
-- [ ] Implementar sincronização de estoque do Bling
-- [ ] Criar automação para pausar campanhas quando produto esgotar
-- [ ] Integrar Canva API para geração automática de designs
-- [ ] Vincular credenciais do Meta
-- [ ] Testar fluxos completos
+- [x] Corrigir botão de salvar contas na página de Influenciadoras
+- [x] Implementar sincronização de estoque do Bling
+- [x] Criar automação para pausar campanhas quando produto esgotar
+- [x] Integrar Canva API para geração automática de designs
+- [x] Vincular credenciais do Meta
+- [x] Testar fluxos completos
 
 ## Fase 22: Login/Cadastro com GitHub
 - [ ] Criar página de Login/Cadastro de Colaboradores
