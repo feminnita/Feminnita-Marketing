@@ -144,3 +144,25 @@
 - [ ] Implementar gerenciamento de contatos
 - [ ] Criar pipeline de vendas
 - [ ] Implementar histórico de interações
+
+
+## Fase 15: Gerenciar Contas Reais das Influenciadoras
+- [x] Criar interface para adicionar contas reais (Instagram, TikTok, YouTube, Blog) - Router criado
+- [x] Implementar armazenamento seguro de tokens de acesso das contas - Procedures criadas
+- [x] Criar validação de contas conectadas - Validada por plataforma
+- [x] Implementar sincronização de seguidores/métricas das contas reais - syncAccountMetrics criada
+- [x] Criar dashboard de status de conexão das contas - getConnectionStatus criada
+
+## Fase 16: Integração com Meta Ads API
+- [x] Implementar autenticação com Meta Ads API - Router existente expandido
+- [x] Criar procedures para criar campanhas automáticas - createCampaign implementada
+- [x] Implementar orçamento e bidding automático - toggleCampaign implementada
+- [x] Criar relatórios de performance de campanhas - getCampaignPerformance implementada
+- [x] Implementar otimização automática de campanhas - optimizeCampaign implementada
+
+## Fase 17: Automação de Postagens Terças/Sextas
+- [x] Criar scheduler para terças e sextas - schedulePostingDays implementada
+- [x] Implementar lembrete na véspera para aprovar tema/modelo - sendThemeReminder implementada
+- [x] Criar fluxo de aprovação de conteúdo - requestThemeApproval implementada
+- [x] Implementar publicação automática após aprovação - approveThemeAndGenerate implementada
+- [x] Criar notificações de sucesso/erro de publicação - Integrada com notifyOwner

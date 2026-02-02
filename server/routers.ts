@@ -17,6 +17,8 @@ import { oauthCallbacksRouter } from "./routers/oauth-callbacks";
 import { whatsappBusinessRouter } from "./routers/whatsapp-business";
 import { autonomousInfluencersRouter } from "./routers/autonomous-influencers";
 import { melhorEnvioRouter } from "./routers/melhor-envio";
+import { influencerAccountsRouter } from "./routers/influencer-accounts";
+import { postSchedulerRouter } from "./routers/post-scheduler";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -60,6 +62,8 @@ export const appRouter = router({
   whatsappBusiness: whatsappBusinessRouter,
   autonomousInfluencers: autonomousInfluencersRouter,
   melhorEnvio: melhorEnvioRouter,
+  influencerAccounts: influencerAccountsRouter,
+  postScheduler: postSchedulerRouter,
 
   // TODO: add feature routers here, e.g.
   // todo: router({
