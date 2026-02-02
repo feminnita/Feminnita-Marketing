@@ -6,6 +6,7 @@ import IntegrationGuide from "@/pages/IntegrationGuide";
 import Performance from "@/pages/Performance";
 import Automations from "@/pages/Automations";
 import Campaigns from "@/pages/Campaigns";
+import InfluencersDashboard from "@/pages/InfluencersDashboard";
 
 export default function App() {
   const [location] = useLocation();
@@ -24,6 +25,8 @@ export default function App() {
         return <Automations />;
       case "/campanhas":
         return <Campaigns />;
+      case "/influenciadoras":
+        return <InfluencersDashboard />;
       default:
         return <Home />;
     }
