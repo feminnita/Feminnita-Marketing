@@ -11,6 +11,7 @@ import MetaAdsCampaigns from "@/pages/MetaAdsCampaigns";
 import OAuthCredentials from "@/pages/OAuthCredentials";
 import CollaboratorsManagement from "@/pages/CollaboratorsManagement";
 import ConfigureCredentials from "@/pages/ConfigureCredentials";
+import LoginSignup from "@/pages/LoginSignup";
 
 
 export default function App() {
@@ -40,6 +41,10 @@ export default function App() {
         return <CollaboratorsManagement />;
       case "/configurar-credenciais":
         return <ConfigureCredentials />;
+      case "/login":
+        return <LoginSignup />;
+      case "/signup":
+        return <LoginSignup />;
 
       default:
         return <Home />;

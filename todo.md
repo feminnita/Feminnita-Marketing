@@ -194,3 +194,19 @@
 - [x] Adicionar rota e menu para página de configurar credenciais
 - [x] Implementar testes de banco de dados (6 testes passando)
 - [x] Validar todos os testes passando (138 testes no total)
+
+
+## Fase 21: Sincronização Bling, Canva e Meta
+- [ ] Corrigir botão de salvar contas na página de Influenciadoras
+- [ ] Implementar sincronização de estoque do Bling
+- [ ] Criar automação para pausar campanhas quando produto esgotar
+- [ ] Integrar Canva API para geração automática de designs
+- [ ] Vincular credenciais do Meta
+- [ ] Testar fluxos completos
+
+## Fase 22: Login/Cadastro com GitHub
+- [ ] Criar página de Login/Cadastro de Colaboradores
+- [ ] Adicionar botão GitHub para autenticação OAuth
+- [ ] Implementar autenticação por email e senha
+- [ ] Integrar GitHub OAuth com banco de dados
+- [ ] Testar fluxo completo de login/cadastro
