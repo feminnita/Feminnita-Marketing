@@ -19,7 +19,6 @@ export default function CollaboratorsManagement() {
   const { data: collaborators, isLoading, refetch } = trpc.collaborators.listCollaborators.useQuery();
   const createMutation = trpc.collaborators.createCollaborator.useMutation();
   const deleteMutation = trpc.collaborators.deleteCollaborator.useMutation();
-  const connectGitHubMutation = trpc.collaborators.connectGitHub.useMutation();
 
   const handleCreateCollaborator = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +35,7 @@ export default function CollaboratorsManagement() {
         password: formData.password,
         role: formData.role,
       });
-      
+
       toast.success("Colaborador criado com sucesso");
       setFormData({ name: "", email: "", password: "", role: "viewer" });
       setShowForm(false);
@@ -46,11 +45,11 @@ export default function CollaboratorsManagement() {
     }
   };
 
-  const handleDeleteCollaborator = async (collaboratorId: number) => {
+  const handleDeleteCollaborator = async (id: any) => {
     if (!confirm("Tem certeza que deseja deletar este colaborador?")) return;
 
     try {
-      await deleteMutation.mutateAsync({ collaboratorId });
+      await deleteMutation.mutateAsync({ collaboratorId: id });
       toast.success("Colaborador deletado com sucesso");
       refetch();
     } catch (error: any) {
@@ -58,191 +57,120 @@ export default function CollaboratorsManagement() {
     }
   };
 
-  const handleConnectGitHub = async (collaboratorId: number) => {
-    // Simular conexão com GitHub
-    const githubId = prompt("Digite seu GitHub ID:");
-    const githubUsername = prompt("Digite seu GitHub username:");
 
-    if (!githubId || !githubUsername) return;
-
-    try {
-      await connectGitHubMutation.mutateAsync({
-        collaboratorId,
-        githubId,
-        githubUsername,
-      });
-      toast.success("GitHub conectado com sucesso");
-      refetch();
-    } catch (error: any) {
-      toast.error(error.message || "Erro ao conectar GitHub");
-    }
-  };
 
   return (
-    <div className="container py-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
-            <Users className="w-8 h-8" style={{ color: "#A63D4A" }} />
-            Gerenciamento de Colaboradores
-          </h1>
-          <p className="text-slate-600 mt-2">Crie e gerencie colaboradores da sua equipe</p>
+          <h1 className="text-3xl font-bold">Gerenciamento de Colaboradores</h1>
+          <p className="text-gray-600 mt-2">Gerencie os colaboradores da sua equipe</p>
         </div>
-        <Button
-          onClick={() => setShowForm(!showForm)}
-          className="gap-2"
-          style={{ backgroundColor: "#A63D4A" }}
-        >
+        <Button onClick={() => setShowForm(!showForm)} className="gap-2">
           <Plus className="w-4 h-4" />
           Novo Colaborador
         </Button>
       </div>
 
       {showForm && (
-        <Card className="mb-8 border-amber-200">
+        <Card>
           <CardHeader>
-            <CardTitle>Criar Novo Colaborador</CardTitle>
+            <CardTitle>Novo Colaborador</CardTitle>
             <CardDescription>Adicione um novo membro à sua equipe</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleCreateCollaborator} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Nome</label>
-                  <Input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Nome completo"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Email</label>
-                  <Input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="email@example.com"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Senha</label>
-                  <Input
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    placeholder="Mínimo 6 caracteres"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Função</label>
-                  <Select value={formData.role} onValueChange={(value: any) => setFormData({ ...formData, role: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="z-50">
-                      <SelectItem value="viewer">Visualizador</SelectItem>
-                      <SelectItem value="editor">Editor</SelectItem>
-                      <SelectItem value="admin">Administrador</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Nome</label>
+                <Input
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Nome do colaborador"
+                />
               </div>
-              <div className="space-y-4">
-                <div className="flex gap-2">
-                  <Button type="submit" style={{ backgroundColor: "#A63D4A" }}>
-                    Criar Colaborador
-                  </Button>
-                  <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
-                    Cancelar
-                  </Button>
-                </div>
-                <div className="border-t pt-4">
-                  <p className="text-sm text-slate-600 mb-3">Ou conecte com GitHub:</p>
-                  <Button 
-                    type="button"
-                    variant="outline"
-                    className="w-full gap-2 border-slate-300 hover:bg-slate-50"
-                    onClick={() => {
-                      const clientId = "YOUR_GITHUB_CLIENT_ID";
-                      const redirectUri = `${window.location.origin}/auth/github/callback`;
-                      const scope = "user:email";
-                      const state = Math.random().toString(36).substring(7);
-                      sessionStorage.setItem("github_oauth_state", state);
-                      window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&state=${state}`;
-                    }}
-                  >
-                    <Github className="w-4 h-4" />
-                    Conectar com GitHub
-                  </Button>
-                </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Email</label>
+                <Input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="email@example.com"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Senha</label>
+                <Input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder="Senha segura"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Função</label>
+                <Select value={formData.role} onValueChange={(role) => setFormData({ ...formData, role: role as any })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Administrador</SelectItem>
+                    <SelectItem value="editor">Editor</SelectItem>
+                    <SelectItem value="viewer">Visualizador</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex gap-2">
+                <Button type="submit" disabled={createMutation.isPending}>
+                  {createMutation.isPending ? "Criando..." : "Criar Colaborador"}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
+                  Cancelar
+                </Button>
               </div>
             </form>
           </CardContent>
         </Card>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {isLoading ? (
-          <div className="col-span-full text-center py-8">
-            <p className="text-slate-600">Carregando colaboradores...</p>
-          </div>
-        ) : collaborators && collaborators.length > 0 ? (
-          collaborators.map((collab: any) => (
-            <Card key={collab.id} className="border-amber-200 hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="text-lg">{collab.name}</CardTitle>
-                <CardDescription>{collab.email}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-slate-700">Função:</span>
-                  <span className="text-sm px-3 py-1 rounded-full" style={{ backgroundColor: "#FFF3E0", color: "#A63D4A" }}>
-                    {collab.role === "admin" ? "Administrador" : collab.role === "editor" ? "Editor" : "Visualizador"}
-                  </span>
-                </div>
-                
-                {collab.githubUsername && (
-                  <div className="flex items-center gap-2 text-sm text-slate-600">
-                    <Github className="w-4 h-4" />
-                    <span>{collab.githubUsername}</span>
+      <Card>
+        <CardHeader>
+          <CardTitle>Colaboradores</CardTitle>
+          <CardDescription>Lista de todos os colaboradores da equipe</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <p className="text-gray-500">Carregando colaboradores...</p>
+          ) : !collaborators || collaborators.length === 0 ? (
+            <p className="text-gray-500">Nenhum colaborador adicionado ainda</p>
+          ) : (
+            <div className="space-y-4">
+              {collaborators.map((collaborator: any) => (
+                <div key={collaborator.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex-1">
+                    <p className="font-medium">{collaborator.name}</p>
+                    <p className="text-sm text-gray-600">{collaborator.email}</p>
+                    <p className="text-xs text-gray-500 mt-1">Função: {collaborator.role}</p>
                   </div>
-                )}
-
-                {collab.lastLogin && (
-                  <div className="text-xs text-slate-500">
-                    Último acesso: {new Date(collab.lastLogin).toLocaleDateString("pt-BR")}
+                  <div className="flex gap-2">
+                    {/* GitHub button will be enabled after fixing router */}
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleDeleteCollaborator(Number(collaborator.id))}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
-                )}
-
-                <div className="flex gap-2 pt-4">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleConnectGitHub(collab.id)}
-                    className="flex-1 gap-1"
-                  >
-                    <Github className="w-3 h-3" />
-                    GitHub
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDeleteCollaborator(collab.id)}
-                    className="flex-1"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
                 </div>
-              </CardContent>
-            </Card>
-          ))
-        ) : (
-          <div className="col-span-full text-center py-8">
-            <p className="text-slate-600">Nenhum colaborador cadastrado ainda</p>
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
