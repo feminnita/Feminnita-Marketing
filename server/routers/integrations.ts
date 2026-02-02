@@ -1,191 +1,341 @@
-import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
+import { z } from "zod";
+import { getDb } from "../db";
+import { oauthCredentials } from "../../drizzle/schema";
+import { eq, and } from "drizzle-orm";
 
 export const integrationsRouter = router({
-  // Salvar token de integração
-  salvarToken: protectedProcedure
+  // Get status of all integrations
+  getStatus: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+
+    const credentials = await db
+      .select()
+      .from(oauthCredentials)
+      .where(eq(oauthCredentials.userId, ctx.user.id));
+
+    const status: Record<string, any> = {
+      bling: { connected: false },
+      canva: { connected: false },
+      meta: { connected: false },
+    };
+
+    credentials.forEach((cred) => {
+      if (cred.platform === "bling") {
+        status.bling = {
+          connected: true,
+          lastSync: cred.lastValidated,
+        };
+      } else if (cred.platform === "canva") {
+        status.canva = {
+          connected: true,
+          lastSync: cred.lastValidated,
+        };
+      } else if (cred.platform === "meta") {
+        status.meta = {
+          connected: true,
+          lastSync: cred.lastValidated,
+        };
+      }
+    });
+
+    return status;
+  }),
+
+  // Connect Bling
+  connectBling: protectedProcedure
     .input(
       z.object({
-        plataforma: z.enum([
-          "tray",
-          "google_drive",
-          "meta",
-          "email_marketing",
-          "instagram",
-          "tiktok",
-          "facebook",
-          "whatsapp",
-          "bling",
-        ]),
-        token: z.string().min(1),
+        apiKey: z.string().min(1, "API Key é obrigatória"),
       })
     )
-    .mutation(async ({ input, ctx }: any) => {
-      console.log(`Salvando token para ${input.plataforma}`);
-      
-      // Aqui você salvaria no banco de dados
-      // await db.integrations.insert({
-      //   userId: ctx.user.id,
-      //   plataforma: input.plataforma,
-      //   token: encryptToken(input.token),
-      //   isConnected: false,
-      // });
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
 
-      return {
-        sucesso: true,
-        mensagem: `Token de ${input.plataforma} salvo com sucesso!`,
-        plataforma: input.plataforma,
-      };
-    }),
+      try {
+        // Test connection to Bling API
+        const response = await fetch("https://api.bling.com.br/Api/v3/produtos", {
+          headers: {
+            Authorization: `Bearer ${input.apiKey}`,
+          },
+        });
 
-  // Validar conexão com plataforma
-  validarConexao: protectedProcedure
-    .input(
-      z.object({
-        plataforma: z.enum([
-          "tray",
-          "google_drive",
-          "meta",
-          "email_marketing",
-          "instagram",
-          "tiktok",
-          "facebook",
-          "whatsapp",
-          "bling",
-        ]),
-        token: z.string(),
-      })
-    )
-    .mutation(async ({ input }: any) => {
-      console.log(`Validando conexão com ${input.plataforma}`);
+        if (!response.ok) {
+          throw new Error("API Key inválida ou Bling indisponível");
+        }
 
-      // Simulação de validação
-      const validacoes: Record<string, boolean> = {
-        tray: input.token.length > 10,
-        google_drive: input.token.includes("ya29") || input.token.length > 50,
-        meta: input.token.includes("EAA") || input.token.length > 100,
-        email_marketing: input.token.length > 20,
-        instagram: input.token.length > 20,
-        tiktok: input.token.length > 20,
-        facebook: input.token.includes("EAA") || input.token.length > 100,
-        whatsapp: input.token.length > 20,
-        bling: input.token.length > 20,
-      };
+        // Delete existing Bling credential
+        await db
+          .delete(oauthCredentials)
+          .where(
+            and(
+              eq(oauthCredentials.userId, ctx.user.id),
+              eq(oauthCredentials.platform, "bling")
+            )
+          );
 
-      const isValid = validacoes[input.plataforma] || false;
+        // Save new credential
+        await db.insert(oauthCredentials).values({
+          userId: ctx.user.id,
+          platform: "bling",
+          accessToken: input.apiKey,
+          refreshToken: null,
+          expiresAt: null,
+          lastValidated: new Date(),
+        });
 
-      if (isValid) {
-        return {
-          sucesso: true,
-          conectado: true,
-          mensagem: `Conexão com ${input.plataforma} validada com sucesso!`,
-        };
-      } else {
-        return {
-          sucesso: false,
-          conectado: false,
-          mensagem: `Token inválido para ${input.plataforma}. Verifique e tente novamente.`,
-        };
+        return { success: true, message: "Bling conectado com sucesso" };
+      } catch (error: any) {
+        throw new Error(`Erro ao conectar Bling: ${error.message}`);
       }
     }),
 
-  // Listar integrações do usuário
-  listar: protectedProcedure.query(async ({ ctx }: any) => {
-    console.log(`Listando integrações do usuário ${ctx.user.id}`);
+  // Connect Canva
+  connectCanva: protectedProcedure
+    .input(
+      z.object({
+        clientId: z.string().min(1, "Client ID é obrigatório"),
+        clientSecret: z.string().min(1, "Client Secret é obrigatório"),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
 
-    // Aqui você buscaria do banco de dados
-    // const integracoes = await db.integrations.findMany({
-    //   where: { userId: ctx.user.id }
-    // });
+      try {
+        // Test connection to Canva API
+        const response = await fetch("https://api.canva.com/rest/v1/designs", {
+          headers: {
+            Authorization: `Bearer ${input.clientId}`,
+            "Content-Type": "application/json",
+          },
+        });
 
-    return [
-      {
-        plataforma: "tray",
-        isConnected: false,
-        lastValidated: null,
-      },
-      {
-        plataforma: "google_drive",
-        isConnected: false,
-        lastValidated: null,
-      },
-      {
-        plataforma: "meta",
-        isConnected: false,
-        lastValidated: null,
-      },
-      {
-        plataforma: "email_marketing",
-        isConnected: false,
-        lastValidated: null,
-      },
-      {
-        plataforma: "instagram",
-        isConnected: false,
-        lastValidated: null,
-      },
-      {
-        plataforma: "tiktok",
-        isConnected: false,
-        lastValidated: null,
-      },
-      {
-        plataforma: "facebook",
-        isConnected: false,
-        lastValidated: null,
-      },
-      {
-        plataforma: "whatsapp",
-        isConnected: false,
-        lastValidated: null,
-      },
-      {
-        plataforma: "bling",
-        isConnected: false,
-        lastValidated: null,
-      },
-    ];
+        if (!response.ok && response.status !== 401) {
+          throw new Error("Credenciais inválidas ou Canva indisponível");
+        }
+
+        // Delete existing Canva credential
+        await db
+          .delete(oauthCredentials)
+          .where(
+            and(
+              eq(oauthCredentials.userId, ctx.user.id),
+              eq(oauthCredentials.platform, "canva")
+            )
+          );
+
+        // Save new credential
+        await db.insert(oauthCredentials).values({
+          userId: ctx.user.id,
+          platform: "canva",
+          accessToken: input.clientId,
+          refreshToken: input.clientSecret,
+          expiresAt: null,
+          lastValidated: new Date(),
+        });
+
+        return { success: true, message: "Canva conectada com sucesso" };
+      } catch (error: any) {
+        throw new Error(`Erro ao conectar Canva: ${error.message}`);
+      }
+    }),
+
+  // Connect Meta
+  connectMeta: protectedProcedure
+    .input(
+      z.object({
+        appId: z.string().min(1, "App ID é obrigatório"),
+        appSecret: z.string().min(1, "App Secret é obrigatório"),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      try {
+        // Test connection to Meta Graph API
+        const response = await fetch(
+          `https://graph.instagram.com/v18.0/me?access_token=${input.appId}`
+        );
+
+        if (!response.ok) {
+          throw new Error("App ID/Secret inválidos ou Meta indisponível");
+        }
+
+        // Delete existing Meta credential
+        await db
+          .delete(oauthCredentials)
+          .where(
+            and(
+              eq(oauthCredentials.userId, ctx.user.id),
+              eq(oauthCredentials.platform, "meta")
+            )
+          );
+
+        // Save new credential
+        await db.insert(oauthCredentials).values({
+          userId: ctx.user.id,
+          platform: "meta",
+          accessToken: input.appId,
+          refreshToken: input.appSecret,
+          expiresAt: null,
+          lastValidated: new Date(),
+        });
+
+        return { success: true, message: "Meta conectada com sucesso" };
+      } catch (error: any) {
+        throw new Error(`Erro ao conectar Meta: ${error.message}`);
+      }
+    }),
+
+  // Disconnect integration
+  disconnect: protectedProcedure
+    .input(
+      z.object({
+        platform: z.enum(["bling", "canva", "meta"]),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      await db
+        .delete(oauthCredentials)
+        .where(
+          and(
+            eq(oauthCredentials.userId, ctx.user.id),
+            eq(oauthCredentials.platform, input.platform)
+          )
+        );
+
+      return { success: true, message: `${input.platform} desconectado com sucesso` };
+    }),
+
+  // Get Bling products
+  getBlingProducts: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+
+    const credential = await db
+      .select()
+      .from(oauthCredentials)
+      .where(
+        and(
+          eq(oauthCredentials.userId, ctx.user.id),
+          eq(oauthCredentials.platform, "bling")
+        )
+      )
+      .limit(1);
+
+    if (!credential.length) {
+      throw new Error("Bling não conectado");
+    }
+
+    try {
+      const response = await fetch("https://api.bling.com.br/Api/v3/produtos", {
+        headers: {
+          Authorization: `Bearer ${credential[0].accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao buscar produtos do Bling");
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error: any) {
+      throw new Error(`Erro ao buscar produtos: ${error.message}`);
+    }
   }),
 
-  // Desconectar integração
-  desconectar: protectedProcedure
+  // Create Canva design
+  createCanvaDesign: protectedProcedure
     .input(
       z.object({
-        plataforma: z.string(),
+        title: z.string(),
+        designType: z.string(),
       })
     )
-    .mutation(async ({ input }: any) => {
-      console.log(`Desconectando ${input.plataforma}`);
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
 
-      // Aqui você deletaria do banco de dados
-      // await db.integrations.delete({
-      //   where: {
-      //     userId: ctx.user.id,
-      //     plataforma: input.plataforma,
-      //   }
-      // });
+      const credential = await db
+        .select()
+        .from(oauthCredentials)
+        .where(
+          and(
+            eq(oauthCredentials.userId, ctx.user.id),
+            eq(oauthCredentials.platform, "canva")
+          )
+        )
+        .limit(1);
 
-      return {
-        sucesso: true,
-        mensagem: `${input.plataforma} desconectado com sucesso!`,
-      };
+      if (!credential.length) {
+        throw new Error("Canva não conectada");
+      }
+
+      try {
+        const response = await fetch("https://api.canva.com/rest/v1/designs", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${credential[0].accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: input.title,
+            design_type: input.designType,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Erro ao criar design no Canva");
+        }
+
+        const data = await response.json();
+        return data;
+      } catch (error: any) {
+        throw new Error(`Erro ao criar design: ${error.message}`);
+      }
     }),
 
-  // Obter status de integração
-  obterStatus: protectedProcedure
-    .input(
-      z.object({
-        plataforma: z.string(),
-      })
-    )
-    .query(async ({ input }: any) => {
-      console.log(`Obtendo status de ${input.plataforma}`);
+  // Get Meta insights
+  getMetaInsights: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
 
-      return {
-        plataforma: input.plataforma,
-        isConnected: false,
-        lastValidated: null,
-        mensagem: "Não conectado",
-      };
-    }),
+    const credential = await db
+      .select()
+      .from(oauthCredentials)
+      .where(
+        and(
+          eq(oauthCredentials.userId, ctx.user.id),
+          eq(oauthCredentials.platform, "meta")
+        )
+      )
+      .limit(1);
+
+    if (!credential.length) {
+      throw new Error("Meta não conectada");
+    }
+
+    try {
+      const response = await fetch(
+        `https://graph.instagram.com/v18.0/me/insights?access_token=${credential[0].accessToken}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Erro ao buscar insights do Meta");
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error: any) {
+      throw new Error(`Erro ao buscar insights: ${error.message}`);
+    }
+  }),
 });
