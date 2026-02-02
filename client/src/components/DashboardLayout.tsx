@@ -30,8 +30,7 @@ import { Button } from "./ui/button";
 const menuItems = [
   { icon: LayoutDashboard, label: "Início", path: "/" },
   { icon: Users, label: "Influenciadoras", path: "/influenciadoras" },
-  { icon: Users, label: "Conectar Contas", path: "/conectar-contas" },
-  { icon: LayoutDashboard, label: "Aprovar Temas", path: "/aprovar-temas" },
+
   { icon: LayoutDashboard, label: "Integrações", path: "/integraciones" },
   { icon: LayoutDashboard, label: "Guia de Integrações", path: "/integration-guide" },
   { icon: LayoutDashboard, label: "Performance", path: "/performance" },

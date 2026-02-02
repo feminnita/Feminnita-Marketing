@@ -7,6 +7,7 @@ import { Users, TrendingUp, MessageCircle, Heart, Share2, Eye, BarChart3, Zap } 
 
 export default function InfluencersDashboard() {
   const [selectedInfluencer, setSelectedInfluencer] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'contas' | 'temas'>('dashboard');
 
   // Fetch all influencers
   const { data: influencersData, isLoading: loadingInfluencers } =
@@ -40,6 +41,43 @@ export default function InfluencersDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
       <div className="max-w-7xl mx-auto">
+        {/* Tabs */}
+        <div className="flex gap-2 mb-8 border-b border-slate-200">
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`px-4 py-2 font-semibold transition-colors ${
+              activeTab === 'dashboard'
+                ? 'text-pink-600 border-b-2 border-pink-600'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            Dashboard
+          </button>
+          <button
+            onClick={() => setActiveTab('contas')}
+            className={`px-4 py-2 font-semibold transition-colors ${
+              activeTab === 'contas'
+                ? 'text-pink-600 border-b-2 border-pink-600'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            Conectar Contas
+          </button>
+          <button
+            onClick={() => setActiveTab('temas')}
+            className={`px-4 py-2 font-semibold transition-colors ${
+              activeTab === 'temas'
+                ? 'text-pink-600 border-b-2 border-pink-600'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            Aprovar Temas
+          </button>
+        </div>
+
+        {/* Dashboard Tab */}
+        {activeTab === 'dashboard' && (
+        <>
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-slate-900 mb-2">
@@ -263,6 +301,117 @@ export default function InfluencersDashboard() {
           <div className="text-center py-12">
             <p className="text-slate-600">Carregando influenciadoras...</p>
           </div>
+        )}
+        </>
+        )}
+
+        {/* Conectar Contas Tab */}
+        {activeTab === 'contas' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Conectar Contas das Influenciadoras</CardTitle>
+              <CardDescription>
+                Registre as contas reais de Instagram, TikTok, YouTube e Blog
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-900">
+                    <strong>Como conectar:</strong> Forneça o nome da conta (@username) e o token de acesso de cada plataforma. Os tokens são armazenados com segurança.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {['Carol', 'Renata', 'Vanessa', 'Luiza'].map((name) => (
+                    <div key={name} className="p-4 border border-slate-200 rounded-lg">
+                      <h3 className="font-semibold text-slate-900 mb-3">{name}</h3>
+                      <div className="space-y-3">
+                        {['Instagram', 'TikTok', 'YouTube', 'Blog'].map((platform) => (
+                          <div key={platform}>
+                            <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                              {platform}
+                            </label>
+                            <input
+                              type="text"
+                              placeholder={`@${name.toLowerCase()}_${platform.toLowerCase()}`}
+                              className="w-full px-2 py-1 text-sm border border-slate-300 rounded"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <button className="w-full mt-4 px-3 py-2 bg-pink-600 text-white text-sm font-semibold rounded hover:bg-pink-700">
+                        Salvar Contas
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Aprovar Temas Tab */}
+        {activeTab === 'temas' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Aprovar Temas e Modelos</CardTitle>
+              <CardDescription>
+                Revise e aprove os temas para postagem das influenciadoras
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-900">
+                    <strong>Próximas postagens:</strong> Terças e sextas às 14:00
+                  </p>
+                </div>
+                <div className="space-y-3">
+                  {[
+                    { theme: 'Verão 2026', model: 'Coleção Premium', influencer: 'Carol', status: 'pending' },
+                    { theme: 'Conforto e Estilo', model: 'Básico', influencer: 'Renata', status: 'approved' },
+                  ].map((item, idx) => (
+                    <div
+                      key={idx}
+                      className={`p-4 rounded-lg border-2 ${
+                        item.status === 'approved'
+                          ? 'border-green-200 bg-green-50'
+                          : 'border-amber-200 bg-amber-50'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h4 className="font-semibold text-slate-900">{item.theme}</h4>
+                          <p className="text-sm text-slate-600 mt-1">
+                            Modelo: {item.model} | {item.influencer}
+                          </p>
+                        </div>
+                        <span
+                          className={`text-xs font-semibold px-2 py-1 rounded ${
+                            item.status === 'approved'
+                              ? 'bg-green-200 text-green-800'
+                              : 'bg-amber-200 text-amber-800'
+                          }`}
+                        >
+                          {item.status === 'approved' ? 'Aprovado' : 'Pendente'}
+                        </span>
+                      </div>
+                      {item.status === 'pending' && (
+                        <div className="flex gap-2 mt-3">
+                          <button className="flex-1 px-3 py-2 bg-green-600 text-white text-sm font-semibold rounded hover:bg-green-700">
+                            Aprovar
+                          </button>
+                          <button className="flex-1 px-3 py-2 bg-red-600 text-white text-sm font-semibold rounded hover:bg-red-700">
+                            Rejeitar
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>

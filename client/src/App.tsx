@@ -7,8 +7,7 @@ import Performance from "@/pages/Performance";
 import Automations from "@/pages/Automations";
 import Campaigns from "@/pages/Campaigns";
 import InfluencersDashboard from "@/pages/InfluencersDashboard";
-import ConnectInfluencerAccounts from "@/pages/ConnectInfluencerAccounts";
-import ThemeApproval from "@/pages/ThemeApproval";
+
 
 export default function App() {
   const [location] = useLocation();
@@ -29,10 +28,7 @@ export default function App() {
         return <Campaigns />;
       case "/influenciadoras":
         return <InfluencersDashboard />;
-      case "/conectar-contas":
-        return <ConnectInfluencerAccounts />;
-      case "/aprovar-temas":
-        return <ThemeApproval />;
+
       default:
         return <Home />;
     }
