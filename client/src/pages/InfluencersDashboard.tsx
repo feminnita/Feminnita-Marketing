@@ -8,6 +8,8 @@ import { Users, TrendingUp, MessageCircle, Heart, Share2, Eye, BarChart3, Zap } 
 export default function InfluencersDashboard() {
   const [selectedInfluencer, setSelectedInfluencer] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'contas' | 'temas'>('dashboard');
+  const [accountsData, setAccountsData] = useState<Record<string, Record<string, string>>>({});
+  const [savingInfluencer, setSavingInfluencer] = useState<string | null>(null);
 
   // Fetch all influencers
   const { data: influencersData, isLoading: loadingInfluencers } =
@@ -26,6 +28,57 @@ export default function InfluencersDashboard() {
       { influencerId: selectedInfluencer || 1 },
       { enabled: !!selectedInfluencer }
     );
+
+  // Mutation to save accounts
+  const saveAccountsMutation = trpc.influencerAccounts.addAccount.useMutation();
+
+  const handleSaveAccounts = async (influencerName: string) => {
+    setSavingInfluencer(influencerName);
+    try {
+      const accounts = accountsData[influencerName];
+      if (!accounts || Object.values(accounts).every(v => !v)) {
+        alert("Preencha pelo menos uma conta");
+        setSavingInfluencer(null);
+        return;
+      }
+
+      const influencer = influencers.find(inf => inf.name === influencerName);
+      if (!influencer) {
+        alert("Influenciadora não encontrada");
+        setSavingInfluencer(null);
+        return;
+      }
+
+      for (const [platform, username] of Object.entries(accounts)) {
+        if (username) {
+          await saveAccountsMutation.mutateAsync({
+            influencerId: influencer.id,
+            platform: platform.toLowerCase() as any,
+            accountHandle: username,
+            accountId: `${platform}_${Date.now()}`,
+            accessToken: `token_${platform}_${Date.now()}`,
+          });
+        }
+      }
+
+      alert(`Contas de ${influencerName} salvas com sucesso!`);
+      setAccountsData(prev => ({ ...prev, [influencerName]: {} }));
+    } catch (error: any) {
+      alert(error.message || "Erro ao salvar contas");
+    } finally {
+      setSavingInfluencer(null);
+    }
+  };
+
+  const handleAccountChange = (influencerName: string, platform: string, value: string) => {
+    setAccountsData(prev => ({
+      ...prev,
+      [influencerName]: {
+        ...prev[influencerName],
+        [platform]: value,
+      },
+    }));
+  };
 
   useEffect(() => {
     if (influencersData?.influencers && influencersData.influencers.length > 0) {
@@ -334,13 +387,19 @@ export default function InfluencersDashboard() {
                             <input
                               type="text"
                               placeholder={`@${name.toLowerCase()}_${platform.toLowerCase()}`}
+                              value={accountsData[name]?.[platform] || ""}
+                              onChange={(e) => handleAccountChange(name, platform, e.target.value)}
                               className="w-full px-2 py-1 text-sm border border-slate-300 rounded"
                             />
                           </div>
                         ))}
                       </div>
-                      <button className="w-full mt-4 px-3 py-2 bg-pink-600 text-white text-sm font-semibold rounded hover:bg-pink-700">
-                        Salvar Contas
+                      <button 
+                        onClick={() => handleSaveAccounts(name)}
+                        disabled={savingInfluencer === name}
+                        className="w-full mt-4 px-3 py-2 bg-pink-600 text-white text-sm font-semibold rounded hover:bg-pink-700 disabled:opacity-50"
+                      >
+                        {savingInfluencer === name ? "Salvando..." : "Salvar Contas"}
                       </button>
                     </div>
                   ))}

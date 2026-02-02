@@ -250,3 +250,23 @@ export type InfluencerPerformance = typeof influencerPerformance.$inferSelect;
 export type InsertInfluencerPerformance = typeof influencerPerformance.$inferInsert;
 export type InfluencerInteraction = typeof influencerInteractions.$inferSelect;
 export type InsertInfluencerInteraction = typeof influencerInteractions.$inferInsert;
+
+
+// Tabela para armazenar colaboradores
+export const collaborators = mysqlTable("collaborators", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 320 }).notNull().unique(),
+  passwordHash: text("passwordHash").notNull(), // Hash bcrypt
+  role: mysqlEnum("role", ["admin", "editor", "viewer"]).default("viewer").notNull(),
+  githubId: varchar("githubId", { length: 255 }),
+  githubUsername: varchar("githubUsername", { length: 255 }),
+  isActive: boolean("isActive").default(true).notNull(),
+  lastLogin: timestamp("lastLogin"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+
+export type Collaborator = typeof collaborators.$inferSelect;
+export type InsertCollaborator = typeof collaborators.$inferInsert;

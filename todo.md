@@ -168,3 +168,20 @@
 - [x] Criar fluxo de aprovação de conteúdo - requestThemeApproval implementada
 - [x] Implementar publicação automática após aprovação - approveThemeAndGenerate implementada
 - [x] Criar notificações de sucesso/erro de publicação - Integrada com notifyOwner
+
+
+## Fase 18: Correção do Botão de Salvar Contas
+- [x] Adicionar estado para armazenar dados de contas
+- [x] Implementar handler para salvar contas
+- [x] Conectar botão com mutation de influencerAccounts
+- [x] Adicionar feedback visual (loading state)
+
+## Fase 19: Cadastro de Colaboradores e GitHub
+- [x] Criar tabela de colaboradores no banco de dados
+- [x] Implementar router de cadastro com hash de senha (7 procedures)
+- [x] Criar página de gerenciamento de colaboradores
+- [x] Adicionar rota e menu para página de colaboradores
+- [x] Implementar testes de banco de dados (8 testes)
+- [ ] Testar fluxo completo de cadastro e login
+- [ ] Implementar autenticação de colaboradores com sessão
+- [ ] Adicionar integração GitHub OAuth

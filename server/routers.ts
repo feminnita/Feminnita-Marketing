@@ -22,6 +22,7 @@ import { postSchedulerRouter } from "./routers/post-scheduler";
 import { metaAdsCampaignsRouter } from "./routers/meta-ads-campaigns";
 import { campaignMetricsSyncRouter } from "./routers/campaign-metrics-sync";
 import { smartAlertsRouter } from "./routers/smart-alerts";
+import { collaboratorsRouter } from "./routers/collaborators";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -70,6 +71,7 @@ export const appRouter = router({
   metaAdsCampaigns: metaAdsCampaignsRouter,
   campaignMetricsSync: campaignMetricsSyncRouter,
   smartAlerts: smartAlertsRouter,
+  collaborators: collaboratorsRouter,
 
   // TODO: add feature routers here, e.g.
   // todo: router({
