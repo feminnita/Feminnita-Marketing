@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, CheckCircle2, Loader2, LogOut } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2, LogOut, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 
@@ -167,10 +167,10 @@ export default function IntegrationSetup() {
   };
 
   // Disconnect
-  const handleDisconnect = async (platform: "bling" | "canva" | "meta") => {
+  const handleDisconnect = async (platform: string) => {
     try {
-      await disconnectMutation.mutateAsync({ platform });
-      toast.success(`${platform} desconectado com sucesso`);
+      await disconnectMutation.mutateAsync({ platform: platform as any });
+      toast.success(`${platform} desconectado com sucesso!`);
       if (platform === "bling") setBlingConnected(false);
       if (platform === "canva") setCanvaConnected(false);
       if (platform === "meta") setMetaConnected(false);
@@ -180,10 +180,10 @@ export default function IntegrationSetup() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 p-6">
       <div>
         <h1 className="text-3xl font-bold">Configurar Integrações</h1>
-        <p className="text-gray-600 mt-2">Conecte suas plataformas e teste a conexão antes de salvar</p>
+        <p className="text-muted-foreground mt-2">Teste e configure suas integrações com Bling, Canva e Meta</p>
       </div>
 
       {/* Bling Integration */}
@@ -191,31 +191,34 @@ export default function IntegrationSetup() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2">
-                <span>🔗 Bling ERP</span>
-                {blingConnected && <Badge className="bg-green-500">Conectado</Badge>}
-              </CardTitle>
+              <CardTitle>Bling ERP</CardTitle>
               <CardDescription>Sincronize produtos, pedidos e estoque</CardDescription>
             </div>
-            {blingConnected && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleDisconnect("bling")}
-                className="text-red-600 hover:text-red-700"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Desconectar
-              </Button>
-            )}
+            {blingConnected && <Badge className="bg-green-500">Conectado</Badge>}
+            {!blingConnected && <Badge variant="outline">Desconectado</Badge>}
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="bling-api-key">API Key do Bling</Label>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3">
+            <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-blue-800">
+              <p className="font-semibold mb-1">Como gerar a API Key do Bling:</p>
+              <ol className="list-decimal list-inside space-y-1">
+                <li>Acesse <a href="https://www.bling.com.br" target="_blank" rel="noopener noreferrer" className="underline font-semibold">bling.com.br</a></li>
+                <li>Vá em <strong>Preferências → Sistema → Usuários</strong></li>
+                <li>Crie um novo <strong>"Usuário API"</strong></li>
+                <li>Copie a <strong>chave de integração</strong> gerada</li>
+                <li>Cole aqui e clique em "Testar Conexão"</li>
+              </ol>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="bling-key">API Key do Bling</Label>
             <Input
-              id="bling-api-key"
-              placeholder="Insira sua API Key do Bling"
+              id="bling-key"
+              type="password"
+              placeholder="Cole sua API Key aqui"
               value={blingApiKey}
               onChange={(e) => setBlingApiKey(e.target.value)}
               disabled={blingConnected}
@@ -228,36 +231,21 @@ export default function IntegrationSetup() {
               disabled={blingTesting || !blingApiKey}
               variant="outline"
             >
-              {blingTesting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Testando...
-                </>
-              ) : (
-                <>
-                  {blingConnected ? (
-                    <CheckCircle2 className="w-4 h-4 mr-2 text-green-600" />
-                  ) : (
-                    <AlertCircle className="w-4 h-4 mr-2" />
-                  )}
-                  Testar Conexão
-                </>
-              )}
+              {blingTesting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Testar Conexão
             </Button>
-
             {!blingConnected && (
+              <Button onClick={handleSaveBling} disabled={!blingApiKey || blingTesting}>
+                Salvar Credenciais
+              </Button>
+            )}
+            {blingConnected && (
               <Button
-                onClick={handleSaveBling}
-                disabled={!blingApiKey || connectBlingMutation.isPending}
+                onClick={() => handleDisconnect("bling")}
+                variant="destructive"
               >
-                {connectBlingMutation.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Salvando...
-                  </>
-                ) : (
-                  "Salvar Credenciais"
-                )}
+                <LogOut className="w-4 h-4 mr-2" />
+                Desconectar
               </Button>
             )}
           </div>
@@ -269,43 +257,40 @@ export default function IntegrationSetup() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2">
-                <span>🎨 Canva</span>
-                {canvaConnected && <Badge className="bg-green-500">Conectado</Badge>}
-              </CardTitle>
-              <CardDescription>Crie designs automaticamente para posts e stories</CardDescription>
+              <CardTitle>Canva</CardTitle>
+              <CardDescription>Crie designs automaticamente</CardDescription>
             </div>
-            {canvaConnected && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleDisconnect("canva")}
-                className="text-red-600 hover:text-red-700"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Desconectar
-              </Button>
-            )}
+            {canvaConnected && <Badge className="bg-green-500">Conectado</Badge>}
+            {!canvaConnected && <Badge variant="outline">Desconectado</Badge>}
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="canva-client-id">Client ID do Canva</Label>
+          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 flex gap-3">
+            <AlertCircle className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-purple-800">
+              <p className="font-semibold mb-1">Credenciais do Canva:</p>
+              <p>Use as credenciais fornecidas ou obtenha novas em <a href="https://www.canva.dev" target="_blank" rel="noopener noreferrer" className="underline font-semibold">canva.dev</a></p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="canva-id">Client ID</Label>
             <Input
-              id="canva-client-id"
-              placeholder="Insira seu Client ID do Canva"
+              id="canva-id"
+              type="text"
+              placeholder="OC-AZwe5Lb9Mj6o"
               value={canvaClientId}
               onChange={(e) => setCanvaClientId(e.target.value)}
               disabled={canvaConnected}
             />
           </div>
 
-          <div>
-            <Label htmlFor="canva-client-secret">Client Secret do Canva</Label>
+          <div className="space-y-2">
+            <Label htmlFor="canva-secret">Client Secret</Label>
             <Input
-              id="canva-client-secret"
+              id="canva-secret"
               type="password"
-              placeholder="Insira seu Client Secret do Canva"
+              placeholder="Cole seu Client Secret"
               value={canvaClientSecret}
               onChange={(e) => setCanvaClientSecret(e.target.value)}
               disabled={canvaConnected}
@@ -318,36 +303,24 @@ export default function IntegrationSetup() {
               disabled={canvaTesting || !canvaClientId || !canvaClientSecret}
               variant="outline"
             >
-              {canvaTesting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Testando...
-                </>
-              ) : (
-                <>
-                  {canvaConnected ? (
-                    <CheckCircle2 className="w-4 h-4 mr-2 text-green-600" />
-                  ) : (
-                    <AlertCircle className="w-4 h-4 mr-2" />
-                  )}
-                  Testar Conexão
-                </>
-              )}
+              {canvaTesting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Testar Conexão
             </Button>
-
             {!canvaConnected && (
               <Button
                 onClick={handleSaveCanva}
-                disabled={!canvaClientId || !canvaClientSecret || connectCanvaMutation.isPending}
+                disabled={!canvaClientId || !canvaClientSecret || canvaTesting}
               >
-                {connectCanvaMutation.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Salvando...
-                  </>
-                ) : (
-                  "Salvar Credenciais"
-                )}
+                Salvar Credenciais
+              </Button>
+            )}
+            {canvaConnected && (
+              <Button
+                onClick={() => handleDisconnect("canva")}
+                variant="destructive"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Desconectar
               </Button>
             )}
           </div>
@@ -359,43 +332,45 @@ export default function IntegrationSetup() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2">
-                <span>📱 Meta (Facebook & Instagram)</span>
-                {metaConnected && <Badge className="bg-green-500">Conectado</Badge>}
-              </CardTitle>
-              <CardDescription>Gerencie campanhas de anúncios e posts</CardDescription>
+              <CardTitle>Meta (Facebook & Instagram)</CardTitle>
+              <CardDescription>Gerencie campanhas de anúncios</CardDescription>
             </div>
-            {metaConnected && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleDisconnect("meta")}
-                className="text-red-600 hover:text-red-700"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Desconectar
-              </Button>
-            )}
+            {metaConnected && <Badge className="bg-green-500">Conectado</Badge>}
+            {!metaConnected && <Badge variant="outline">Desconectado</Badge>}
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="meta-app-id">App ID do Meta</Label>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3">
+            <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-blue-800">
+              <p className="font-semibold mb-1">Como obter credenciais do Meta:</p>
+              <ol className="list-decimal list-inside space-y-1">
+                <li>Acesse <a href="https://developers.facebook.com" target="_blank" rel="noopener noreferrer" className="underline font-semibold">developers.facebook.com</a></li>
+                <li>Crie ou acesse seu aplicativo</li>
+                <li>Copie o <strong>App ID</strong> e <strong>App Secret</strong></li>
+                <li>Cole aqui e clique em "Testar Conexão"</li>
+              </ol>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="meta-id">App ID</Label>
             <Input
-              id="meta-app-id"
-              placeholder="Insira seu App ID do Meta"
+              id="meta-id"
+              type="text"
+              placeholder="Cole seu App ID"
               value={metaAppId}
               onChange={(e) => setMetaAppId(e.target.value)}
               disabled={metaConnected}
             />
           </div>
 
-          <div>
-            <Label htmlFor="meta-app-secret">App Secret do Meta</Label>
+          <div className="space-y-2">
+            <Label htmlFor="meta-secret">App Secret</Label>
             <Input
-              id="meta-app-secret"
+              id="meta-secret"
               type="password"
-              placeholder="Insira seu App Secret do Meta"
+              placeholder="Cole seu App Secret"
               value={metaAppSecret}
               onChange={(e) => setMetaAppSecret(e.target.value)}
               disabled={metaConnected}
@@ -408,36 +383,24 @@ export default function IntegrationSetup() {
               disabled={metaTesting || !metaAppId || !metaAppSecret}
               variant="outline"
             >
-              {metaTesting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Testando...
-                </>
-              ) : (
-                <>
-                  {metaConnected ? (
-                    <CheckCircle2 className="w-4 h-4 mr-2 text-green-600" />
-                  ) : (
-                    <AlertCircle className="w-4 h-4 mr-2" />
-                  )}
-                  Testar Conexão
-                </>
-              )}
+              {metaTesting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Testar Conexão
             </Button>
-
             {!metaConnected && (
               <Button
                 onClick={handleSaveMeta}
-                disabled={!metaAppId || !metaAppSecret || connectMetaMutation.isPending}
+                disabled={!metaAppId || !metaAppSecret || metaTesting}
               >
-                {connectMetaMutation.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Salvando...
-                  </>
-                ) : (
-                  "Salvar Credenciais"
-                )}
+                Salvar Credenciais
+              </Button>
+            )}
+            {metaConnected && (
+              <Button
+                onClick={() => handleDisconnect("meta")}
+                variant="destructive"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Desconectar
               </Button>
             )}
           </div>

@@ -1,4 +1,4 @@
-import { protectedProcedure, router } from "../_core/trpc";
+import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
 import { oauthCredentials } from "../../drizzle/schema";
@@ -43,6 +43,37 @@ export const integrationsRouter = router({
     return status;
   }),
 
+  // Test Bling connection
+  testBlingConnection: protectedProcedure
+    .input(
+      z.object({
+        apiKey: z.string().min(1, "API Key é obrigatória"),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const response = await fetch("https://api.bling.com.br/Api/v3/contatos", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${input.apiKey}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.status === 401) {
+          return { success: false, message: "Token/API Key inválido" };
+        } else if (response.status === 403) {
+          return { success: false, message: "Acesso negado - verifique as permissões" };
+        } else if (response.ok) {
+          return { success: true, message: "Conexão com Bling validada com sucesso!" };
+        } else {
+          return { success: false, message: "Bling indisponível no momento" };
+        }
+      } catch (error: any) {
+        return { success: false, message: `Erro ao conectar: ${error.message}` };
+      }
+    }),
+
   // Connect Bling
   connectBling: protectedProcedure
     .input(
@@ -56,14 +87,22 @@ export const integrationsRouter = router({
 
       try {
         // Test connection to Bling API
-        const response = await fetch("https://api.bling.com.br/Api/v3/produtos", {
+        const response = await fetch("https://api.bling.com.br/Api/v3/contatos", {
+          method: "GET",
           headers: {
             Authorization: `Bearer ${input.apiKey}`,
+            "Content-Type": "application/json",
           },
         });
 
         if (!response.ok) {
-          throw new Error("API Key inválida ou Bling indisponível");
+          if (response.status === 401) {
+            throw new Error("Token/API Key inválido");
+          } else if (response.status === 403) {
+            throw new Error("Acesso negado - verifique as permissões");
+          } else {
+            throw new Error("Bling indisponível");
+          }
         }
 
         // Delete existing Bling credential
@@ -92,6 +131,36 @@ export const integrationsRouter = router({
       }
     }),
 
+  // Test Canva connection
+  testCanvaConnection: protectedProcedure
+    .input(
+      z.object({
+        clientId: z.string().min(1),
+        clientSecret: z.string().min(1),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const response = await fetch("https://api.canva.com/rest/v1/brand", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${input.clientId}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.ok) {
+          return { success: true, message: "Conexão com Canva validada com sucesso!" };
+        } else if (response.status === 401) {
+          return { success: false, message: "Credenciais do Canva inválidas" };
+        } else {
+          return { success: false, message: "Canva indisponível no momento" };
+        }
+      } catch (error: any) {
+        return { success: false, message: `Erro ao conectar: ${error.message}` };
+      }
+    }),
+
   // Connect Canva
   connectCanva: protectedProcedure
     .input(
@@ -106,15 +175,16 @@ export const integrationsRouter = router({
 
       try {
         // Test connection to Canva API
-        const response = await fetch("https://api.canva.com/rest/v1/designs", {
+        const response = await fetch("https://api.canva.com/rest/v1/brand", {
+          method: "GET",
           headers: {
             Authorization: `Bearer ${input.clientId}`,
             "Content-Type": "application/json",
           },
         });
 
-        if (!response.ok && response.status !== 401) {
-          throw new Error("Credenciais inválidas ou Canva indisponível");
+        if (!response.ok) {
+          throw new Error("Credenciais do Canva inválidas ou Canva indisponível");
         }
 
         // Delete existing Canva credential
@@ -140,6 +210,32 @@ export const integrationsRouter = router({
         return { success: true, message: "Canva conectada com sucesso" };
       } catch (error: any) {
         throw new Error(`Erro ao conectar Canva: ${error.message}`);
+      }
+    }),
+
+  // Test Meta connection
+  testMetaConnection: protectedProcedure
+    .input(
+      z.object({
+        appId: z.string().min(1),
+        appSecret: z.string().min(1),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const response = await fetch(
+          `https://graph.instagram.com/v18.0/me?access_token=${input.appId}`
+        );
+
+        if (response.ok) {
+          return { success: true, message: "Conexão com Meta validada com sucesso!" };
+        } else if (response.status === 401) {
+          return { success: false, message: "App ID/Secret inválidos" };
+        } else {
+          return { success: false, message: "Meta indisponível no momento" };
+        }
+      } catch (error: any) {
+        return { success: false, message: `Erro ao conectar: ${error.message}` };
       }
     }),
 
@@ -248,143 +344,12 @@ export const integrationsRouter = router({
       const data = await response.json();
       return data;
     } catch (error: any) {
-      throw new Error(`Erro ao buscar produtos: ${error.message}`);
+      throw new Error(`Erro: ${error.message}`);
     }
   }),
 
-  // Create Canva design
-  createCanvaDesign: protectedProcedure
-    .input(
-      z.object({
-        title: z.string(),
-        designType: z.string(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database not available");
-
-      const credential = await db
-        .select()
-        .from(oauthCredentials)
-        .where(
-          and(
-            eq(oauthCredentials.userId, ctx.user.id),
-            eq(oauthCredentials.platform, "canva")
-          )
-        )
-        .limit(1);
-
-      if (!credential.length) {
-        throw new Error("Canva não conectada");
-      }
-
-      try {
-        const response = await fetch("https://api.canva.com/rest/v1/designs", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${credential[0].accessToken}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            title: input.title,
-            design_type: input.designType,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error("Erro ao criar design no Canva");
-        }
-
-        const data = await response.json();
-        return data;
-      } catch (error: any) {
-        throw new Error(`Erro ao criar design: ${error.message}`);
-      }
-    }),
-
-  // Test Bling connection
-  testBlingConnection: protectedProcedure
-    .input(
-      z.object({
-        apiKey: z.string().min(1),
-      })
-    )
-    .mutation(async ({ input }) => {
-      try {
-        const response = await fetch("https://api.bling.com.br/Api/v3/produtos", {
-          headers: {
-            Authorization: `Bearer ${input.apiKey}`,
-          },
-        });
-
-        if (response.ok) {
-          return { success: true, message: "Conexão com Bling validada com sucesso!" };
-        } else if (response.status === 401) {
-          return { success: false, message: "API Key inválida" };
-        } else {
-          return { success: false, message: "Bling indisponível no momento" };
-        }
-      } catch (error: any) {
-        return { success: false, message: `Erro ao conectar: ${error.message}` };
-      }
-    }),
-
-  // Test Canva connection
-  testCanvaConnection: protectedProcedure
-    .input(
-      z.object({
-        clientId: z.string().min(1),
-        clientSecret: z.string().min(1),
-      })
-    )
-    .mutation(async ({ input }) => {
-      try {
-        const response = await fetch("https://api.canva.com/rest/v1/designs", {
-          headers: {
-            Authorization: `Bearer ${input.clientId}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (response.ok || response.status === 401) {
-          return { success: true, message: "Conexão com Canva validada com sucesso!" };
-        } else {
-          return { success: false, message: "Credenciais inválidas ou Canva indisponível" };
-        }
-      } catch (error: any) {
-        return { success: false, message: `Erro ao conectar: ${error.message}` };
-      }
-    }),
-
-  // Test Meta connection
-  testMetaConnection: protectedProcedure
-    .input(
-      z.object({
-        appId: z.string().min(1),
-        appSecret: z.string().min(1),
-      })
-    )
-    .mutation(async ({ input }) => {
-      try {
-        const response = await fetch(
-          `https://graph.instagram.com/v18.0/me?access_token=${input.appId}`
-        );
-
-        if (response.ok) {
-          return { success: true, message: "Conexão com Meta validada com sucesso!" };
-        } else if (response.status === 401) {
-          return { success: false, message: "App ID/Secret inválidos" };
-        } else {
-          return { success: false, message: "Meta indisponível no momento" };
-        }
-      } catch (error: any) {
-        return { success: false, message: `Erro ao conectar: ${error.message}` };
-      }
-    }),
-
-  // Get Meta insights
-  getMetaInsights: protectedProcedure.query(async ({ ctx }) => {
+  // Get Bling orders
+  getBlingOrders: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
@@ -394,28 +359,30 @@ export const integrationsRouter = router({
       .where(
         and(
           eq(oauthCredentials.userId, ctx.user.id),
-          eq(oauthCredentials.platform, "meta")
+          eq(oauthCredentials.platform, "bling")
         )
       )
       .limit(1);
 
     if (!credential.length) {
-      throw new Error("Meta não conectada");
+      throw new Error("Bling não conectado");
     }
 
     try {
-      const response = await fetch(
-        `https://graph.instagram.com/v18.0/me/insights?access_token=${credential[0].accessToken}`
-      );
+      const response = await fetch("https://api.bling.com.br/Api/v3/pedidos", {
+        headers: {
+          Authorization: `Bearer ${credential[0].accessToken}`,
+        },
+      });
 
       if (!response.ok) {
-        throw new Error("Erro ao buscar insights do Meta");
+        throw new Error("Erro ao buscar pedidos do Bling");
       }
 
       const data = await response.json();
       return data;
     } catch (error: any) {
-      throw new Error(`Erro ao buscar insights: ${error.message}`);
+      throw new Error(`Erro: ${error.message}`);
     }
   }),
 });
