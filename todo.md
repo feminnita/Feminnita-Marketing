@@ -155,10 +155,12 @@
 
 ## Fase 16: Integração com Meta Ads API
 - [x] Implementar autenticação com Meta Ads API - Router existente expandido
-- [x] Criar procedures para criar campanhas automáticas - createCampaign implementada
-- [x] Implementar orçamento e bidding automático - toggleCampaign implementada
-- [x] Criar relatórios de performance de campanhas - getCampaignPerformance implementada
+- [x] Criar procedures para criar campanhas automáticas - createCampaignFromContent implementada
+- [x] Implementar orçamento e bidding automático - pauseCampaign/resumeCampaign implementadas
+- [x] Criar relatórios de performance de campanhas - getCampaignMetrics implementada
 - [x] Implementar otimização automática de campanhas - optimizeCampaign implementada
+- [x] Integrar geração automática de campanhas com IA - syncCampaignsWithContent implementada
+- [x] Criar 8 testes Vitest para Meta Ads Campaigns - 124 testes passando
 
 ## Fase 17: Automação de Postagens Terças/Sextas
 - [x] Criar scheduler para terças e sextas - schedulePostingDays implementada
