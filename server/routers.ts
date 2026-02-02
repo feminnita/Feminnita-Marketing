@@ -14,6 +14,7 @@ import { integrationsRouter } from "./routers/integrations";
 import { webhooksRouter } from "./routers/webhooks";
 import { oauthIntegrationsRouter } from "./routers/oauth-integrations";
 import { oauthCallbacksRouter } from "./routers/oauth-callbacks";
+import { whatsappBusinessRouter } from "./routers/whatsapp-business";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -54,6 +55,7 @@ export const appRouter = router({
   webhooks: webhooksRouter,
   oauthIntegrations: oauthIntegrationsRouter,
   oauthCallbacks: oauthCallbacksRouter,
+  whatsappBusiness: whatsappBusinessRouter,
 
   // TODO: add feature routers here, e.g.
   // todo: router({

@@ -131,3 +131,122 @@ export const oauthTokens = mysqlTable("oauth_tokens", {
 
 export type OAuthToken = typeof oauthTokens.$inferSelect;
 export type InsertOAuthToken = typeof oauthTokens.$inferInsert;
+
+
+// ============ Influencers Management ============
+import { date, datetime, decimal, json, longtext } from "drizzle-orm/mysql-core";
+import { sql } from "drizzle-orm";
+
+export const influencers = mysqlTable("influencers", {
+  id: int("id").primaryKey().autoincrement(),
+  name: varchar("name", { length: 255 }).notNull(), // Carol, Renata, Vanessa, Luiza
+  bio: text("bio"),
+  personality: varchar("personality", { length: 255 }), // Unique personality traits
+  avatar: varchar("avatar", { length: 512 }), // Avatar URL
+  instagramHandle: varchar("instagram_handle", { length: 255 }),
+  tiktokHandle: varchar("tiktok_handle", { length: 255 }),
+  youtubeHandle: varchar("youtube_handle", { length: 255 }),
+  blogUrl: varchar("blog_url", { length: 512 }),
+  instagramAccessToken: varchar("instagram_access_token", { length: 512 }),
+  tiktokAccessToken: varchar("tiktok_access_token", { length: 512 }),
+  youtubeAccessToken: varchar("youtube_access_token", { length: 512 }),
+  isActive: boolean("is_active").default(true),
+  createdAt: datetime("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime("updated_at").default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(() => new Date()),
+});
+
+export const influencerKnowledgeBase = mysqlTable("influencer_knowledge_base", {
+  id: int("id").primaryKey().autoincrement(),
+  influencerId: int("influencer_id").notNull().references(() => influencers.id),
+  category: varchar("category", { length: 255 }), // "products", "policies", "faqs", "trends"
+  content: longtext("content"),
+  embedding: varchar("embedding", { length: 2048 }), // Vector embedding for RAG
+  source: varchar("source", { length: 255 }), // "catalog", "manual", "feedback"
+  createdAt: datetime("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime("updated_at").default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(() => new Date()),
+});
+
+export const influencerPosts = mysqlTable("influencer_posts", {
+  id: int("id").primaryKey().autoincrement(),
+  influencerId: int("influencer_id").notNull().references(() => influencers.id),
+  platform: varchar("platform", { length: 50 }), // "instagram", "tiktok", "youtube", "blog"
+  postId: varchar("post_id", { length: 255 }), // Platform-specific post ID
+  content: longtext("content"),
+  mediaUrls: json("media_urls").$type<string[]>(),
+  caption: text("caption"),
+  hashtags: json("hashtags").$type<string[]>(),
+  scheduledAt: datetime("scheduled_at"),
+  publishedAt: datetime("published_at"),
+  status: varchar("status", { length: 50 }), // "draft", "scheduled", "published", "failed"
+  engagementMetrics: json("engagement_metrics").$type<{
+    likes?: number;
+    comments?: number;
+    shares?: number;
+    views?: number;
+    saves?: number;
+  }>(),
+  aiGenerated: boolean("ai_generated").default(true),
+  approvedBy: varchar("approved_by", { length: 255 }),
+  approvedAt: datetime("approved_at"),
+  createdAt: datetime("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime("updated_at").default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(() => new Date()),
+});
+
+export const influencerTrends = mysqlTable("influencer_trends", {
+  id: int("id").primaryKey().autoincrement(),
+  influencerId: int("influencer_id").notNull().references(() => influencers.id),
+  platform: varchar("platform", { length: 50 }),
+  trendName: varchar("trend_name", { length: 255 }).notNull(),
+  trendCategory: varchar("trend_category", { length: 100 }), // "hashtag", "sound", "challenge", "topic"
+  relevanceScore: decimal("relevance_score", { precision: 3, scale: 2 }), // 0-1
+  momentum: varchar("momentum", { length: 50 }), // "rising", "peak", "declining"
+  estimatedReach: int("estimated_reach"),
+  recommendedPostType: varchar("recommended_post_type", { length: 50 }),
+  detectedAt: datetime("detected_at").default(sql`CURRENT_TIMESTAMP`),
+  expiresAt: datetime("expires_at"),
+});
+
+export const influencerPerformance = mysqlTable("influencer_performance", {
+  id: int("id").primaryKey().autoincrement(),
+  influencerId: int("influencer_id").notNull().references(() => influencers.id),
+  date: date("date").notNull(),
+  platform: varchar("platform", { length: 50 }),
+  totalFollowers: int("total_followers"),
+  followersGrowth: int("followers_growth"),
+  totalEngagement: int("total_engagement"),
+  engagementRate: decimal("engagement_rate", { precision: 5, scale: 2 }),
+  totalReach: int("total_reach"),
+  totalImpressions: int("total_impressions"),
+  topPost: varchar("top_post", { length: 255 }),
+  topPostEngagement: int("top_post_engagement"),
+  averagePostsPerDay: decimal("average_posts_per_day", { precision: 4, scale: 2 }),
+  sentimentScore: decimal("sentiment_score", { precision: 3, scale: 2 }), // 0-1
+  createdAt: datetime("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const influencerInteractions = mysqlTable("influencer_interactions", {
+  id: int("id").primaryKey().autoincrement(),
+  influencerId: int("influencer_id").notNull().references(() => influencers.id),
+  platform: varchar("platform", { length: 50 }),
+  interactionType: varchar("interaction_type", { length: 50 }), // "comment", "dm", "mention"
+  followerUsername: varchar("follower_username", { length: 255 }),
+  content: text("content"),
+  sentiment: varchar("sentiment", { length: 20 }), // "positive", "neutral", "negative"
+  responseGenerated: text("response_generated"),
+  responseSent: boolean("response_sent").default(false),
+  sentAt: datetime("sent_at"),
+  createdAt: datetime("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export type Influencer = typeof influencers.$inferSelect;
+export type InsertInfluencer = typeof influencers.$inferInsert;
+export type InfluencerKnowledgeBase = typeof influencerKnowledgeBase.$inferSelect;
+export type InsertInfluencerKnowledgeBase = typeof influencerKnowledgeBase.$inferInsert;
+export type InfluencerPost = typeof influencerPosts.$inferSelect;
+export type InsertInfluencerPost = typeof influencerPosts.$inferInsert;
+export type InfluencerTrend = typeof influencerTrends.$inferSelect;
+export type InsertInfluencerTrend = typeof influencerTrends.$inferInsert;
+export type InfluencerPerformance = typeof influencerPerformance.$inferSelect;
+export type InsertInfluencerPerformance = typeof influencerPerformance.$inferInsert;
+export type InfluencerInteraction = typeof influencerInteractions.$inferSelect;
+export type InsertInfluencerInteraction = typeof influencerInteractions.$inferInsert;
