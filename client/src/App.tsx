@@ -13,6 +13,7 @@ import CollaboratorsManagement from "@/pages/CollaboratorsManagement";
 import ConfigureCredentials from "@/pages/ConfigureCredentials";
 import LoginSignup from "@/pages/LoginSignup";
 import IntegrationSetup from "@/pages/IntegrationSetup";
+import CanvaOAuth from "@/pages/CanvaOAuth";
 
 
 export default function App() {
@@ -48,6 +49,10 @@ export default function App() {
         return <LoginSignup />;
       case "/configurar-integracao":
         return <IntegrationSetup />;
+      case "/canva-oauth":
+        return <CanvaOAuth />;
+      case "/api/canva/callback":
+        return <CanvaOAuth />;
 
       default:
         return <Home />;
