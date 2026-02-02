@@ -61,3 +61,12 @@
 - [x] Adicionar tabela de OAuth tokens ao banco
 - [x] Criar router de OAuth callbacks
 - [x] Criar página de guia visual de integrações
+
+
+## Fase 9: Conectar Bling ERP e Sincronização Automática
+- [x] Criar página de conexão Bling com fluxo OAuth completo
+- [x] Implementar webhooks do Bling para sincronização automática
+- [x] Criar middleware de validação de tokens expirados
+- [x] Corrigir queries Drizzle com `and()` em vez de `&&`
+- [x] Testar fluxo completo de conexão e sincronização (91 testes passando)
+- [ ] Criar dashboard de status de sincronização Bling

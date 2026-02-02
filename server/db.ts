@@ -1,5 +1,5 @@
-import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
+import { eq, and } from "drizzle-orm";
 import { InsertUser, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -130,8 +130,10 @@ export async function saveOAuthToken(
     .select()
     .from(oauthTokens)
     .where(
-      eq(oauthTokens.userId, userId) &&
-      eq(oauthTokens.plataforma, plataforma)
+      and(
+        eq(oauthTokens.userId, userId),
+        eq(oauthTokens.plataforma, plataforma)
+      )
     )
     .limit(1);
 
@@ -141,8 +143,10 @@ export async function saveOAuthToken(
       .update(oauthTokens)
       .set(values)
       .where(
-        eq(oauthTokens.userId, userId) &&
-        eq(oauthTokens.plataforma, plataforma)
+        and(
+          eq(oauthTokens.userId, userId),
+          eq(oauthTokens.plataforma, plataforma)
+        )
       );
     return existing[0];
   } else {
@@ -152,8 +156,10 @@ export async function saveOAuthToken(
       .select()
       .from(oauthTokens)
       .where(
-        eq(oauthTokens.userId, userId) &&
-        eq(oauthTokens.plataforma, plataforma)
+        and(
+          eq(oauthTokens.userId, userId),
+          eq(oauthTokens.plataforma, plataforma)
+        )
       )
       .limit(1);
     return result[0];
@@ -173,9 +179,11 @@ export async function getOAuthToken(
     .select()
     .from(oauthTokens)
     .where(
-      eq(oauthTokens.userId, userId) &&
-      eq(oauthTokens.plataforma, plataforma) &&
-      eq(oauthTokens.isActive, true)
+      and(
+        eq(oauthTokens.userId, userId),
+        eq(oauthTokens.plataforma, plataforma),
+        eq(oauthTokens.isActive, true)
+      )
     )
     .limit(1);
 
@@ -195,8 +203,10 @@ export async function deleteOAuthToken(
     .update(oauthTokens)
     .set({ isActive: false })
     .where(
-      eq(oauthTokens.userId, userId) &&
-      eq(oauthTokens.plataforma, plataforma)
+      and(
+        eq(oauthTokens.userId, userId),
+        eq(oauthTokens.plataforma, plataforma)
+      )
     );
 }
 
