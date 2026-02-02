@@ -14,6 +14,7 @@ import ConfigureCredentials from "@/pages/ConfigureCredentials";
 import LoginSignup from "@/pages/LoginSignup";
 import IntegrationSetup from "@/pages/IntegrationSetup";
 import CanvaOAuth from "@/pages/CanvaOAuth";
+import MetaCapiSetup from "@/pages/MetaCapiSetup";
 
 
 export default function App() {
@@ -53,6 +54,8 @@ export default function App() {
         return <CanvaOAuth />;
       case "/api/canva/callback":
         return <CanvaOAuth />;
+      case "/meta-capi-setup":
+        return <MetaCapiSetup />;
 
       default:
         return <Home />;

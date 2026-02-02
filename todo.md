@@ -217,3 +217,24 @@
 - [x] Criar página IntegrationSetup com botões de teste
 - [x] Implementar feedback visual (sucesso/erro)
 - [x] Testar fluxo completo
+
+
+## Fase 24: Meta Conversions API (CAPI) - Rastreio de Eventos ✅ COMPLETO
+- [x] Pesquisar e entender fluxo correto do Meta CAPI
+- [x] Criar router meta-capi.ts com 5 procedures principais
+  - [x] sendEvent: Enviar evento único para Meta
+  - [x] sendBatchEvents: Enviar múltiplos eventos em lote
+  - [x] sendPurchaseEvent: Enviar evento de compra (caso mais comum)
+  - [x] testConnection: Testar conexão com Pixel ID e Access Token
+  - [x] getCredentials: Obter credenciais salvas
+- [x] Implementar hash SHA256 para email (obrigatório pela Meta)
+- [x] Criar página MetaCapiSetup.tsx com formulário completo
+- [x] Adicionar rota /meta-capi-setup em App.tsx
+- [x] Adicionar menu item "Configurar Meta CAPI" no sidebar
+- [x] Criar 19 testes Vitest para validar estrutura de eventos
+- [x] Registrar router no appRouter (routers.ts)
+- [x] Corrigir testes obsoletos do integrations.test.ts
+- [x] Validar 150 testes passando
+- [ ] Integrar com sincronização de pedidos do Bling (próxima fase)
+- [ ] Criar automação para enviar eventos de compra automaticamente (próxima fase)
+- [ ] Testar fluxo completo com credenciais reais (próxima fase)
