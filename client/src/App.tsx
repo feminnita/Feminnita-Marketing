@@ -7,6 +7,7 @@ import Performance from "@/pages/Performance";
 import Automations from "@/pages/Automations";
 import Campaigns from "@/pages/Campaigns";
 import InfluencersDashboard from "@/pages/InfluencersDashboard";
+import MetaAdsCampaigns from "@/pages/MetaAdsCampaigns";
 
 
 export default function App() {
@@ -28,6 +29,8 @@ export default function App() {
         return <Campaigns />;
       case "/influenciadoras":
         return <InfluencersDashboard />;
+      case "/meta-ads-campaigns":
+        return <MetaAdsCampaigns />;
 
       default:
         return <Home />;
