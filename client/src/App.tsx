@@ -1,6 +1,7 @@
 import { useLocation, Link } from "wouter";
 import DashboardLayout from "@/components/DashboardLayout";
 import Home from "@/pages/Home";
+import PublicHome from "@/pages/PublicHome";
 import Integrations from "@/pages/Integrations";
 import IntegrationGuide from "@/pages/IntegrationGuide";
 import Performance from "@/pages/Performance";
@@ -24,13 +25,13 @@ export default function App() {
   const [location] = useLocation();
 
   // Rotas publicas que nao requerem autenticacao
-  const publicRoutes = ["/termos", "/privacidade"];
+  const publicRoutes = ["/", "/termos", "/privacidade"];
   const isPublicRoute = publicRoutes.includes(location);
 
   const getPageComponent = () => {
     switch (location) {
       case "/":
-        return <Home />;
+        return isPublicRoute ? <PublicHome /> : <Home />;
       case "/integraciones":
         return <Integrations />;
       case "/integration-guide":

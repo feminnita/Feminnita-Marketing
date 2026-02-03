@@ -240,11 +240,11 @@
 - [ ] Testar fluxo completo com credenciais reais (próxima fase)
 
 
-## Fase 25: Páginas Públicas para Validação TikTok ✅ COMPLETO
-- [x] Criar página pública de Home (sem login)
+## Fase 25: Páginas Públicas para Validação TikTok COMPLETO
+- [x] Criar página pública de Home sem login
 - [x] Criar página pública de Termos de Serviço
 - [x] Criar página pública de Política de Privacidade
 - [x] Criar PublicLayout para rotas sem autenticação
-- [x] Adicionar rotas /termos e /privacidade em App.tsx
-- [x] Testar URLs públicas no navegador
-- [x] Validar que páginas carregam sem autenticação
+- [x] Adicionar rotas raiz termos e privacidade em App.tsx
+- [x] Testar URLs públicas no servidor de desenvolvimento
+- [x] Validar que páginas carregam SEM autenticação
