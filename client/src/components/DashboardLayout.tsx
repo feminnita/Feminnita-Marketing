@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, Sparkles, TrendingUp, Github, MessageCircle, Package } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, Sparkles, TrendingUp, Github } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -37,8 +37,6 @@ const menuItems = [
   { icon: LayoutDashboard, label: "Configurar Credenciais", path: "/configurar-credenciais" },
   { icon: LayoutDashboard, label: "Testar Integrações", path: "/configurar-integracao" },
   { icon: LayoutDashboard, label: "Configurar Meta CAPI", path: "/meta-capi-setup" },
-  { icon: MessageCircle, label: "Configurar Evolution API", path: "/evolution-api-setup" },
-  { icon: Package, label: "Melhor Envio (Rastreio)", path: "/melhor-envio-setup" },
   { icon: LayoutDashboard, label: "Guia de Integrações", path: "/integration-guide" },
   { icon: LayoutDashboard, label: "Performance", path: "/performance" },
   { icon: LayoutDashboard, label: "Automações", path: "/automaciones" },
