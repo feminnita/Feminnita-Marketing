@@ -248,3 +248,44 @@
 - [x] Adicionar rotas raiz termos e privacidade em App.tsx
 - [x] Testar URLs públicas no servidor de desenvolvimento
 - [x] Validar que páginas carregam SEM autenticação
+
+
+## Fase 26: Integração Evolution API - WhatsApp Web ✅ COMPLETO
+- [x] Criar router evolution-api.ts com procedures principais
+  - [x] connectInstance: Conectar via QR Code
+  - [x] sendMessage: Enviar mensagem individual
+  - [x] sendGroupMessage: Enviar mensagem para grupo VIP
+  - [x] generateAiResponse: IA de atendimento automática
+  - [x] transferToHuman: Transferir para atendente humano
+  - [x] sendPaymentConfirmation: Confirmação de pagamento
+  - [x] sendTrackingCode: Envio de código de rastreio
+- [x] Implementar IA de atendimento automática
+  - [x] Integrar com LLM para respostas inteligentes
+  - [x] Criar contexto de conhecimento sobre Feminnita
+  - [x] Implementar detecção de intenção (transferência)
+- [x] Implementar transferência para humano
+  - [x] Detectar quando cliente quer falar com pessoa
+  - [x] Enviar mensagem para grupo de atendentes
+- [x] Criar sistema de grupo VIP
+  - [x] Configurar grupo 22992910707
+  - [x] Enviar promoções com emoji
+  - [x] Enviar lançamentos
+  - [x] Enviar cupons exclusivos
+- [x] Integrar com Bling para automação
+  - [x] Enviar confirmação de pagamento quando pedido é pago
+  - [x] Enviar código de rastreio quando pedido é enviado
+  - [x] Integrar com Melhor Envio para link de rastreio
+- [x] Criar página EvolutionApiSetup.tsx
+  - [x] Formulário para API Key da Evolution API
+  - [x] Botão para conectar via QR Code
+  - [x] Status da conexão
+  - [x] Testes de envio de mensagem
+  - [x] Tabs para diferentes funcionalidades
+- [x] Criar testes Vitest
+  - [x] Testar estrutura de mensagens (5 testes)
+  - [x] Testar IA de atendimento (4 testes)
+  - [x] Testar transferência para humano (1 teste)
+  - [x] Testar envio para grupo VIP (1 teste)
+  - [x] Testar validação de entrada (9 testes)
+  - [x] Testar números de telefone (2 testes)
+- [x] Validar 176 testes passando

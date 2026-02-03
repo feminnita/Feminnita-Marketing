@@ -31,6 +31,7 @@ import { canvaRealRouter } from "./routers/canva-real";
 import { metaRealRouter } from "./routers/meta-real";
 import { canvaOAuthRouter } from "./routers/canva-oauth";
 import { metaCapiRouter } from "./routers/meta-capi";
+import { evolutionApiRouter } from "./routers/evolution-api";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -90,6 +91,7 @@ export const appRouter = router({
   metaReal: router(metaRealRouter),
   canvaOAuth: canvaOAuthRouter,
   metaCapi: metaCapiRouter,
+  evolutionApi: evolutionApiRouter,
 
   // TODO: add feature routers here, e.g.
   // todo: router({

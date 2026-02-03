@@ -19,6 +19,7 @@ import MetaCapiSetup from "@/pages/MetaCapiSetup";
 import TermosServico from "@/pages/TermosServico";
 import Privacidade from "@/pages/Privacidade";
 import PublicLayout from "@/components/PublicLayout";
+import EvolutionApiSetup from "@/pages/EvolutionApiSetup";
 
 
 export default function App() {
@@ -68,6 +69,8 @@ export default function App() {
         return <TermosServico />;
       case "/privacidade":
         return <Privacidade />;
+      case "/evolution-api-setup":
+        return <EvolutionApiSetup />;
 
       default:
         return <Home />;
