@@ -15,10 +15,17 @@ import LoginSignup from "@/pages/LoginSignup";
 import IntegrationSetup from "@/pages/IntegrationSetup";
 import CanvaOAuth from "@/pages/CanvaOAuth";
 import MetaCapiSetup from "@/pages/MetaCapiSetup";
+import TermosServico from "@/pages/TermosServico";
+import Privacidade from "@/pages/Privacidade";
+import PublicLayout from "@/components/PublicLayout";
 
 
 export default function App() {
   const [location] = useLocation();
+
+  // Rotas publicas que nao requerem autenticacao
+  const publicRoutes = ["/termos", "/privacidade"];
+  const isPublicRoute = publicRoutes.includes(location);
 
   const getPageComponent = () => {
     switch (location) {
@@ -56,12 +63,26 @@ export default function App() {
         return <CanvaOAuth />;
       case "/meta-capi-setup":
         return <MetaCapiSetup />;
+      case "/termos":
+        return <TermosServico />;
+      case "/privacidade":
+        return <Privacidade />;
 
       default:
         return <Home />;
     }
   };
 
+  // Se for rota publica, usar PublicLayout (sem autenticacao)
+  if (isPublicRoute) {
+    return (
+      <PublicLayout>
+        {getPageComponent()}
+      </PublicLayout>
+    );
+  }
+
+  // Caso contrario, usar DashboardLayout (com autenticacao)
   return (
     <DashboardLayout>
       {getPageComponent()}
