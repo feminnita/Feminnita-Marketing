@@ -289,3 +289,26 @@
   - [x] Testar validação de entrada (9 testes)
   - [x] Testar números de telefone (2 testes)
 - [x] Validar 176 testes passando
+
+
+## Fase 27: Integração Melhor Envio - Rastreamento de Pedidos ✅ COMPLETO
+- [x] Criar router melhor-envio-integration.ts com procedures principais
+  - [x] getTrackingCode: Obter código de rastreio do pedido
+  - [x] getTrackingLink: Gerar link de rastreamento
+  - [x] validateCredentials: Validar API Key e Secret Token
+  - [x] getShippingOptions: Listar opções de frete
+  - [x] formatTrackingMessage: Formatar mensagem com emoji e link
+  - [x] setCredentials: Configurar credenciais
+  - [x] generateLabel: Gerar etiqueta
+- [x] Criar página MelhorEnvioSetup.tsx
+  - [x] Formulário para API Key e Secret Token
+  - [x] Botão para validar credenciais
+  - [x] Status da conexão
+  - [x] Teste de obtenção de rastreio
+  - [x] Teste de formatação de mensagem
+  - [x] Cálculo de frete
+- [x] Registrar router no appRouter
+- [x] Adicionar rota /melhor-envio-setup em App.tsx
+- [x] Adicionar menu item no DashboardLayout
+- [x] Criar 32 testes Vitest
+- [x] Validar 200 testes passando

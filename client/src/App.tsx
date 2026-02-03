@@ -20,6 +20,7 @@ import TermosServico from "@/pages/TermosServico";
 import Privacidade from "@/pages/Privacidade";
 import PublicLayout from "@/components/PublicLayout";
 import EvolutionApiSetup from "@/pages/EvolutionApiSetup";
+import MelhorEnvioSetup from "@/pages/MelhorEnvioSetup";
 
 
 export default function App() {
@@ -71,6 +72,8 @@ export default function App() {
         return <Privacidade />;
       case "/evolution-api-setup":
         return <EvolutionApiSetup />;
+      case "/melhor-envio-setup":
+        return <MelhorEnvioSetup />;
 
       default:
         return <Home />;
