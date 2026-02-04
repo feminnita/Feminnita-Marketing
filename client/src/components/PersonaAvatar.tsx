@@ -7,10 +7,10 @@ interface PersonaAvatarProps {
 }
 
 const personaImages = {
-  Carol: "/images/persona-carol.png",
-  Renata: "/images/persona-renata.png",
-  Vanessa: "/images/persona-vanessa.png",
-  Luiza: "/images/persona-luiza.png",
+  Carol: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663030153148/fmGkGhjBbWsPWfzJ.png",
+  Renata: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663030153148/iBpLrsLcdOKXJVOf.png",
+  Vanessa: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663030153148/urQYvzTuJucHBYSJ.png",
+  Luiza: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663030153148/hrWCsFlCCKNaQify.png",
 };
 
 export default function PersonaAvatar({ name, size = "md", showName = false }: PersonaAvatarProps) {

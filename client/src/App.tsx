@@ -1,5 +1,6 @@
 import { useLocation, Link } from "wouter";
 import DashboardLayout from "@/components/DashboardLayout";
+import PublicLayout from "@/components/PublicLayout";
 import Home from "@/pages/Home";
 import Integrations from "@/pages/Integrations";
 import IntegrationGuide from "@/pages/IntegrationGuide";
@@ -15,13 +16,26 @@ import LoginSignup from "@/pages/LoginSignup";
 import IntegrationSetup from "@/pages/IntegrationSetup";
 import CanvaOAuth from "@/pages/CanvaOAuth";
 import MetaCapiSetup from "@/pages/MetaCapiSetup";
+import TermosServico from "@/pages/TermosServico";
+import Privacidade from "@/pages/Privacidade";
 
 
 export default function App() {
   const [location] = useLocation();
 
+  // Rotas públicas que não requerem autenticação
+  const publicRoutes = ["/termos", "/privacidade"];
+  const isPublicRoute = publicRoutes.includes(location);
+
   const getPageComponent = () => {
     switch (location) {
+      // Rotas públicas
+      case "/termos":
+        return <TermosServico />;
+      case "/privacidade":
+        return <Privacidade />;
+
+      // Rotas autenticadas
       case "/":
         return <Home />;
       case "/integraciones":
@@ -61,6 +75,11 @@ export default function App() {
         return <Home />;
     }
   };
+
+  // Use PublicLayout para rotas públicas, DashboardLayout para o resto
+  if (isPublicRoute) {
+    return <PublicLayout>{getPageComponent()}</PublicLayout>;
+  }
 
   return (
     <DashboardLayout>

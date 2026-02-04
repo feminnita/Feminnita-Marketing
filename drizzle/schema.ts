@@ -298,3 +298,100 @@ export const oauthCredentials = mysqlTable("oauth_credentials", {
 
 export type OAuthCredential = typeof oauthCredentials.$inferSelect;
 export type InsertOAuthCredential = typeof oauthCredentials.$inferInsert;
+
+
+// Tabelas para CMS de Gerenciamento de Conteúdo
+export const contentItems = mysqlTable("content_items", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id),
+  section: varchar("section", { length: 100 }).notNull(), // "personas", "planejamento", "roteiros", etc
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  content: text("content"), // Conteúdo principal (texto rico)
+  hashtags: text("hashtags"), // JSON array de hashtags
+  status: mysqlEnum("status", ["draft", "scheduled", "published", "archived"]).default("draft").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+
+export type ContentItem = typeof contentItems.$inferSelect;
+export type InsertContentItem = typeof contentItems.$inferInsert;
+
+// Tabela para armazenar arquivos de mídia (vídeos, imagens)
+export const mediaFiles = mysqlTable("media_files", {
+  id: int("id").autoincrement().primaryKey(),
+  contentId: int("contentId").notNull().references(() => contentItems.id),
+  userId: int("userId").notNull().references(() => users.id),
+  fileName: varchar("fileName", { length: 255 }).notNull(),
+  fileType: varchar("fileType", { length: 50 }).notNull(), // "video", "image"
+  mimeType: varchar("mimeType", { length: 100 }).notNull(), // "video/mp4", "image/jpeg"
+  fileSize: int("fileSize").notNull(), // em bytes
+  s3Key: varchar("s3Key", { length: 500 }).notNull(), // chave no S3
+  s3Url: text("s3Url").notNull(), // URL pública do S3
+  thumbnailUrl: text("thumbnailUrl"), // URL do thumbnail (para vídeos)
+  duration: int("duration"), // duração em segundos (para vídeos)
+  width: int("width"), // largura em pixels
+  height: int("height"), // altura em pixels
+  uploadedAt: timestamp("uploadedAt").defaultNow().notNull(),
+});
+
+export type MediaFile = typeof mediaFiles.$inferSelect;
+export type InsertMediaFile = typeof mediaFiles.$inferInsert;
+
+// Tabela para agendamento de publicações
+export const scheduledPosts = mysqlTable("scheduled_posts", {
+  id: int("id").autoincrement().primaryKey(),
+  contentId: int("contentId").notNull().references(() => contentItems.id),
+  userId: int("userId").notNull().references(() => users.id),
+  platforms: varchar("platforms", { length: 500 }).notNull(), // JSON array: ["instagram", "facebook", "tiktok", "whatsapp"]
+  scheduledAt: timestamp("scheduledAt").notNull(),
+  status: mysqlEnum("status", ["pending", "processing", "published", "failed", "cancelled"]).default("pending").notNull(),
+  failureReason: text("failureReason"), // Motivo da falha, se houver
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+
+export type ScheduledPost = typeof scheduledPosts.$inferSelect;
+export type InsertScheduledPost = typeof scheduledPosts.$inferInsert;
+
+// Tabela para histórico de publicações
+export const postHistory = mysqlTable("post_history", {
+  id: int("id").autoincrement().primaryKey(),
+  scheduledPostId: int("scheduledPostId").notNull().references(() => scheduledPosts.id),
+  contentId: int("contentId").notNull().references(() => contentItems.id),
+  userId: int("userId").notNull().references(() => users.id),
+  platform: varchar("platform", { length: 50 }).notNull(), // "instagram", "facebook", "tiktok", "whatsapp"
+  postId: varchar("postId", { length: 255 }), // ID da publicação na plataforma
+  postUrl: text("postUrl"), // URL da publicação
+  status: mysqlEnum("status", ["success", "failed", "pending"]).default("pending").notNull(),
+  errorMessage: text("errorMessage"),
+  postedAt: timestamp("postedAt"),
+  engagement: int("engagement"), // likes, comments, shares combinados
+  reach: int("reach"), // alcance da publicação
+  impressions: int("impressions"), // impressões da publicação
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PostHistory = typeof postHistory.$inferSelect;
+export type InsertPostHistory = typeof postHistory.$inferInsert;
+
+
+// Tabela para armazenar contas das influenciadoras (email, Instagram, TikTok, Facebook, WhatsApp)
+export const influencerAccounts = mysqlTable("influencer_accounts", {
+  id: int("id").autoincrement().primaryKey(),
+  influencerId: int("influencerId").notNull().references(() => influencers.id),
+  email: varchar("email", { length: 320 }),
+  instagram: varchar("instagram", { length: 255 }),
+  tiktok: varchar("tiktok", { length: 255 }),
+  facebook: varchar("facebook", { length: 255 }),
+  whatsapp: varchar("whatsapp", { length: 20 }),
+  youtube: varchar("youtube", { length: 255 }),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+
+export type InfluencerAccount = typeof influencerAccounts.$inferSelect;
+export type InsertInfluencerAccount = typeof influencerAccounts.$inferInsert;
+
+

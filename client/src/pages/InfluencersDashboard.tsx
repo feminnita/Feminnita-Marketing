@@ -42,7 +42,7 @@ export default function InfluencersDashboard() {
   );
 
   // Mutation to save accounts
-  const saveAccountsMutation = trpc.influencerAccounts.addAccount.useMutation();
+  const saveAccountsMutation = trpc.influencerAccounts.saveAccounts.useMutation();
 
   const handleSaveAccounts = async (influencerName: string) => {
     setSavingInfluencer(influencerName);
@@ -73,21 +73,21 @@ export default function InfluencersDashboard() {
 
       // Save each account
       let savedCount = 0;
+      const accountsData: any = {
+        influencerId: influencer.id,
+      };
+
       for (const [platform, username] of Object.entries(influencerAccounts)) {
         if (username) {
-          try {
-            await saveAccountsMutation.mutateAsync({
-              influencerId: influencer.id,
-              platform: platform.toLowerCase() as any,
-              accountHandle: username,
-              accountId: `${platform}_${influencer.id}_${Date.now()}`,
-              accessToken: `token_${platform}_${Date.now()}`,
-            });
-            savedCount++;
-          } catch (err: any) {
-            console.error(`Erro ao salvar conta ${platform}:`, err);
-          }
+          accountsData[platform.toLowerCase()] = username;
         }
+      }
+
+      try {
+        await saveAccountsMutation.mutateAsync(accountsData);
+        savedCount++;
+      } catch (error) {
+        console.error("Error saving accounts:", error);
       }
 
       if (savedCount > 0) {

@@ -238,3 +238,115 @@
 - [ ] Integrar com sincronização de pedidos do Bling (próxima fase)
 - [ ] Criar automação para enviar eventos de compra automaticamente (próxima fase)
 - [ ] Testar fluxo completo com credenciais reais (próxima fase)
+
+
+## Fase 28: CMS Completo - Gerenciamento de Conteúdo para Todas as Seções
+- [ ] Criar estrutura de banco de dados
+  - [ ] Tabela `content_items` (id, section, title, description, status)
+  - [ ] Tabela `media_files` (id, content_id, url, type, s3_key)
+  - [ ] Tabela `scheduled_posts` (id, content_id, scheduled_at, platforms, status)
+  - [ ] Tabela `post_history` (id, content_id, platform, posted_at, response)
+- [ ] Implementar upload de mídia
+  - [ ] Upload de vídeos para S3
+  - [ ] Upload de imagens para S3
+  - [ ] Validação de tipo e tamanho
+  - [ ] Geração de thumbnails
+- [ ] Criar editor de conteúdo
+  - [ ] Editor de texto rico (WYSIWYG)
+  - [ ] Preview de conteúdo
+  - [ ] Edição de hashtags
+  - [ ] Edição de descrição
+- [ ] Implementar agendamento
+  - [ ] Seleção de data/hora
+  - [ ] Seleção de plataformas (Instagram, Facebook, TikTok, WhatsApp)
+  - [ ] Agendamento em fila
+  - [ ] Cancelamento de agendamento
+- [ ] Integrar publicação automática
+  - [ ] Instagram API
+  - [ ] Facebook API
+  - [ ] TikTok API
+  - [ ] Evolution API (WhatsApp)
+- [ ] Criar dashboard de gerenciamento
+  - [ ] Botão de engrenagem/configurações
+  - [ ] Lista de conteúdos agendados
+  - [ ] Histórico de publicações
+  - [ ] Estatísticas por plataforma
+- [ ] Criar interface para cada seção
+  - [ ] Personas & Planejamento
+  - [ ] Roteiros
+  - [ ] Tendências
+  - [ ] Imagens IG
+  - [ ] Legendas de Posts
+  - [ ] Todas as outras seções
+- [ ] Criar testes Vitest
+  - [ ] Testes de upload
+  - [ ] Testes de agendamento
+  - [ ] Testes de publicação
+- [ ] Testar fluxo completo e salvar checkpoint
+
+
+## Fase 29: Correção de Bugs e Suporte Multi-Conta
+- [ ] Corrigir botão rosa de salvar contas das influenciadoras
+  - [ ] Diagnosticar por que o botão não funciona
+  - [ ] Verificar se há erro na API
+  - [ ] Verificar se há erro no frontend
+  - [ ] Testar salvar email, Instagram, TikTok, etc.
+- [ ] Adicionar suporte para múltiplas contas de usuário
+  - [ ] Criar interface para gerenciar múltiplas contas
+  - [ ] Permitir adicionar nova conta
+  - [ ] Permitir alternar entre contas
+  - [ ] Permitir remover conta
+- [ ] Exportar projeto para GitHub
+  - [ ] Criar repositório no GitHub
+  - [ ] Configurar credenciais
+  - [ ] Fazer primeiro push
+  - [ ] Validar que tudo foi enviado
+- [ ] Testar e validar tudo funcionando
+
+
+## Fase 30: Sistema de Contas das Influenciadoras
+- [ ] Criar tabela `influencer_accounts` no banco de dados
+  - [ ] id, influencer_id, email, instagram, tiktok, facebook, whatsapp
+  - [ ] created_at, updated_at
+- [ ] Criar router tRPC para gerenciar contas
+  - [ ] saveInfluencerAccounts: Salvar/atualizar contas
+  - [ ] getInfluencerAccounts: Obter contas de uma influenciadora
+  - [ ] deleteInfluencerAccount: Deletar conta
+- [ ] Criar formulário com botão rosa
+  - [ ] Campos para email, Instagram, TikTok, Facebook, WhatsApp
+  - [ ] Validação de entrada
+  - [ ] Botão "Salvar" rosa que funciona
+  - [ ] Feedback de sucesso/erro
+- [ ] Integrar formulário no ModuloInfluenciadorasSection
+  - [ ] Mostrar formulário para cada influenciadora
+  - [ ] Carregar contas salvas
+  - [ ] Permitir editar contas
+- [ ] Criar sistema de envio automático
+  - [ ] Quando postagem é agendada, enviar para todas as contas da influenciadora
+  - [ ] Rastrear status de envio
+  - [ ] Registrar erros
+- [ ] Criar testes Vitest
+- [ ] Testar fluxo completo e salvar checkpoint
+
+
+## Fase 31: Corrigir Botão Rosa de Salvar Contas das Influenciadoras
+- [ ] Criar formulário simples com campos: email, instagram, tiktok, facebook, whatsapp, youtube
+- [ ] Botão rosa "Salvar Contas" que funciona perfeitamente
+- [ ] Salvar dados no banco de dados
+- [ ] Carregar dados existentes quando abrir o formulário
+- [ ] Mensagem de sucesso/erro ao salvar
+- [ ] Integrar no ModuloInfluenciadorasSection
+- [ ] Testar fluxo completo
+
+## Fase 32: Sistema Completo de Postagens
+- [ ] Criar tabelas no banco: postagens, mídia, agendamento
+- [ ] Router tRPC para CRUD de postagens
+- [ ] Componente de upload de vídeos/imagens com S3
+- [ ] Editor de conteúdo (texto, emojis, hashtags)
+- [ ] Sistema de agendamento (data/hora de publicação)
+- [ ] Integração com Instagram (via API)
+- [ ] Integração com Facebook (via API)
+- [ ] Integração com TikTok (via API)
+- [ ] Integração com Grupo VIP WhatsApp (22992810707)
+- [ ] Envio automático na data/hora agendada
+- [ ] Dashboard de postagens com histórico
