@@ -1,9 +1,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clock, Users, Volume2, Target } from "lucide-react";
+import { Clock, Users, Volume2, Target, Edit2, Save, X } from "lucide-react";
+import { useState } from "react";
 
-const roteiros = [
+const initialRoteiros = [
   {
     id: 1,
     title: "Renda Extra e Primeiro Investimento",
@@ -148,12 +150,43 @@ const storyRoteiros = [
 ];
 
 export default function RoteiroSection() {
+  const [roteiros, setRoteiros] = useState(initialRoteiros);
+  const [editingRoteiro, setEditingRoteiro] = useState<number | null>(null);
+  const [editingScene, setEditingScene] = useState<{ roteiro: number; scene: number } | null>(null);
+
+  const handleEditRoteiro = (roteiro: typeof roteiros[0]) => {
+    setEditingRoteiro(roteiro.id);
+  };
+
+  const handleSaveRoteiro = (roteiro: typeof roteiros[0]) => {
+    setRoteiros(roteiros.map(r => r.id === roteiro.id ? roteiro : r));
+    setEditingRoteiro(null);
+  };
+
+  const handleEditScene = (roteiroId: number, sceneIdx: number) => {
+    setEditingScene({ roteiro: roteiroId, scene: sceneIdx });
+  };
+
+  const handleSaveScene = (roteiroId: number, sceneIdx: number, updatedScene: any) => {
+    setRoteiros(roteiros.map(r => 
+      r.id === roteiroId 
+        ? { ...r, scenes: r.scenes.map((s, idx) => idx === sceneIdx ? updatedScene : s) }
+        : r
+    ));
+    setEditingScene(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingRoteiro(null);
+    setEditingScene(null);
+  };
+
   return (
     <div className="space-y-8">
       <div>
         <h2 className="text-2xl font-bold text-slate-900 mb-2">Roteiros de Vídeos para Stories e Ads</h2>
         <p className="text-slate-600">
-          Roteiros detalhados baseados em formatos que já venderam milhares de peças no TikTok. Cada roteiro inclui timing, áudio, texto na tela e chamada para ação.
+          Roteiros detalhados baseados em formatos que já venderam milhares de peças no TikTok. Cada roteiro inclui timing, áudio, texto na tela e chamada para ação. Clique em "Editar" para modificar qualquer conteúdo.
         </p>
       </div>
 
@@ -171,20 +204,74 @@ export default function RoteiroSection() {
           <TabsContent key={roteiro.id} value={`roteiro-${roteiro.id}`} className="space-y-6">
             <Card className="border-slate-200">
               <CardHeader>
-                <CardTitle className="text-xl">{roteiro.title}</CardTitle>
-                <CardDescription className="flex gap-4 mt-3 text-sm">
-                  <span className="flex items-center gap-1">
-                    <Users className="w-4 h-4" />
-                    {roteiro.persona}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    {roteiro.duration}
-                  </span>
-                </CardDescription>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    {editingRoteiro === roteiro.id ? (
+                      <input
+                        type="text"
+                        value={roteiro.title}
+                        onChange={(e) => setRoteiros(roteiros.map(r => 
+                          r.id === roteiro.id ? { ...r, title: e.target.value } : r
+                        ))}
+                        className="text-xl font-bold text-slate-900 border-b-2 border-rose-400 w-full mb-2 focus:outline-none"
+                      />
+                    ) : (
+                      <CardTitle className="text-xl">{roteiro.title}</CardTitle>
+                    )}
+                    <CardDescription className="flex gap-4 mt-3 text-sm">
+                      <span className="flex items-center gap-1">
+                        <Users className="w-4 h-4" />
+                        {roteiro.persona}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        {roteiro.duration}
+                      </span>
+                    </CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    {editingRoteiro === roteiro.id ? (
+                      <>
+                        <Button
+                          size="sm"
+                          onClick={() => handleSaveRoteiro(roteiro)}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <Save className="w-4 h-4 mr-1" /> Salvar
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handleCancelEdit}
+                        >
+                          <X className="w-4 h-4 mr-1" /> Cancelar
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEditRoteiro(roteiro)}
+                      >
+                        <Edit2 className="w-4 h-4 mr-1" /> Editar
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-slate-600 mb-4">{roteiro.audience}</p>
+                {editingRoteiro === roteiro.id ? (
+                  <input
+                    type="text"
+                    value={roteiro.audience}
+                    onChange={(e) => setRoteiros(roteiros.map(r => 
+                      r.id === roteiro.id ? { ...r, audience: e.target.value } : r
+                    ))}
+                    className="text-sm text-slate-600 border-b border-slate-300 w-full focus:outline-none mb-4"
+                  />
+                ) : (
+                  <p className="text-sm text-slate-600 mb-4">{roteiro.audience}</p>
+                )}
               </CardContent>
             </Card>
 
@@ -192,28 +279,116 @@ export default function RoteiroSection() {
               {roteiro.scenes.map((scene, idx) => (
                 <Card key={idx} className="border-l-4 border-l-rose-400">
                   <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
                         <Badge variant="outline" className="mb-2">{scene.time}</Badge>
-                        <CardTitle className="text-base">{scene.title}</CardTitle>
+                        {editingScene?.roteiro === roteiro.id && editingScene?.scene === idx ? (
+                          <input
+                            type="text"
+                            value={scene.title}
+                            onChange={(e) => {
+                              const updated = { ...scene, title: e.target.value };
+                              handleSaveScene(roteiro.id, idx, updated);
+                            }}
+                            className="text-base font-bold text-slate-900 border-b border-rose-400 w-full focus:outline-none"
+                          />
+                        ) : (
+                          <CardTitle className="text-base">{scene.title}</CardTitle>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        {editingScene?.roteiro === roteiro.id && editingScene?.scene === idx ? (
+                          <>
+                            <Button
+                              size="sm"
+                              onClick={() => handleSaveScene(roteiro.id, idx, scene)}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <Save className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={handleCancelEdit}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEditScene(roteiro.id, idx)}
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div>
                       <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Descrição da Cena</p>
-                      <p className="text-sm text-slate-700">{scene.description}</p>
+                      {editingScene?.roteiro === roteiro.id && editingScene?.scene === idx ? (
+                        <textarea
+                          value={scene.description}
+                          onChange={(e) => {
+                            const updated = { ...scene, description: e.target.value };
+                            setRoteiros(roteiros.map(r => 
+                              r.id === roteiro.id 
+                                ? { ...r, scenes: r.scenes.map((s, i) => i === idx ? updated : s) }
+                                : r
+                            ));
+                          }}
+                          className="w-full text-sm text-slate-700 border border-slate-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-rose-400"
+                          rows={2}
+                        />
+                      ) : (
+                        <p className="text-sm text-slate-700">{scene.description}</p>
+                      )}
                     </div>
                     <div className="grid md:grid-cols-2 gap-3">
                       <div className="bg-blue-50 p-3 rounded border border-blue-200">
                         <p className="text-xs font-semibold text-blue-600 uppercase mb-1 flex items-center gap-1">
                           <Volume2 className="w-3 h-3" /> Áudio
                         </p>
-                        <p className="text-sm text-blue-900">{scene.audio}</p>
+                        {editingScene?.roteiro === roteiro.id && editingScene?.scene === idx ? (
+                          <textarea
+                            value={scene.audio}
+                            onChange={(e) => {
+                              const updated = { ...scene, audio: e.target.value };
+                              setRoteiros(roteiros.map(r => 
+                                r.id === roteiro.id 
+                                  ? { ...r, scenes: r.scenes.map((s, i) => i === idx ? updated : s) }
+                                  : r
+                              ));
+                            }}
+                            className="w-full text-sm text-blue-900 border border-blue-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            rows={2}
+                          />
+                        ) : (
+                          <p className="text-sm text-blue-900">{scene.audio}</p>
+                        )}
                       </div>
                       <div className="bg-amber-50 p-3 rounded border border-amber-200">
                         <p className="text-xs font-semibold text-amber-600 uppercase mb-1">Texto na Tela</p>
-                        <p className="text-sm text-amber-900 font-medium">{scene.text}</p>
+                        {editingScene?.roteiro === roteiro.id && editingScene?.scene === idx ? (
+                          <textarea
+                            value={scene.text}
+                            onChange={(e) => {
+                              const updated = { ...scene, text: e.target.value };
+                              setRoteiros(roteiros.map(r => 
+                                r.id === roteiro.id 
+                                  ? { ...r, scenes: r.scenes.map((s, i) => i === idx ? updated : s) }
+                                  : r
+                              ));
+                            }}
+                            className="w-full text-sm text-amber-900 border border-amber-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-amber-400 font-medium"
+                            rows={2}
+                          />
+                        ) : (
+                          <p className="text-sm text-amber-900 font-medium">{scene.text}</p>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -223,12 +398,32 @@ export default function RoteiroSection() {
 
             <Card className="bg-gradient-to-r from-rose-50 to-pink-50 border-rose-200">
               <CardHeader>
-                <CardTitle className="text-base">Chamada para Ação (CTA)</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base">Chamada para Ação (CTA)</CardTitle>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setEditingRoteiro(roteiro.id === editingRoteiro ? null : roteiro.id)}
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
-                <Badge className="bg-rose-600 hover:bg-rose-700 text-white text-sm py-2 px-4">
-                  {roteiro.cta}
-                </Badge>
+                {editingRoteiro === roteiro.id ? (
+                  <input
+                    type="text"
+                    value={roteiro.cta}
+                    onChange={(e) => setRoteiros(roteiros.map(r => 
+                      r.id === roteiro.id ? { ...r, cta: e.target.value } : r
+                    ))}
+                    className="w-full text-sm text-rose-900 border-b-2 border-rose-400 focus:outline-none font-medium"
+                  />
+                ) : (
+                  <Badge className="bg-rose-600 hover:bg-rose-700 text-white text-sm py-2 px-4">
+                    {roteiro.cta}
+                  </Badge>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
