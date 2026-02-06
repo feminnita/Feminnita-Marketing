@@ -1,6 +1,8 @@
-import { Palette, TrendingUp, CheckCircle, Zap, Users, Target } from "lucide-react";
+import { Palette, TrendingUp, CheckCircle, Zap, Users, Target, ExternalLink, Copy, Eye } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export function IntegracaoCanvaSection() {
   const metricas = [
@@ -234,6 +236,20 @@ export function IntegracaoCanvaSection() {
     }
   ];
 
+  const handleOpenCanva = (categoria: string) => {
+    window.open(`https://www.canva.com/search?q=${encodeURIComponent(categoria)}`, '_blank');
+    toast.success(`Abrindo templates de ${categoria} no Canva`);
+  };
+
+  const handleCopyCategory = (categoria: string) => {
+    navigator.clipboard.writeText(categoria);
+    toast.success(`Categoria copiada: ${categoria}`);
+  };
+
+  const handleViewDetails = (categoria: string, quantidade: number) => {
+    toast.info(`${quantidade} templates disponíveis para ${categoria}`);
+  };
+
   return (
     <div className="space-y-6">
       {/* Overview Metrics */}
@@ -264,12 +280,14 @@ export function IntegracaoCanvaSection() {
           <div className="space-y-3">
             {templates.map((temp, idx) => (
               <div key={idx} className="border border-slate-200/50 rounded-lg p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <h4 className="font-semibold text-slate-900">{temp.categoria}</h4>
-                  <Badge className="bg-purple-100 text-purple-700">{temp.quantidade} templates</Badge>
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h4 className="font-semibold text-slate-900">{temp.categoria}</h4>
+                    <Badge className="bg-purple-100 text-purple-700 mt-1">{temp.quantidade} templates</Badge>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm mb-4">
                   <div>
                     <p className="text-slate-500 text-xs">Personas</p>
                     <p className="font-bold text-slate-900 text-xs">{temp.personas}</p>
@@ -286,6 +304,36 @@ export function IntegracaoCanvaSection() {
                     <p className="text-slate-500 text-xs">Impacto</p>
                     <p className="font-bold text-green-600">{temp.impacto}</p>
                   </div>
+                </div>
+
+                <div className="flex gap-2 flex-wrap">
+                  <Button
+                    size="sm"
+                    variant="default"
+                    onClick={() => handleOpenCanva(temp.categoria)}
+                    className="gap-2"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Abrir no Canva
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleCopyCategory(temp.categoria)}
+                    className="gap-2"
+                  >
+                    <Copy className="w-4 h-4" />
+                    Copiar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleViewDetails(temp.categoria, temp.quantidade)}
+                    className="gap-2"
+                  >
+                    <Eye className="w-4 h-4" />
+                    Detalhes
+                  </Button>
                 </div>
               </div>
             ))}
