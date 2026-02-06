@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Link2, CheckCircle, AlertCircle } from "lucide-react";
+import { Calendar, Link2, CheckCircle, AlertCircle, X } from "lucide-react";
 import { useState } from "react";
 
 export default function CalendarioConteudoSection() {
@@ -44,7 +44,11 @@ export default function CalendarioConteudoSection() {
       titulo: "Teaser Lançamento",
       persona: "Carol",
       plataforma: "Instagram",
-      status: "agendado"
+      status: "agendado",
+      descricao: "Vídeo de teaser do novo lançamento de pijamas com a persona Carol",
+      roteiro: "Renda Extra e Primeiro Investimento",
+      duracao: "15 segundos",
+      hashtags: "#FeminnitaLançamento #PijamaNovoModelo"
     },
     {
       id: 2,
@@ -54,7 +58,11 @@ export default function CalendarioConteudoSection() {
       titulo: "Bastidores Produção",
       persona: "Vanessa",
       plataforma: "Instagram",
-      status: "agendado"
+      status: "agendado",
+      descricao: "Mostrando bastidores da produção de conteúdo com a família",
+      roteiro: "Compra Coletiva e Economia Familiar",
+      duracao: "30 segundos",
+      hashtags: "#BastidoresFeminnita #FamiliaUnida"
     },
     {
       id: 3,
@@ -64,7 +72,11 @@ export default function CalendarioConteudoSection() {
       titulo: "Renda Extra",
       persona: "Carol",
       plataforma: "TikTok",
-      status: "agendado"
+      status: "agendado",
+      descricao: "Anúncio focado em renda extra para iniciantes",
+      roteiro: "Renda Extra e Primeiro Investimento",
+      duracao: "20 segundos",
+      hashtags: "#RendaExtra #FeminnitaLucro"
     },
     {
       id: 4,
@@ -74,7 +86,11 @@ export default function CalendarioConteudoSection() {
       titulo: "Enquete Cores",
       persona: "Renata",
       plataforma: "Instagram",
-      status: "agendado"
+      status: "agendado",
+      descricao: "Enquete interativa sobre cores de pijamas preferidas",
+      roteiro: "Qualidade e Variedade para Lojistas",
+      duracao: "15 segundos",
+      hashtags: "#EnqueteInterativa #VocêEscolhe"
     },
     {
       id: 5,
@@ -84,9 +100,15 @@ export default function CalendarioConteudoSection() {
       titulo: "Análise Qualidade",
       persona: "Renata",
       plataforma: "Instagram",
-      status: "agendado"
+      status: "agendado",
+      descricao: "Análise detalhada da qualidade dos tecidos Feminnita",
+      roteiro: "Qualidade e Variedade para Lojistas",
+      duracao: "30 segundos",
+      hashtags: "#QualidadeFeminnita #TecidoPremium"
     }
   ]);
+
+  const [eventoSelecionado, setEventoSelecionado] = useState<typeof eventos[0] | null>(null);
 
   const conectarIntegracao = (id: number) => {
     setIntegracoes(integracoes.map(int => 
@@ -183,13 +205,102 @@ export default function CalendarioConteudoSection() {
                   <p className="font-bold text-green-600">✅ {evt.status}</p>
                 </div>
                 <div className="text-right">
-                  <Button size="sm" variant="outline">Ver Detalhes</Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => setEventoSelecionado(evt)}
+                  >
+                    Ver Detalhes
+                  </Button>
                 </div>
               </div>
             </div>
           ))}
         </CardContent>
       </Card>
+
+      {/* Modal de Detalhes */}
+      {eventoSelecionado && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-4 border-b">
+              <div className="flex-1">
+                <CardTitle className="text-2xl">{eventoSelecionado.titulo}</CardTitle>
+                <CardDescription className="mt-2">{eventoSelecionado.descricao}</CardDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setEventoSelecionado(null)}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+
+            <CardContent className="space-y-6 pt-6">
+              {/* Informações Básicas */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Data e Hora</p>
+                  <p className="text-sm font-medium text-slate-900">{eventoSelecionado.data} às {eventoSelecionado.hora}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Tipo</p>
+                  <Badge className="bg-purple-600">{eventoSelecionado.tipo}</Badge>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Persona</p>
+                  <p className="text-sm font-medium text-slate-900">{eventoSelecionado.persona}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Plataforma</p>
+                  <p className="text-sm font-medium text-slate-900">{eventoSelecionado.plataforma}</p>
+                </div>
+              </div>
+
+              {/* Detalhes do Conteúdo */}
+              <div className="space-y-3 border-t pt-4">
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Roteiro Utilizado</p>
+                  <p className="text-sm text-slate-700">{eventoSelecionado.roteiro}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Duração</p>
+                  <p className="text-sm text-slate-700">{eventoSelecionado.duracao}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Hashtags</p>
+                  <p className="text-sm text-slate-700">{eventoSelecionado.hashtags}</p>
+                </div>
+              </div>
+
+              {/* Status */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <p className="text-xs font-semibold text-green-600 uppercase mb-1">Status</p>
+                <p className="text-sm font-medium text-green-900">✅ {eventoSelecionado.status}</p>
+              </div>
+
+              {/* Ações */}
+              <div className="flex gap-2 pt-4 border-t">
+                <Button className="flex-1 bg-purple-600 hover:bg-purple-700">
+                  Editar Evento
+                </Button>
+                <Button variant="outline" className="flex-1">
+                  Duplicar
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setEventoSelecionado(null)}
+                  className="flex-1"
+                >
+                  Fechar
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Dicas */}
       <Card className="border-blue-200 bg-blue-50">
