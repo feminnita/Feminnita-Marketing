@@ -17,9 +17,14 @@ async function importarCampanhasMetaAds() {
     const accessToken = ENV.metaAccessToken;
     const accountId = ENV.metaAdAccountId;
 
+    console.log("[Meta Ads] Iniciando importação de campanhas");
+    console.log("[Meta Ads] Account ID formatado:", accountId);
+    console.log("[Meta Ads] Token presente:", !!accessToken);
+
     if (!accessToken || !accountId) {
-      console.warn("Meta credentials not configured");
-      return [];
+      const msg = "Meta credentials not configured";
+      console.error("[Meta Ads]", msg);
+      throw new Error(msg);
     }
 
     const result = await obterCampanhasMetaAds(accessToken, accountId, [
@@ -33,9 +38,13 @@ async function importarCampanhasMetaAds() {
       "lifetime_budget",
     ]);
 
+    console.log("[Meta Ads] Campanhas importadas com sucesso:", result.data?.length || 0);
     return result.data || [];
-  } catch (error) {
-    console.error("Erro ao importar campanhas do Meta:", error);
+  } catch (error: any) {
+    const errorMsg = error?.message || JSON.stringify(error);
+    console.error("[Meta Ads] ERRO ao importar campanhas:", errorMsg);
+    console.error("[Meta Ads] Stack:", error?.stack);
+    // Retorna array vazio mas loga o erro para debug
     return [];
   }
 }

@@ -18,13 +18,15 @@ import CanvaOAuth from "@/pages/CanvaOAuth";
 import MetaCapiSetup from "@/pages/MetaCapiSetup";
 import TermosServico from "@/pages/TermosServico";
 import Privacidade from "@/pages/Privacidade";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import TermsOfService from "@/pages/TermsOfService";
 
 
 export default function App() {
   const [location] = useLocation();
 
   // Rotas públicas que não requerem autenticação
-  const publicRoutes = ["/termos", "/privacidade"];
+  const publicRoutes = ["/termos", "/privacidade", "/privacy", "/terms"];
   const isPublicRoute = publicRoutes.includes(location);
 
   const getPageComponent = () => {
@@ -34,6 +36,10 @@ export default function App() {
         return <TermosServico />;
       case "/privacidade":
         return <Privacidade />;
+      case "/privacy":
+        return <PrivacyPolicy />;
+      case "/terms":
+        return <TermsOfService />;
 
       // Rotas autenticadas
       case "/":

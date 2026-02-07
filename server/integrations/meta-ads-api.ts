@@ -33,7 +33,9 @@ export async function fazerRequisicaoMetaAds(
   params.append("access_token", accessToken);
 
   try {
-    const response = await fetch(`${url}?${params.toString()}`, {
+    // Se o endpoint já contém ?, usar & para adicionar o access_token
+    const separator = url.includes("?") ? "&" : "?";
+    const response = await fetch(`${url}${separator}${params.toString()}`, {
       ...opcoes,
       headers: {
         "Content-Type": "application/json",
