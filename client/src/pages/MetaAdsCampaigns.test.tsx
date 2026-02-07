@@ -201,4 +201,60 @@ describe("MetaAdsCampaigns", () => {
       expect(screen.getByText("Conversões")).toBeInTheDocument();
     });
   });
+
+  it("should have type='button' on auto-refresh button", () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MetaAdsCampaigns />
+      </QueryClientProvider>
+    );
+
+    const autoRefreshButton = screen.getByText(/Auto-refresh/) as HTMLButtonElement;
+    expect(autoRefreshButton.type).toBe("button");
+  });
+
+  it("should have type='button' on sync button", () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MetaAdsCampaigns />
+      </QueryClientProvider>
+    );
+
+    const syncButton = screen.getByText("Sincronizar Agora") as HTMLButtonElement;
+    expect(syncButton.type).toBe("button");
+  });
+
+  it("should toggle auto-refresh state when button is clicked", () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MetaAdsCampaigns />
+      </QueryClientProvider>
+    );
+
+    const autoRefreshButton = screen.getByText("Auto-refresh ON");
+    fireEvent.click(autoRefreshButton);
+
+    expect(screen.getByText("Auto-refresh OFF")).toBeInTheDocument();
+  });
+
+  it("should call sync mutation when sync button is clicked", async () => {
+    const syncMutationMock = vi.fn();
+    vi.mocked(trpc.metaAdsCampaigns.sincronizarTempoReal.useMutation).mockReturnValue({
+      mutateAsync: syncMutationMock,
+      isPending: false,
+    } as any);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MetaAdsCampaigns />
+      </QueryClientProvider>
+    );
+
+    const syncButton = screen.getByText("Sincronizar Agora");
+    fireEvent.click(syncButton);
+
+    await waitFor(() => {
+      expect(syncMutationMock).toHaveBeenCalled();
+    });
+  });
 });

@@ -122,6 +122,7 @@ export default function MetaAdsCampaigns() {
         </div>
         <div className="flex gap-2">
           <Button
+            type="button"
             onClick={() => setAutoRefresh(!autoRefresh)}
             variant={autoRefresh ? "default" : "outline"}
             className="gap-2"
@@ -130,6 +131,7 @@ export default function MetaAdsCampaigns() {
             {autoRefresh ? "Auto-refresh ON" : "Auto-refresh OFF"}
           </Button>
           <Button
+            type="button"
             onClick={handleSyncRealtime}
             disabled={syncMutation.isPending}
             className="gap-2 bg-blue-600 hover:bg-blue-700"
