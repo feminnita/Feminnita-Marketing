@@ -186,6 +186,7 @@ export function InfluencerAccountsForm({
 
         {/* Botão Salvar */}
         <Button
+          type="button"
           onClick={handleSave}
           disabled={isSaving}
           className="w-full text-white"

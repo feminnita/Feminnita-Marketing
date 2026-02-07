@@ -123,6 +123,7 @@ export function InfluencerAccountsModal({ influencerName, onSave, initialData }:
         {/* Botão Salvar */}
         <div className="pt-4 space-y-2">
           <Button
+            type="button"
             onClick={handleSave}
             disabled={isSaving}
             className="w-full bg-pink-600 hover:bg-pink-700 text-white"
