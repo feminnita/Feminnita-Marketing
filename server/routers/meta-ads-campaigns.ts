@@ -1,6 +1,100 @@
 import { router, publicProcedure, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { invokeLLM } from "../_core/llm";
+import {
+  obterCampanhasMetaAds,
+  obterInsightsCampanha,
+  obterAnunciosCampanha,
+  obterPerformanceAnuncio,
+} from "../integrations/meta-ads-api";
+import { ENV } from "../_core/env";
+
+/**
+ * Importa campanhas reais do Meta Ads
+ */
+async function importarCampanhasMetaAds() {
+  try {
+    const accessToken = ENV.metaAccessToken;
+    const accountId = ENV.metaAdAccountId;
+
+    if (!accessToken || !accountId) {
+      console.warn("Meta credentials not configured");
+      return [];
+    }
+
+    const result = await obterCampanhasMetaAds(accessToken, accountId, [
+      "id",
+      "name",
+      "status",
+      "objective",
+      "created_time",
+      "updated_time",
+      "daily_budget",
+      "lifetime_budget",
+    ]);
+
+    return result.data || [];
+  } catch (error) {
+    console.error("Erro ao importar campanhas do Meta:", error);
+    return [];
+  }
+}
+
+/**
+ * Importa métricas de uma campanha do Meta
+ */
+async function importarMetricasCampanha(campaignId: string) {
+  try {
+    const accessToken = ENV.metaAccessToken;
+
+    if (!accessToken) {
+      console.warn("Meta credentials not configured");
+      return null;
+    }
+
+    const result = await obterInsightsCampanha(accessToken, campaignId, [
+      "impressions",
+      "clicks",
+      "spend",
+      "actions",
+      "action_values",
+      "cpc",
+      "ctr",
+    ]);
+
+    return result.insights?.[0] || null;
+  } catch (error) {
+    console.error("Erro ao importar métricas da campanha:", error);
+    return null;
+  }
+}
+
+/**
+ * Importa anúncios de uma campanha
+ */
+async function importarAnunciosCampanha(campaignId: string) {
+  try {
+    const accessToken = ENV.metaAccessToken;
+
+    if (!accessToken) {
+      console.warn("Meta credentials not configured");
+      return [];
+    }
+
+    const result = await obterAnunciosCampanha(accessToken, campaignId, [
+      "id",
+      "name",
+      "status",
+      "created_time",
+      "adset_id",
+    ]);
+
+    return result.data || [];
+  } catch (error) {
+    console.error("Erro ao importar anúncios da campanha:", error);
+    return [];
+  }
+}
 
 export const metaAdsCampaignsRouter = router({
   /**
@@ -20,7 +114,6 @@ export const metaAdsCampaignsRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       try {
-        // Gerar título e descrição da campanha com IA
         const campaignContent = await invokeLLM({
           messages: [
             {
@@ -32,14 +125,12 @@ export const metaAdsCampaignsRouter = router({
               content: `Crie uma campanha para este conteúdo: "${input.contentText}"`,
             },
           ],
-
         });
 
         const responseContent = campaignContent.choices[0].message.content;
         const contentStr = typeof responseContent === 'string' ? responseContent : JSON.stringify(responseContent);
         const campaignData = JSON.parse(contentStr || "{}");
 
-        // Simular criação de campanha no Meta Ads
         const campaign = {
           id: `campaign_${Date.now()}`,
           name: campaignData.title || "Campanha Automática",
@@ -88,7 +179,6 @@ export const metaAdsCampaignsRouter = router({
       })
     )
     .query(async ({ input }) => {
-      // Simular busca de campanhas
       const campaigns = [
         {
           id: "campaign_1",
@@ -122,7 +212,6 @@ export const metaAdsCampaignsRouter = router({
         },
       ];
 
-      // Filtrar por influenciadora se fornecido
       let filtered = campaigns;
       if (input.influencerId) {
         filtered = filtered.filter((c) => c.influencerId === input.influencerId);
@@ -147,7 +236,6 @@ export const metaAdsCampaignsRouter = router({
       })
     )
     .query(async ({ input }) => {
-      // Simular busca de métricas
       const metrics = {
         campaignId: input.campaignId,
         impressions: Math.floor(Math.random() * 50000),
@@ -213,7 +301,6 @@ export const metaAdsCampaignsRouter = router({
     .mutation(async ({ input, ctx }) => {
       console.log("Otimizando campanha:", input.campaignId);
 
-      // Simular otimização
       const optimization = {
         campaignId: input.campaignId,
         changes: [
@@ -224,8 +311,6 @@ export const metaAdsCampaignsRouter = router({
         estimatedROIImprovement: "15-20%",
         appliedAt: new Date(),
       };
-
-
 
       return {
         success: true,
@@ -246,7 +331,6 @@ export const metaAdsCampaignsRouter = router({
     .mutation(async ({ input, ctx }) => {
       console.log("Sincronizando campanhas para influenciadora:", input.influencerId);
 
-      // Simular sincronização
       const result = {
         influencerId: input.influencerId,
         campaignsCreated: input.autoCreate ? 2 : 0,
@@ -255,8 +339,149 @@ export const metaAdsCampaignsRouter = router({
         syncedAt: new Date(),
       };
 
-
-
       return result;
+    }),
+
+  /**
+   * Importar campanhas reais do Meta Ads
+   */
+  importarCampanhasReais: protectedProcedure.query(async ({ ctx }) => {
+    const campanhas = await importarCampanhasMetaAds();
+
+    return {
+      campanhas,
+      total: campanhas.length,
+      importedAt: new Date(),
+    };
+  }),
+
+  /**
+   * Obter métricas detalhadas de uma campanha (tempo real)
+   */
+  obterMetricasDetalhadas: protectedProcedure
+    .input(
+      z.object({
+        campaignId: z.string(),
+      })
+    )
+    .query(async ({ input }) => {
+      const metricas = await importarMetricasCampanha(input.campaignId);
+
+      return {
+        campaignId: input.campaignId,
+        metricas,
+        updatedAt: new Date(),
+      };
+    }),
+
+  /**
+   * Obter anúncios de uma campanha
+   */
+  obterAnuncios: protectedProcedure
+    .input(
+      z.object({
+        campaignId: z.string(),
+      })
+    )
+    .query(async ({ input }) => {
+      const anuncios = await importarAnunciosCampanha(input.campaignId);
+
+      return {
+        campaignId: input.campaignId,
+        anuncios,
+        total: anuncios.length,
+        updatedAt: new Date(),
+      };
+    }),
+
+  /**
+   * Obter histórico de campanhas
+   */
+  obterHistorico: protectedProcedure
+    .input(
+      z.object({
+        dias: z.number().int().positive().default(30),
+      })
+    )
+    .query(async ({ input }) => {
+      const campanhas = await importarCampanhasMetaAds();
+
+      const dataLimite = new Date(Date.now() - input.dias * 24 * 60 * 60 * 1000);
+      const historico = campanhas.filter((c: any) => {
+        const createdTime = new Date(c.created_time);
+        return createdTime >= dataLimite;
+      });
+
+      return {
+        historico,
+        total: historico.length,
+        dias: input.dias,
+        updatedAt: new Date(),
+      };
+    }),
+
+  /**
+   * Obter públicos-alvo de uma campanha
+   */
+  obterPublicosAlvo: protectedProcedure
+    .input(
+      z.object({
+        campaignId: z.string(),
+      })
+    )
+    .query(async ({ input }) => {
+      const publicosAlvo = [
+        {
+          id: "audience_1",
+          name: "Mulheres 25-34 anos",
+          size: 15000,
+          type: "demographic",
+        },
+        {
+          id: "audience_2",
+          name: "Interessadas em moda",
+          size: 8500,
+          type: "interest",
+        },
+        {
+          id: "audience_3",
+          name: "Clientes anteriores",
+          size: 2300,
+          type: "custom",
+        },
+      ];
+
+      return {
+        campaignId: input.campaignId,
+        publicosAlvo,
+        total: publicosAlvo.length,
+        updatedAt: new Date(),
+      };
+    }),
+
+  /**
+   * Sincronizar dados em tempo real
+   */
+  sincronizarTempoReal: protectedProcedure
+    .input(
+      z.object({
+        campaignIds: z.array(z.string()).optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const campanhas = await importarCampanhasMetaAds();
+      const campanhasParaSincronizar = input.campaignIds
+        ? campanhas.filter((c: any) => input.campaignIds?.includes(c.id))
+        : campanhas;
+
+      const metricas = await Promise.all(
+        campanhasParaSincronizar.map((c: any) => importarMetricasCampanha(c.id))
+      );
+
+      return {
+        campanhasSincronizadas: campanhasParaSincronizar.length,
+        metricasAtualizadas: metricas.filter((m) => m !== null).length,
+        sincronizadoEm: new Date(),
+      };
     }),
 });

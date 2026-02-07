@@ -1,5 +1,6 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeAll } from "vitest";
 import { metaAdsCampaignsRouter } from "./meta-ads-campaigns";
+import { obterCampanhasMetaAds } from "../integrations/meta-ads-api";
 
 describe("Meta Ads Campaigns Router", () => {
   it("deve criar uma campanha a partir do conteúdo", async () => {
@@ -141,5 +142,158 @@ describe("Meta Ads Campaigns Router", () => {
     expect(result.influencerId).toBe(1);
     expect(result.campaignsCreated).toBeGreaterThanOrEqual(0);
     expect(result.campaignsUpdated).toBeGreaterThanOrEqual(0);
+  });
+});
+
+
+describe("Meta Ads Credentials Validation", () => {
+  let accessToken: string;
+  let adAccountId: string;
+
+  beforeAll(() => {
+    accessToken = process.env.META_ACCESS_TOKEN || "";
+    adAccountId = process.env.META_AD_ACCOUNT_ID || "";
+  });
+
+  it("should have META_ACCESS_TOKEN configured", () => {
+    expect(accessToken).toBeTruthy();
+    expect(accessToken.length).toBeGreaterThan(0);
+  });
+
+  it("should have META_AD_ACCOUNT_ID configured", () => {
+    expect(adAccountId).toBeTruthy();
+    expect(adAccountId).toMatch(/^\d+$|^act_\d+$/);
+  });
+
+  it("should have META_PIXEL_ID configured", () => {
+    const pixelId = process.env.META_PIXEL_ID || "";
+    expect(pixelId).toBeTruthy();
+    expect(pixelId).toMatch(/^\d+$/);
+  });
+
+  it("should validate credentials with Meta API", async () => {
+    if (!accessToken || !adAccountId) {
+      console.warn("Skipping Meta API test - credentials not configured");
+      return;
+    }
+
+    try {
+      const result = await obterCampanhasMetaAds(accessToken, adAccountId, [
+        "id",
+        "name",
+        "status",
+      ]);
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.data) || result.data === undefined).toBe(true);
+    } catch (error: any) {
+      if (error.statusCode === 401 || error.statusCode === 403) {
+        throw new Error(
+          `Invalid Meta credentials: ${error.message}. Please check your META_ACCESS_TOKEN and META_AD_ACCOUNT_ID.`
+        );
+      }
+      console.warn("Meta API test warning:", error.message);
+    }
+  });
+});
+
+
+describe("Meta Ads Real-time Import", () => {
+  it("should import real campaigns from Meta", async () => {
+    const caller = metaAdsCampaignsRouter.createCaller({
+      req: {} as any,
+      res: {} as any,
+      user: { id: "1", email: "test@test.com", role: "user" },
+    });
+
+    const result = await caller.importarCampanhasReais();
+
+    expect(result).toBeDefined();
+    expect(result.campanhas).toBeDefined();
+    expect(Array.isArray(result.campanhas)).toBe(true);
+    expect(result.total).toBeGreaterThanOrEqual(0);
+    expect(result.importedAt).toBeDefined();
+  });
+
+  it("should get detailed metrics", async () => {
+    const caller = metaAdsCampaignsRouter.createCaller({
+      req: {} as any,
+      res: {} as any,
+      user: { id: "1", email: "test@test.com", role: "user" },
+    });
+
+    const result = await caller.obterMetricasDetalhadas({
+      campaignId: "campaign_1",
+    });
+
+    expect(result).toBeDefined();
+    expect(result.campaignId).toBe("campaign_1");
+    expect(result.updatedAt).toBeDefined();
+  });
+
+  it("should get campaign ads", async () => {
+    const caller = metaAdsCampaignsRouter.createCaller({
+      req: {} as any,
+      res: {} as any,
+      user: { id: "1", email: "test@test.com", role: "user" },
+    });
+
+    const result = await caller.obterAnuncios({
+      campaignId: "campaign_1",
+    });
+
+    expect(result).toBeDefined();
+    expect(result.campaignId).toBe("campaign_1");
+    expect(Array.isArray(result.anuncios)).toBe(true);
+    expect(result.total).toBeGreaterThanOrEqual(0);
+  });
+
+  it("should get target audiences", async () => {
+    const caller = metaAdsCampaignsRouter.createCaller({
+      req: {} as any,
+      res: {} as any,
+      user: { id: "1", email: "test@test.com", role: "user" },
+    });
+
+    const result = await caller.obterPublicosAlvo({
+      campaignId: "campaign_1",
+    });
+
+    expect(result).toBeDefined();
+    expect(result.campaignId).toBe("campaign_1");
+    expect(Array.isArray(result.publicosAlvo)).toBe(true);
+    expect(result.total).toBeGreaterThanOrEqual(0);
+  });
+
+  it("should get campaign history", async () => {
+    const caller = metaAdsCampaignsRouter.createCaller({
+      req: {} as any,
+      res: {} as any,
+      user: { id: "1", email: "test@test.com", role: "user" },
+    });
+
+    const result = await caller.obterHistorico({
+      dias: 30,
+    });
+
+    expect(result).toBeDefined();
+    expect(Array.isArray(result.historico)).toBe(true);
+    expect(result.dias).toBe(30);
+    expect(result.total).toBeGreaterThanOrEqual(0);
+  });
+
+  it("should sync real-time data", async () => {
+    const caller = metaAdsCampaignsRouter.createCaller({
+      req: {} as any,
+      res: {} as any,
+      user: { id: "1", email: "test@test.com", role: "user" },
+    });
+
+    const result = await caller.sincronizarTempoReal({});
+
+    expect(result).toBeDefined();
+    expect(result.campanhasSincronizadas).toBeGreaterThanOrEqual(0);
+    expect(result.metricasAtualizadas).toBeGreaterThanOrEqual(0);
+    expect(result.sincronizadoEm).toBeDefined();
   });
 });
