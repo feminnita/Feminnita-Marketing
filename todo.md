@@ -350,3 +350,9 @@
 - [ ] Integração com Grupo VIP WhatsApp (22992810707)
 - [ ] Envio automático na data/hora agendada
 - [ ] Dashboard de postagens com histórico
+
+## Fase 29: Corrigir Redirecionamento do Botão Salvar Contas
+- [x] Diagnosticar por que o botão leva para página em branco
+- [x] Remover redirecionamento indesejado
+- [x] Testar que o botão salva dados sem sair da página
+- [x] Adicionar feedback visual de sucesso/erro
