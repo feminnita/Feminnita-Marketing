@@ -73,22 +73,24 @@ export default function InfluencersDashboard() {
         return;
       }
 
-      // Save each account
-      let savedCount = 0;
+      // Prepare account data - only include fields that are not empty
       const accountsData: any = {
         influencerId: influencer.id,
       };
 
-      for (const [platform, username] of Object.entries(influencerAccounts)) {
-        if (username) {
-          accountsData[platform.toLowerCase()] = username;
-        }
-      }
+      // Map field names to match the backend schema
+      if (influencerAccounts.instagram) accountsData.instagram = influencerAccounts.instagram;
+      if (influencerAccounts.tiktok) accountsData.tiktok = influencerAccounts.tiktok;
+      if (influencerAccounts.youtube) accountsData.youtube = influencerAccounts.youtube;
+      if (influencerAccounts.blog) accountsData.blog = influencerAccounts.blog;
+      if (influencerAccounts.email) accountsData.email = influencerAccounts.email;
+
+      console.log("Saving accounts data:", accountsData);
 
       try {
-        await saveAccountsMutation.mutateAsync(accountsData);
-        savedCount++;
-        toast.success(`${savedCount} conta(s) salva(s) com sucesso!`);
+        const result = await saveAccountsMutation.mutateAsync(accountsData);
+        console.log("Save result:", result);
+        toast.success(`Contas salvas com sucesso!`);
         // Clear the form
         setAccounts(prev => ({
           ...prev,
@@ -96,7 +98,8 @@ export default function InfluencersDashboard() {
         }));
       } catch (error) {
         console.error("Error saving accounts:", error);
-        toast.error(`Erro ao salvar: ${error instanceof Error ? error.message : "Erro desconhecido"}`);
+        const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
+        toast.error(`Erro ao salvar: ${errorMessage}`);
       }
     } catch (error: any) {
       console.error("Erro ao salvar contas:", error);
