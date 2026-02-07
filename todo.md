@@ -356,3 +356,14 @@
 - [x] Remover redirecionamento indesejado
 - [x] Testar que o botão salva dados sem sair da página
 - [x] Adicionar feedback visual de sucesso/erro
+
+## Fase 33: Corrigir Botão Salvar Contas e Integração Meta
+- [ ] Diagnosticar por que botão Salvar Contas ainda redireciona para página em branco
+- [ ] Verificar se há erro no handler do botão
+- [ ] Verificar se há erro na mutação tRPC
+- [ ] Testar botão até funcionar corretamente SEM redirecionamento
+- [ ] Investigar por que integração Meta não está puxando informações programadas
+- [ ] Verificar se credenciais Meta estão corretas
+- [ ] Verificar se API Meta está retornando dados
+- [ ] Corrigir integração Meta
+- [ ] Testar integração Meta até funcionar
