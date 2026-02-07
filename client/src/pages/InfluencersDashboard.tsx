@@ -16,6 +16,14 @@ interface InfluencerAccounts {
   };
 }
 
+// Mapeamento de nomes para IDs das influenciadoras
+const INFLUENCER_IDS: { [key: string]: number } = {
+  Carol: 1,
+  Renata: 2,
+  Vanessa: 3,
+  Luiza: 4,
+};
+
 export default function InfluencersDashboard() {
   const [selectedInfluencer, setSelectedInfluencer] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'contas' | 'emails' | 'temas'>('dashboard');
@@ -44,7 +52,16 @@ export default function InfluencersDashboard() {
   );
 
   // Mutation to save accounts
-  const saveAccountsMutation = trpc.influencerAccounts.saveAccounts.useMutation();
+  const saveAccountsMutation = trpc.influencerAccounts.saveAccounts.useMutation({
+    onSuccess: (result) => {
+      console.log("Success:", result);
+      toast.success(result.message || "Contas salvas com sucesso!");
+    },
+    onError: (error) => {
+      console.error("Error:", error);
+      toast.error(error.message || "Erro ao salvar contas");
+    },
+  });
 
   const handleSaveAccounts = async (influencerName: string) => {
     setSavingInfluencer(influencerName);
@@ -57,50 +74,42 @@ export default function InfluencersDashboard() {
         return;
       }
 
-      if (Object.values(influencerAccounts).every(v => !v)) {
+      // Verificar se pelo menos um campo foi preenchido
+      const hasAnyValue = Object.values(influencerAccounts).some(v => v && v.trim());
+      if (!hasAnyValue) {
         toast.error("Preencha pelo menos uma conta");
         setSavingInfluencer(null);
         return;
       }
 
-      // Get influencer ID from the data
-      const influencers = influencersData?.influencers || [];
-      const influencer = influencers.find(inf => inf.name === influencerName);
-      
-      if (!influencer) {
-        toast.error(`Influenciadora "${influencerName}" não encontrada no sistema`);
+      // Obter o ID da influenciadora
+      const influencerId = INFLUENCER_IDS[influencerName];
+      if (!influencerId) {
+        toast.error(`Influenciadora "${influencerName}" não encontrada`);
         setSavingInfluencer(null);
         return;
       }
 
-      // Prepare account data - only include fields that are not empty
-      const accountsData: any = {
-        influencerId: influencer.id,
+      // Preparar dados para enviar (apenas campos preenchidos)
+      const accountsData = {
+        influencerId,
+        ...(influencerAccounts.instagram && { instagram: influencerAccounts.instagram }),
+        ...(influencerAccounts.tiktok && { tiktok: influencerAccounts.tiktok }),
+        ...(influencerAccounts.youtube && { youtube: influencerAccounts.youtube }),
+        ...(influencerAccounts.blog && { blog: influencerAccounts.blog }),
+        ...(influencerAccounts.email && { email: influencerAccounts.email }),
       };
 
-      // Map field names to match the backend schema
-      if (influencerAccounts.instagram) accountsData.instagram = influencerAccounts.instagram;
-      if (influencerAccounts.tiktok) accountsData.tiktok = influencerAccounts.tiktok;
-      if (influencerAccounts.youtube) accountsData.youtube = influencerAccounts.youtube;
-      if (influencerAccounts.blog) accountsData.blog = influencerAccounts.blog;
-      if (influencerAccounts.email) accountsData.email = influencerAccounts.email;
+      console.log("Enviando dados:", accountsData);
 
-      console.log("Saving accounts data:", accountsData);
+      // Chamar a mutação
+      await saveAccountsMutation.mutateAsync(accountsData);
 
-      try {
-        const result = await saveAccountsMutation.mutateAsync(accountsData);
-        console.log("Save result:", result);
-        toast.success(`Contas salvas com sucesso!`);
-        // Clear the form
-        setAccounts(prev => ({
-          ...prev,
-          [influencerName]: { instagram: "", tiktok: "", youtube: "", blog: "", email: "" }
-        }));
-      } catch (error) {
-        console.error("Error saving accounts:", error);
-        const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
-        toast.error(`Erro ao salvar: ${errorMessage}`);
-      }
+      // Limpar o formulário após sucesso
+      setAccounts(prev => ({
+        ...prev,
+        [influencerName]: { instagram: "", tiktok: "", youtube: "", blog: "", email: "" }
+      }));
     } catch (error: any) {
       console.error("Erro ao salvar contas:", error);
       toast.error(`Erro ao salvar: ${error.message || "Erro desconhecido"}`);
@@ -203,61 +212,40 @@ export default function InfluencersDashboard() {
                   </div>
 
                   {currentInfluencer && (
-                    <div className="space-y-4">
-                      <div className="p-4 bg-gradient-to-r from-pink-50 to-orange-50 rounded-lg">
-                        <h3 className="font-semibold text-slate-900 mb-2">{currentInfluencer.name}</h3>
-                        <p className="text-sm text-slate-600">{currentInfluencer.personality}</p>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <Card className="bg-gradient-to-br from-blue-50 to-blue-100">
-                          <CardContent className="pt-6">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="text-sm text-slate-600">Seguidores</p>
-                                <p className="text-2xl font-bold text-blue-600">{metrics?.currentFollowers || 0}</p>
-                              </div>
-                              <Users className="w-8 h-8 text-blue-400" />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Card>
+                        <CardContent className="pt-6">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm text-slate-600">Seguidores</p>
+                              <p className="text-2xl font-bold text-blue-600">{metrics?.currentFollowers || 0}</p>
                             </div>
-                          </CardContent>
-                        </Card>
-
-                        <Card className="bg-gradient-to-br from-red-50 to-red-100">
-                          <CardContent className="pt-6">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="text-sm text-slate-600">Engajamento</p>
-                                <p className="text-2xl font-bold text-red-600">{metrics?.totalEngagement || 0}</p>
-                              </div>
-                              <Heart className="w-8 h-8 text-red-400" />
+                            <Users className="w-8 h-8 text-blue-400" />
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardContent className="pt-6">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm text-slate-600">Engajamento</p>
+                              <p className="text-2xl font-bold text-green-600">{metrics?.avgEngagementRate || '0'}%</p>
                             </div>
-                          </CardContent>
-                        </Card>
-
-                        <Card className="bg-gradient-to-br from-green-50 to-green-100">
-                          <CardContent className="pt-6">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="text-sm text-slate-600">Crescimento</p>
-                                <p className="text-2xl font-bold text-green-600">{metrics?.followerGrowth || 0}%</p>
-                              </div>
-                              <TrendingUp className="w-8 h-8 text-green-400" />
+                            <TrendingUp className="w-8 h-8 text-green-400" />
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardContent className="pt-6">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm text-slate-600">Posts</p>
+                              <p className="text-2xl font-bold text-orange-600">{posts?.scheduled?.length || 0}</p>
                             </div>
-                          </CardContent>
-                        </Card>
-
-                        <Card className="bg-gradient-to-br from-orange-50 to-orange-100">
-                          <CardContent className="pt-6">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="text-sm text-slate-600">Posts</p>
-                                <p className="text-2xl font-bold text-orange-600">{posts?.scheduled?.length || 0}</p>
-                              </div>
-                              <BarChart3 className="w-8 h-8 text-orange-400" />
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </div>
+                            <BarChart3 className="w-8 h-8 text-orange-400" />
+                          </div>
+                        </CardContent>
+                      </Card>
                     </div>
                   )}
                 </>
@@ -308,10 +296,10 @@ export default function InfluencersDashboard() {
                       </div>
                       <Button
                         onClick={() => handleSaveAccounts(name)}
-                        disabled={savingInfluencer === name}
+                        disabled={savingInfluencer === name || saveAccountsMutation.isPending}
                         className="w-full mt-4 bg-pink-600 hover:bg-pink-700 text-white"
                       >
-                        {savingInfluencer === name ? (
+                        {savingInfluencer === name || saveAccountsMutation.isPending ? (
                           <>
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                             Salvando...
@@ -348,9 +336,9 @@ export default function InfluencersDashboard() {
                     <div key={name} className="p-4 border border-slate-200 rounded-lg bg-white hover:bg-slate-50 transition">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h3 className="font-semibold text-slate-900">{name}</h3>
-                          <p className="text-sm text-slate-600 mt-1">
-                            {email ? email : <span className="text-slate-400 italic">Email não configurado</span>}
+                          <p className="font-semibold text-slate-900">{name}</p>
+                          <p className={`text-sm ${email ? 'text-slate-600' : 'text-slate-400'}`}>
+                            {email || "Email não configurado"}
                           </p>
                         </div>
                         {email && (
@@ -358,16 +346,16 @@ export default function InfluencersDashboard() {
                             onClick={() => handleCopyEmail(email, name)}
                             variant="outline"
                             size="sm"
-                            className="ml-4"
+                            className="gap-2"
                           >
                             {copiedEmail === name ? (
                               <>
-                                <Check className="w-4 h-4 mr-2 text-green-600" />
+                                <Check className="w-4 h-4" />
                                 Copiado
                               </>
                             ) : (
                               <>
-                                <Copy className="w-4 h-4 mr-2" />
+                                <Copy className="w-4 h-4" />
                                 Copiar
                               </>
                             )}
@@ -388,13 +376,11 @@ export default function InfluencersDashboard() {
             <CardHeader>
               <CardTitle>Aprovar Temas de Conteúdo</CardTitle>
               <CardDescription>
-                Revise e aprove os temas propostos pelas influenciadoras
+                Revise e aprove os temas de conteúdo propostos pelas influenciadoras
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8">
-                <p className="text-slate-600">Funcionalidade em desenvolvimento...</p>
-              </div>
+              <p className="text-slate-600">Funcionalidade em desenvolvimento...</p>
             </CardContent>
           </Card>
         )}
