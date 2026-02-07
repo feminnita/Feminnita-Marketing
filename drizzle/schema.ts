@@ -395,3 +395,53 @@ export type InfluencerAccount = typeof influencerAccounts.$inferSelect;
 export type InsertInfluencerAccount = typeof influencerAccounts.$inferInsert;
 
 
+
+
+// ============ Meta Ads Campaign Management ============
+
+// Tabela para armazenar histórico de sincronizações
+export const metaSyncHistory = mysqlTable("meta_sync_history", {
+  id: int("id").primaryKey().autoincrement(),
+  userId: int("userId").notNull(),
+  syncType: mysqlEnum("syncType", ["campaigns", "metrics", "ads", "audiences", "full"]).notNull(),
+  totalCampaigns: int("totalCampaigns").default(0),
+  updatedCampaigns: int("updatedCampaigns").default(0),
+  failedCampaigns: int("failedCampaigns").default(0),
+  status: mysqlEnum("status", ["success", "partial", "failed"]).notNull(),
+  errorMessage: text("errorMessage"),
+  syncDuration: int("syncDuration"), // em milissegundos
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type MetaSyncHistory = typeof metaSyncHistory.$inferSelect;
+export type InsertMetaSyncHistory = typeof metaSyncHistory.$inferInsert;
+
+// Tabela para armazenar alertas inteligentes
+export const metaCampaignAlerts = mysqlTable("meta_campaign_alerts", {
+  id: int("id").primaryKey().autoincrement(),
+  userId: int("userId").notNull(),
+  campaignId: varchar("campaignId", { length: 255 }).notNull(),
+  campaignName: varchar("campaignName", { length: 255 }).notNull(),
+  alertType: mysqlEnum("alertType", [
+    "low_roi",
+    "high_spend",
+    "budget_limit",
+    "performance_drop",
+    "high_cpc",
+    "low_ctr",
+  ]).notNull(),
+  severity: mysqlEnum("severity", ["info", "warning", "critical"]).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  currentValue: varchar("currentValue", { length: 255 }),
+  threshold: varchar("threshold", { length: 255 }),
+  recommendation: text("recommendation"),
+  isRead: boolean("isRead").default(false).notNull(),
+  isResolved: boolean("isResolved").default(false).notNull(),
+  resolvedAt: timestamp("resolvedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+
+export type MetaCampaignAlert = typeof metaCampaignAlerts.$inferSelect;
+export type InsertMetaCampaignAlert = typeof metaCampaignAlerts.$inferInsert;

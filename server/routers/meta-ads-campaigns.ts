@@ -484,4 +484,162 @@ export const metaAdsCampaignsRouter = router({
         sincronizadoEm: new Date(),
       };
     }),
+
+  /**
+   * Obter histórico de sincronizações
+   */
+  getSyncHistory: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().int().positive().default(10),
+        offset: z.number().int().nonnegative().default(0),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const syncHistory = [
+        {
+          id: 1,
+          syncType: "full" as const,
+          totalCampaigns: 2,
+          updatedCampaigns: 2,
+          failedCampaigns: 0,
+          status: "success" as const,
+          syncDuration: 2500,
+          createdAt: new Date(Date.now() - 5 * 60 * 1000),
+        },
+        {
+          id: 2,
+          syncType: "metrics" as const,
+          totalCampaigns: 2,
+          updatedCampaigns: 2,
+          failedCampaigns: 0,
+          status: "success" as const,
+          syncDuration: 1800,
+          createdAt: new Date(Date.now() - 15 * 60 * 1000),
+        },
+      ];
+
+      return {
+        history: syncHistory.slice(input.offset, input.offset + input.limit),
+        total: syncHistory.length,
+        offset: input.offset,
+        limit: input.limit,
+      };
+    }),
+
+  /**
+   * Obter alertas inteligentes
+   */
+  getCampaignAlerts: protectedProcedure
+    .input(
+      z.object({
+        campaignId: z.string().optional(),
+        severity: z.enum(["info", "warning", "critical"]).optional(),
+        isResolved: z.boolean().optional(),
+        limit: z.number().int().positive().default(20),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const alerts = [
+        {
+          id: 1,
+          campaignId: "campaign_1",
+          campaignName: "Verão 2026 - Coleção Premium",
+          alertType: "low_roi" as const,
+          severity: "warning" as const,
+          title: "ROI abaixo do esperado",
+          description: "A campanha tem ROI de 2.5x, abaixo do alvo de 3x",
+          currentValue: "2.5x",
+          threshold: "3x",
+          recommendation: "Considere aumentar o orçamento para públicos de melhor performance",
+          isRead: false,
+          isResolved: false,
+          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+        },
+        {
+          id: 2,
+          campaignId: "campaign_1",
+          campaignName: "Verão 2026 - Coleção Premium",
+          alertType: "high_spend" as const,
+          severity: "info" as const,
+          title: "Gasto alto detectado",
+          description: "A campanha gastou R$ 45.50 hoje",
+          currentValue: "R$ 45.50",
+          threshold: "R$ 50.00",
+          recommendation: "Monitore o orçamento para evitar excesso",
+          isRead: true,
+          isResolved: false,
+          createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000),
+        },
+        {
+          id: 3,
+          campaignId: "campaign_2",
+          campaignName: "Conforto e Estilo - Básico",
+          alertType: "budget_limit" as const,
+          severity: "critical" as const,
+          title: "Orçamento próximo ao limite",
+          description: "A campanha atingiu 95% do orçamento mensal",
+          currentValue: "R$ 95.00",
+          threshold: "R$ 100.00",
+          recommendation: "Aumente o orçamento ou pause a campanha para economizar",
+          isRead: false,
+          isResolved: false,
+          createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000),
+        },
+      ];
+
+      let filtered = alerts;
+      if (input.campaignId) {
+        filtered = filtered.filter((a) => a.campaignId === input.campaignId);
+      }
+      if (input.severity) {
+        filtered = filtered.filter((a) => a.severity === input.severity);
+      }
+      if (input.isResolved !== undefined) {
+        filtered = filtered.filter((a) => a.isResolved === input.isResolved);
+      }
+
+      return {
+        alerts: filtered.slice(0, input.limit),
+        total: filtered.length,
+        unreadCount: filtered.filter((a) => !a.isRead).length,
+        criticalCount: filtered.filter((a) => a.severity === "critical").length,
+      };
+    }),
+
+  /**
+   * Marcar alerta como lido
+   */
+  markAlertAsRead: protectedProcedure
+    .input(
+      z.object({
+        alertId: z.number().int().positive(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      return {
+        success: true,
+        message: "Alerta marcado como lido",
+        alertId: input.alertId,
+      };
+    }),
+
+  /**
+   * Resolver alerta
+   */
+  resolveAlert: protectedProcedure
+    .input(
+      z.object({
+        alertId: z.number().int().positive(),
+        resolution: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      return {
+        success: true,
+        message: "Alerta resolvido",
+        alertId: input.alertId,
+        resolvedAt: new Date(),
+      };
+    }),
 });

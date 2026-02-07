@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
 import { BarChart3, Pause, Play, Zap, TrendingUp, Users, Eye, MousePointerClick, RefreshCw, Clock, Target, Megaphone } from "lucide-react";
 import { toast } from "sonner";
+import { SyncHistoryPanel } from "@/components/SyncHistoryPanel";
+import { CampaignAlertsPanel } from "@/components/CampaignAlertsPanel";
 
 export default function MetaAdsCampaigns() {
   const [selectedCampaign, setSelectedCampaign] = useState<string | null>(null);
@@ -433,7 +435,13 @@ export default function MetaAdsCampaigns() {
         </div>
       )}
 
-      {/* Histórico */}
+      {/* Alertas e Histórico */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        <CampaignAlertsPanel />
+        <SyncHistoryPanel />
+      </div>
+
+      {/* Histórico de Campanhas */}
       {activeTab === "history" && (
         <Card>
           <CardHeader>
