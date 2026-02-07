@@ -295,6 +295,7 @@ export default function InfluencersDashboard() {
                         ))}
                       </div>
                       <Button
+                        type="button"
                         onClick={() => handleSaveAccounts(name)}
                         disabled={savingInfluencer === name || saveAccountsMutation.isPending}
                         className="w-full mt-4 bg-pink-600 hover:bg-pink-700 text-white"
