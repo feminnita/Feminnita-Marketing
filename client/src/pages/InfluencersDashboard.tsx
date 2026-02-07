@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc";
-import { Users, TrendingUp, Heart, BarChart3, Loader2 } from "lucide-react";
+import { Users, TrendingUp, Heart, BarChart3, Loader2, Mail, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 
 interface InfluencerAccounts {
@@ -12,19 +12,21 @@ interface InfluencerAccounts {
     tiktok: string;
     youtube: string;
     blog: string;
+    email: string;
   };
 }
 
 export default function InfluencersDashboard() {
   const [selectedInfluencer, setSelectedInfluencer] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'contas' | 'temas'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'contas' | 'emails' | 'temas'>('dashboard');
   const [accounts, setAccounts] = useState<InfluencerAccounts>({
-    Carol: { instagram: "", tiktok: "", youtube: "", blog: "" },
-    Renata: { instagram: "", tiktok: "", youtube: "", blog: "" },
-    Vanessa: { instagram: "", tiktok: "", youtube: "", blog: "" },
-    Luiza: { instagram: "", tiktok: "", youtube: "", blog: "" },
+    Carol: { instagram: "", tiktok: "", youtube: "", blog: "", email: "" },
+    Renata: { instagram: "", tiktok: "", youtube: "", blog: "", email: "" },
+    Vanessa: { instagram: "", tiktok: "", youtube: "", blog: "", email: "" },
+    Luiza: { instagram: "", tiktok: "", youtube: "", blog: "", email: "" },
   });
   const [savingInfluencer, setSavingInfluencer] = useState<string | null>(null);
+  const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
 
   // Fetch all influencers
   const { data: influencersData, isLoading: influencersLoading } = trpc.autonomousInfluencers.listInfluencers.useQuery();
@@ -86,19 +88,15 @@ export default function InfluencersDashboard() {
       try {
         await saveAccountsMutation.mutateAsync(accountsData);
         savedCount++;
-      } catch (error) {
-        console.error("Error saving accounts:", error);
-      }
-
-      if (savedCount > 0) {
         toast.success(`${savedCount} conta(s) salva(s) com sucesso!`);
         // Clear the form
         setAccounts(prev => ({
           ...prev,
-          [influencerName]: { instagram: "", tiktok: "", youtube: "", blog: "" }
+          [influencerName]: { instagram: "", tiktok: "", youtube: "", blog: "", email: "" }
         }));
-      } else {
-        toast.error("Nenhuma conta foi salva");
+      } catch (error) {
+        console.error("Error saving accounts:", error);
+        toast.error(`Erro ao salvar: ${error instanceof Error ? error.message : "Erro desconhecido"}`);
       }
     } catch (error: any) {
       console.error("Erro ao salvar contas:", error);
@@ -118,6 +116,13 @@ export default function InfluencersDashboard() {
     }));
   };
 
+  const handleCopyEmail = (email: string, influencerName: string) => {
+    navigator.clipboard.writeText(email);
+    setCopiedEmail(influencerName);
+    toast.success("Email copiado!");
+    setTimeout(() => setCopiedEmail(null), 2000);
+  };
+
   useEffect(() => {
     if (influencersData?.influencers && influencersData.influencers.length > 0) {
       setSelectedInfluencer(influencersData.influencers[0].id);
@@ -133,22 +138,28 @@ export default function InfluencersDashboard() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Tabs */}
-        <div className="flex gap-2 mb-8 border-b border-slate-200">
+        <div className="flex gap-2 mb-8 border-b border-slate-200 overflow-x-auto">
           <button
             onClick={() => setActiveTab('dashboard')}
-            className={`px-4 py-2 font-semibold transition ${activeTab === 'dashboard' ? 'text-pink-600 border-b-2 border-pink-600' : 'text-slate-600 hover:text-slate-900'}`}
+            className={`px-4 py-2 font-semibold transition whitespace-nowrap ${activeTab === 'dashboard' ? 'text-pink-600 border-b-2 border-pink-600' : 'text-slate-600 hover:text-slate-900'}`}
           >
             Dashboard
           </button>
           <button
             onClick={() => setActiveTab('contas')}
-            className={`px-4 py-2 font-semibold transition ${activeTab === 'contas' ? 'text-pink-600 border-b-2 border-pink-600' : 'text-slate-600 hover:text-slate-900'}`}
+            className={`px-4 py-2 font-semibold transition whitespace-nowrap ${activeTab === 'contas' ? 'text-pink-600 border-b-2 border-pink-600' : 'text-slate-600 hover:text-slate-900'}`}
           >
             Conectar Contas
           </button>
           <button
+            onClick={() => setActiveTab('emails')}
+            className={`px-4 py-2 font-semibold transition whitespace-nowrap ${activeTab === 'emails' ? 'text-pink-600 border-b-2 border-pink-600' : 'text-slate-600 hover:text-slate-900'}`}
+          >
+            Gerenciar Emails
+          </button>
+          <button
             onClick={() => setActiveTab('temas')}
-            className={`px-4 py-2 font-semibold transition ${activeTab === 'temas' ? 'text-pink-600 border-b-2 border-pink-600' : 'text-slate-600 hover:text-slate-900'}`}
+            className={`px-4 py-2 font-semibold transition whitespace-nowrap ${activeTab === 'temas' ? 'text-pink-600 border-b-2 border-pink-600' : 'text-slate-600 hover:text-slate-900'}`}
           >
             Aprovar Temas
           </button>
@@ -258,14 +269,14 @@ export default function InfluencersDashboard() {
             <CardHeader>
               <CardTitle>Conectar Contas das Influenciadoras</CardTitle>
               <CardDescription>
-                Registre as contas reais de Instagram, TikTok, YouTube e Blog
+                Registre as contas reais de Instagram, TikTok, YouTube, Blog e Email
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-sm text-blue-900">
-                    <strong>Como conectar:</strong> Forneça o nome da conta (@username) de cada plataforma. Os dados são armazenados com segurança.
+                    <strong>Como conectar:</strong> Forneça o nome da conta (@username) de cada plataforma e o email. Os dados são armazenados com segurança.
                   </p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -273,14 +284,18 @@ export default function InfluencersDashboard() {
                     <div key={name} className="p-4 border border-slate-200 rounded-lg bg-white">
                       <h3 className="font-semibold text-slate-900 mb-3">{name}</h3>
                       <div className="space-y-3">
-                        {['instagram', 'tiktok', 'youtube', 'blog'].map((platform) => (
+                        {['instagram', 'tiktok', 'youtube', 'blog', 'email'].map((platform) => (
                           <div key={platform}>
                             <label className="text-xs font-semibold text-slate-600 mb-1 block">
-                              {platform.charAt(0).toUpperCase() + platform.slice(1)}
+                              {platform === 'email' ? 'Email' : platform.charAt(0).toUpperCase() + platform.slice(1)}
                             </label>
                             <Input
-                              type="text"
-                              placeholder={`@${name.toLowerCase()}_${platform}`}
+                              type={platform === 'email' ? 'email' : 'text'}
+                              placeholder={
+                                platform === 'email'
+                                  ? `${name.toLowerCase()}@email.com`
+                                  : `@${name.toLowerCase()}_${platform}`
+                              }
                               value={accounts[name]?.[platform as keyof typeof accounts[string]] || ""}
                               onChange={(e) => handleAccountChange(name, platform, e.target.value)}
                               className="w-full"
@@ -310,17 +325,73 @@ export default function InfluencersDashboard() {
           </Card>
         )}
 
+        {/* Gerenciar Emails Tab */}
+        {activeTab === 'emails' && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="w-5 h-5" />
+                Gerenciar Emails das Influenciadoras
+              </CardTitle>
+              <CardDescription>
+                Visualize e copie todos os emails das influenciadoras em um só lugar
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {['Carol', 'Renata', 'Vanessa', 'Luiza'].map((name) => {
+                  const email = accounts[name]?.email;
+                  return (
+                    <div key={name} className="p-4 border border-slate-200 rounded-lg bg-white hover:bg-slate-50 transition">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-semibold text-slate-900">{name}</h3>
+                          <p className="text-sm text-slate-600 mt-1">
+                            {email ? email : <span className="text-slate-400 italic">Email não configurado</span>}
+                          </p>
+                        </div>
+                        {email && (
+                          <Button
+                            onClick={() => handleCopyEmail(email, name)}
+                            variant="outline"
+                            size="sm"
+                            className="ml-4"
+                          >
+                            {copiedEmail === name ? (
+                              <>
+                                <Check className="w-4 h-4 mr-2 text-green-600" />
+                                Copiado
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-4 h-4 mr-2" />
+                                Copiar
+                              </>
+                            )}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Aprovar Temas Tab */}
         {activeTab === 'temas' && (
           <Card>
             <CardHeader>
-              <CardTitle>Aprovar Temas e Modelos</CardTitle>
+              <CardTitle>Aprovar Temas de Conteúdo</CardTitle>
               <CardDescription>
-                Revise e aprove os temas para postagem das influenciadoras
+                Revise e aprove os temas propostos pelas influenciadoras
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-slate-600">Nenhum tema pendente de aprovação no momento.</p>
+              <div className="text-center py-8">
+                <p className="text-slate-600">Funcionalidade em desenvolvimento...</p>
+              </div>
             </CardContent>
           </Card>
         )}
