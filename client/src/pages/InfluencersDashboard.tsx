@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc";
-import { Users, TrendingUp, Heart, BarChart3, Loader2, Mail, Copy, Check } from "lucide-react";
+import { Users, TrendingUp, Heart, BarChart3, Loader2, Mail, Copy, Check, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
 interface InfluencerAccounts {
@@ -13,6 +13,7 @@ interface InfluencerAccounts {
     youtube: string;
     blog: string;
     email: string;
+    whatsapp: string;
   };
 }
 
@@ -28,10 +29,10 @@ export default function InfluencersDashboard() {
   const [selectedInfluencer, setSelectedInfluencer] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'contas' | 'emails' | 'temas'>('dashboard');
   const [accounts, setAccounts] = useState<InfluencerAccounts>({
-    Carol: { instagram: "", tiktok: "", youtube: "", blog: "", email: "" },
-    Renata: { instagram: "", tiktok: "", youtube: "", blog: "", email: "" },
-    Vanessa: { instagram: "", tiktok: "", youtube: "", blog: "", email: "" },
-    Luiza: { instagram: "", tiktok: "", youtube: "", blog: "", email: "" },
+    Carol: { instagram: "", tiktok: "", youtube: "", blog: "", email: "", whatsapp: "" },
+    Renata: { instagram: "", tiktok: "", youtube: "", blog: "", email: "", whatsapp: "" },
+    Vanessa: { instagram: "", tiktok: "", youtube: "", blog: "", email: "", whatsapp: "" },
+    Luiza: { instagram: "", tiktok: "", youtube: "", blog: "", email: "", whatsapp: "" },
   });
   const [savingInfluencer, setSavingInfluencer] = useState<string | null>(null);
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
@@ -56,6 +57,7 @@ export default function InfluencersDashboard() {
     onSuccess: (result) => {
       console.log("Success:", result);
       toast.success(result.message || "Contas salvas com sucesso!");
+      // NÃO limpar o formulário para o usuário ver o que foi salvo
     },
     onError: (error) => {
       console.error("Error:", error);
@@ -64,7 +66,9 @@ export default function InfluencersDashboard() {
   });
 
   const handleSaveAccounts = async (influencerName: string) => {
+    // Prevenir comportamento padrão
     setSavingInfluencer(influencerName);
+    
     try {
       const influencerAccounts = accounts[influencerName];
       
@@ -98,6 +102,7 @@ export default function InfluencersDashboard() {
         ...(influencerAccounts.youtube && { youtube: influencerAccounts.youtube }),
         ...(influencerAccounts.blog && { blog: influencerAccounts.blog }),
         ...(influencerAccounts.email && { email: influencerAccounts.email }),
+        ...(influencerAccounts.whatsapp && { whatsapp: influencerAccounts.whatsapp }),
       };
 
       console.log("Enviando dados:", accountsData);
@@ -105,11 +110,6 @@ export default function InfluencersDashboard() {
       // Chamar a mutação
       await saveAccountsMutation.mutateAsync(accountsData);
 
-      // Limpar o formulário após sucesso
-      setAccounts(prev => ({
-        ...prev,
-        [influencerName]: { instagram: "", tiktok: "", youtube: "", blog: "", email: "" }
-      }));
     } catch (error: any) {
       console.error("Erro ao salvar contas:", error);
       toast.error(`Erro ao salvar: ${error.message || "Erro desconhecido"}`);
@@ -260,14 +260,14 @@ export default function InfluencersDashboard() {
             <CardHeader>
               <CardTitle>Conectar Contas das Influenciadoras</CardTitle>
               <CardDescription>
-                Registre as contas reais de Instagram, TikTok, YouTube, Blog e Email
+                Registre as contas reais de Instagram, TikTok, YouTube, Blog, Email e WhatsApp
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-sm text-blue-900">
-                    <strong>Como conectar:</strong> Forneça o nome da conta (@username) de cada plataforma e o email. Os dados são armazenados com segurança.
+                    <strong>Como conectar:</strong> Forneça o nome da conta (@username) de cada plataforma, email e WhatsApp. Os dados são armazenados com segurança.
                   </p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -275,16 +275,18 @@ export default function InfluencersDashboard() {
                     <div key={name} className="p-4 border border-slate-200 rounded-lg bg-white">
                       <h3 className="font-semibold text-slate-900 mb-3">{name}</h3>
                       <div className="space-y-3">
-                        {['instagram', 'tiktok', 'youtube', 'blog', 'email'].map((platform) => (
+                        {['instagram', 'tiktok', 'youtube', 'blog', 'email', 'whatsapp'].map((platform) => (
                           <div key={platform}>
                             <label className="text-xs font-semibold text-slate-600 mb-1 block">
-                              {platform === 'email' ? 'Email' : platform.charAt(0).toUpperCase() + platform.slice(1)}
+                              {platform === 'email' ? 'Email' : platform === 'whatsapp' ? 'WhatsApp' : platform.charAt(0).toUpperCase() + platform.slice(1)}
                             </label>
                             <Input
-                              type={platform === 'email' ? 'email' : 'text'}
+                              type={platform === 'email' ? 'email' : platform === 'whatsapp' ? 'tel' : 'text'}
                               placeholder={
                                 platform === 'email'
                                   ? `${name.toLowerCase()}@email.com`
+                                  : platform === 'whatsapp'
+                                  ? '+55 11 9 9999-9999'
                                   : `@${name.toLowerCase()}_${platform}`
                               }
                               value={accounts[name]?.[platform as keyof typeof accounts[string]] || ""}
@@ -296,7 +298,11 @@ export default function InfluencersDashboard() {
                       </div>
                       <Button
                         type="button"
-                        onClick={() => handleSaveAccounts(name)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleSaveAccounts(name);
+                        }}
                         disabled={savingInfluencer === name || saveAccountsMutation.isPending}
                         className="w-full mt-4 bg-pink-600 hover:bg-pink-700 text-white"
                       >
@@ -323,45 +329,82 @@ export default function InfluencersDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Mail className="w-5 h-5" />
-                Gerenciar Emails das Influenciadoras
+                Gerenciar Contatos das Influenciadoras
               </CardTitle>
               <CardDescription>
-                Visualize e copie todos os emails das influenciadoras em um só lugar
+                Visualize e copie todos os emails e WhatsApp das influenciadoras em um só lugar
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {['Carol', 'Renata', 'Vanessa', 'Luiza'].map((name) => {
                   const email = accounts[name]?.email;
+                  const whatsapp = accounts[name]?.whatsapp;
                   return (
                     <div key={name} className="p-4 border border-slate-200 rounded-lg bg-white hover:bg-slate-50 transition">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-semibold text-slate-900">{name}</p>
-                          <p className={`text-sm ${email ? 'text-slate-600' : 'text-slate-400'}`}>
-                            {email || "Email não configurado"}
-                          </p>
+                      <div className="mb-3">
+                        <p className="font-semibold text-slate-900">{name}</p>
+                      </div>
+                      <div className="space-y-2">
+                        {/* Email */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Mail className="w-4 h-4 text-slate-400" />
+                            <div>
+                              <p className="text-xs text-slate-500">Email</p>
+                              <p className={`text-sm ${email ? 'text-slate-600 font-medium' : 'text-slate-400'}`}>
+                                {email || "Não configurado"}
+                              </p>
+                            </div>
+                          </div>
+                          {email && (
+                            <Button
+                              onClick={() => handleCopyEmail(email, name)}
+                              variant="outline"
+                              size="sm"
+                              className="gap-2"
+                            >
+                              {copiedEmail === name ? (
+                                <>
+                                  <Check className="w-4 h-4" />
+                                  Copiado
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-4 h-4" />
+                                  Copiar
+                                </>
+                              )}
+                            </Button>
+                          )}
                         </div>
-                        {email && (
-                          <Button
-                            onClick={() => handleCopyEmail(email, name)}
-                            variant="outline"
-                            size="sm"
-                            className="gap-2"
-                          >
-                            {copiedEmail === name ? (
-                              <>
-                                <Check className="w-4 h-4" />
-                                Copiado
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="w-4 h-4" />
-                                Copiar
-                              </>
-                            )}
-                          </Button>
-                        )}
+
+                        {/* WhatsApp */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <MessageCircle className="w-4 h-4 text-slate-400" />
+                            <div>
+                              <p className="text-xs text-slate-500">WhatsApp</p>
+                              <p className={`text-sm ${whatsapp ? 'text-slate-600 font-medium' : 'text-slate-400'}`}>
+                                {whatsapp || "Não configurado"}
+                              </p>
+                            </div>
+                          </div>
+                          {whatsapp && (
+                            <Button
+                              onClick={() => {
+                                navigator.clipboard.writeText(whatsapp);
+                                toast.success("WhatsApp copiado!");
+                              }}
+                              variant="outline"
+                              size="sm"
+                              className="gap-2"
+                            >
+                              <Copy className="w-4 h-4" />
+                              Copiar
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
@@ -377,7 +420,7 @@ export default function InfluencersDashboard() {
             <CardHeader>
               <CardTitle>Aprovar Temas de Conteúdo</CardTitle>
               <CardDescription>
-                Revise e aprove os temas de conteúdo propostos pelas influenciadoras
+                Revise e aprove os temas sugeridos pelas influenciadoras autônomas
               </CardDescription>
             </CardHeader>
             <CardContent>
