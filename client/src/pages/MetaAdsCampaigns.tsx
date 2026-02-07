@@ -333,6 +333,7 @@ export default function MetaAdsCampaigns() {
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <Button
+                    type="button"
                     onClick={() => handlePauseCampaign(selectedCampaign)}
                     disabled={pauseMutation.isPending}
                     className="w-full"
@@ -343,6 +344,7 @@ export default function MetaAdsCampaigns() {
                   </Button>
 
                   <Button
+                    type="button"
                     onClick={() => handleResumeCampaign(selectedCampaign)}
                     disabled={resumeMutation.isPending}
                     className="w-full"
@@ -353,6 +355,7 @@ export default function MetaAdsCampaigns() {
                   </Button>
 
                   <Button
+                    type="button"
                     onClick={() => handleOptimizeCampaign(selectedCampaign)}
                     disabled={optimizeMutation.isPending}
                     className="w-full bg-blue-600 hover:bg-blue-700"
