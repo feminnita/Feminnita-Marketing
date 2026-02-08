@@ -1,22 +1,8 @@
-import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
-
-/**
- * Router simples para salvar contas das influenciadoras
- * Armazena: email, instagram, tiktok, facebook, whatsapp, youtube
- */
-
-// Armazenamento em memória (em produção, usar banco de dados)
-const influencerAccountsStore = new Map<number, {
-  influencerId: number;
-  email?: string;
-  instagram?: string;
-  tiktok?: string;
-  facebook?: string;
-  whatsapp?: string;
-  youtube?: string;
-  updatedAt: Date;
-}>();
+import { eq } from "drizzle-orm";
+import { router, protectedProcedure } from "../_core/trpc";
+import { getDb } from "../db";
+import { influencerAccounts } from "../../drizzle/schema";
 
 export const influencerAccountsRouter = router({
   /**
@@ -36,31 +22,59 @@ export const influencerAccountsRouter = router({
     )
     .mutation(async ({ input }) => {
       try {
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
         console.log('[Influencer Accounts] INICIANDO saveAccounts com input:', JSON.stringify(input));
         
-        const accountData = {
-          influencerId: input.influencerId,
-          email: input.email,
-          instagram: input.instagram,
-          tiktok: input.tiktok,
-          facebook: input.facebook,
-          whatsapp: input.whatsapp,
-          youtube: input.youtube,
-          updatedAt: new Date(),
-        };
+        // Verificar se já existe registro
+        const existing = await db
+          .select()
+          .from(influencerAccounts)
+          .where(eq(influencerAccounts.influencerId, input.influencerId))
+          .limit(1);
 
-        console.log('[Influencer Accounts] Salvando dados:', JSON.stringify(accountData));
-        influencerAccountsStore.set(input.influencerId, accountData);
-        console.log('[Influencer Accounts] Dados salvos com sucesso! Total de contas:', influencerAccountsStore.size);
+        let result;
+        if (existing && existing.length > 0) {
+          // Atualizar
+          result = await db
+            .update(influencerAccounts)
+            .set({
+              email: input.email,
+              instagram: input.instagram,
+              tiktok: input.tiktok,
+              facebook: input.facebook,
+              whatsapp: input.whatsapp,
+              youtube: input.youtube,
+              updatedAt: new Date(),
+            })
+            .where(eq(influencerAccounts.influencerId, input.influencerId));
+          console.log('[Influencer Accounts] Contas atualizadas com sucesso!');
+        } else {
+          // Inserir novo
+          result = await db.insert(influencerAccounts).values({
+            influencerId: input.influencerId,
+            email: input.email,
+            instagram: input.instagram,
+            tiktok: input.tiktok,
+            facebook: input.facebook,
+            whatsapp: input.whatsapp,
+            youtube: input.youtube,
+            isActive: true,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+          console.log('[Influencer Accounts] Contas inseridas com sucesso!');
+        }
 
         return {
           success: true,
           message: "Contas salvas com sucesso!",
-          data: accountData,
+          influencerId: input.influencerId,
         };
       } catch (error) {
         console.error("[influencerAccounts.saveAccounts] ERRO:", error);
-        throw new Error("Erro ao salvar contas");
+        throw new Error("Erro ao salvar contas: " + (error instanceof Error ? error.message : "Erro desconhecido"));
       }
     }),
 
@@ -71,46 +85,21 @@ export const influencerAccountsRouter = router({
     .input(z.object({ influencerId: z.number() }))
     .query(async ({ input }) => {
       try {
+        const db = await getDb();
+        if (!db) return null;
+
         console.log('[Influencer Accounts] Obtendo contas para influencerId:', input.influencerId);
-        const account = influencerAccountsStore.get(input.influencerId);
-        console.log('[Influencer Accounts] Contas encontradas:', account ? 'sim' : 'não');
-        return account || null;
+        const account = await db
+          .select()
+          .from(influencerAccounts)
+          .where(eq(influencerAccounts.influencerId, input.influencerId))
+          .limit(1);
+        
+        console.log('[Influencer Accounts] Contas encontradas:', account && account.length > 0 ? 'sim' : 'nao');
+        return account && account.length > 0 ? account[0] : null;
       } catch (error) {
         console.error("[influencerAccounts.getAccounts]", error);
         throw new Error("Erro ao obter contas");
       }
     }),
-
-  /**
-   * Deletar contas de uma influenciadora
-   */
-  deleteAccounts: protectedProcedure
-    .input(z.object({ influencerId: z.number() }))
-    .mutation(async ({ input }) => {
-      try {
-        console.log('[Influencer Accounts] Deletando contas para influencerId:', input.influencerId);
-        influencerAccountsStore.delete(input.influencerId);
-        console.log('[Influencer Accounts] Contas deletadas com sucesso!');
-        return {
-          success: true,
-          message: "Contas deletadas com sucesso!",
-        };
-      } catch (error) {
-        console.error("[influencerAccounts.deleteAccounts]", error);
-        throw new Error("Erro ao deletar contas");
-      }
-    }),
-
-  /**
-   * Obter todas as contas
-   */
-  getAllAccounts: protectedProcedure.query(async () => {
-    try {
-      console.log('[Influencer Accounts] Obtendo todas as contas. Total:', influencerAccountsStore.size);
-      return Array.from(influencerAccountsStore.values());
-    } catch (error) {
-      console.error("[influencerAccounts.getAllAccounts]", error);
-      throw new Error("Erro ao obter contas");
-    }
-  }),
 });
