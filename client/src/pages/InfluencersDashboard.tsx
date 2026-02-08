@@ -371,10 +371,10 @@ export default function InfluencersDashboard() {
                           handleSaveAccounts(name);
                         }}
                         disabled={savingInfluencer === name || saveAccountsMutation.isPending}
-                        className={`w-full mt-4 text-white transition ${
+                        className={`w-full mt-4 text-white transition font-semibold ${
                           savedInfluencer === name
                             ? 'bg-green-600 hover:bg-green-700'
-                            : 'bg-pink-600 hover:bg-pink-700'
+                            : 'bg-pink-600 hover:bg-pink-700 hover:shadow-lg'
                         }`}
                       >
                         {savingInfluencer === name ? (
@@ -385,10 +385,10 @@ export default function InfluencersDashboard() {
                         ) : savedInfluencer === name ? (
                           <>
                             <Check className="w-4 h-4 mr-2" />
-                             Salvo!
+                            ✅ Salvo com Sucesso!
                           </>
                         ) : (
-                          "Salvar Contas"
+                          "💾 Salvar Contas"
                         )}
                       </Button>
                     </div>
