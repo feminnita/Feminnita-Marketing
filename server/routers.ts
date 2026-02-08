@@ -35,6 +35,9 @@ import { postsRouter } from "./routers/posts";
 import { instagramApiRouter } from "./routers/instagram-api";
 import { metaGraphRouter } from "./routers/meta-graph-api";
 import { instagramRouter } from "./routers/instagram";
+import { influencerBlogRouter } from "./routers/influencer-blog";
+import { getDb } from "./db";
+import { influencers } from "../drizzle/schema";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -98,6 +101,20 @@ export const appRouter = router({
   instagram: instagramApiRouter,
   metaGraph: metaGraphRouter,
   instagramPublish: instagramRouter,
+  influencerBlog: influencerBlogRouter,
+  influencers: router({
+    list: publicProcedure.query(async () => {
+      try {
+        const db = await getDb();
+        if (!db) return [];
+        const allInfluencers = await db.select().from(influencers);
+        return allInfluencers;
+      } catch (error) {
+        console.error('[Influencers] Erro ao listar:', error);
+        return [];
+      }
+    }),
+  }),
 
   // TODO: add feature routers here, e.g.
   // todo: router({

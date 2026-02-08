@@ -12,4 +12,5 @@ export default defineConfig({
   dbCredentials: {
     url: connectionString,
   },
+  relations: "./drizzle/relations.ts",
 });

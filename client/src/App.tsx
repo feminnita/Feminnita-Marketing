@@ -23,6 +23,7 @@ import TermsOfService from "@/pages/TermsOfService";
 import InstagramDashboard from "@/pages/InstagramDashboard";
 import MetaAdsDashboard from "@/pages/MetaAdsDashboard";
 import SocialMediaScheduler from "@/pages/SocialMediaScheduler";
+import InfluencerBlog from "@/pages/InfluencerBlog";
 
 
 export default function App() {
@@ -87,6 +88,8 @@ export default function App() {
         return <MetaCapiSetup />;
       case "/social-media-scheduler":
         return <SocialMediaScheduler />;
+      case "/blog-influencers":
+        return <InfluencerBlog />;
 
       default:
         return <Home />;
