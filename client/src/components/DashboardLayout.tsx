@@ -31,6 +31,7 @@ const menuItems = [
   { icon: LayoutDashboard, label: "Início", path: "/" },
   { icon: Users, label: "Influenciadoras", path: "/influenciadoras" },
   { icon: BookOpen, label: "Blog das Influencers", path: "/blog-influencers" },
+  { icon: TrendingUp, label: "Analytics", path: "/analytics" },
   { icon: TrendingUp, label: "Campanhas Meta Ads", path: "/meta-ads-campaigns" },
   { icon: Calendar, label: "Agendador de Postagens", path: "/agendador-postagens" },
   { icon: Users, label: "Colaboradores", path: "/colaboradores" },

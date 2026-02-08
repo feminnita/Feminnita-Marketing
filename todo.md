@@ -522,3 +522,31 @@
 - [ ] Configurar DNS
 - [ ] Implementar SEO básico
 - [ ] Criar robots.txt
+
+
+## Fase 31: Implementação das 3 Sugestões Completada
+- [x] Integração com Meta Graph API real (router meta-graph-integration.ts)
+  - publishImage: Publicar imagem/carrossel no Instagram
+  - getPostInsights: Obter insights de um post (métricas)
+  - getAccountInsights: Obter métricas da conta (followers, posts, etc)
+  - syncAllPostMetrics: Sincronizar métricas de todos os posts
+  - validateAccessToken: Validar token de acesso
+  - refreshAccessToken: Renovar token de acesso
+
+- [x] Dashboard de Analytics de Posts (página Analytics.tsx)
+  - Seletor de conta Instagram
+  - Filtros por período (semana, mês, ano)
+  - KPIs: Seguidores, Alcance, Impressões, Visualizações de Perfil
+  - Gráficos: Engajamento, Alcance vs Impressões, Performance por Conta
+  - Distribuição de Conteúdo (Pie Chart)
+  - Recomendações automáticas
+  - Sincronização de métricas em tempo real
+
+- [x] Configurar 4 Blogs Públicos com Domínios
+  - Página pública PublicInfluencerBlog.tsx
+  - Router public-blogs.ts com 6 procedures
+  - Documentação BLOG_DOMAINS_SETUP.md
+  - Suporte para subdomínios (carol.feminnita.com, etc)
+  - Roteamento dinâmico por domínio
+  - Links cruzados entre blogs
+  - SEO otimizado

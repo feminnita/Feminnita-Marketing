@@ -24,6 +24,7 @@ import InstagramDashboard from "@/pages/InstagramDashboard";
 import MetaAdsDashboard from "@/pages/MetaAdsDashboard";
 import SocialMediaScheduler from "@/pages/SocialMediaScheduler";
 import InfluencerBlog from "@/pages/InfluencerBlog";
+import Analytics from "@/pages/Analytics";
 
 
 export default function App() {
@@ -90,6 +91,8 @@ export default function App() {
         return <SocialMediaScheduler />;
       case "/blog-influencers":
         return <InfluencerBlog />;
+      case "/analytics":
+        return <Analytics />;
 
       default:
         return <Home />;
