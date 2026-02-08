@@ -100,15 +100,39 @@ export default function SocialMediaScheduler() {
     setEditingPost(null);
   };
 
+  const publishMutation = trpc.instagramPublish.publishPost.useMutation();
+
   const handlePublishNow = async (post: ScheduledPost) => {
     try {
-      // Aqui você chamaria a API para publicar
-      // await trpc.socialMedia.publishPost.useMutation()
-      alert(`Post publicado em: ${post.platforms.join(", ")}`);
-      setPosts(posts.map((p) => (p.id === post.id ? { ...p, status: "published" as const } : p)));
+      if (!post.imageUrl) {
+        alert("Post sem imagem nao pode ser publicado");
+        return;
+      }
+
+      const platformsToPublish = post.platforms.filter((p) => p !== "whatsapp") as ("instagram" | "facebook")[];
+
+      if (platformsToPublish.length === 0) {
+        alert("Selecione pelo menos Instagram ou Facebook para publicar");
+        return;
+      }
+
+      const result = await publishMutation.mutateAsync({
+        caption: post.caption,
+        imageUrl: post.imageUrl,
+        platforms: platformsToPublish,
+      });
+
+      if (result.success) {
+        alert(`Publicado com sucesso em: ${platformsToPublish.join(", ")}`);
+        setPosts(posts.map((p) => (p.id === post.id ? { ...p, status: "published" as const } : p)));
+      } else {
+        alert(`Erro ao publicar: ${result.error}`);
+        setPosts(posts.map((p) => (p.id === post.id ? { ...p, status: "failed" as const } : p)));
+      }
     } catch (error) {
       console.error("Erro ao publicar:", error);
-      alert("Erro ao publicar o post");
+      alert(`Erro ao publicar o post: ${error instanceof Error ? error.message : "Erro desconhecido"}`);
+      setPosts(posts.map((p) => (p.id === post.id ? { ...p, status: "failed" as const } : p)));
     }
   };
 

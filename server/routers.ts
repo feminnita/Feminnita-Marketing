@@ -34,6 +34,7 @@ import { metaCapiRouter } from "./routers/meta-capi";
 import { postsRouter } from "./routers/posts";
 import { instagramApiRouter } from "./routers/instagram-api";
 import { metaGraphRouter } from "./routers/meta-graph-api";
+import { instagramRouter } from "./routers/instagram";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -96,6 +97,7 @@ export const appRouter = router({
   posts: postsRouter,
   instagram: instagramApiRouter,
   metaGraph: metaGraphRouter,
+  instagramPublish: instagramRouter,
 
   // TODO: add feature routers here, e.g.
   // todo: router({
