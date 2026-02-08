@@ -6,8 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
 import { BarChart3, Pause, Play, Zap, TrendingUp, Users, Eye, MousePointerClick, RefreshCw, Clock, Target, Megaphone } from "lucide-react";
 import { toast } from "sonner";
-import { SyncHistoryPanel } from "@/components/SyncHistoryPanel";
-import { CampaignAlertsPanel } from "@/components/CampaignAlertsPanel";
+
 
 export default function MetaAdsCampaigns() {
   const [selectedCampaign, setSelectedCampaign] = useState<string | null>(null);
@@ -31,35 +30,14 @@ export default function MetaAdsCampaigns() {
     { enabled: !!selectedCampaign }
   );
 
-  // Obter métricas detalhadas
-  const { data: detailedMetricsData } = trpc.metaAdsCampaigns.obterMetricasDetalhadas.useQuery(
-    { campaignId: selectedCampaign || "" },
-    { enabled: !!selectedCampaign && activeTab === "metrics" }
-  );
 
-  // Obter anúncios da campanha
-  const { data: adsData } = trpc.metaAdsCampaigns.obterAnuncios.useQuery(
-    { campaignId: selectedCampaign || "" },
-    { enabled: !!selectedCampaign && activeTab === "ads" }
-  );
 
-  // Obter públicos-alvo
-  const { data: audiencesData } = trpc.metaAdsCampaigns.obterPublicosAlvo.useQuery(
-    { campaignId: selectedCampaign || "" },
-    { enabled: !!selectedCampaign && activeTab === "audiences" }
-  );
 
-  // Obter histórico
-  const { data: historyData } = trpc.metaAdsCampaigns.obterHistorico.useQuery(
-    { dias: 30 },
-    { enabled: activeTab === "history" }
-  );
+
+
 
   // Mutations
   const pauseMutation = trpc.metaAdsCampaigns.pauseCampaign.useMutation();
-  const resumeMutation = trpc.metaAdsCampaigns.resumeCampaign.useMutation();
-  const optimizeMutation = trpc.metaAdsCampaigns.optimizeCampaign.useMutation();
-  const syncMutation = trpc.metaAdsCampaigns.sincronizarTempoReal.useMutation();
 
   const handlePauseCampaign = async (campaignId: string) => {
     try {
@@ -71,34 +49,11 @@ export default function MetaAdsCampaigns() {
     }
   };
 
-  const handleResumeCampaign = async (campaignId: string) => {
-    try {
-      await resumeMutation.mutateAsync({ campaignId });
-      toast.success("Campanha retomada com sucesso");
-      refetchCampaigns();
-    } catch (error) {
-      toast.error("Erro ao retomar campanha");
-    }
-  };
 
-  const handleOptimizeCampaign = async (campaignId: string) => {
-    try {
-      await optimizeMutation.mutateAsync({ campaignId });
-      toast.success("Campanha otimizada com sucesso");
-    } catch (error) {
-      toast.error("Erro ao otimizar campanha");
-    }
-  };
 
-  const handleSyncRealtime = async () => {
-    try {
-      await syncMutation.mutateAsync({});
-      toast.success("Dados sincronizados em tempo real");
-      refetchCampaigns();
-    } catch (error) {
-      toast.error("Erro ao sincronizar dados");
-    }
-  };
+
+
+
 
   // Auto-refresh a cada 30 segundos
   useEffect(() => {
@@ -132,15 +87,7 @@ export default function MetaAdsCampaigns() {
             <RefreshCw className="w-4 h-4" />
             {autoRefresh ? "Auto-refresh ON" : "Auto-refresh OFF"}
           </Button>
-          <Button
-            type="button"
-            onClick={handleSyncRealtime}
-            disabled={syncMutation.isPending}
-            className="gap-2 bg-blue-600 hover:bg-blue-700"
-          >
-            <Clock className="w-4 h-4" />
-            Sincronizar Agora
-          </Button>
+
         </div>
       </div>
 
@@ -162,7 +109,7 @@ export default function MetaAdsCampaigns() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-slate-900">
-              {campaigns.reduce((sum, c: any) => sum + (c.metrics?.impressions || 0), 0).toLocaleString()}
+              {campaigns.reduce((sum: number, c: any) => sum + (c.metrics?.impressions || 0), 0).toLocaleString()}
             </div>
           </CardContent>
         </Card>
@@ -173,7 +120,7 @@ export default function MetaAdsCampaigns() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-slate-900">
-              {campaigns.reduce((sum, c: any) => sum + (c.metrics?.clicks || 0), 0).toLocaleString()}
+              {campaigns.reduce((sum: number, c: any) => sum + (c.metrics?.clicks || 0), 0).toLocaleString()}
             </div>
           </CardContent>
         </Card>
@@ -184,7 +131,7 @@ export default function MetaAdsCampaigns() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {(campaigns.reduce((sum, c: any) => sum + (c.metrics?.roi || 0), 0) / Math.max(campaigns.length, 1)).toFixed(1)}x
+              {(campaigns.reduce((sum: number, c: any) => sum + (c.metrics?.roi || 0), 0) / Math.max(campaigns.length, 1)).toFixed(1)}x
             </div>
           </CardContent>
         </Card>
@@ -306,7 +253,7 @@ export default function MetaAdsCampaigns() {
                     <CardContent>
                       {loadingMetrics ? (
                         <div className="text-center py-8 text-slate-500">Carregando métricas...</div>
-                      ) : detailedMetricsData?.metricas ? (
+                      ) : metricsData ? (
                         <div className="space-y-3 text-sm">
                           <div className="flex justify-between">
                             <span className="text-slate-600">CTR:</span>
@@ -347,26 +294,9 @@ export default function MetaAdsCampaigns() {
                     Pausar Campanha
                   </Button>
 
-                  <Button
-                    type="button"
-                    onClick={() => handleResumeCampaign(selectedCampaign)}
-                    disabled={resumeMutation.isPending}
-                    className="w-full"
-                    variant="outline"
-                  >
-                    <Play className="w-4 h-4 mr-2" />
-                    Retomar Campanha
-                  </Button>
 
-                  <Button
-                    type="button"
-                    onClick={() => handleOptimizeCampaign(selectedCampaign)}
-                    disabled={optimizeMutation.isPending}
-                    className="w-full bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Zap className="w-4 h-4 mr-2" />
-                    Otimizar Campanha
-                  </Button>
+
+
                 </CardContent>
               </Card>
             </>
@@ -394,18 +324,7 @@ export default function MetaAdsCampaigns() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {adsData?.anuncios && adsData.anuncios.length > 0 ? (
-                <div className="space-y-2">
-                  {adsData.anuncios.map((ad: any) => (
-                    <div key={ad.id} className="p-3 bg-slate-50 rounded border border-slate-200">
-                      <p className="font-medium text-sm">{ad.name}</p>
-                      <p className="text-xs text-slate-600">Status: {ad.status}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-slate-500 text-sm">Nenhum anúncio encontrado</p>
-              )}
+              <p className="text-slate-500 text-sm">Anúncios não disponíveis</p>
             </CardContent>
           </Card>
 
@@ -418,28 +337,13 @@ export default function MetaAdsCampaigns() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {audiencesData?.publicosAlvo && audiencesData.publicosAlvo.length > 0 ? (
-                <div className="space-y-2">
-                  {audiencesData.publicosAlvo.map((audience: any) => (
-                    <div key={audience.id} className="p-3 bg-slate-50 rounded border border-slate-200">
-                      <p className="font-medium text-sm">{audience.name}</p>
-                      <p className="text-xs text-slate-600">{audience.size.toLocaleString()} pessoas</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-slate-500 text-sm">Nenhum público-alvo encontrado</p>
-              )}
+              <p className="text-slate-500 text-sm">Públicos-alvo não disponíveis</p>
             </CardContent>
           </Card>
         </div>
       )}
 
-      {/* Alertas e Histórico */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-        <CampaignAlertsPanel />
-        <SyncHistoryPanel />
-      </div>
+
 
       {/* Histórico de Campanhas */}
       {activeTab === "history" && (
@@ -451,18 +355,7 @@ export default function MetaAdsCampaigns() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {historyData?.historico && historyData.historico.length > 0 ? (
-              <div className="space-y-2">
-                {historyData.historico.map((campaign: any) => (
-                  <div key={campaign.id} className="p-3 bg-slate-50 rounded border border-slate-200">
-                    <p className="font-medium text-sm">{campaign.name}</p>
-                    <p className="text-xs text-slate-600">Criada em: {new Date(campaign.created_time).toLocaleDateString('pt-BR')}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-slate-500 text-sm">Nenhuma campanha no histórico</p>
-            )}
+            <p className="text-slate-500 text-sm">Histórico não disponível</p>
           </CardContent>
         </Card>
       )}

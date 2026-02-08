@@ -53,6 +53,12 @@ export default function InfluencersDashboard() {
     { enabled: !!selectedInfluencer }
   );
 
+  // Fetch influencer accounts
+  const { data: accountsData, isLoading: accountsLoading } = trpc.influencerAccounts.getAccounts.useQuery(
+    { influencerId: selectedInfluencer || 1 },
+    { enabled: !!selectedInfluencer }
+  );
+
   // Mutation to save accounts
   const saveAccountsMutation = trpc.influencerAccounts.saveAccounts.useMutation({
     onSuccess: (result) => {
@@ -145,6 +151,37 @@ export default function InfluencersDashboard() {
     toast.success("Email copiado!");
     setTimeout(() => setCopiedEmail(null), 2000);
   };
+
+  // Load accounts when they are fetched
+  useEffect(() => {
+    if (accountsData) {
+      const accountsMap: InfluencerAccounts = {};
+      
+      // Initialize with empty values
+      Object.keys(INFLUENCER_IDS).forEach(name => {
+        accountsMap[name] = { instagram: "", tiktok: "", youtube: "", blog: "", email: "", whatsapp: "" };
+      });
+      
+      // Fill in actual data (accountsData is a single object, not array)
+      if (accountsData.influencerId) {
+        const influencerName = Object.keys(INFLUENCER_IDS).find(
+          name => INFLUENCER_IDS[name] === accountsData.influencerId
+        );
+        if (influencerName) {
+          accountsMap[influencerName] = {
+            instagram: accountsData.instagram || "",
+            tiktok: accountsData.tiktok || "",
+            youtube: accountsData.youtube || "",
+            blog: accountsData.facebook || "",
+            email: accountsData.email || "",
+            whatsapp: accountsData.whatsapp || "",
+          };
+        }
+      }
+      
+      setAccounts(accountsMap);
+    }
+  }, [accountsData]);
 
   useEffect(() => {
     if (influencersData?.influencers && influencersData.influencers.length > 0) {

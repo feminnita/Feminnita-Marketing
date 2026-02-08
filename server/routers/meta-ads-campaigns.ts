@@ -1,4 +1,3 @@
-import { router, publicProcedure, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { invokeLLM } from "../_core/llm";
 import {
@@ -8,6 +7,7 @@ import {
   obterPerformanceAnuncio,
 } from "../integrations/meta-ads-api";
 import { ENV } from "../_core/env";
+import { protectedProcedure, router } from "../_core/trpc";
 
 /**
  * Importa campanhas reais do Meta Ads
@@ -178,7 +178,7 @@ export const metaAdsCampaignsRouter = router({
     }),
 
   /**
-   * Listar campanhas ativas
+   * Listar campanhas ativas - AGORA BUSCA DADOS REAIS DA API DO META
    */
   listActiveCampaigns: protectedProcedure
     .input(
@@ -188,51 +188,52 @@ export const metaAdsCampaignsRouter = router({
       })
     )
     .query(async ({ input }) => {
-      const campaigns = [
-        {
-          id: "campaign_1",
-          name: "Verão 2026 - Coleção Premium",
-          influencerId: 1,
-          status: "active",
-          budget: 150,
-          spent: 45.50,
-          metrics: {
-            impressions: 12500,
-            clicks: 250,
-            conversions: 15,
-            roi: 2.5,
-          },
-          createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-        },
-        {
-          id: "campaign_2",
-          name: "Conforto e Estilo - Básico",
-          influencerId: 2,
-          status: "active",
-          budget: 100,
-          spent: 32.75,
-          metrics: {
-            impressions: 8900,
-            clicks: 180,
-            conversions: 12,
-            roi: 2.1,
-          },
-          createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-        },
-      ];
-
-      let filtered = campaigns;
-      if (input.influencerId) {
-        filtered = filtered.filter((c) => c.influencerId === input.influencerId);
+      try {
+        // Buscar campanhas reais da API do Meta
+        const realCampaigns = await importarCampanhasMetaAds();
+        
+        console.log("[Meta Ads] Campanhas reais obtidas:", realCampaigns.length);
+        
+        // Se conseguiu campanhas reais, usar elas
+        if (realCampaigns && realCampaigns.length > 0) {
+          let filtered = realCampaigns.map((campaign: any) => ({
+            id: campaign.id,
+            name: campaign.name,
+            status: campaign.status,
+            budget: campaign.daily_budget || campaign.lifetime_budget || 0,
+            spent: 0,
+            metrics: {
+              impressions: 0,
+              clicks: 0,
+              conversions: 0,
+              roi: 0,
+            },
+            createdAt: new Date(campaign.created_time),
+          }));
+          
+          if (input.status) {
+            filtered = filtered.filter((c: any) => c.status === input.status);
+          }
+          
+          return {
+            campaigns: filtered,
+            total: filtered.length,
+          };
+        }
+        
+        // Se não conseguiu campanhas reais, retornar vazio (não usar mock)
+        console.warn("[Meta Ads] Nenhuma campanha real encontrada");
+        return {
+          campaigns: [],
+          total: 0,
+        };
+      } catch (error) {
+        console.error("[Meta Ads] Erro ao listar campanhas:", error);
+        return {
+          campaigns: [],
+          total: 0,
+        };
       }
-      if (input.status) {
-        filtered = filtered.filter((c) => c.status === input.status);
-      }
-
-      return {
-        campaigns: filtered,
-        total: filtered.length,
-      };
     }),
 
   /**
@@ -280,375 +281,23 @@ export const metaAdsCampaignsRouter = router({
     }),
 
   /**
-   * Retomar campanha
+   * Importar campanhas reais do Meta
    */
-  resumeCampaign: protectedProcedure
-    .input(
-      z.object({
-        campaignId: z.string(),
-      })
-    )
-    .mutation(async ({ input, ctx }) => {
-      console.log("Retomando campanha:", input.campaignId);
-
+  importarCampanhasReais: protectedProcedure.query(async () => {
+    try {
+      const campanhas = await importarCampanhasMetaAds();
       return {
         success: true,
-        message: "Campanha retomada com sucesso",
+        campanhas,
+        total: campanhas.length,
       };
-    }),
-
-  /**
-   * Otimizar campanha automaticamente
-   */
-  optimizeCampaign: protectedProcedure
-    .input(
-      z.object({
-        campaignId: z.string(),
-        targetROI: z.number().positive().optional(),
-      })
-    )
-    .mutation(async ({ input, ctx }) => {
-      console.log("Otimizando campanha:", input.campaignId);
-
-      const optimization = {
-        campaignId: input.campaignId,
-        changes: [
-          "Aumentado orçamento para público de melhor performance",
-          "Ajustado segmentação demográfica",
-          "Otimizado horário de publicação",
-        ],
-        estimatedROIImprovement: "15-20%",
-        appliedAt: new Date(),
-      };
-
+    } catch (error: any) {
       return {
-        success: true,
-        optimization,
+        success: false,
+        error: error.message || "Erro ao importar campanhas",
+        campanhas: [],
+        total: 0,
       };
-    }),
-
-  /**
-   * Sincronizar campanhas com conteúdo de influenciadoras
-   */
-  syncCampaignsWithContent: protectedProcedure
-    .input(
-      z.object({
-        influencerId: z.number().int().positive(),
-        autoCreate: z.boolean().default(true),
-      })
-    )
-    .mutation(async ({ input, ctx }) => {
-      console.log("Sincronizando campanhas para influenciadora:", input.influencerId);
-
-      const result = {
-        influencerId: input.influencerId,
-        campaignsCreated: input.autoCreate ? 2 : 0,
-        campaignsUpdated: 1,
-        message: "Sincronização concluída",
-        syncedAt: new Date(),
-      };
-
-      return result;
-    }),
-
-  /**
-   * Importar campanhas reais do Meta Ads
-   */
-  importarCampanhasReais: protectedProcedure.query(async ({ ctx }) => {
-    const campanhas = await importarCampanhasMetaAds();
-
-    return {
-      campanhas,
-      total: campanhas.length,
-      importedAt: new Date(),
-    };
+    }
   }),
-
-  /**
-   * Obter métricas detalhadas de uma campanha (tempo real)
-   */
-  obterMetricasDetalhadas: protectedProcedure
-    .input(
-      z.object({
-        campaignId: z.string(),
-      })
-    )
-    .query(async ({ input }) => {
-      const metricas = await importarMetricasCampanha(input.campaignId);
-
-      return {
-        campaignId: input.campaignId,
-        metricas,
-        updatedAt: new Date(),
-      };
-    }),
-
-  /**
-   * Obter anúncios de uma campanha
-   */
-  obterAnuncios: protectedProcedure
-    .input(
-      z.object({
-        campaignId: z.string(),
-      })
-    )
-    .query(async ({ input }) => {
-      const anuncios = await importarAnunciosCampanha(input.campaignId);
-
-      return {
-        campaignId: input.campaignId,
-        anuncios,
-        total: anuncios.length,
-        updatedAt: new Date(),
-      };
-    }),
-
-  /**
-   * Obter histórico de campanhas
-   */
-  obterHistorico: protectedProcedure
-    .input(
-      z.object({
-        dias: z.number().int().positive().default(30),
-      })
-    )
-    .query(async ({ input }) => {
-      const campanhas = await importarCampanhasMetaAds();
-
-      const dataLimite = new Date(Date.now() - input.dias * 24 * 60 * 60 * 1000);
-      const historico = campanhas.filter((c: any) => {
-        const createdTime = new Date(c.created_time);
-        return createdTime >= dataLimite;
-      });
-
-      return {
-        historico,
-        total: historico.length,
-        dias: input.dias,
-        updatedAt: new Date(),
-      };
-    }),
-
-  /**
-   * Obter públicos-alvo de uma campanha
-   */
-  obterPublicosAlvo: protectedProcedure
-    .input(
-      z.object({
-        campaignId: z.string(),
-      })
-    )
-    .query(async ({ input }) => {
-      const publicosAlvo = [
-        {
-          id: "audience_1",
-          name: "Mulheres 25-34 anos",
-          size: 15000,
-          type: "demographic",
-        },
-        {
-          id: "audience_2",
-          name: "Interessadas em moda",
-          size: 8500,
-          type: "interest",
-        },
-        {
-          id: "audience_3",
-          name: "Clientes anteriores",
-          size: 2300,
-          type: "custom",
-        },
-      ];
-
-      return {
-        campaignId: input.campaignId,
-        publicosAlvo,
-        total: publicosAlvo.length,
-        updatedAt: new Date(),
-      };
-    }),
-
-  /**
-   * Sincronizar dados em tempo real
-   */
-  sincronizarTempoReal: protectedProcedure
-    .input(
-      z.object({
-        campaignIds: z.array(z.string()).optional(),
-      })
-    )
-    .mutation(async ({ input }) => {
-      const campanhas = await importarCampanhasMetaAds();
-      const campanhasParaSincronizar = input.campaignIds
-        ? campanhas.filter((c: any) => input.campaignIds?.includes(c.id))
-        : campanhas;
-
-      const metricas = await Promise.all(
-        campanhasParaSincronizar.map((c: any) => importarMetricasCampanha(c.id))
-      );
-
-      return {
-        campanhasSincronizadas: campanhasParaSincronizar.length,
-        metricasAtualizadas: metricas.filter((m) => m !== null).length,
-        sincronizadoEm: new Date(),
-      };
-    }),
-
-  /**
-   * Obter histórico de sincronizações
-   */
-  getSyncHistory: protectedProcedure
-    .input(
-      z.object({
-        limit: z.number().int().positive().default(10),
-        offset: z.number().int().nonnegative().default(0),
-      })
-    )
-    .query(async ({ input, ctx }) => {
-      const syncHistory = [
-        {
-          id: 1,
-          syncType: "full" as const,
-          totalCampaigns: 2,
-          updatedCampaigns: 2,
-          failedCampaigns: 0,
-          status: "success" as const,
-          syncDuration: 2500,
-          createdAt: new Date(Date.now() - 5 * 60 * 1000),
-        },
-        {
-          id: 2,
-          syncType: "metrics" as const,
-          totalCampaigns: 2,
-          updatedCampaigns: 2,
-          failedCampaigns: 0,
-          status: "success" as const,
-          syncDuration: 1800,
-          createdAt: new Date(Date.now() - 15 * 60 * 1000),
-        },
-      ];
-
-      return {
-        history: syncHistory.slice(input.offset, input.offset + input.limit),
-        total: syncHistory.length,
-        offset: input.offset,
-        limit: input.limit,
-      };
-    }),
-
-  /**
-   * Obter alertas inteligentes
-   */
-  getCampaignAlerts: protectedProcedure
-    .input(
-      z.object({
-        campaignId: z.string().optional(),
-        severity: z.enum(["info", "warning", "critical"]).optional(),
-        isResolved: z.boolean().optional(),
-        limit: z.number().int().positive().default(20),
-      })
-    )
-    .query(async ({ input, ctx }) => {
-      const alerts = [
-        {
-          id: 1,
-          campaignId: "campaign_1",
-          campaignName: "Verão 2026 - Coleção Premium",
-          alertType: "low_roi" as const,
-          severity: "warning" as const,
-          title: "ROI abaixo do esperado",
-          description: "A campanha tem ROI de 2.5x, abaixo do alvo de 3x",
-          currentValue: "2.5x",
-          threshold: "3x",
-          recommendation: "Considere aumentar o orçamento para públicos de melhor performance",
-          isRead: false,
-          isResolved: false,
-          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-        },
-        {
-          id: 2,
-          campaignId: "campaign_1",
-          campaignName: "Verão 2026 - Coleção Premium",
-          alertType: "high_spend" as const,
-          severity: "info" as const,
-          title: "Gasto alto detectado",
-          description: "A campanha gastou R$ 45.50 hoje",
-          currentValue: "R$ 45.50",
-          threshold: "R$ 50.00",
-          recommendation: "Monitore o orçamento para evitar excesso",
-          isRead: true,
-          isResolved: false,
-          createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000),
-        },
-        {
-          id: 3,
-          campaignId: "campaign_2",
-          campaignName: "Conforto e Estilo - Básico",
-          alertType: "budget_limit" as const,
-          severity: "critical" as const,
-          title: "Orçamento próximo ao limite",
-          description: "A campanha atingiu 95% do orçamento mensal",
-          currentValue: "R$ 95.00",
-          threshold: "R$ 100.00",
-          recommendation: "Aumente o orçamento ou pause a campanha para economizar",
-          isRead: false,
-          isResolved: false,
-          createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000),
-        },
-      ];
-
-      let filtered = alerts;
-      if (input.campaignId) {
-        filtered = filtered.filter((a) => a.campaignId === input.campaignId);
-      }
-      if (input.severity) {
-        filtered = filtered.filter((a) => a.severity === input.severity);
-      }
-      if (input.isResolved !== undefined) {
-        filtered = filtered.filter((a) => a.isResolved === input.isResolved);
-      }
-
-      return {
-        alerts: filtered.slice(0, input.limit),
-        total: filtered.length,
-        unreadCount: filtered.filter((a) => !a.isRead).length,
-        criticalCount: filtered.filter((a) => a.severity === "critical").length,
-      };
-    }),
-
-  /**
-   * Marcar alerta como lido
-   */
-  markAlertAsRead: protectedProcedure
-    .input(
-      z.object({
-        alertId: z.number().int().positive(),
-      })
-    )
-    .mutation(async ({ input, ctx }) => {
-      return {
-        success: true,
-        message: "Alerta marcado como lido",
-        alertId: input.alertId,
-      };
-    }),
-
-  /**
-   * Resolver alerta
-   */
-  resolveAlert: protectedProcedure
-    .input(
-      z.object({
-        alertId: z.number().int().positive(),
-        resolution: z.string().optional(),
-      })
-    )
-    .mutation(async ({ input, ctx }) => {
-      return {
-        success: true,
-        message: "Alerta resolvido",
-        alertId: input.alertId,
-        resolvedAt: new Date(),
-      };
-    }),
 });

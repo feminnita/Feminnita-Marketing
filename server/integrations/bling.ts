@@ -5,7 +5,7 @@
 
 import { BlingAccessToken, BlingError, BlingErrorResponse, BlingProdutoResponse, BlingPedidoResponse, BlingContatoResponse, BlingEstoqueResponse } from "@shared/types/bling";
 
-const BLING_API_BASE_URL = "https://api.bling.com.br/Api/v3";
+const BLING_API_BASE_URL = "https://www.bling.com.br/api/v3";
 
 export class BlingAPIError extends Error {
   constructor(
