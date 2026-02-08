@@ -365,11 +365,7 @@ export default function InfluencersDashboard() {
                       </div>
                       <Button
                         type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleSaveAccounts(name);
-                        }}
+                        onClick={() => handleSaveAccounts(name)}
                         disabled={savingInfluencer === name || saveAccountsMutation.isPending}
                         className={`w-full mt-4 text-white transition font-semibold ${
                           savedInfluencer === name
