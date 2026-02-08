@@ -445,3 +445,111 @@ export const metaCampaignAlerts = mysqlTable("meta_campaign_alerts", {
 
 export type MetaCampaignAlert = typeof metaCampaignAlerts.$inferSelect;
 export type InsertMetaCampaignAlert = typeof metaCampaignAlerts.$inferInsert;
+
+
+// ============ Instagram Accounts Management ============
+
+/**
+ * Tabela para armazenar contas Instagram (Feminnita + Influencers)
+ * Cada influencer pode ter múltiplas contas, assim como a Feminnita
+ */
+export const instagramAccounts = mysqlTable("instagram_accounts", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Identificação
+  accountType: mysqlEnum("accountType", ["feminnita", "influencer"]).notNull(),
+  influencerId: int("influencerId").references(() => influencers.id), // NULL para Feminnita
+  
+  // Dados da conta Instagram
+  instagramId: varchar("instagramId", { length: 255 }).notNull().unique(), // ID numérico do Instagram
+  username: varchar("username", { length: 255 }).notNull(), // @username
+  displayName: varchar("displayName", { length: 255 }).notNull(),
+  profilePictureUrl: text("profilePictureUrl"),
+  biography: text("biography"),
+  
+  // Tokens de acesso
+  accessToken: text("accessToken").notNull(), // Token de acesso do Instagram Graph API
+  accessTokenExpiresAt: timestamp("accessTokenExpiresAt"),
+  refreshToken: text("refreshToken"), // Para renovar token
+  
+  // Informações da conta
+  followers: int("followers").default(0),
+  following: int("following").default(0),
+  postsCount: int("postsCount").default(0),
+  
+  // Status
+  isActive: boolean("isActive").default(true).notNull(),
+  isVerified: boolean("isVerified").default(false).notNull(),
+  lastTokenRefresh: timestamp("lastTokenRefresh"),
+  lastMetricsSync: timestamp("lastMetricsSync"),
+  
+  // Auditoria
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+
+export type InstagramAccount = typeof instagramAccounts.$inferSelect;
+export type InsertInstagramAccount = typeof instagramAccounts.$inferInsert;
+
+/**
+ * Tabela para rastrear publicações feitas em cada conta Instagram
+ */
+export const igPostPublications = mysqlTable("ig_post_publications", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Relações
+  postId: int("postId").notNull().references(() => influencerPosts.id),
+  instagramAccountId: int("instagramAccountId").notNull().references(() => instagramAccounts.id),
+  
+  // Dados da publicação
+  instagramPostId: varchar("instagramPostId", { length: 255 }), // ID retornado pelo Instagram
+  caption: text("caption"),
+  mediaUrls: text("mediaUrls"), // JSON array de URLs
+  
+  // Status
+  status: mysqlEnum("status", ["pending", "published", "failed", "scheduled"]).notNull().default("pending"),
+  publishedAt: timestamp("publishedAt"),
+  scheduledFor: timestamp("scheduledFor"),
+  
+  // Métricas
+  likes: int("likes").default(0),
+  comments: int("comments").default(0),
+  shares: int("shares").default(0),
+  saves: int("saves").default(0),
+  impressions: int("impressions").default(0),
+  reach: int("reach").default(0),
+  
+  // Erro (se houver)
+  errorMessage: text("errorMessage"),
+  errorCode: varchar("errorCode", { length: 255 }),
+  
+  // Auditoria
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+
+export type IgPostPublication = typeof igPostPublications.$inferSelect;
+export type InsertIgPostPublication = typeof igPostPublications.$inferInsert;
+
+/**
+ * Tabela para armazenar credenciais de aplicação Instagram (para renovação de tokens)
+ */
+export const instagramAppCredentials = mysqlTable("instagram_app_credentials", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  appId: varchar("appId", { length: 255 }).notNull(),
+  appSecret: text("appSecret").notNull(),
+  businessAccountId: varchar("businessAccountId", { length: 255 }).notNull(),
+  
+  // Credenciais do usuário que autorizou
+  userId: int("userId").notNull().references(() => users.id),
+  
+  // Status
+  isActive: boolean("isActive").default(true).notNull(),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+
+export type InstagramAppCredentials = typeof instagramAppCredentials.$inferSelect;
+export type InsertInstagramAppCredentials = typeof instagramAppCredentials.$inferInsert;

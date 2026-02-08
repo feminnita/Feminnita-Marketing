@@ -78,6 +78,13 @@
       "when": 1770492947114,
       "tag": "0010_true_rawhide_kid",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1770584237029,
+      "tag": "0011_narrow_kitty_pryde",
+      "breakpoints": true
     }
   ]
 }

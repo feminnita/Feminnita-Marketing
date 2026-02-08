@@ -430,3 +430,95 @@
 - [x] Corrigir 12 erros de TypeScript restantes
 - [x] Validar que todos os testes passam (185 testes passando, 15 falhando por permissões Meta)
 - [x] Servidor rodando normalmente sem erros de compilação
+
+
+## Fase 26: Arquitetura de 4 Blogs Públicos Independentes + Dashboard Privado
+- [ ] Criar estrutura de multi-blog (4 blogs públicos + 1 dashboard privado)
+- [ ] Implementar autenticação privada para dashboard Feminnita Marketing
+- [ ] Criar tabela de blogs no banco de dados (blog_id, slug, influencer_id, domain)
+- [ ] Implementar roteamento dinâmico por domínio/slug
+- [ ] Criar página pública de blog para cada influencer
+- [ ] Implementar navegação entre blogs (links cruzados)
+- [ ] Adicionar link "Voltar ao Hub" nos blogs públicos
+- [ ] Testar acesso público vs privado
+
+## Fase 27: Upload de Imagens com S3
+- [ ] Criar componente de drag-and-drop para upload de imagens
+- [ ] Implementar validação de tipos e tamanho de arquivo
+- [ ] Integrar com S3 para armazenamento de imagens
+- [ ] Criar preview de imagens antes de publicar
+- [ ] Implementar redimensionamento automático de imagens
+- [ ] Adicionar suporte para múltiplas imagens por post
+- [ ] Criar galeria de imagens no blog
+- [ ] Testar upload e exibição de imagens
+
+## Fase 28: Integração com Meta Ads API para Publicação
+- [ ] Implementar publicação automática no Instagram quando post é publicado
+- [ ] Implementar publicação automática no Facebook
+- [ ] Criar sistema de fila para publicações agendadas
+- [ ] Implementar retry automático em caso de falha
+- [ ] Adicionar feedback visual de status de publicação
+- [ ] Criar logs de publicação (sucesso/erro)
+- [ ] Testar fluxo completo de publicação
+
+## Fase 29: Dashboard de Analytics de Posts
+- [ ] Criar tabela de métricas de posts no banco de dados
+- [ ] Implementar sincronização de métricas do Instagram Insights
+- [ ] Implementar sincronização de métricas do Facebook Insights
+- [ ] Criar dashboard com gráficos de engajamento
+- [ ] Implementar filtros por período, influencer, plataforma
+- [ ] Criar relatórios de performance
+- [ ] Adicionar recomendações de conteúdo baseadas em dados
+- [ ] Testar sincronização de métricas
+
+## Fase 30: Configuração de Domínios e Publicação
+- [ ] Configurar 4 domínios para blogs (ou subdomínios)
+- [ ] Implementar SSL/TLS para todos os domínios
+- [ ] Configurar DNS para apontar para Manus
+- [ ] Testar acesso público aos blogs
+- [ ] Implementar SEO básico (meta tags, sitemap)
+- [ ] Criar robots.txt para indexação
+- [ ] Testar indexação no Google
+
+
+## Fase 26: Arquitetura de 4 Blogs Públicos Independentes + Dashboard Privado
+- [x] Criar estrutura de multi-blog (4 blogs públicos + 1 dashboard privado)
+- [x] Implementar tabelas Instagram no banco de dados (instagramAccounts, igPostPublications)
+- [x] Criar router de gerenciamento de contas Instagram
+- [x] Criar router de publicação automática no Instagram
+- [x] Criar seed file para as 5 contas Instagram
+- [ ] Implementar autenticação privada para dashboard Feminnita Marketing
+- [ ] Criar roteamento dinâmico por domínio/slug
+- [ ] Criar página pública de blog para cada influencer
+- [ ] Implementar navegação entre blogs (links cruzados)
+
+## Fase 27: Upload de Imagens com S3
+- [x] Criar router de upload de mídia com S3
+- [ ] Criar componente de drag-and-drop para upload
+- [ ] Implementar validação de tipos e tamanho
+- [ ] Criar preview de imagens
+- [ ] Implementar redimensionamento automático
+- [ ] Adicionar suporte para múltiplas imagens
+
+## Fase 28: Integração com Meta Ads API para Publicação
+- [x] Criar estrutura de publicação automática
+- [x] Implementar publicação em múltiplas contas
+- [x] Implementar agendamento de posts
+- [ ] Integrar com Meta Graph API real
+- [ ] Implementar sincronização de métricas
+- [ ] Adicionar retry automático em caso de falha
+
+## Fase 29: Dashboard de Analytics de Posts
+- [ ] Criar tabela de métricas de posts
+- [ ] Implementar sincronização de Instagram Insights
+- [ ] Criar dashboard com gráficos
+- [ ] Implementar filtros por período
+- [ ] Criar relatórios de performance
+- [ ] Adicionar recomendações de conteúdo
+
+## Fase 30: Configuração de Domínios e Publicação
+- [ ] Configurar 4 domínios para blogs
+- [ ] Implementar SSL/TLS
+- [ ] Configurar DNS
+- [ ] Implementar SEO básico
+- [ ] Criar robots.txt
