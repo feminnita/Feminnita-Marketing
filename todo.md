@@ -175,6 +175,8 @@
 - [x] Implementar handler para salvar contas
 - [x] Conectar botão com mutation de influencerAccounts
 - [x] Adicionar feedback visual (loading state)
+- [x] Testar botão na página de influenciadoras
+- [x] Criar testes unitários para router de contas (8 testes passando)
 
 ## Fase 19: Cadastro de Colaboradores e GitHub
 - [x] Criar tabela de colaboradores no banco de dados

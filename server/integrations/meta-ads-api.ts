@@ -3,8 +3,8 @@
  * Documentação: https://developers.facebook.com/docs/marketing-api
  */
 
-const META_API_URL = "https://graph.instagram.com/v18.0";
-const META_GRAPH_URL = "https://graph.facebook.com/v18.0";
+const META_API_URL = "https://graph.instagram.com/v24.0";
+const META_GRAPH_URL = "https://graph.facebook.com/v24.0";
 
 export class MetaAdsAPIError extends Error {
   constructor(
