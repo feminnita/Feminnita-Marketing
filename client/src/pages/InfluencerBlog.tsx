@@ -12,16 +12,16 @@ import { ptBR } from "date-fns/locale";
 interface BlogPost {
   id: number;
   influencerId: number;
-  platform: string;
-  content: string;
-  caption: string;
-  mediaUrls?: string[];
-  hashtags?: string[];
-  scheduledAt?: Date;
-  publishedAt?: Date;
-  status: "draft" | "scheduled" | "published" | "failed";
-  createdAt: Date;
-  updatedAt: Date;
+  platform: string | null;
+  content: string | null;
+  caption: string | null;
+  mediaUrls?: string[] | null;
+  hashtags?: string[] | null;
+  scheduledAt?: Date | string | null;
+  publishedAt?: Date | string | null;
+  status: string | null;
+  createdAt: Date | string | null;
+  updatedAt: Date | string | null;
 }
 
 export default function InfluencerBlog() {
@@ -112,11 +112,11 @@ export default function InfluencerBlog() {
   const handleEdit = (post: BlogPost) => {
     setEditingPost(post);
     setFormData({
-      content: post.content,
+      content: post.content || "",
       caption: post.caption || "",
       hashtags: post.hashtags?.join(", ") || "",
       scheduledAt: post.scheduledAt ? format(new Date(post.scheduledAt), "yyyy-MM-dd'T'HH:mm") : "",
-      platform: post.platform,
+      platform: post.platform || "instagram",
     });
     setIsCreating(true);
   };
@@ -131,7 +131,7 @@ export default function InfluencerBlog() {
     publishNowMutation.mutate({ postId });
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | null) => {
     switch (status) {
       case "published":
         return "bg-green-100 text-green-800";
@@ -278,7 +278,7 @@ export default function InfluencerBlog() {
                   <div>
                     <CardTitle className="text-lg">{post.caption || "Sem título"}</CardTitle>
                     <CardDescription>
-                      {format(new Date(post.createdAt), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
+                      {post.createdAt && format(new Date(post.createdAt), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
                     </CardDescription>
                   </div>
                   <Badge className={getStatusColor(post.status)}>
