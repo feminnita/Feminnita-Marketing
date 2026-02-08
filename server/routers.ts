@@ -19,7 +19,6 @@ import { autonomousInfluencersRouter } from "./routers/autonomous-influencers";
 import { melhorEnvioRouter } from "./routers/melhor-envio";
 import { influencerAccountsRouter } from "./routers/influencer-accounts";
 import { postSchedulerRouter } from "./routers/post-scheduler";
-import { metaAdsCampaignsRouter } from "./routers/meta-ads-campaigns";
 import { campaignMetricsSyncRouter } from "./routers/campaign-metrics-sync";
 import { smartAlertsRouter } from "./routers/smart-alerts";
 import { collaboratorsRouter } from "./routers/collaborators";
@@ -42,6 +41,7 @@ import { instagramPublisherRouter } from "./routers/instagram-publisher";
 import { metaGraphIntegrationRouter } from "./routers/meta-graph-integration";
 import { publicBlogsRouter } from "./routers/public-blogs";
 import { publicationQueueRouter } from "./routers/publication-queue";
+import { metaAdsCampaignsRouter } from "./routers/meta-ads-campaigns";
 import { getDb } from "./db";
 import { influencers } from "../drizzle/schema";
 
@@ -89,7 +89,6 @@ export const appRouter = router({
   melhorEnvio: melhorEnvioRouter,
   influencerAccounts: influencerAccountsRouter,
   postScheduler: postSchedulerRouter,
-  metaAdsCampaigns: metaAdsCampaignsRouter,
   campaignMetricsSync: campaignMetricsSyncRouter,
   smartAlerts: smartAlertsRouter,
   collaborators: collaboratorsRouter,
@@ -114,6 +113,7 @@ export const appRouter = router({
   metaGraphIntegration: metaGraphIntegrationRouter,
   publicBlogs: publicBlogsRouter,
   publicationQueue: publicationQueueRouter,
+  metaAdsCampaigns: metaAdsCampaignsRouter,
   influencers: router({
     list: publicProcedure.query(async () => {
       try {

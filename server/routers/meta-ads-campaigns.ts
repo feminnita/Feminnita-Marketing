@@ -1,288 +1,122 @@
+import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
-import { invokeLLM } from "../_core/llm";
-import {
-  obterCampanhasMetaAds,
-  obterInsightsCampanha,
-  obterAnunciosCampanha,
-  obterPerformanceAnuncio,
-} from "../integrations/meta-ads-api";
-import { ENV } from "../_core/env";
-import { protectedProcedure, router } from "../_core/trpc";
-
-/**
- * Dados de teste para sandbox mode
- */
-function obterCampanhasTeste() {
-  return [
-    {
-      id: "test_campaign_1",
-      name: "Campanha Teste - Pijamas Inverno",
-      status: "ACTIVE",
-      objective: "LINK_CLICKS",
-      created_time: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      updated_time: new Date().toISOString(),
-      daily_budget: 100,
-      lifetime_budget: 700,
-    },
-    {
-      id: "test_campaign_2",
-      name: "Campanha Teste - Black Friday",
-      status: "ACTIVE",
-      objective: "CONVERSIONS",
-      created_time: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-      updated_time: new Date().toISOString(),
-      daily_budget: 150,
-      lifetime_budget: 1050,
-    },
-    {
-      id: "test_campaign_3",
-      name: "Campanha Teste - Promoção Verão",
-      status: "PAUSED",
-      objective: "LINK_CLICKS",
-      created_time: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
-      updated_time: new Date().toISOString(),
-      daily_budget: 75,
-      lifetime_budget: 525,
-    },
-  ];
-}
-
-/**
- * Importa campanhas reais do Meta Ads
- */
-async function importarCampanhasMetaAds() {
-  try {
-    const accessToken = ENV.metaAccessToken;
-    const accountId = ENV.metaAdAccountId;
-
-    console.log("[Meta Ads] Iniciando importação de campanhas");
-    console.log("[Meta Ads] Account ID formatado:", accountId);
-    console.log("[Meta Ads] Token presente:", !!accessToken);
-
-    if (!accessToken || !accountId) {
-      const msg = "Meta credentials not configured";
-      console.error("[Meta Ads]", msg);
-      console.log("[Meta Ads] Usando dados de teste (sandbox mode)");
-      return obterCampanhasTeste();
-    }
-
-    const result = await obterCampanhasMetaAds(accessToken, accountId, [
-      "id",
-      "name",
-      "status",
-      "objective",
-      "created_time",
-      "updated_time",
-      "daily_budget",
-      "lifetime_budget",
-    ]);
-
-    console.log("[Meta Ads] Campanhas importadas com sucesso:", result.data?.length || 0);
-    return result.data || [];
-  } catch (error: any) {
-    const errorMsg = error?.message || JSON.stringify(error);
-    console.error("[Meta Ads] ERRO ao importar campanhas:", errorMsg);
-    console.error("[Meta Ads] Stack:", error?.stack);
-    
-    // Se o erro for de permissão de sandbox, token expirado, ou qualquer erro de autenticação, usar dados de teste
-    if (errorMsg.includes("sandbox") || errorMsg.includes("permission") || errorMsg.includes("ads_management") || errorMsg.includes("expired") || errorMsg.includes("Session has expired") || errorMsg.includes("Error validating access token")) {
-      console.log("[Meta Ads] Detectado erro de sandbox/permissão/token expirado. Usando dados de teste.");
-      console.log("[Meta Ads] Erro completo:", errorMsg);
-      return obterCampanhasTeste();
-    }
-    
-    // Retorna dados de teste como fallback
-    console.log("[Meta Ads] Erro desconhecido. Usando dados de teste.");
-    return obterCampanhasTeste();
-  }
-}
-
-/**
- * Importa métricas de uma campanha do Meta
- */
-async function importarMetricasCampanha(campaignId: string) {
-  try {
-    const accessToken = ENV.metaAccessToken;
-
-    if (!accessToken) {
-      console.warn("Meta credentials not configured");
-      return null;
-    }
-
-    const result = await obterInsightsCampanha(accessToken, campaignId, [
-      "impressions",
-      "clicks",
-      "spend",
-      "actions",
-      "action_values",
-      "cpc",
-      "ctr",
-    ]);
-
-    return result.insights?.[0] || null;
-  } catch (error) {
-    console.error("Erro ao importar métricas da campanha:", error);
-    return null;
-  }
-}
-
-/**
- * Importa anúncios de uma campanha
- */
-async function importarAnunciosCampanha(campaignId: string) {
-  try {
-    const accessToken = ENV.metaAccessToken;
-
-    if (!accessToken) {
-      console.warn("Meta credentials not configured");
-      return [];
-    }
-
-    const result = await obterAnunciosCampanha(accessToken, campaignId, [
-      "id",
-      "name",
-      "status",
-      "created_time",
-      "adset_id",
-    ]);
-
-    return result.data || [];
-  } catch (error) {
-    console.error("Erro ao importar anúncios da campanha:", error);
-    return [];
-  }
-}
+import { eq } from "drizzle-orm";
+import { getDb } from "../db";
+import { instagramAccounts } from "../../drizzle/schema";
 
 export const metaAdsCampaignsRouter = router({
   /**
-   * Criar campanha automática baseada em conteúdo de influenciadora
-   */
-  createCampaignFromContent: protectedProcedure
-    .input(
-      z.object({
-        influencerId: z.number().int().positive(),
-        contentId: z.string(),
-        contentText: z.string(),
-        contentImage: z.string().optional(),
-        platforms: z.array(z.enum(["instagram", "facebook"])).default(["instagram", "facebook"]),
-        budget: z.number().positive().default(100),
-        duration: z.number().int().positive().default(7),
-      })
-    )
-    .mutation(async ({ input, ctx }) => {
-      try {
-        const campaignContent = await invokeLLM({
-          messages: [
-            {
-              role: "system",
-              content: "Você é um especialista em marketing e criação de campanhas de anúncios. Crie um título e descrição para uma campanha de anúncio baseada no conteúdo fornecido. Retorne em JSON com campos: title (máx 30 caracteres) e description (máx 125 caracteres).",
-            },
-            {
-              role: "user",
-              content: `Crie uma campanha para este conteúdo: "${input.contentText}"`,
-            },
-          ],
-        });
-
-        const responseContent = campaignContent.choices[0].message.content;
-        const contentStr = typeof responseContent === 'string' ? responseContent : JSON.stringify(responseContent);
-        const campaignData = JSON.parse(contentStr || "{}");
-
-        const campaign = {
-          id: `campaign_${Date.now()}`,
-          name: campaignData.title || "Campanha Automática",
-          description: campaignData.description || input.contentText,
-          influencerId: input.influencerId,
-          contentId: input.contentId,
-          platforms: input.platforms,
-          budget: input.budget,
-          duration: input.duration,
-          status: "active",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          metrics: {
-            impressions: 0,
-            clicks: 0,
-            conversions: 0,
-            spend: 0,
-            roi: 0,
-          },
-        };
-
-        console.log("Campanha Meta Ads criada:", campaign);
-
-        return {
-          success: true,
-          campaign,
-          message: "Campanha criada com sucesso",
-        };
-      } catch (error) {
-        console.error("Erro ao criar campanha Meta Ads:", error);
-        return {
-          success: false,
-          error: "Erro ao criar campanha",
-        };
-      }
-    }),
-
-  /**
-   * Listar campanhas ativas - AGORA BUSCA DADOS REAIS DA API DO META
+   * Listar campanhas ativas
    */
   listActiveCampaigns: protectedProcedure
     .input(
       z.object({
-        influencerId: z.number().int().positive().optional(),
-        status: z.enum(["active", "paused", "completed"]).optional(),
+        status: z.enum(["active", "paused", "all"]).default("active"),
       })
     )
     .query(async ({ input }) => {
       try {
-        // Buscar campanhas reais da API do Meta
-        const realCampaigns = await importarCampanhasMetaAds();
-        
-        console.log("[Meta Ads] Campanhas reais obtidas:", realCampaigns.length);
-        
-        // Se conseguiu campanhas reais, usar elas
-        if (realCampaigns && realCampaigns.length > 0) {
-          let filtered = realCampaigns.map((campaign: any) => ({
-            id: campaign.id,
-            name: campaign.name,
-            status: campaign.status,
-            budget: campaign.daily_budget || campaign.lifetime_budget || 0,
-            spent: 0,
-            metrics: {
-              impressions: 0,
-              clicks: 0,
-              conversions: 0,
-              roi: 0,
-            },
-            createdAt: new Date(campaign.created_time),
-          }));
-          
-          if (input.status) {
-            filtered = filtered.filter((c: any) => c.status.toLowerCase() === input.status?.toLowerCase());
-          }
-          
-          return {
-            campaigns: filtered,
-            total: filtered.length,
-          };
+        const db = await getDb();
+        if (!db) return { campaigns: [] };
+
+        // Obter conta Feminnita
+        const account = await db
+          .select()
+          .from(instagramAccounts)
+          .where(eq(instagramAccounts.accountType, "feminnita"))
+          .limit(1);
+
+        if (!account || account.length === 0) {
+          return { campaigns: [] };
         }
-        
-        // Se não conseguiu campanhas reais, retornar vazio (não usar mock)
-        console.warn("[Meta Ads] Nenhuma campanha real encontrada");
+
+        // Retornar campanhas vazias por enquanto
+        // As campanhas reais virão de importarCampanhasReais
         return {
           campaigns: [],
-          total: 0,
+          message: "Use importarCampanhasReais para sincronizar campanhas",
         };
       } catch (error) {
-        console.error("[Meta Ads] Erro ao listar campanhas:", error);
-        return {
-          campaigns: [],
-          total: 0,
-        };
+        console.error("[Meta Ads Campaigns] Erro ao listar campanhas:", error);
+        return { campaigns: [] };
       }
     }),
+
+  /**
+   * Importar campanhas reais do Meta Ads
+   */
+  importarCampanhasReais: protectedProcedure.query(async () => {
+    try {
+      const db = await getDb();
+      if (!db) return { campanhas: [] };
+
+      // Obter conta Feminnita
+      const account = await db
+        .select()
+        .from(instagramAccounts)
+        .where(eq(instagramAccounts.accountType, "feminnita"))
+        .limit(1);
+
+      if (!account || account.length === 0) {
+        throw new Error("Conta Feminnita não encontrada");
+      }
+
+      const igAccount = account[0];
+
+      // Buscar campanhas usando Meta Graph API
+      const adAccountId = process.env.META_AD_ACCOUNT_ID;
+      if (!adAccountId) {
+        throw new Error("META_AD_ACCOUNT_ID não configurado");
+      }
+
+      const campaignsResponse = await fetch(
+        `https://graph.instagram.com/v18.0/${adAccountId}/campaigns?fields=id,name,status,objective,created_time,updated_time,spend,impressions,clicks,actions&access_token=${igAccount.accessToken}`
+      );
+
+      if (!campaignsResponse.ok) {
+        const error = await campaignsResponse.json();
+        throw new Error(`Meta API Error: ${error.error?.message || "Unknown error"}`);
+      }
+
+      const data = await campaignsResponse.json();
+
+      if (!data.data) {
+        return { campanhas: [] };
+      }
+
+      // Filtrar apenas campanhas ativas
+      const activeCampaigns = data.data
+        .filter((campaign: any) => campaign.status === "ACTIVE")
+        .map((campaign: any) => ({
+          id: campaign.id,
+          name: campaign.name,
+          status: campaign.status,
+          objective: campaign.objective,
+          createdTime: campaign.created_time,
+          updatedTime: campaign.updated_time,
+          spend: parseFloat(campaign.spend || "0"),
+          impressions: campaign.impressions || 0,
+          clicks: campaign.clicks || 0,
+          actions: campaign.actions || [],
+        }));
+
+      console.log(
+        `[Meta Ads Campaigns] ${activeCampaigns.length} campanhas ativas importadas`
+      );
+
+      return {
+        campanhas: activeCampaigns,
+        totalCampaigns: activeCampaigns.length,
+        message: `${activeCampaigns.length} campanhas ativas sincronizadas`,
+      };
+    } catch (error) {
+      console.error("[Meta Ads Campaigns] Erro ao importar campanhas:", error);
+      return {
+        campanhas: [],
+        error: (error as Error).message,
+      };
+    }
+  }),
 
   /**
    * Obter métricas de uma campanha
@@ -294,20 +128,74 @@ export const metaAdsCampaignsRouter = router({
       })
     )
     .query(async ({ input }) => {
-      const metrics = {
-        campaignId: input.campaignId,
-        impressions: Math.floor(Math.random() * 50000),
-        clicks: Math.floor(Math.random() * 1000),
-        conversions: Math.floor(Math.random() * 100),
-        spend: parseFloat((Math.random() * 500).toFixed(2)),
-        cpc: parseFloat((Math.random() * 5).toFixed(2)),
-        ctr: parseFloat((Math.random() * 5).toFixed(2)),
-        conversionRate: parseFloat((Math.random() * 15).toFixed(2)),
-        roi: parseFloat((Math.random() * 5).toFixed(2)),
-        updatedAt: new Date(),
-      };
+      try {
+        const db = await getDb();
+        if (!db) return null;
 
-      return metrics;
+        // Obter conta Feminnita
+        const account = await db
+          .select()
+          .from(instagramAccounts)
+          .where(eq(instagramAccounts.accountType, "feminnita"))
+          .limit(1);
+
+        if (!account || account.length === 0) {
+          throw new Error("Conta Feminnita não encontrada");
+        }
+
+        const igAccount = account[0];
+
+        // Buscar métricas da campanha
+        const metricsResponse = await fetch(
+          `https://graph.instagram.com/v18.0/${input.campaignId}/insights?fields=spend,impressions,clicks,actions,action_values,cost_per_action_type,cpc,cpm,cpp&access_token=${igAccount.accessToken}`
+        );
+
+        if (!metricsResponse.ok) {
+          const error = await metricsResponse.json();
+          throw new Error(`Meta API Error: ${error.error?.message || "Unknown error"}`);
+        }
+
+        const data = await metricsResponse.json();
+
+        if (!data.data) {
+          return null;
+        }
+
+        // Processar métricas
+        const metricsMap: Record<string, any> = {};
+        data.data.forEach((metric: any) => {
+          metricsMap[metric.name] = metric.values?.[0]?.value || 0;
+        });
+
+        const spend = parseFloat(metricsMap.spend || "0");
+        const impressions = metricsMap.impressions || 0;
+        const clicks = metricsMap.clicks || 0;
+        const actions = metricsMap.actions || 0;
+        const actionValues = parseFloat(metricsMap.action_values || "0");
+
+        // Calcular métricas derivadas
+        const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
+        const conversionRate = clicks > 0 ? (actions / clicks) * 100 : 0;
+        const roi = spend > 0 ? ((actionValues - spend) / spend) * 100 : 0;
+
+        return {
+          campaignId: input.campaignId,
+          spend,
+          impressions,
+          clicks,
+          cpc: parseFloat(metricsMap.cpc || "0"),
+          cpm: parseFloat(metricsMap.cpm || "0"),
+          cpp: parseFloat(metricsMap.cpp || "0"),
+          actions,
+          actionValues,
+          ctr,
+          conversionRate,
+          roi,
+        };
+      } catch (error) {
+        console.error("[Meta Ads Campaigns] Erro ao obter métricas:", error);
+        return null;
+      }
     }),
 
   /**
@@ -319,33 +207,53 @@ export const metaAdsCampaignsRouter = router({
         campaignId: z.string(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
-      console.log("Pausando campanha:", input.campaignId);
+    .mutation(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
 
-      return {
-        success: true,
-        message: "Campanha pausada com sucesso",
-      };
+        // Obter conta Feminnita
+        const account = await db
+          .select()
+          .from(instagramAccounts)
+          .where(eq(instagramAccounts.accountType, "feminnita"))
+          .limit(1);
+
+        if (!account || account.length === 0) {
+          throw new Error("Conta Feminnita não encontrada");
+        }
+
+        const igAccount = account[0];
+
+        // Pausar campanha via Meta API
+        const pauseResponse = await fetch(
+          `https://graph.instagram.com/v18.0/${input.campaignId}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              status: "PAUSED",
+              access_token: igAccount.accessToken,
+            }),
+          }
+        );
+
+        if (!pauseResponse.ok) {
+          const error = await pauseResponse.json();
+          throw new Error(`Meta API Error: ${error.error?.message || "Unknown error"}`);
+        }
+
+        console.log(`[Meta Ads Campaigns] Campanha ${input.campaignId} pausada`);
+
+        return {
+          success: true,
+          message: "Campanha pausada com sucesso",
+        };
+      } catch (error) {
+        console.error("[Meta Ads Campaigns] Erro ao pausar campanha:", error);
+        throw error;
+      }
     }),
-
-  /**
-   * Importar campanhas reais do Meta
-   */
-  importarCampanhasReais: protectedProcedure.query(async () => {
-    try {
-      const campanhas = await importarCampanhasMetaAds();
-      return {
-        success: true,
-        campanhas,
-        total: campanhas.length,
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        error: error.message || "Erro ao importar campanhas",
-        campanhas: [],
-        total: 0,
-      };
-    }
-  }),
 });

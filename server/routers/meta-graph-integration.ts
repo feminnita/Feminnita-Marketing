@@ -339,6 +339,86 @@ export const metaGraphIntegrationRouter = router({
     }),
 
   /**
+   * Buscar campanhas ativas do Meta Ads
+   */
+  getCampaigns: protectedProcedure
+    .input(
+      z.object({
+        accountId: z.number(),
+      })
+    )
+    .query(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        // Obter conta Instagram
+        const account = await db
+          .select()
+          .from(instagramAccounts)
+          .where(eq(instagramAccounts.id, input.accountId))
+          .limit(1);
+
+        if (!account || account.length === 0) {
+          throw new Error("Conta Instagram não encontrada");
+        }
+
+        const igAccount = account[0];
+
+        // Buscar campanhas do Meta Ads
+        // Usar o AD_ACCOUNT_ID do ambiente
+        const adAccountId = process.env.META_AD_ACCOUNT_ID;
+        if (!adAccountId) {
+          throw new Error("META_AD_ACCOUNT_ID não configurado");
+        }
+
+        const campaignsResponse = await makeMetaGraphRequest(
+          `/${adAccountId}/campaigns?fields=id,name,status,objective,created_time,updated_time,spend,impressions,clicks,actions`,
+          "GET",
+          igAccount.accessToken
+        );
+
+        if (!campaignsResponse.data) {
+          return {
+            success: true,
+            campaigns: [],
+            message: "Nenhuma campanha encontrada",
+          };
+        }
+
+        // Filtrar apenas campanhas ativas
+        const activeCampaigns = campaignsResponse.data
+          .filter((campaign: any) => campaign.status === "ACTIVE")
+          .map((campaign: any) => ({
+            id: campaign.id,
+            name: campaign.name,
+            status: campaign.status,
+            objective: campaign.objective,
+            createdTime: campaign.created_time,
+            updatedTime: campaign.updated_time,
+            spend: campaign.spend || 0,
+            impressions: campaign.impressions || 0,
+            clicks: campaign.clicks || 0,
+            actions: campaign.actions || [],
+          }));
+
+        return {
+          success: true,
+          campaigns: activeCampaigns,
+          totalCampaigns: activeCampaigns.length,
+          message: `${activeCampaigns.length} campanhas ativas encontradas`,
+        };
+      } catch (error) {
+        console.error("[Meta Graph Integration] Erro ao buscar campanhas:", error);
+        return {
+          success: false,
+          campaigns: [],
+          error: (error as Error).message,
+        };
+      }
+    }),
+
+  /**
    * Renovar token de acesso (se tiver refresh token)
    */
   refreshAccessToken: protectedProcedure

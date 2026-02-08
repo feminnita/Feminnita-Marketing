@@ -232,7 +232,7 @@ export default function MetaAdsCampaigns() {
                               <TrendingUp className="w-4 h-4 text-slate-600" />
                               <span className="text-sm text-slate-600">Conversões</span>
                             </div>
-                            <span className="font-semibold">{metricsData?.conversions?.toLocaleString()}</span>
+                            <span className="font-semibold">{metricsData?.actions?.toLocaleString()}</span>
                           </div>
 
                           <div className="flex items-center justify-between p-3 bg-green-50 rounded border border-green-200">
