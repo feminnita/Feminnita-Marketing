@@ -67,7 +67,11 @@ export default function DashboardLayout({
     return <DashboardLayoutSkeleton />
   }
 
-  if (!user) {
+  // Em desenvolvimento, permitir acesso sem autenticação
+  const isDevelopment = import.meta.env.DEV;
+  const requiresAuth = !isDevelopment && !user;
+
+  if (requiresAuth) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full">
