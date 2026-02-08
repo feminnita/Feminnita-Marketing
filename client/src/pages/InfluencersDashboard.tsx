@@ -77,14 +77,14 @@ export default function InfluencersDashboard() {
   });
 
   const handleSaveAccounts = async (influencerName: string) => {
-    // Prevenir comportamento padrão
+    // Prevenir comportamento padrao
     setSavingInfluencer(influencerName);
     
     try {
       const influencerAccounts = accounts[influencerName];
       
       if (!influencerAccounts) {
-        toast.error("Influenciadora não encontrada");
+        toast.error("Influenciadora nao encontrada");
         setSavingInfluencer(null);
         return;
       }
@@ -100,7 +100,7 @@ export default function InfluencersDashboard() {
       // Obter o ID da influenciadora
       const influencerId = INFLUENCER_IDS[influencerName];
       if (!influencerId) {
-        toast.error(`Influenciadora "${influencerName}" não encontrada`);
+        toast.error(`Influenciadora "${influencerName}" nao encontrada`);
         setSavingInfluencer(null);
         return;
       }
@@ -118,7 +118,7 @@ export default function InfluencersDashboard() {
 
       console.log("Enviando dados:", accountsData);
 
-      // Chamar a mutação
+      // Chamar a mutacao
       await saveAccountsMutation.mutateAsync(accountsData);
 
     } catch (error: any) {
@@ -164,7 +164,7 @@ export default function InfluencersDashboard() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">Dashboard de Influenciadoras</h1>
-            <p className="text-slate-600 mt-1">Monitore o desempenho em tempo real de suas influenciadoras autônomas</p>
+            <p className="text-slate-600 mt-1">Monitore o desempenho em tempo real de suas influenciadoras autonomas</p>
           </div>
         </div>
 
@@ -200,7 +200,7 @@ export default function InfluencersDashboard() {
                 Dashboard de Influenciadoras
               </CardTitle>
               <CardDescription>
-                Monitore o desempenho em tempo real de suas influenciadoras autônomas
+                Monitore o desempenho em tempo real de suas influenciadoras autonomas
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -236,7 +236,7 @@ export default function InfluencersDashboard() {
                           <TrendingUp className="w-8 h-8 text-blue-600 mx-auto mb-2" />
                           <p className="text-sm text-slate-600">Seguidores</p>
                           <p className="text-2xl font-bold text-blue-600">
-                            {metrics?.followers?.toLocaleString() || "N/A"}
+                            {metrics?.currentFollowers?.toLocaleString() || "N/A"}
                           </p>
                         </div>
                       </CardContent>
@@ -248,7 +248,7 @@ export default function InfluencersDashboard() {
                           <Heart className="w-8 h-8 text-pink-600 mx-auto mb-2" />
                           <p className="text-sm text-slate-600">Engajamento</p>
                           <p className="text-2xl font-bold text-pink-600">
-                            {metrics?.engagement?.toFixed(1) || "N/A"}%
+                            {metrics?.totalEngagement?.toFixed(1) || "N/A"}%
                           </p>
                         </div>
                       </CardContent>
@@ -260,7 +260,7 @@ export default function InfluencersDashboard() {
                           <BarChart3 className="w-8 h-8 text-purple-600 mx-auto mb-2" />
                           <p className="text-sm text-slate-600">Posts</p>
                           <p className="text-2xl font-bold text-purple-600">
-                            {posts?.length || 0}
+                            {postsData?.scheduled?.length || 0}
                           </p>
                         </div>
                       </CardContent>
@@ -272,7 +272,7 @@ export default function InfluencersDashboard() {
                           <TrendingUp className="w-8 h-8 text-green-600 mx-auto mb-2" />
                           <p className="text-sm text-slate-600">Taxa de Crescimento</p>
                           <p className="text-2xl font-bold text-green-600">
-                            {metrics?.growthRate?.toFixed(1) || "N/A"}%
+                            {metrics?.followerGrowth?.toFixed(1) || "N/A"}%
                           </p>
                         </div>
                       </CardContent>
@@ -297,7 +297,7 @@ export default function InfluencersDashboard() {
               <div className="space-y-4">
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-sm text-blue-900">
-                    <strong>Como conectar:</strong> Forneça o nome da conta (@username) de cada plataforma, email e WhatsApp. Os dados são armazenados com segurança.
+                    <strong>Como conectar:</strong> Forneca o nome da conta (@username) de cada plataforma, email e WhatsApp. Os dados sao armazenados com seguranca.
                   </p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -371,7 +371,7 @@ export default function InfluencersDashboard() {
                 Gerenciar Contatos das Influenciadoras
               </CardTitle>
               <CardDescription>
-                Visualize e copie todos os emails e WhatsApp das influenciadoras em um só lugar
+                Visualize e copie todos os emails e WhatsApp das influenciadoras em um so lugar
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -389,7 +389,7 @@ export default function InfluencersDashboard() {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-xs text-slate-600">Email</p>
-                            <p className="font-mono text-sm text-slate-900">{email || "Não configurado"}</p>
+                            <p className="font-mono text-sm text-slate-900">{email || "Nao configurado"}</p>
                           </div>
                           {email && (
                             <button
@@ -409,7 +409,7 @@ export default function InfluencersDashboard() {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-xs text-slate-600">WhatsApp</p>
-                            <p className="font-mono text-sm text-slate-900">{whatsapp || "Não configurado"}</p>
+                            <p className="font-mono text-sm text-slate-900">{whatsapp || "Nao configurado"}</p>
                           </div>
                           {whatsapp && (
                             <button
@@ -439,10 +439,10 @@ export default function InfluencersDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageCircle className="w-5 h-5" />
-                Aprovar Temas de Conteúdo
+                Aprovar Temas de Conteudo
               </CardTitle>
               <CardDescription>
-                Revise e aprove os temas de conteúdo propostos pelas influenciadoras
+                Revise e aprove os temas de conteudo propostos pelas influenciadoras
               </CardDescription>
             </CardHeader>
             <CardContent>

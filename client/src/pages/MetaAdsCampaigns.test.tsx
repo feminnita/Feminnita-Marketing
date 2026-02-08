@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import MetaAdsCampaigns from "./MetaAdsCampaigns";
+import "@testing-library/jest-dom";
 
 // Mock do trpc
 vi.mock("@/lib/trpc", () => ({
@@ -105,8 +106,8 @@ describe("MetaAdsCampaigns", () => {
       </QueryClientProvider>
     );
 
-    expect(screen.getByText("Campanhas Meta Ads")).toBeInTheDocument();
-    expect(screen.getByText("Verão 2026 - Coleção Premium")).toBeInTheDocument();
+    expect(screen.getByText("Campanhas Meta Ads")).toBeDefined();
+    expect(screen.getByText("Verão 2026 - Coleção Premium")).toBeDefined();
   });
 
   it("should select a campaign when clicked", async () => {
@@ -120,9 +121,9 @@ describe("MetaAdsCampaigns", () => {
     fireEvent.click(campaignCard);
 
     await waitFor(() => {
-      expect(screen.getByText("Pausar Campanha")).toBeInTheDocument();
-      expect(screen.getByText("Retomar Campanha")).toBeInTheDocument();
-      expect(screen.getByText("Otimizar Campanha")).toBeInTheDocument();
+      expect(screen.getByText("Pausar Campanha")).toBeDefined();
+      expect(screen.getByText("Retomar Campanha")).toBeDefined();
+      expect(screen.getByText("Otimizar Campanha")).toBeDefined();
     });
   });
 
@@ -182,7 +183,7 @@ describe("MetaAdsCampaigns", () => {
     const autoRefreshButton = screen.getByText("Auto-refresh ON");
     fireEvent.click(autoRefreshButton);
 
-    expect(screen.getByText("Auto-refresh OFF")).toBeInTheDocument();
+    expect(screen.getByText("Auto-refresh OFF")).toBeDefined();
   });
 
   it("should display metrics when campaign is selected", async () => {
@@ -196,9 +197,9 @@ describe("MetaAdsCampaigns", () => {
     fireEvent.click(campaignCard);
 
     await waitFor(() => {
-      expect(screen.getByText("Impressões")).toBeInTheDocument();
-      expect(screen.getByText("Cliques")).toBeInTheDocument();
-      expect(screen.getByText("Conversões")).toBeInTheDocument();
+      expect(screen.getByText("Impressões")).toBeDefined();
+      expect(screen.getByText("Cliques")).toBeDefined();
+      expect(screen.getByText("Conversões")).toBeDefined();
     });
   });
 
@@ -234,7 +235,7 @@ describe("MetaAdsCampaigns", () => {
     const autoRefreshButton = screen.getByText("Auto-refresh ON");
     fireEvent.click(autoRefreshButton);
 
-    expect(screen.getByText("Auto-refresh OFF")).toBeInTheDocument();
+    expect(screen.getByText("Auto-refresh OFF")).toBeDefined();
   });
 
   it("should call sync mutation when sync button is clicked", async () => {

@@ -21,6 +21,7 @@ import Privacidade from "@/pages/Privacidade";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
 import InstagramDashboard from "@/pages/InstagramDashboard";
+import MetaAdsDashboard from "@/pages/MetaAdsDashboard";
 
 
 export default function App() {
@@ -61,6 +62,8 @@ export default function App() {
         return <MetaAdsCampaigns />;
       case "/instagram":
         return <InstagramDashboard />;
+      case "/meta-ads-dashboard":
+        return <MetaAdsDashboard />;
       case "/oauth-credentials":
         return <OAuthCredentials />;
       case "/colaboradores":

@@ -401,3 +401,13 @@
 - [x] Adicionar feedback visual claro (loading state + toast + mudanca de texto do botao)
 - [x] Testar botao novamente e confirmar funcionamento 100%
 - [x] Verificar logs do servidor confirmando dados salvos
+
+
+## Fase 27: Integração Conta Real Meta Ads (1591843931601745)
+- [ ] Atualizar configuração do Meta Ads para usar conta real
+- [ ] Testar conexão com a conta real
+- [ ] Importar campanhas reais que já estão rodando
+- [ ] Criar procedure para publicar vídeos na conta real
+- [ ] Testar publicação de vídeo na conta real
+- [ ] Criar testes unitários para integração
+- [ ] Salvar checkpoint com integração completa

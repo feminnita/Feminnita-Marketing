@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,7 +36,7 @@ interface AccountMetrics {
 }
 
 export default function InstagramDashboard() {
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [businessAccountId, setBusinessAccountId] = useState("");
   const [accessToken, setAccessToken] = useState("");
   const [posts, setPosts] = useState<InstagramPost[]>([]);
@@ -45,7 +45,8 @@ export default function InstagramDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("posts");
 
-  const instagramApi = trpc.instagram;
+  const testConnectionMutation = trpc.instagram.testConnection.useMutation();
+  const syncPostsMutation = trpc.instagram.syncInstagramPosts.useMutation();
 
   // Testar conexão
   const testConnection = async () => {
@@ -58,12 +59,12 @@ export default function InstagramDashboard() {
     setError(null);
 
     try {
-      const result = await instagramApi.testConnection.mutate({
+      const result = await testConnectionMutation.mutateAsync({
         businessAccountId,
         accessToken,
       });
 
-      if (result.success) {
+      if (result.success && result.data) {
         alert(`✅ Conexão estabelecida com sucesso!\nConta: ${result.data.accountName}`);
       } else {
         setError(result.message);
@@ -87,15 +88,15 @@ export default function InstagramDashboard() {
     setError(null);
 
     try {
-      const result = await instagramApi.syncInstagramPosts.mutate({
+      const result = await syncPostsMutation.mutateAsync({
         businessAccountId,
         accessToken,
         limit: 25,
       });
 
-      if (result.success) {
+      if (result.success && result.data) {
         setPosts(result.data);
-        alert(`✅ ${result.count} posts sincronizados com sucesso!`);
+        alert(`✅ Posts sincronizados com sucesso!`);
       } else {
         setError("Erro ao sincronizar posts");
       }
@@ -118,12 +119,18 @@ export default function InstagramDashboard() {
     setError(null);
 
     try {
-      const result = await instagramApi.getFollowerInsights.query({
-        businessAccountId,
-        accessToken,
-      });
+      // Usar query para getFollowerInsights
+      const { refetch } = trpc.instagram.getFollowerInsights.useQuery(
+        { businessAccountId, accessToken },
+        { enabled: false }
+      );
+      const { data: result } = await refetch();
+      
+      if (!result) {
+        throw new Error('Erro ao obter métricas');
+      }
 
-      if (result.success) {
+      if (result.success && result.data) {
         setMetrics(result.data);
       } else {
         setError("Erro ao obter métricas");
@@ -206,6 +213,7 @@ export default function InstagramDashboard() {
                 onClick={testConnection}
                 disabled={isLoading || !businessAccountId || !accessToken}
                 variant="outline"
+                type="button"
               >
                 {isLoading ? "Testando..." : "Testar Conexão"}
               </Button>
@@ -213,6 +221,7 @@ export default function InstagramDashboard() {
                 onClick={syncPosts}
                 disabled={isLoading || !businessAccountId || !accessToken}
                 className="bg-pink-600 hover:bg-pink-700"
+                type="button"
               >
                 {isLoading ? "Sincronizando..." : "Sincronizar Posts"}
               </Button>
@@ -220,6 +229,7 @@ export default function InstagramDashboard() {
                 onClick={getMetrics}
                 disabled={isLoading || !businessAccountId || !accessToken}
                 variant="outline"
+                type="button"
               >
                 {isLoading ? "Carregando..." : "Atualizar Métricas"}
               </Button>
@@ -283,32 +293,12 @@ export default function InstagramDashboard() {
                         </div>
                       </div>
 
-                      {/* Métricas Detalhadas */}
-                      {post.insights && (
-                        <div className="space-y-1 text-xs text-gray-600 border-t pt-3">
-                          <div className="flex justify-between">
-                            <span>Alcance:</span>
-                            <span className="font-semibold">{post.insights.reach || 0}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Engajamento:</span>
-                            <span className="font-semibold">{post.insights.engagement || 0}</span>
-                          </div>
-                          {post.insights.video_views && (
-                            <div className="flex justify-between">
-                              <span>Visualizações:</span>
-                              <span className="font-semibold">{post.insights.video_views}</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
                       {/* Link */}
                       <a
                         href={post.permalink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="block mt-3 text-xs text-pink-600 hover:text-pink-700 font-medium"
+                        className="text-xs text-pink-600 hover:text-pink-700 font-medium"
                       >
                         Ver no Instagram →
                       </a>
@@ -320,102 +310,72 @@ export default function InstagramDashboard() {
           </TabsContent>
 
           {/* Métricas Tab */}
-          <TabsContent value="metrics">
+          <TabsContent value="metrics" className="space-y-4">
             {Object.keys(metrics).length === 0 ? (
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-12">
                   <BarChart3 className="w-12 h-12 text-gray-300 mb-4" />
                   <p className="text-gray-500 text-center">
-                    Nenhuma métrica carregada. Clique em "Atualizar Métricas" para começar.
+                    Nenhuma métrica carregada ainda. Clique em "Atualizar Métricas" para começar.
                   </p>
                 </CardContent>
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* Seguidores */}
-                {metrics.follower_count && (
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium flex items-center gap-2">
-                        <Users className="w-4 h-4 text-pink-600" />
-                        Seguidores
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-3xl font-bold text-gray-900">
-                        {(metrics.follower_count || 0).toLocaleString()}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-gray-600">Impressões</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-gray-900">
+                      {(metrics.impressions || 0).toLocaleString('pt-BR')}
+                    </div>
+                  </CardContent>
+                </Card>
 
-                {/* Impressões */}
-                {metrics.impressions && (
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium flex items-center gap-2">
-                        <Eye className="w-4 h-4 text-blue-600" />
-                        Impressões
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-3xl font-bold text-gray-900">
-                        {(metrics.impressions || 0).toLocaleString()}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-gray-600">Alcance</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-gray-900">
+                      {(metrics.reach || 0).toLocaleString('pt-BR')}
+                    </div>
+                  </CardContent>
+                </Card>
 
-                {/* Alcance */}
-                {metrics.reach && (
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium flex items-center gap-2">
-                        <TrendingUp className="w-4 h-4 text-green-600" />
-                        Alcance
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-3xl font-bold text-gray-900">
-                        {(metrics.reach || 0).toLocaleString()}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-gray-600">Seguidores</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-gray-900">
+                      {(metrics.follower_count || 0).toLocaleString('pt-BR')}
+                    </div>
+                  </CardContent>
+                </Card>
 
-                {/* Visualizações de Perfil */}
-                {metrics.profile_views && (
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium flex items-center gap-2">
-                        <BarChart3 className="w-4 h-4 text-purple-600" />
-                        Visualizações de Perfil
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-3xl font-bold text-gray-900">
-                        {(metrics.profile_views || 0).toLocaleString()}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-gray-600">Visualizações de Perfil</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-gray-900">
+                      {(metrics.profile_views || 0).toLocaleString('pt-BR')}
+                    </div>
+                  </CardContent>
+                </Card>
 
-                {/* Cliques no Site */}
-                {metrics.website_clicks && (
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium flex items-center gap-2">
-                        <Share2 className="w-4 h-4 text-orange-600" />
-                        Cliques no Site
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-3xl font-bold text-gray-900">
-                        {(metrics.website_clicks || 0).toLocaleString()}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-gray-600">Cliques no Site</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-gray-900">
+                      {(metrics.website_clicks || 0).toLocaleString('pt-BR')}
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             )}
           </TabsContent>
