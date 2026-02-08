@@ -1,14 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar, Clock, Instagram, Facebook, MessageCircle, Plus, Edit, Trash2, Send, AlertCircle } from "lucide-react";
+import { Calendar, Clock, Instagram, Facebook, MessageCircle, Plus, Edit, Trash2, Send, AlertCircle, Download } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { preloadedPosts } from "@/data/preloadedPostsWithImages";
 
 interface ScheduledPost {
-  id: string;
+  id: string | number;
   caption: string;
   platforms: ("instagram" | "facebook" | "whatsapp")[];
   scheduledDate: string;
@@ -21,6 +22,30 @@ interface ScheduledPost {
 export default function SocialMediaScheduler() {
   const { user, isAuthenticated } = useAuth();
   const [posts, setPosts] = useState<ScheduledPost[]>([]);
+  const [postsLoaded, setPostsLoaded] = useState(false);
+
+  // Carregar postagens pré-carregadas na primeira vez
+  useEffect(() => {
+    if (!postsLoaded && preloadedPosts.length > 0) {
+      const convertedPosts = preloadedPosts.map((post: any) => {
+        const dateStr = post.scheduledDate instanceof Date 
+          ? post.scheduledDate.toISOString().split('T')[0]
+          : String(post.scheduledDate);
+        return {
+          id: String(post.id),
+          caption: post.caption,
+          platforms: post.platform,
+          scheduledDate: dateStr,
+          scheduledTime: post.scheduledTime,
+          status: "scheduled" as const,
+          imageUrl: post.type === 'single' ? post.imageUrl : (post.slides?.[0]?.imageUrl || ""),
+          carouselSlides: post.type === 'carousel' ? post.slides?.length || 0 : 0,
+        };
+      });
+      setPosts(convertedPosts);
+      setPostsLoaded(true);
+    }
+  }, [postsLoaded]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     caption: "",
@@ -38,7 +63,7 @@ export default function SocialMediaScheduler() {
     }
 
     const newPost: ScheduledPost = {
-      id: Date.now().toString(),
+      id: String(Date.now()),
       ...formData,
       status: "scheduled",
     };
@@ -54,7 +79,7 @@ export default function SocialMediaScheduler() {
     });
   };
 
-  const handleDeletePost = (id: string) => {
+  const handleDeletePost = (id: string | number) => {
     setPosts(posts.filter((p) => p.id !== id));
   };
 
@@ -129,6 +154,32 @@ export default function SocialMediaScheduler() {
                 <Plus className="w-5 h-5" />
                 Nova Postagem
               </CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const convertedPosts = preloadedPosts.map((post: any) => {
+                    const dateStr = post.scheduledDate instanceof Date 
+                      ? post.scheduledDate.toISOString().split('T')[0]
+                      : String(post.scheduledDate);
+                    return {
+                      id: String(post.id),
+                      caption: post.caption,
+                      platforms: post.platform,
+                      scheduledDate: dateStr,
+                      scheduledTime: post.scheduledTime,
+                      status: "scheduled" as const,
+                      imageUrl: post.type === 'single' ? post.imageUrl : (post.slides?.[0]?.imageUrl || ""),
+                      carouselSlides: post.type === 'carousel' ? post.slides?.length || 0 : 0,
+                    };
+                  });
+                  setPosts(convertedPosts);
+                }}
+                className="w-full mt-2"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Carregar 15 Postagens Pré-carregadas
+              </Button>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Caption */}
@@ -235,9 +286,33 @@ export default function SocialMediaScheduler() {
             {posts.length === 0 ? (
               <Card>
                 <CardContent className="pt-6">
-                  <div className="text-center text-gray-500">
+                  <div className="text-center text-gray-500 space-y-4">
                     <AlertCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
                     <p>Nenhuma postagem agendada ainda</p>
+                    <Button
+                      onClick={() => {
+                        const convertedPosts = preloadedPosts.map((post: any) => {
+                          const dateStr = post.scheduledDate instanceof Date 
+                            ? post.scheduledDate.toISOString().split('T')[0]
+                            : String(post.scheduledDate);
+                          return {
+                            id: String(post.id),
+                            caption: post.caption,
+                            platforms: post.platform,
+                            scheduledDate: dateStr,
+                            scheduledTime: post.scheduledTime,
+                            status: "scheduled" as const,
+                            imageUrl: post.type === 'single' ? post.imageUrl : (post.slides?.[0]?.imageUrl || ""),
+                            carouselSlides: post.type === 'carousel' ? post.slides?.length || 0 : 0,
+                          };
+                        });
+                        setPosts(convertedPosts);
+                      }}
+                      className="w-full"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Carregar 15 Postagens Pré-carregadas
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
