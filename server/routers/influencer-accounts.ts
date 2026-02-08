@@ -36,6 +36,8 @@ export const influencerAccountsRouter = router({
     )
     .mutation(async ({ input }) => {
       try {
+        console.log('[Influencer Accounts] INICIANDO saveAccounts com input:', JSON.stringify(input));
+        
         const accountData = {
           influencerId: input.influencerId,
           email: input.email,
@@ -47,7 +49,9 @@ export const influencerAccountsRouter = router({
           updatedAt: new Date(),
         };
 
+        console.log('[Influencer Accounts] Salvando dados:', JSON.stringify(accountData));
         influencerAccountsStore.set(input.influencerId, accountData);
+        console.log('[Influencer Accounts] Dados salvos com sucesso! Total de contas:', influencerAccountsStore.size);
 
         return {
           success: true,
@@ -55,7 +59,7 @@ export const influencerAccountsRouter = router({
           data: accountData,
         };
       } catch (error) {
-        console.error("[influencerAccounts.saveAccounts]", error);
+        console.error("[influencerAccounts.saveAccounts] ERRO:", error);
         throw new Error("Erro ao salvar contas");
       }
     }),
@@ -67,7 +71,9 @@ export const influencerAccountsRouter = router({
     .input(z.object({ influencerId: z.number() }))
     .query(async ({ input }) => {
       try {
+        console.log('[Influencer Accounts] Obtendo contas para influencerId:', input.influencerId);
         const account = influencerAccountsStore.get(input.influencerId);
+        console.log('[Influencer Accounts] Contas encontradas:', account ? 'sim' : 'não');
         return account || null;
       } catch (error) {
         console.error("[influencerAccounts.getAccounts]", error);
@@ -82,7 +88,9 @@ export const influencerAccountsRouter = router({
     .input(z.object({ influencerId: z.number() }))
     .mutation(async ({ input }) => {
       try {
+        console.log('[Influencer Accounts] Deletando contas para influencerId:', input.influencerId);
         influencerAccountsStore.delete(input.influencerId);
+        console.log('[Influencer Accounts] Contas deletadas com sucesso!');
         return {
           success: true,
           message: "Contas deletadas com sucesso!",
@@ -98,6 +106,7 @@ export const influencerAccountsRouter = router({
    */
   getAllAccounts: protectedProcedure.query(async () => {
     try {
+      console.log('[Influencer Accounts] Obtendo todas as contas. Total:', influencerAccountsStore.size);
       return Array.from(influencerAccountsStore.values());
     } catch (error) {
       console.error("[influencerAccounts.getAllAccounts]", error);

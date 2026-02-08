@@ -35,6 +35,7 @@ export default function InfluencersDashboard() {
     Luiza: { instagram: "", tiktok: "", youtube: "", blog: "", email: "", whatsapp: "" },
   });
   const [savingInfluencer, setSavingInfluencer] = useState<string | null>(null);
+  const [savedInfluencer, setSavedInfluencer] = useState<string | null>(null);
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
 
   // Fetch all influencers
@@ -55,13 +56,23 @@ export default function InfluencersDashboard() {
   // Mutation to save accounts
   const saveAccountsMutation = trpc.influencerAccounts.saveAccounts.useMutation({
     onSuccess: (result) => {
-      console.log("Success:", result);
-      toast.success(result.message || "Contas salvas com sucesso!");
-      // NÃO limpar o formulário para o usuário ver o que foi salvo
+      console.log("[InfluencersDashboard] SUCCESS - Resultado:", result);
+      toast.success(" Contas salvas com sucesso!", {
+        duration: 3000,
+        position: "top-right",
+      });
+      // Mostrar indicador visual de sucesso
+      if (savingInfluencer) {
+        setSavedInfluencer(savingInfluencer);
+        setTimeout(() => setSavedInfluencer(null), 2000);
+      }
     },
     onError: (error) => {
-      console.error("Error:", error);
-      toast.error(error.message || "Erro ao salvar contas");
+      console.error("[InfluencersDashboard] ERROR - Erro:", error);
+      toast.error(" Erro ao salvar contas: " + (error.message || "Erro desconhecido"), {
+        duration: 3000,
+        position: "top-right",
+      });
     },
   });
 
@@ -148,108 +159,127 @@ export default function InfluencersDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">Dashboard de Influenciadoras</h1>
+            <p className="text-slate-600 mt-1">Monitore o desempenho em tempo real de suas influenciadoras autônomas</p>
+          </div>
+        </div>
+
         {/* Tabs */}
-        <div className="flex gap-2 mb-8 border-b border-slate-200 overflow-x-auto">
-          <button
-            onClick={() => setActiveTab('dashboard')}
-            className={`px-4 py-2 font-semibold transition whitespace-nowrap ${activeTab === 'dashboard' ? 'text-pink-600 border-b-2 border-pink-600' : 'text-slate-600 hover:text-slate-900'}`}
-          >
-            Dashboard
-          </button>
-          <button
-            onClick={() => setActiveTab('contas')}
-            className={`px-4 py-2 font-semibold transition whitespace-nowrap ${activeTab === 'contas' ? 'text-pink-600 border-b-2 border-pink-600' : 'text-slate-600 hover:text-slate-900'}`}
-          >
-            Conectar Contas
-          </button>
-          <button
-            onClick={() => setActiveTab('emails')}
-            className={`px-4 py-2 font-semibold transition whitespace-nowrap ${activeTab === 'emails' ? 'text-pink-600 border-b-2 border-pink-600' : 'text-slate-600 hover:text-slate-900'}`}
-          >
-            Gerenciar Emails
-          </button>
-          <button
-            onClick={() => setActiveTab('temas')}
-            className={`px-4 py-2 font-semibold transition whitespace-nowrap ${activeTab === 'temas' ? 'text-pink-600 border-b-2 border-pink-600' : 'text-slate-600 hover:text-slate-900'}`}
-          >
-            Aprovar Temas
-          </button>
+        <div className="flex gap-2 border-b border-slate-200">
+          {[
+            { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+            { id: 'contas', label: 'Conectar Contas', icon: Users },
+            { id: 'emails', label: 'Gerenciar Emails', icon: Mail },
+            { id: 'temas', label: 'Aprovar Temas', icon: MessageCircle },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`px-4 py-3 font-medium flex items-center gap-2 border-b-2 transition ${
+                activeTab === tab.id
+                  ? 'border-pink-600 text-pink-600'
+                  : 'border-transparent text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <tab.icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
           <Card>
             <CardHeader>
-              <CardTitle>Dashboard de Influenciadoras</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="w-5 h-5" />
+                Dashboard de Influenciadoras
+              </CardTitle>
               <CardDescription>
                 Monitore o desempenho em tempo real de suas influenciadoras autônomas
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {influencersLoading ? (
-                <div className="text-center py-8">
-                  <Loader2 className="w-8 h-8 animate-spin mx-auto text-slate-400" />
-                  <p className="text-slate-600 mt-2">Carregando influenciadoras...</p>
-                </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                    {influencers.map((inf) => (
+              <div className="space-y-6">
+                {/* Influencer Selection */}
+                <div>
+                  <label className="text-sm font-semibold text-slate-700 mb-2 block">
+                    Selecione uma Influenciadora
+                  </label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {influencers.map((influencer) => (
                       <button
-                        key={inf.id}
-                        onClick={() => setSelectedInfluencer(inf.id)}
-                        className={`p-4 rounded-lg border-2 transition ${
-                          selectedInfluencer === inf.id
-                            ? 'border-pink-600 bg-pink-50'
-                            : 'border-slate-200 bg-white hover:border-pink-300'
+                        key={influencer.id}
+                        onClick={() => setSelectedInfluencer(influencer.id)}
+                        className={`p-3 rounded-lg border-2 transition font-medium ${
+                          selectedInfluencer === influencer.id
+                            ? 'border-pink-600 bg-pink-50 text-pink-600'
+                            : 'border-slate-200 bg-white text-slate-900 hover:border-pink-300'
                         }`}
                       >
-                        <h3 className="font-semibold text-slate-900">{inf.name}</h3>
-                        <p className="text-sm text-slate-600">{inf.personality}</p>
+                        {influencer.name}
                       </button>
                     ))}
                   </div>
+                </div>
 
-                  {currentInfluencer && (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <Card>
-                        <CardContent className="pt-6">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-sm text-slate-600">Seguidores</p>
-                              <p className="text-2xl font-bold text-blue-600">{metrics?.currentFollowers || 0}</p>
-                            </div>
-                            <Users className="w-8 h-8 text-blue-400" />
-                          </div>
-                        </CardContent>
-                      </Card>
-                      <Card>
-                        <CardContent className="pt-6">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-sm text-slate-600">Engajamento</p>
-                              <p className="text-2xl font-bold text-green-600">{metrics?.avgEngagementRate || '0'}%</p>
-                            </div>
-                            <TrendingUp className="w-8 h-8 text-green-400" />
-                          </div>
-                        </CardContent>
-                      </Card>
-                      <Card>
-                        <CardContent className="pt-6">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-sm text-slate-600">Posts</p>
-                              <p className="text-2xl font-bold text-orange-600">{posts?.scheduled?.length || 0}</p>
-                            </div>
-                            <BarChart3 className="w-8 h-8 text-orange-400" />
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  )}
-                </>
-              )}
+                {/* Metrics Grid */}
+                {currentInfluencer && (
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+                      <CardContent className="pt-6">
+                        <div className="text-center">
+                          <TrendingUp className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                          <p className="text-sm text-slate-600">Seguidores</p>
+                          <p className="text-2xl font-bold text-blue-600">
+                            {metrics?.followers?.toLocaleString() || "N/A"}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-to-br from-pink-50 to-pink-100 border-pink-200">
+                      <CardContent className="pt-6">
+                        <div className="text-center">
+                          <Heart className="w-8 h-8 text-pink-600 mx-auto mb-2" />
+                          <p className="text-sm text-slate-600">Engajamento</p>
+                          <p className="text-2xl font-bold text-pink-600">
+                            {metrics?.engagement?.toFixed(1) || "N/A"}%
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+                      <CardContent className="pt-6">
+                        <div className="text-center">
+                          <BarChart3 className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+                          <p className="text-sm text-slate-600">Posts</p>
+                          <p className="text-2xl font-bold text-purple-600">
+                            {posts?.length || 0}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+                      <CardContent className="pt-6">
+                        <div className="text-center">
+                          <TrendingUp className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                          <p className="text-sm text-slate-600">Taxa de Crescimento</p>
+                          <p className="text-2xl font-bold text-green-600">
+                            {metrics?.growthRate?.toFixed(1) || "N/A"}%
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         )}
@@ -304,12 +334,21 @@ export default function InfluencersDashboard() {
                           handleSaveAccounts(name);
                         }}
                         disabled={savingInfluencer === name || saveAccountsMutation.isPending}
-                        className="w-full mt-4 bg-pink-600 hover:bg-pink-700 text-white"
+                        className={`w-full mt-4 text-white transition ${
+                          savedInfluencer === name
+                            ? 'bg-green-600 hover:bg-green-700'
+                            : 'bg-pink-600 hover:bg-pink-700'
+                        }`}
                       >
-                        {savingInfluencer === name || saveAccountsMutation.isPending ? (
+                        {savingInfluencer === name ? (
                           <>
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                             Salvando...
+                          </>
+                        ) : savedInfluencer === name ? (
+                          <>
+                            <Check className="w-4 h-4 mr-2" />
+                             Salvo!
                           </>
                         ) : (
                           "Salvar Contas"
@@ -348,61 +387,41 @@ export default function InfluencersDashboard() {
                       <div className="space-y-2">
                         {/* Email */}
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Mail className="w-4 h-4 text-slate-400" />
-                            <div>
-                              <p className="text-xs text-slate-500">Email</p>
-                              <p className={`text-sm ${email ? 'text-slate-600 font-medium' : 'text-slate-400'}`}>
-                                {email || "Não configurado"}
-                              </p>
-                            </div>
+                          <div>
+                            <p className="text-xs text-slate-600">Email</p>
+                            <p className="font-mono text-sm text-slate-900">{email || "Não configurado"}</p>
                           </div>
                           {email && (
-                            <Button
+                            <button
                               onClick={() => handleCopyEmail(email, name)}
-                              variant="outline"
-                              size="sm"
-                              className="gap-2"
+                              className="p-2 hover:bg-slate-100 rounded transition"
                             >
                               {copiedEmail === name ? (
-                                <>
-                                  <Check className="w-4 h-4" />
-                                  Copiado
-                                </>
+                                <Check className="w-5 h-5 text-green-600" />
                               ) : (
-                                <>
-                                  <Copy className="w-4 h-4" />
-                                  Copiar
-                                </>
+                                <Copy className="w-5 h-5 text-slate-400" />
                               )}
-                            </Button>
+                            </button>
                           )}
                         </div>
 
                         {/* WhatsApp */}
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <MessageCircle className="w-4 h-4 text-slate-400" />
-                            <div>
-                              <p className="text-xs text-slate-500">WhatsApp</p>
-                              <p className={`text-sm ${whatsapp ? 'text-slate-600 font-medium' : 'text-slate-400'}`}>
-                                {whatsapp || "Não configurado"}
-                              </p>
-                            </div>
+                          <div>
+                            <p className="text-xs text-slate-600">WhatsApp</p>
+                            <p className="font-mono text-sm text-slate-900">{whatsapp || "Não configurado"}</p>
                           </div>
                           {whatsapp && (
-                            <Button
-                              onClick={() => {
-                                navigator.clipboard.writeText(whatsapp);
-                                toast.success("WhatsApp copiado!");
-                              }}
-                              variant="outline"
-                              size="sm"
-                              className="gap-2"
+                            <button
+                              onClick={() => handleCopyEmail(whatsapp, `${name}-wa`)}
+                              className="p-2 hover:bg-slate-100 rounded transition"
                             >
-                              <Copy className="w-4 h-4" />
-                              Copiar
-                            </Button>
+                              {copiedEmail === `${name}-wa` ? (
+                                <Check className="w-5 h-5 text-green-600" />
+                              ) : (
+                                <Copy className="w-5 h-5 text-slate-400" />
+                              )}
+                            </button>
                           )}
                         </div>
                       </div>
@@ -418,13 +437,19 @@ export default function InfluencersDashboard() {
         {activeTab === 'temas' && (
           <Card>
             <CardHeader>
-              <CardTitle>Aprovar Temas de Conteúdo</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <MessageCircle className="w-5 h-5" />
+                Aprovar Temas de Conteúdo
+              </CardTitle>
               <CardDescription>
-                Revise e aprove os temas sugeridos pelas influenciadoras autônomas
+                Revise e aprove os temas de conteúdo propostos pelas influenciadoras
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-slate-600">Funcionalidade em desenvolvimento...</p>
+              <div className="text-center py-12">
+                <MessageCircle className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                <p className="text-slate-600">Funcionalidade em desenvolvimento</p>
+              </div>
             </CardContent>
           </Card>
         )}
