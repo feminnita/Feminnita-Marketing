@@ -27,7 +27,7 @@ export const instagramAccountsRouter = router({
         const db = await getDb();
         if (!db) throw new Error("Database not available");
 
-        const result = await db.insert(instagramAccounts).values({
+        await db.insert(instagramAccounts).values({
           accountType: input.accountType,
           influencerId: input.influencerId || null,
           instagramId: input.instagramId,
@@ -42,9 +42,16 @@ export const instagramAccountsRouter = router({
           updatedAt: new Date(),
         });
 
+        // Buscar a conta inserida
+        const insertedAccount = await db
+          .select()
+          .from(instagramAccounts)
+          .where(eq(instagramAccounts.username, input.username))
+          .limit(1);
+
         return {
           success: true,
-          accountId: (result as any).insertId,
+          accountId: insertedAccount[0]?.id || 0,
           message: `Conta @${input.username} adicionada com sucesso!`,
         };
       } catch (error) {

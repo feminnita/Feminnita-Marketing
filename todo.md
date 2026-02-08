@@ -550,3 +550,18 @@
   - Roteamento dinâmico por domínio
   - Links cruzados entre blogs
   - SEO otimizado
+
+
+## Bugs Reportados - Prioridade Alta
+
+- [ ] BUG: Contas de influencers não salvam no banco (volta em branco após clicar salvar)
+- [ ] BUG: Meta Ads não vincula campanhas das 4 influencers (apenas @feminnita aparece)
+- [ ] BUG: Campanhas ativas não aparecem no dashboard
+
+
+## Fase 35: Implementação das 3 Sugestões Finais
+
+- [x] Componente MediaUpload com drag-and-drop para upload de imagens/vídeos
+- [x] Documentação DNS_CONFIGURATION.md para configurar 4 blogs públicos
+- [x] Router publicationQueue com retry automático e fila de publicação
+- [x] Integração do publicationQueue ao appRouter

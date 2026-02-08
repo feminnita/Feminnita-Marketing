@@ -41,6 +41,7 @@ import { instagramAccountsRouter } from "./routers/instagram-accounts";
 import { instagramPublisherRouter } from "./routers/instagram-publisher";
 import { metaGraphIntegrationRouter } from "./routers/meta-graph-integration";
 import { publicBlogsRouter } from "./routers/public-blogs";
+import { publicationQueueRouter } from "./routers/publication-queue";
 import { getDb } from "./db";
 import { influencers } from "../drizzle/schema";
 
@@ -112,6 +113,7 @@ export const appRouter = router({
   instagramPublisher: instagramPublisherRouter,
   metaGraphIntegration: metaGraphIntegrationRouter,
   publicBlogs: publicBlogsRouter,
+  publicationQueue: publicationQueueRouter,
   influencers: router({
     list: publicProcedure.query(async () => {
       try {
