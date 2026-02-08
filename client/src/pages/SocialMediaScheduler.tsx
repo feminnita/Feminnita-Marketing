@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar, Clock, Instagram, Facebook, MessageCircle, Plus, Edit, Trash2, Send, AlertCircle, Download } from "lucide-react";
+import { Calendar, Clock, Instagram, Facebook, MessageCircle, Plus, Edit, Trash2, Send, AlertCircle, Download, X } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { preloadedPosts } from "@/data/preloadedPostsWithImages";
+import { postsCreativos } from "@/data/postsCreativos";
 
 interface ScheduledPost {
   id: string | number;
@@ -47,6 +48,7 @@ export default function SocialMediaScheduler() {
     }
   }, [postsLoaded]);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingPost, setEditingPost] = useState<ScheduledPost | null>(null);
   const [formData, setFormData] = useState({
     caption: "",
     platforms: ["instagram"] as ("instagram" | "facebook" | "whatsapp")[],
@@ -81,6 +83,21 @@ export default function SocialMediaScheduler() {
 
   const handleDeletePost = (id: string | number) => {
     setPosts(posts.filter((p) => p.id !== id));
+  };
+
+  const handleEditPost = (post: ScheduledPost) => {
+    setEditingPost(post);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingPost) return;
+    
+    setPosts(posts.map((p) => (p.id === editingPost.id ? editingPost : p)));
+    setEditingPost(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingPost(null);
   };
 
   const handlePublishNow = async (post: ScheduledPost) => {
@@ -158,27 +175,22 @@ export default function SocialMediaScheduler() {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  const convertedPosts = preloadedPosts.map((post: any) => {
-                    const dateStr = post.scheduledDate instanceof Date 
-                      ? post.scheduledDate.toISOString().split('T')[0]
-                      : String(post.scheduledDate);
-                    return {
-                      id: String(post.id),
-                      caption: post.caption,
-                      platforms: post.platform,
-                      scheduledDate: dateStr,
-                      scheduledTime: post.scheduledTime,
-                      status: "scheduled" as const,
-                      imageUrl: post.type === 'single' ? post.imageUrl : (post.slides?.[0]?.imageUrl || ""),
-                      carouselSlides: post.type === 'carousel' ? post.slides?.length || 0 : 0,
-                    };
-                  });
+                  const convertedPosts = postsCreativos.map((post: any) => ({
+                    id: String(post.id),
+                    caption: post.caption,
+                    platforms: ["instagram", "facebook"] as ("instagram" | "facebook" | "whatsapp")[],
+                    scheduledDate: post.scheduledDate.toISOString().split('T')[0],
+                    scheduledTime: post.scheduledDate.toISOString().split('T')[1].substring(0, 5),
+                    status: "scheduled" as const,
+                    imageUrl: post.imageUrl,
+                    carouselSlides: 1,
+                  }));
                   setPosts(convertedPosts);
                 }}
                 className="w-full mt-2"
               >
                 <Download className="w-4 h-4 mr-2" />
-                Carregar 15 Postagens Pré-carregadas
+                Carregar 15 Postagens Criativas
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -291,27 +303,22 @@ export default function SocialMediaScheduler() {
                     <p>Nenhuma postagem agendada ainda</p>
                     <Button
                       onClick={() => {
-                        const convertedPosts = preloadedPosts.map((post: any) => {
-                          const dateStr = post.scheduledDate instanceof Date 
-                            ? post.scheduledDate.toISOString().split('T')[0]
-                            : String(post.scheduledDate);
-                          return {
-                            id: String(post.id),
-                            caption: post.caption,
-                            platforms: post.platform,
-                            scheduledDate: dateStr,
-                            scheduledTime: post.scheduledTime,
-                            status: "scheduled" as const,
-                            imageUrl: post.type === 'single' ? post.imageUrl : (post.slides?.[0]?.imageUrl || ""),
-                            carouselSlides: post.type === 'carousel' ? post.slides?.length || 0 : 0,
-                          };
-                        });
+                        const convertedPosts = postsCreativos.map((post: any) => ({
+                          id: String(post.id),
+                          caption: post.caption,
+                          platforms: ["instagram", "facebook"] as ("instagram" | "facebook" | "whatsapp")[],
+                          scheduledDate: post.scheduledDate.toISOString().split('T')[0],
+                          scheduledTime: post.scheduledDate.toISOString().split('T')[1].substring(0, 5),
+                          status: "scheduled" as const,
+                          imageUrl: post.imageUrl,
+                          carouselSlides: 1,
+                        }));
                         setPosts(convertedPosts);
                       }}
                       className="w-full"
                     >
                       <Download className="w-4 h-4 mr-2" />
-                      Carregar 15 Postagens Pré-carregadas
+                      Carregar 15 Postagens Criativas
                     </Button>
                   </div>
                 </CardContent>
@@ -360,7 +367,11 @@ export default function SocialMediaScheduler() {
                         <Send className="w-4 h-4 mr-2" />
                         Publicar Agora
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleEditPost(post)}
+                      >
                         <Edit className="w-4 h-4 mr-2" />
                         Editar
                       </Button>
@@ -408,6 +419,128 @@ export default function SocialMediaScheduler() {
           </div>
         </div>
       </div>
+
+      {/* Modal de Edição */}
+      {editingPost && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <CardTitle>Editar Postagem</CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCancelEdit}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Legenda */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Legenda</label>
+                <Textarea
+                  value={editingPost.caption}
+                  onChange={(e) => setEditingPost({ ...editingPost, caption: e.target.value })}
+                  className="min-h-[120px]"
+                />
+              </div>
+
+              {/* URL da Imagem */}
+              <div>
+                <label className="block text-sm font-medium mb-2">URL da Imagem</label>
+                <Input
+                  type="url"
+                  value={editingPost.imageUrl || ""}
+                  onChange={(e) => setEditingPost({ ...editingPost, imageUrl: e.target.value })}
+                  placeholder="https://exemplo.com/imagem.jpg"
+                />
+              </div>
+
+              {/* Pré-visualização da Imagem */}
+              {editingPost.imageUrl && (
+                <div>
+                  <label className="block text-sm font-medium mb-2">Pré-visualização</label>
+                  <img 
+                    src={editingPost.imageUrl} 
+                    alt="Pré-visualização" 
+                    className="w-full h-64 object-cover rounded" 
+                  />
+                </div>
+              )}
+
+              {/* Data */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Data</label>
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-gray-500" />
+                  <Input
+                    type="date"
+                    value={editingPost.scheduledDate}
+                    onChange={(e) => setEditingPost({ ...editingPost, scheduledDate: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              {/* Hora */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Hora</label>
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-gray-500" />
+                  <Input
+                    type="time"
+                    value={editingPost.scheduledTime}
+                    onChange={(e) => setEditingPost({ ...editingPost, scheduledTime: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              {/* Plataformas */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Plataformas</label>
+                <div className="space-y-2">
+                  {["instagram", "facebook", "whatsapp"].map((platform) => (
+                    <label key={platform} className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={editingPost.platforms.includes(platform as any)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setEditingPost({
+                              ...editingPost,
+                              platforms: [...editingPost.platforms, platform as any],
+                            });
+                          } else {
+                            setEditingPost({
+                              ...editingPost,
+                              platforms: editingPost.platforms.filter((p) => p !== platform),
+                            });
+                          }
+                        }}
+                      />
+                      <span className="capitalize">{platform}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Botões de Ação */}
+              <div className="flex gap-2 justify-end pt-4">
+                <Button
+                  variant="outline"
+                  onClick={handleCancelEdit}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleSaveEdit}
+                >
+                  Salvar Alterações
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

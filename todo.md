@@ -411,3 +411,14 @@
 - [ ] Testar publicação de vídeo na conta real
 - [ ] Criar testes unitários para integração
 - [ ] Salvar checkpoint com integração completa
+
+
+## Fase 26: Postagens Criativas e Visuais com Edição
+- [ ] Gerar 15 imagens criativas com design profissional (vinho + creme)
+- [ ] Criar legendas persuasivas baseadas nos prompts
+- [ ] Implementar funcionalidade de edição de postagens (texto + imagem)
+- [ ] Corrigir botão "Editar" no SocialMediaScheduler
+- [ ] Carregar postagens criativas no Agendador
+- [ ] Testar visualização completa das postagens
+- [ ] Testar edição de texto e imagem das postagens
+- [ ] Validar que postagens são editáveis e visuais
