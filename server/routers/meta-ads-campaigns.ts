@@ -1,6 +1,6 @@
-import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
+import { router, protectedProcedure } from "../_core/trpc";
 import { getDb } from "../db";
 import { instagramAccounts } from "../../drizzle/schema";
 
@@ -8,80 +8,60 @@ export const metaAdsCampaignsRouter = router({
   /**
    * Listar campanhas ativas
    */
-  listActiveCampaigns: protectedProcedure
-    .input(
-      z.object({
-        status: z.enum(["active", "paused", "all"]).default("active"),
-      })
-    )
-    .query(async ({ input }) => {
-      try {
-        const db = await getDb();
-        if (!db) return { campaigns: [] };
-
-        // Obter conta Feminnita
-        const account = await db
-          .select()
-          .from(instagramAccounts)
-          .where(eq(instagramAccounts.accountType, "feminnita"))
-          .limit(1);
-
-        if (!account || account.length === 0) {
-          return { campaigns: [] };
-        }
-
-        // Retornar campanhas vazias por enquanto
-        // As campanhas reais virão de importarCampanhasReais
-        return {
-          campaigns: [],
-          message: "Use importarCampanhasReais para sincronizar campanhas",
-        };
-      } catch (error) {
-        console.error("[Meta Ads Campaigns] Erro ao listar campanhas:", error);
+  listActiveCampaigns: protectedProcedure.query(async () => {
+    try {
+      const db = await getDb();
+      if (!db) {
         return { campaigns: [] };
       }
-    }),
+      return { campaigns: [] };
+    } catch (error) {
+      console.error("[Meta Ads Campaigns] Erro:", error);
+      return { campaigns: [] };
+    }
+  }),
 
   /**
    * Importar campanhas reais do Meta Ads
    */
   importarCampanhasReais: protectedProcedure.query(async () => {
     try {
-      const db = await getDb();
-      if (!db) return { campanhas: [] };
-
-      // Obter conta Feminnita
-      const account = await db
-        .select()
-        .from(instagramAccounts)
-        .where(eq(instagramAccounts.accountType, "feminnita"))
-        .limit(1);
-
-      if (!account || account.length === 0) {
-        throw new Error("Conta Feminnita não encontrada");
-      }
-
-      const igAccount = account[0];
-
-      // Buscar campanhas usando Meta Graph API
+      // Usar token de Meta Ads (nao Instagram)
+      const metaAccessToken = process.env.META_ACCESS_TOKEN;
       const adAccountId = process.env.META_AD_ACCOUNT_ID;
-      if (!adAccountId) {
-        throw new Error("META_AD_ACCOUNT_ID não configurado");
+
+      if (!metaAccessToken) {
+        console.error("[Meta Ads Campaigns] META_ACCESS_TOKEN nao configurado");
+        return { campanhas: [], error: "Token de Meta Ads nao configurado" };
       }
 
+      if (!adAccountId) {
+        console.error("[Meta Ads Campaigns] META_AD_ACCOUNT_ID nao configurado");
+        return { campanhas: [], error: "ID da conta de anuncios nao configurado" };
+      }
+
+      console.log(`[Meta Ads Campaigns] Buscando campanhas para account ${adAccountId}`);
+
+      // Usar endpoint correto: Meta Ads API (nao Instagram API)
       const campaignsResponse = await fetch(
-        `https://graph.instagram.com/v18.0/${adAccountId}/campaigns?fields=id,name,status,objective,created_time,updated_time,spend,impressions,clicks,actions&access_token=${igAccount.accessToken}`
+        `https://graph.facebook.com/v18.0/${adAccountId}/campaigns?fields=id,name,status,objective,created_time,updated_time,daily_budget,lifetime_budget,spend,impressions,clicks,actions&access_token=${metaAccessToken}`
       );
 
+      console.log(`[Meta Ads Campaigns] Status da resposta: ${campaignsResponse.status}`);
+
       if (!campaignsResponse.ok) {
-        const error = await campaignsResponse.json();
-        throw new Error(`Meta API Error: ${error.error?.message || "Unknown error"}`);
+        const errorData = await campaignsResponse.json();
+        const errorMsg = errorData.error?.message || "Erro desconhecido";
+        console.error(`[Meta Ads Campaigns] Erro na API: ${errorMsg}`);
+        throw new Error(`Meta API Error: ${errorMsg}`);
       }
 
       const data = await campaignsResponse.json();
+      console.log(`[Meta Ads Campaigns] Resposta da API:`, JSON.stringify(data).substring(0, 200));
 
-      if (!data.data) {
-        return { campanhas: [] };
+      if (!data.data || data.data.length === 0) {
+        console.log("[Meta Ads Campaigns] Nenhuma campanha encontrada");
+        return { campanhas: [], message: "Nenhuma campanha encontrada" };
       }
 
       // Filtrar apenas campanhas ativas
@@ -94,10 +74,15 @@ export const metaAdsCampaignsRouter = router({
           objective: campaign.objective,
           createdTime: campaign.created_time,
           updatedTime: campaign.updated_time,
-          spend: parseFloat(campaign.spend || "0"),
+          dailyBudget: campaign.daily_budget ? parseFloat(campaign.daily_budget) : 0,
+          lifetimeBudget: campaign.lifetime_budget ? parseFloat(campaign.lifetime_budget) : 0,
+          spend: campaign.spend ? parseFloat(campaign.spend) : 0,
           impressions: campaign.impressions || 0,
           clicks: campaign.clicks || 0,
           actions: campaign.actions || [],
+          roi: 0,
+          ctr: 0,
+          conversionRate: 0,
         }));
 
       console.log(
@@ -117,143 +102,4 @@ export const metaAdsCampaignsRouter = router({
       };
     }
   }),
-
-  /**
-   * Obter métricas de uma campanha
-   */
-  getCampaignMetrics: protectedProcedure
-    .input(
-      z.object({
-        campaignId: z.string(),
-      })
-    )
-    .query(async ({ input }) => {
-      try {
-        const db = await getDb();
-        if (!db) return null;
-
-        // Obter conta Feminnita
-        const account = await db
-          .select()
-          .from(instagramAccounts)
-          .where(eq(instagramAccounts.accountType, "feminnita"))
-          .limit(1);
-
-        if (!account || account.length === 0) {
-          throw new Error("Conta Feminnita não encontrada");
-        }
-
-        const igAccount = account[0];
-
-        // Buscar métricas da campanha
-        const metricsResponse = await fetch(
-          `https://graph.instagram.com/v18.0/${input.campaignId}/insights?fields=spend,impressions,clicks,actions,action_values,cost_per_action_type,cpc,cpm,cpp&access_token=${igAccount.accessToken}`
-        );
-
-        if (!metricsResponse.ok) {
-          const error = await metricsResponse.json();
-          throw new Error(`Meta API Error: ${error.error?.message || "Unknown error"}`);
-        }
-
-        const data = await metricsResponse.json();
-
-        if (!data.data) {
-          return null;
-        }
-
-        // Processar métricas
-        const metricsMap: Record<string, any> = {};
-        data.data.forEach((metric: any) => {
-          metricsMap[metric.name] = metric.values?.[0]?.value || 0;
-        });
-
-        const spend = parseFloat(metricsMap.spend || "0");
-        const impressions = metricsMap.impressions || 0;
-        const clicks = metricsMap.clicks || 0;
-        const actions = metricsMap.actions || 0;
-        const actionValues = parseFloat(metricsMap.action_values || "0");
-
-        // Calcular métricas derivadas
-        const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
-        const conversionRate = clicks > 0 ? (actions / clicks) * 100 : 0;
-        const roi = spend > 0 ? ((actionValues - spend) / spend) * 100 : 0;
-
-        return {
-          campaignId: input.campaignId,
-          spend,
-          impressions,
-          clicks,
-          cpc: parseFloat(metricsMap.cpc || "0"),
-          cpm: parseFloat(metricsMap.cpm || "0"),
-          cpp: parseFloat(metricsMap.cpp || "0"),
-          actions,
-          actionValues,
-          ctr,
-          conversionRate,
-          roi,
-        };
-      } catch (error) {
-        console.error("[Meta Ads Campaigns] Erro ao obter métricas:", error);
-        return null;
-      }
-    }),
-
-  /**
-   * Pausar campanha
-   */
-  pauseCampaign: protectedProcedure
-    .input(
-      z.object({
-        campaignId: z.string(),
-      })
-    )
-    .mutation(async ({ input }) => {
-      try {
-        const db = await getDb();
-        if (!db) throw new Error("Database not available");
-
-        // Obter conta Feminnita
-        const account = await db
-          .select()
-          .from(instagramAccounts)
-          .where(eq(instagramAccounts.accountType, "feminnita"))
-          .limit(1);
-
-        if (!account || account.length === 0) {
-          throw new Error("Conta Feminnita não encontrada");
-        }
-
-        const igAccount = account[0];
-
-        // Pausar campanha via Meta API
-        const pauseResponse = await fetch(
-          `https://graph.instagram.com/v18.0/${input.campaignId}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              status: "PAUSED",
-              access_token: igAccount.accessToken,
-            }),
-          }
-        );
-
-        if (!pauseResponse.ok) {
-          const error = await pauseResponse.json();
-          throw new Error(`Meta API Error: ${error.error?.message || "Unknown error"}`);
-        }
-
-        console.log(`[Meta Ads Campaigns] Campanha ${input.campaignId} pausada`);
-
-        return {
-          success: true,
-          message: "Campanha pausada com sucesso",
-        };
-      } catch (error) {
-        console.error("[Meta Ads Campaigns] Erro ao pausar campanha:", error);
-        throw error;
-      }
-    }),
 });

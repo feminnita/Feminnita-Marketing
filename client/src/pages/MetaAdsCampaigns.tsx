@@ -13,22 +13,16 @@ export default function MetaAdsCampaigns() {
   const [activeTab, setActiveTab] = useState<"overview" | "metrics" | "ads" | "audiences" | "history">("overview");
   const [autoRefresh, setAutoRefresh] = useState(true);
 
-  // Listar campanhas ativas
-  const { data: campaignsData, isLoading: loadingCampaigns, refetch: refetchCampaigns } = trpc.metaAdsCampaigns.listActiveCampaigns.useQuery({
-    status: "active",
-  });
-
   // Importar campanhas reais do Meta
-  const { data: realCampaignsData, isLoading: loadingRealCampaigns } = trpc.metaAdsCampaigns.importarCampanhasReais.useQuery(
+  const { data: realCampaignsData, isLoading: loadingCampaigns, refetch: refetchCampaigns } = trpc.metaAdsCampaigns.importarCampanhasReais.useQuery(
     undefined,
     { enabled: autoRefresh }
   );
 
-  // Obter métricas da campanha selecionada
-  const { data: metricsData, isLoading: loadingMetrics } = trpc.metaAdsCampaigns.getCampaignMetrics.useQuery(
-    { campaignId: selectedCampaign || "" },
-    { enabled: !!selectedCampaign }
-  );
+  // Usar dados das campanhas importadas
+  const campaignsData = realCampaignsData?.campanhas || [];
+  const metricsData = selectedCampaign ? campaignsData.find((c: any) => c.id === selectedCampaign) : null;
+  const loadingMetrics = loadingCampaigns;
 
 
 
@@ -37,12 +31,12 @@ export default function MetaAdsCampaigns() {
 
 
   // Mutations
-  const pauseMutation = trpc.metaAdsCampaigns.pauseCampaign.useMutation();
+  // Mutations removidas - usar importarCampanhasReais para sincronizar
 
-  const handlePauseCampaign = async (campaignId: string) => {
+  const handleRefresh = async () => {
     try {
-      await pauseMutation.mutateAsync({ campaignId });
-      toast.success("Campanha pausada com sucesso");
+      await refetchCampaigns();
+      toast.success("Campanhas sincronizadas com sucesso");
       refetchCampaigns();
     } catch (error) {
       toast.error("Erro ao pausar campanha");
@@ -146,7 +140,7 @@ export default function MetaAdsCampaigns() {
               <CardDescription>Clique em uma campanha para ver detalhes</CardDescription>
             </CardHeader>
             <CardContent>
-              {loadingCampaigns || loadingRealCampaigns ? (
+              {loadingCampaigns || loadingCampaigns ? (
                 <div className="text-center py-8 text-slate-500">Carregando campanhas...</div>
               ) : campaigns.length === 0 ? (
                 <div className="text-center py-8 text-slate-500">Nenhuma campanha ativa</div>
@@ -285,8 +279,8 @@ export default function MetaAdsCampaigns() {
                 <CardContent className="space-y-2">
                   <Button
                     type="button"
-                    onClick={() => handlePauseCampaign(selectedCampaign)}
-                    disabled={pauseMutation.isPending}
+                    onClick={() => handleRefresh()}
+                    disabled={loadingCampaigns}
                     className="w-full"
                     variant="outline"
                   >
