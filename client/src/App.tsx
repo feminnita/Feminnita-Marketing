@@ -20,6 +20,7 @@ import TermosServico from "@/pages/TermosServico";
 import Privacidade from "@/pages/Privacidade";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
+import InstagramDashboard from "@/pages/InstagramDashboard";
 
 
 export default function App() {
@@ -58,6 +59,8 @@ export default function App() {
         return <InfluencersDashboard />;
       case "/meta-ads-campaigns":
         return <MetaAdsCampaigns />;
+      case "/instagram":
+        return <InstagramDashboard />;
       case "/oauth-credentials":
         return <OAuthCredentials />;
       case "/colaboradores":

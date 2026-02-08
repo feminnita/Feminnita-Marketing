@@ -353,6 +353,15 @@
 - [ ] Envio automático na data/hora agendada
 - [ ] Dashboard de postagens com histórico
 
+## Fase 25: Integração Instagram Graph API
+- [x] Pesquisar endpoints do Instagram Graph API
+- [x] Criar router de Instagram com procedures (getBusinessAccount, getMediaList, getMediaInsights, getFollowerInsights, syncInstagramPosts, testConnection, getCredentials)
+- [x] Escrever 20 testes unitários para validação de estrutura de respostas
+- [x] Criar página de dashboard do Instagram
+- [x] Registrar rota /instagram no App.tsx
+- [ ] Testar integração no navegador
+- [ ] Salvar checkpoint com integração Instagram completa
+
 ## Fase 29: Corrigir Redirecionamento do Botão Salvar Contas
 - [x] Diagnosticar por que o botão leva para página em branco
 - [x] Remover redirecionamento indesejado
@@ -369,3 +378,18 @@
 - [ ] Verificar se API Meta está retornando dados
 - [ ] Corrigir integração Meta
 - [ ] Testar integração Meta até funcionar
+
+
+## Fase 25: Integração Instagram Graph API
+- [ ] Pesquisar endpoints do Instagram Graph API
+- [ ] Implementar autenticação com Instagram Business Account
+- [ ] Criar router instagram-api.ts com procedures
+  - [ ] getBusinessAccount: Obter dados da conta de negócios
+  - [ ] getMediaList: Listar posts/reels/stories
+  - [ ] getMediaInsights: Obter métricas de engajamento
+  - [ ] getFollowerInsights: Obter dados de seguidores
+  - [ ] syncInstagramPosts: Sincronizar posts em tempo real
+- [ ] Criar página InstagramDashboard.tsx
+- [ ] Implementar sincronização automática de posts
+- [ ] Criar 10+ testes Vitest para Instagram API
+- [ ] Integrar com dashboard de influenciadoras
