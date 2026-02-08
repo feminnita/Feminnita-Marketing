@@ -22,6 +22,7 @@ import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
 import InstagramDashboard from "@/pages/InstagramDashboard";
 import MetaAdsDashboard from "@/pages/MetaAdsDashboard";
+import SocialMediaScheduler from "@/pages/SocialMediaScheduler";
 
 
 export default function App() {
@@ -64,6 +65,8 @@ export default function App() {
         return <InstagramDashboard />;
       case "/meta-ads-dashboard":
         return <MetaAdsDashboard />;
+      case "/agendador-postagens":
+        return <SocialMediaScheduler />;
       case "/oauth-credentials":
         return <OAuthCredentials />;
       case "/colaboradores":
@@ -82,6 +85,8 @@ export default function App() {
         return <CanvaOAuth />;
       case "/meta-capi-setup":
         return <MetaCapiSetup />;
+      case "/social-media-scheduler":
+        return <SocialMediaScheduler />;
 
       default:
         return <Home />;
