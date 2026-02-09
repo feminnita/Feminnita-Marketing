@@ -1,0 +1,19 @@
+{
+  "query": "SELECT COUNT(*) as total_influencers FROM influencers; SELECT COUNT(*) as total_accounts FROM influencer_accounts;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HAbCL8QDjoZNnU.root --database 5s7UsNyNaKsNSzFSrZJVSX --execute SELECT COUNT(*) as total_influencers FROM influencers; SELECT COUNT(*) as total_accounts FROM influencer_accounts;",
+  "rows": [
+    {
+      "total_influencers": "4"
+    },
+    {
+      "total_influencers": "total_accounts"
+    },
+    {
+      "total_influencers": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_influencers\n4\ntotal_accounts\n1\n",
+  "stderr": "",
+  "execution_time_ms": 197
+}

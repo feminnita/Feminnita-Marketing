@@ -1,0 +1,85 @@
+{
+  "query": "SHOW TABLES;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HAbCL8QDjoZNnU.root --database 5s7UsNyNaKsNSzFSrZJVSX --execute SHOW TABLES;",
+  "rows": [
+    {
+      "Tables_in_5s7UsNyNaKsNSzFSrZJVSX": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_5s7UsNyNaKsNSzFSrZJVSX": "collaborators"
+    },
+    {
+      "Tables_in_5s7UsNyNaKsNSzFSrZJVSX": "content_items"
+    },
+    {
+      "Tables_in_5s7UsNyNaKsNSzFSrZJVSX": "influencer_accounts_simple"
+    },
+    {
+      "Tables_in_5s7UsNyNaKsNSzFSrZJVSX": "influencer_interactions"
+    },
+    {
+      "Tables_in_5s7UsNyNaKsNSzFSrZJVSX": "influencer_knowledge_base"
+    },
+    {
+      "Tables_in_5s7UsNyNaKsNSzFSrZJVSX": "influencer_performance"
+    },
+    {
+      "Tables_in_5s7UsNyNaKsNSzFSrZJVSX": "influencer_posts"
+    },
+    {
+      "Tables_in_5s7UsNyNaKsNSzFSrZJVSX": "influencer_trends"
+    },
+    {
+      "Tables_in_5s7UsNyNaKsNSzFSrZJVSX": "influencers"
+    },
+    {
+      "Tables_in_5s7UsNyNaKsNSzFSrZJVSX": "instagram_accounts"
+    },
+    {
+      "Tables_in_5s7UsNyNaKsNSzFSrZJVSX": "instagram_app_credentials"
+    },
+    {
+      "Tables_in_5s7UsNyNaKsNSzFSrZJVSX": "instagram_post_publications"
+    },
+    {
+      "Tables_in_5s7UsNyNaKsNSzFSrZJVSX": "integrations"
+    },
+    {
+      "Tables_in_5s7UsNyNaKsNSzFSrZJVSX": "media_files"
+    },
+    {
+      "Tables_in_5s7UsNyNaKsNSzFSrZJVSX": "meta_campaign_alerts"
+    },
+    {
+      "Tables_in_5s7UsNyNaKsNSzFSrZJVSX": "meta_sync_history"
+    },
+    {
+      "Tables_in_5s7UsNyNaKsNSzFSrZJVSX": "notifications"
+    },
+    {
+      "Tables_in_5s7UsNyNaKsNSzFSrZJVSX": "oauth_credentials"
+    },
+    {
+      "Tables_in_5s7UsNyNaKsNSzFSrZJVSX": "oauth_tokens"
+    },
+    {
+      "Tables_in_5s7UsNyNaKsNSzFSrZJVSX": "post_history"
+    },
+    {
+      "Tables_in_5s7UsNyNaKsNSzFSrZJVSX": "scheduled_posts"
+    },
+    {
+      "Tables_in_5s7UsNyNaKsNSzFSrZJVSX": "users"
+    },
+    {
+      "Tables_in_5s7UsNyNaKsNSzFSrZJVSX": "webhook_events"
+    },
+    {
+      "Tables_in_5s7UsNyNaKsNSzFSrZJVSX": "webhooks"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_5s7UsNyNaKsNSzFSrZJVSX\n__drizzle_migrations\ncollaborators\ncontent_items\ninfluencer_accounts_simple\ninfluencer_interactions\ninfluencer_knowledge_base\ninfluencer_performance\ninfluencer_posts\ninfluencer_trends\ninfluencers\ninstagram_accounts\ninstagram_app_credentials\ninstagram_post_publications\nintegrations\nmedia_files\nmeta_campaign_alerts\nmeta_sync_history\nnotifications\noauth_credentials\noauth_tokens\npost_history\nscheduled_posts\nusers\nwebhook_events\nwebhooks\n",
+  "stderr": "",
+  "execution_time_ms": 63
+}

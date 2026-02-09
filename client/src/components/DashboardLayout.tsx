@@ -30,6 +30,11 @@ import { Button } from "./ui/button";
 const menuItems = [
   { icon: LayoutDashboard, label: "Início", path: "/" },
   { icon: Users, label: "Influenciadoras", path: "/influenciadoras" },
+  { icon: Users, label: "Contas das Influenciadoras", path: "/contas-influenciadoras" },
+  { icon: BookOpen, label: "Perfil - Carol", path: "/influenciadora/1" },
+  { icon: BookOpen, label: "Perfil - Renata", path: "/influenciadora/2" },
+  { icon: BookOpen, label: "Perfil - Vanessa", path: "/influenciadora/3" },
+  { icon: BookOpen, label: "Perfil - Luiza", path: "/influenciadora/4" },
   { icon: BookOpen, label: "Blog das Influencers", path: "/blog-influencers" },
   { icon: TrendingUp, label: "Analytics", path: "/analytics" },
   { icon: TrendingUp, label: "Campanhas Meta Ads", path: "/meta-ads-campaigns" },

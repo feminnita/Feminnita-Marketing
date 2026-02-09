@@ -1,0 +1,30 @@
+{
+  "query": "SHOW CREATE TABLE influencer_accounts;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HAbCL8QDjoZNnU.root --database 5s7UsNyNaKsNSzFSrZJVSX --execute SHOW CREATE TABLE influencer_accounts;",
+  "rows": [
+    {
+      "Table": "influencer_accounts",
+      "Create Table": "CREATE TABLE `influencer_accounts` ("
+    }
+  ],
+  "messages": [
+    "  `id` int(11) NOT NULL AUTO_INCREMENT,",
+    "  `influencerId` int(11) NOT NULL,",
+    "  `email` varchar(320) DEFAULT NULL,",
+    "  `instagram` varchar(255) DEFAULT NULL,",
+    "  `tiktok` varchar(255) DEFAULT NULL,",
+    "  `facebook` varchar(255) DEFAULT NULL,",
+    "  `whatsapp` varchar(20) DEFAULT NULL,",
+    "  `youtube` varchar(255) DEFAULT NULL,",
+    "  `isActive` tinyint(1) NOT NULL DEFAULT '1',",
+    "  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,",
+    "  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,",
+    "  PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */,",
+    "  UNIQUE KEY `unique_influencer` (`influencerId`),",
+    "  CONSTRAINT `fk_1` FOREIGN KEY (`influencerId`) REFERENCES `5s7UsNyNaKsNSzFSrZJVSX`.`influencers` (`id`) ON DELETE CASCADE",
+    ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin AUTO_INCREMENT=120001"
+  ],
+  "stdout": "Table\tCreate Table\ninfluencer_accounts\tCREATE TABLE `influencer_accounts` (\n  `id` int(11) NOT NULL AUTO_INCREMENT,\n  `influencerId` int(11) NOT NULL,\n  `email` varchar(320) DEFAULT NULL,\n  `instagram` varchar(255) DEFAULT NULL,\n  `tiktok` varchar(255) DEFAULT NULL,\n  `facebook` varchar(255) DEFAULT NULL,\n  `whatsapp` varchar(20) DEFAULT NULL,\n  `youtube` varchar(255) DEFAULT NULL,\n  `isActive` tinyint(1) NOT NULL DEFAULT '1',\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */,\n  UNIQUE KEY `unique_influencer` (`influencerId`),\n  CONSTRAINT `fk_1` FOREIGN KEY (`influencerId`) REFERENCES `5s7UsNyNaKsNSzFSrZJVSX`.`influencers` (`id`) ON DELETE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin AUTO_INCREMENT=120001\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}

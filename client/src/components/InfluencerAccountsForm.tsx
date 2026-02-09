@@ -36,14 +36,15 @@ export function InfluencerAccountsForm({
 
   // Preencher formulário com contas existentes
   React.useEffect(() => {
-    if (existingAccounts) {
+    if (existingAccounts && typeof existingAccounts === 'object' && 'email' in existingAccounts) {
+      const accounts = existingAccounts as any;
       setFormData({
-        email: existingAccounts.email || "",
-        instagram: existingAccounts.instagram || "",
-        tiktok: existingAccounts.tiktok || "",
-        facebook: existingAccounts.facebook || "",
-        whatsapp: existingAccounts.whatsapp || "",
-        youtube: existingAccounts.youtube || "",
+        email: accounts.email || "",
+        instagram: accounts.instagram || "",
+        tiktok: accounts.tiktok || "",
+        facebook: accounts.facebook || "",
+        whatsapp: accounts.whatsapp || "",
+        youtube: accounts.youtube || "",
       });
     }
   }, [existingAccounts]);

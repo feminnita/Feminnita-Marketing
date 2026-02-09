@@ -1,0 +1,130 @@
+{
+  "query": "DESCRIBE influencers;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HAbCL8QDjoZNnU.root --database 5s7UsNyNaKsNSzFSrZJVSX --execute DESCRIBE influencers;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int(11)",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "name",
+      "Type": "varchar(255)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "bio",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "personality",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "avatar",
+      "Type": "varchar(512)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "instagram_handle",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "tiktok_handle",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "youtube_handle",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "blog_url",
+      "Type": "varchar(512)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "instagram_access_token",
+      "Type": "varchar(512)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "tiktok_access_token",
+      "Type": "varchar(512)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "youtube_access_token",
+      "Type": "varchar(512)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "is_active",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "created_at",
+      "Type": "datetime",
+      "Null": "YES",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "updated_at",
+      "Type": "datetime",
+      "Null": "YES",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint(11)\tNO\tPRI\tNULL\tauto_increment\nname\tvarchar(255)\tNO\t\tNULL\t\nbio\ttext\tYES\t\tNULL\t\npersonality\tvarchar(255)\tYES\t\tNULL\t\navatar\tvarchar(512)\tYES\t\tNULL\t\ninstagram_handle\tvarchar(255)\tYES\t\tNULL\t\ntiktok_handle\tvarchar(255)\tYES\t\tNULL\t\nyoutube_handle\tvarchar(255)\tYES\t\tNULL\t\nblog_url\tvarchar(512)\tYES\t\tNULL\t\ninstagram_access_token\tvarchar(512)\tYES\t\tNULL\t\ntiktok_access_token\tvarchar(512)\tYES\t\tNULL\t\nyoutube_access_token\tvarchar(512)\tYES\t\tNULL\t\nis_active\ttinyint(1)\tYES\t\t1\t\ncreated_at\tdatetime\tYES\t\tCURRENT_TIMESTAMP\t\nupdated_at\tdatetime\tYES\t\tCURRENT_TIMESTAMP\t\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}

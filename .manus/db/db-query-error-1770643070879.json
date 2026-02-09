@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO influencers (name, description, isActive, createdAt, updatedAt) VALUES\n('Carol', 'Influenciadora Carol', true, NOW(), NOW()),\n('Renata', 'Influenciadora Renata', true, NOW(), NOW()),\n('Vanessa', 'Influenciadora Vanessa', true, NOW(), NOW()),\n('Luiza', 'Influenciadora Luiza', true, NOW(), NOW());",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HAbCL8QDjoZNnU.root --database 5s7UsNyNaKsNSzFSrZJVSX --execute INSERT INTO influencers (name, description, isActive, createdAt, updatedAt) VALUES\n('Carol', 'Influenciadora Carol', true, NOW(), NOW()),\n('Renata', 'Influenciadora Renata', true, NOW(), NOW()),\n('Vanessa', 'Influenciadora Vanessa', true, NOW(), NOW()),\n('Luiza', 'Influenciadora Luiza', true, NOW(), NOW());",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'description' in 'field list'"
+  ]
+}

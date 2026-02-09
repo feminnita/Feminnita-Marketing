@@ -25,7 +25,8 @@ import MetaAdsDashboard from "@/pages/MetaAdsDashboard";
 import SocialMediaScheduler from "@/pages/SocialMediaScheduler";
 import InfluencerBlog from "@/pages/InfluencerBlog";
 import Analytics from "@/pages/Analytics";
-
+import InfluencerAccountsPage from "@/pages/InfluencerAccountsPage";
+import InfluencerProfilePage from "@/pages/InfluencerProfilePage";
 
 export default function App() {
   const [location] = useLocation();
@@ -93,6 +94,12 @@ export default function App() {
         return <InfluencerBlog />;
       case "/analytics":
         return <Analytics />;
+      case "/contas-influenciadoras":
+        return <InfluencerAccountsPage />;
+      
+      // Rotas de perfis individuais de influenciadoras
+      case /^\/influenciadora\/\d+$/.test(location) ? location : "":
+        return <InfluencerProfilePage />;
 
       default:
         return <Home />;

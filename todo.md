@@ -565,3 +565,18 @@
 - [x] Documentação DNS_CONFIGURATION.md para configurar 4 blogs públicos
 - [x] Router publicationQueue com retry automático e fila de publicação
 - [x] Integração do publicationQueue ao appRouter
+
+## Fase 26: Refazer Página de Cadastro de Contas do Zero
+- [ ] Criar nova página InfluencerAccountsPage.tsx do zero
+- [ ] Implementar formulário simples e funcional
+- [ ] Testar salvamento de dados no banco
+- [ ] Validar que não há erros de SQL
+
+
+## Fase 26: Criar 4 Perfis de Influenciadoras com Vida Dia a Dia
+- [x] Definir personalidades e perfis das 4 influenciadoras
+- [x] Criar página de perfil individual com vida dia a dia
+- [x] Criar sistema de posts com conteúdo pessoal + Feminnita
+- [x] Integrar routers tRPC para gerenciar perfis
+- [x] Criar os 4 perfis iniciais com posts de exemplo
+- [x] Adicionar menu de navegação para cada perfil

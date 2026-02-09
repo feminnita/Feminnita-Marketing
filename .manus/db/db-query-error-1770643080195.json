@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO influencers (name, createdAt, updatedAt) VALUES\n('Carol', NOW(), NOW()),\n('Renata', NOW(), NOW()),\n('Vanessa', NOW(), NOW()),\n('Luiza', NOW(), NOW());",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HAbCL8QDjoZNnU.root --database 5s7UsNyNaKsNSzFSrZJVSX --execute INSERT INTO influencers (name, createdAt, updatedAt) VALUES\n('Carol', NOW(), NOW()),\n('Renata', NOW(), NOW()),\n('Vanessa', NOW(), NOW()),\n('Luiza', NOW(), NOW());",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'createdAt' in 'field list'"
+  ]
+}

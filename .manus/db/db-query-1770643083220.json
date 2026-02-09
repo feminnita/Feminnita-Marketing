@@ -1,0 +1,55 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'influencers';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HAbCL8QDjoZNnU.root --database 5s7UsNyNaKsNSzFSrZJVSX --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'influencers';",
+  "rows": [
+    {
+      "COLUMN_NAME": "id"
+    },
+    {
+      "COLUMN_NAME": "name"
+    },
+    {
+      "COLUMN_NAME": "bio"
+    },
+    {
+      "COLUMN_NAME": "personality"
+    },
+    {
+      "COLUMN_NAME": "avatar"
+    },
+    {
+      "COLUMN_NAME": "instagram_handle"
+    },
+    {
+      "COLUMN_NAME": "tiktok_handle"
+    },
+    {
+      "COLUMN_NAME": "youtube_handle"
+    },
+    {
+      "COLUMN_NAME": "blog_url"
+    },
+    {
+      "COLUMN_NAME": "instagram_access_token"
+    },
+    {
+      "COLUMN_NAME": "tiktok_access_token"
+    },
+    {
+      "COLUMN_NAME": "youtube_access_token"
+    },
+    {
+      "COLUMN_NAME": "is_active"
+    },
+    {
+      "COLUMN_NAME": "created_at"
+    },
+    {
+      "COLUMN_NAME": "updated_at"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nid\nname\nbio\npersonality\navatar\ninstagram_handle\ntiktok_handle\nyoutube_handle\nblog_url\ninstagram_access_token\ntiktok_access_token\nyoutube_access_token\nis_active\ncreated_at\nupdated_at\n",
+  "stderr": "",
+  "execution_time_ms": 67
+}

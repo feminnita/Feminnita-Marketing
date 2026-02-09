@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS influencer_accounts_simple (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  influencerId INT NOT NULL,\n  email VARCHAR(255),\n  instagram VARCHAR(255),\n  tiktok VARCHAR(255),\n  facebook VARCHAR(255),\n  whatsapp VARCHAR(20),\n  youtube VARCHAR(255),\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  UNIQUE KEY unique_influencer (influencerId)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2HAbCL8QDjoZNnU.root --database 5s7UsNyNaKsNSzFSrZJVSX --execute CREATE TABLE IF NOT EXISTS influencer_accounts_simple (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  influencerId INT NOT NULL,\n  email VARCHAR(255),\n  instagram VARCHAR(255),\n  tiktok VARCHAR(255),\n  facebook VARCHAR(255),\n  whatsapp VARCHAR(20),\n  youtube VARCHAR(255),\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  UNIQUE KEY unique_influencer (influencerId)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 184
+}
