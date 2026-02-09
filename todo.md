@@ -627,3 +627,32 @@
 - [ ] Implementar IA para gerar conteúdo
 - [ ] Criar sistema de automação que publica nos horários
 - [ ] Testar e validar todo o fluxo
+
+
+## Fase 29: Sistema de Automação de Influenciadoras - 3 Componentes Principais
+
+### 1. Dashboard de Agendamento de Posts
+- [x] Criar página SchedulePostsPage com interface completa
+- [x] Implementar seletor de influenciadora (Carol, Renata, Vanessa, Luiza)
+- [x] Criar editor de conteúdo com preview
+- [x] Implementar seletor de data e hora
+- [x] Adicionar seleção de plataformas (Instagram, TikTok, Blog)
+- [x] Criar botão de "Agendar Post"
+- [x] Implementar lista de posts agendados com status
+- [x] Criar router tRPC para agendamento (create, list, update, delete, publish)
+
+### 2. Integração com Meta API (Instagram + Reels)
+- [ ] Implementar router meta-posts.ts com procedures
+- [ ] Criar função para publicar no Instagram via Meta API
+- [ ] Implementar função para publicar Reels
+- [ ] Adicionar tratamento de erros e retry
+- [ ] Criar testes Vitest para Meta API
+- [ ] Validar tokens de acesso das contas
+
+### 3. Sistema de IA para Geração de Conteúdo
+- [ ] Criar router ai-content-generator.ts
+- [ ] Implementar geração de captions com IA
+- [ ] Criar geração de hashtags automáticas
+- [ ] Implementar geração de conteúdo baseado no perfil da influenciadora
+- [ ] Adicionar opção de regenerar conteúdo
+- [ ] Criar testes para geração de conteúdo

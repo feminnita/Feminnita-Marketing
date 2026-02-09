@@ -41,6 +41,7 @@ const menuItems = [
   { icon: BookOpen, label: "Blog - Luiza", path: "/blog/4" },
   { icon: BookOpen, label: "Blog das Influencers", path: "/blog-influencers" },
   { icon: Newspaper, label: "Blogs Externos", path: "/blogs-influenciadoras" },
+  { icon: Calendar, label: "Agendar Posts", path: "/agendar-posts" },
   { icon: TrendingUp, label: "Analytics", path: "/analytics" },
   { icon: TrendingUp, label: "Campanhas Meta Ads", path: "/meta-ads-campaigns" },
   { icon: Calendar, label: "Agendador de Postagens", path: "/agendador-postagens" },
