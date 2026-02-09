@@ -580,3 +580,21 @@
 - [x] Integrar routers tRPC para gerenciar perfis
 - [x] Criar os 4 perfis iniciais com posts de exemplo
 - [x] Adicionar menu de navegação para cada perfil
+
+
+## Fase 27: Criar Blogs com Produtos e Links de Vendas
+- [ ] Criar schema de blog com posts, produtos e links
+- [ ] Criar página de blog por influenciadora
+- [ ] Criar editor de posts com integração de produtos
+- [ ] Integrar produtos Feminnita nos posts
+- [ ] Criar postagens iniciais com produtos e links de vendas
+- [ ] Testar blogs completos
+
+
+## Fase 27: Adicionar Postagens de Vendas nos Blogs
+- [x] Criar postagens de vendas para Carol com produtos e preços
+- [x] Criar postagens de vendas para Renata com produtos e preços
+- [x] Criar postagens de vendas para Vanessa com produtos e preços
+- [x] Criar postagens de vendas para Luiza com produtos e preços
+- [x] Integrar links de compra diretos para Feminnita
+- [x] Testar fluxo de vendas nos blogs

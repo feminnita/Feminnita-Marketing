@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, Sparkles, TrendingUp, Github, Calendar, BookOpen } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, Sparkles, TrendingUp, Github, Calendar, BookOpen, Newspaper } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -35,6 +35,10 @@ const menuItems = [
   { icon: BookOpen, label: "Perfil - Renata", path: "/influenciadora/2" },
   { icon: BookOpen, label: "Perfil - Vanessa", path: "/influenciadora/3" },
   { icon: BookOpen, label: "Perfil - Luiza", path: "/influenciadora/4" },
+  { icon: BookOpen, label: "Blog - Carol", path: "/blog/1" },
+  { icon: BookOpen, label: "Blog - Renata", path: "/blog/2" },
+  { icon: BookOpen, label: "Blog - Vanessa", path: "/blog/3" },
+  { icon: BookOpen, label: "Blog - Luiza", path: "/blog/4" },
   { icon: BookOpen, label: "Blog das Influencers", path: "/blog-influencers" },
   { icon: TrendingUp, label: "Analytics", path: "/analytics" },
   { icon: TrendingUp, label: "Campanhas Meta Ads", path: "/meta-ads-campaigns" },
