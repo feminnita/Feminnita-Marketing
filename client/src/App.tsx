@@ -30,6 +30,7 @@ import InfluencerProfilePage from "@/pages/InfluencerProfilePage";
 import InfluencerBlogPage from "@/pages/InfluencerBlogPage";
 import InfluencerBlogsLinksPage from "@/pages/InfluencerBlogsLinksPage";
 
+
 export default function App() {
   const [location] = useLocation();
 
@@ -46,9 +47,8 @@ export default function App() {
         return <Privacidade />;
       case "/privacy":
         return <PrivacyPolicy />;
-      case "/terms":
+       case "/terms":
         return <TermsOfService />;
-
       // Rotas autenticadas
       case "/":
         return <Home />;

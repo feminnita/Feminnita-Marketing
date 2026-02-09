@@ -605,3 +605,25 @@
 - [x] Adicionar rotas no App.tsx
 - [x] Adicionar menu items no DashboardLayout
 - [x] Testar links e validar funcionalidade
+
+
+## Fase 29: Blog Público da Carol - Influenciadora Autônoma
+- [ ] Criar página pública do blog da Carol
+- [ ] Implementar sistema de agendamento de posts
+- [ ] Criar dashboard admin para gerenciar posts
+- [ ] Integrar Meta API (Instagram + Reels)
+- [ ] Integrar TikTok API
+- [ ] Implementar geração de conteúdo com IA
+- [ ] Configurar postagem automática em horários programados
+- [ ] Testar fluxo completo de automação
+
+
+## Fase 29: Sistema de Automação de Postagens - Influenciadoras Autônomas
+- [ ] Criar schema de banco para agendamento de posts
+- [ ] Criar dashboard de gerenciamento de posts agendados
+- [ ] Implementar sistema de agendamento com horários
+- [ ] Integrar Meta API (Instagram + Reels)
+- [ ] Integrar TikTok API
+- [ ] Implementar IA para gerar conteúdo
+- [ ] Criar sistema de automação que publica nos horários
+- [ ] Testar e validar todo o fluxo
