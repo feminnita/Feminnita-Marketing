@@ -28,6 +28,7 @@ import Analytics from "@/pages/Analytics";
 import InfluencerAccountsPage from "@/pages/InfluencerAccountsPage";
 import InfluencerProfilePage from "@/pages/InfluencerProfilePage";
 import InfluencerBlogPage from "@/pages/InfluencerBlogPage";
+import InfluencerBlogsLinksPage from "@/pages/InfluencerBlogsLinksPage";
 
 export default function App() {
   const [location] = useLocation();
@@ -97,6 +98,8 @@ export default function App() {
         return <Analytics />;
       case "/contas-influenciadoras":
         return <InfluencerAccountsPage />;
+      case "/blogs-influenciadoras":
+        return <InfluencerBlogsLinksPage />;
       
       // Rotas de perfis individuais de influenciadoras
       case /^\/influenciadora\/\d+$/.test(location) ? location : "":

@@ -598,3 +598,10 @@
 - [x] Criar postagens de vendas para Luiza com produtos e preços
 - [x] Integrar links de compra diretos para Feminnita
 - [x] Testar fluxo de vendas nos blogs
+
+
+## Fase 28: Página de Vinculação de Blogs Externos
+- [x] Criar página de blogs das influenciadoras com links externos
+- [x] Adicionar rotas no App.tsx
+- [x] Adicionar menu items no DashboardLayout
+- [x] Testar links e validar funcionalidade
