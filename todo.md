@@ -710,3 +710,119 @@
 - [ ] Criar integração com YouTube API
 - [ ] Implementar sincronização com blogs externos
 - [ ] Criar dashboard de analytics de postagens
+
+
+## Fase 30: Geração Automática de Posts com IA (Influenciadoras com Vida Própria)
+
+### 1. Sistema de Geração Automática de Posts
+- [ ] Criar router auto-content-generator.ts com procedures
+- [ ] Implementar função que gera posts automaticamente para cada influenciadora
+- [ ] Criar contexto personalizado para cada influenciadora (Carol, Renata, Vanessa, Luiza)
+- [ ] Implementar geração de múltiplos posts por dia (manhã, tarde, noite)
+- [ ] Adicionar variação de conteúdo (dicas, lifestyle, produtos, histórias)
+- [ ] Criar testes Vitest para geração automática
+
+### 2. Agendador de Geração de Posts (Cron Job)
+- [ ] Implementar cron job que roda diariamente
+- [ ] Configurar horários de geração (8h, 12h, 18h, 21h)
+- [ ] Criar função que dispara geração automática
+- [ ] Implementar retry em caso de falha
+- [ ] Adicionar logs de execução
+
+### 3. Integração com Publicação Automática
+- [ ] Conectar geração automática com publicação automática
+- [ ] Publicar automaticamente após geração
+- [ ] Adicionar delay entre posts (para não parecer bot)
+- [ ] Implementar variação de horários de publicação
+
+### 4. Dashboard de Monitoramento
+- [ ] Criar página para visualizar posts gerados
+- [ ] Mostrar histórico de publicações
+- [ ] Adicionar estatísticas de engajamento
+- [ ] Permitir edição manual de posts gerados
+- [ ] Mostrar status de cada influenciadora
+
+### 5. Testes e Validação
+- [ ] Testar geração automática de posts
+- [ ] Validar qualidade do conteúdo gerado
+- [ ] Testar publicação automática
+- [ ] Verificar se posts estão sendo publicados nos horários corretos
+
+
+## Fase 31: Dashboard de Aprovação de Posts (Treinar IAs)
+
+### 1. Router de Gerenciamento de Aprovação
+- [ ] Criar router post-approval.ts com procedures
+- [ ] Implementar função para listar posts pendentes de aprovação
+- [ ] Implementar função para aprovar posts
+- [ ] Implementar função para rejeitar posts
+- [ ] Implementar função para editar posts antes de publicar
+- [ ] Implementar função para salvar feedback de treinamento
+
+### 2. Dashboard de Aprovação de Posts
+- [ ] Criar página ApprovalDashboardPage.tsx
+- [ ] Listar todos os posts gerados pelas IAs
+- [ ] Mostrar informações de cada influenciadora
+- [ ] Exibir preview do post (caption, hashtags, CTA)
+- [ ] Adicionar botões de Aprovar/Rejeitar/Editar
+- [ ] Mostrar histórico de posts publicados
+
+### 3. Visualização e Edição de Posts
+- [ ] Criar modal de visualização de post
+- [ ] Implementar editor de conteúdo (caption, hashtags)
+- [ ] Mostrar metadados do post (tópico, produto mencionado)
+- [ ] Adicionar preview em tempo real
+
+### 4. Sistema de Feedback para Treinar IAs
+- [ ] Criar formulário de feedback
+- [ ] Salvar feedback de cada aprovação/rejeição
+- [ ] Armazenar razões de rejeição
+- [ ] Usar feedback para melhorar próximas gerações
+
+### 5. Integração com Publicação
+- [ ] Conectar aprovação com publicação automática
+- [ ] Publicar apenas posts aprovados
+- [ ] Rejeitar posts automaticamente se não aprovados em 24h
+- [ ] Notificar quando posts forem publicados
+
+### 6. Testes e Validação
+- [ ] Testar fluxo completo de aprovação
+- [ ] Validar edição de posts
+- [ ] Testar sistema de feedback
+- [ ] Verificar se posts aprovados são publicados corretamente
+
+
+## Fase 35: Dashboard de Aprovação de Posts ✅ COMPLETO
+- [x] Criar página frontend ApprovalDashboardPage.tsx
+  - [x] Visualização de posts pendentes em abas
+  - [x] Histórico de posts publicados
+  - [x] Estatísticas de aprovação (total, aprovados, rejeitados, pendentes)
+  - [x] Botões de ação: Aprovar, Rejeitar, Editar
+  - [x] Modal para edição de captions
+  - [x] Filtros por influenciadora
+- [x] Criar router tRPC post-approval.ts com 7 procedures
+  - [x] listPendingPosts: Listar posts em draft
+  - [x] approvePost: Aprovar e agendar publicação
+  - [x] rejectPost: Rejeitar com motivo
+  - [x] editPost: Editar caption e hashtags
+  - [x] getPublishedHistory: Ver posts publicados
+  - [x] getApprovalStats: Estatísticas gerais
+  - [x] saveFeedback: Salvar feedback para treinar IA
+- [x] Integrar no App.tsx
+  - [x] Adicionar rota /dashboard-aprovacao
+  - [x] Adicionar menu item "Aprovar Posts" no sidebar
+- [x] Criar testes vitest (7 testes passando)
+  - [x] listPendingPosts retorna array
+  - [x] getApprovalStats retorna estrutura correta
+  - [x] getPublishedHistory retorna histórico
+  - [x] approvePost retorna sucesso
+  - [x] rejectPost retorna sucesso
+  - [x] editPost retorna sucesso
+  - [x] saveFeedback retorna sucesso
+
+**Próximas Etapas Sugeridas:**
+- [ ] Integrar com sistema de geração automática de posts
+- [ ] Adicionar notificações quando novos posts estão pendentes
+- [ ] Criar relatório de performance de aprovações por influenciadora
+- [ ] Implementar sistema de feedback para treinar IA
+- [ ] Adicionar agendamento automático de posts após aprovação

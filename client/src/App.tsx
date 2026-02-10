@@ -30,6 +30,7 @@ import InfluencerProfilePage from "@/pages/InfluencerProfilePage";
 import InfluencerBlogPage from "@/pages/InfluencerBlogPage";
 import InfluencerBlogsLinksPage from "@/pages/InfluencerBlogsLinksPage";
 import SchedulePostsPage from "@/pages/SchedulePostsPage";
+import ApprovalDashboardPage from "@/pages/ApprovalDashboardPage";
 
 
 export default function App() {
@@ -103,6 +104,8 @@ export default function App() {
         return <InfluencerBlogsLinksPage />;
       case "/agendar-posts":
         return <SchedulePostsPage />;
+      case "/dashboard-aprovacao":
+        return <ApprovalDashboardPage />;
       // Rotas autenticadas de perfis individuais de influenciadoras
       case /^\/influenciadora\/\d+$/.test(location) ? location : "":
         return <InfluencerProfilePage />;
