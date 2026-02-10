@@ -36,6 +36,9 @@ import { metaGraphRouter } from "./routers/meta-graph-api";
 import { instagramRouter } from "./routers/instagram";
 import { influencerBlogRouter } from "./routers/influencer-blog";
 import { scheduledPostsRouter } from "./routers/scheduled-posts";
+import { metaInstagramPublisherRouter } from "./routers/meta-instagram-publisher";
+import { aiContentGeneratorRouter } from "./routers/ai-content-generator";
+import { publicationAutomationRouter } from "./routers/publication-automation";
 import { mediaUploadRouter } from "./routers/media-upload";
 import { instagramAccountsRouter } from "./routers/instagram-accounts";
 import { instagramPublisherRouter } from "./routers/instagram-publisher";
@@ -109,6 +112,9 @@ export const appRouter = router({
   instagramPublish: instagramRouter,
   influencerBlog: influencerBlogRouter,
   scheduledPosts: scheduledPostsRouter,
+  metaInstagramPublisher: metaInstagramPublisherRouter,
+  aiContentGenerator: aiContentGeneratorRouter,
+  publicationAutomation: publicationAutomationRouter,
   mediaUpload: mediaUploadRouter,
   instagramAccounts: instagramAccountsRouter,
   instagramPublisher: instagramPublisherRouter,

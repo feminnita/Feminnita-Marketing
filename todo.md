@@ -656,3 +656,57 @@
 - [ ] Implementar geração de conteúdo baseado no perfil da influenciadora
 - [ ] Adicionar opção de regenerar conteúdo
 - [ ] Criar testes para geração de conteúdo
+
+
+### 4. Automação de Publicação nos Horários Programados
+- [ ] Criar job scheduler (cron/node-schedule)
+- [ ] Implementar verificação de posts a publicar
+- [ ] Criar função para publicar em múltiplas plataformas
+- [ ] Adicionar retry automático em caso de falha
+- [ ] Implementar logging de publicações
+- [ ] Criar dashboard de histórico de publicações
+
+
+## Fase 29: Sistema Completo de Automação de Influenciadoras
+
+### 1. Dashboard de Agendamento de Posts
+- [x] Criar página SchedulePostsPage com interface completa
+- [x] Implementar seletor de influenciadora (Carol, Renata, Vanessa, Luiza)
+- [x] Criar editor de conteúdo com preview
+- [x] Implementar seletor de data e hora
+- [x] Adicionar seleção de plataformas (Instagram, TikTok, Blog)
+- [x] Criar botão de "Agendar Post"
+- [x] Implementar lista de posts agendados com status
+- [x] Criar router tRPC para agendamento (create, list, update, delete, publish)
+
+### 2. Integração com Meta API (Instagram + Reels)
+- [x] Implementar router meta-instagram-publisher.ts com procedures
+- [x] Criar função para publicar no Instagram via Meta API
+- [x] Implementar função para publicar Reels
+- [x] Adicionar tratamento de erros e retry
+- [ ] Criar testes Vitest para Meta API
+- [ ] Validar tokens de acesso das contas
+
+### 3. Sistema de IA para Geração de Conteúdo
+- [x] Criar router ai-content-generator.ts
+- [x] Implementar geração de captions com IA
+- [x] Implementar geração de hashtags com IA
+- [x] Implementar geração de posts completos
+- [x] Criar perfis de cada influenciadora para contexto de IA
+- [x] Criar testes Vitest para IA
+
+### 4. Automação de Publicação
+- [x] Criar router publication-automation.ts
+- [x] Implementar job scheduler para verificar posts pendentes
+- [x] Criar função para publicar automaticamente nos horários
+- [x] Implementar retry em caso de falha
+- [x] Criar histórico de publicações
+- [x] Criar testes Vitest para automação
+
+### 5. Próximos Passos
+- [ ] Integrar Meta API com credenciais reais
+- [ ] Testar publicação automática em horários programados
+- [ ] Criar integração com TikTok API
+- [ ] Criar integração com YouTube API
+- [ ] Implementar sincronização com blogs externos
+- [ ] Criar dashboard de analytics de postagens
