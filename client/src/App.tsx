@@ -31,6 +31,7 @@ import InfluencerBlogPage from "@/pages/InfluencerBlogPage";
 import InfluencerBlogsLinksPage from "@/pages/InfluencerBlogsLinksPage";
 import SchedulePostsPage from "@/pages/SchedulePostsPage";
 import ApprovalDashboardPage from "@/pages/ApprovalDashboardPage";
+import PerformanceReportPage from "@/pages/PerformanceReportPage";
 
 
 export default function App() {
@@ -106,6 +107,8 @@ export default function App() {
         return <SchedulePostsPage />;
       case "/dashboard-aprovacao":
         return <ApprovalDashboardPage />;
+      case "/relatorio-performance":
+        return <PerformanceReportPage />;
       // Rotas autenticadas de perfis individuais de influenciadoras
       case /^\/influenciadora\/\d+$/.test(location) ? location : "":
         return <InfluencerProfilePage />;

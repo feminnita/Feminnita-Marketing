@@ -41,6 +41,7 @@ import { aiContentGeneratorRouter } from "./routers/ai-content-generator";
 import { publicationAutomationRouter } from "./routers/publication-automation";
 import { autoContentGeneratorRouter } from "./routers/auto-content-generator";
 import { postApprovalRouter } from "./routers/post-approval";
+import { postApprovalEnhancedRouter } from "./routers/post-approval-enhanced";
 import { mediaUploadRouter } from "./routers/media-upload";
 import { instagramAccountsRouter } from "./routers/instagram-accounts";
 import { instagramPublisherRouter } from "./routers/instagram-publisher";
@@ -119,6 +120,7 @@ export const appRouter = router({
   publicationAutomation: publicationAutomationRouter,
   autoContentGenerator: autoContentGeneratorRouter,
   postApproval: postApprovalRouter,
+  postApprovalEnhanced: postApprovalEnhancedRouter,
   mediaUpload: mediaUploadRouter,
   instagramAccounts: instagramAccountsRouter,
   instagramPublisher: instagramPublisherRouter,

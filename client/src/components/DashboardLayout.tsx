@@ -43,6 +43,7 @@ const menuItems = [
   { icon: Newspaper, label: "Blogs Externos", path: "/blogs-influenciadoras" },
   { icon: Calendar, label: "Agendar Posts", path: "/agendar-posts" },
   { icon: CheckCircle, label: "Aprovar Posts", path: "/dashboard-aprovacao" },
+  { icon: TrendingUp, label: "Relatório de Performance", path: "/relatorio-performance" },
   { icon: TrendingUp, label: "Analytics", path: "/analytics" },
   { icon: TrendingUp, label: "Campanhas Meta Ads", path: "/meta-ads-campaigns" },
   { icon: Calendar, label: "Agendador de Postagens", path: "/agendador-postagens" },

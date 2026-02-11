@@ -826,3 +826,29 @@
 - [ ] Criar relatório de performance de aprovações por influenciadora
 - [ ] Implementar sistema de feedback para treinar IA
 - [ ] Adicionar agendamento automático de posts após aprovação
+
+
+## Fase 36: Melhorias no Dashboard de Aprovação - Fase 1 ✅ COMPLETO
+- [x] Conectar Dashboard com geração automática de posts
+  - [x] Criar procedure para buscar posts gerados mas não aprovados
+  - [x] Integrar listPendingPosts com ai-content-generator
+  - [x] Adicionar filtro por status (draft, gerado, pendente)
+  - [x] Implementar sincronização automática de novos posts
+  - [x] Criar testes para integração (8 testes passando)
+
+## Fase 37: Notificações em Tempo Real - Fase 2 ✅ COMPLETO
+- [x] Implementar notificações para novos posts pendentes
+  - [x] Criar toast notifications quando novo post chega
+  - [x] Adicionar badge de contagem de posts pendentes
+  - [x] Implementar som de notificação (opcional)
+  - [x] Criar notificação por email para o proprietário
+  - [x] Testar notificações em tempo real
+
+## Fase 38: Relatório de Performance - Fase 3 ✅ COMPLETO
+- [x] Criar página de relatório de performance por influenciadora
+  - [x] Dashboard com métricas: aprovação rate, posts rejeitados, temas populares
+  - [x] Gráficos de aprovação ao longo do tempo
+  - [x] Análise de motivos de rejeição
+  - [x] Sugestões de melhoria baseadas em feedback
+  - [x] Exportar relatório em PDF
+  - [x] Testes para relatório
