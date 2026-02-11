@@ -46,6 +46,7 @@ const menuItems = [
   { icon: TrendingUp, label: "Relatório de Performance", path: "/relatorio-performance" },
   { icon: Brain, label: "Treinar IA", path: "/ia-treinamento" },
   { icon: MessageCircle, label: "WhatsApp Setup", path: "/whatsapp-setup" },
+  { icon: MessageCircle, label: "WhatsApp Baileys", path: "/whatsapp-baileys" },
   { icon: TrendingUp, label: "Analytics", path: "/analytics" },
   { icon: TrendingUp, label: "Campanhas Meta Ads", path: "/meta-ads-campaigns" },
   { icon: Calendar, label: "Agendador de Postagens", path: "/agendador-postagens" },

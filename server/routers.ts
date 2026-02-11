@@ -44,6 +44,9 @@ import { postApprovalRouter } from "./routers/post-approval";
 import { postApprovalEnhancedRouter } from "./routers/post-approval-enhanced";
 import { aiCustomerSupportRouter } from "./routers/ai-customer-support";
 import { whatsappAIIntegrationRouter } from "./routers/whatsapp-ai-integration";
+import { whatsappFaqRouter } from "./routers/whatsapp-faq";
+
+import { whatsappBaileysRouter } from "./routers/whatsapp-baileys";
 import { mediaUploadRouter } from "./routers/media-upload";
 import { instagramAccountsRouter } from "./routers/instagram-accounts";
 import { instagramPublisherRouter } from "./routers/instagram-publisher";
@@ -125,6 +128,9 @@ export const appRouter = router({
   postApprovalEnhanced: postApprovalEnhancedRouter,
   aiCustomerSupport: aiCustomerSupportRouter,
   whatsappAIIntegration: whatsappAIIntegrationRouter,
+  whatsappFaq: whatsappFaqRouter,
+
+  whatsappBaileys: whatsappBaileysRouter,
   mediaUpload: mediaUploadRouter,
   instagramAccounts: instagramAccountsRouter,
   instagramPublisher: instagramPublisherRouter,

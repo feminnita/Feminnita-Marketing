@@ -902,3 +902,49 @@
   - [x] Procedures de webhook e envio
   - [x] Página de setup
 - [x] Testes e checkpoint
+
+
+## Fase 40: Melhorias no Sistema de IA de Atendimento - Em Progresso
+- [ ] Conectar com Meta API - Webhook do WhatsApp Business
+  - [ ] Criar endpoint /api/webhooks/whatsapp
+  - [ ] Implementar validação de token do webhook
+  - [ ] Processar mensagens recebidas
+  - [ ] Enviar respostas automáticas
+  - [ ] Registrar eventos no banco
+  - [ ] Testar webhook com Meta
+- [ ] Automação de Respostas Frequentes - Sistema de FAQs
+  - [ ] Criar tabela de categorias de FAQs
+  - [ ] Criar interface para gerenciar FAQs
+  - [ ] Implementar busca inteligente de FAQs
+  - [ ] Treinar IA com exemplos de FAQs
+  - [ ] Auto-responder perguntas frequentes
+  - [ ] Coletar feedback de respostas
+- [ ] Analytics de Atendimento - Dashboard com Métricas
+  - [ ] Criar tabela de métricas de atendimento
+  - [ ] Implementar cálculo de taxa de escalação
+  - [ ] Implementar cálculo de tempo médio de resposta
+  - [ ] Implementar cálculo de satisfação do cliente
+  - [ ] Criar dashboard com gráficos
+  - [ ] Exportar relatórios de performance
+
+
+## Fase 41: API WhatsApp Gratuita com Baileys ✅ COMPLETO
+- [x] Instalar e configurar Baileys
+  - [x] Instalar @whiskeysockets/baileys
+  - [x] Criar serviço de conexão com Baileys
+  - [x] Implementar autenticação com QR Code
+  - [x] Salvar sessão no banco de dados
+- [x] Criar router de WhatsApp com Baileys
+  - [x] Procedure para conectar WhatsApp
+  - [x] Procedure para enviar mensagens
+  - [x] Procedure para enviar mídia
+  - [x] Procedure para receber mensagens
+  - [x] Procedure para listar contatos
+  - [x] Procedure para status de conexão
+- [x] Criar Dashboard de Gerenciamento
+  - [x] Página de conexão com QR Code
+  - [x] Visualizar conversas ativas
+  - [x] Enviar mensagens manualmente
+  - [x] Histórico de mensagens
+  - [x] Status de conexão em tempo real
+- [x] Testes e checkpoint
