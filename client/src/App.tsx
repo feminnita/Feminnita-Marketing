@@ -32,6 +32,8 @@ import InfluencerBlogsLinksPage from "@/pages/InfluencerBlogsLinksPage";
 import SchedulePostsPage from "@/pages/SchedulePostsPage";
 import ApprovalDashboardPage from "@/pages/ApprovalDashboardPage";
 import PerformanceReportPage from "@/pages/PerformanceReportPage";
+import AITrainingDashboardPage from "@/pages/AITrainingDashboardPage";
+import WhatsAppAISetupPage from "@/pages/WhatsAppAISetupPage";
 
 
 export default function App() {
@@ -109,6 +111,10 @@ export default function App() {
         return <ApprovalDashboardPage />;
       case "/relatorio-performance":
         return <PerformanceReportPage />;
+      case "/ia-treinamento":
+        return <AITrainingDashboardPage />;
+      case "/whatsapp-setup":
+        return <WhatsAppAISetupPage />;
       // Rotas autenticadas de perfis individuais de influenciadoras
       case /^\/influenciadora\/\d+$/.test(location) ? location : "":
         return <InfluencerProfilePage />;

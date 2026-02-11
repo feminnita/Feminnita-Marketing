@@ -553,3 +553,195 @@ export const instagramAppCredentials = mysqlTable("instagram_app_credentials", {
 
 export type InstagramAppCredentials = typeof instagramAppCredentials.$inferSelect;
 export type InsertInstagramAppCredentials = typeof instagramAppCredentials.$inferInsert;
+
+
+// ============================================
+// TABELAS PARA IA DE ATENDIMENTO WHATSAPP
+// ============================================
+
+// Base de conhecimento com informações de produtos
+export const knowledgeBase = mysqlTable("knowledge_base", {
+  id: int("id").primaryKey().autoincrement(),
+  userId: int("userId").notNull().references(() => users.id),
+  
+  // Tipo de conteúdo
+  contentType: mysqlEnum("contentType", [
+    "product",
+    "faq",
+    "policy",
+    "promotion",
+    "general_info"
+  ]).notNull(),
+  
+  // Título e descrição
+  title: varchar("title", { length: 255 }).notNull(),
+  description: longtext("description"),
+  
+  // Link do produto/página
+  url: text("url"),
+  
+  // Categoria
+  category: varchar("category", { length: 100 }),
+  
+  // Tags para busca
+  tags: json("tags").$type<string[]>(),
+  
+  // Conteúdo embedido para busca semântica
+  embedding: longtext("embedding"), // JSON com vetor de embedding
+  
+  // Status
+  isActive: boolean("isActive").default(true).notNull(),
+  
+  createdAt: datetime("createdAt").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime("updatedAt").default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(() => new Date()),
+});
+
+export type KnowledgeBase = typeof knowledgeBase.$inferSelect;
+export type InsertKnowledgeBase = typeof knowledgeBase.$inferInsert;
+
+// Dados de treinamento para a IA
+export const aiTrainingData = mysqlTable("ai_training_data", {
+  id: int("id").primaryKey().autoincrement(),
+  userId: int("userId").notNull().references(() => users.id),
+  
+  // Exemplos de entrada e saída esperada
+  userMessage: longtext("userMessage").notNull(),
+  expectedResponse: longtext("expectedResponse").notNull(),
+  
+  // Categoria da pergunta
+  category: varchar("category", { length: 100 }),
+  
+  // Se deve encaminhar para humano
+  shouldEscalate: boolean("shouldEscalate").default(false).notNull(),
+  
+  // Motivo da escalação
+  escalationReason: varchar("escalationReason", { length: 255 }),
+  
+  // Produtos relacionados
+  relatedProductIds: json("relatedProductIds").$type<number[]>(),
+  
+  // Feedback sobre qualidade
+  quality: mysqlEnum("quality", ["excellent", "good", "poor"]),
+  
+  // Status
+  isActive: boolean("isActive").default(true).notNull(),
+  
+  createdAt: datetime("createdAt").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime("updatedAt").default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(() => new Date()),
+});
+
+export type AITrainingData = typeof aiTrainingData.$inferSelect;
+export type InsertAITrainingData = typeof aiTrainingData.$inferInsert;
+
+// Histórico de conversas
+export const conversationHistory = mysqlTable("conversation_history", {
+  id: int("id").primaryKey().autoincrement(),
+  userId: int("userId").notNull().references(() => users.id),
+  
+  // Identificador do cliente no WhatsApp
+  whatsappPhoneNumber: varchar("whatsappPhoneNumber", { length: 20 }).notNull(),
+  whatsappContactName: varchar("whatsappContactName", { length: 255 }),
+  
+  // Mensagem do usuário
+  userMessage: longtext("userMessage").notNull(),
+  
+  // Resposta da IA
+  aiResponse: longtext("aiResponse"),
+  
+  // Confiança da resposta (0-1)
+  confidence: decimal("confidence", { precision: 3, scale: 2 }),
+  
+  // Produtos mencionados
+  mentionedProducts: json("mentionedProducts").$type<{
+    id: number;
+    name: string;
+    url: string;
+  }[]>(),
+  
+  // Se foi escalado para humano
+  escalated: boolean("escalated").default(false).notNull(),
+  escalatedAt: datetime("escalatedAt"),
+  escalatedReason: varchar("escalatedReason", { length: 255 }),
+  
+  // Feedback do usuário
+  userFeedback: mysqlEnum("userFeedback", ["helpful", "not_helpful", "escalated"]),
+  
+  // Status da conversa
+  status: mysqlEnum("status", [
+    "open",
+    "closed",
+    "escalated",
+    "resolved"
+  ]).default("open").notNull(),
+  
+  createdAt: datetime("createdAt").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime("updatedAt").default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(() => new Date()),
+});
+
+export type ConversationHistory = typeof conversationHistory.$inferSelect;
+export type InsertConversationHistory = typeof conversationHistory.$inferInsert;
+
+// Fila de escalação para atendimento humano
+export const escalationQueue = mysqlTable("escalation_queue", {
+  id: int("id").primaryKey().autoincrement(),
+  userId: int("userId").notNull().references(() => users.id),
+  
+  // Referência à conversa
+  conversationHistoryId: int("conversationHistoryId").notNull().references(() => conversationHistory.id),
+  
+  // Cliente
+  whatsappPhoneNumber: varchar("whatsappPhoneNumber", { length: 20 }).notNull(),
+  whatsappContactName: varchar("whatsappContactName", { length: 255 }),
+  
+  // Motivo da escalação
+  reason: varchar("reason", { length: 255 }).notNull(),
+  priority: mysqlEnum("priority", ["low", "medium", "high", "urgent"]).default("medium").notNull(),
+  
+  // Atendente atribuído
+  assignedToAgent: varchar("assignedToAgent", { length: 255 }),
+  
+  // Status
+  status: mysqlEnum("status", [
+    "waiting",
+    "in_progress",
+    "resolved",
+    "closed"
+  ]).default("waiting").notNull(),
+  
+  // Timestamps
+  createdAt: datetime("createdAt").default(sql`CURRENT_TIMESTAMP`),
+  startedAt: datetime("startedAt"),
+  resolvedAt: datetime("resolvedAt"),
+  updatedAt: datetime("updatedAt").default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(() => new Date()),
+});
+
+export type EscalationQueue = typeof escalationQueue.$inferSelect;
+export type InsertEscalationQueue = typeof escalationQueue.$inferInsert;
+
+// Configurações de IA por usuário
+export const aiSettings = mysqlTable("ai_settings", {
+  id: int("id").primaryKey().autoincrement(),
+  userId: int("userId").notNull().references(() => users.id).unique(),
+  
+  // Comportamento da IA
+  systemPrompt: longtext("systemPrompt"),
+  temperature: decimal("temperature", { precision: 2, scale: 2 }).default("0.7"),
+  maxTokens: int("maxTokens").default(500),
+  
+  // Configurações de escalação
+  escalationKeywords: json("escalationKeywords").$type<string[]>(),
+  autoEscalateAfterMessages: int("autoEscalateAfterMessages").default(5),
+  
+  // Configurações de busca de produtos
+  searchResultsLimit: int("searchResultsLimit").default(3),
+  minConfidenceScore: decimal("minConfidenceScore", { precision: 3, scale: 2 }).default("0.6"),
+  
+  // Status
+  isEnabled: boolean("isEnabled").default(true).notNull(),
+  
+  createdAt: datetime("createdAt").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime("updatedAt").default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(() => new Date()),
+});
+
+export type AISettings = typeof aiSettings.$inferSelect;
+export type InsertAISettings = typeof aiSettings.$inferInsert;

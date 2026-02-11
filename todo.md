@@ -852,3 +852,53 @@
   - [x] Sugestões de melhoria baseadas em feedback
   - [x] Exportar relatório em PDF
   - [x] Testes para relatório
+
+
+## Fase 39: Sistema de IA de Atendimento no WhatsApp Business
+- [ ] Criar schema de banco de dados
+  - [ ] Tabela aiTrainingData (exemplos de treinamento)
+  - [ ] Tabela knowledgeBase (informações de produtos)
+  - [ ] Tabela conversationHistory (histórico de conversas)
+  - [ ] Tabela escalationQueue (fila de atendimento humano)
+- [ ] Implementar router de IA de atendimento
+  - [ ] Procedure para processar mensagem com LLM
+  - [ ] Buscar produtos na base de conhecimento
+  - [ ] Detectar quando encaminhar para humano
+  - [ ] Salvar histórico de conversas
+- [ ] Criar Dashboard de Treinamento
+  - [ ] Interface para adicionar exemplos de treinamento
+  - [ ] Visualizar histórico de conversas
+  - [ ] Testar respostas da IA
+  - [ ] Gerenciar base de conhecimento
+- [ ] Integrar com WhatsApp Business
+  - [ ] Configurar webhook para receber mensagens
+  - [ ] Enviar respostas via API
+  - [ ] Gerenciar conversas ativas
+- [ ] Testes e deploy
+  - [ ] Testes vitest para IA
+  - [ ] Testar integração WhatsApp
+  - [ ] Checkpoint final
+
+
+## Fase 39: Sistema de IA de Atendimento WhatsApp ✅ COMPLETO
+- [x] Criar schema de banco de dados para IA
+  - [x] Tabela knowledgeBase
+  - [x] Tabela aiTrainingData
+  - [x] Tabela conversationHistory
+  - [x] Tabela escalationQueue
+  - [x] Tabela aiSettings
+- [x] Implementar router tRPC com LLM
+  - [x] Procedure processMessage
+  - [x] Procedure addKnowledgeItem
+  - [x] Procedure addTrainingExample
+  - [x] Procedure listEscalations
+  - [x] Testes vitest (21 testes passando)
+- [x] Criar Dashboard de Treinamento
+  - [x] Página AITrainingDashboardPage
+  - [x] Abas: Treinamento, Base de Conhecimento, Configurações, Testar
+  - [x] Menu item no sidebar
+- [x] Integrar com WhatsApp Business
+  - [x] Router whatsappAIIntegrationRouter
+  - [x] Procedures de webhook e envio
+  - [x] Página de setup
+- [x] Testes e checkpoint
