@@ -8,6 +8,8 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { handleBlingWebhook } from "./bling-webhook";
+import { initializeBaileysOnStartup } from "./baileys-startup";
+import { setupBaileysDebugRoutes } from "./baileys-debug";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -34,10 +36,22 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  
+  // Inicializar Baileys no startup
+  try {
+    await initializeBaileysOnStartup();
+    console.log("[Baileys] Inicializado com sucesso no startup");
+  } catch (error) {
+    console.error("[Baileys] Erro ao inicializar:", error);
+  }
+  
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
   // Bling webhook for real-time inventory sync
   app.post("/api/bling/webhook", handleBlingWebhook);
+  
+  // Baileys debug routes
+  setupBaileysDebugRoutes(app);
   // tRPC API
   app.use(
     "/api/trpc",

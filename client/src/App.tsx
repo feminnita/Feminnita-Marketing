@@ -35,6 +35,7 @@ import PerformanceReportPage from "@/pages/PerformanceReportPage";
 import AITrainingDashboardPage from "@/pages/AITrainingDashboardPage";
 import WhatsAppAISetupPage from "@/pages/WhatsAppAISetupPage";
 import WhatsAppBaileysPage from "@/pages/WhatsAppBaileysPage";
+import WhatsAppBaileysSimplePage from "@/pages/WhatsAppBaileysSimplePage";
 
 
 export default function App() {
@@ -117,7 +118,7 @@ export default function App() {
       case "/whatsapp-setup":
         return <WhatsAppAISetupPage />;
       case "/whatsapp-baileys":
-        return <WhatsAppBaileysPage />;
+        return <WhatsAppBaileysSimplePage />;
       // Rotas autenticadas de perfis individuais de influenciadoras
       case /^\/influenciadora\/\d+$/.test(location) ? location : "":
         return <InfluencerProfilePage />;
