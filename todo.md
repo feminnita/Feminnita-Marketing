@@ -962,3 +962,38 @@
 - [x] Testar geração de QR Code (FUNCIONANDO - gerado em 1.5 segundos)
 - [x] Integrar com frontend (página WhatsAppBaileysSimplePage criada)
 - [x] Testar fluxo completo (QR Code exibindo corretamente)
+
+
+## Fase 43: Integração Baileys + IA de Atendimento - Em Progresso
+- [ ] Conectar Baileys com IA de Atendimento
+  - [ ] Criar webhook para receber mensagens do Baileys
+  - [ ] Integrar com router aiCustomerSupport
+  - [ ] Gerar respostas automáticas com IA
+  - [ ] Enviar respostas via Baileys
+  - [ ] Detectar escalação automática
+  - [ ] Salvar histórico de conversas
+  - [ ] Testes vitest
+- [ ] Implementar WebSocket para notificações em tempo real
+  - [ ] Criar servidor WebSocket
+  - [ ] Notificar quando nova mensagem chega
+  - [ ] Notificar quando IA responde
+  - [ ] Notificar quando precisa escalação
+  - [ ] Conectar frontend com WebSocket
+  - [ ] Exibir notificações em tempo real
+  - [ ] Testes vitest
+
+
+## Fase 43: Integração Baileys + IA com WebSocket ✅ COMPLETO
+- [x] Conectar Baileys com IA de Atendimento
+  - [x] Router baileys-ai-integration
+  - [x] Procedures para processar mensagens
+  - [x] Integração com LLM
+  - [x] Salvamento de histórico
+- [x] Implementar WebSocket para notificações em tempo real
+  - [x] Servidor WebSocket com Socket.IO
+  - [x] Eventos de nova mensagem
+  - [x] Eventos de resposta da IA
+  - [x] Eventos de escalação
+  - [x] Hook React useWhatsAppNotifications
+  - [x] Página de visualização de notificações
+  - [x] Menu item "Notificações" no sidebar

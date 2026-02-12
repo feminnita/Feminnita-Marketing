@@ -10,6 +10,7 @@ import { serveStatic, setupVite } from "./vite";
 import { handleBlingWebhook } from "./bling-webhook";
 import { initializeBaileysOnStartup } from "./baileys-startup";
 import { setupBaileysDebugRoutes } from "./baileys-debug";
+import { initializeWebSocket } from "./websocket-notifications";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -36,6 +37,14 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  
+  // Inicializar WebSocket para notificações em tempo real
+  try {
+    initializeWebSocket(server);
+    console.log("[WebSocket] Inicializado com sucesso");
+  } catch (error) {
+    console.error("[WebSocket] Erro ao inicializar:", error);
+  }
   
   // Inicializar Baileys no startup
   try {

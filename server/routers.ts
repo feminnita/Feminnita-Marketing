@@ -47,6 +47,7 @@ import { whatsappAIIntegrationRouter } from "./routers/whatsapp-ai-integration";
 import { whatsappFaqRouter } from "./routers/whatsapp-faq";
 
 import { whatsappBaileysRouter } from "./routers/whatsapp-baileys";
+import { baileysAIIntegrationRouter } from "./routers/baileys-ai-integration";
 import { mediaUploadRouter } from "./routers/media-upload";
 import { instagramAccountsRouter } from "./routers/instagram-accounts";
 import { instagramPublisherRouter } from "./routers/instagram-publisher";
@@ -131,6 +132,7 @@ export const appRouter = router({
   whatsappFaq: whatsappFaqRouter,
 
   whatsappBaileys: whatsappBaileysRouter,
+  baileysAIIntegration: baileysAIIntegrationRouter,
   mediaUpload: mediaUploadRouter,
   instagramAccounts: instagramAccountsRouter,
   instagramPublisher: instagramPublisherRouter,
