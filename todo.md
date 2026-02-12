@@ -948,3 +948,7 @@
   - [x] Histórico de mensagens
   - [x] Status de conexão em tempo real
 - [x] Testes e checkpoint
+
+
+## Bugs Reportados
+- [x] Botão "Conectar com código QR" não funciona na página WhatsApp Baileys - CORRIGIDO (faltava import de useState)
