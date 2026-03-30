@@ -50,9 +50,9 @@ export const canvaOAuthRouter = router({
     )
     .mutation(async ({ input }) => {
       try {
-        const clientId = "OC-AZwe5Lb9Mj6o";
-        const clientSecret = "CANVA_CLIENT_SECRET_REMOVED";
-        const redirectUri = "https://feminnita-5s7usnyn.manus.space/api/canva/callback";
+        const clientId = process.env.CANVA_CLIENT_ID || "";
+        const clientSecret = process.env.CANVA_CLIENT_SECRET || "";
+        const redirectUri = process.env.CANVA_REDIRECT_URI || "https://feminnita-5s7usnyn.manus.space/api/canva/callback";
 
         // Exchange authorization code for access token
         const tokenResponse = await fetch("https://api.canva.com/rest/v1/oauth/token", {
@@ -134,8 +134,8 @@ export const canvaOAuthRouter = router({
     }
 
     try {
-      const clientId = "OC-AZwe5Lb9Mj6o";
-      const clientSecret = "CANVA_CLIENT_SECRET_REMOVED";
+      const clientId = process.env.CANVA_CLIENT_ID || "";
+      const clientSecret = process.env.CANVA_CLIENT_SECRET || "";
 
       const tokenResponse = await fetch("https://api.canva.com/rest/v1/oauth/token", {
         method: "POST",

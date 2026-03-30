@@ -15,8 +15,8 @@ export default function IntegrationSetup() {
   const [blingConnected, setBlingConnected] = useState(false);
 
   // Canva
-  const [canvaClientId, setCanvaClientId] = useState("OC-AZwe5Lb9Mj6o");
-  const [canvaClientSecret, setCanvaClientSecret] = useState("CANVA_CLIENT_SECRET_REMOVED");
+  const [canvaClientId, setCanvaClientId] = useState("");
+  const [canvaClientSecret, setCanvaClientSecret] = useState("");
   const [canvaTesting, setCanvaTesting] = useState(false);
   const [canvaConnected, setCanvaConnected] = useState(false);
 

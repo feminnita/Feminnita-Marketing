@@ -8,8 +8,8 @@ import { toast } from "sonner";
 
 export default function Integrations() {
   const [blingApiKey, setBlingApiKey] = useState("");
-  const [canvaClientId, setCanvaClientId] = useState("OC-AZwe5Lb9Mj6o");
-  const [canvaClientSecret, setCanvaClientSecret] = useState("CANVA_CLIENT_SECRET_REMOVED");
+  const [canvaClientId, setCanvaClientId] = useState("");
+  const [canvaClientSecret, setCanvaClientSecret] = useState("");
   const [metaAppId, setMetaAppId] = useState("");
   const [metaAppSecret, setMetaAppSecret] = useState("");
 

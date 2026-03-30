@@ -18,7 +18,7 @@ export const canvaRealRouter = {
    */
   getAuthUrl: publicProcedure.query(async () => {
     try {
-      const clientId = "OC-AZwe5Lb9Mj6o";
+      const clientId = process.env.CANVA_CLIENT_ID || "";
       const redirectUri = process.env.CANVA_REDIRECT_URI || "https://your-domain.com/api/oauth/callback";
       
       const authUrl = `https://www.canva.com/api/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=design:read,design:write,asset:read,asset:write`;
@@ -41,8 +41,8 @@ export const canvaRealRouter = {
     }))
     .mutation(async ({ input }: any) => {
       try {
-        const clientId = "OC-AZwe5Lb9Mj6o";
-        const clientSecret = "CANVA_CLIENT_SECRET_REMOVED";
+        const clientId = process.env.CANVA_CLIENT_ID || "";
+        const clientSecret = process.env.CANVA_CLIENT_SECRET || "";
         const redirectUri = process.env.CANVA_REDIRECT_URI || "https://your-domain.com/api/oauth/callback";
 
         const response = await fetch(`${CANVA_API_BASE}/oauth/token`, {
