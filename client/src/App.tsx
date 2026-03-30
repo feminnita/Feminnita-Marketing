@@ -122,16 +122,17 @@ export default function App() {
         return <WhatsAppBaileysSimplePage />;
       case "/whatsapp-notifications":
         return <WhatsAppNotificationsPage />;
-      // Rotas autenticadas de perfis individuais de influenciadoras
-      case /^\/influenciadora\/\d+$/.test(location) ? location : "":
-        return <InfluencerProfilePage />;
-      
-      // Rotas de blogs das influenciadoras
-      case /^\/blog\/\d+$/.test(location) ? location : "":
-        return <InfluencerBlogPage />;
-
-      default:
+      default: {
+        // Rotas autenticadas de perfis individuais de influenciadoras
+        if (/^\/influenciadora\/\d+$/.test(location)) {
+          return <InfluencerProfilePage />;
+        }
+        // Rotas de blogs das influenciadoras
+        if (/^\/blog\/\d+$/.test(location)) {
+          return <InfluencerBlogPage />;
+        }
         return <Home />;
+      }
     }
   };
 

@@ -10,14 +10,44 @@ export const metaAdsCampaignsRouter = router({
    */
   listActiveCampaigns: protectedProcedure.query(async () => {
     try {
-      const db = await getDb();
-      if (!db) {
-        return { campaigns: [] };
+      const metaAccessToken = process.env.META_ACCESS_TOKEN;
+      const adAccountId = process.env.META_AD_ACCOUNT_ID;
+
+      if (!metaAccessToken || !adAccountId) {
+        return { campaigns: [], error: "META_ACCESS_TOKEN ou META_AD_ACCOUNT_ID não configurados" };
       }
-      return { campaigns: [] };
+
+      const response = await fetch(
+        `https://graph.facebook.com/v18.0/${adAccountId}/campaigns?fields=id,name,status,objective,created_time,updated_time,daily_budget,lifetime_budget,spend,impressions,clicks&access_token=${metaAccessToken}`
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || "Erro ao buscar campanhas");
+      }
+
+      const data = await response.json();
+      const campaigns = (data.data || [])
+        .filter((c: any) => c.status === "ACTIVE")
+        .map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          status: c.status,
+          objective: c.objective,
+          createdTime: c.created_time,
+          updatedTime: c.updated_time,
+          dailyBudget: c.daily_budget ? parseFloat(c.daily_budget) / 100 : 0,
+          lifetimeBudget: c.lifetime_budget ? parseFloat(c.lifetime_budget) / 100 : 0,
+          spend: c.spend ? parseFloat(c.spend) : 0,
+          impressions: parseInt(c.impressions || "0"),
+          clicks: parseInt(c.clicks || "0"),
+          ctr: c.impressions && c.clicks ? ((parseInt(c.clicks) / parseInt(c.impressions)) * 100).toFixed(2) : "0.00",
+        }));
+
+      return { campaigns, total: campaigns.length };
     } catch (error) {
-      console.error("[Meta Ads Campaigns] Erro:", error);
-      return { campaigns: [] };
+      console.error("[Meta Ads Campaigns] Erro em listActiveCampaigns:", error);
+      return { campaigns: [], error: (error as Error).message };
     }
   }),
 

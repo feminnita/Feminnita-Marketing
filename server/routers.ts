@@ -1,7 +1,7 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router } from "./_core/trpc";
+import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { blingOAuthRouter } from "./routers/bling-oauth";
 import { blingRouter } from "./routers/bling";
 import { blingSyncRouter } from "./routers/bling-sync";
@@ -141,7 +141,7 @@ export const appRouter = router({
   publicationQueue: publicationQueueRouter,
   metaAdsCampaigns: metaAdsCampaignsRouter,
   influencers: router({
-    list: publicProcedure.query(async () => {
+    list: protectedProcedure.query(async () => {
       try {
         const db = await getDb();
         if (!db) return [];

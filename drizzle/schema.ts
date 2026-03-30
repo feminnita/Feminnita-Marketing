@@ -745,3 +745,53 @@ export const aiSettings = mysqlTable("ai_settings", {
 
 export type AISettings = typeof aiSettings.$inferSelect;
 export type InsertAISettings = typeof aiSettings.$inferInsert;
+
+
+// ============ Campanhas de Marketing ============
+
+export const campaigns = mysqlTable("campaigns", {
+  id: int("id").primaryKey().autoincrement(),
+  userId: int("userId").notNull().references(() => users.id),
+  nome: varchar("nome", { length: 255 }).notNull(),
+  plataforma: mysqlEnum("plataforma", ["instagram", "facebook", "tiktok", "whatsapp", "email"]).notNull(),
+  orcamento: decimal("orcamento", { precision: 10, scale: 2 }).notNull(),
+  publicoAlvo: text("publico_alvo"),
+  descricao: text("descricao"),
+  dataInicio: varchar("data_inicio", { length: 20 }),
+  dataFim: varchar("data_fim", { length: 20 }),
+  status: mysqlEnum("status", ["rascunho", "planejamento", "ativa", "pausada", "finalizada"]).default("rascunho").notNull(),
+  impressoes: int("impressoes").default(0),
+  cliques: int("cliques").default(0),
+  conversoes: int("conversoes").default(0),
+  roi: decimal("roi", { precision: 6, scale: 2 }).default("0"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+
+export type Campaign = typeof campaigns.$inferSelect;
+export type InsertCampaign = typeof campaigns.$inferInsert;
+
+
+// ============ Automações ============
+
+export const automations = mysqlTable("automations", {
+  id: int("id").primaryKey().autoincrement(),
+  userId: int("userId").notNull().references(() => users.id),
+  nome: varchar("nome", { length: 255 }).notNull(),
+  tipo: mysqlEnum("tipo", ["post", "mensagem", "email", "whatsapp"]).notNull(),
+  plataforma: mysqlEnum("plataforma", ["instagram", "facebook", "tiktok", "whatsapp", "email"]).notNull(),
+  conteudo: text("conteudo"),
+  agendamento: varchar("agendamento", { length: 255 }),
+  status: mysqlEnum("status", ["ativo", "pausado", "agendado"]).default("agendado").notNull(),
+  proximaExecucao: timestamp("proxima_execucao"),
+  ultimaExecucao: timestamp("ultima_execucao"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+
+export type Automation = typeof automations.$inferSelect;
+export type InsertAutomation = typeof automations.$inferInsert;
+
+
+// Re-exportar tabelas Bling
+export * from "./schema-bling";

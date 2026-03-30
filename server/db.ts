@@ -223,7 +223,9 @@ export async function updateOAuthTokenLastUsed(
     .update(oauthTokens)
     .set({ lastUsed: new Date() })
     .where(
-      eq(oauthTokens.userId, userId) &&
-      eq(oauthTokens.plataforma, plataforma)
+      and(
+        eq(oauthTokens.userId, userId),
+        eq(oauthTokens.plataforma, plataforma)
+      )
     );
 }

@@ -1,5 +1,8 @@
 import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
+import { getDb } from "../db";
+import { campaigns } from "../../drizzle/schema";
+import { eq, and, desc } from "drizzle-orm";
 
 export const campaignsRouter = router({
   // Criar campanha
@@ -9,85 +12,115 @@ export const campaignsRouter = router({
         nome: z.string(),
         plataforma: z.enum(["instagram", "facebook", "tiktok", "whatsapp", "email"]),
         orcamento: z.number(),
-        publico_alvo: z.string(),
-        descricao: z.string(),
-        data_inicio: z.string(),
-        data_fim: z.string(),
+        publico_alvo: z.string().optional(),
+        descricao: z.string().optional(),
+        data_inicio: z.string().optional(),
+        data_fim: z.string().optional(),
       })
     )
-    .mutation(async ({ input }: any) => {
-      console.log("Criando campanha:", input);
-      return {
-        id: Math.random().toString(),
-        ...input,
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      await db.insert(campaigns).values({
+        userId: ctx.user.id,
+        nome: input.nome,
+        plataforma: input.plataforma,
+        orcamento: String(input.orcamento),
+        publicoAlvo: input.publico_alvo,
+        descricao: input.descricao,
+        dataInicio: input.data_inicio,
+        dataFim: input.data_fim,
         status: "rascunho",
-        criado_em: new Date(),
-        performance: {
-          impressoes: 0,
-          cliques: 0,
-          conversoes: 0,
-          roi: 0,
-        },
+      });
+
+      const inserted = await db
+        .select()
+        .from(campaigns)
+        .where(eq(campaigns.userId, ctx.user.id))
+        .orderBy(desc(campaigns.createdAt))
+        .limit(1);
+
+      const c = inserted[0];
+      return {
+        id: String(c.id),
+        nome: c.nome,
+        plataforma: c.plataforma,
+        orcamento: parseFloat(String(c.orcamento)),
+        publico_alvo: c.publicoAlvo,
+        descricao: c.descricao,
+        data_inicio: c.dataInicio,
+        data_fim: c.dataFim,
+        status: c.status,
+        criado_em: c.createdAt,
+        performance: { impressoes: 0, cliques: 0, conversoes: 0, roi: 0 },
       };
     }),
 
   // Listar campanhas
-  listar: protectedProcedure.query(async () => {
-    return [
-      {
-        id: "1",
-        nome: "Campanha Verão 2026",
-        plataforma: "instagram",
-        orcamento: 5000,
-        publico_alvo: "Mulheres 18-45 anos",
-        descricao: "Promoção de verão com até 50% de desconto",
-        data_inicio: "2026-01-15",
-        data_fim: "2026-02-28",
-        status: "ativa",
-        criado_em: new Date("2026-01-10"),
-        performance: {
-          impressoes: 125000,
-          cliques: 3500,
-          conversoes: 280,
-          roi: 2.8,
-        },
+  listar: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) return [];
+
+    const rows = await db
+      .select()
+      .from(campaigns)
+      .where(eq(campaigns.userId, ctx.user.id))
+      .orderBy(desc(campaigns.createdAt));
+
+    return rows.map((c) => ({
+      id: String(c.id),
+      nome: c.nome,
+      plataforma: c.plataforma,
+      orcamento: parseFloat(String(c.orcamento)),
+      publico_alvo: c.publicoAlvo,
+      descricao: c.descricao,
+      data_inicio: c.dataInicio,
+      data_fim: c.dataFim,
+      status: c.status,
+      criado_em: c.createdAt,
+      performance: {
+        impressoes: c.impressoes ?? 0,
+        cliques: c.cliques ?? 0,
+        conversoes: c.conversoes ?? 0,
+        roi: parseFloat(String(c.roi ?? "0")),
       },
-      {
-        id: "2",
-        nome: "Black Friday 2026",
-        plataforma: "facebook",
-        orcamento: 8000,
-        publico_alvo: "Todos os públicos",
-        descricao: "Preparação para Black Friday",
-        data_inicio: "2026-10-01",
-        data_fim: "2026-11-30",
-        status: "planejamento",
-        criado_em: new Date("2026-09-15"),
-        performance: {
-          impressoes: 0,
-          cliques: 0,
-          conversoes: 0,
-          roi: 0,
-        },
-      },
-    ];
+    }));
   }),
 
   // Obter campanha específica
   obter: protectedProcedure
     .input(z.object({ id: z.string() }))
-    .query(async ({ input }: any) => {
-      console.log("Obtendo campanha:", input.id);
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const rows = await db
+        .select()
+        .from(campaigns)
+        .where(and(eq(campaigns.id, parseInt(input.id)), eq(campaigns.userId, ctx.user.id)))
+        .limit(1);
+
+      if (!rows.length) throw new Error("Campanha não encontrada");
+      const c = rows[0];
+
       return {
-        id: input.id,
-        nome: "Campanha Exemplo",
-        plataforma: "instagram",
-        orcamento: 5000,
-        publico_alvo: "Mulheres 18-45 anos",
-        descricao: "Descrição da campanha",
-        data_inicio: "2026-01-15",
-        data_fim: "2026-02-28",
-        status: "ativa",
+        id: String(c.id),
+        nome: c.nome,
+        plataforma: c.plataforma,
+        orcamento: parseFloat(String(c.orcamento)),
+        publico_alvo: c.publicoAlvo,
+        descricao: c.descricao,
+        data_inicio: c.dataInicio,
+        data_fim: c.dataFim,
+        status: c.status,
+        criado_em: c.createdAt,
+        performance: {
+          impressoes: c.impressoes ?? 0,
+          cliques: c.cliques ?? 0,
+          conversoes: c.conversoes ?? 0,
+          roi: parseFloat(String(c.roi ?? "0")),
+        },
       };
     }),
 
@@ -105,40 +138,83 @@ export const campaignsRouter = router({
         status: z.enum(["rascunho", "planejamento", "ativa", "pausada", "finalizada"]).optional(),
       })
     )
-    .mutation(async ({ input }: any) => {
-      console.log("Atualizando campanha:", input);
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const updateData: Record<string, any> = {};
+      if (input.nome) updateData.nome = input.nome;
+      if (input.orcamento !== undefined) updateData.orcamento = String(input.orcamento);
+      if (input.publico_alvo !== undefined) updateData.publicoAlvo = input.publico_alvo;
+      if (input.descricao !== undefined) updateData.descricao = input.descricao;
+      if (input.data_inicio !== undefined) updateData.dataInicio = input.data_inicio;
+      if (input.data_fim !== undefined) updateData.dataFim = input.data_fim;
+      if (input.status) updateData.status = input.status;
+
+      await db
+        .update(campaigns)
+        .set(updateData)
+        .where(and(eq(campaigns.id, parseInt(input.id)), eq(campaigns.userId, ctx.user.id)));
+
       return { sucesso: true, mensagem: "Campanha atualizada com sucesso!" };
     }),
 
   // Deletar campanha
   deletar: protectedProcedure
     .input(z.object({ id: z.string() }))
-    .mutation(async ({ input }: any) => {
-      console.log("Deletando campanha:", input.id);
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      await db
+        .delete(campaigns)
+        .where(and(eq(campaigns.id, parseInt(input.id)), eq(campaigns.userId, ctx.user.id)));
+
       return { sucesso: true, mensagem: "Campanha deletada com sucesso!" };
     }),
 
-  // Publicar campanha
+  // Publicar campanha (muda status para ativa)
   publicar: protectedProcedure
     .input(z.object({ id: z.string() }))
-    .mutation(async ({ input }: any) => {
-      console.log("Publicando campanha:", input.id);
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      await db
+        .update(campaigns)
+        .set({ status: "ativa" })
+        .where(and(eq(campaigns.id, parseInt(input.id)), eq(campaigns.userId, ctx.user.id)));
+
       return { sucesso: true, mensagem: "Campanha publicada com sucesso!" };
     }),
 
   // Pausar campanha
   pausar: protectedProcedure
     .input(z.object({ id: z.string() }))
-    .mutation(async ({ input }: any) => {
-      console.log("Pausando campanha:", input.id);
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      await db
+        .update(campaigns)
+        .set({ status: "pausada" })
+        .where(and(eq(campaigns.id, parseInt(input.id)), eq(campaigns.userId, ctx.user.id)));
+
       return { sucesso: true, mensagem: "Campanha pausada com sucesso!" };
     }),
 
   // Retomar campanha
   retomar: protectedProcedure
     .input(z.object({ id: z.string() }))
-    .mutation(async ({ input }: any) => {
-      console.log("Retomando campanha:", input.id);
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      await db
+        .update(campaigns)
+        .set({ status: "ativa" })
+        .where(and(eq(campaigns.id, parseInt(input.id)), eq(campaigns.userId, ctx.user.id)));
+
       return { sucesso: true, mensagem: "Campanha retomada com sucesso!" };
     }),
 });

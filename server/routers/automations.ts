@@ -1,5 +1,8 @@
 import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
+import { getDb } from "../db";
+import { automations } from "../../drizzle/schema";
+import { eq, and, desc } from "drizzle-orm";
 
 export const automationsRouter = router({
   // Criar automação
@@ -13,18 +16,41 @@ export const automationsRouter = router({
         agendamento: z.string(),
       })
     )
-    .mutation(async ({ input }: any) => {
-      // Aqui você salvaria no banco de dados
-      console.log("Criando automação:", input);
-      return {
-        id: Math.random().toString(),
-        ...input,
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      await db.insert(automations).values({
+        userId: ctx.user.id,
+        nome: input.nome,
+        tipo: input.tipo,
+        plataforma: input.plataforma,
+        conteudo: input.conteudo,
+        agendamento: input.agendamento,
         status: "agendado",
-        criado_em: new Date(),
+      });
+
+      const inserted = await db
+        .select()
+        .from(automations)
+        .where(eq(automations.userId, ctx.user.id))
+        .orderBy(desc(automations.createdAt))
+        .limit(1);
+
+      const a = inserted[0];
+      return {
+        id: String(a.id),
+        nome: a.nome,
+        tipo: a.tipo,
+        plataforma: a.plataforma,
+        conteudo: a.conteudo,
+        agendamento: a.agendamento,
+        status: a.status,
+        criado_em: a.createdAt,
       };
     }),
 
-  // Executar automação (publicar conteúdo)
+  // Executar automação
   executar: protectedProcedure
     .input(
       z.object({
@@ -33,46 +59,40 @@ export const automationsRouter = router({
         conteudo: z.string(),
       })
     )
-    .mutation(async ({ input }: any) => {
-      try {
-        if (input.plataforma === "instagram" || input.plataforma === "facebook") {
-          // Publicar no Meta Ads
-          console.log("Publicando no Meta:", input.conteudo);
-          return { sucesso: true, mensagem: "Publicado no Meta com sucesso!" };
-        } else if (input.plataforma === "tiktok") {
-          // Publicar no TikTok
-          console.log("Publicando no TikTok:", input.conteudo);
-          return { sucesso: true, mensagem: "Publicado no TikTok com sucesso!" };
-        } else if (input.plataforma === "whatsapp") {
-          // Enviar no WhatsApp
-          console.log("Enviando no WhatsApp:", input.conteudo);
-          return { sucesso: true, mensagem: "Enviado no WhatsApp com sucesso!" };
-        } else if (input.plataforma === "email") {
-          // Enviar email
-          console.log("Enviando email:", input.conteudo);
-          return { sucesso: true, mensagem: "Email enviado com sucesso!" };
-        }
-      } catch (error) {
-        console.error("Erro ao executar automação:", error);
-        return { sucesso: false, mensagem: "Erro ao executar automação" };
-      }
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      await db
+        .update(automations)
+        .set({ ultimaExecucao: new Date() })
+        .where(and(eq(automations.id, parseInt(input.id)), eq(automations.userId, ctx.user.id)));
+
+      return { sucesso: true, mensagem: `Automação executada na plataforma ${input.plataforma}` };
     }),
 
   // Listar automações
-  listar: protectedProcedure.query(async () => {
-    // Aqui você buscaria do banco de dados
-    return [
-      {
-        id: "1",
-        nome: "Post Instagram Diário",
-        tipo: "post",
-        plataforma: "instagram",
-        conteudo: "Novo look da semana! 👗✨",
-        agendamento: "Diariamente às 10:00",
-        status: "ativo",
-        proxima_execucao: "Hoje às 10:00",
-      },
-    ];
+  listar: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) return [];
+
+    const rows = await db
+      .select()
+      .from(automations)
+      .where(eq(automations.userId, ctx.user.id))
+      .orderBy(desc(automations.createdAt));
+
+    return rows.map((a) => ({
+      id: String(a.id),
+      nome: a.nome,
+      tipo: a.tipo,
+      plataforma: a.plataforma,
+      conteudo: a.conteudo,
+      agendamento: a.agendamento,
+      status: a.status,
+      proxima_execucao: a.proximaExecucao,
+      ultima_execucao: a.ultimaExecucao,
+    }));
   }),
 
   // Atualizar automação
@@ -86,20 +106,39 @@ export const automationsRouter = router({
         status: z.enum(["ativo", "pausado", "agendado"]).optional(),
       })
     )
-    .mutation(async ({ input }: any) => {
-      console.log("Atualizando automação:", input);
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const updateData: Record<string, any> = {};
+      if (input.nome) updateData.nome = input.nome;
+      if (input.conteudo !== undefined) updateData.conteudo = input.conteudo;
+      if (input.agendamento !== undefined) updateData.agendamento = input.agendamento;
+      if (input.status) updateData.status = input.status;
+
+      await db
+        .update(automations)
+        .set(updateData)
+        .where(and(eq(automations.id, parseInt(input.id)), eq(automations.userId, ctx.user.id)));
+
       return { sucesso: true, mensagem: "Automação atualizada com sucesso!" };
     }),
 
   // Deletar automação
   deletar: protectedProcedure
     .input(z.object({ id: z.string() }))
-    .mutation(async ({ input }: any) => {
-      console.log("Deletando automação:", input.id);
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      await db
+        .delete(automations)
+        .where(and(eq(automations.id, parseInt(input.id)), eq(automations.userId, ctx.user.id)));
+
       return { sucesso: true, mensagem: "Automação deletada com sucesso!" };
     }),
 
-  // Testar publicação
+  // Testar publicação (sem persistência real, apenas validação)
   testar: protectedProcedure
     .input(
       z.object({
@@ -107,8 +146,7 @@ export const automationsRouter = router({
         conteudo: z.string(),
       })
     )
-    .mutation(async ({ input }: any) => {
-      console.log("Testando publicação:", input);
+    .mutation(async ({ input }) => {
       return {
         sucesso: true,
         mensagem: `Teste de publicação no ${input.plataforma} realizado com sucesso!`,

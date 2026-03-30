@@ -1,8 +1,8 @@
 import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
-import { influencerPosts, influencers } from "../../drizzle/schema";
-import { eq, desc } from "drizzle-orm";
+import { influencerPosts, influencers, aiTrainingData } from "../../drizzle/schema";
+import { eq, desc, and, inArray } from "drizzle-orm";
 
 export const postApprovalRouter = router({
   // Listar posts pendentes de aprovação
@@ -156,7 +156,7 @@ export const postApprovalRouter = router({
       }
     }),
 
-  // Salvar feedback para treinar IA
+  // Salvar feedback para treinar IA (persiste em ai_training_data)
   saveFeedback: protectedProcedure
     .input(z.object({
       postId: z.number(),
@@ -165,9 +165,25 @@ export const postApprovalRouter = router({
       rating: z.number().min(1).max(5),
       improvements: z.array(z.string()).optional(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
-        // Aqui você pode salvar feedback em uma tabela separada de feedback
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+
+        const qualityMap: Record<number, "excellent" | "good" | "poor"> = {
+          5: "excellent", 4: "excellent", 3: "good", 2: "poor", 1: "poor",
+        };
+
+        await db.insert(aiTrainingData).values({
+          userId: ctx.user.id,
+          userMessage: `Feedback sobre post ${input.postId}: ${input.feedback}`,
+          expectedResponse: input.improvements?.join("; ") || input.feedback,
+          category: "feedback_post",
+          shouldEscalate: false,
+          quality: qualityMap[input.rating] || "good",
+          isActive: true,
+        });
+
         return {
           success: true,
           postId: input.postId,
@@ -257,6 +273,18 @@ export const postApprovalRouter = router({
             ? Math.round((totalApproved / totalGenerated) * 100)
             : 0;
 
+        const allInfluencers = await db.select().from(influencers);
+        const byInfluencer: Record<string, { approved: number; rejected: number; pending: number }> = {};
+
+        for (const inf of allInfluencers) {
+          const infPosts = allPosts.filter((p: any) => p.influencerId === inf.id);
+          byInfluencer[inf.name.toLowerCase()] = {
+            approved: infPosts.filter((p: any) => p.status === "scheduled" || p.status === "published").length,
+            rejected: infPosts.filter((p: any) => p.status === "failed").length,
+            pending: infPosts.filter((p: any) => p.status === "draft").length,
+          };
+        }
+
         return {
           totalGenerated,
           totalApproved,
@@ -264,12 +292,7 @@ export const postApprovalRouter = router({
           totalPending,
           totalPublished,
           approvalRate,
-          byInfluencer: {
-            carol: { approved: 0, rejected: 0, pending: 0 },
-            renata: { approved: 0, rejected: 0, pending: 0 },
-            vanessa: { approved: 0, rejected: 0, pending: 0 },
-            luiza: { approved: 0, rejected: 0, pending: 0 },
-          },
+          byInfluencer,
         };
       } catch (error) {
         console.error("Erro ao obter estatísticas:", error);

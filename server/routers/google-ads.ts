@@ -1,4 +1,4 @@
-import { publicProcedure, router } from "../_core/trpc";
+import { protectedProcedure as publicProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import {
   obterCampanhasGoogleAds,
