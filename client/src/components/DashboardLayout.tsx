@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, Sparkles, TrendingUp, Github, Calendar, BookOpen, Newspaper, CheckCircle, Brain, MessageCircle, Bell } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, Sparkles, TrendingUp, Github, Calendar, BookOpen, Newspaper, CheckCircle, Brain, MessageCircle, Bell, Image, Briefcase } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -48,6 +48,8 @@ const menuItems = [
   { icon: MessageCircle, label: "WhatsApp Setup", path: "/whatsapp-setup" },
   { icon: MessageCircle, label: "WhatsApp Baileys", path: "/whatsapp-baileys" },
   { icon: Bell, label: "Notificações", path: "/whatsapp-notifications" },
+  { icon: Image, label: "Banco de Imagens", path: "/banco-imagens" },
+  { icon: Briefcase, label: "Equipe de Marketing", path: "/equipe-marketing" },
   { icon: TrendingUp, label: "Analytics", path: "/analytics" },
   { icon: TrendingUp, label: "Campanhas Meta Ads", path: "/meta-ads-campaigns" },
   { icon: Calendar, label: "Agendador de Postagens", path: "/agendador-postagens" },
