@@ -1,8 +1,8 @@
 import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { eq, inArray, or } from "drizzle-orm";
 import { getDb } from "../db";
-import { instagramAccounts, igPostPublications } from "../../drizzle/schema";
+import { instagramAccounts, igPostPublications, influencers } from "../../drizzle/schema";
 
 export const instagramAccountsRouter = router({
   /**
@@ -63,12 +63,29 @@ export const instagramAccountsRouter = router({
   /**
    * Listar todas as contas Instagram (Feminnita + Influencers)
    */
-  listAccounts: protectedProcedure.query(async () => {
+  listAccounts: protectedProcedure.query(async ({ ctx }: any) => {
     try {
       const db = await getDb();
       if (!db) return [];
 
-      const accounts = await db.select().from(instagramAccounts);
+      // Get influencer IDs belonging to this user
+      const userInfluencers = await db
+        .select({ id: influencers.id })
+        .from(influencers)
+        .where(eq(influencers.userId, ctx.user.id));
+
+      const influencerIds = userInfluencers.map((i: { id: number }) => i.id);
+
+      // Return user's influencer accounts + shared feminnita brand accounts
+      const accounts = influencerIds.length > 0
+        ? await db.select().from(instagramAccounts).where(
+            or(
+              inArray(instagramAccounts.influencerId, influencerIds),
+              eq(instagramAccounts.accountType, "feminnita")
+            )
+          )
+        : await db.select().from(instagramAccounts).where(eq(instagramAccounts.accountType, "feminnita"));
+
       return accounts;
     } catch (error) {
       console.error('[Instagram Accounts] Erro ao listar contas:', error);

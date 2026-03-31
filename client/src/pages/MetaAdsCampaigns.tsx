@@ -60,8 +60,8 @@ export default function MetaAdsCampaigns() {
     return () => clearInterval(interval);
   }, [autoRefresh, refetchCampaigns]);
 
-  const campaigns = campaignsData?.campaigns || [];
-  const realCampaigns = realCampaignsData?.campanhas || [];
+  const campaigns = campaignsData; // campaignsData already is the array
+  const totalFromMeta = realCampaignsData?.totalCampaigns ?? 0;
 
   return (
     <div className="space-y-6">
@@ -93,7 +93,7 @@ export default function MetaAdsCampaigns() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-slate-900">{campaigns.length}</div>
-            <p className="text-xs text-slate-500 mt-1">{realCampaigns.length} do Meta</p>
+            <p className="text-xs text-slate-500 mt-1">{totalFromMeta} do Meta</p>
           </CardContent>
         </Card>
 
@@ -103,7 +103,7 @@ export default function MetaAdsCampaigns() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-slate-900">
-              {campaigns.reduce((sum: number, c: any) => sum + (c.metrics?.impressions || 0), 0).toLocaleString()}
+              {campaigns.reduce((sum: number, c: any) => sum + (c.impressions || 0), 0).toLocaleString()}
             </div>
           </CardContent>
         </Card>
@@ -114,7 +114,7 @@ export default function MetaAdsCampaigns() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-slate-900">
-              {campaigns.reduce((sum: number, c: any) => sum + (c.metrics?.clicks || 0), 0).toLocaleString()}
+              {campaigns.reduce((sum: number, c: any) => sum + (c.clicks || 0), 0).toLocaleString()}
             </div>
           </CardContent>
         </Card>
@@ -125,7 +125,7 @@ export default function MetaAdsCampaigns() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {(campaigns.reduce((sum: number, c: any) => sum + (c.metrics?.roi || 0), 0) / Math.max(campaigns.length, 1)).toFixed(1)}x
+              {(campaigns.reduce((sum: number, c: any) => sum + (c.roi || 0), 0) / Math.max(campaigns.length, 1)).toFixed(1)}x
             </div>
           </CardContent>
         </Card>
@@ -140,7 +140,7 @@ export default function MetaAdsCampaigns() {
               <CardDescription>Clique em uma campanha para ver detalhes</CardDescription>
             </CardHeader>
             <CardContent>
-              {loadingCampaigns || loadingCampaigns ? (
+              {loadingCampaigns ? (
                 <div className="text-center py-8 text-slate-500">Carregando campanhas...</div>
               ) : campaigns.length === 0 ? (
                 <div className="text-center py-8 text-slate-500">Nenhuma campanha ativa</div>
@@ -159,13 +159,13 @@ export default function MetaAdsCampaigns() {
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <h3 className="font-semibold text-slate-900">{campaign.name}</h3>
-                          <p className="text-sm text-slate-600 mt-1">{campaign.description}</p>
+                          <p className="text-sm text-slate-600 mt-1">{campaign.objective ?? ""}</p>
                           <div className="flex gap-2 mt-2 flex-wrap">
                             <Badge variant="outline" className="text-xs">
-                              Orçamento: R$ {campaign.budget}
+                              Orçamento: R$ {(campaign.dailyBudget || campaign.lifetimeBudget || 0).toFixed(2)}
                             </Badge>
                             <Badge variant="outline" className="text-xs">
-                              Gasto: R$ {campaign.spent}
+                              Gasto: R$ {(campaign.spend || 0).toFixed(2)}
                             </Badge>
                             <Badge variant="outline" className="text-xs">
                               Status: {campaign.status}
@@ -173,7 +173,7 @@ export default function MetaAdsCampaigns() {
                           </div>
                         </div>
                         <div className="text-right ml-4">
-                          <div className="text-2xl font-bold text-slate-900">{campaign.metrics?.roi || 0}x</div>
+                          <div className="text-2xl font-bold text-slate-900">{campaign.roi || 0}x</div>
                           <div className="text-xs text-slate-600">ROI</div>
                         </div>
                       </div>

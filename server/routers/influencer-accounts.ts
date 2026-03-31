@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { router, protectedProcedure } from "../_core/trpc";
 import { getDb } from "../db";
-import { influencerAccounts } from "../../drizzle/schema";
-import { eq, sql } from "drizzle-orm";
+import { influencerAccounts, influencers } from "../../drizzle/schema";
+import { eq, sql, inArray } from "drizzle-orm";
 
 export const influencerAccountsRouter = router({
   saveAccounts: protectedProcedure
@@ -118,18 +118,20 @@ export const influencerAccountsRouter = router({
       }
     }),
 
-  getAllAccounts: protectedProcedure.query(async () => {
-    console.log("[getAllAccounts] Listando todas as contas");
-    
+  getAllAccounts: protectedProcedure.query(async ({ ctx }: any) => {
     const db = await getDb();
     if (!db) return [];
 
     try {
-      const result = await db.select().from(influencerAccounts);
-      
-      console.log("[getAllAccounts] Resultado:", result);
-      
-      return result;
+      const userInfluencers = await db
+        .select({ id: influencers.id })
+        .from(influencers)
+        .where(eq(influencers.userId, ctx.user.id));
+
+      const ids = userInfluencers.map((i: { id: number }) => i.id);
+      if (ids.length === 0) return [];
+
+      return await db.select().from(influencerAccounts).where(inArray(influencerAccounts.influencerId, ids));
     } catch (error) {
       console.error("[getAllAccounts] Erro:", error);
       return [];
