@@ -11,6 +11,7 @@ import { handleBlingWebhook } from "./bling-webhook";
 import { initializeBaileysOnStartup } from "./baileys-startup";
 import { setupBaileysDebugRoutes } from "./baileys-debug";
 import { initializeWebSocket } from "./websocket-notifications";
+import { startAllAgents } from "../agents/index";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -53,7 +54,15 @@ async function startServer() {
   } catch (error) {
     console.error("[Baileys] Erro ao inicializar:", error);
   }
-  
+
+  // Inicializar agentes de automação
+  try {
+    startAllAgents();
+    console.log("[Agents] Agentes de automação iniciados com sucesso");
+  } catch (error) {
+    console.error("[Agents] Erro ao iniciar agentes:", error);
+  }
+
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
   // Bling webhook for real-time inventory sync

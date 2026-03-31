@@ -41,35 +41,90 @@ export const canvaIntegrationRouter = {
           throw new Error("Credenciais do Canva não configuradas");
         }
 
-        const canvaSecret = credentials[0].clientSecret;
+        const accessToken = credentials[0].clientSecret;
 
-        // In production, you would call Canva API here
-        // const response = await fetch('https://api.canva.com/v1/designs', {
-        //   method: 'POST',
-        //   headers: {
-        //     'Authorization': `Bearer ${canvaSecret}`,
-        //     'Content-Type': 'application/json',
-        //   },
-        //   body: JSON.stringify({
-        //     title: input.title,
-        //     design_type: input.designType,
-        //     template_id: input.templateId,
-        //     content: input.content,
-        //   }),
-        // });
+        // Chamar Canva API para criar o design
+        try {
+          const canvaRes = await fetch("https://api.canva.com/rest/v1/designs", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              title: input.title,
+              design_type: { name: input.designType },
+              asset_id: input.templateId,
+            }),
+          });
 
-        return {
-          success: true,
-          message: "Design gerado com sucesso",
-          design: {
-            id: `design_${Date.now()}`,
-            title: input.title,
-            type: input.designType,
-            templateId: input.templateId,
-            status: "draft",
-            createdAt: new Date(),
-          },
-        };
+          if (canvaRes.status === 401 || canvaRes.status === 403) {
+            // Token inválido ou expirado - retornar pending_token ao invés de throw
+            console.warn("[Canva] Token inválido ou expirado, retornando pending_token");
+            return {
+              success: false,
+              message: "Token do Canva inválido ou expirado. Reconecte sua conta Canva.",
+              design: {
+                id: `design_${Date.now()}`,
+                title: input.title,
+                type: input.designType,
+                templateId: input.templateId,
+                status: "pending_token",
+                createdAt: new Date(),
+              },
+            };
+          }
+
+          if (!canvaRes.ok) {
+            const errText = await canvaRes.text();
+            console.error(`[Canva] Erro ao criar design: ${errText}`);
+            return {
+              success: false,
+              message: `Erro na API do Canva: ${canvaRes.status}`,
+              design: {
+                id: `design_${Date.now()}`,
+                title: input.title,
+                type: input.designType,
+                templateId: input.templateId,
+                status: "pending_token",
+                createdAt: new Date(),
+              },
+            };
+          }
+
+          const canvaData = await canvaRes.json() as {
+            design?: { id?: string; title?: string; urls?: { edit_url?: string; view_url?: string } };
+          };
+
+          return {
+            success: true,
+            message: "Design gerado com sucesso",
+            design: {
+              id: canvaData.design?.id ?? `design_${Date.now()}`,
+              title: canvaData.design?.title ?? input.title,
+              type: input.designType,
+              templateId: input.templateId,
+              status: "draft",
+              editUrl: canvaData.design?.urls?.edit_url ?? null,
+              viewUrl: canvaData.design?.urls?.view_url ?? null,
+              createdAt: new Date(),
+            },
+          };
+        } catch (apiError: any) {
+          console.warn("[Canva] Falha na chamada à API, retornando pending_token:", apiError);
+          return {
+            success: false,
+            message: "Não foi possível conectar à API do Canva.",
+            design: {
+              id: `design_${Date.now()}`,
+              title: input.title,
+              type: input.designType,
+              templateId: input.templateId,
+              status: "pending_token",
+              createdAt: new Date(),
+            },
+          };
+        }
       } catch (error: any) {
         throw new Error(`Erro ao gerar design: ${error.message}`);
       }
@@ -84,41 +139,99 @@ export const canvaIntegrationRouter = {
     }))
     .query(async ({ input }: any) => {
       try {
-        // Mock templates - in production, fetch from Canva API
-        const templates = [
+        const defaultTemplates = [
           {
             id: "template_1",
             name: "Instagram Post - Produto",
             type: "instagram_post",
-            thumbnail: "https://via.placeholder.com/1080x1080?text=Instagram+Post",
+            thumbnail: null as string | null,
             category: "ecommerce",
           },
           {
             id: "template_2",
             name: "Instagram Story - Promoção",
             type: "instagram_story",
-            thumbnail: "https://via.placeholder.com/1080x1920?text=Instagram+Story",
+            thumbnail: null as string | null,
             category: "promotion",
           },
           {
             id: "template_3",
             name: "TikTok Video - Trend",
             type: "tiktok",
-            thumbnail: "https://via.placeholder.com/1080x1920?text=TikTok",
+            thumbnail: null as string | null,
             category: "viral",
           },
           {
             id: "template_4",
             name: "YouTube Thumbnail",
             type: "youtube_thumbnail",
-            thumbnail: "https://via.placeholder.com/1280x720?text=YouTube",
+            thumbnail: null as string | null,
             category: "video",
+          },
+          {
+            id: "template_5",
+            name: "Blog Header - Artigo",
+            type: "blog_header",
+            thumbnail: null as string | null,
+            category: "content",
           },
         ];
 
+        const accessToken = process.env.CANVA_ACCESS_TOKEN;
+
+        if (accessToken) {
+          try {
+            const query = input.designType ?? "";
+            const canvaRes = await fetch(
+              `https://api.canva.com/rest/v1/designs?query=${encodeURIComponent(query)}&ownership=any&limit=20`,
+              {
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                },
+              }
+            );
+
+            if (canvaRes.ok) {
+              const canvaData = await canvaRes.json() as {
+                items?: Array<{
+                  id: string;
+                  title: string;
+                  thumbnail?: { url?: string };
+                  design_type?: { name?: string };
+                }>;
+              };
+
+              if (canvaData.items && canvaData.items.length > 0) {
+                const canvaTemplates = canvaData.items.map((item) => ({
+                  id: item.id,
+                  name: item.title,
+                  type: item.design_type?.name ?? (input.designType ?? "instagram_post"),
+                  thumbnail: item.thumbnail?.url ?? null,
+                  category: "canva",
+                }));
+
+                const filtered = input.designType
+                  ? canvaTemplates.filter(t => t.type === input.designType)
+                  : canvaTemplates;
+
+                return {
+                  success: true,
+                  templates: filtered,
+                  total: filtered.length,
+                };
+              }
+            } else {
+              console.warn(`[Canva] getTemplates API respondeu ${canvaRes.status}, usando templates padrão`);
+            }
+          } catch (apiError) {
+            console.warn("[Canva] Falha ao buscar templates da API, usando templates padrão:", apiError);
+          }
+        }
+
+        // Fallback: retornar templates default estruturados
         const filtered = input.designType
-          ? templates.filter(t => t.type === input.designType)
-          : templates;
+          ? defaultTemplates.filter(t => t.type === input.designType)
+          : defaultTemplates;
 
         return {
           success: true,

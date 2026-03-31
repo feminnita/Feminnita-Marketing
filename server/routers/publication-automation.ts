@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { scheduledPosts } from "../../drizzle/schema";
-import { eq, and, lte } from "drizzle-orm";
+import { scheduledPosts, postHistory, instagramAccounts, oauthTokens, contentItems, influencerPosts } from "../../drizzle/schema";
+import { eq, and, lte, desc } from "drizzle-orm";
 
 // Mapa de jobs em execução
 const activeJobs = new Map<string, NodeJS.Timeout>();
@@ -333,26 +333,245 @@ async function publishToPlatform(
 async function publishToInstagram(
   post: (typeof scheduledPosts.$inferSelect)
 ): Promise<boolean> {
-  // Implementar integração com Meta API
   console.log(`Publicando no Instagram: ${post.id}`);
-  // TODO: Chamar Meta API
-  return true;
+  try {
+    const db = await getDb();
+    if (!db) return false;
+
+    // 1. Buscar o contentItem via DB
+    const contentItemRows = await db
+      .select()
+      .from(contentItems)
+      .where(eq(contentItems.id, post.contentId))
+      .limit(1);
+
+    const contentItem = contentItemRows[0] ?? null;
+
+    // 2. Buscar conta Instagram ativa
+    const accountRows = await db
+      .select()
+      .from(instagramAccounts)
+      .where(eq(instagramAccounts.isActive, true))
+      .limit(1);
+
+    const account = accountRows[0] ?? null;
+
+    if (!account) {
+      console.warn(`[Instagram] Nenhuma conta Instagram ativa configurada para post ${post.id}`);
+      return false;
+    }
+
+    const instagramId = account.instagramId;
+    const accessToken = account.accessToken;
+    const caption = contentItem?.content ?? contentItem?.title ?? "";
+
+    // 3. Criar container de mídia
+    const mediaPayload: Record<string, string> = {
+      caption,
+      access_token: accessToken,
+    };
+
+    // Se disponível, incluir image_url
+    if (contentItem?.content) {
+      // Tentar extrair URL de imagem do conteúdo se houver
+    }
+
+    const createMediaRes = await fetch(
+      `https://graph.facebook.com/v18.0/${instagramId}/media`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(mediaPayload),
+      }
+    );
+
+    if (!createMediaRes.ok) {
+      const errText = await createMediaRes.text();
+      console.error(`[Instagram] Erro ao criar container de mídia: ${errText}`);
+      await db.insert(postHistory).values({
+        scheduledPostId: post.id,
+        contentId: post.contentId,
+        userId: post.userId,
+        platform: "instagram",
+        status: "failed",
+        errorMessage: errText,
+        postedAt: new Date(),
+      });
+      return false;
+    }
+
+    const createMediaData = await createMediaRes.json() as { id?: string };
+    const containerId = createMediaData.id;
+
+    if (!containerId) {
+      console.error(`[Instagram] Container ID não retornado para post ${post.id}`);
+      return false;
+    }
+
+    // 4. Publicar o container
+    const publishRes = await fetch(
+      `https://graph.facebook.com/v18.0/${instagramId}/media_publish`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          creation_id: containerId,
+          access_token: accessToken,
+        }),
+      }
+    );
+
+    if (!publishRes.ok) {
+      const errText = await publishRes.text();
+      console.error(`[Instagram] Erro ao publicar mídia: ${errText}`);
+      await db.insert(postHistory).values({
+        scheduledPostId: post.id,
+        contentId: post.contentId,
+        userId: post.userId,
+        platform: "instagram",
+        status: "failed",
+        errorMessage: errText,
+        postedAt: new Date(),
+      });
+      return false;
+    }
+
+    const publishData = await publishRes.json() as { id?: string };
+
+    // 5. Registrar resultado em postHistory
+    await db.insert(postHistory).values({
+      scheduledPostId: post.id,
+      contentId: post.contentId,
+      userId: post.userId,
+      platform: "instagram",
+      postId: publishData.id ?? null,
+      status: "success",
+      postedAt: new Date(),
+    });
+
+    console.log(`[Instagram] Post ${post.id} publicado com sucesso: ${publishData.id}`);
+    return true;
+  } catch (error) {
+    console.error(`[Instagram] Erro ao publicar post ${post.id}:`, error);
+    return false;
+  }
 }
 
 async function publishToTikTok(
   post: (typeof scheduledPosts.$inferSelect)
 ): Promise<boolean> {
-  // Implementar integração com TikTok API
   console.log(`Publicando no TikTok: ${post.id}`);
-  // TODO: Chamar TikTok API
-  return true;
+  try {
+    const db = await getDb();
+    if (!db) return false;
+
+    // 1. Buscar o contentItem via DB
+    const contentItemRows = await db
+      .select()
+      .from(contentItems)
+      .where(eq(contentItems.id, post.contentId))
+      .limit(1);
+
+    const contentItem = contentItemRows[0] ?? null;
+
+    // 2. Buscar oauthToken da plataforma 'tiktok' com isActive=true
+    const tokenRows = await db
+      .select()
+      .from(oauthTokens)
+      .where(
+        and(
+          eq(oauthTokens.plataforma, "tiktok"),
+          eq(oauthTokens.isActive, true)
+        )
+      )
+      .orderBy(desc(oauthTokens.updatedAt))
+      .limit(1);
+
+    const token = tokenRows[0] ?? null;
+
+    if (!token) {
+      console.warn(`[TikTok] Nenhum token TikTok ativo configurado para post ${post.id}`);
+      return false;
+    }
+
+    const caption = contentItem?.content ?? contentItem?.title ?? "";
+
+    // 3. Publicar vídeo no TikTok
+    const tiktokRes = await fetch(
+      "https://open.tiktokapis.com/v2/post/publish/video/init/",
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token.accessToken}`,
+          "Content-Type": "application/json; charset=UTF-8",
+        },
+        body: JSON.stringify({
+          post_info: {
+            title: caption.slice(0, 150),
+            privacy_level: "PUBLIC_TO_EVERYONE",
+          },
+          source_info: {
+            source: "PULL_FROM_URL",
+            video_url: "", // URL do vídeo deve ser preenchida quando disponível
+          },
+        }),
+      }
+    );
+
+    if (!tiktokRes.ok) {
+      const errText = await tiktokRes.text();
+      console.error(`[TikTok] Erro ao publicar: ${errText}`);
+      return false;
+    }
+
+    const tiktokData = await tiktokRes.json() as { data?: { publish_id?: string }; error?: { code?: string } };
+
+    if (tiktokData.error?.code && tiktokData.error.code !== "ok") {
+      console.error(`[TikTok] API retornou erro: ${JSON.stringify(tiktokData.error)}`);
+      return false;
+    }
+
+    console.log(`[TikTok] Post ${post.id} publicado com sucesso: ${tiktokData.data?.publish_id}`);
+    return true;
+  } catch (error) {
+    console.error(`[TikTok] Erro ao publicar post ${post.id}:`, error);
+    return false;
+  }
 }
 
 async function publishToBlog(
   post: (typeof scheduledPosts.$inferSelect)
 ): Promise<boolean> {
-  // Implementar publicação no blog
   console.log(`Publicando no Blog: ${post.id}`);
-  // TODO: Publicar no blog
-  return true;
+  try {
+    const db = await getDb();
+    if (!db) return false;
+
+    // 1. Buscar o contentItem via DB
+    const contentItemRows = await db
+      .select()
+      .from(contentItems)
+      .where(eq(contentItems.id, post.contentId))
+      .limit(1);
+
+    const contentItem = contentItemRows[0] ?? null;
+    const blogContent = contentItem?.content ?? contentItem?.title ?? "";
+
+    // 2. Inserir em influencerPosts com platform='blog', status='published'
+    // influencerId=1 representa a conta da Feminnita (proprietária do blog)
+    await db.insert(influencerPosts).values({
+      influencerId: 1,
+      platform: "blog",
+      caption: blogContent,
+      content: blogContent,
+      status: "published",
+      publishedAt: new Date(),
+    });
+
+    console.log(`[Blog] Post ${post.id} publicado com sucesso`);
+    return true;
+  } catch (error) {
+    console.error(`[Blog] Erro ao publicar post ${post.id}:`, error);
+    return false;
+  }
 }
