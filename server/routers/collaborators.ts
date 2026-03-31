@@ -5,13 +5,24 @@ import { getDb } from "../db";
 import { eq } from "drizzle-orm";
 import * as crypto from "crypto";
 
-// Hash de senha com bcrypt (usando crypto nativo para simplicidade)
+// Hash seguro com scrypt (Node.js nativo) + salt aleatório
 function hashPassword(password: string): string {
-  return crypto.createHash("sha256").update(password).digest("hex");
+  const salt = crypto.randomBytes(16).toString("hex");
+  const hash = crypto.scryptSync(password, salt, 64).toString("hex");
+  return `${salt}:${hash}`;
 }
 
-function verifyPassword(password: string, hash: string): boolean {
-  return hashPassword(password) === hash;
+function verifyPassword(password: string, stored: string): boolean {
+  // Suporte a formato legado (SHA-256 sem salt) e novo formato (scrypt com salt)
+  if (stored.includes(":")) {
+    const [salt, hash] = stored.split(":");
+    if (!salt || !hash) return false;
+    const derived = crypto.scryptSync(password, salt, 64);
+    return crypto.timingSafeEqual(Buffer.from(hash, "hex"), derived);
+  }
+  // Legado SHA-256
+  const legacy = crypto.createHash("sha256").update(password).digest("hex");
+  return legacy === stored;
 }
 
 export const collaboratorsRouter = router({
@@ -96,9 +107,7 @@ export const collaboratorsRouter = router({
       }
 
       // Atualizar lastLogin
-      const db2 = await getDb();
-      if (!db2) throw new Error("Database not available");
-      await db2
+      await db
         .update(collaborators)
         .set({ lastLogin: new Date() })
         .where(eq(collaborators.id, collaborator.id));
