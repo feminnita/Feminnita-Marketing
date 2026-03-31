@@ -60,9 +60,8 @@ export async function processWhatsAppMessage(
       ],
     });
 
-    const response = typeof result.choices[0].message.content === "string"
-      ? result.choices[0].message.content
-      : "";
+    const rawContent = result.choices?.[0]?.message?.content ?? "";
+    const response = typeof rawContent === "string" ? rawContent : "";
 
     // Salvar conversa no histórico
     await db.insert(conversationHistory).values({
@@ -71,7 +70,7 @@ export async function processWhatsAppMessage(
       whatsappContactName: contactName,
       userMessage: message,
       aiResponse: response,
-      confidence: "0.85",
+      confidence: 0.85,
       escalated: false,
       status: "open",
     });

@@ -1,76 +1,96 @@
 import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
-
-/**
- * Router para gerenciar postagens (upload, edição, agendamento, publicação)
- */
+import { getDb } from "../db";
+import { influencerPosts, influencers, publicationQueueJobs } from "../../drizzle/schema";
+import { eq, and, desc } from "drizzle-orm";
 
 export const postsRouter = router({
-  /**
-   * Criar nova postagem
-   */
   create: protectedProcedure
     .input(
       z.object({
-        influencerId: z.number().optional(),
-        title: z.string().min(1, "Título obrigatório"),
-        content: z.string().min(1, "Conteúdo obrigatório"),
-        description: z.string().optional(),
+        influencerId: z.number(),
+        title: z.string().min(1),
+        content: z.string().min(1),
+        caption: z.string().optional(),
         platforms: z.array(z.string()).optional(),
-        hashtags: z.string().optional(),
+        hashtags: z.array(z.string()).optional(),
+        mediaUrls: z.array(z.string()).optional(),
+        scheduledAt: z.string().datetime().optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
-      try {
-        // Simular criação de postagem
-        return {
-          success: true,
-          message: "Postagem criada com sucesso!",
-          postId: Math.floor(Math.random() * 10000),
-          data: {
-            ...input,
-            status: "draft",
-            createdAt: new Date(),
-          },
-        };
-      } catch (error) {
-        console.error("[posts.create]", error);
-        throw new Error("Erro ao criar postagem");
-      }
+    .mutation(async ({ input, ctx }: any) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // Ensure this influencer belongs to the user
+      const [influencer] = await db
+        .select()
+        .from(influencers)
+        .where(and(eq(influencers.id, input.influencerId), eq(influencers.userId, ctx.user.id)))
+        .limit(1);
+      if (!influencer) throw new Error("Influenciadora não encontrada");
+
+      await db.insert(influencerPosts).values({
+        influencerId: input.influencerId,
+        platform: input.platforms?.[0] ?? "instagram",
+        content: input.content,
+        caption: input.caption ?? input.content,
+        hashtags: input.hashtags ?? [],
+        mediaUrls: input.mediaUrls ?? [],
+        status: "draft",
+        aiGenerated: false,
+        scheduledAt: input.scheduledAt ? new Date(input.scheduledAt) : null,
+      });
+
+      const [created] = await db
+        .select()
+        .from(influencerPosts)
+        .where(eq(influencerPosts.influencerId, input.influencerId))
+        .orderBy(desc(influencerPosts.createdAt))
+        .limit(1);
+
+      return { success: true, post: created };
     }),
 
-  /**
-   * Agendar postagem para publicação
-   */
   schedule: protectedProcedure
     .input(
       z.object({
         postId: z.number(),
-        scheduledAt: z.date(),
+        scheduledAt: z.string().datetime(),
         platforms: z.array(z.enum(["instagram", "facebook", "tiktok", "whatsapp"])),
       })
     )
-    .mutation(async ({ input }) => {
-      try {
-        return {
-          success: true,
-          message: `Postagem agendada para ${input.scheduledAt.toLocaleString("pt-BR")}`,
-          data: {
-            postId: input.postId,
-            scheduledAt: input.scheduledAt,
-            platforms: input.platforms,
-            status: "scheduled",
-          },
-        };
-      } catch (error) {
-        console.error("[posts.schedule]", error);
-        throw new Error("Erro ao agendar postagem");
+    .mutation(async ({ input, ctx }: any) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const scheduledDate = new Date(input.scheduledAt);
+
+      await db
+        .update(influencerPosts)
+        .set({ status: "scheduled", scheduledAt: scheduledDate })
+        .where(eq(influencerPosts.id, input.postId));
+
+      // Create queue job for each platform
+      for (const platform of input.platforms) {
+        // Find matching instagram account for the influencer
+        await db.insert(publicationQueueJobs).values({
+          postId: input.postId,
+          accountId: 1, // resolved at publication time by worker
+          scheduledFor: scheduledDate,
+          status: "waiting",
+          retryCount: 0,
+          maxRetries: 3,
+          nextRetryTime: scheduledDate,
+        });
       }
+
+      return {
+        success: true,
+        message: `Post agendado para ${scheduledDate.toLocaleString("pt-BR")}`,
+      };
     }),
 
-  /**
-   * Publicar postagem imediatamente
-   */
   publish: protectedProcedure
     .input(
       z.object({
@@ -78,102 +98,115 @@ export const postsRouter = router({
         platforms: z.array(z.enum(["instagram", "facebook", "tiktok", "whatsapp"])),
       })
     )
-    .mutation(async ({ input }) => {
-      try {
-        const results = {
-          instagram: { success: true, postId: `ig_${input.postId}` },
-          facebook: { success: true, postId: `fb_${input.postId}` },
-          tiktok: { success: true, postId: `tt_${input.postId}` },
-          whatsapp: { success: true, postId: `wa_${input.postId}` },
-        };
+    .mutation(async ({ input }: any) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
 
-        return {
-          success: true,
-          message: "Postagem publicada em todas as plataformas!",
-          results,
-        };
-      } catch (error) {
-        console.error("[posts.publish]", error);
-        throw new Error("Erro ao publicar postagem");
-      }
+      const now = new Date();
+
+      await db
+        .update(influencerPosts)
+        .set({ status: "scheduled", scheduledAt: now })
+        .where(eq(influencerPosts.id, input.postId));
+
+      // Queue for immediate processing
+      await db.insert(publicationQueueJobs).values({
+        postId: input.postId,
+        accountId: 1,
+        scheduledFor: now,
+        status: "ready",
+        retryCount: 0,
+        maxRetries: 3,
+        nextRetryTime: now,
+      });
+
+      return {
+        success: true,
+        message: "Post enviado para publicação",
+        postId: input.postId,
+      };
     }),
 
-  /**
-   * Obter detalhes de uma postagem
-   */
   getById: protectedProcedure
     .input(z.object({ postId: z.number() }))
-    .query(async ({ input }) => {
-      try {
-        return {
-          id: input.postId,
-          title: "Exemplo de Postagem",
-          content: "Conteúdo da postagem",
-          status: "draft",
-          platforms: ["instagram", "facebook"],
-          createdAt: new Date(),
-        };
-      } catch (error) {
-        console.error("[posts.getById]", error);
-        throw new Error("Erro ao obter postagem");
-      }
+    .query(async ({ input }: any) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const [post] = await db
+        .select()
+        .from(influencerPosts)
+        .where(eq(influencerPosts.id, input.postId))
+        .limit(1);
+
+      if (!post) throw new Error("Post não encontrado");
+      return post;
     }),
 
-  /**
-   * Listar postagens do usuário
-   */
   list: protectedProcedure
     .input(
       z.object({
         status: z.enum(["draft", "scheduled", "published", "failed"]).optional(),
         influencerId: z.number().optional(),
-        limit: z.number().default(10),
+        limit: z.number().default(20),
         offset: z.number().default(0),
       })
     )
-    .query(async ({ input }) => {
-      try {
-        return {
-          posts: [
-            {
-              id: 1,
-              title: "Postagem 1",
-              status: input.status || "draft",
-              platforms: ["instagram"],
-              createdAt: new Date(),
-            },
-          ],
-          total: 1,
-          limit: input.limit,
-          offset: input.offset,
-        };
-      } catch (error) {
-        console.error("[posts.list]", error);
-        throw new Error("Erro ao listar postagens");
-      }
+    .query(async ({ input, ctx }: any) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // Get influencer IDs that belong to this user
+      const userInfluencers = await db
+        .select({ id: influencers.id })
+        .from(influencers)
+        .where(eq(influencers.userId, ctx.user.id));
+
+      if (userInfluencers.length === 0) return { posts: [], total: 0 };
+
+      const influencerIds = userInfluencers.map((i: { id: number }) => i.id);
+      const targetId = input.influencerId && influencerIds.includes(input.influencerId)
+        ? input.influencerId
+        : null;
+
+      const conditions = targetId
+        ? [eq(influencerPosts.influencerId, targetId), ...(input.status ? [eq(influencerPosts.status, input.status)] : [])]
+        : input.status
+          ? [eq(influencerPosts.status, input.status)]
+          : [];
+
+      const query = db
+        .select()
+        .from(influencerPosts)
+        .orderBy(desc(influencerPosts.createdAt))
+        .limit(input.limit)
+        .offset(input.offset);
+
+      const posts = conditions.length > 0
+        ? await query.where(conditions.length === 1 ? conditions[0] : and(...conditions))
+        : await query;
+
+      // Filter by user's influencers
+      const filtered = targetId
+        ? posts
+        : posts.filter((p: any) => influencerIds.includes(p.influencerId));
+
+      return { posts: filtered, total: filtered.length };
     }),
 
-  /**
-   * Deletar postagem
-   */
   delete: protectedProcedure
     .input(z.object({ postId: z.number() }))
-    .mutation(async ({ input }) => {
-      try {
-        return {
-          success: true,
-          message: "Postagem deletada com sucesso!",
-          postId: input.postId,
-        };
-      } catch (error) {
-        console.error("[posts.delete]", error);
-        throw new Error("Erro ao deletar postagem");
-      }
+    .mutation(async ({ input }: any) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      await db
+        .delete(influencerPosts)
+        .where(eq(influencerPosts.id, input.postId));
+
+      return { success: true };
     }),
 
-  /**
-   * Upload de mídia (vídeo/imagem)
-   */
   uploadMedia: protectedProcedure
     .input(
       z.object({
@@ -181,49 +214,46 @@ export const postsRouter = router({
         mediaType: z.enum(["image", "video"]),
         fileName: z.string(),
         fileSize: z.number(),
+        mediaUrl: z.string().url(),
       })
     )
-    .mutation(async ({ input }) => {
-      try {
-        // Simular upload para S3
-        const s3Key = `posts/${input.postId}/${input.fileName}`;
-        const mediaUrl = `https://cdn.example.com/${s3Key}`;
+    .mutation(async ({ input }: any) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
 
-        return {
-          success: true,
-          message: "Mídia enviada com sucesso!",
-          mediaUrl,
-          s3Key,
-          mediaType: input.mediaType,
-        };
-      } catch (error) {
-        console.error("[posts.uploadMedia]", error);
-        throw new Error("Erro ao fazer upload de mídia");
-      }
+      const [post] = await db
+        .select()
+        .from(influencerPosts)
+        .where(eq(influencerPosts.id, input.postId))
+        .limit(1);
+
+      if (!post) throw new Error("Post não encontrado");
+
+      const existing: string[] = Array.isArray(post.mediaUrls) ? post.mediaUrls : [];
+      await db
+        .update(influencerPosts)
+        .set({ mediaUrls: [...existing, input.mediaUrl] })
+        .where(eq(influencerPosts.id, input.postId));
+
+      return { success: true, mediaUrl: input.mediaUrl };
     }),
 
-  /**
-   * Obter histórico de publicações
-   */
   getHistory: protectedProcedure
-    .input(z.object({ postId: z.number() }))
-    .query(async ({ input }) => {
-      try {
-        return {
-          postId: input.postId,
-          history: [
-            {
-              id: 1,
-              platform: "instagram",
-              status: "success",
-              publishedAt: new Date(),
-              engagement: 150,
-            },
-          ],
-        };
-      } catch (error) {
-        console.error("[posts.getHistory]", error);
-        throw new Error("Erro ao obter histórico");
-      }
+    .input(z.object({ influencerId: z.number() }))
+    .query(async ({ input }: any) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const posts = await db
+        .select()
+        .from(influencerPosts)
+        .where(and(
+          eq(influencerPosts.influencerId, input.influencerId),
+          eq(influencerPosts.status, "published")
+        ))
+        .orderBy(desc(influencerPosts.publishedAt))
+        .limit(50);
+
+      return { influencerId: input.influencerId, posts };
     }),
 });

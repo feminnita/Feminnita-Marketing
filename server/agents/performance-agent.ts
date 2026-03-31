@@ -62,7 +62,7 @@ async function collectInfluencerMetrics(influencer: {
     totalFollowers,
     followersGrowth: 0,
     totalEngagement,
-    engagementRate: String(engagementRate),
+    engagementRate: engagementRate,
     totalReach: 0,
     totalImpressions: 0,
   });

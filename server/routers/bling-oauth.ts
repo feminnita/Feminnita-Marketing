@@ -18,7 +18,7 @@ export const blingOAuthRouter = router({
   gerarUrlAutorizacao: protectedProcedure
     .query(async () => {
       try {
-        const state = Math.random().toString(36).substring(7);
+        const state = (await import("crypto")).randomBytes(16).toString("hex");
         const urlAutorizacao = gerarUrlAutorizacao(state);
 
         return {

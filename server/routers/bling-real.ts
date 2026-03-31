@@ -18,9 +18,10 @@ export const blingRealRouter = {
    */
   getAuthUrl: publicProcedure.query(async () => {
     try {
-      const clientId = "f5db027120133a8e6b148ef6b08238393f5a5b65";
+      const clientId = process.env.BLING_CLIENT_ID;
+      if (!clientId) throw new Error("BLING_CLIENT_ID não configurado");
       const redirectUri = process.env.BLING_REDIRECT_URI || "https://your-domain.com/api/oauth/callback";
-      
+
       const authUrl = `https://bling.com.br/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=produtos,pedidos,estoque,contatos`;
 
       return {
@@ -41,8 +42,9 @@ export const blingRealRouter = {
     }))
     .mutation(async ({ input }: any) => {
       try {
-        const clientId = "f5db027120133a8e6b148ef6b08238393f5a5b65";
-        const clientSecret = "705258b9887b72da27cc629278ce420ddc4b3ba94954dccf351321f4a9b2";
+        const clientId = process.env.BLING_CLIENT_ID;
+        const clientSecret = process.env.BLING_CLIENT_SECRET;
+        if (!clientId || !clientSecret) throw new Error("BLING_CLIENT_ID / BLING_CLIENT_SECRET não configurados");
         const redirectUri = process.env.BLING_REDIRECT_URI || "https://your-domain.com/api/oauth/callback";
 
         const response = await fetch(`${BLING_API_BASE}/oauth/token`, {
