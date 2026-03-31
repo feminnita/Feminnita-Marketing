@@ -1,6 +1,9 @@
 import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import axios, { AxiosError } from "axios";
+import { getDb } from "../db";
+import { instagramAccounts } from "../../drizzle/schema";
+import { eq, and } from "drizzle-orm";
 
 const INSTAGRAM_GRAPH_API_BASE = "https://graph.instagram.com/v19.0";
 
@@ -348,15 +351,36 @@ export const instagramApiRouter = router({
   /**
    * Obter credenciais salvas do Instagram
    */
-  getCredentials: protectedProcedure.query(async ({ ctx }) => {
+  getCredentials: protectedProcedure.query(async ({ ctx }: any) => {
     try {
-      // TODO: Implementar busca no banco de dados
-      // Por enquanto, retorna estrutura vazia
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // Buscar conta Instagram ativa do usuário
+      const accounts = await db
+        .select()
+        .from(instagramAccounts)
+        .where(and(eq(instagramAccounts.userId, ctx.user.id), eq(instagramAccounts.isActive, true)))
+        .limit(1);
+
+      if (accounts.length > 0) {
+        return {
+          success: true,
+          data: {
+            businessAccountId: accounts[0].instagramId,
+            accessToken: accounts[0].accessToken,
+            username: accounts[0].username,
+          },
+        };
+      }
+
+      // Fallback para env vars se nenhuma conta no DB
       return {
         success: true,
         data: {
           businessAccountId: process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID || "",
           accessToken: process.env.META_ACCESS_TOKEN || "",
+          username: "",
         },
       };
     } catch (error) {

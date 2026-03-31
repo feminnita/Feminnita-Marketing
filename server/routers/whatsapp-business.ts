@@ -2,6 +2,9 @@ import { router, protectedProcedure, publicProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { notifyOwner } from "../_core/notification";
 import { TRPCError } from "@trpc/server";
+import { getDb } from "../db";
+import { conversationHistory } from "../../drizzle/schema";
+import { eq, and, desc } from "drizzle-orm";
 
 /**
  * WhatsApp Business Router
@@ -273,10 +276,10 @@ Feminnita Pijamas
   /**
    * Get WhatsApp configuration
    */
-  getConfiguration: publicProcedure.query(async () => {
+  getConfiguration: protectedProcedure.query(async () => {
     return {
-      mainNumber: "(47) 99623-3764",
-      businessName: "Feminnita Pijamas",
+      mainNumber: process.env.WHATSAPP_MAIN_NUMBER || "",
+      businessName: process.env.WHATSAPP_BUSINESS_NAME || "Feminnita Pijamas",
       features: [
         "Confirmação de Pagamento",
         "Rastreio de Pedidos",
@@ -304,13 +307,25 @@ Feminnita Pijamas
         limit: z.number().default(50),
       })
     )
-    .query(async ({ input }) => {
-      // This would fetch from database in production
+    .query(async ({ input, ctx }: any) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const messages = await db
+        .select()
+        .from(conversationHistory)
+        .where(and(
+          eq(conversationHistory.userId, ctx.user.id),
+          eq(conversationHistory.whatsappPhoneNumber, input.phoneNumber)
+        ))
+        .orderBy(desc(conversationHistory.createdAt))
+        .limit(input.limit);
+
       return {
         phoneNumber: input.phoneNumber,
-        messages: [],
-        totalMessages: 0,
-        lastMessage: null,
+        messages,
+        totalMessages: messages.length,
+        lastMessage: messages[0] ?? null,
       };
     }),
 

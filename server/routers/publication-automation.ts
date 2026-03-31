@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { scheduledPosts, postHistory, instagramAccounts, oauthTokens, contentItems, influencerPosts } from "../../drizzle/schema";
+import { scheduledPosts, postHistory, instagramAccounts, oauthTokens, contentItems, influencerPosts, influencers } from "../../drizzle/schema";
 import { eq, and, lte, desc } from "drizzle-orm";
 
 // Mapa de jobs em execução
@@ -57,7 +57,7 @@ export const publicationAutomationRouter = router({
     }),
 
   // Verificar posts pendentes
-  checkPendingPosts: publicProcedure.query(async () => {
+  checkPendingPosts: protectedProcedure.query(async ({ ctx }: any) => {
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
@@ -70,6 +70,7 @@ export const publicationAutomationRouter = router({
         .where(
           and(
             eq(scheduledPosts.status, "pending"),
+            eq(scheduledPosts.userId, ctx.user.id),
             lte(scheduledPosts.scheduledAt, now)
           )
         );
@@ -557,10 +558,16 @@ async function publishToBlog(
     const contentItem = contentItemRows[0] ?? null;
     const blogContent = contentItem?.content ?? contentItem?.title ?? "";
 
-    // 2. Inserir em influencerPosts com platform='blog', status='published'
-    // influencerId=1 representa a conta da Feminnita (proprietária do blog)
+    // 2. Buscar influencer do owner do post (userId → primeiro influencer ativo)
+    const [blogInfluencer] = await db
+      .select()
+      .from(influencers)
+      .where(and(eq(influencers.userId, post.userId), eq(influencers.isActive, true)))
+      .limit(1);
+    if (!blogInfluencer) { console.error(`[Blog] Nenhum influencer ativo para userId=${post.userId}`); return false; }
+
     await db.insert(influencerPosts).values({
-      influencerId: 1,
+      influencerId: blogInfluencer.id,
       platform: "blog",
       caption: blogContent,
       content: blogContent,

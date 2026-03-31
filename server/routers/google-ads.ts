@@ -1,4 +1,4 @@
-import { protectedProcedure as publicProcedure, router } from "../_core/trpc";
+import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import {
   obterCampanhasGoogleAds,
@@ -14,7 +14,7 @@ export const googleAdsRouter = router({
   /**
    * Obtém campanhas do Google Ads
    */
-  obterCampanhas: publicProcedure
+  obterCampanhas: protectedProcedure
     .input(
       z.object({
         accessToken: z.string(),
@@ -43,7 +43,7 @@ export const googleAdsRouter = router({
   /**
    * Obtém anúncios de uma campanha
    */
-  obterAnuncios: publicProcedure
+  obterAnuncios: protectedProcedure
     .input(
       z.object({
         accessToken: z.string(),
@@ -74,7 +74,7 @@ export const googleAdsRouter = router({
   /**
    * Obtém performance de uma campanha
    */
-  obterPerformance: publicProcedure
+  obterPerformance: protectedProcedure
     .input(
       z.object({
         accessToken: z.string(),
@@ -104,7 +104,7 @@ export const googleAdsRouter = router({
   /**
    * Cria uma nova campanha
    */
-  criarCampanha: publicProcedure
+  criarCampanha: protectedProcedure
     .input(
       z.object({
         accessToken: z.string(),
@@ -143,7 +143,7 @@ export const googleAdsRouter = router({
   /**
    * Pausa uma campanha
    */
-  pausarCampanha: publicProcedure
+  pausarCampanha: protectedProcedure
     .input(
       z.object({
         accessToken: z.string(),
