@@ -2,6 +2,9 @@ import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { notifyOwner } from "../_core/notification";
+import { getDb } from "../db";
+import { influencerPosts } from "../../drizzle/schema";
+import { eq, and, gte, desc } from "drizzle-orm";
 
 /**
  * Post Scheduler Router
@@ -224,34 +227,39 @@ export const postSchedulerRouter = router({
     )
     .query(async ({ input }) => {
       try {
-        // Mock scheduled posts
-        const scheduledPosts = [
-          {
-            id: "post_1",
-            influencerId: input.influencerId,
-            theme: "Verão 2026",
-            model: "Coleção Premium",
-            platforms: ["instagram", "tiktok"],
-            scheduledFor: new Date(Date.now() + 2 * 86400000), // 2 days from now
-            status: "approved",
-            content: "Post content here",
-          },
-          {
-            id: "post_2",
-            influencerId: input.influencerId,
-            theme: "Conforto e Estilo",
-            model: "Básico",
-            platforms: ["youtube", "blog"],
-            scheduledFor: new Date(Date.now() + 5 * 86400000), // 5 days from now
-            status: "pending_approval",
-            content: "Post content here",
-          },
-        ];
+        const db = await getDb();
+        if (!db) {
+          return { success: true, posts: [], totalScheduled: 0, nextPosting: getNextPostingDay() };
+        }
+
+        const rows = await db
+          .select()
+          .from(influencerPosts)
+          .where(
+            and(
+              eq(influencerPosts.influencerId, input.influencerId),
+              eq(influencerPosts.status, "scheduled")
+            )
+          )
+          .orderBy(desc(influencerPosts.scheduledAt))
+          .limit(20);
+
+        const posts = rows.map((p) => ({
+          id: String(p.id),
+          influencerId: p.influencerId,
+          platform: p.platform,
+          caption: p.caption || "",
+          hashtags: p.hashtags || [],
+          scheduledFor: p.scheduledAt,
+          status: p.status,
+          content: p.content || "",
+          mediaUrls: p.mediaUrls || [],
+        }));
 
         return {
           success: true,
-          posts: scheduledPosts,
-          totalScheduled: scheduledPosts.length,
+          posts,
+          totalScheduled: posts.length,
           nextPosting: getNextPostingDay(),
         };
       } catch (error) {

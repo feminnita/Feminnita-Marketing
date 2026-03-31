@@ -1,8 +1,5 @@
-import { z } from "zod";
-import { eq } from "drizzle-orm";
 import { router, protectedProcedure } from "../_core/trpc";
 import { getDb } from "../db";
-import { instagramAccounts } from "../../drizzle/schema";
 
 export const metaAdsCampaignsRouter = router({
   /**

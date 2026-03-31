@@ -2,6 +2,7 @@ import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { webhooks, webhookEvents, notifications } from "../../drizzle/schema";
 import { eq, and } from "drizzle-orm";
+import { getDb } from "../db";
 import crypto from "crypto";
 
 export const webhooksRouter = router({
@@ -23,12 +24,13 @@ export const webhooksRouter = router({
         webhookUrl: z.string().url(),
       })
     )
-    .mutation(async ({ ctx, input }: any) => {
-      console.log(`Registrando webhook para ${input.plataforma}`);
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
 
       const webhookSecret = crypto.randomBytes(32).toString("hex");
 
-      const result = await ctx.db.insert(webhooks).values({
+      const result = await db.insert(webhooks).values({
         userId: ctx.user.id,
         plataforma: input.plataforma,
         webhookUrl: input.webhookUrl,
@@ -39,22 +41,22 @@ export const webhooksRouter = router({
       return {
         sucesso: true,
         mensagem: "Webhook registrado com sucesso",
-        webhookId: result.insertId,
         webhookSecret,
         plataforma: input.plataforma,
       };
     }),
 
   // Listar webhooks do usuário
-  listar: protectedProcedure.query(async ({ ctx }: any) => {
-    console.log(`Listando webhooks do usuário ${ctx.user.id}`);
+  listar: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) return [];
 
-    const result = await ctx.db
-        .select()
-        .from(webhooks)
-        .where(eq(webhooks.userId, ctx.user.id));
+    const result = await db
+      .select()
+      .from(webhooks)
+      .where(eq(webhooks.userId, ctx.user.id));
 
-      return result.map((w: any) => ({
+    return result.map((w) => ({
       id: w.id,
       plataforma: w.plataforma,
       webhookUrl: w.webhookUrl,
@@ -67,10 +69,11 @@ export const webhooksRouter = router({
   // Desativar webhook
   desativar: protectedProcedure
     .input(z.object({ webhookId: z.number() }))
-    .mutation(async ({ ctx, input }: any) => {
-      console.log(`Desativando webhook ${input.webhookId}`);
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
 
-      await ctx.db
+      await db
         .update(webhooks)
         .set({ isActive: false })
         .where(
@@ -80,19 +83,17 @@ export const webhooksRouter = router({
           )
         );
 
-      return {
-        sucesso: true,
-        mensagem: "Webhook desativado com sucesso",
-      };
+      return { sucesso: true, mensagem: "Webhook desativado com sucesso" };
     }),
 
   // Deletar webhook
   deletar: protectedProcedure
     .input(z.object({ webhookId: z.number() }))
-    .mutation(async ({ ctx, input }: any) => {
-      console.log(`Deletando webhook ${input.webhookId}`);
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
 
-      await ctx.db
+      await db
         .delete(webhooks)
         .where(
           and(
@@ -101,30 +102,26 @@ export const webhooksRouter = router({
           )
         );
 
-      return {
-        sucesso: true,
-        mensagem: "Webhook deletado com sucesso",
-      };
+      return { sucesso: true, mensagem: "Webhook deletado com sucesso" };
     }),
 
   // Listar eventos de webhook
   listarEventos: protectedProcedure
     .input(z.object({ webhookId: z.number().optional() }))
-    .query(async ({ ctx, input }: any) => {
-      console.log(`Listando eventos de webhook`);
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) return [];
 
-      let query = ctx.db
+      const rows = await db
         .select()
         .from(webhookEvents)
         .where(eq(webhookEvents.userId, ctx.user.id));
 
-      if (input.webhookId) {
-        query = query.where(eq(webhookEvents.webhookId, input.webhookId));
-      }
+      const filtered = input.webhookId
+        ? rows.filter((e) => e.webhookId === input.webhookId)
+        : rows;
 
-      const result = await query;
-
-      return result.map((e: any) => ({
+      return filtered.map((e) => ({
         id: e.id,
         webhookId: e.webhookId,
         plataforma: e.plataforma,
@@ -138,30 +135,34 @@ export const webhooksRouter = router({
     }),
 
   // Listar notificações
-  listarNotificacoes: protectedProcedure.query(async ({ ctx }: any) => {
-    console.log(`Listando notificações do usuário ${ctx.user.id}`);
+  listarNotificacoes: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) return [];
 
-    const result = await ctx.db
+    return db
       .select()
       .from(notifications)
       .where(eq(notifications.userId, ctx.user.id));
-
-    return result;
   }),
 
-  // Marcar notificação como lida
+  // Marcar notificação como lida (com persistência real)
   marcarComoLida: protectedProcedure
     .input(z.object({ notificationId: z.number() }))
-    .mutation(async ({ ctx, input }: any) => {
-      console.log(`Marcando notificação ${input.notificationId} como lida`);
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
 
-      // Aqui você faria a atualização no banco de dados
-      // Por enquanto, apenas retornamos sucesso
+      await db
+        .update(notifications)
+        .set({ isRead: true })
+        .where(
+          and(
+            eq(notifications.id, input.notificationId),
+            eq(notifications.userId, ctx.user.id)
+          )
+        );
 
-      return {
-        sucesso: true,
-        mensagem: "Notificação marcada como lida",
-      };
+      return { sucesso: true, mensagem: "Notificação marcada como lida" };
     }),
 
   // Processar evento de webhook (chamado pelo endpoint Express)
@@ -174,27 +175,23 @@ export const webhooksRouter = router({
         eventData: z.record(z.string(), z.any()),
       })
     )
-    .mutation(async ({ ctx, input }: any) => {
-      console.log(`Processando evento: ${input.eventType} de ${input.plataforma}`);
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { sucesso: false, mensagem: "Database not available" };
 
-      // Validar webhook secret
-      const webhook = await ctx.db
+      const webhook = await db
         .select()
         .from(webhooks)
         .where(eq(webhooks.webhookSecret, input.webhookSecret))
         .limit(1);
 
       if (!webhook || webhook.length === 0) {
-        return {
-          sucesso: false,
-          mensagem: "Webhook secret inválido",
-        };
+        return { sucesso: false, mensagem: "Webhook secret inválido" };
       }
 
       const w = webhook[0];
 
-      // Registrar evento
-      await ctx.db.insert(webhookEvents).values({
+      await db.insert(webhookEvents).values({
         webhookId: w.id,
         userId: w.userId,
         plataforma: input.plataforma,
@@ -203,7 +200,6 @@ export const webhooksRouter = router({
         status: "pending",
       });
 
-      // Criar notificação
       const tituloMap: Record<string, string> = {
         campaign_created: "Nova Campanha Criada",
         campaign_updated: "Campanha Atualizada",
@@ -221,7 +217,7 @@ export const webhooksRouter = router({
       const titulo = tituloMap[input.eventType] || input.eventType;
       const tipo = tipoMap[input.eventType] || "success";
 
-      await ctx.db.insert(notifications).values({
+      await db.insert(notifications).values({
         userId: w.userId,
         plataforma: input.plataforma,
         titulo,
@@ -229,15 +225,11 @@ export const webhooksRouter = router({
         tipo,
       });
 
-      // Atualizar lastTriggered
-      await ctx.db
+      await db
         .update(webhooks)
         .set({ lastTriggered: new Date() })
         .where(eq(webhooks.id, w.id));
 
-      return {
-        sucesso: true,
-        mensagem: "Evento processado com sucesso",
-      };
+      return { sucesso: true, mensagem: "Evento processado com sucesso" };
     }),
 });

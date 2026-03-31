@@ -16,14 +16,16 @@ export const postApprovalRouter = router({
         const db = await getDb();
         if (!db) return [];
 
-        let query = db
+        const whereClause = input.influencerId
+          ? and(eq(influencerPosts.status, "draft"), eq(influencerPosts.influencerId, input.influencerId))
+          : eq(influencerPosts.status, "draft");
+
+        const posts = await db
           .select()
           .from(influencerPosts)
-          .where(eq(influencerPosts.status, "draft"))
+          .where(whereClause)
           .orderBy(desc(influencerPosts.createdAt))
           .limit(input.limit);
-
-        const posts = await query;
 
         return posts.map((post: any) => ({
           id: post.id,

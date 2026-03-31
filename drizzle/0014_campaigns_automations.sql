@@ -1,4 +1,4 @@
--- Migration 0014: Adicionar tabelas campaigns e automations
+-- Migration 0014: Adicionar tabelas campaigns, automations, publication_queue_jobs e tabelas Bling
 
 CREATE TABLE `campaigns` (
   `id` int AUTO_INCREMENT PRIMARY KEY,
@@ -34,6 +34,20 @@ CREATE TABLE `automations` (
   `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT `automations_userId_fk` FOREIGN KEY (`userId`) REFERENCES `users`(`id`)
+);
+
+CREATE TABLE `publication_queue_jobs` (
+  `id` int AUTO_INCREMENT PRIMARY KEY,
+  `postId` int NOT NULL,
+  `accountId` int NOT NULL,
+  `retryCount` int NOT NULL DEFAULT 0,
+  `maxRetries` int NOT NULL DEFAULT 5,
+  `lastError` text,
+  `nextRetryTime` timestamp,
+  `status` enum('ready','waiting','processing','failed','done') NOT NULL DEFAULT 'ready',
+  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT `pub_queue_postId_fk` FOREIGN KEY (`postId`) REFERENCES `influencer_posts`(`id`)
 );
 
 -- Tabelas Bling (schema-bling.ts)

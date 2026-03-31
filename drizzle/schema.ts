@@ -793,5 +793,24 @@ export type Automation = typeof automations.$inferSelect;
 export type InsertAutomation = typeof automations.$inferInsert;
 
 
+// ============ Fila de Publicação Persistente ============
+
+export const publicationQueueJobs = mysqlTable("publication_queue_jobs", {
+  id: int("id").primaryKey().autoincrement(),
+  postId: int("postId").notNull().references(() => influencerPosts.id),
+  accountId: int("accountId").notNull(),
+  retryCount: int("retryCount").default(0).notNull(),
+  maxRetries: int("maxRetries").default(5).notNull(),
+  lastError: text("lastError"),
+  nextRetryTime: timestamp("nextRetryTime"),
+  status: mysqlEnum("status", ["ready", "waiting", "processing", "failed", "done"]).default("ready").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+
+export type PublicationQueueJob = typeof publicationQueueJobs.$inferSelect;
+export type InsertPublicationQueueJob = typeof publicationQueueJobs.$inferInsert;
+
+
 // Re-exportar tabelas Bling
 export * from "./schema-bling";
