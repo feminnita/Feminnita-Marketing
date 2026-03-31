@@ -55,6 +55,8 @@ import { metaGraphIntegrationRouter } from "./routers/meta-graph-integration";
 import { publicBlogsRouter } from "./routers/public-blogs";
 import { publicationQueueRouter } from "./routers/publication-queue";
 import { metaAdsCampaignsRouter } from "./routers/meta-ads-campaigns";
+import { marketResearchRouter } from "./routers/market-research";
+import { assetLibraryRouter } from "./routers/asset-library";
 import { getDb } from "./db";
 import { influencers } from "../drizzle/schema";
 
@@ -140,6 +142,8 @@ export const appRouter = router({
   publicBlogs: publicBlogsRouter,
   publicationQueue: publicationQueueRouter,
   metaAdsCampaigns: metaAdsCampaignsRouter,
+  marketResearch: marketResearchRouter,
+  assetLibrary: assetLibraryRouter,
   influencers: router({
     list: protectedProcedure.query(async () => {
       try {

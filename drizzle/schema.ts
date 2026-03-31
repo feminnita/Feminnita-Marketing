@@ -812,5 +812,108 @@ export type PublicationQueueJob = typeof publicationQueueJobs.$inferSelect;
 export type InsertPublicationQueueJob = typeof publicationQueueJobs.$inferInsert;
 
 
+// ============ Equipe de Marketing com IA ============
+
+export const marketingResearchReports = mysqlTable("marketing_research_reports", {
+  id: int("id").primaryKey().autoincrement(),
+  userId: int("userId").notNull().references(() => users.id),
+  reportDate: date("report_date").notNull(),
+  competitorInsights: json("competitor_insights").$type<{
+    competitors: Array<{ name: string; strategy: string; topContent: string; strengths: string }>;
+    gaps: string[];
+    opportunities: string[];
+  }>(),
+  trendingHashtags: json("trending_hashtags").$type<string[]>(),
+  contentOpportunities: json("content_opportunities").$type<string[]>(),
+  audienceInsights: text("audience_insights"),
+  weeklyStrategy: text("weekly_strategy"),
+  recommendations: json("recommendations").$type<Array<{ priority: "alta" | "media" | "baixa"; action: string; rationale: string }>>(),
+  rawAnalysis: text("raw_analysis"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type MarketingResearchReport = typeof marketingResearchReports.$inferSelect;
+export type InsertMarketingResearchReport = typeof marketingResearchReports.$inferInsert;
+
+export const contentBriefs = mysqlTable("content_briefs", {
+  id: int("id").primaryKey().autoincrement(),
+  userId: int("userId").notNull().references(() => users.id),
+  influencerId: int("influencer_id").references(() => influencers.id),
+  briefType: mysqlEnum("brief_type", ["carousel", "reel", "story", "post", "feed"]).notNull(),
+  topic: varchar("topic", { length: 500 }).notNull(),
+  targetAudience: text("target_audience"),
+  keyMessages: json("key_messages").$type<string[]>(),
+  hashtags: json("hashtags").$type<string[]>(),
+  callToAction: varchar("call_to_action", { length: 255 }),
+  generatedContent: json("generated_content").$type<Record<string, unknown>>(),
+  copywriterNotes: text("copywriter_notes"),
+  status: mysqlEnum("status", ["pending", "generated", "approved", "published"]).default("pending").notNull(),
+  researchReportId: int("research_report_id"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+
+export type ContentBrief = typeof contentBriefs.$inferSelect;
+export type InsertContentBrief = typeof contentBriefs.$inferInsert;
+
+export const competitorData = mysqlTable("competitor_data", {
+  id: int("id").primaryKey().autoincrement(),
+  userId: int("userId").notNull(),
+  competitorName: varchar("competitor_name", { length: 255 }).notNull(),
+  platform: varchar("platform", { length: 50 }).notNull(),
+  contentType: varchar("content_type", { length: 50 }),
+  estimatedEngagement: int("estimated_engagement"),
+  captionAnalysis: text("caption_analysis"),
+  hashtagsUsed: json("hashtags_used").$type<string[]>(),
+  postingFrequency: varchar("posting_frequency", { length: 100 }),
+  keyStrategies: json("key_strategies").$type<string[]>(),
+  detectedAt: timestamp("detected_at").defaultNow().notNull(),
+});
+
+export type CompetitorData = typeof competitorData.$inferSelect;
+export type InsertCompetitorData = typeof competitorData.$inferInsert;
+
+// ============ Banco de Imagens e Lançamentos ============
+
+export const assetLibrary = mysqlTable("asset_library", {
+  id: int("id").primaryKey().autoincrement(),
+  userId: int("userId").notNull().references(() => users.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  category: mysqlEnum("category", ["produto", "lifestyle", "modelo", "colecao", "background", "logo", "outro"]).notNull(),
+  url: text("url").notNull(),
+  thumbnailUrl: text("thumbnail_url"),
+  mimeType: varchar("mime_type", { length: 100 }),
+  fileSize: int("file_size"),
+  tags: json("tags").$type<string[]>(),
+  platform: mysqlEnum("platform", ["instagram", "tiktok", "todos"]).default("todos").notNull(),
+  aiAnalysis: text("ai_analysis"),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+
+export type AssetLibraryItem = typeof assetLibrary.$inferSelect;
+export type InsertAssetLibraryItem = typeof assetLibrary.$inferInsert;
+
+export const productCollections = mysqlTable("product_collections", {
+  id: int("id").primaryKey().autoincrement(),
+  userId: int("userId").notNull().references(() => users.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  collectionType: mysqlEnum("collection_type", ["produto", "colecao", "campanha", "temporada"]).notNull(),
+  season: varchar("season", { length: 100 }),
+  launchDate: timestamp("launch_date"),
+  status: mysqlEnum("status", ["rascunho", "ativo", "arquivado"]).default("rascunho").notNull(),
+  assetIds: json("asset_ids").$type<number[]>().default([]),
+  briefsGenerated: boolean("briefs_generated").default(false).notNull(),
+  contentPlan: json("content_plan").$type<Record<string, unknown>>(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+
+export type ProductCollection = typeof productCollections.$inferSelect;
+export type InsertProductCollection = typeof productCollections.$inferInsert;
+
 // Re-exportar tabelas Bling
 export * from "./schema-bling";

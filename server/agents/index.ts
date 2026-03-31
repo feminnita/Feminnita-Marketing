@@ -4,6 +4,10 @@ import { startContentAgent } from "./content-agent";
 import { startAlertAgent } from "./alert-agent";
 import { startPerformanceAgent } from "./performance-agent";
 import { startPublicationWorker } from "./publication-worker";
+import { startMarketResearchAgent } from "./market-research-agent";
+import { startCopywriterAgent } from "./copywriter-agent";
+import { startCreativeTeamAgent } from "./creative-team-agent";
+import { startLaunchAgent } from "./launch-agent";
 
 export function startAllAgents(): () => void {
   console.log("[Agents] Iniciando todos os agentes de automação...");
@@ -17,6 +21,10 @@ export function startAllAgents(): () => void {
     { name: "AlertAgent", start: startAlertAgent },
     { name: "PerformanceAgent", start: startPerformanceAgent },
     { name: "PublicationWorker", start: startPublicationWorker },
+    { name: "MarketResearch", start: startMarketResearchAgent },
+    { name: "Copywriter", start: startCopywriterAgent },
+    { name: "CreativeTeam", start: startCreativeTeamAgent },
+    { name: "LaunchAgent", start: startLaunchAgent },
   ];
 
   for (const agent of agents) {
