@@ -4,6 +4,7 @@ import { Boom } from "@hapi/boom";
 import path from "path";
 import fs from "fs";
 import qrcode from "qrcode";
+import { processWhatsAppMessage } from "../agents/whatsapp-ai-agent";
 
 interface WhatsAppSession {
   socket: WASocket | null;
@@ -106,8 +107,40 @@ export async function initializeWhatsApp(userId: number): Promise<string> {
     socket.ev.on("messages.upsert", async (m) => {
       const msg = m.messages[0];
       if (!msg.key.fromMe && msg.message) {
-        console.log(`[WhatsApp Message] De ${msg.key.remoteJid}: ${msg.message.conversation || "[Mídia]"}`);
-        // Aqui você pode integrar com a IA de atendimento
+        const remoteJid = msg.key.remoteJid ?? "";
+        const textContent =
+          msg.message.conversation ||
+          msg.message.extendedTextMessage?.text ||
+          "";
+
+        console.log(`[WhatsApp Message] De ${remoteJid}: ${textContent || "[Mídia]"}`);
+
+        if (!textContent) return; // Ignora mensagens sem texto (mídia, stickers, etc.)
+
+        // Extrair número limpo (sem sufixo @s.whatsapp.net)
+        const phoneNumber = remoteJid.split("@")[0];
+
+        // Obter nome do contato, se disponível
+        const contactName =
+          (msg as any).pushName ||
+          (msg as any).notifyName ||
+          phoneNumber;
+
+        // Processar com IA e enviar resposta se disponível
+        const aiResponse = await processWhatsAppMessage(
+          userId,
+          phoneNumber,
+          contactName,
+          textContent
+        );
+
+        if (aiResponse) {
+          const session = sessions.get(userId);
+          if (session?.socket && session.isConnected) {
+            await session.socket.sendMessage(remoteJid, { text: aiResponse });
+            console.log(`[WhatsApp AI] Resposta enviada para ${remoteJid}`);
+          }
+        }
       }
     });
 

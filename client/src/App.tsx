@@ -37,7 +37,8 @@ import WhatsAppAISetupPage from "@/pages/WhatsAppAISetupPage";
 import WhatsAppBaileysPage from "@/pages/WhatsAppBaileysPage";
 import WhatsAppBaileysSimplePage from "./pages/WhatsAppBaileysSimplePage";
 import WhatsAppNotificationsPage from "./pages/WhatsAppNotificationsPage";
-
+import AssetLibraryPage from "@/pages/AssetLibraryPage";
+import MarketingTeamPage from "@/pages/MarketingTeamPage";
 
 export default function App() {
   const [location] = useLocation();
@@ -122,6 +123,10 @@ export default function App() {
         return <WhatsAppBaileysSimplePage />;
       case "/whatsapp-notifications":
         return <WhatsAppNotificationsPage />;
+      case "/banco-imagens":
+        return <AssetLibraryPage />;
+      case "/equipe-marketing":
+        return <MarketingTeamPage />;
       default: {
         // Rotas autenticadas de perfis individuais de influenciadoras
         if (/^\/influenciadora\/\d+$/.test(location)) {

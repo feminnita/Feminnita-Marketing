@@ -232,4 +232,68 @@ export const webhooksRouter = router({
 
       return { sucesso: true, mensagem: "Evento processado com sucesso" };
     }),
+
+  // Verificar assinatura HMAC de um webhook recebido
+  verificarAssinatura: publicProcedure
+    .input(z.object({
+      payload: z.string(), // body do webhook como string
+      signature: z.string(), // valor do header X-Hub-Signature-256
+      secret: z.string(),    // secret do webhook
+    }))
+    .mutation(({ input }) => {
+      const expectedSig = "sha256=" + crypto
+        .createHmac("sha256", input.secret)
+        .update(input.payload)
+        .digest("hex");
+
+      const sigBuffer = Buffer.from(input.signature);
+      const expBuffer = Buffer.from(expectedSig);
+
+      if (sigBuffer.length !== expBuffer.length) {
+        return { valid: false };
+      }
+
+      const valid = crypto.timingSafeEqual(sigBuffer, expBuffer);
+      return { valid };
+    }),
+
+  // Receber e validar evento de webhook com HMAC
+  receberEvento: publicProcedure
+    .input(z.object({
+      webhookId: z.number(),
+      payload: z.string(),
+      signature: z.string(),
+      eventType: z.string(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const webhook = await db.select().from(webhooks)
+        .where(and(eq(webhooks.id, input.webhookId), eq(webhooks.isActive, true)))
+        .limit(1);
+
+      if (!webhook.length) throw new Error("Webhook não encontrado");
+
+      const secret = webhook[0].webhookSecret;
+      const expectedSig = "sha256=" + crypto.createHmac("sha256", secret).update(input.payload).digest("hex");
+      const sigBuffer = Buffer.from(input.signature.padEnd(expectedSig.length));
+      const expBuffer = Buffer.from(expectedSig);
+
+      const valid = sigBuffer.length === expBuffer.length && crypto.timingSafeEqual(sigBuffer, expBuffer);
+      if (!valid) throw new Error("Assinatura HMAC inválida");
+
+      await db.insert(webhookEvents).values({
+        webhookId: input.webhookId,
+        userId: webhook[0].userId,
+        plataforma: webhook[0].plataforma,
+        eventType: input.eventType,
+        eventData: input.payload,
+        status: "pending",
+      });
+
+      await db.update(webhooks).set({ lastTriggered: new Date() }).where(eq(webhooks.id, input.webhookId));
+
+      return { success: true, message: "Evento registrado com sucesso" };
+    }),
 });
