@@ -189,3 +189,36 @@ export function isUserConnected(userId: number): boolean {
 export function getIO(): SocketIOServer | null {
   return io;
 }
+
+export function notifyNewAlert(userId: number, alert: {
+  id?: number;
+  alertType: string;
+  severity: string;
+  title: string;
+  campaignId?: string;
+  campaignName?: string;
+  currentValue?: string;
+  threshold?: string;
+  recommendation?: string;
+}): void {
+  const io = getIO();
+  if (!io) return;
+  io.to(`user_${userId}`).emit("new_alert", {
+    ...alert,
+    timestamp: new Date().toISOString(),
+  });
+}
+
+export function notifyPerformanceUpdate(userId: number, data: {
+  influencerId: number;
+  followers: number;
+  engagementRate: number;
+  platform: string;
+}): void {
+  const io = getIO();
+  if (!io) return;
+  io.to(`user_${userId}`).emit("performance_update", {
+    ...data,
+    timestamp: new Date().toISOString(),
+  });
+}

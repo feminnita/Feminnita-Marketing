@@ -5,6 +5,21 @@ import { getDb } from "../db";
 import { eq } from "drizzle-orm";
 import * as crypto from "crypto";
 
+// Rate limiter simples em memória para login
+const loginAttempts = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(key: string, maxAttempts = 5, windowMs = 15 * 60 * 1000): boolean {
+  const now = Date.now();
+  const record = loginAttempts.get(key);
+  if (!record || record.resetAt < now) {
+    loginAttempts.set(key, { count: 1, resetAt: now + windowMs });
+    return true; // permitido
+  }
+  if (record.count >= maxAttempts) return false; // bloqueado
+  record.count++;
+  return true; // permitido
+}
+
 // Hash seguro com scrypt (Node.js nativo) + salt aleatório
 function hashPassword(password: string): string {
   const salt = crypto.randomBytes(16).toString("hex");
@@ -85,6 +100,10 @@ export const collaboratorsRouter = router({
     .mutation(async ({ input }: any) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
+
+      if (!checkRateLimit(input.email)) {
+        throw new Error("Muitas tentativas de login. Tente novamente em 15 minutos.");
+      }
 
       const result = await db
         .select()

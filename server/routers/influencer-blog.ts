@@ -1,7 +1,7 @@
 import { router, publicProcedure, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
-import { influencerPosts, influencers } from "../../drizzle/schema";
+import { influencerPosts, influencers, publicationQueueJobs } from "../../drizzle/schema";
 import { eq, desc } from "drizzle-orm";
 
 export const influencerBlogRouter = router({
@@ -146,6 +146,25 @@ export const influencerBlogRouter = router({
 
         // TODO: Integrate with Meta Ads API to publish
         // This would call the Meta Graph API to publish to Instagram/Facebook
+
+        // Buscar conta Instagram associada à influencer deste post
+        const post = posts[0];
+        const { instagramAccounts } = await import("../../drizzle/schema");
+        const igAccounts = await db
+          .select()
+          .from(instagramAccounts)
+          .where(eq(instagramAccounts.influencerId, post.influencerId ?? 0))
+          .limit(1);
+
+        if (igAccounts.length > 0) {
+          await db.insert(publicationQueueJobs).values({
+            postId: input.postId,
+            accountId: igAccounts[0].id,
+            retryCount: 0,
+            maxRetries: 3,
+            status: "ready",
+          });
+        }
 
         return { success: true };
       } catch (error) {

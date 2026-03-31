@@ -433,16 +433,67 @@ export const metaGraphIntegrationRouter = router({
         const db = await getDb();
         if (!db) throw new Error("Database not available");
 
-        // TODO: Implementar refresh de token com Meta API
-        // const response = await fetch(`${META_GRAPH_API_BASE}/refresh_access_token`, {
-        //   method: "GET",
-        //   headers: {
-        //     "Content-Type": "application/json",
-        //   },
-        // });
+        const appId = process.env.META_APP_ID;
+        const appSecret = process.env.META_APP_SECRET;
+
+        if (!appId || !appSecret) {
+          throw new Error(
+            "META_APP_ID e META_APP_SECRET precisam estar configurados nas variáveis de ambiente"
+          );
+        }
+
+        // Buscar a conta Instagram no banco
+        const account = await db
+          .select()
+          .from(instagramAccounts)
+          .where(eq(instagramAccounts.id, input.accountId))
+          .limit(1);
+
+        if (!account || account.length === 0) {
+          throw new Error("Conta Instagram não encontrada");
+        }
+
+        const igAccount = account[0];
+
+        // Trocar por long-lived token via Meta Graph API
+        const tokenUrl =
+          `https://graph.facebook.com/v18.0/oauth/access_token` +
+          `?grant_type=fb_exchange_token` +
+          `&client_id=${appId}` +
+          `&client_secret=${appSecret}` +
+          `&fb_exchange_token=${igAccount.accessToken}`;
+
+        const tokenRes = await fetch(tokenUrl, { method: "GET" });
+        if (!tokenRes.ok) {
+          throw new Error(`Erro ao renovar token: ${await tokenRes.text()}`);
+        }
+
+        const tokenData = await tokenRes.json() as {
+          access_token: string;
+          token_type: string;
+          expires_in?: number;
+        };
+
+        const newAccessToken = tokenData.access_token;
+        const expiresIn = tokenData.expires_in; // em segundos
+        const expiresAt = expiresIn
+          ? new Date(Date.now() + expiresIn * 1000)
+          : null;
+
+        // Atualizar o token na tabela instagramAccounts
+        await db
+          .update(instagramAccounts)
+          .set({
+            accessToken: newAccessToken,
+            ...(expiresAt ? { tokenExpiresAt: expiresAt } : {}),
+            updatedAt: new Date(),
+          })
+          .where(eq(instagramAccounts.id, input.accountId));
 
         return {
           success: true,
+          accessToken: newAccessToken,
+          expiresAt,
           message: "Token renovado com sucesso",
         };
       } catch (error) {
