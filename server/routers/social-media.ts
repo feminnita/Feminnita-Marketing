@@ -1,14 +1,16 @@
 import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
-
-/**
- * Router para gerenciar contas de redes sociais e postagens agendadas
- */
+import { getDb } from "../db";
+import {
+  influencerAccounts,
+  contentItems,
+  scheduledPosts,
+  influencerPosts,
+  influencers,
+} from "../../drizzle/schema";
+import { eq, and, desc } from "drizzle-orm";
 
 export const socialMediaRouter = router({
-  /**
-   * Salvar contas de uma influenciadora
-   */
   saveInfluencerAccounts: protectedProcedure
     .input(
       z.object({
@@ -21,52 +23,76 @@ export const socialMediaRouter = router({
         youtube: z.string().optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
-      try {
-        console.log(`[socialMedia.saveInfluencerAccounts] Salvando contas para influenciadora ${input.influencerId}`);
-        
-        // Aqui você conectaria com o banco de dados
-        // await db.update(influencerAccounts).set(input).where(eq(influencerAccounts.influencerId, input.influencerId));
+    .mutation(async ({ input, ctx }: any) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
 
-        return {
-          success: true,
-          message: "Contas salvas com sucesso!",
-          data: input,
-        };
-      } catch (error) {
-        console.error("[socialMedia.saveInfluencerAccounts]", error);
-        throw new Error("Erro ao salvar contas");
+      // Ensure influencer belongs to user
+      const [influencer] = await db
+        .select()
+        .from(influencers)
+        .where(and(eq(influencers.id, input.influencerId), eq(influencers.userId, ctx.user.id)))
+        .limit(1);
+      if (!influencer) throw new Error("Influenciadora não encontrada");
+
+      const existing = await db
+        .select()
+        .from(influencerAccounts)
+        .where(eq(influencerAccounts.influencerId, input.influencerId))
+        .limit(1);
+
+      const updates: Record<string, string | undefined> = {};
+      if (input.email !== undefined) updates.email = input.email;
+      if (input.instagram !== undefined) updates.instagram = input.instagram;
+      if (input.tiktok !== undefined) updates.tiktok = input.tiktok;
+      if (input.facebook !== undefined) updates.facebook = input.facebook;
+      if (input.whatsapp !== undefined) updates.whatsapp = input.whatsapp;
+      if (input.youtube !== undefined) updates.youtube = input.youtube;
+
+      if (existing.length > 0) {
+        await db
+          .update(influencerAccounts)
+          .set(updates)
+          .where(eq(influencerAccounts.influencerId, input.influencerId));
+      } else {
+        await db.insert(influencerAccounts).values({
+          influencerId: input.influencerId,
+          ...updates,
+        });
       }
+
+      const [updated] = await db
+        .select()
+        .from(influencerAccounts)
+        .where(eq(influencerAccounts.influencerId, input.influencerId))
+        .limit(1);
+
+      return { success: true, data: updated };
     }),
 
-  /**
-   * Obter contas de uma influenciadora
-   */
   getInfluencerAccounts: protectedProcedure
     .input(z.object({ influencerId: z.number() }))
-    .query(async ({ input }) => {
-      try {
-        // Aqui você buscaria do banco de dados
-        // const accounts = await db.query.influencerAccounts.findFirst({ where: eq(influencerAccounts.influencerId, input.influencerId) });
+    .query(async ({ input }: any) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
 
-        return {
-          influencerId: input.influencerId,
-          email: "",
-          instagram: "",
-          tiktok: "",
-          facebook: "",
-          whatsapp: "",
-          youtube: "",
-        };
-      } catch (error) {
-        console.error("[socialMedia.getInfluencerAccounts]", error);
-        throw new Error("Erro ao obter contas");
-      }
+      const [accounts] = await db
+        .select()
+        .from(influencerAccounts)
+        .where(eq(influencerAccounts.influencerId, input.influencerId))
+        .limit(1);
+
+      return accounts ?? {
+        influencerId: input.influencerId,
+        email: "",
+        instagram: "",
+        tiktok: "",
+        facebook: "",
+        whatsapp: "",
+        youtube: "",
+      };
     }),
 
-  /**
-   * Agendar postagem
-   */
   schedulePost: protectedProcedure
     .input(
       z.object({
@@ -78,38 +104,49 @@ export const socialMediaRouter = router({
         platforms: z.array(z.enum(["instagram", "facebook", "tiktok", "whatsapp"])),
       })
     )
-    .mutation(async ({ input, ctx }) => {
-      try {
-        const scheduledDateTime = new Date(`${input.scheduledDate}T${input.scheduledTime}`);
+    .mutation(async ({ input, ctx }: any) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
 
-        console.log(`[socialMedia.schedulePost] Agendando postagem para ${scheduledDateTime.toLocaleString("pt-BR")}`);
+      const scheduledAt = new Date(`${input.scheduledDate}T${input.scheduledTime}`);
 
-        // Aqui você salvaria no banco de dados
-        // await db.insert(scheduledPosts).values({
-        //   userId: ctx.user.id,
-        //   influencerId: input.influencerId,
-        //   title: input.title,
-        //   content: input.content,
-        //   scheduledAt: scheduledDateTime,
-        //   platforms: JSON.stringify(input.platforms),
-        //   status: "scheduled",
-        // });
+      // Create a content item first
+      await db.insert(contentItems).values({
+        userId: ctx.user.id,
+        section: "social_media",
+        title: input.title,
+        content: input.content,
+        status: "scheduled",
+      });
 
-        return {
-          success: true,
-          message: `Postagem agendada para ${scheduledDateTime.toLocaleString("pt-BR")}`,
-          postId: Math.floor(Math.random() * 10000),
-          data: input,
-        };
-      } catch (error) {
-        console.error("[socialMedia.schedulePost]", error);
-        throw new Error("Erro ao agendar postagem");
-      }
+      const [contentItem] = await db
+        .select()
+        .from(contentItems)
+        .where(and(eq(contentItems.userId, ctx.user.id), eq(contentItems.title, input.title)))
+        .orderBy(desc(contentItems.createdAt))
+        .limit(1);
+
+      await db.insert(scheduledPosts).values({
+        userId: ctx.user.id,
+        contentId: contentItem.id,
+        platforms: JSON.stringify(input.platforms),
+        scheduledAt,
+        status: "pending",
+      });
+
+      const [created] = await db
+        .select()
+        .from(scheduledPosts)
+        .where(eq(scheduledPosts.contentId, contentItem.id))
+        .limit(1);
+
+      return {
+        success: true,
+        message: `Postagem agendada para ${scheduledAt.toLocaleString("pt-BR")}`,
+        postId: created.id,
+      };
     }),
 
-  /**
-   * Publicar postagem imediatamente
-   */
   publishPost: protectedProcedure
     .input(
       z.object({
@@ -119,95 +156,59 @@ export const socialMediaRouter = router({
         platforms: z.array(z.enum(["instagram", "facebook", "tiktok", "whatsapp"])),
       })
     )
-    .mutation(async ({ input }) => {
-      try {
-        console.log(`[socialMedia.publishPost] Publicando em ${input.platforms.join(", ")}`);
+    .mutation(async ({ input, ctx }: any) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
 
-        const results: Record<string, any> = {};
-
-        // Instagram
-        if (input.platforms.includes("instagram")) {
-          results.instagram = {
-            success: true,
-            postId: `ig_${Math.random().toString(36).substr(2, 9)}`,
-            url: "https://instagram.com/p/...",
-          };
-        }
-
-        // Facebook
-        if (input.platforms.includes("facebook")) {
-          results.facebook = {
-            success: true,
-            postId: `fb_${Math.random().toString(36).substr(2, 9)}`,
-            url: "https://facebook.com/...",
-          };
-        }
-
-        // TikTok
-        if (input.platforms.includes("tiktok")) {
-          results.tiktok = {
-            success: true,
-            postId: `tt_${Math.random().toString(36).substr(2, 9)}`,
-            url: "https://tiktok.com/...",
-          };
-        }
-
-        // WhatsApp (Grupo VIP)
-        if (input.platforms.includes("whatsapp")) {
-          results.whatsapp = {
-            success: true,
-            messageId: `wa_${Math.random().toString(36).substr(2, 9)}`,
-            groupId: "22992810707",
-          };
-        }
-
-        return {
-          success: true,
-          message: "Postagem publicada em todas as plataformas!",
-          results,
-        };
-      } catch (error) {
-        console.error("[socialMedia.publishPost]", error);
-        throw new Error("Erro ao publicar postagem");
+      // Insert draft post per platform, queued for immediate publishing via publication worker
+      const now = new Date();
+      for (const platform of input.platforms) {
+        if (platform === "whatsapp") continue; // WhatsApp handled via Baileys separately
+        await db.insert(influencerPosts).values({
+          influencerId: input.influencerId,
+          platform,
+          content: input.content,
+          caption: input.content,
+          status: "scheduled",
+          scheduledAt: now,
+          aiGenerated: false,
+        });
       }
+
+      return {
+        success: true,
+        message: "Postagem enviada para publicação via fila",
+        platforms: input.platforms,
+      };
     }),
 
-  /**
-   * Obter postagens agendadas
-   */
   getScheduledPosts: protectedProcedure
     .input(z.object({ influencerId: z.number().optional() }))
-    .query(async ({ input, ctx }) => {
-      try {
-        // Aqui você buscaria do banco de dados
-        // const posts = await db.query.scheduledPosts.findMany({ where: eq(scheduledPosts.userId, ctx.user.id) });
+    .query(async ({ input, ctx }: any) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
 
-        return {
-          posts: [],
-          total: 0,
-        };
-      } catch (error) {
-        console.error("[socialMedia.getScheduledPosts]", error);
-        throw new Error("Erro ao obter postagens agendadas");
-      }
+      const posts = await db
+        .select()
+        .from(scheduledPosts)
+        .where(eq(scheduledPosts.userId, ctx.user.id))
+        .orderBy(desc(scheduledPosts.scheduledAt))
+        .limit(50);
+
+      return { posts, total: posts.length };
     }),
 
-  /**
-   * Deletar postagem agendada
-   */
   deleteScheduledPost: protectedProcedure
     .input(z.object({ postId: z.number() }))
-    .mutation(async ({ input }) => {
-      try {
-        console.log(`[socialMedia.deleteScheduledPost] Deletando postagem ${input.postId}`);
+    .mutation(async ({ input, ctx }: any) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
 
-        return {
-          success: true,
-          message: "Postagem deletada com sucesso!",
-        };
-      } catch (error) {
-        console.error("[socialMedia.deleteScheduledPost]", error);
-        throw new Error("Erro ao deletar postagem");
-      }
+      await db
+        .update(scheduledPosts)
+        .set({ status: "cancelled" })
+        .where(and(eq(scheduledPosts.id, input.postId), eq(scheduledPosts.userId, ctx.user.id)));
+
+      return { success: true };
     }),
 });

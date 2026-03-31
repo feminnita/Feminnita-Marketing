@@ -1,127 +1,132 @@
 import { useState } from "react";
-import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { BarChart3, TrendingUp, AlertCircle, CheckCircle2, XCircle, Download } from "lucide-react";
+import { TrendingUp, AlertCircle, CheckCircle2, XCircle, RefreshCw } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 
+const INFLUENCER_NAMES = ["carol", "renata", "vanessa", "luiza"];
+
 export default function PerformanceReportPage() {
-  const { user } = useAuth();
   const [selectedInfluencer, setSelectedInfluencer] = useState<string>("carol");
 
-  // Buscar estatísticas de aprovação
-  const { data: stats } = trpc.postApproval.getApprovalStats.useQuery();
-  
-  // Dados simulados de performance por influenciadora
-  const performanceData = {
-    carol: {
-      name: "Carol",
-      totalGenerated: 24,
-      approved: 18,
-      rejected: 4,
-      pending: 2,
-      approvalRate: 75,
-      avgEngagement: 4.2,
-      topRejectionReason: "Falta de autenticidade",
-      trend: "up",
-    },
-    renata: {
-      name: "Renata",
-      totalGenerated: 20,
-      approved: 17,
-      rejected: 2,
-      pending: 1,
-      approvalRate: 85,
-      avgEngagement: 5.1,
-      topRejectionReason: "Tom inadequado",
-      trend: "up",
-    },
-    vanessa: {
-      name: "Vanessa",
-      totalGenerated: 22,
-      approved: 16,
-      rejected: 5,
-      pending: 1,
-      approvalRate: 73,
-      avgEngagement: 3.8,
-      topRejectionReason: "Design fraco",
-      trend: "down",
-    },
-    luiza: {
-      name: "Luiza",
-      totalGenerated: 19,
-      approved: 15,
-      rejected: 3,
-      pending: 1,
-      approvalRate: 79,
-      avgEngagement: 4.6,
-      topRejectionReason: "Falta de CTA",
-      trend: "up",
-    },
-  };
+  const { data: stats, isLoading, refetch } = trpc.postApproval.getApprovalStats.useQuery();
 
-  const current = performanceData[selectedInfluencer as keyof typeof performanceData];
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
-  const rejectionReasons = [
-    { reason: "Falta de autenticidade", count: 4, percentage: 40 },
-    { reason: "Tom inadequado", count: 3, percentage: 30 },
-    { reason: "Design fraco", count: 2, percentage: 20 },
-    { reason: "Falta de CTA", count: 1, percentage: 10 },
-  ];
+  const byInfluencer = stats?.byInfluencer ?? {};
 
-  const monthlyData = [
-    { month: "Jan", approved: 15, rejected: 3 },
-    { month: "Fev", approved: 18, rejected: 2 },
-    { month: "Mar", approved: 17, rejected: 4 },
-    { month: "Abr", approved: 20, rejected: 2 },
-    { month: "Mai", approved: 22, rejected: 3 },
-    { month: "Jun", approved: 18, rejected: 4 },
-  ];
+  // Build per-influencer stats from real data
+  const influencerStats = INFLUENCER_NAMES.map((key) => {
+    const data = byInfluencer[key] ?? { approved: 0, rejected: 0, pending: 0 };
+    const total = data.approved + data.rejected + data.pending;
+    const approvalRate = total > 0 ? Math.round((data.approved / total) * 100) : 0;
+    return { key, name: key.charAt(0).toUpperCase() + key.slice(1), total, approvalRate, ...data };
+  });
 
-  const improvements = [
-    "✅ Aumentar menção de produtos naturalmente",
-    "✅ Melhorar autenticidade da voz",
-    "✅ Adicionar mais emojis relevantes",
-    "✅ Incluir CTA mais claro",
-  ];
+  const current = influencerStats.find((i) => i.key === selectedInfluencer) ?? influencerStats[0];
+
+  // Month-over-month from global stats
+  const globalTotal = stats?.totalGenerated ?? 0;
+  const globalApprovalRate = stats?.approvalRate ?? 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">Relatório de Performance</h1>
-          <p className="text-slate-600">Análise de aprovação e engajamento por influenciadora</p>
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-slate-900 mb-2">Relatório de Performance</h1>
+            <p className="text-slate-600">Análise de aprovação por influenciadora</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2">
+            <RefreshCw className="w-4 h-4" />
+            Atualizar
+          </Button>
         </div>
 
-        {/* Seletor de Influenciadora */}
-        <div className="mb-8 flex gap-2 flex-wrap">
-          {Object.entries(performanceData).map(([key, data]) => (
+        {/* Global summary */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">Total Gerado</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{globalTotal}</div>
+              <p className="text-xs text-slate-500 mt-1">todos os posts</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">Aprovados</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-green-600">{stats?.totalApproved ?? 0}</div>
+              <p className="text-xs text-slate-500 mt-1">
+                <CheckCircle2 className="inline w-3 h-3 mr-1" />
+                {globalApprovalRate}% taxa global
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">Rejeitados</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-red-600">{stats?.totalRejected ?? 0}</div>
+              <p className="text-xs text-slate-500 mt-1">
+                <XCircle className="inline w-3 h-3 mr-1" />
+                posts com falha
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">Publicados</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-blue-600">{stats?.totalPublished ?? 0}</div>
+              <p className="text-xs text-slate-500 mt-1">
+                <TrendingUp className="inline w-3 h-3 mr-1" />
+                no ar
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Influencer selector */}
+        <div className="mb-6 flex gap-2 flex-wrap">
+          {influencerStats.map((inf) => (
             <Button
-              key={key}
-              variant={selectedInfluencer === key ? "default" : "outline"}
-              onClick={() => setSelectedInfluencer(key)}
-              className="capitalize"
+              key={inf.key}
+              variant={selectedInfluencer === inf.key ? "default" : "outline"}
+              onClick={() => setSelectedInfluencer(inf.key)}
             >
-              {data.name}
+              {inf.name}
+              <Badge variant="secondary" className="ml-2 text-xs">
+                {inf.approvalRate}%
+              </Badge>
             </Button>
           ))}
         </div>
 
-        {/* Estatísticas Principais */}
+        {/* Per-influencer detail */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-slate-600">Total Gerado</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{current.totalGenerated}</div>
-              <p className="text-xs text-slate-500 mt-1">posts este mês</p>
+              <div className="text-3xl font-bold">{current.total}</div>
+              <p className="text-xs text-slate-500 mt-1">posts de {current.name}</p>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-slate-600">Aprovados</CardTitle>
@@ -134,7 +139,6 @@ export default function PerformanceReportPage() {
               </p>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-slate-600">Rejeitados</CardTitle>
@@ -143,197 +147,94 @@ export default function PerformanceReportPage() {
               <div className="text-3xl font-bold text-red-600">{current.rejected}</div>
               <p className="text-xs text-slate-500 mt-1">
                 <XCircle className="inline w-3 h-3 mr-1" />
-                {Math.round((current.rejected / current.totalGenerated) * 100)}% taxa
+                {current.total > 0 ? Math.round((current.rejected / current.total) * 100) : 0}% taxa
               </p>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">Engajamento Médio</CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-600">Pendentes</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-blue-600">{current.avgEngagement}%</div>
-              <p className="text-xs text-slate-500 mt-1">
-                <TrendingUp className="inline w-3 h-3 mr-1" />
-                {current.trend === "up" ? "Crescimento" : "Queda"}
-              </p>
+              <div className="text-3xl font-bold text-amber-600">{current.pending}</div>
+              <p className="text-xs text-slate-500 mt-1">aguardando aprovação</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Tabs com Análises */}
-        <Tabs defaultValue="reasons" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="reasons">Motivos de Rejeição</TabsTrigger>
-            <TabsTrigger value="timeline">Histórico Mensal</TabsTrigger>
-            <TabsTrigger value="improvements">Sugestões</TabsTrigger>
+        <Tabs defaultValue="overview" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+            <TabsTrigger value="all">Todas as Influenciadoras</TabsTrigger>
           </TabsList>
 
-          {/* Motivos de Rejeição */}
-          <TabsContent value="reasons">
+          <TabsContent value="overview">
             <Card>
               <CardHeader>
-                <CardTitle>Análise de Motivos de Rejeição</CardTitle>
-                <CardDescription>
-                  Principais razões por que posts foram rejeitados
-                </CardDescription>
+                <CardTitle>Status dos Posts — {current.name}</CardTitle>
+                <CardDescription>Distribuição atual dos posts gerados</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {current.total === 0 ? (
+                  <div className="flex items-center gap-2 p-4 bg-slate-50 rounded-lg text-slate-500 text-sm">
+                    <AlertCircle className="w-4 h-4" />
+                    Nenhum post gerado ainda para {current.name}.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {[
+                      { label: "Aprovados / Publicados", value: current.approved, color: "bg-green-500", total: current.total },
+                      { label: "Rejeitados / Falhos", value: current.rejected, color: "bg-red-500", total: current.total },
+                      { label: "Pendentes (rascunho)", value: current.pending, color: "bg-amber-400", total: current.total },
+                    ].map((row) => (
+                      <div key={row.label} className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span>{row.label}</span>
+                          <Badge variant="secondary">{row.value}</Badge>
+                        </div>
+                        <div className="w-full bg-slate-200 rounded-full h-2">
+                          <div
+                            className={`${row.color} h-2 rounded-full transition-all`}
+                            style={{ width: `${row.total > 0 ? (row.value / row.total) * 100 : 0}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="all">
+            <Card>
+              <CardHeader>
+                <CardTitle>Comparativo — Todas as Influenciadoras</CardTitle>
+                <CardDescription>Taxa de aprovação por influenciadora</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {rejectionReasons.map((item, idx) => (
-                    <div key={idx} className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium text-sm">{item.reason}</span>
-                        <Badge variant="secondary">{item.count} posts</Badge>
+                  {influencerStats.map((inf) => (
+                    <div key={inf.key} className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="font-medium">{inf.name}</span>
+                        <span className="text-slate-500">
+                          {inf.approved}/{inf.total} posts · {inf.approvalRate}% aprovação
+                        </span>
                       </div>
                       <div className="w-full bg-slate-200 rounded-full h-2">
                         <div
-                          className="bg-red-500 h-2 rounded-full transition-all"
-                          style={{ width: `${item.percentage}%` }}
+                          className="bg-green-500 h-2 rounded-full transition-all"
+                          style={{ width: `${inf.approvalRate}%` }}
                         />
                       </div>
-                      <p className="text-xs text-slate-500">{item.percentage}% do total rejeitado</p>
                     </div>
                   ))}
                 </div>
-
-                <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                  <div className="flex gap-2 items-start">
-                    <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium text-sm text-amber-900">Motivo Principal</p>
-                      <p className="text-sm text-amber-800 mt-1">{current.topRejectionReason}</p>
-                      <p className="text-xs text-amber-700 mt-2">
-                        Foco em melhorar este aspecto pode aumentar a taxa de aprovação em até 30%.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Histórico Mensal */}
-          <TabsContent value="timeline">
-            <Card>
-              <CardHeader>
-                <CardTitle>Histórico de Aprovações - Últimos 6 Meses</CardTitle>
-                <CardDescription>
-                  Tendência de aprovação e rejeição ao longo do tempo
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {monthlyData.map((month, idx) => (
-                    <div key={idx} className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium text-sm">{month.month}</span>
-                        <span className="text-xs text-slate-500">
-                          {month.approved + month.rejected} posts
-                        </span>
-                      </div>
-                      <div className="flex gap-1 h-8">
-                        <div
-                          className="bg-green-500 rounded flex items-center justify-center text-white text-xs font-bold"
-                          style={{
-                            width: `${(month.approved / (month.approved + month.rejected)) * 100}%`,
-                          }}
-                        >
-                          {month.approved > 0 && month.approved}
-                        </div>
-                        <div
-                          className="bg-red-500 rounded flex items-center justify-center text-white text-xs font-bold"
-                          style={{
-                            width: `${(month.rejected / (month.approved + month.rejected)) * 100}%`,
-                          }}
-                        >
-                          {month.rejected > 0 && month.rejected}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-6 flex gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-500 rounded" />
-                    <span>Aprovados</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-red-500 rounded" />
-                    <span>Rejeitados</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Sugestões de Melhoria */}
-          <TabsContent value="improvements">
-            <Card>
-              <CardHeader>
-                <CardTitle>Sugestões de Melhoria</CardTitle>
-                <CardDescription>
-                  Recomendações baseadas em análise de feedback
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {improvements.map((improvement, idx) => (
-                    <div
-                      key={idx}
-                      className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3"
-                    >
-                      <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                      <p className="text-sm text-green-900">{improvement}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="font-medium text-sm text-blue-900 mb-2">💡 Dica IA</p>
-                  <p className="text-sm text-blue-800">
-                    Com base no padrão de rejeições, recomendamos treinar a IA com exemplos de posts
-                    bem-sucedidos de {current.name} para melhorar a qualidade dos próximos posts.
-                  </p>
-                </div>
-
-                <Button className="w-full mt-6 gap-2">
-                  <Download className="w-4 h-4" />
-                  Exportar Relatório em PDF
-                </Button>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
-
-        {/* Resumo Geral */}
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle>Resumo Geral do Mês</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h4 className="font-medium text-sm text-slate-900 mb-3">Pontos Fortes</h4>
-                <ul className="space-y-2 text-sm text-slate-700">
-                  <li>✨ {current.approvalRate}% de taxa de aprovação</li>
-                  <li>📈 Engajamento médio de {current.avgEngagement}%</li>
-                  <li>🎯 Consistência em gerar conteúdo relevante</li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-medium text-sm text-slate-900 mb-3">Áreas de Melhoria</h4>
-                <ul className="space-y-2 text-sm text-slate-700">
-                  <li>🔧 Trabalhar em {current.topRejectionReason.toLowerCase()}</li>
-                  <li>📝 Revisar padrão de captions rejeitadas</li>
-                  <li>🎨 Melhorar variedade de temas</li>
-                </ul>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
