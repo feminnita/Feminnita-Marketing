@@ -1,24 +1,47 @@
 import { z } from "zod";
-import { publicProcedure, router } from "../_core/trpc";
+import { publicProcedure, protectedProcedure, router } from "../_core/trpc";
+import { getDb } from "../db";
+import { oauthCredentials } from "../../drizzle/schema";
+import { eq, and } from "drizzle-orm";
 
 /**
  * OAuth Integrations Router
  * Handles OAuth flows for Meta (Facebook/Instagram), TikTok, and Google Drive
  */
 export const oauthIntegrationsRouter = router({
-  // ============ Save Credentials ============
-  saveCredentials: publicProcedure
+  // ============ Save Credentials (requer autenticação + persiste no banco) ============
+  saveCredentials: protectedProcedure
     .input(z.object({
-      platform: z.string(),
+      platform: z.enum(["bling", "canva", "meta", "tiktok", "google_drive", "whatsapp", "email_marketing", "tray"]),
       clientId: z.string(),
       clientSecret: z.string(),
       redirectUri: z.string().optional(),
     }))
-    .mutation(async ({ input }) => {
-      // Salvar credenciais em variáveis de ambiente (em produção, usar banco de dados)
-      process.env[`${input.platform.toUpperCase()}_CLIENT_ID`] = input.clientId;
-      process.env[`${input.platform.toUpperCase()}_CLIENT_SECRET`] = input.clientSecret;
-      
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const existing = await db
+        .select()
+        .from(oauthCredentials)
+        .where(and(eq(oauthCredentials.userId, ctx.user.id), eq(oauthCredentials.platform, input.platform)))
+        .limit(1);
+
+      if (existing.length > 0) {
+        await db
+          .update(oauthCredentials)
+          .set({ clientId: input.clientId, clientSecret: input.clientSecret, updatedAt: new Date() })
+          .where(and(eq(oauthCredentials.userId, ctx.user.id), eq(oauthCredentials.platform, input.platform)));
+      } else {
+        await db.insert(oauthCredentials).values({
+          userId: ctx.user.id,
+          platform: input.platform,
+          clientId: input.clientId,
+          clientSecret: input.clientSecret,
+          isConnected: false,
+        });
+      }
+
       return {
         success: true,
         message: `Credenciais de ${input.platform} salvas com sucesso`,

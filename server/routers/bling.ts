@@ -4,6 +4,7 @@
 
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
+import { saveOAuthToken } from "../db";
 import {
   sincronizarProdutos,
   sincronizarPedidos,
@@ -27,29 +28,11 @@ export const blingRouter = router({
     )
     .mutation(async ({ ctx, input }: any) => {
       try {
-        const expiresAt = new Date();
-        if (input.expiresIn) {
-          expiresAt.setSeconds(expiresAt.getSeconds() + input.expiresIn);
-        } else {
-          // Default: 1 hora
-          expiresAt.setHours(expiresAt.getHours() + 1);
-        }
-
-        // Aqui você salvaria no banco de dados
-        // await db.blingCredentials.upsert({
-        //   where: { userId: ctx.user.id },
-        //   update: {
-        //     accessToken: input.accessToken,
-        //     refreshToken: input.refreshToken,
-        //     expiresAt,
-        //   },
-        //   create: {
-        //     userId: ctx.user.id,
-        //     accessToken: input.accessToken,
-        //     refreshToken: input.refreshToken,
-        //     expiresAt,
-        //   },
-        // });
+        await saveOAuthToken(ctx.user.id, "bling", {
+          accessToken: input.accessToken,
+          refreshToken: input.refreshToken,
+          expiresIn: input.expiresIn,
+        });
 
         return {
           success: true,
