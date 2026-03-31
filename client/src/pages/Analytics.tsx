@@ -3,11 +3,10 @@ import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Heart, Eye, MessageCircle, Share2, TrendingUp, Users } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 
-const COLORS = ["#A63D4A", "#E8B4B8", "#F5D5D8", "#FFE8EB"];
 
 export default function Analytics() {
   const { user } = useAuth();
@@ -21,48 +20,48 @@ export default function Analytics() {
     { enabled: !!selectedAccountId }
   );
 
+  // Get influencerId from selected account
+  const accounts = accountsQuery.data || [];
+  const selectedAccount = accounts.find((a) => a.id.toString() === selectedAccountId);
+  const influencerId = selectedAccount?.influencerId ?? null;
+
+  // Performance metrics from influencer_performance table
+  const performanceQuery = trpc.autonomousInfluencers.getPerformanceMetrics.useQuery(
+    { influencerId: influencerId!, days: 30 },
+    { enabled: !!influencerId }
+  );
+
   // Mutation para sincronizar métricas
   const syncMetricsMutation = trpc.metaGraphIntegration.syncAllPostMetrics.useMutation({
     onSuccess: () => {
       accountInsightsQuery.refetch();
+      performanceQuery.refetch();
     },
   });
 
-  const accounts = accountsQuery.data || [];
   const insights = accountInsightsQuery.data;
+  const perfMetrics = performanceQuery.data?.metrics;
 
-  // Dados simulados para gráficos (será substituído por dados reais)
-  const engagementData = [
-    { date: "01/02", likes: 120, comments: 45, shares: 12 },
-    { date: "02/02", likes: 150, comments: 60, shares: 18 },
-    { date: "03/02", likes: 180, comments: 75, shares: 25 },
-    { date: "04/02", likes: 140, comments: 50, shares: 15 },
-    { date: "05/02", likes: 200, comments: 85, shares: 30 },
-    { date: "06/02", likes: 220, comments: 95, shares: 35 },
-    { date: "07/02", likes: 250, comments: 110, shares: 40 },
-  ];
+  // Build chart data from real performance rows
+  const rawData = (perfMetrics?.data ?? []).slice(0, 14).reverse();
 
-  const reachData = [
-    { date: "01/02", reach: 1200, impressions: 1800 },
-    { date: "02/02", reach: 1500, impressions: 2100 },
-    { date: "03/02", reach: 1800, impressions: 2500 },
-    { date: "04/02", reach: 1400, impressions: 2000 },
-    { date: "05/02", reach: 2000, impressions: 2800 },
-    { date: "06/02", reach: 2200, impressions: 3000 },
-    { date: "07/02", reach: 2500, impressions: 3400 },
-  ];
+  const engagementData = rawData.map((m: any) => ({
+    date: String(m.date).slice(5), // MM-DD
+    engajamento: m.totalEngagement ?? 0,
+    taxa: parseFloat(m.engagementRate ?? "0"),
+  }));
+
+  const reachData = rawData.map((m: any) => ({
+    date: String(m.date).slice(5),
+    alcance: m.totalReach ?? 0,
+    impressoes: m.totalImpressions ?? 0,
+  }));
 
   const accountPerformanceData = accounts.map((acc) => ({
     name: acc.username,
     followers: acc.followers || 0,
     posts: acc.postsCount || 0,
   }));
-
-  const contentTypeData = [
-    { name: "Imagens", value: 45 },
-    { name: "Carrosséis", value: 30 },
-    { name: "Reels", value: 25 },
-  ];
 
   return (
     <div className="space-y-8">
@@ -167,7 +166,9 @@ export default function Analytics() {
         <Card>
           <CardHeader>
             <CardTitle>Engajamento</CardTitle>
-            <CardDescription>Likes, comentários e compartilhamentos</CardDescription>
+            <CardDescription>
+              {influencerId ? "Engajamento total por dia (últimos 30 dias)" : "Selecione uma conta para ver dados reais"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -177,9 +178,8 @@ export default function Analytics() {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="likes" stroke="#A63D4A" strokeWidth={2} />
-                <Line type="monotone" dataKey="comments" stroke="#E8B4B8" strokeWidth={2} />
-                <Line type="monotone" dataKey="shares" stroke="#F5D5D8" strokeWidth={2} />
+                <Line type="monotone" dataKey="engajamento" stroke="#A63D4A" strokeWidth={2} name="Engajamento" />
+                <Line type="monotone" dataKey="taxa" stroke="#E8B4B8" strokeWidth={2} name="Taxa (%)" />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -189,7 +189,9 @@ export default function Analytics() {
         <Card>
           <CardHeader>
             <CardTitle>Alcance vs Impressões</CardTitle>
-            <CardDescription>Comparativo de alcance e impressões</CardDescription>
+            <CardDescription>
+              {influencerId ? "Dados reais de alcance e impressões" : "Selecione uma conta para ver dados reais"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -199,8 +201,8 @@ export default function Analytics() {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="reach" fill="#A63D4A" />
-                <Bar dataKey="impressions" fill="#E8B4B8" />
+                <Bar dataKey="alcance" fill="#A63D4A" name="Alcance" />
+                <Bar dataKey="impressoes" fill="#E8B4B8" name="Impressões" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -227,48 +229,41 @@ export default function Analytics() {
           </CardContent>
         </Card>
 
-        {/* Tipo de Conteúdo */}
+        {/* Métricas de Seguidores */}
         <Card>
           <CardHeader>
-            <CardTitle>Distribuição de Conteúdo</CardTitle>
-            <CardDescription>Tipos de posts publicados</CardDescription>
+            <CardTitle>Crescimento de Seguidores</CardTitle>
+            <CardDescription>
+              {influencerId
+                ? `Atual: ${(perfMetrics?.currentFollowers ?? 0).toLocaleString()} · Crescimento: ${perfMetrics?.followerGrowth ?? 0}`
+                : "Selecione uma conta para ver dados reais"}
+            </CardDescription>
           </CardHeader>
-          <CardContent className="flex justify-center">
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={contentTypeData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, value }) => `${name}: ${value}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {contentTypeData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 bg-slate-50 rounded-lg text-center">
+                <p className="text-2xl font-bold">{(perfMetrics?.currentFollowers ?? 0).toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground mt-1">Seguidores Atuais</p>
+              </div>
+              <div className="p-4 bg-slate-50 rounded-lg text-center">
+                <p className={`text-2xl font-bold ${(perfMetrics?.followerGrowth ?? 0) >= 0 ? "text-green-600" : "text-red-600"}`}>
+                  {(perfMetrics?.followerGrowth ?? 0) >= 0 ? "+" : ""}{(perfMetrics?.followerGrowth ?? 0).toLocaleString()}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">Crescimento (30d)</p>
+              </div>
+              <div className="p-4 bg-slate-50 rounded-lg text-center">
+                <p className="text-2xl font-bold">{perfMetrics?.avgEngagementRate ?? "0"}%</p>
+                <p className="text-xs text-muted-foreground mt-1">Taxa de Engajamento</p>
+              </div>
+              <div className="p-4 bg-slate-50 rounded-lg text-center">
+                <p className="text-2xl font-bold">{(perfMetrics?.totalEngagement ?? 0).toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground mt-1">Engajamento Total</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Recomendações */}
-      <Card className="bg-amber-50 border-amber-200">
-        <CardHeader>
-          <CardTitle className="text-amber-900">💡 Recomendações</CardTitle>
-        </CardHeader>
-        <CardContent className="text-amber-800 space-y-2">
-          <p>• Seus posts com imagens têm 2.5x mais engajamento que carrosséis</p>
-          <p>• Melhor horário para postar: 19:00 - 21:00 (baseado em dados históricos)</p>
-          <p>• Hashtags mais efetivas: #pijamas #moda #conforto</p>
-          <p>• Considere aumentar frequência de posts para 4-5 por semana</p>
-        </CardContent>
-      </Card>
     </div>
   );
 }
