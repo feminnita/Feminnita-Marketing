@@ -1,7 +1,27 @@
-import { COOKIE_NAME } from "@shared/const";
+import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { sdk } from "./_core/sdk";
+import * as db from "./db";
+import { z } from "zod";
+import { scrypt, randomBytes, timingSafeEqual } from "crypto";
+import { promisify } from "util";
+
+const scryptAsync = promisify(scrypt);
+
+async function hashPassword(password: string): Promise<string> {
+  const salt = randomBytes(16).toString("hex");
+  const hash = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${salt}:${hash.toString("hex")}`;
+}
+
+async function verifyPassword(password: string, stored: string): Promise<boolean> {
+  const [salt, hash] = stored.split(":");
+  const hashBuf = Buffer.from(hash, "hex");
+  const derived = (await scryptAsync(password, salt, 64)) as Buffer;
+  return timingSafeEqual(hashBuf, derived);
+}
 import { blingOAuthRouter } from "./routers/bling-oauth";
 import { blingRouter } from "./routers/bling";
 import { blingSyncRouter } from "./routers/bling-sync";
@@ -66,12 +86,44 @@ export const appRouter = router({
   system: systemRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
+
+    register: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+        password: z.string().min(6),
+        name: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const existing = await db.getUserByEmail(input.email);
+        if (existing) throw new Error("Email já cadastrado");
+        const passwordHash = await hashPassword(input.password);
+        const user = await db.createUser({ email: input.email, passwordHash, name: input.name });
+        const token = await sdk.signSession({ userId: user.id, email: user.email });
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, token, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+        return { success: true as const, user };
+      }),
+
+    login: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+        password: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const user = await db.getUserByEmail(input.email);
+        if (!user || !user.passwordHash) throw new Error("Email ou senha inválidos");
+        const valid = await verifyPassword(input.password, user.passwordHash);
+        if (!valid) throw new Error("Email ou senha inválidos");
+        const token = await sdk.signSession({ userId: user.id, email: user.email });
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, token, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+        return { success: true as const, user };
+      }),
+
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
-      return {
-        success: true,
-      } as const;
+      return { success: true } as const;
     }),
   }),
 

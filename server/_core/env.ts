@@ -1,21 +1,16 @@
-const formatMetaAccountId = (accountId: string): string => {
-  if (!accountId) return "";
-  // Se já tem o prefixo act_, retorna como está
-  if (accountId.startsWith("act_")) return accountId;
-  // Caso contrário, adiciona o prefixo
-  return `act_${accountId}`;
-};
-
 export const ENV = {
-  appId: process.env.VITE_APP_ID ?? "",
   cookieSecret: process.env.JWT_SECRET ?? "",
   databaseUrl: process.env.DATABASE_URL ?? "",
-  oAuthServerUrl: process.env.OAUTH_SERVER_URL ?? "",
-  ownerOpenId: process.env.OWNER_OPEN_ID ?? "",
+  adminEmail: process.env.ADMIN_EMAIL ?? "",
   isProduction: process.env.NODE_ENV === "production",
-  forgeApiUrl: process.env.BUILT_IN_FORGE_API_URL ?? "",
-  forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
+  // LLM / AI service (supports both new LLM_API_* and legacy BUILT_IN_FORGE_* names)
+  forgeApiUrl: process.env.LLM_API_URL ?? process.env.BUILT_IN_FORGE_API_URL ?? "",
+  forgeApiKey: process.env.LLM_API_KEY ?? process.env.BUILT_IN_FORGE_API_KEY ?? "",
   metaAccessToken: process.env.META_ACCESS_TOKEN ?? "",
-  metaAdAccountId: formatMetaAccountId(process.env.META_AD_ACCOUNT_ID ?? ""),
+  metaAdAccountId: (process.env.META_AD_ACCOUNT_ID ?? "").startsWith("act_")
+    ? (process.env.META_AD_ACCOUNT_ID ?? "")
+    : process.env.META_AD_ACCOUNT_ID
+    ? `act_${process.env.META_AD_ACCOUNT_ID}`
+    : "",
   metaPixelId: process.env.META_PIXEL_ID ?? "",
 };

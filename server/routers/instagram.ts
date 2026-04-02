@@ -12,7 +12,7 @@ export const instagramRouter = router({
     }))
     .query(async ({ input }) => {
       try {
-        const instagramAccountId = process.env.VITE_APP_ID || "";
+        const instagramAccountId = process.env.INSTAGRAM_ACCOUNT_ID || "";
         const accessToken = process.env.META_ACCESS_TOKEN || "";
 
         if (!instagramAccountId || !accessToken) {
