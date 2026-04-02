@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getInfluencerCosmetics } from "@/lib/influencerCosmetics";
 import { useRoute } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,72 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
 import { Loader2, ShoppingCart, Heart, MessageCircle, Share2, ArrowRight } from "lucide-react";
 
-const INFLUENCER_PROFILES = {
-  1: {
-    name: "Carol",
-    title: "A Mãe Moderna",
-    color: "from-pink-400 to-pink-600",
-    bgColor: "bg-pink-50",
-    accentColor: "text-pink-600",
-    image: "👩‍👧‍👦",
-    feminnita_url: "https://www.feminnita.com.br",
-  },
-  2: {
-    name: "Renata",
-    title: "A Executiva Elegante",
-    color: "from-purple-400 to-purple-600",
-    bgColor: "bg-purple-50",
-    accentColor: "text-purple-600",
-    image: "👩‍💼",
-    feminnita_url: "https://www.feminnita.com.br",
-  },
-  3: {
-    name: "Vanessa",
-    title: "A Criativa Artística",
-    color: "from-blue-400 to-blue-600",
-    bgColor: "bg-blue-50",
-    accentColor: "text-blue-600",
-    image: "🎨",
-    feminnita_url: "https://www.feminnita.com.br",
-  },
-  4: {
-    name: "Luiza",
-    title: "A Fitness Aventureira",
-    color: "from-green-400 to-green-600",
-    bgColor: "bg-green-50",
-    accentColor: "text-green-600",
-    image: "💪",
-    feminnita_url: "https://www.feminnita.com.br",
-  },
-};
 
-interface BlogPost {
-  id: number;
-  content: string;
-  caption: string;
-  hashtags: string[];
-  publishedAt: Date | null;
-  createdAt: Date | null;
-  status: string;
-  products?: Array<{
-    id: string;
-    name: string;
-    price: number;
-    image: string;
-    url: string;
-    description: string;
-  }>;
-}
-
-const DEFAULT_COSMETICS = {
-  color: "from-gray-400 to-gray-600",
-  bgColor: "bg-gray-50",
-  accentColor: "text-gray-600",
-  image: "👤",
-  feminnita_url: "https://www.feminnita.com.br",
-  name: "",
-  title: "",
-};
 
 export default function InfluencerBlogPage() {
   const [, params] = useRoute("/blog/:id");
@@ -82,7 +18,7 @@ export default function InfluencerBlogPage() {
   const { data: influencersData } = trpc.autonomousInfluencers.listInfluencers.useQuery();
   const dbInfluencer = influencersData?.influencers?.find((i: any) => i.id === influencerId);
 
-  const cosmetics = INFLUENCER_PROFILES[influencerId as keyof typeof INFLUENCER_PROFILES] ?? DEFAULT_COSMETICS;
+  const cosmetics = getInfluencerCosmetics(influencerId);
   const profile = dbInfluencer
     ? { ...cosmetics, name: dbInfluencer.name, title: dbInfluencer.personality ?? cosmetics.title ?? "" }
     : cosmetics.name

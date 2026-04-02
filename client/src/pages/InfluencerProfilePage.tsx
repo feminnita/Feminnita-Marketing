@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getInfluencerCosmetics } from "@/lib/influencerCosmetics";
 import { useRoute } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,108 +9,7 @@ import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Loader2, Heart, MessageCircle, Share2, Plus, Trash2, Edit2 } from "lucide-react";
 
-const INFLUENCER_PROFILES = {
-  1: {
-    name: "Carol",
-    title: "A Mãe Moderna",
-    bio: "Mãe de 2 filhos, equilibrando maternidade com vida pessoal. Amante de conforto e praticidade.",
-    color: "from-pink-400 to-pink-600",
-    bgColor: "bg-pink-50",
-    accentColor: "text-pink-600",
-    image: "👩‍👧‍👦",
-    dailyLife: [
-      "Acordar cedo para preparar as crianças",
-      "Trabalho remoto com os filhos",
-      "Yoga 3x por semana",
-      "Noites de série com o marido",
-      "Finais de semana em família",
-    ],
-    feminnita: [
-      "Pijamas confortáveis para noites de série",
-      "Roupa prática para trabalhar em casa",
-      "Pijamas para as crianças também",
-      "Conforto durante o dia de trabalho",
-    ],
-  },
-  2: {
-    name: "Renata",
-    title: "A Executiva Elegante",
-    bio: "Executiva ambiciosa, sofisticada. Viajante, networking e desenvolvimento pessoal.",
-    color: "from-purple-400 to-purple-600",
-    bgColor: "bg-purple-50",
-    accentColor: "text-purple-600",
-    image: "👩‍💼",
-    dailyLife: [
-      "Reuniões importantes e apresentações",
-      "Viagens de negócios frequentes",
-      "Eventos corporativos",
-      "Academia e autocuidado",
-      "Leitura e desenvolvimento pessoal",
-    ],
-    feminnita: [
-      "Pijamas sofisticados para viagens",
-      "Roupa confortável para dias intensos",
-      "Pijamas elegantes para eventos",
-      "Conforto sem perder elegância",
-    ],
-  },
-  3: {
-    name: "Vanessa",
-    title: "A Criativa Artística",
-    bio: "Artista e designer criativa. Adora arte, música e expressão pessoal.",
-    color: "from-blue-400 to-blue-600",
-    bgColor: "bg-blue-50",
-    accentColor: "text-blue-600",
-    image: "🎨",
-    dailyLife: [
-      "Trabalho criativo (design e ilustração)",
-      "Cafés e galerias de arte",
-      "Encontros com amigos artistas",
-      "Yoga e meditação",
-      "Criação de conteúdo para redes sociais",
-    ],
-    feminnita: [
-      "Pijamas com designs únicos",
-      "Roupa confortável para criar",
-      "Pijamas para noites de inspiração",
-      "Expressão pessoal através da moda",
-    ],
-  },
-  4: {
-    name: "Luiza",
-    title: "A Fitness Aventureira",
-    bio: "Atleta e influenciadora fitness. Aventureira, energética e apaixonada por esportes.",
-    color: "from-green-400 to-green-600",
-    bgColor: "bg-green-50",
-    accentColor: "text-green-600",
-    image: "💪",
-    dailyLife: [
-      "Treinos intensos (musculação, corrida)",
-      "Trilhas e atividades ao ar livre",
-      "Conteúdo fitness para redes sociais",
-      "Alimentação saudável e meal prep",
-      "Viagens para esportes radicais",
-    ],
-    feminnita: [
-      "Pijamas confortáveis para recuperação",
-      "Roupa prática para dias ativos",
-      "Pijamas para dormir bem",
-      "Conforto após atividades intensas",
-    ],
-  },
-};
 
-const DEFAULT_COSMETICS = {
-  color: "from-gray-400 to-gray-600",
-  bgColor: "bg-gray-50",
-  accentColor: "text-gray-600",
-  image: "👤",
-  dailyLife: [] as string[],
-  feminnita: [] as string[],
-  title: "",
-  bio: "",
-  name: "",
-};
 
 export default function InfluencerProfilePage() {
   const [, params] = useRoute("/influenciadora/:id");
@@ -124,7 +24,7 @@ export default function InfluencerProfilePage() {
   const dbInfluencer = influencersData?.influencers?.find((i: any) => i.id === influencerId);
 
   // Static cosmetics (colors, emoji) with DB name/bio taking priority
-  const cosmetics = INFLUENCER_PROFILES[influencerId as keyof typeof INFLUENCER_PROFILES] ?? DEFAULT_COSMETICS;
+  const cosmetics = getInfluencerCosmetics(influencerId);
   const profile = dbInfluencer
     ? {
         ...cosmetics,
@@ -215,7 +115,7 @@ export default function InfluencerProfilePage() {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
-                  {profile.dailyLife.map((item, idx) => (
+                  {(profile.dailyLife ?? []).map((item, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <span className="text-lg mt-1">✓</span>
                       <span className="text-sm">{item}</span>
@@ -235,7 +135,7 @@ export default function InfluencerProfilePage() {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
-                  {profile.feminnita.map((item, idx) => (
+                  {(profile.feminnita ?? []).map((item, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <span className="text-lg">💝</span>
                       <span className="text-sm">{item}</span>
