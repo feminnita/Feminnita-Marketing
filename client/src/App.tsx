@@ -1,47 +1,62 @@
-import { useLocation, Link } from "wouter";
+import { lazy, Suspense } from "react";
+import { useLocation } from "wouter";
 import DashboardLayout from "@/components/DashboardLayout";
 import PublicLayout from "@/components/PublicLayout";
+
+// Páginas carregadas imediatamente (rota inicial + login)
 import Home from "@/pages/Home";
-import Integrations from "@/pages/Integrations";
-import IntegrationGuide from "@/pages/IntegrationGuide";
-import Performance from "@/pages/Performance";
-import Automations from "@/pages/Automations";
-import Campaigns from "@/pages/Campaigns";
-import InfluencersDashboard from "@/pages/InfluencersDashboard";
-import MetaAdsCampaigns from "@/pages/MetaAdsCampaigns";
-import OAuthCredentials from "@/pages/OAuthCredentials";
-import CollaboratorsManagement from "@/pages/CollaboratorsManagement";
-import ConfigureCredentials from "@/pages/ConfigureCredentials";
 import LoginSignup from "@/pages/LoginSignup";
-import IntegrationSetup from "@/pages/IntegrationSetup";
-import CanvaOAuth from "@/pages/CanvaOAuth";
-import MetaCapiSetup from "@/pages/MetaCapiSetup";
-import TermosServico from "@/pages/TermosServico";
-import Privacidade from "@/pages/Privacidade";
-import PrivacyPolicy from "@/pages/PrivacyPolicy";
-import TermsOfService from "@/pages/TermsOfService";
-import InstagramDashboard from "@/pages/InstagramDashboard";
-import MetaAdsDashboard from "@/pages/MetaAdsDashboard";
-import SocialMediaScheduler from "@/pages/SocialMediaScheduler";
-import InfluencerBlog from "@/pages/InfluencerBlog";
-import Analytics from "@/pages/Analytics";
-import InfluencerAccountsPage from "@/pages/InfluencerAccountsPage";
-import InfluencerProfilePage from "@/pages/InfluencerProfilePage";
-import InfluencerBlogPage from "@/pages/InfluencerBlogPage";
-import InfluencerBlogsLinksPage from "@/pages/InfluencerBlogsLinksPage";
-import SchedulePostsPage from "@/pages/SchedulePostsPage";
-import ApprovalDashboardPage from "@/pages/ApprovalDashboardPage";
-import PerformanceReportPage from "@/pages/PerformanceReportPage";
-import AITrainingDashboardPage from "@/pages/AITrainingDashboardPage";
-import WhatsAppAISetupPage from "@/pages/WhatsAppAISetupPage";
-import WhatsAppBaileysPage from "@/pages/WhatsAppBaileysPage";
-import WhatsAppBaileysSimplePage from "./pages/WhatsAppBaileysSimplePage";
-import WhatsAppNotificationsPage from "./pages/WhatsAppNotificationsPage";
-import AssetLibraryPage from "@/pages/AssetLibraryPage";
-import MarketingTeamPage from "@/pages/MarketingTeamPage";
-import AfiliadasPage from "@/pages/AfiliadasPage";
-import BrandBookPage from "@/pages/BrandBookPage";
-import TiktokLivePage from "@/pages/TiktokLivePage";
+
+// Todas as outras páginas em lazy para code splitting
+const Integrations            = lazy(() => import("@/pages/Integrations"));
+const IntegrationGuide        = lazy(() => import("@/pages/IntegrationGuide"));
+const Performance             = lazy(() => import("@/pages/Performance"));
+const Automations             = lazy(() => import("@/pages/Automations"));
+const Campaigns               = lazy(() => import("@/pages/Campaigns"));
+const InfluencersDashboard    = lazy(() => import("@/pages/InfluencersDashboard"));
+const MetaAdsCampaigns        = lazy(() => import("@/pages/MetaAdsCampaigns"));
+const OAuthCredentials        = lazy(() => import("@/pages/OAuthCredentials"));
+const CollaboratorsManagement = lazy(() => import("@/pages/CollaboratorsManagement"));
+const ConfigureCredentials    = lazy(() => import("@/pages/ConfigureCredentials"));
+const IntegrationSetup        = lazy(() => import("@/pages/IntegrationSetup"));
+const CanvaOAuth              = lazy(() => import("@/pages/CanvaOAuth"));
+const MetaCapiSetup           = lazy(() => import("@/pages/MetaCapiSetup"));
+const TermosServico           = lazy(() => import("@/pages/TermosServico"));
+const Privacidade             = lazy(() => import("@/pages/Privacidade"));
+const PrivacyPolicy           = lazy(() => import("@/pages/PrivacyPolicy"));
+const TermsOfService          = lazy(() => import("@/pages/TermsOfService"));
+const InstagramDashboard      = lazy(() => import("@/pages/InstagramDashboard"));
+const MetaAdsDashboard        = lazy(() => import("@/pages/MetaAdsDashboard"));
+const SocialMediaScheduler    = lazy(() => import("@/pages/SocialMediaScheduler"));
+const InfluencerBlog          = lazy(() => import("@/pages/InfluencerBlog"));
+const Analytics               = lazy(() => import("@/pages/Analytics"));
+const InfluencerAccountsPage  = lazy(() => import("@/pages/InfluencerAccountsPage"));
+const InfluencerProfilePage   = lazy(() => import("@/pages/InfluencerProfilePage"));
+const InfluencerBlogPage      = lazy(() => import("@/pages/InfluencerBlogPage"));
+const InfluencerBlogsLinksPage= lazy(() => import("@/pages/InfluencerBlogsLinksPage"));
+const SchedulePostsPage       = lazy(() => import("@/pages/SchedulePostsPage"));
+const ApprovalDashboardPage   = lazy(() => import("@/pages/ApprovalDashboardPage"));
+const PerformanceReportPage   = lazy(() => import("@/pages/PerformanceReportPage"));
+const AITrainingDashboardPage = lazy(() => import("@/pages/AITrainingDashboardPage"));
+const WhatsAppAISetupPage     = lazy(() => import("@/pages/WhatsAppAISetupPage"));
+const WhatsAppBaileysSimplePage  = lazy(() => import("./pages/WhatsAppBaileysSimplePage"));
+const WhatsAppNotificationsPage  = lazy(() => import("./pages/WhatsAppNotificationsPage"));
+const AssetLibraryPage        = lazy(() => import("@/pages/AssetLibraryPage"));
+const MarketingTeamPage       = lazy(() => import("@/pages/MarketingTeamPage"));
+const AfiliadasPage           = lazy(() => import("@/pages/AfiliadasPage"));
+const BrandBookPage           = lazy(() => import("@/pages/BrandBookPage"));
+const TiktokLivePage          = lazy(() => import("@/pages/TiktokLivePage"));
+
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-8 h-8 border-4 border-pink-500 border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm text-slate-500">Carregando...</p>
+      </div>
+    </div>
+  );
+}
 
 export default function App() {
   const [location] = useLocation();
@@ -59,7 +74,7 @@ export default function App() {
         return <Privacidade />;
       case "/privacy":
         return <PrivacyPolicy />;
-       case "/terms":
+      case "/terms":
         return <TermsOfService />;
       // Rotas autenticadas
       case "/":
@@ -110,7 +125,7 @@ export default function App() {
         return <Analytics />;
       case "/contas-influenciadoras":
         return <InfluencerAccountsPage />;
-       case "/blogs-externos":
+      case "/blogs-externos":
         return <InfluencerBlogsLinksPage />;
       case "/agendar-posts":
         return <SchedulePostsPage />;
@@ -137,11 +152,9 @@ export default function App() {
       case "/tiktok-live":
         return <TiktokLivePage />;
       default: {
-        // Rotas autenticadas de perfis individuais de influenciadoras
         if (/^\/influenciadora\/\d+$/.test(location)) {
           return <InfluencerProfilePage />;
         }
-        // Rotas de blogs das influenciadoras
         if (/^\/blog\/\d+$/.test(location)) {
           return <InfluencerBlogPage />;
         }
@@ -150,14 +163,21 @@ export default function App() {
     }
   };
 
-  // Use PublicLayout para rotas públicas, DashboardLayout para o resto
   if (isPublicRoute) {
-    return <PublicLayout>{getPageComponent()}</PublicLayout>;
+    return (
+      <PublicLayout>
+        <Suspense fallback={<PageLoader />}>
+          {getPageComponent()}
+        </Suspense>
+      </PublicLayout>
+    );
   }
 
   return (
     <DashboardLayout>
-      {getPageComponent()}
+      <Suspense fallback={<PageLoader />}>
+        {getPageComponent()}
+      </Suspense>
     </DashboardLayout>
   );
 }

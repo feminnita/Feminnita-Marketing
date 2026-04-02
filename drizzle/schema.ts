@@ -1127,3 +1127,23 @@ export const contentTemplates = mysqlTable("content_templates", {
 });
 export type ContentTemplate = typeof contentTemplates.$inferSelect;
 export type InsertContentTemplate = typeof contentTemplates.$inferInsert;
+
+// === HISTÓRICO DE DESIGNS CANVA ===
+export const designHistory = mysqlTable("design_history", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  designId: varchar("designId", { length: 255 }).notNull(),
+  designName: varchar("designName", { length: 500 }).notNull(),
+  designType: varchar("designType", { length: 100 }),
+  thumbnailUrl: text("thumbnailUrl"),
+  editUrl: text("editUrl"),
+  exportUrl: text("exportUrl"),
+  status: mysqlEnum("status", ["draft", "exported", "published"]).notNull().default("draft"),
+  influencerId: int("influencerId"),
+  campaignId: int("campaignId"),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+export type DesignHistory = typeof designHistory.$inferSelect;
+export type InsertDesignHistory = typeof designHistory.$inferInsert;

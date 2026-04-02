@@ -1,8 +1,8 @@
 import { protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
-import { oauthCredentials } from "../../drizzle/schema";
-import { eq, and } from "drizzle-orm";
+import { oauthCredentials, designHistory } from "../../drizzle/schema";
+import { eq, and, desc } from "drizzle-orm";
 
 /**
  * Canva API Integration Router
@@ -266,16 +266,87 @@ export const canvaIntegrationRouter = {
    * Get design history
    */
   getDesignHistory: protectedProcedure
-    .query(async ({ ctx }: any) => {
+    .input(z.object({
+      limit: z.number().min(1).max(100).optional().default(50),
+    }).optional())
+    .query(async ({ ctx, input }: any) => {
       try {
-        // In production, fetch from database
+        const db = await getDb();
+        if (!db) return { success: true, designs: [], total: 0 };
+
+        const rows = await db
+          .select()
+          .from(designHistory)
+          .where(eq(designHistory.userId, ctx.user.id))
+          .orderBy(desc(designHistory.createdAt))
+          .limit(input?.limit ?? 50);
+
         return {
           success: true,
-          designs: [],
-          total: 0,
+          designs: rows,
+          total: rows.length,
         };
       } catch (error: any) {
         throw new Error(`Erro ao buscar histórico: ${error.message}`);
+      }
+    }),
+
+  saveDesignHistory: protectedProcedure
+    .input(z.object({
+      designId: z.string(),
+      designName: z.string(),
+      designType: z.string().optional(),
+      thumbnailUrl: z.string().optional(),
+      editUrl: z.string().optional(),
+      exportUrl: z.string().optional(),
+      status: z.enum(["draft", "exported", "published"]).optional().default("draft"),
+      influencerId: z.number().optional(),
+      campaignId: z.number().optional(),
+      notes: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }: any) => {
+      try {
+        const db = await getDb();
+        if (!db) throw new Error("Database connection failed");
+
+        await db.insert(designHistory).values({
+          userId: ctx.user.id,
+          designId: input.designId,
+          designName: input.designName,
+          designType: input.designType,
+          thumbnailUrl: input.thumbnailUrl,
+          editUrl: input.editUrl,
+          exportUrl: input.exportUrl,
+          status: input.status ?? "draft",
+          influencerId: input.influencerId,
+          campaignId: input.campaignId,
+          notes: input.notes,
+        });
+
+        return { success: true };
+      } catch (error: any) {
+        throw new Error(`Erro ao salvar histórico: ${error.message}`);
+      }
+    }),
+
+  updateDesignStatus: protectedProcedure
+    .input(z.object({
+      id: z.number(),
+      status: z.enum(["draft", "exported", "published"]),
+    }))
+    .mutation(async ({ ctx, input }: any) => {
+      try {
+        const db = await getDb();
+        if (!db) throw new Error("Database connection failed");
+
+        await db
+          .update(designHistory)
+          .set({ status: input.status })
+          .where(and(eq(designHistory.id, input.id), eq(designHistory.userId, ctx.user.id)));
+
+        return { success: true };
+      } catch (error: any) {
+        throw new Error(`Erro ao atualizar status: ${error.message}`);
       }
     }),
 

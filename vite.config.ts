@@ -167,6 +167,40 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // Vendor: React core
+          if (id.includes("node_modules/react") || id.includes("node_modules/react-dom") || id.includes("node_modules/scheduler")) {
+            return "vendor-react";
+          }
+          // Vendor: UI components (radix-ui, lucide, class-variance)
+          if (id.includes("node_modules/@radix-ui") || id.includes("node_modules/lucide-react") || id.includes("node_modules/class-variance-authority") || id.includes("node_modules/clsx") || id.includes("node_modules/tailwind-merge")) {
+            return "vendor-ui";
+          }
+          // Vendor: tRPC + tanstack-query
+          if (id.includes("node_modules/@trpc") || id.includes("node_modules/@tanstack")) {
+            return "vendor-trpc";
+          }
+          // Vendor: Charts (recharts is heavy)
+          if (id.includes("node_modules/recharts") || id.includes("node_modules/d3-") || id.includes("node_modules/victory")) {
+            return "vendor-charts";
+          }
+          // Vendor: Form / validation
+          if (id.includes("node_modules/zod") || id.includes("node_modules/react-hook-form") || id.includes("node_modules/@hookform")) {
+            return "vendor-forms";
+          }
+          // Vendor: Date utilities
+          if (id.includes("node_modules/date-fns") || id.includes("node_modules/dayjs")) {
+            return "vendor-dates";
+          }
+          // Vendor: remaining node_modules
+          if (id.includes("node_modules")) {
+            return "vendor-misc";
+          }
+        },
+      },
+    },
   },
   server: {
     host: true,
