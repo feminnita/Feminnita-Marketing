@@ -1,0 +1,55 @@
+name: CI — Build & Type Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build & Type Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm check
+        env:
+          DATABASE_URL: mysql://mock:mock@localhost:4000/feminnita
+          OAUTH_SERVER_URL: https://auth.manus.space
+          JWT_SECRET: ci_secret_32_chars_placeholder_ci
+          VITE_APP_ID: ci_app_id
+
+      - name: Build
+        run: pnpm build
+        env:
+          DATABASE_URL: mysql://mock:mock@localhost:4000/feminnita
+          OAUTH_SERVER_URL: https://auth.manus.space
+          JWT_SECRET: ci_secret_32_chars_placeholder_ci
+          VITE_APP_ID: ci_app_id
+          NODE_ENV: production
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/public
+          retention-days: 7
