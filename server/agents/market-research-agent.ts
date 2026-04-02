@@ -252,7 +252,7 @@ async function runMarketResearch(): Promise<void> {
   try {
     await db.insert(marketingResearchReports).values({
       userId,
-      reportDate: today,
+      reportDate: new Date(today),
       competitorInsights: {
         competitors: research.competitors,
         gaps: [],

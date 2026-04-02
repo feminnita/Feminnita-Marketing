@@ -36,10 +36,16 @@ async function runContentGeneration() {
   for (const influencer of activeInfluencers) {
     try {
       const result = await invokeLLM({
-        system:
-          "Você é especialista em marketing para Feminnita Pijamas, marca de atacado de pijamas femininos. Crie posts autênticos para Instagram.",
-        user: `Gere um post para a influenciadora ${influencer.name} (personalidade: ${influencer.personality ?? "descontraída"}, bio: ${influencer.bio ?? "influenciadora de moda"
-          }). Retorne JSON com: caption (máx 200 chars), hashtags (array de 5-8 strings sem #), cta (call to action curto).`,
+        messages: [
+          {
+            role: "system",
+            content: "Você é especialista em marketing para Feminnita Pijamas, marca de atacado de pijamas femininos. Crie posts autênticos para Instagram.",
+          },
+          {
+            role: "user",
+            content: `Gere um post para a influenciadora ${influencer.name} (personalidade: ${influencer.personality ?? "descontraída"}, bio: ${influencer.bio ?? "influenciadora de moda"}). Retorne JSON com: caption (máx 200 chars), hashtags (array de 5-8 strings sem #), cta (call to action curto).`,
+          },
+        ],
         outputSchema: {
           name: "post_instagram",
           schema: {
@@ -78,9 +84,10 @@ async function runContentGeneration() {
 
   if (generatedCount > 0) {
     try {
-      await notifyOwner(
-        `[ContentAgent] ${generatedCount} post(s) gerado(s) automaticamente para aprovação.`
-      );
+      await notifyOwner({
+        title: "[ContentAgent] Posts gerados",
+        content: `${generatedCount} post(s) gerado(s) automaticamente para aprovação.`,
+      });
     } catch (err) {
       console.error("[ContentAgent] Erro ao notificar owner:", err);
     }

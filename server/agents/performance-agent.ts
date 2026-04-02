@@ -57,12 +57,12 @@ async function collectInfluencerMetrics(influencer: {
 
   await db.insert(influencerPerformance).values({
     influencerId: influencer.id,
-    date: today,
+    date: new Date(today),
     platform: "instagram",
     totalFollowers,
     followersGrowth: 0,
     totalEngagement,
-    engagementRate: engagementRate,
+    engagementRate: String(engagementRate),
     totalReach: 0,
     totalImpressions: 0,
   });

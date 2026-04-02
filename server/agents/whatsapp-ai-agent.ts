@@ -70,7 +70,7 @@ export async function processWhatsAppMessage(
       whatsappContactName: contactName,
       userMessage: message,
       aiResponse: response,
-      confidence: 0.85,
+      confidence: "0.85",
       escalated: false,
       status: "open",
     });
