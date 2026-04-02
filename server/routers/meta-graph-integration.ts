@@ -3,6 +3,7 @@ import { z } from "zod";
 import { eq, and } from "drizzle-orm";
 import { getDb } from "../db";
 import { instagramAccounts, igPostPublications, influencers } from "../../drizzle/schema";
+import { assertRateLimit } from "../_core/rateLimiter";
 
 const META_GRAPH_API_BASE = "https://graph.instagram.com/v18.0";
 
@@ -57,6 +58,7 @@ export const metaGraphIntegrationRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      assertRateLimit(`meta-graph:${ctx.user.id}`, 20); // 20 publicações/min
       try {
         const db = await getDb();
         if (!db) throw new Error("Database not available");
@@ -179,6 +181,7 @@ export const metaGraphIntegrationRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
+      assertRateLimit(`meta-graph:${ctx.user.id}`, 30); // 30 queries/min
       try {
         const db = await getDb();
         if (!db) return null;
@@ -249,6 +252,7 @@ export const metaGraphIntegrationRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      assertRateLimit(`meta-graph:${ctx.user.id}`, 20); // 20 publicações/min
       try {
         const db = await getDb();
         if (!db) throw new Error("Database not available");

@@ -1,149 +1,155 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Calendar, Video, TrendingUp, MessageCircle, Target, Zap, Play, Film, Activity, FileText, Calculator, Save, Star, Bell, Instagram, BarChart3, Sparkles, Clock, DollarSign, Ticket, Edit, Music, Cloud, MessageSquare, Database, Download, ShoppingCart, Lightbulb, Palette, Brain, Smartphone, CreditCard, Copy, TrendingDown, Share2, Mail, BookOpen, AlertTriangle, Heart } from "lucide-react";
-import PersonasSection from "@/components/PersonasSection";
-import PlanejamentoSection from "@/components/PlanejamentoSection";
-import RoteiroSection from "@/components/RoteiroSection";
-import TendenciasSection from "@/components/TendenciasSection";
-import NovoRoteiroStoriesSection from "@/components/NovoRoteiroStoriesSection";
-import RoteiroTikTokSection from "@/components/RoteiroTikTokSection";
-import IdeiasImagensInstagramSection from "@/components/IdeiasImagensInstagramSection";
-import LegendaPostsSection from "@/components/LegendaPostsSection";
-import RoteiroanunciaTikTokSection from "@/components/RoteiroanunciaTikTokSection";
-import RoteiroAnuncioFamiliarSection from "@/components/RoteiroAnuncioFamiliarSection";
-import RoteiroInstagramReelsSection from "@/components/RoteiroInstagramReelsSection";
-import TresRoteirosTikTokInvernoSection from "@/components/TresRoteirosTikTokInvernoSection";
-import PlanoStoriesSemanSection from "@/components/PlanoStoriesSemanSection";
-import Stories42Section from "@/components/Stories42Section";
-import AnaliseAdsSection from "@/components/AnaliseAdsSection";
-import DashboardMonitoramentoSection from "@/components/DashboardMonitoramentoSection";
-import GeradorRelatorioSection from "@/components/GeradorRelatorioSection";
-import CalculadoraOrcamentoSection from "@/components/CalculadoraOrcamentoSection";
-import GoogleAnalyticsSection from "@/components/GoogleAnalyticsSection";
-import ExportarCalendarioSection from "@/components/ExportarCalendarioSection";
-import TemplatesReutilizaveisSection from "@/components/TemplatesReutilizaveisSection";
-import IntegracaoZapierSection from "@/components/IntegracaoZapierSection";
-import FeedbackRatingsSection from "@/components/FeedbackRatingsSection";
-import NotificacoesPushSection from "@/components/NotificacoesPushSection";
-import MetaBusinessSuiteSection from "@/components/MetaBusinessSuiteSection";
-import ABTestingSection from "@/components/ABTestingSection";
-import IAOtimizacaoLegendaSection from "@/components/IAOtimizacaoLegendaSection";
-import GoogleAdsSection from "@/components/GoogleAdsSection";
-import AgendamentoInteligenteSection from "@/components/AgendamentoInteligenteSection";
-import DashboardROIConsolidadoSection from "@/components/DashboardROIConsolidadoSection";
-import IntegracaoSlackEmailSection from "@/components/IntegracaoSlackEmailSection";
-import PrevisaoVendasSection from "@/components/PrevisaoVendasSection";
-import ComparativoConcorrentesSection from "@/components/ComparativoConcorrentesSection";
-import { IntegracaoWhatsAppSection } from "@/components/IntegracaoWhatsAppSection";
-import AtribuicaoVendasSection from "@/components/AtribuicaoVendasSection";
-import ChatIASection from "@/components/ChatIASection";
-import CalendarioConteudoSection from "@/components/CalendarioConteudoSection";
-import RelatoriosAgendadosSection from "@/components/RelatoriosAgendadosSection";
-import BibliotecaTemplatesSection from "@/components/BibliotecaTemplatesSection";
-import IntegracaoWhatsAppAPISection from "@/components/IntegracaoWhatsAppAPISection";
-import DashboardPerformanceRealtimeSection from "@/components/DashboardPerformanceRealtimeSection";
-import SistemaCuponsPromocoesSection from "@/components/SistemaCuponsPromocoesSection";
 import BarraBuscaAbas from "@/components/BarraBuscaAbas";
 import MenuFavoritosAbas from "@/components/MenuFavoritosAbas";
-import GeracaoVideosIASection from "@/components/GeracaoVideosIASection";
-import IntegracaoStripeSection from "@/components/IntegracaoStripeSection";
-import AnaliseConorrentesAutomaticoSection from "@/components/AnaliseConorrentesAutomaticoSection";
-import GeradorConteudoIASection from "@/components/GeradorConteudoIASection";
-import IntegracaoCapCutSection from "@/components/IntegracaoCapCutSection";
-import BibliotecaAudiosSection from "@/components/BibliotecaAudiosSection";
-import AgendadorPublicacaoSection from "@/components/AgendadorPublicacaoSection";
-import IntegracaoGoogleDriveSection from "@/components/IntegracaoGoogleDriveSection";
-import FeedbackClientesSection from "@/components/FeedbackClientesSection";
-import RelatorioSemanalSection from "@/components/RelatorioSemanalSection";
-import IntegracaoCRMSection from "@/components/IntegracaoCRMSection";
-import SistemaRecomendacaoProdutosSection from "@/components/SistemaRecomendacaoProdutosSection";
-import AnalyticsAvancadoFunilSection from "@/components/AnalyticsAvancadoFunilSection";
-import NotificacoesRealtimeSection from "@/components/NotificacoesRealtimeSection";
-import ExportacaoRelatoriosSection from "@/components/ExportacaoRelatoriosSection";
-import IntegracaoHotjarClaritySection from "@/components/IntegracaoHotjarClaritySection";
-import SistemaLoyaltyPontosSection from "@/components/SistemaLoyaltyPontosSection";
-import ChatbotSuportePushSection from "@/components/ChatbotSuportePushSection";
-import GaleriaLooksPersonasSection from "@/components/GaleriaLooksPersonasSection";
-import ComparadorPersonasSection from "@/components/ComparadorPersonasSection";
-import IntegracaoPinterestCanvaSection from "@/components/IntegracaoPinterestCanvaSection";
-import PerformancePersonaSection from "@/components/PerformancePersonaSection";
-import AssistenteSelecaoPersonaSection from "@/components/AssistenteSelecaoPersonaSection";
-import DashboardTendenciasViraisSection from "@/components/DashboardTendenciasViraisSection";
-import SistemaNotificacoesInteligentesSection from "@/components/SistemaNotificacoesInteligentesSection";
-import ExportadorRelatoriosPersonaSection from "@/components/ExportadorRelatoriosPersonaSection";
-import EstrategiaGrowthViralSection from "@/components/EstrategiaGrowthViralSection";
-import CalendarioConteudoOtimizadoSection from "@/components/CalendarioConteudoOtimizadoSection";
-import AnaliseConcorrentesSection from "@/components/AnaliseConcorrentesSection";
-import IntegracaoAPIsSection from "@/components/IntegracaoAPIsSection";
-import DashboardUnificadoSection from "@/components/DashboardUnificadoSection";
-import SistemaAutomacaoPostsSection from "@/components/SistemaAutomacaoPostsSection";
-import IntegracaoAdsSection from "@/components/IntegracaoAdsSection";
-import SistemaRecomendacaoConteudoSection from "@/components/SistemaRecomendacaoConteudoSection";
-import ModuloInfluenciadorasSection from "@/components/ModuloInfluenciadorasSection";
-import SistemaRelatoriosMensaisSection from "@/components/SistemaRelatoriosMensaisSection";
-import ModuloTesteABAvancadoSection from "@/components/ModuloTesteABAvancadoSection";
-import SistemaNotificacoesTempoRealSection from "@/components/SistemaNotificacoesTempoRealSection";
-import IntegracaoGoogleAnalytics4Section from "@/components/IntegracaoGoogleAnalytics4Section";
-import DashboardMobileResponsivoSection from "@/components/DashboardMobileResponsivoSection";
-import ExportacaoDadosSection from "@/components/ExportacaoDadosSection";
-import IntegracaoCalendarioGoogleSection from "@/components/IntegracaoCalendarioGoogleSection";
-import SistemaLembretesAutomaticosSection from "@/components/SistemaLembretesAutomaticosSection";
-import SuporteMultiplosCalendariosSection from "@/components/SuporteMultiplosCalendariosSection";
-import DashboardROIPersonaSection from "@/components/DashboardROIPersonaSection";
-import FerramentaClonagemCampanhasSection from "@/components/FerramentaClonagemCampanhasSection";
-import { PainelVendasTempoRealSection } from "@/components/PainelVendasTempoRealSection";
-import { SistemaFeedbackClientesSection } from "@/components/SistemaFeedbackClientesSection";
-import { IntegracaoTawkIntercomSection } from "@/components/IntegracaoTawkIntercomSection";
-import { RelatorioCohortAnalysisSection } from "@/components/RelatorioCohortAnalysisSection";
-import { PrevisaoChurnIASection } from "@/components/PrevisaoChurnIASection";
-import { DashboardLTVPersonaSection } from "@/components/DashboardLTVPersonaSection";
-import { ProgramaReferenciaAutomaticoSection } from "@/components/ProgramaReferenciaAutomaticoSection";
-import { IntegracaoEmailMarketingSection } from "@/components/IntegracaoEmailMarketingSection";
-import { PrevisaoDemandaIASection } from "@/components/PrevisaoDemandaIASection";
-import { DashboardExecutivoConsolidadoSection } from "@/components/DashboardExecutivoConsolidadoSection";
-
-import { AlertasAutomaticosSection } from "@/components/AlertasAutomaticosSection";
-import { IntegracaoTikTokAdsSection } from "@/components/IntegracaoTikTokAdsSection";
-import { RecomendadorProdutosIASection } from "@/components/RecomendadorProdutosIASection";
-import { ExportacaoGoogleSheetsSection } from "@/components/ExportacaoGoogleSheetsSection";
-import { IntegracaoInstagramAdsSection } from '@/components/IntegracaoInstagramAdsSection';
-import { IntegracaoFacebookAdsSection } from '@/components/IntegracaoFacebookAdsSection';
-import { SegmentacaoClientesSection } from '@/components/SegmentacaoClientesSection';
-import { ComparadorEstrategiasABTestingSection } from '@/components/ComparadorEstrategiasABTestingSection';
-import { ComparativoMetaGoogleAdsSection } from '@/components/ComparativoMetaGoogleAdsSection';
-import { AutomacaoSegmentacaoClientesSection } from '@/components/AutomacaoSegmentacaoClientesSection';
-import { RelatorioROISegmentoSection } from '@/components/RelatorioROISegmentoSection';
-import { EmailMarketingSection } from '@/components/EmailMarketingSection';
-import { CRMClientesSection } from '@/components/CRMClientesSection';
-import { AtribuicaoMulticanalSection } from '@/components/AtribuicaoMulticanalSection';
-import { ManualSection } from '@/components/ManualSection';
-import { AutomacaoBlingSection } from '@/components/AutomacaoBlingSection';
-import { RelatorioInfluenciadoresSection } from '@/components/RelatorioInfluenciadoresSection';
-import { PrevisaoChurnSection } from '@/components/PrevisaoChurnSection';
-import { IntegracaoTraySection } from '@/components/IntegracaoTraySection';
-import { RentabilidadeProdutoSection } from '@/components/RentabilidadeProdutoSection';
-import { PrevisaoDemandaSection } from '@/components/PrevisaoDemandaSection';
-import { AutomacaoEmailInteligenteSection } from '@/components/AutomacaoEmailInteligenteSection';
-import { LifetimeValueDetalhadoSection } from '@/components/LifetimeValueDetalhadoSection';
-import { AnalisesCompetitivaSection } from '@/components/AnalisesCompetitivaSection';
-import { GoogleAnalytics4Section } from '@/components/GoogleAnalytics4Section';
-import { SistemaRecomendacaoInteligenteSection } from '@/components/SistemaRecomendacaoInteligenteSection';
-import { OtimizacaoFunilSection } from '@/components/OtimizacaoFunilSection';
-import { AnaliseSentimentoRedesSociaisSection } from '@/components/AnaliseSentimentoRedesSociaisSection';
-import { RecomendacaoOrcamentoCanalSection } from '@/components/RecomendacaoOrcamentoCanalSection';
-import { IntegracaoCanvaSection } from '@/components/IntegracaoCanvaSection';
-import { PrevisaoDemandaMachineLearningSection } from '@/components/PrevisaoDemandaMachineLearningSection';
-import { AutomacaoRespostasRedesSociaisSection } from '@/components/AutomacaoRespostasRedesSociaisSection';
-import { AnaliseConcorrenciaTempoRealSection } from '@/components/AnaliseConcorrenciaTempoRealSection';
 import SidebarNavegacao from '@/components/SidebarNavegacao';
-import RentabilidadeDetalhadaSection from '@/components/RentabilidadeDetalhadaSection';
-import AutomacaoRelatoriosAgendadosSection from '@/components/AutomacaoRelatoriosAgendadosSection';
-import IntegracaoAfiliados from '@/components/IntegracaoAfiliados';
-import DropsPlannerSection from '@/components/DropsPlannerSection';
-import UGCCollectorSection from '@/components/UGCCollectorSection';
-import RecuperacaoAbandonoSection from '@/components/RecuperacaoAbandonoSection';
+
+const PersonasSection = lazy(() => import("@/components/PersonasSection"));
+const PlanejamentoSection = lazy(() => import("@/components/PlanejamentoSection"));
+const RoteiroSection = lazy(() => import("@/components/RoteiroSection"));
+const TendenciasSection = lazy(() => import("@/components/TendenciasSection"));
+const NovoRoteiroStoriesSection = lazy(() => import("@/components/NovoRoteiroStoriesSection"));
+const RoteiroTikTokSection = lazy(() => import("@/components/RoteiroTikTokSection"));
+const IdeiasImagensInstagramSection = lazy(() => import("@/components/IdeiasImagensInstagramSection"));
+const LegendaPostsSection = lazy(() => import("@/components/LegendaPostsSection"));
+const RoteiroanunciaTikTokSection = lazy(() => import("@/components/RoteiroanunciaTikTokSection"));
+const RoteiroAnuncioFamiliarSection = lazy(() => import("@/components/RoteiroAnuncioFamiliarSection"));
+const RoteiroInstagramReelsSection = lazy(() => import("@/components/RoteiroInstagramReelsSection"));
+const TresRoteirosTikTokInvernoSection = lazy(() => import("@/components/TresRoteirosTikTokInvernoSection"));
+const PlanoStoriesSemanSection = lazy(() => import("@/components/PlanoStoriesSemanSection"));
+const Stories42Section = lazy(() => import("@/components/Stories42Section"));
+const AnaliseAdsSection = lazy(() => import("@/components/AnaliseAdsSection"));
+const DashboardMonitoramentoSection = lazy(() => import("@/components/DashboardMonitoramentoSection"));
+const GeradorRelatorioSection = lazy(() => import("@/components/GeradorRelatorioSection"));
+const CalculadoraOrcamentoSection = lazy(() => import("@/components/CalculadoraOrcamentoSection"));
+const GoogleAnalyticsSection = lazy(() => import("@/components/GoogleAnalyticsSection"));
+const ExportarCalendarioSection = lazy(() => import("@/components/ExportarCalendarioSection"));
+const TemplatesReutilizaveisSection = lazy(() => import("@/components/TemplatesReutilizaveisSection"));
+const IntegracaoZapierSection = lazy(() => import("@/components/IntegracaoZapierSection"));
+const FeedbackRatingsSection = lazy(() => import("@/components/FeedbackRatingsSection"));
+const NotificacoesPushSection = lazy(() => import("@/components/NotificacoesPushSection"));
+const MetaBusinessSuiteSection = lazy(() => import("@/components/MetaBusinessSuiteSection"));
+const ABTestingSection = lazy(() => import("@/components/ABTestingSection"));
+const IAOtimizacaoLegendaSection = lazy(() => import("@/components/IAOtimizacaoLegendaSection"));
+const GoogleAdsSection = lazy(() => import("@/components/GoogleAdsSection"));
+const AgendamentoInteligenteSection = lazy(() => import("@/components/AgendamentoInteligenteSection"));
+const DashboardROIConsolidadoSection = lazy(() => import("@/components/DashboardROIConsolidadoSection"));
+const IntegracaoSlackEmailSection = lazy(() => import("@/components/IntegracaoSlackEmailSection"));
+const PrevisaoVendasSection = lazy(() => import("@/components/PrevisaoVendasSection"));
+const ComparativoConcorrentesSection = lazy(() => import("@/components/ComparativoConcorrentesSection"));
+const IntegracaoWhatsAppSection = lazy(() => import("@/components/IntegracaoWhatsAppSection").then(m => ({ default: m.IntegracaoWhatsAppSection })));
+const AtribuicaoVendasSection = lazy(() => import("@/components/AtribuicaoVendasSection"));
+const ChatIASection = lazy(() => import("@/components/ChatIASection"));
+const CalendarioConteudoSection = lazy(() => import("@/components/CalendarioConteudoSection"));
+const RelatoriosAgendadosSection = lazy(() => import("@/components/RelatoriosAgendadosSection"));
+const BibliotecaTemplatesSection = lazy(() => import("@/components/BibliotecaTemplatesSection"));
+const IntegracaoWhatsAppAPISection = lazy(() => import("@/components/IntegracaoWhatsAppAPISection"));
+const DashboardPerformanceRealtimeSection = lazy(() => import("@/components/DashboardPerformanceRealtimeSection"));
+const SistemaCuponsPromocoesSection = lazy(() => import("@/components/SistemaCuponsPromocoesSection"));
+const GeracaoVideosIASection = lazy(() => import("@/components/GeracaoVideosIASection"));
+const IntegracaoStripeSection = lazy(() => import("@/components/IntegracaoStripeSection"));
+const AnaliseConorrentesAutomaticoSection = lazy(() => import("@/components/AnaliseConorrentesAutomaticoSection"));
+const GeradorConteudoIASection = lazy(() => import("@/components/GeradorConteudoIASection"));
+const IntegracaoCapCutSection = lazy(() => import("@/components/IntegracaoCapCutSection"));
+const BibliotecaAudiosSection = lazy(() => import("@/components/BibliotecaAudiosSection"));
+const AgendadorPublicacaoSection = lazy(() => import("@/components/AgendadorPublicacaoSection"));
+const IntegracaoGoogleDriveSection = lazy(() => import("@/components/IntegracaoGoogleDriveSection"));
+const FeedbackClientesSection = lazy(() => import("@/components/FeedbackClientesSection"));
+const RelatorioSemanalSection = lazy(() => import("@/components/RelatorioSemanalSection"));
+const IntegracaoCRMSection = lazy(() => import("@/components/IntegracaoCRMSection"));
+const SistemaRecomendacaoProdutosSection = lazy(() => import("@/components/SistemaRecomendacaoProdutosSection"));
+const AnalyticsAvancadoFunilSection = lazy(() => import("@/components/AnalyticsAvancadoFunilSection"));
+const NotificacoesRealtimeSection = lazy(() => import("@/components/NotificacoesRealtimeSection"));
+const ExportacaoRelatoriosSection = lazy(() => import("@/components/ExportacaoRelatoriosSection"));
+const IntegracaoHotjarClaritySection = lazy(() => import("@/components/IntegracaoHotjarClaritySection"));
+const SistemaLoyaltyPontosSection = lazy(() => import("@/components/SistemaLoyaltyPontosSection"));
+const ChatbotSuportePushSection = lazy(() => import("@/components/ChatbotSuportePushSection"));
+const GaleriaLooksPersonasSection = lazy(() => import("@/components/GaleriaLooksPersonasSection"));
+const ComparadorPersonasSection = lazy(() => import("@/components/ComparadorPersonasSection"));
+const IntegracaoPinterestCanvaSection = lazy(() => import("@/components/IntegracaoPinterestCanvaSection"));
+const PerformancePersonaSection = lazy(() => import("@/components/PerformancePersonaSection"));
+const AssistenteSelecaoPersonaSection = lazy(() => import("@/components/AssistenteSelecaoPersonaSection"));
+const DashboardTendenciasViraisSection = lazy(() => import("@/components/DashboardTendenciasViraisSection"));
+const SistemaNotificacoesInteligentesSection = lazy(() => import("@/components/SistemaNotificacoesInteligentesSection"));
+const ExportadorRelatoriosPersonaSection = lazy(() => import("@/components/ExportadorRelatoriosPersonaSection"));
+const EstrategiaGrowthViralSection = lazy(() => import("@/components/EstrategiaGrowthViralSection"));
+const CalendarioConteudoOtimizadoSection = lazy(() => import("@/components/CalendarioConteudoOtimizadoSection"));
+const AnaliseConcorrentesSection = lazy(() => import("@/components/AnaliseConcorrentesSection"));
+const IntegracaoAPIsSection = lazy(() => import("@/components/IntegracaoAPIsSection"));
+const DashboardUnificadoSection = lazy(() => import("@/components/DashboardUnificadoSection"));
+const SistemaAutomacaoPostsSection = lazy(() => import("@/components/SistemaAutomacaoPostsSection"));
+const IntegracaoAdsSection = lazy(() => import("@/components/IntegracaoAdsSection"));
+const SistemaRecomendacaoConteudoSection = lazy(() => import("@/components/SistemaRecomendacaoConteudoSection"));
+const ModuloInfluenciadorasSection = lazy(() => import("@/components/ModuloInfluenciadorasSection"));
+const SistemaRelatoriosMensaisSection = lazy(() => import("@/components/SistemaRelatoriosMensaisSection"));
+const ModuloTesteABAvancadoSection = lazy(() => import("@/components/ModuloTesteABAvancadoSection"));
+const SistemaNotificacoesTempoRealSection = lazy(() => import("@/components/SistemaNotificacoesTempoRealSection"));
+const IntegracaoGoogleAnalytics4Section = lazy(() => import("@/components/IntegracaoGoogleAnalytics4Section"));
+const DashboardMobileResponsivoSection = lazy(() => import("@/components/DashboardMobileResponsivoSection"));
+const ExportacaoDadosSection = lazy(() => import("@/components/ExportacaoDadosSection"));
+const IntegracaoCalendarioGoogleSection = lazy(() => import("@/components/IntegracaoCalendarioGoogleSection"));
+const SistemaLembretesAutomaticosSection = lazy(() => import("@/components/SistemaLembretesAutomaticosSection"));
+const SuporteMultiplosCalendariosSection = lazy(() => import("@/components/SuporteMultiplosCalendariosSection"));
+const DashboardROIPersonaSection = lazy(() => import("@/components/DashboardROIPersonaSection"));
+const FerramentaClonagemCampanhasSection = lazy(() => import("@/components/FerramentaClonagemCampanhasSection"));
+const PainelVendasTempoRealSection = lazy(() => import("@/components/PainelVendasTempoRealSection").then(m => ({ default: m.PainelVendasTempoRealSection })));
+const SistemaFeedbackClientesSection = lazy(() => import("@/components/SistemaFeedbackClientesSection").then(m => ({ default: m.SistemaFeedbackClientesSection })));
+const IntegracaoTawkIntercomSection = lazy(() => import("@/components/IntegracaoTawkIntercomSection").then(m => ({ default: m.IntegracaoTawkIntercomSection })));
+const RelatorioCohortAnalysisSection = lazy(() => import("@/components/RelatorioCohortAnalysisSection").then(m => ({ default: m.RelatorioCohortAnalysisSection })));
+const PrevisaoChurnIASection = lazy(() => import("@/components/PrevisaoChurnIASection").then(m => ({ default: m.PrevisaoChurnIASection })));
+const DashboardLTVPersonaSection = lazy(() => import("@/components/DashboardLTVPersonaSection").then(m => ({ default: m.DashboardLTVPersonaSection })));
+const ProgramaReferenciaAutomaticoSection = lazy(() => import("@/components/ProgramaReferenciaAutomaticoSection").then(m => ({ default: m.ProgramaReferenciaAutomaticoSection })));
+const IntegracaoEmailMarketingSection = lazy(() => import("@/components/IntegracaoEmailMarketingSection").then(m => ({ default: m.IntegracaoEmailMarketingSection })));
+const PrevisaoDemandaIASection = lazy(() => import("@/components/PrevisaoDemandaIASection").then(m => ({ default: m.PrevisaoDemandaIASection })));
+const DashboardExecutivoConsolidadoSection = lazy(() => import("@/components/DashboardExecutivoConsolidadoSection").then(m => ({ default: m.DashboardExecutivoConsolidadoSection })));
+const AlertasAutomaticosSection = lazy(() => import("@/components/AlertasAutomaticosSection").then(m => ({ default: m.AlertasAutomaticosSection })));
+const IntegracaoTikTokAdsSection = lazy(() => import("@/components/IntegracaoTikTokAdsSection").then(m => ({ default: m.IntegracaoTikTokAdsSection })));
+const RecomendadorProdutosIASection = lazy(() => import("@/components/RecomendadorProdutosIASection").then(m => ({ default: m.RecomendadorProdutosIASection })));
+const ExportacaoGoogleSheetsSection = lazy(() => import("@/components/ExportacaoGoogleSheetsSection").then(m => ({ default: m.ExportacaoGoogleSheetsSection })));
+const IntegracaoInstagramAdsSection = lazy(() => import("@/components/IntegracaoInstagramAdsSection").then(m => ({ default: m.IntegracaoInstagramAdsSection })));
+const IntegracaoFacebookAdsSection = lazy(() => import("@/components/IntegracaoFacebookAdsSection").then(m => ({ default: m.IntegracaoFacebookAdsSection })));
+const SegmentacaoClientesSection = lazy(() => import("@/components/SegmentacaoClientesSection").then(m => ({ default: m.SegmentacaoClientesSection })));
+const ComparadorEstrategiasABTestingSection = lazy(() => import("@/components/ComparadorEstrategiasABTestingSection").then(m => ({ default: m.ComparadorEstrategiasABTestingSection })));
+const ComparativoMetaGoogleAdsSection = lazy(() => import("@/components/ComparativoMetaGoogleAdsSection").then(m => ({ default: m.ComparativoMetaGoogleAdsSection })));
+const AutomacaoSegmentacaoClientesSection = lazy(() => import("@/components/AutomacaoSegmentacaoClientesSection").then(m => ({ default: m.AutomacaoSegmentacaoClientesSection })));
+const RelatorioROISegmentoSection = lazy(() => import("@/components/RelatorioROISegmentoSection").then(m => ({ default: m.RelatorioROISegmentoSection })));
+const EmailMarketingSection = lazy(() => import("@/components/EmailMarketingSection").then(m => ({ default: m.EmailMarketingSection })));
+const CRMClientesSection = lazy(() => import("@/components/CRMClientesSection").then(m => ({ default: m.CRMClientesSection })));
+const AtribuicaoMulticanalSection = lazy(() => import("@/components/AtribuicaoMulticanalSection").then(m => ({ default: m.AtribuicaoMulticanalSection })));
+const ManualSection = lazy(() => import("@/components/ManualSection").then(m => ({ default: m.ManualSection })));
+const AutomacaoBlingSection = lazy(() => import("@/components/AutomacaoBlingSection").then(m => ({ default: m.AutomacaoBlingSection })));
+const RelatorioInfluenciadoresSection = lazy(() => import("@/components/RelatorioInfluenciadoresSection").then(m => ({ default: m.RelatorioInfluenciadoresSection })));
+const PrevisaoChurnSection = lazy(() => import("@/components/PrevisaoChurnSection").then(m => ({ default: m.PrevisaoChurnSection })));
+const IntegracaoTraySection = lazy(() => import("@/components/IntegracaoTraySection").then(m => ({ default: m.IntegracaoTraySection })));
+const RentabilidadeProdutoSection = lazy(() => import("@/components/RentabilidadeProdutoSection").then(m => ({ default: m.RentabilidadeProdutoSection })));
+const PrevisaoDemandaSection = lazy(() => import("@/components/PrevisaoDemandaSection").then(m => ({ default: m.PrevisaoDemandaSection })));
+const AutomacaoEmailInteligenteSection = lazy(() => import("@/components/AutomacaoEmailInteligenteSection").then(m => ({ default: m.AutomacaoEmailInteligenteSection })));
+const LifetimeValueDetalhadoSection = lazy(() => import("@/components/LifetimeValueDetalhadoSection").then(m => ({ default: m.LifetimeValueDetalhadoSection })));
+const AnalisesCompetitivaSection = lazy(() => import("@/components/AnalisesCompetitivaSection").then(m => ({ default: m.AnalisesCompetitivaSection })));
+const GoogleAnalytics4Section = lazy(() => import("@/components/GoogleAnalytics4Section").then(m => ({ default: m.GoogleAnalytics4Section })));
+const SistemaRecomendacaoInteligenteSection = lazy(() => import("@/components/SistemaRecomendacaoInteligenteSection").then(m => ({ default: m.SistemaRecomendacaoInteligenteSection })));
+const OtimizacaoFunilSection = lazy(() => import("@/components/OtimizacaoFunilSection").then(m => ({ default: m.OtimizacaoFunilSection })));
+const AnaliseSentimentoRedesSociaisSection = lazy(() => import("@/components/AnaliseSentimentoRedesSociaisSection").then(m => ({ default: m.AnaliseSentimentoRedesSociaisSection })));
+const RecomendacaoOrcamentoCanalSection = lazy(() => import("@/components/RecomendacaoOrcamentoCanalSection").then(m => ({ default: m.RecomendacaoOrcamentoCanalSection })));
+const IntegracaoCanvaSection = lazy(() => import("@/components/IntegracaoCanvaSection").then(m => ({ default: m.IntegracaoCanvaSection })));
+const PrevisaoDemandaMachineLearningSection = lazy(() => import("@/components/PrevisaoDemandaMachineLearningSection").then(m => ({ default: m.PrevisaoDemandaMachineLearningSection })));
+const AutomacaoRespostasRedesSociaisSection = lazy(() => import("@/components/AutomacaoRespostasRedesSociaisSection").then(m => ({ default: m.AutomacaoRespostasRedesSociaisSection })));
+const AnaliseConcorrenciaTempoRealSection = lazy(() => import("@/components/AnaliseConcorrenciaTempoRealSection").then(m => ({ default: m.AnaliseConcorrenciaTempoRealSection })));
+const RentabilidadeDetalhadaSection = lazy(() => import("@/components/RentabilidadeDetalhadaSection"));
+const AutomacaoRelatoriosAgendadosSection = lazy(() => import("@/components/AutomacaoRelatoriosAgendadosSection"));
+const IntegracaoAfiliados = lazy(() => import("@/components/IntegracaoAfiliados"));
+const DropsPlannerSection = lazy(() => import("@/components/DropsPlannerSection"));
+const UGCCollectorSection = lazy(() => import("@/components/UGCCollectorSection"));
+const RecuperacaoAbandonoSection = lazy(() => import("@/components/RecuperacaoAbandonoSection"));
+
+const SuspenseFallback = (
+  <div className="flex justify-center py-8">
+    <div className="w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -765,559 +771,559 @@ export default function Home() {
           </TabsList>
 
           <TabsContent value="personas" className="space-y-6">
-            <PersonasSection />
+            <Suspense fallback={SuspenseFallback}><PersonasSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="planejamento" className="space-y-6">
-            <PlanejamentoSection />
+            <Suspense fallback={SuspenseFallback}><PlanejamentoSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="roteiros" className="space-y-6">
-            <RoteiroSection />
+            <Suspense fallback={SuspenseFallback}><RoteiroSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="tendencias" className="space-y-6">
-            <TendenciasSection />
+            <Suspense fallback={SuspenseFallback}><TendenciasSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="novos-roteiros" className="space-y-6">
-            <NovoRoteiroStoriesSection />
+            <Suspense fallback={SuspenseFallback}><NovoRoteiroStoriesSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="tiktok" className="space-y-6">
-            <RoteiroTikTokSection />
+            <Suspense fallback={SuspenseFallback}><RoteiroTikTokSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="imagens" className="space-y-6">
-            <IdeiasImagensInstagramSection />
+            <Suspense fallback={SuspenseFallback}><IdeiasImagensInstagramSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="legendas" className="space-y-6">
-            <LegendaPostsSection />
+            <Suspense fallback={SuspenseFallback}><LegendaPostsSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="anuncio" className="space-y-6">
-            <RoteiroanunciaTikTokSection />
+            <Suspense fallback={SuspenseFallback}><RoteiroanunciaTikTokSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="familiar" className="space-y-6">
-            <RoteiroAnuncioFamiliarSection />
+            <Suspense fallback={SuspenseFallback}><RoteiroAnuncioFamiliarSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="reels" className="space-y-6">
-            <RoteiroInstagramReelsSection />
+            <Suspense fallback={SuspenseFallback}><RoteiroInstagramReelsSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="tiktok-inverno" className="space-y-6">
-            <TresRoteirosTikTokInvernoSection />
+            <Suspense fallback={SuspenseFallback}><TresRoteirosTikTokInvernoSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="stories" className="space-y-6">
-            <PlanoStoriesSemanSection />
+            <Suspense fallback={SuspenseFallback}><PlanoStoriesSemanSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="stories-42" className="space-y-6">
-            <Stories42Section />
+            <Suspense fallback={SuspenseFallback}><Stories42Section /></Suspense>
           </TabsContent>
 
           <TabsContent value="ads-analise" className="space-y-6">
-            <AnaliseAdsSection />
+            <Suspense fallback={SuspenseFallback}><AnaliseAdsSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="dashboard" className="space-y-6">
-            <DashboardMonitoramentoSection />
+            <Suspense fallback={SuspenseFallback}><DashboardMonitoramentoSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="relatorio" className="space-y-6">
-            <GeradorRelatorioSection />
+            <Suspense fallback={SuspenseFallback}><GeradorRelatorioSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="calculadora" className="space-y-6">
-            <CalculadoraOrcamentoSection />
+            <Suspense fallback={SuspenseFallback}><CalculadoraOrcamentoSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
-            <GoogleAnalyticsSection />
+            <Suspense fallback={SuspenseFallback}><GoogleAnalyticsSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="calendario" className="space-y-6">
-            <ExportarCalendarioSection />
+            <Suspense fallback={SuspenseFallback}><ExportarCalendarioSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="templates" className="space-y-6">
-            <TemplatesReutilizaveisSection />
+            <Suspense fallback={SuspenseFallback}><TemplatesReutilizaveisSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="zapier" className="space-y-6">
-            <IntegracaoZapierSection />
+            <Suspense fallback={SuspenseFallback}><IntegracaoZapierSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="ratings" className="space-y-6">
-            <FeedbackRatingsSection />
+            <Suspense fallback={SuspenseFallback}><FeedbackRatingsSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="notificacoes" className="space-y-6">
-            <NotificacoesPushSection />
+            <Suspense fallback={SuspenseFallback}><NotificacoesPushSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="meta" className="space-y-6">
-            <MetaBusinessSuiteSection />
+            <Suspense fallback={SuspenseFallback}><MetaBusinessSuiteSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="abtest" className="space-y-6">
-            <ABTestingSection />
+            <Suspense fallback={SuspenseFallback}><ABTestingSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="ia" className="space-y-6">
-            <IAOtimizacaoLegendaSection />
+            <Suspense fallback={SuspenseFallback}><IAOtimizacaoLegendaSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="googleads" className="space-y-6">
-            <GoogleAdsSection />
+            <Suspense fallback={SuspenseFallback}><GoogleAdsSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="agendamento" className="space-y-6">
-            <AgendamentoInteligenteSection />
+            <Suspense fallback={SuspenseFallback}><AgendamentoInteligenteSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="roi" className="space-y-6">
-            <DashboardROIConsolidadoSection />
+            <Suspense fallback={SuspenseFallback}><DashboardROIConsolidadoSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="slack" className="space-y-6">
-            <IntegracaoSlackEmailSection />
+            <Suspense fallback={SuspenseFallback}><IntegracaoSlackEmailSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="previsao" className="space-y-6">
-            <PrevisaoVendasSection />
+            <Suspense fallback={SuspenseFallback}><PrevisaoVendasSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="concorrentes" className="space-y-6">
-            <ComparativoConcorrentesSection />
+            <Suspense fallback={SuspenseFallback}><ComparativoConcorrentesSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="whatsapp" className="space-y-6">
-            <IntegracaoWhatsAppSection />
+            <Suspense fallback={SuspenseFallback}><IntegracaoWhatsAppSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="atribuicao" className="space-y-6">
-            <AtribuicaoVendasSection />
+            <Suspense fallback={SuspenseFallback}><AtribuicaoVendasSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="chat" className="space-y-6">
-            <ChatIASection />
+            <Suspense fallback={SuspenseFallback}><ChatIASection /></Suspense>
           </TabsContent>
 
           <TabsContent value="calendario-conteudo" className="space-y-6">
-            <CalendarioConteudoSection />
+            <Suspense fallback={SuspenseFallback}><CalendarioConteudoSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="relatorios" className="space-y-6">
-            <RelatoriosAgendadosSection />
+            <Suspense fallback={SuspenseFallback}><RelatoriosAgendadosSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="biblioteca" className="space-y-6">
-            <BibliotecaTemplatesSection />
+            <Suspense fallback={SuspenseFallback}><BibliotecaTemplatesSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="whatsapp-api" className="space-y-6">
-            <IntegracaoWhatsAppAPISection />
+            <Suspense fallback={SuspenseFallback}><IntegracaoWhatsAppAPISection /></Suspense>
           </TabsContent>
 
           <TabsContent value="performance" className="space-y-6">
-            <DashboardPerformanceRealtimeSection />
+            <Suspense fallback={SuspenseFallback}><DashboardPerformanceRealtimeSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="cupons" className="space-y-6">
-            <SistemaCuponsPromocoesSection />
+            <Suspense fallback={SuspenseFallback}><SistemaCuponsPromocoesSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="videos-ia" className="space-y-6">
-            <GeracaoVideosIASection />
+            <Suspense fallback={SuspenseFallback}><GeracaoVideosIASection /></Suspense>
           </TabsContent>
 
           <TabsContent value="capcut" className="space-y-6">
-            <IntegracaoCapCutSection />
+            <Suspense fallback={SuspenseFallback}><IntegracaoCapCutSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="audios" className="space-y-6">
-            <BibliotecaAudiosSection />
+            <Suspense fallback={SuspenseFallback}><BibliotecaAudiosSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="agendador" className="space-y-6">
-            <AgendadorPublicacaoSection />
+            <Suspense fallback={SuspenseFallback}><AgendadorPublicacaoSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="drive" className="space-y-6">
-            <IntegracaoGoogleDriveSection />
+            <Suspense fallback={SuspenseFallback}><IntegracaoGoogleDriveSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="feedback" className="space-y-6">
-            <FeedbackClientesSection />
+            <Suspense fallback={SuspenseFallback}><FeedbackClientesSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="relatorio" className="space-y-6">
-            <RelatorioSemanalSection />
+            <Suspense fallback={SuspenseFallback}><RelatorioSemanalSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="crm" className="space-y-6">
-            <IntegracaoCRMSection />
+            <Suspense fallback={SuspenseFallback}><IntegracaoCRMSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="notificacoes" className="space-y-6">
-            <NotificacoesRealtimeSection />
+            <Suspense fallback={SuspenseFallback}><NotificacoesRealtimeSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="exportacao" className="space-y-6">
-            <ExportacaoRelatoriosSection />
+            <Suspense fallback={SuspenseFallback}><ExportacaoRelatoriosSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="stripe" className="space-y-6">
-            <IntegracaoStripeSection />
+            <Suspense fallback={SuspenseFallback}><IntegracaoStripeSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="concorrentes-auto" className="space-y-6">
-            <AnaliseConorrentesAutomaticoSection />
+            <Suspense fallback={SuspenseFallback}><AnaliseConorrentesAutomaticoSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="gerador-ia" className="space-y-6">
-            <GeradorConteudoIASection />
+            <Suspense fallback={SuspenseFallback}><GeradorConteudoIASection /></Suspense>
           </TabsContent>
 
           <TabsContent value="recomendacao" className="space-y-6">
-            <SistemaRecomendacaoProdutosSection />
+            <Suspense fallback={SuspenseFallback}><SistemaRecomendacaoProdutosSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="funil-analytics" className="space-y-6">
-            <AnalyticsAvancadoFunilSection />
+            <Suspense fallback={SuspenseFallback}><AnalyticsAvancadoFunilSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="hotjar" className="space-y-6">
-            <IntegracaoHotjarClaritySection />
+            <Suspense fallback={SuspenseFallback}><IntegracaoHotjarClaritySection /></Suspense>
           </TabsContent>
 
           <TabsContent value="loyalty" className="space-y-6">
-            <SistemaLoyaltyPontosSection />
+            <Suspense fallback={SuspenseFallback}><SistemaLoyaltyPontosSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="chatbot" className="space-y-6">
-            <ChatbotSuportePushSection />
+            <Suspense fallback={SuspenseFallback}><ChatbotSuportePushSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="galeria-looks" className="space-y-6">
-            <GaleriaLooksPersonasSection />
+            <Suspense fallback={SuspenseFallback}><GaleriaLooksPersonasSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="comparador" className="space-y-6">
-            <ComparadorPersonasSection />
+            <Suspense fallback={SuspenseFallback}><ComparadorPersonasSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="pinterest-canva" className="space-y-6">
-            <IntegracaoPinterestCanvaSection />
+            <Suspense fallback={SuspenseFallback}><IntegracaoPinterestCanvaSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="performance" className="space-y-6">
-            <PerformancePersonaSection />
+            <Suspense fallback={SuspenseFallback}><PerformancePersonaSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="quiz-persona" className="space-y-6">
-            <AssistenteSelecaoPersonaSection />
+            <Suspense fallback={SuspenseFallback}><AssistenteSelecaoPersonaSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="tendencias-virais" className="space-y-6">
-            <DashboardTendenciasViraisSection />
+            <Suspense fallback={SuspenseFallback}><DashboardTendenciasViraisSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="notificacoes" className="space-y-6">
-            <SistemaNotificacoesInteligentesSection />
+            <Suspense fallback={SuspenseFallback}><SistemaNotificacoesInteligentesSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="exportar-relatorios" className="space-y-6">
-            <ExportadorRelatoriosPersonaSection />
+            <Suspense fallback={SuspenseFallback}><ExportadorRelatoriosPersonaSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="growth-viral" className="space-y-6">
-            <EstrategiaGrowthViralSection />
+            <Suspense fallback={SuspenseFallback}><EstrategiaGrowthViralSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="calendario-conteudo" className="space-y-6">
-            <CalendarioConteudoOtimizadoSection />
+            <Suspense fallback={SuspenseFallback}><CalendarioConteudoOtimizadoSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="concorrentes" className="space-y-6">
-            <AnaliseConcorrentesSection />
+            <Suspense fallback={SuspenseFallback}><AnaliseConcorrentesSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="apis-integracao" className="space-y-6">
-            <IntegracaoAPIsSection />
+            <Suspense fallback={SuspenseFallback}><IntegracaoAPIsSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="dashboard-unificado" className="space-y-6">
-            <DashboardUnificadoSection />
+            <Suspense fallback={SuspenseFallback}><DashboardUnificadoSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="automacao-posts" className="space-y-6">
-            <SistemaAutomacaoPostsSection />
+            <Suspense fallback={SuspenseFallback}><SistemaAutomacaoPostsSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="ads-integracao" className="space-y-6">
-            <IntegracaoAdsSection />
+            <Suspense fallback={SuspenseFallback}><IntegracaoAdsSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="recomendacao-ia" className="space-y-6">
-            <SistemaRecomendacaoConteudoSection />
+            <Suspense fallback={SuspenseFallback}><SistemaRecomendacaoConteudoSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="influenciadoras" className="space-y-6">
-            <ModuloInfluenciadorasSection />
+            <Suspense fallback={SuspenseFallback}><ModuloInfluenciadorasSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="relatorios-mensais" className="space-y-6">
-            <SistemaRelatoriosMensaisSection />
+            <Suspense fallback={SuspenseFallback}><SistemaRelatoriosMensaisSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="testes-ab" className="space-y-6">
-            <ModuloTesteABAvancadoSection />
+            <Suspense fallback={SuspenseFallback}><ModuloTesteABAvancadoSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="notificacoes" className="space-y-6">
-            <SistemaNotificacoesTempoRealSection />
+            <Suspense fallback={SuspenseFallback}><SistemaNotificacoesTempoRealSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
-            <IntegracaoGoogleAnalytics4Section />
+            <Suspense fallback={SuspenseFallback}><IntegracaoGoogleAnalytics4Section /></Suspense>
           </TabsContent>
 
           <TabsContent value="mobile" className="space-y-6">
-            <DashboardMobileResponsivoSection />
+            <Suspense fallback={SuspenseFallback}><DashboardMobileResponsivoSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="exportacao" className="space-y-6">
-            <ExportacaoDadosSection />
+            <Suspense fallback={SuspenseFallback}><ExportacaoDadosSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="calendario" className="space-y-6">
-            <IntegracaoCalendarioGoogleSection />
+            <Suspense fallback={SuspenseFallback}><IntegracaoCalendarioGoogleSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="lembretes" className="space-y-6">
-            <SistemaLembretesAutomaticosSection />
+            <Suspense fallback={SuspenseFallback}><SistemaLembretesAutomaticosSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="multiplos" className="space-y-6">
-            <SuporteMultiplosCalendariosSection />
+            <Suspense fallback={SuspenseFallback}><SuporteMultiplosCalendariosSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="roi" className="space-y-6">
-            <DashboardROIPersonaSection />
+            <Suspense fallback={SuspenseFallback}><DashboardROIPersonaSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="stripe" className="space-y-6">
-            <IntegracaoStripeSection />
+            <Suspense fallback={SuspenseFallback}><IntegracaoStripeSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="clonagem" className="space-y-6">
-            <FerramentaClonagemCampanhasSection />
+            <Suspense fallback={SuspenseFallback}><FerramentaClonagemCampanhasSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="vendas-realtime" className="space-y-6">
-            <PainelVendasTempoRealSection />
+            <Suspense fallback={SuspenseFallback}><PainelVendasTempoRealSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="feedback-clientes" className="space-y-6">
-            <SistemaFeedbackClientesSection />
+            <Suspense fallback={SuspenseFallback}><SistemaFeedbackClientesSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="chat-tawk" className="space-y-6">
-            <IntegracaoTawkIntercomSection />
+            <Suspense fallback={SuspenseFallback}><IntegracaoTawkIntercomSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="cohort" className="space-y-6">
-            <RelatorioCohortAnalysisSection />
+            <Suspense fallback={SuspenseFallback}><RelatorioCohortAnalysisSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="churn-ia" className="space-y-6">
-            <PrevisaoChurnIASection />
+            <Suspense fallback={SuspenseFallback}><PrevisaoChurnIASection /></Suspense>
           </TabsContent>
 
           <TabsContent value="ltv" className="space-y-6">
-            <DashboardLTVPersonaSection />
+            <Suspense fallback={SuspenseFallback}><DashboardLTVPersonaSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="referencia" className="space-y-6">
-            <ProgramaReferenciaAutomaticoSection />
+            <Suspense fallback={SuspenseFallback}><ProgramaReferenciaAutomaticoSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="email" className="space-y-6">
-            <IntegracaoEmailMarketingSection />
+            <Suspense fallback={SuspenseFallback}><IntegracaoEmailMarketingSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="previsao" className="space-y-6">
-            <PrevisaoDemandaIASection />
+            <Suspense fallback={SuspenseFallback}><PrevisaoDemandaIASection /></Suspense>
           </TabsContent>
 
           <TabsContent value="dashboard-exec" className="space-y-6">
-            <DashboardExecutivoConsolidadoSection />
+            <Suspense fallback={SuspenseFallback}><DashboardExecutivoConsolidadoSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="alertas" className="space-y-6">
-            <AlertasAutomaticosSection />
+            <Suspense fallback={SuspenseFallback}><AlertasAutomaticosSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="tiktok-ads" className="space-y-6">
-            <IntegracaoTikTokAdsSection />
+            <Suspense fallback={SuspenseFallback}><IntegracaoTikTokAdsSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="recomendador" className="space-y-6">
-            <RecomendadorProdutosIASection />
+            <Suspense fallback={SuspenseFallback}><RecomendadorProdutosIASection /></Suspense>
           </TabsContent>
 
           <TabsContent value="google-sheets" className="space-y-6">
-            <ExportacaoGoogleSheetsSection />
+            <Suspense fallback={SuspenseFallback}><ExportacaoGoogleSheetsSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="instagram-ads" className="space-y-6">
-            <IntegracaoInstagramAdsSection />
+            <Suspense fallback={SuspenseFallback}><IntegracaoInstagramAdsSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="facebook-ads" className="space-y-6">
-            <IntegracaoFacebookAdsSection />
+            <Suspense fallback={SuspenseFallback}><IntegracaoFacebookAdsSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="segmentacao" className="space-y-6">
-            <SegmentacaoClientesSection />
+            <Suspense fallback={SuspenseFallback}><SegmentacaoClientesSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="comparador-ab" className="space-y-6">
-            <ComparadorEstrategiasABTestingSection />
+            <Suspense fallback={SuspenseFallback}><ComparadorEstrategiasABTestingSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="meta-vs-google" className="space-y-6">
-            <ComparativoMetaGoogleAdsSection />
+            <Suspense fallback={SuspenseFallback}><ComparativoMetaGoogleAdsSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="automacao-segmentacao" className="space-y-6">
-            <AutomacaoSegmentacaoClientesSection />
+            <Suspense fallback={SuspenseFallback}><AutomacaoSegmentacaoClientesSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="roi-segmento" className="space-y-6">
-            <RelatorioROISegmentoSection />
+            <Suspense fallback={SuspenseFallback}><RelatorioROISegmentoSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="email-marketing" className="space-y-6">
-            <EmailMarketingSection />
+            <Suspense fallback={SuspenseFallback}><EmailMarketingSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="crm-clientes" className="space-y-6">
-            <CRMClientesSection />
+            <Suspense fallback={SuspenseFallback}><CRMClientesSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="atribuicao-multichannel" className="space-y-6">
-            <AtribuicaoMulticanalSection />
+            <Suspense fallback={SuspenseFallback}><AtribuicaoMulticanalSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="manual" className="space-y-6">
-            <ManualSection />
+            <Suspense fallback={SuspenseFallback}><ManualSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="automacao-bling" className="space-y-6">
-            <AutomacaoBlingSection />
+            <Suspense fallback={SuspenseFallback}><AutomacaoBlingSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="relatorio-influenciadores" className="space-y-6">
-            <RelatorioInfluenciadoresSection />
+            <Suspense fallback={SuspenseFallback}><RelatorioInfluenciadoresSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="previsao-churn" className="space-y-6">
-            <PrevisaoChurnSection />
+            <Suspense fallback={SuspenseFallback}><PrevisaoChurnSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="integracao-tray" className="space-y-6">
-            <IntegracaoTraySection />
+            <Suspense fallback={SuspenseFallback}><IntegracaoTraySection /></Suspense>
           </TabsContent>
 
           <TabsContent value="rentabilidade-produto" className="space-y-6">
-            <RentabilidadeProdutoSection />
+            <Suspense fallback={SuspenseFallback}><RentabilidadeProdutoSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="previsao-demanda" className="space-y-6">
-            <PrevisaoDemandaSection />
+            <Suspense fallback={SuspenseFallback}><PrevisaoDemandaSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="automacao-email" className="space-y-6">
-            <AutomacaoEmailInteligenteSection />
+            <Suspense fallback={SuspenseFallback}><AutomacaoEmailInteligenteSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="ltv-detalhado" className="space-y-6">
-            <LifetimeValueDetalhadoSection />
+            <Suspense fallback={SuspenseFallback}><LifetimeValueDetalhadoSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="analise-competitiva" className="space-y-6">
-            <AnalisesCompetitivaSection />
+            <Suspense fallback={SuspenseFallback}><AnalisesCompetitivaSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="google-analytics" className="space-y-6">
-            <GoogleAnalytics4Section />
+            <Suspense fallback={SuspenseFallback}><GoogleAnalytics4Section /></Suspense>
           </TabsContent>
 
           <TabsContent value="recomendacao-ia" className="space-y-6">
-            <SistemaRecomendacaoInteligenteSection />
+            <Suspense fallback={SuspenseFallback}><SistemaRecomendacaoInteligenteSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="otimizacao-funil" className="space-y-6">
-            <OtimizacaoFunilSection />
+            <Suspense fallback={SuspenseFallback}><OtimizacaoFunilSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="whatsapp-integracao" className="space-y-6">
-            <IntegracaoWhatsAppSection />
+            <Suspense fallback={SuspenseFallback}><IntegracaoWhatsAppSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="sentimento-redes" className="space-y-6">
-            <AnaliseSentimentoRedesSociaisSection />
+            <Suspense fallback={SuspenseFallback}><AnaliseSentimentoRedesSociaisSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="orcamento-canais" className="space-y-6">
-            <RecomendacaoOrcamentoCanalSection />
+            <Suspense fallback={SuspenseFallback}><RecomendacaoOrcamentoCanalSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="canva-integracao" className="space-y-6">
-            <IntegracaoCanvaSection />
+            <Suspense fallback={SuspenseFallback}><IntegracaoCanvaSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="demanda-ml" className="space-y-6">
-            <PrevisaoDemandaMachineLearningSection />
+            <Suspense fallback={SuspenseFallback}><PrevisaoDemandaMachineLearningSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="respostas-ia" className="space-y-6">
-            <AutomacaoRespostasRedesSociaisSection />
+            <Suspense fallback={SuspenseFallback}><AutomacaoRespostasRedesSociaisSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="concorrencia-tempo-real" className="space-y-6">
-            <AnaliseConcorrenciaTempoRealSection />
+            <Suspense fallback={SuspenseFallback}><AnaliseConcorrenciaTempoRealSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="rentabilidade-detalhada" className="space-y-6">
-            <RentabilidadeDetalhadaSection />
+            <Suspense fallback={SuspenseFallback}><RentabilidadeDetalhadaSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="relatorios-agendados" className="space-y-6">
-            <AutomacaoRelatoriosAgendadosSection />
+            <Suspense fallback={SuspenseFallback}><AutomacaoRelatoriosAgendadosSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="afiliados" className="space-y-6">
-            <IntegracaoAfiliados />
+            <Suspense fallback={SuspenseFallback}><IntegracaoAfiliados /></Suspense>
           </TabsContent>
 
           <TabsContent value="drops-planner" className="space-y-6">
-            <DropsPlannerSection />
+            <Suspense fallback={SuspenseFallback}><DropsPlannerSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="ugc-collector" className="space-y-6">
-            <UGCCollectorSection />
+            <Suspense fallback={SuspenseFallback}><UGCCollectorSection /></Suspense>
           </TabsContent>
 
           <TabsContent value="abandono-recovery" className="space-y-6">
-            <RecuperacaoAbandonoSection />
+            <Suspense fallback={SuspenseFallback}><RecuperacaoAbandonoSection /></Suspense>
           </TabsContent>
         </Tabs>
       </section>

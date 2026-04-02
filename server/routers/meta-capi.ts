@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { getDb } from "../db";
 import { eq, and } from "drizzle-orm";
 import { oauthCredentials } from "../../drizzle/schema";
+import { assertRateLimit } from "../_core/rateLimiter";
 
 /**
  * Meta Conversions API (CAPI) Router
@@ -72,6 +73,7 @@ export const metaCapiRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      assertRateLimit(`meta-capi:${ctx.user.id}`, 60); // 60 eventos/min por usuário
       try {
         // Obter credenciais do banco
         const dbInstance = await getDb();
@@ -213,6 +215,7 @@ export const metaCapiRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      assertRateLimit(`meta-capi:${ctx.user.id}`, 60);
       try {
         // Obter credenciais
         const dbInstance = await getDb();
@@ -356,6 +359,7 @@ export const metaCapiRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      assertRateLimit(`meta-capi:${ctx.user.id}`, 60);
       try {
         const dbInstance = await getDb();
         if (!dbInstance) {

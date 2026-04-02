@@ -4,6 +4,7 @@ import axios, { AxiosError } from "axios";
 import { getDb } from "../db";
 import { instagramAccounts } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
+import { assertRateLimit } from "../_core/rateLimiter";
 
 const INSTAGRAM_GRAPH_API_BASE = "https://graph.instagram.com/v19.0";
 
@@ -185,7 +186,8 @@ export const instagramApiRouter = router({
         accessToken: z.string(),
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
+      assertRateLimit(`instagram-insights:${ctx.user.id}`, 20); // 20 queries/min
       try {
         const response = await axios.get<{ data: InstagramMediaInsight[] }>(
           `${INSTAGRAM_GRAPH_API_BASE}/${input.businessAccountId}/insights`,
@@ -236,7 +238,8 @@ export const instagramApiRouter = router({
         limit: z.number().default(25),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      assertRateLimit(`instagram-sync:${ctx.user.id}`, 10); // 10 syncs/min
       try {
         // Obter lista de posts
         const mediaResponse = await axios.get<{
