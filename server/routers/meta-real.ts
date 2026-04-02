@@ -2,7 +2,7 @@ import { publicProcedure, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
 import { oauthCredentials } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 /**
  * Meta Graph API Integration Router - REAL IMPLEMENTATION
@@ -88,7 +88,7 @@ export const metaRealRouter = {
       const credentials = await db
         .select()
         .from(oauthCredentials)
-        .where(eq(oauthCredentials.platform, "meta"));
+        .where(and(eq(oauthCredentials.platform, "meta"), eq(oauthCredentials.userId, ctx.user.id)));
 
       if (!credentials || credentials.length === 0) {
         throw new Error("Credenciais do Meta não configuradas");
@@ -127,7 +127,7 @@ export const metaRealRouter = {
       metric: z.enum(["impressions", "reach", "profile_views", "follower_count"]).optional(),
       period: z.enum(["day", "week", "month", "lifetime"]).optional(),
     }))
-    .query(async ({ input }: any) => {
+    .query(async ({ input, ctx }: any) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database connection failed");
@@ -136,7 +136,7 @@ export const metaRealRouter = {
         const credentials = await db
           .select()
           .from(oauthCredentials)
-          .where(eq(oauthCredentials.platform, "meta"));
+          .where(and(eq(oauthCredentials.platform, "meta"), eq(oauthCredentials.userId, ctx.user.id)));
 
         if (!credentials || credentials.length === 0) {
           throw new Error("Credenciais do Meta não configuradas");
@@ -180,7 +180,7 @@ export const metaRealRouter = {
     .input(z.object({
       limit: z.number().optional(),
     }))
-    .query(async ({ input }: any) => {
+    .query(async ({ input, ctx }: any) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database connection failed");
@@ -189,7 +189,7 @@ export const metaRealRouter = {
         const credentials = await db
           .select()
           .from(oauthCredentials)
-          .where(eq(oauthCredentials.platform, "meta"));
+          .where(and(eq(oauthCredentials.platform, "meta"), eq(oauthCredentials.userId, ctx.user.id)));
 
         if (!credentials || credentials.length === 0) {
           throw new Error("Credenciais do Meta não configuradas");
@@ -233,7 +233,7 @@ export const metaRealRouter = {
       mediaUrl: z.string(),
       mediaType: z.enum(["IMAGE", "VIDEO", "CAROUSEL"]).optional(),
     }))
-    .mutation(async ({ input }: any) => {
+    .mutation(async ({ input, ctx }: any) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database connection failed");
@@ -242,7 +242,7 @@ export const metaRealRouter = {
         const credentials = await db
           .select()
           .from(oauthCredentials)
-          .where(eq(oauthCredentials.platform, "meta"));
+          .where(and(eq(oauthCredentials.platform, "meta"), eq(oauthCredentials.userId, ctx.user.id)));
 
         if (!credentials || credentials.length === 0) {
           throw new Error("Credenciais do Meta não configuradas");
@@ -287,7 +287,7 @@ export const metaRealRouter = {
     .input(z.object({
       mediaId: z.string(),
     }))
-    .mutation(async ({ input }: any) => {
+    .mutation(async ({ input, ctx }: any) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database connection failed");
@@ -296,7 +296,7 @@ export const metaRealRouter = {
         const credentials = await db
           .select()
           .from(oauthCredentials)
-          .where(eq(oauthCredentials.platform, "meta"));
+          .where(and(eq(oauthCredentials.platform, "meta"), eq(oauthCredentials.userId, ctx.user.id)));
 
         if (!credentials || credentials.length === 0) {
           throw new Error("Credenciais do Meta não configuradas");
@@ -335,7 +335,7 @@ export const metaRealRouter = {
     .input(z.object({
       mediaId: z.string(),
     }))
-    .query(async ({ input }: any) => {
+    .query(async ({ input, ctx }: any) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database connection failed");
@@ -344,7 +344,7 @@ export const metaRealRouter = {
         const credentials = await db
           .select()
           .from(oauthCredentials)
-          .where(eq(oauthCredentials.platform, "meta"));
+          .where(and(eq(oauthCredentials.platform, "meta"), eq(oauthCredentials.userId, ctx.user.id)));
 
         if (!credentials || credentials.length === 0) {
           throw new Error("Credenciais do Meta não configuradas");
@@ -394,7 +394,7 @@ export const metaRealRouter = {
           accessToken: null,
           refreshToken: null,
         })
-        .where(eq(oauthCredentials.platform, "meta"));
+        .where(and(eq(oauthCredentials.platform, "meta"), eq(oauthCredentials.userId, ctx.user.id)));
 
       return {
         success: true,

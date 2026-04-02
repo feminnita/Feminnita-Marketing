@@ -11,14 +11,21 @@ export const postApprovalRouter = router({
       limit: z.number().default(20),
       influencerId: z.number().optional(),
     }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) return [];
 
+        const myInfluencers = await db
+          .select({ id: influencers.id })
+          .from(influencers)
+          .where(eq(influencers.userId, ctx.user.id));
+        const myIds = myInfluencers.map((i: any) => i.id);
+        if (myIds.length === 0) return [];
+
         const whereClause = input.influencerId
-          ? and(eq(influencerPosts.status, "draft"), eq(influencerPosts.influencerId, input.influencerId))
-          : eq(influencerPosts.status, "draft");
+          ? and(eq(influencerPosts.status, "draft"), eq(influencerPosts.influencerId, input.influencerId), inArray(influencerPosts.influencerId, myIds))
+          : and(eq(influencerPosts.status, "draft"), inArray(influencerPosts.influencerId, myIds));
 
         const posts = await db
           .select()
@@ -56,6 +63,12 @@ export const postApprovalRouter = router({
       try {
         const db = await getDb();
         if (!db) throw new Error("Database not available");
+
+        // Verify ownership
+        const [post] = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq(influencerPosts.id, input.postId)).limit(1);
+        if (!post) throw new Error("Post não encontrado");
+        const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and(eq(influencers.id, post.influencerId ?? 0), eq(influencers.userId, ctx.user.id))).limit(1);
+        if (!owned) throw new Error("Acesso negado");
 
         // Atualizar status para scheduled
         await db
@@ -96,6 +109,11 @@ export const postApprovalRouter = router({
         const db = await getDb();
         if (!db) throw new Error("Database not available");
 
+        const [post] = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq(influencerPosts.id, input.postId)).limit(1);
+        if (!post) throw new Error("Post não encontrado");
+        const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and(eq(influencers.id, post.influencerId ?? 0), eq(influencers.userId, ctx.user.id))).limit(1);
+        if (!owned) throw new Error("Acesso negado");
+
         // Atualizar status para failed (ou criar novo status)
         await db
           .update(influencerPosts)
@@ -128,10 +146,15 @@ export const postApprovalRouter = router({
       hashtags: z.array(z.string()).optional(),
       cta: z.string().optional(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database not available");
+
+        const [post] = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq(influencerPosts.id, input.postId)).limit(1);
+        if (!post) throw new Error("Post não encontrado");
+        const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and(eq(influencers.id, post.influencerId ?? 0), eq(influencers.userId, ctx.user.id))).limit(1);
+        if (!owned) throw new Error("Acesso negado");
 
         // Atualizar post
         await db
@@ -207,15 +230,26 @@ export const postApprovalRouter = router({
       influencerId: z.number().optional(),
       limit: z.number().default(20),
     }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) return [];
 
+        const myInfluencers = await db
+          .select({ id: influencers.id })
+          .from(influencers)
+          .where(eq(influencers.userId, ctx.user.id));
+        const myIds = myInfluencers.map((i: any) => i.id);
+        if (myIds.length === 0) return [];
+
+        const whereClause = input.influencerId
+          ? and(eq(influencerPosts.status, "published"), eq(influencerPosts.influencerId, input.influencerId), inArray(influencerPosts.influencerId, myIds))
+          : and(eq(influencerPosts.status, "published"), inArray(influencerPosts.influencerId, myIds));
+
         let query = db
           .select()
           .from(influencerPosts)
-          .where(eq(influencerPosts.status, "published"))
+          .where(whereClause)
           .orderBy(desc(influencerPosts.publishedAt))
           .limit(input.limit);
 
@@ -242,7 +276,7 @@ export const postApprovalRouter = router({
 
   // Obter estatísticas de aprovação
   getApprovalStats: protectedProcedure
-    .query(async () => {
+    .query(async ({ ctx }) => {
       try {
         const db = await getDb();
         if (!db) {
@@ -253,16 +287,19 @@ export const postApprovalRouter = router({
             totalPending: 0,
             totalPublished: 0,
             approvalRate: 0,
-            byInfluencer: {
-              carol: { approved: 0, rejected: 0, pending: 0 },
-              renata: { approved: 0, rejected: 0, pending: 0 },
-              vanessa: { approved: 0, rejected: 0, pending: 0 },
-              luiza: { approved: 0, rejected: 0, pending: 0 },
-            },
+            byInfluencer: {},
           };
         }
 
-        const allPosts = await db.select().from(influencerPosts);
+        const myInfluencers = await db
+          .select()
+          .from(influencers)
+          .where(eq(influencers.userId, ctx.user.id));
+        const myIds = myInfluencers.map((i: any) => i.id);
+
+        const allPosts = myIds.length > 0
+          ? await db.select().from(influencerPosts).where(inArray(influencerPosts.influencerId, myIds))
+          : [];
 
         const totalGenerated = allPosts.length;
         const totalApproved = allPosts.filter((p: any) => p.status === "scheduled").length;
@@ -275,12 +312,11 @@ export const postApprovalRouter = router({
             ? Math.round((totalApproved / totalGenerated) * 100)
             : 0;
 
-        const allInfluencers = await db.select().from(influencers);
         const byInfluencer: Record<string, { approved: number; rejected: number; pending: number }> = {};
 
-        for (const inf of allInfluencers) {
+        for (const inf of myInfluencers) {
           const infPosts = allPosts.filter((p: any) => p.influencerId === inf.id);
-          byInfluencer[inf.name.toLowerCase()] = {
+          byInfluencer[(inf as any).name.toLowerCase()] = {
             approved: infPosts.filter((p: any) => p.status === "scheduled" || p.status === "published").length,
             rejected: infPosts.filter((p: any) => p.status === "failed").length,
             pending: infPosts.filter((p: any) => p.status === "draft").length,

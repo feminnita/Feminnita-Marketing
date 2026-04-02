@@ -1,93 +1,38 @@
-import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
+import { protectedProcedure, router } from "../_core/trpc";
 import { invokeLLM } from "../_core/llm";
 import { z } from "zod";
-
-// Perfis das influenciadoras com contexto para IA
-const influencerProfiles = {
-  carol: {
-    name: "Carol",
-    persona: "A Mãe Moderna",
-    bio: "Mãe de dois filhos, trabalha como freelancer, adora séries e pijamas confortáveis. Sempre buscando equilibrar maternidade, trabalho e autocuidado.",
-    interests: ["maternidade", "trabalho remoto", "séries", "conforto", "autocuidado", "família"],
-    postTopics: [
-      "rotina de mãe moderna",
-      "dicas de conforto",
-      "noites de série",
-      "trabalho remoto com filhos",
-      "autocuidado para mães",
-      "pijamas para relaxar"
-    ]
-  },
-  renata: {
-    name: "Renata",
-    persona: "A Executiva Elegante",
-    bio: "Executiva de sucesso, viaja a negócios, aprecia luxo e sofisticação. Acredita que qualidade de sono é essencial para performance.",
-    interests: ["negócios", "viagens", "sofisticação", "performance", "bem-estar", "estilo"],
-    postTopics: [
-      "dicas de viagem executiva",
-      "importância do sono",
-      "rotina de executiva",
-      "sofisticação no dia a dia",
-      "recuperação após viagens",
-      "pijamas sofisticados"
-    ]
-  },
-  vanessa: {
-    name: "Vanessa",
-    persona: "A Criativa Artística",
-    bio: "Designer criativa, trabalha em estúdio próprio, adora cores e designs únicos. Busca inspiração em tudo ao seu redor.",
-    interests: ["design", "criatividade", "cores", "arte", "inovação", "estilo pessoal"],
-    postTopics: [
-      "processo criativo",
-      "inspiração para designs",
-      "dia no estúdio",
-      "tendências de moda",
-      "cores e padrões",
-      "pijamas com designs únicos"
-    ]
-  },
-  luiza: {
-    name: "Luiza",
-    persona: "A Fitness Aventureira",
-    bio: "Personal trainer e aventureira, adora treinos intensos e atividades ao ar livre. Acredita que recuperação é tão importante quanto o treino.",
-    interests: ["fitness", "aventura", "saúde", "performance", "recuperação", "bem-estar"],
-    postTopics: [
-      "treinos intensos",
-      "recuperação muscular",
-      "importância do sono",
-      "aventuras ao ar livre",
-      "nutrição e bem-estar",
-      "pijamas para atletas"
-    ]
-  }
-};
-
-type InfluencerId = keyof typeof influencerProfiles;
+import { getDb } from "../db";
+import { influencers } from "../../drizzle/schema";
+import { eq, and } from "drizzle-orm";
 
 export const autoContentGeneratorRouter = router({
   // Gerar um post automático para uma influenciadora
   generatePost: protectedProcedure
     .input(z.object({
-      influencerId: z.enum(["carol", "renata", "vanessa", "luiza"]),
+      influencerId: z.number(),
       includeProduct: z.boolean().default(true),
     }))
-    .mutation(async ({ input }) => {
-      const profile = influencerProfiles[input.influencerId as InfluencerId];
-      
-      if (!profile) {
-        throw new Error("Influenciadora não encontrada");
-      }
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
 
-      // Selecionar um tópico aleatório
-      const randomTopic = profile.postTopics[
-        Math.floor(Math.random() * profile.postTopics.length)
-      ];
+      const [influencer] = await db
+        .select()
+        .from(influencers)
+        .where(and(eq(influencers.id, input.influencerId), eq(influencers.userId, ctx.user.id)))
+        .limit(1);
+
+      if (!influencer) throw new Error("Influenciadora não encontrada");
+
+      const name = influencer.name;
+      const persona = influencer.personality || name;
+      const bio = influencer.bio || `${name} é uma influenciadora da Feminnita.`;
 
       const prompt = `
-Você é ${profile.name}, conhecida como "${profile.persona}".
-Bio: ${profile.bio}
+Você é ${name}, conhecida como "${persona}".
+Bio: ${bio}
 
-Gere um post autêntico e engajador sobre: "${randomTopic}"
+Gere um post autêntico e engajador para o Instagram.
 
 ${input.includeProduct ? `
 Inclua uma menção natural aos pijamas Feminnita de forma orgânica, sem parecer propaganda.
@@ -144,39 +89,46 @@ Responda em JSON com este formato:
       const messageContent = response.choices[0].message.content;
       const contentStr = typeof messageContent === 'string' ? messageContent : JSON.stringify(messageContent);
       const content = JSON.parse(contentStr || "{}");
-      
+
       return {
         influencerId: input.influencerId,
-        influencerName: profile.name,
+        influencerName: name,
         caption: content.caption,
         hashtags: content.hashtags,
         cta: content.cta,
         productMention: content.productMention,
         generatedAt: new Date(),
-        topic: randomTopic
       };
     }),
 
-  // Gerar posts para todas as influenciadoras
+  // Gerar posts para todas as influenciadoras do usuário
   generateAllPosts: protectedProcedure
     .input(z.object({
       includeProducts: z.boolean().default(true),
     }))
-    .mutation(async ({ input }): Promise<any[]> => {
-      const influencerIds: InfluencerId[] = ["carol", "renata", "vanessa", "luiza"];
+    .mutation(async ({ ctx, input }): Promise<any[]> => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const userInfluencers = await db
+        .select()
+        .from(influencers)
+        .where(and(eq(influencers.userId, ctx.user.id), eq(influencers.isActive, true)));
+
       const posts: any[] = [];
 
-      for (const id of influencerIds) {
+      for (const inf of userInfluencers) {
         try {
-          const post: any = await autoContentGeneratorRouter.createCaller({ user: null } as any).generatePost({
-            influencerId: id,
+          const post: any = await autoContentGeneratorRouter.createCaller({ user: ctx.user } as any).generatePost({
+            influencerId: inf.id,
             includeProduct: input.includeProducts,
           });
           posts.push(post);
         } catch (error) {
-          console.error(`Erro ao gerar post para ${id}:`, error);
+          console.error(`Erro ao gerar post para ${inf.name}:`, error);
           posts.push({
-            influencerId: id,
+            influencerId: inf.id,
+            influencerName: inf.name,
             error: "Falha ao gerar post"
           });
         }
@@ -188,21 +140,21 @@ Responda em JSON com este formato:
   // Gerar múltiplos posts para uma influenciadora
   generateMultiplePosts: protectedProcedure
     .input(z.object({
-      influencerId: z.enum(["carol", "renata", "vanessa", "luiza"]),
+      influencerId: z.number(),
       count: z.number().min(1).max(5).default(3),
       includeProducts: z.boolean().default(true),
     }))
-    .mutation(async ({ input }): Promise<any[]> => {
+    .mutation(async ({ ctx, input }): Promise<any[]> => {
       const posts: any[] = [];
 
       for (let i = 0; i < input.count; i++) {
         try {
-          const post: any = await autoContentGeneratorRouter.createCaller({ user: null } as any).generatePost({
+          const post: any = await autoContentGeneratorRouter.createCaller({ user: ctx.user } as any).generatePost({
             influencerId: input.influencerId,
             includeProduct: input.includeProducts,
           });
           posts.push(post);
-          
+
           // Pequeno delay entre gerações para evitar rate limit
           await new Promise(resolve => setTimeout(resolve, 500));
         } catch (error) {
@@ -213,27 +165,22 @@ Responda em JSON com este formato:
       return posts;
     }),
 
-  // Obter perfil de uma influenciadora
-  getInfluencerProfile: publicProcedure
-    .input(z.object({
-      influencerId: z.enum(["carol", "renata", "vanessa", "luiza"]),
-    }))
-    .query(({ input }) => {
-      const profile = influencerProfiles[input.influencerId as InfluencerId];
-      if (!profile) {
-        throw new Error("Influenciadora não encontrada");
-      }
-      return profile;
-    }),
+  // Listar influenciadoras do usuário
+  listInfluencers: protectedProcedure
+    .query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) return [];
 
-  // Listar todas as influenciadoras
-  listInfluencers: publicProcedure
-    .query(() => {
-      return Object.entries(influencerProfiles).map(([id, profile]) => ({
-        id,
-        name: profile.name,
-        persona: profile.persona,
-        bio: profile.bio
+      const rows = await db
+        .select()
+        .from(influencers)
+        .where(and(eq(influencers.userId, ctx.user.id), eq(influencers.isActive, true)));
+
+      return rows.map((inf) => ({
+        id: inf.id,
+        name: inf.name,
+        persona: inf.personality || inf.name,
+        bio: inf.bio || "",
       }));
-    })
+    }),
 });

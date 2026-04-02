@@ -39,6 +39,9 @@ import WhatsAppBaileysSimplePage from "./pages/WhatsAppBaileysSimplePage";
 import WhatsAppNotificationsPage from "./pages/WhatsAppNotificationsPage";
 import AssetLibraryPage from "@/pages/AssetLibraryPage";
 import MarketingTeamPage from "@/pages/MarketingTeamPage";
+import AfiliadasPage from "@/pages/AfiliadasPage";
+import BrandBookPage from "@/pages/BrandBookPage";
+import TiktokLivePage from "@/pages/TiktokLivePage";
 
 export default function App() {
   const [location] = useLocation();
@@ -127,6 +130,12 @@ export default function App() {
         return <AssetLibraryPage />;
       case "/equipe-marketing":
         return <MarketingTeamPage />;
+      case "/afiliadas":
+        return <AfiliadasPage />;
+      case "/brand-book":
+        return <BrandBookPage />;
+      case "/tiktok-live":
+        return <TiktokLivePage />;
       default: {
         // Rotas autenticadas de perfis individuais de influenciadoras
         if (/^\/influenciadora\/\d+$/.test(location)) {

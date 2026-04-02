@@ -3,132 +3,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Music, Download, Play, Heart, Share2, ExternalLink, Search } from "lucide-react";
+import { Music, Download, Play, Heart, Share2, Search } from "lucide-react";
 
 const TRENDING_SOUNDS = [
-  {
-    id: "sound-1",
-    nome: "Renda Extra - Trending",
-    artista: "TikTok Viral",
-    duracao: "15s",
-    categoria: "Renda Extra",
-    uso: 2847,
-    link: "https://www.tiktok.com/music/",
-    tipo: "Trending"
-  },
-  {
-    id: "sound-2",
-    nome: "Conforto & Lifestyle",
-    artista: "Indie Pop",
-    duracao: "30s",
-    categoria: "Lifestyle",
-    uso: 1923,
-    link: "https://www.tiktok.com/music/",
-    tipo: "Trending"
-  },
-  {
-    id: "sound-3",
-    nome: "Motivação Empreendedora",
-    artista: "Motivational",
-    duracao: "20s",
-    categoria: "Motivação",
-    uso: 1654,
-    link: "https://www.tiktok.com/music/",
-    tipo: "Trending"
-  },
-  {
-    id: "sound-4",
-    nome: "Compra Coletiva - Alegria",
-    artista: "Pop Upbeat",
-    duracao: "25s",
-    categoria: "Compra Coletiva",
-    uso: 1421,
-    link: "https://www.tiktok.com/music/",
-    tipo: "Trending"
-  },
-  {
-    id: "sound-5",
-    nome: "ASMR - Tecido Macio",
-    artista: "ASMR Sounds",
-    duracao: "30s",
-    categoria: "ASMR",
-    uso: 987,
-    link: "https://www.tiktok.com/music/",
-    tipo: "Trending"
-  },
-  {
-    id: "sound-6",
-    nome: "Unboxing - Surpresa",
-    artista: "Sound Effects",
-    duracao: "10s",
-    categoria: "Unboxing",
-    uso: 1876,
-    link: "https://www.tiktok.com/music/",
-    tipo: "Trending"
-  },
+  { id: "sound-1", nome: "Renda Extra - Trending", artista: "TikTok Viral", duracao: "15s", categoria: "Renda Extra", link: "https://www.tiktok.com/music/", tipo: "Trending" },
+  { id: "sound-2", nome: "Conforto & Lifestyle", artista: "Indie Pop", duracao: "30s", categoria: "Lifestyle", link: "https://www.tiktok.com/music/", tipo: "Trending" },
+  { id: "sound-3", nome: "Motivação Empreendedora", artista: "Motivational", duracao: "20s", categoria: "Motivação", link: "https://www.tiktok.com/music/", tipo: "Trending" },
+  { id: "sound-4", nome: "Compra Coletiva - Alegria", artista: "Pop Upbeat", duracao: "25s", categoria: "Compra Coletiva", link: "https://www.tiktok.com/music/", tipo: "Trending" },
+  { id: "sound-5", nome: "ASMR - Tecido Macio", artista: "ASMR Sounds", duracao: "30s", categoria: "ASMR", link: "https://www.tiktok.com/music/", tipo: "Trending" },
+  { id: "sound-6", nome: "Unboxing - Surpresa", artista: "Sound Effects", duracao: "10s", categoria: "Unboxing", link: "https://www.tiktok.com/music/", tipo: "Trending" },
 ];
 
 const ROYALTY_FREE = [
-  {
-    id: "rf-1",
-    nome: "Energetic Vibes",
-    artista: "Free Music Archive",
-    duracao: "60s",
-    categoria: "Energético",
-    uso: 5432,
-    link: "https://freemusicarchive.org",
-    tipo: "Royalty Free"
-  },
-  {
-    id: "rf-2",
-    nome: "Soft Background",
-    artista: "Epidemic Sound",
-    duracao: "60s",
-    categoria: "Background",
-    uso: 3421,
-    link: "https://www.epidemicsound.com",
-    tipo: "Royalty Free"
-  },
-  {
-    id: "rf-3",
-    nome: "Uplifting Pop",
-    artista: "Bensound",
-    duracao: "60s",
-    categoria: "Pop",
-    uso: 2876,
-    link: "https://www.bensound.com",
-    tipo: "Royalty Free"
-  },
-  {
-    id: "rf-4",
-    nome: "Corporate Success",
-    artista: "Incompetech",
-    duracao: "60s",
-    categoria: "Corporativo",
-    uso: 1987,
-    link: "https://incompetech.com",
-    tipo: "Royalty Free"
-  },
-  {
-    id: "rf-5",
-    nome: "Chill Lofi",
-    artista: "Chosic",
-    duracao: "60s",
-    categoria: "Lofi",
-    uso: 4123,
-    link: "https://www.chosic.com/spotify-playlist-generator/",
-    tipo: "Royalty Free"
-  },
-  {
-    id: "rf-6",
-    nome: "Motivational Strings",
-    artista: "YouTube Audio Library",
-    duracao: "60s",
-    categoria: "Motivação",
-    uso: 3654,
-    link: "https://www.youtube.com/audiolibrary",
-    tipo: "Royalty Free"
-  },
+  { id: "rf-1", nome: "Energetic Vibes", artista: "Free Music Archive", duracao: "60s", categoria: "Energético", link: "https://freemusicarchive.org", tipo: "Royalty Free" },
+  { id: "rf-2", nome: "Soft Background", artista: "Epidemic Sound", duracao: "60s", categoria: "Background", link: "https://www.epidemicsound.com", tipo: "Royalty Free" },
+  { id: "rf-3", nome: "Uplifting Pop", artista: "Bensound", duracao: "60s", categoria: "Pop", link: "https://www.bensound.com", tipo: "Royalty Free" },
+  { id: "rf-4", nome: "Corporate Success", artista: "Incompetech", duracao: "60s", categoria: "Corporativo", link: "https://incompetech.com", tipo: "Royalty Free" },
+  { id: "rf-5", nome: "Chill Lofi", artista: "Chosic", duracao: "60s", categoria: "Lofi", link: "https://www.chosic.com/spotify-playlist-generator/", tipo: "Royalty Free" },
+  { id: "rf-6", nome: "Motivational Strings", artista: "YouTube Audio Library", duracao: "60s", categoria: "Motivação", link: "https://www.youtube.com/audiolibrary", tipo: "Royalty Free" },
 ];
 
 const CATEGORIAS = ["Renda Extra", "Lifestyle", "Motivação", "Compra Coletiva", "ASMR", "Unboxing", "Energético", "Background", "Pop", "Corporativo", "Lofi"];
@@ -147,9 +39,7 @@ export default function BibliotecaAudiosSection() {
   );
 
   const toggleFavorite = (id: string) => {
-    setFavorites(prev =>
-      prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]
-    );
+    setFavorites(prev => prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]);
   };
 
   return (
@@ -206,12 +96,7 @@ export default function BibliotecaAudiosSection() {
             <h3 className="font-semibold text-sm mb-3">Categorias</h3>
             <div className="flex flex-wrap gap-2">
               {CATEGORIAS.map(cat => (
-                <Button
-                  key={cat}
-                  variant={selectedCategory === cat ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedCategory(cat)}
-                >
+                <Button key={cat} variant={selectedCategory === cat ? "default" : "outline"} size="sm" onClick={() => setSelectedCategory(cat)}>
                   {cat}
                 </Button>
               ))}
@@ -220,14 +105,10 @@ export default function BibliotecaAudiosSection() {
 
           {/* Lista de Áudios */}
           <div className="space-y-3">
-            <h3 className="font-semibold text-sm">
-              {filteredAudios.length} Áudios Encontrados
-            </h3>
+            <h3 className="font-semibold text-sm">{filteredAudios.length} Áudios Encontrados</h3>
             {filteredAudios.length === 0 ? (
               <Card className="p-6 text-center">
-                <p className="text-sm text-slate-600">
-                  Nenhum áudio encontrado nesta categoria. Tente outra!
-                </p>
+                <p className="text-sm text-slate-600">Nenhum áudio encontrado nesta categoria. Tente outra!</p>
               </Card>
             ) : (
               filteredAudios.map(audio => (
@@ -236,53 +117,21 @@ export default function BibliotecaAudiosSection() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="font-semibold text-sm">{audio.nome}</h4>
-                        <Badge variant="secondary" className="text-xs">
-                          {audio.tipo}
-                        </Badge>
+                        <Badge variant="secondary" className="text-xs">{audio.tipo}</Badge>
                       </div>
-                      <p className="text-xs text-slate-600 mb-2">
-                        {audio.artista} • {audio.duracao}
-                      </p>
-                      <div className="flex items-center gap-2 text-xs text-slate-500">
-                        <span>👥 {audio.uso.toLocaleString()} usos</span>
-                      </div>
+                      <p className="text-xs text-slate-600">{audio.artista} • {audio.duracao}</p>
                     </div>
                     <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => window.open(audio.link, "_blank")}
-                        className="gap-1"
-                      >
+                      <Button size="sm" variant="ghost" onClick={() => window.open(audio.link, "_blank")} className="gap-1">
                         <Play className="w-4 h-4" />
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => toggleFavorite(audio.id)}
-                      >
-                        <Heart
-                          className={`w-4 h-4 ${
-                            favorites.includes(audio.id)
-                              ? "fill-red-500 text-red-500"
-                              : "text-slate-400"
-                          }`}
-                        />
+                      <Button size="sm" variant="ghost" onClick={() => toggleFavorite(audio.id)}>
+                        <Heart className={`w-4 h-4 ${favorites.includes(audio.id) ? "fill-red-500 text-red-500" : "text-slate-400"}`} />
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          navigator.clipboard.writeText(audio.link);
-                        }}
-                      >
+                      <Button size="sm" variant="ghost" onClick={() => navigator.clipboard.writeText(audio.link)}>
                         <Share2 className="w-4 h-4" />
                       </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => window.open(audio.link, "_blank")}
-                        className="gap-1"
-                      >
+                      <Button size="sm" onClick={() => window.open(audio.link, "_blank")} className="gap-1">
                         <Download className="w-3 h-3" />
                         Usar
                       </Button>
@@ -312,7 +161,7 @@ export default function BibliotecaAudiosSection() {
             <ol className="text-sm space-y-2 text-slate-700">
               <li>1. <strong>Escolha a categoria</strong> que combina com seu vídeo</li>
               <li>2. <strong>Busque ou navegue</strong> pelos áudios disponíveis</li>
-              <li>3. <strong>Clique em "Play"</strong> para ouvir preview</li>
+              <li>3. <strong>Clique em "Play"</strong> para ouvir preview na plataforma</li>
               <li>4. <strong>Clique em "Usar"</strong> para acessar a plataforma</li>
               <li>5. <strong>Baixe o áudio</strong> em MP3 ou WAV</li>
               <li>6. <strong>Adicione ao seu vídeo</strong> no CapCut ou editor preferido</li>
@@ -324,45 +173,22 @@ export default function BibliotecaAudiosSection() {
           <div className="grid md:grid-cols-3 gap-3">
             <Card className="p-4">
               <h4 className="font-semibold text-sm mb-2">🎵 TikTok Sounds</h4>
-              <p className="text-xs text-slate-600 mb-3">
-                Trending sounds direto do TikTok
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.open("https://www.tiktok.com/music", "_blank")}
-                className="w-full text-xs"
-              >
+              <p className="text-xs text-slate-600 mb-3">Trending sounds direto do TikTok</p>
+              <Button variant="outline" size="sm" onClick={() => window.open("https://www.tiktok.com/music", "_blank")} className="w-full text-xs">
                 Acessar
               </Button>
             </Card>
-
             <Card className="p-4">
               <h4 className="font-semibold text-sm mb-2">🎼 YouTube Audio</h4>
-              <p className="text-xs text-slate-600 mb-3">
-                Biblioteca royalty-free do YouTube
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.open("https://www.youtube.com/audiolibrary", "_blank")}
-                className="w-full text-xs"
-              >
+              <p className="text-xs text-slate-600 mb-3">Biblioteca royalty-free do YouTube</p>
+              <Button variant="outline" size="sm" onClick={() => window.open("https://www.youtube.com/audiolibrary", "_blank")} className="w-full text-xs">
                 Acessar
               </Button>
             </Card>
-
             <Card className="p-4">
               <h4 className="font-semibold text-sm mb-2">🎧 Epidemic Sound</h4>
-              <p className="text-xs text-slate-600 mb-3">
-                Música premium royalty-free
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.open("https://www.epidemicsound.com", "_blank")}
-                className="w-full text-xs"
-              >
+              <p className="text-xs text-slate-600 mb-3">Música premium royalty-free</p>
+              <Button variant="outline" size="sm" onClick={() => window.open("https://www.epidemicsound.com", "_blank")} className="w-full text-xs">
                 Acessar
               </Button>
             </Card>

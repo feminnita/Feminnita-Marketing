@@ -1,8 +1,8 @@
 import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { getDb } from "../db";
-import { instagramAccounts, igPostPublications } from "../../drizzle/schema";
+import { instagramAccounts, igPostPublications, influencers } from "../../drizzle/schema";
 
 const META_GRAPH_API_BASE = "https://graph.instagram.com/v18.0";
 
@@ -56,7 +56,7 @@ export const metaGraphIntegrationRouter = router({
         hashtags: z.array(z.string()).optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database not available");
@@ -73,6 +73,13 @@ export const metaGraphIntegrationRouter = router({
         }
 
         const igAccount = account[0];
+
+        // Verify ownership
+        if (igAccount.accountType === "influencer" && igAccount.influencerId) {
+          const [owned] = await db.select({ id: influencers.id }).from(influencers)
+            .where(and(eq(influencers.id, igAccount.influencerId), eq(influencers.userId, ctx.user.id))).limit(1);
+          if (!owned) throw new Error("Acesso negado");
+        }
 
         // Preparar caption com hashtags
         let fullCaption = input.caption;
@@ -171,7 +178,7 @@ export const metaGraphIntegrationRouter = router({
         accountId: z.number(),
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) return null;
@@ -187,6 +194,13 @@ export const metaGraphIntegrationRouter = router({
         }
 
         const igAccount = account[0];
+
+        // Verify ownership
+        if (igAccount.accountType === "influencer" && igAccount.influencerId) {
+          const [owned] = await db.select({ id: influencers.id }).from(influencers)
+            .where(and(eq(influencers.id, igAccount.influencerId), eq(influencers.userId, ctx.user.id))).limit(1);
+          if (!owned) throw new Error("Acesso negado");
+        }
 
         // Obter insights da conta
         const insights = await makeMetaGraphRequest(
@@ -234,7 +248,7 @@ export const metaGraphIntegrationRouter = router({
         accountId: z.number(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database not available");
@@ -251,6 +265,13 @@ export const metaGraphIntegrationRouter = router({
         }
 
         const igAccount = account[0];
+
+        // Verify ownership
+        if (igAccount.accountType === "influencer" && igAccount.influencerId) {
+          const [owned] = await db.select({ id: influencers.id }).from(influencers)
+            .where(and(eq(influencers.id, igAccount.influencerId), eq(influencers.userId, ctx.user.id))).limit(1);
+          if (!owned) throw new Error("Acesso negado");
+        }
 
         // Obter publicações da conta
         const publications = await db

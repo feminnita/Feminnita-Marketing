@@ -1,352 +1,182 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Instagram, TrendingUp, BarChart3, CheckCircle, AlertCircle, Share2 } from "lucide-react";
-import { useState } from "react";
+import { Instagram, TrendingUp, BarChart3, AlertCircle } from "lucide-react";
+import { trpc } from "@/lib/trpc";
+
+const PLATAFORMA_LABELS: Record<string, string> = {
+  instagram: "Instagram",
+  facebook: "Facebook",
+  tiktok: "TikTok",
+  whatsapp: "WhatsApp",
+  email: "Email",
+};
 
 export default function MetaBusinessSuiteSection() {
-  const [conectado, setConectado] = useState(false);
-  const [metaKey, setMetaKey] = useState("");
-  const [contas, setContas] = useState([
-    {
-      id: 1,
-      nome: "Feminnita Oficial",
-      plataforma: "Instagram",
-      seguidores: 15420,
-      engajamento: 8.5,
-      alcance: 45230,
-      status: "ativo"
-    },
-    {
-      id: 2,
-      nome: "Feminnita TikTok",
-      plataforma: "TikTok",
-      seguidores: 8950,
-      engajamento: 12.3,
-      alcance: 125680,
-      status: "ativo"
-    }
-  ]);
+  const { data: campanhas = [] } = trpc.campaigns.listar.useQuery(undefined, { refetchInterval: 60_000 });
+  const { data: tokenStatus } = trpc.oauthCallbacks.getTokenStatus.useQuery({ platform: "meta" });
 
-  const [metricas, setMetricas] = useState({
-    impressoes: 234567,
-    alcance: 89234,
-    engajamentos: 7654,
-    cliques: 2345,
-    conversoes: 234,
-    receita: 12340
-  });
+  const metaCampanhas = (campanhas as any[]).filter(c =>
+    c.plataforma === "instagram" || c.plataforma === "facebook"
+  );
+  const ativas = metaCampanhas.filter(c => c.status === "ativa");
 
-  const [posts, setPosts] = useState([
-    {
-      id: 1,
-      titulo: "Story - Renda Extra",
-      plataforma: "Instagram",
-      tipo: "story",
-      data: "2026-01-31",
-      status: "publicado",
-      alcance: 5230,
-      engajamento: 456,
-      cliques: 123
-    },
-    {
-      id: 2,
-      titulo: "Reels - Bastidores",
-      plataforma: "Instagram",
-      tipo: "reels",
-      data: "2026-01-31",
-      status: "publicado",
-      alcance: 12450,
-      engajamento: 1234,
-      cliques: 345
-    },
-    {
-      id: 3,
-      titulo: "TikTok - ASMR",
-      plataforma: "TikTok",
-      tipo: "tiktok",
-      data: "2026-01-30",
-      status: "publicado",
-      alcance: 45230,
-      engajamento: 5234,
-      cliques: 876
-    }
-  ]);
+  const totalImpressoes = ativas.reduce((s, c) => s + (c.impressoes ?? 0), 0);
+  const totalAlcance = ativas.reduce((s, c) => s + (c.cliques ?? 0), 0);
+  const totalEngajamentos = ativas.reduce((s, c) => s + (c.conversoes ?? 0), 0);
+  const totalOrcamento = ativas.reduce((s, c) => s + parseFloat(c.orcamento ?? "0"), 0);
+  const rois = ativas.filter(c => parseFloat(c.roi ?? "0") > 0);
+  const roiMedio = rois.length > 0 ? rois.reduce((s, c) => s + parseFloat(c.roi ?? "0"), 0) / rois.length : 0;
 
-  const conectarMeta = () => {
-    if (metaKey.trim()) {
-      setConectado(true);
-    }
-  };
+  const isConnected = tokenStatus?.connected === true;
 
-  const publicarAgora = (id: number) => {
-    alert(`Post ${id} publicado em todas as redes!`);
+  const handleConnectMeta = () => {
+    window.location.href = `/api/oauth/meta/connect`;
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-slate-900 mb-2">Integração Meta Business Suite</h2>
-        <p className="text-slate-600">
-          Publique e monitore métricas em tempo real diretamente do Instagram e Facebook sem sair da plataforma.
+        <p className="text-slate-600 text-sm">
+          Performance de campanhas Instagram e Facebook. Configure o OAuth Meta em <strong>Integrações &gt; Credenciais OAuth</strong> para sincronização automática.
         </p>
       </div>
 
-      {/* Conexão com Meta */}
-      <Card className="border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Instagram className="w-5 h-5 text-blue-600" />
-            Conectar Meta Business Suite
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {!conectado ? (
-            <>
+      {/* Status da Conexão */}
+      <Card className={`border-l-4 ${isConnected ? "border-l-green-500 bg-green-50" : "border-l-amber-500 bg-amber-50"}`}>
+        <CardContent className="pt-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Instagram className={`w-5 h-5 ${isConnected ? "text-green-600" : "text-amber-600"}`} />
               <div>
-                <label className="text-sm font-semibold text-slate-700 mb-2 block">Token de Acesso Meta</label>
-                <div className="flex gap-2">
-                  <Input 
-                    placeholder="Seu token de acesso Meta"
-                    value={metaKey}
-                    onChange={(e) => setMetaKey(e.target.value)}
-                    type="password"
-                    className="flex-1"
-                  />
-                  <Button 
-                    onClick={conectarMeta}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    Conectar
-                  </Button>
-                </div>
-                <p className="text-xs text-slate-600 mt-2">
-                  Encontre seu token em: Meta Business Suite → Configurações → Tokens
+                <p className="font-semibold text-slate-900">
+                  {isConnected ? "Meta conectado via OAuth" : "Meta não conectado"}
+                </p>
+                <p className="text-sm text-slate-600">
+                  {isConnected
+                    ? "Sincronização automática ativa"
+                    : "Configure em Integrações > Credenciais OAuth para sincronizar campanhas reais"}
                 </p>
               </div>
-
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded">
-                <p className="text-sm font-semibold text-blue-900 mb-2">Como Obter Seu Token Meta:</p>
-                <ol className="text-xs text-blue-700 space-y-1 list-decimal list-inside">
-                  <li>Acesse business.facebook.com</li>
-                  <li>Vá para Configurações → Tokens</li>
-                  <li>Clique em "Gerar Novo Token"</li>
-                  <li>Selecione suas contas Instagram/Facebook</li>
-                  <li>Cole aqui e clique em Conectar</li>
-                </ol>
-              </div>
-            </>
-          ) : (
-            <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded">
-              <div>
-                <p className="font-semibold text-green-900">✅ Conectado com Sucesso</p>
-                <p className="text-sm text-green-700">Meta Business Suite está pronto para usar</p>
-              </div>
-              <Button 
-                variant="outline"
-                onClick={() => {
-                  setConectado(false);
-                  setMetaKey("");
-                }}
-              >
-                Desconectar
-              </Button>
             </div>
-          )}
+            {!isConnected && (
+              <Button onClick={handleConnectMeta} className="bg-blue-600 hover:bg-blue-700 text-sm">
+                Conectar Meta
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
 
-      {conectado && (
+      {/* Métricas de campanhas Meta/IG reais do DB */}
+      {metaCampanhas.length > 0 ? (
         <>
-          {/* Contas Conectadas */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Contas Conectadas</CardTitle>
-              <CardDescription>Suas contas Instagram e Facebook</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {contas.map((conta) => (
-                  <div key={conta.id} className="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:bg-blue-50 transition">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h4 className="font-bold text-slate-900">{conta.nome}</h4>
-                        <p className="text-sm text-slate-600">{conta.plataforma}</p>
-                      </div>
-                      <Badge className="bg-green-600">✅ Ativo</Badge>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3 text-xs">
-                      <div>
-                        <p className="text-slate-600">Seguidores</p>
-                        <p className="font-bold text-slate-900">{conta.seguidores.toLocaleString()}</p>
-                      </div>
-                      <div>
-                        <p className="text-slate-600">Engajamento</p>
-                        <p className="font-bold text-slate-900">{conta.engajamento}%</p>
-                      </div>
-                      <div>
-                        <p className="text-slate-600">Alcance</p>
-                        <p className="font-bold text-slate-900">{conta.alcance.toLocaleString()}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Métricas em Tempo Real */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2">
                 <BarChart3 className="w-5 h-5" />
-                Métricas em Tempo Real
+                Performance Meta/Instagram
               </CardTitle>
-              <CardDescription>Performance de suas campanhas hoje</CardDescription>
+              <CardDescription>
+                {ativas.length} campanha{ativas.length !== 1 ? "s" : ""} ativa{ativas.length !== 1 ? "s" : ""} de {metaCampanhas.length} total
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-3 gap-4">
                 {[
-                  { titulo: "Impressões", valor: metricas.impressoes.toLocaleString(), icon: "👁️" },
-                  { titulo: "Alcance", valor: metricas.alcance.toLocaleString(), icon: "📊" },
-                  { titulo: "Engajamentos", valor: metricas.engajamentos.toLocaleString(), icon: "❤️" },
-                  { titulo: "Cliques", valor: metricas.cliques.toLocaleString(), icon: "🖱️" },
-                  { titulo: "Conversões", valor: metricas.conversoes, icon: "💰" },
-                  { titulo: "Receita", valor: `R$ ${metricas.receita.toLocaleString()}`, icon: "💵" }
-                ].map((metrica, idx) => (
-                  <div key={idx} className="border border-slate-200 rounded-lg p-4 text-center hover:border-blue-300 hover:bg-blue-50 transition">
-                    <p className="text-2xl mb-2">{metrica.icon}</p>
-                    <p className="text-xs font-semibold text-slate-600 uppercase mb-1">{metrica.titulo}</p>
-                    <p className="text-2xl font-bold text-slate-900">{metrica.valor}</p>
+                  { label: "Impressões", valor: totalImpressoes.toLocaleString("pt-BR"), icon: "👁️" },
+                  { label: "Cliques", valor: totalAlcance.toLocaleString("pt-BR"), icon: "🖱️" },
+                  { label: "Conversões", valor: totalEngajamentos.toLocaleString("pt-BR"), icon: "💰" },
+                  { label: "Orçamento", valor: `R$ ${totalOrcamento.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, icon: "💵" },
+                  { label: "ROI Médio", valor: roiMedio > 0 ? `${roiMedio.toFixed(0)}%` : "—", icon: "📈" },
+                  { label: "Campanhas Ativas", valor: String(ativas.length), icon: "📊" },
+                ].map((m, i) => (
+                  <div key={i} className="border border-slate-200 rounded-lg p-4 text-center hover:border-blue-300 transition">
+                    <p className="text-2xl mb-1">{m.icon}</p>
+                    <p className="text-xs text-slate-500 uppercase font-medium mb-1">{m.label}</p>
+                    <p className="text-xl font-bold text-slate-900">{m.valor}</p>
                   </div>
                 ))}
               </div>
             </CardContent>
           </Card>
 
-          {/* Posts Recentes */}
+          {/* Lista de campanhas Meta */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Posts Recentes</CardTitle>
-              <CardDescription>Performance de seus últimos posts</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" />
+                Campanhas Meta / Instagram
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {posts.map((post) => (
-                  <div key={post.id} className="border border-slate-200 rounded-lg p-4">
+                {metaCampanhas.map((c: any) => (
+                  <div key={c.id} className="border border-slate-200 rounded-lg p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div>
-                        <h4 className="font-bold text-slate-900">{post.titulo}</h4>
-                        <p className="text-xs text-slate-600">{post.plataforma} • {post.data}</p>
+                        <h4 className="font-bold text-slate-900">{c.nome}</h4>
+                        <p className="text-xs text-slate-500">
+                          {PLATAFORMA_LABELS[c.plataforma] ?? c.plataforma}
+                          {c.dataInicio ? ` · Início: ${c.dataInicio}` : ""}
+                        </p>
                       </div>
-                      <Badge variant="outline">{post.status}</Badge>
+                      <Badge
+                        className={
+                          c.status === "ativa" ? "bg-green-100 text-green-800 text-xs"
+                          : c.status === "pausada" ? "bg-amber-100 text-amber-800 text-xs"
+                          : "bg-slate-100 text-slate-600 text-xs"
+                        }
+                      >
+                        {c.status}
+                      </Badge>
                     </div>
-
-                    <div className="grid grid-cols-3 gap-3 mb-3 text-xs">
+                    <div className="grid grid-cols-4 gap-2 text-xs">
                       <div>
-                        <p className="text-slate-600">Alcance</p>
-                        <p className="font-bold text-slate-900">{post.alcance.toLocaleString()}</p>
+                        <p className="text-slate-500">Impressões</p>
+                        <p className="font-bold">{(c.impressoes ?? 0).toLocaleString("pt-BR")}</p>
                       </div>
                       <div>
-                        <p className="text-slate-600">Engajamento</p>
-                        <p className="font-bold text-slate-900">{post.engajamento.toLocaleString()}</p>
+                        <p className="text-slate-500">Cliques</p>
+                        <p className="font-bold">{(c.cliques ?? 0).toLocaleString("pt-BR")}</p>
                       </div>
                       <div>
-                        <p className="text-slate-600">Cliques</p>
-                        <p className="font-bold text-slate-900">{post.cliques.toLocaleString()}</p>
+                        <p className="text-slate-500">Conversões</p>
+                        <p className="font-bold text-green-700">{(c.conversoes ?? 0).toLocaleString("pt-BR")}</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-500">ROI</p>
+                        <p className="font-bold text-purple-700">{parseFloat(c.roi ?? "0").toFixed(0)}%</p>
                       </div>
                     </div>
-
-                    <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700">
-                      Ver Detalhes Completos
-                    </Button>
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Publicar Diretamente */}
-          <Card className="border-green-200 bg-green-50">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Share2 className="w-5 h-5 text-green-600" />
-                Publicar Diretamente
-              </CardTitle>
-              <CardDescription>Publique seus roteiros em todas as redes com 1 clique</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {[
-                  { titulo: "Story - Renda Extra", rede: "Instagram" },
-                  { titulo: "Reels - Bastidores", rede: "Instagram" },
-                  { titulo: "TikTok - ASMR", rede: "TikTok" }
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-3 border border-green-200 rounded bg-white">
-                    <div>
-                      <p className="font-semibold text-slate-900">{item.titulo}</p>
-                      <p className="text-xs text-slate-600">{item.rede}</p>
-                    </div>
-                    <Button 
-                      onClick={() => publicarAgora(idx)}
-                      className="bg-green-600 hover:bg-green-700"
-                      size="sm"
-                    >
-                      Publicar Agora
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Dicas */}
-          <Card className="border-blue-200 bg-blue-50">
-            <CardHeader>
-              <CardTitle className="text-lg">Dicas para Máximo Impacto</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              {[
-                "✅ Publique nos horários ideais (19h-21h para máximo engajamento)",
-                "✅ Acompanhe métricas em tempo real para otimizar próximas campanhas",
-                "✅ Use dados de alcance para identificar melhor público-alvo",
-                "✅ Responda comentários nos primeiros 30 minutos após publicar",
-                "✅ Compare performance entre plataformas para alocar recursos",
-                "✅ Crie posts de teste para validar antes de investir em ads"
-              ].map((dica, idx) => (
-                <p key={idx} className="text-slate-700">{dica}</p>
-              ))}
             </CardContent>
           </Card>
         </>
-      )}
-
-      {!conectado && (
-        <Card className="border-amber-200 bg-amber-50">
-          <CardHeader>
-            <CardTitle className="text-lg">Por que usar Meta Business Suite?</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            {[
-              { titulo: "Publique em 1 Clique", descricao: "Publique em Instagram e Facebook simultaneamente" },
-              { titulo: "Métricas em Tempo Real", descricao: "Acompanhe performance de cada post ao vivo" },
-              { titulo: "Gerenciamento Centralizado", descricao: "Controle múltiplas contas de um único lugar" },
-              { titulo: "Análise Profunda", descricao: "Entenda seu público e otimize estratégia" },
-              { titulo: "Integração Perfeita", descricao: "Funciona perfeitamente com Zapier e IA" },
-              { titulo: "Suporte Oficial", descricao: "Acesso a recursos e suporte do Meta" }
-            ].map((item, idx) => (
-              <div key={idx} className="flex gap-3">
-                <span className="text-amber-600">✓</span>
-                <div>
-                  <p className="font-semibold text-slate-900">{item.titulo}</p>
-                  <p className="text-xs text-slate-600">{item.descricao}</p>
-                </div>
-              </div>
-            ))}
+      ) : (
+        <Card className="border-dashed">
+          <CardContent className="py-10 text-center">
+            <AlertCircle className="w-10 h-10 mx-auto mb-3 text-slate-300" />
+            <p className="text-slate-500 mb-1">Nenhuma campanha Meta/Instagram encontrada.</p>
+            <p className="text-sm text-slate-400">Crie campanhas com plataforma "instagram" ou "facebook" na aba Campanhas.</p>
           </CardContent>
         </Card>
       )}
+
+      {/* Dicas */}
+      <Card className="bg-blue-50 border-blue-200 p-4">
+        <h4 className="font-semibold text-sm mb-3">💡 Dicas para Meta Business Suite</h4>
+        <ul className="text-sm space-y-2 text-slate-700">
+          <li>• <strong>Configure OAuth</strong> em Integrações &gt; Credenciais OAuth para sincronizar campanhas reais da API Meta</li>
+          <li>• <strong>Publique nos horários ideais</strong> — 19h–21h para máximo engajamento</li>
+          <li>• <strong>Responda comentários</strong> nos primeiros 30 minutos após publicar</li>
+          <li>• <strong>Compare plataformas</strong> — Instagram vs Facebook para alocar orçamento</li>
+          <li>• <strong>Use Meta CAPI</strong> (aba Meta &gt; CAPI) para rastrear conversões server-side</li>
+        </ul>
+      </Card>
     </div>
   );
 }

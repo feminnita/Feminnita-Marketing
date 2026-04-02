@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Bell, Slack, MessageCircle, AlertCircle, CheckCircle, TrendingUp, DollarSign, Zap } from "lucide-react";
+import { trpc } from "@/lib/trpc";
 
 const NOTIFICACOES_TIPOS = [
   {
@@ -55,55 +57,11 @@ const NOTIFICACOES_TIPOS = [
   },
 ];
 
-const NOTIFICACOES_RECENTES = [
-  {
-    id: 1,
-    tipo: "conversao",
-    titulo: "🎉 Conversão Realizada!",
-    descricao: "Renata converteu 5 clientes - R$ 12.500",
-    timestamp: "Há 2 minutos",
-    lido: false,
-    plataforma: "Slack"
-  },
-  {
-    id: 2,
-    tipo: "meta_atingida",
-    titulo: "✅ Meta Atingida!",
-    descricao: "Campanha de Reels atingiu 50K visualizações",
-    timestamp: "Há 15 minutos",
-    lido: false,
-    plataforma: "WhatsApp"
-  },
-  {
-    id: 3,
-    tipo: "novo_feedback",
-    titulo: "⭐ Novo Feedback",
-    descricao: "Carol recebeu rating 5.0 - 'Excelente!'",
-    timestamp: "Há 1 hora",
-    lido: true,
-    plataforma: "Slack"
-  },
-  {
-    id: 4,
-    tipo: "novo_lead",
-    titulo: "🔥 Novo Lead",
-    descricao: "Novo cliente interessado em compra coletiva",
-    timestamp: "Há 2 horas",
-    lido: true,
-    plataforma: "WhatsApp"
-  },
-  {
-    id: 5,
-    tipo: "performance_baixa",
-    titulo: "⚠️ Performance Baixa",
-    descricao: "TikTok engagement caiu 12% - Investigar",
-    timestamp: "Há 3 horas",
-    lido: true,
-    plataforma: "Slack"
-  },
-];
-
 export default function NotificacoesRealtimeSection() {
+  const { data: alertsData } = trpc.smartAlerts.listActiveAlerts.useQuery(
+    {},
+    { refetchInterval: 60_000 }
+  );
   const [notificacoesAtivas, setNotificacoesAtivas] = useState<Record<string, boolean>>(
     Object.fromEntries(NOTIFICACOES_TIPOS.map(n => [n.id, n.ativo]))
   );
@@ -121,7 +79,8 @@ export default function NotificacoesRealtimeSection() {
     setPlataformas(prev => ({ ...prev, [plataforma]: !prev[plataforma] }));
   };
 
-  const notificacoesNaoLidas = NOTIFICACOES_RECENTES.filter(n => !n.lido).length;
+  const alertas = alertsData?.alerts ?? [];
+  const notificacoesNaoLidas = alertas.filter((a: any) => !a.isRead).length;
 
   return (
     <div className="space-y-6">
@@ -263,32 +222,41 @@ export default function NotificacoesRealtimeSection() {
                 </Badge>
               )}
             </div>
-            <div className="space-y-2">
-              {NOTIFICACOES_RECENTES.map(notif => (
-                <Card
-                  key={notif.id}
-                  className={`p-3 ${
-                    notif.lido ? "bg-slate-50" : "bg-blue-50 border-blue-200"
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-semibold text-sm">{notif.titulo}</h4>
-                        <Badge variant="outline" className="text-xs">
-                          {notif.plataforma}
-                        </Badge>
+            {alertas.length === 0 ? (
+              <Card className="p-4 bg-slate-50 text-center">
+                <p className="text-sm text-slate-500">Nenhum alerta ativo. Os alertas aparecerão aqui quando campanhas gerarem eventos.</p>
+              </Card>
+            ) : (
+              <div className="space-y-2">
+                {alertas.slice(0, 10).map((alerta: any) => (
+                  <Card
+                    key={alerta.id}
+                    className={`p-3 ${alerta.isRead ? "bg-slate-50" : "bg-blue-50 border-blue-200"}`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-semibold text-sm">{alerta.title}</h4>
+                          <Badge
+                            variant="outline"
+                            className={`text-xs ${alerta.severity === "critical" ? "border-red-400 text-red-700" : alerta.severity === "warning" ? "border-amber-400 text-amber-700" : ""}`}
+                          >
+                            {alerta.severity}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-slate-600 mb-1">{alerta.message}</p>
+                        {alerta.campaignName && (
+                          <p className="text-xs text-slate-500">Campanha: {alerta.campaignName}</p>
+                        )}
                       </div>
-                      <p className="text-xs text-slate-600 mb-1">{notif.descricao}</p>
-                      <p className="text-xs text-slate-500">{notif.timestamp}</p>
+                      {!alerta.isRead && (
+                        <div className="w-2 h-2 bg-blue-600 rounded-full mt-1"></div>
+                      )}
                     </div>
-                    {!notif.lido && (
-                      <div className="w-2 h-2 bg-blue-600 rounded-full mt-1"></div>
-                    )}
-                  </div>
-                </Card>
-              ))}
-            </div>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Limites de Alerta */}
@@ -378,7 +346,7 @@ export default function NotificacoesRealtimeSection() {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => alert("Notificação de teste enviada para Slack!")}
+                onClick={() => toast.success("Notificação de teste enviada para Slack!")}
                 className="gap-1 text-xs flex-1"
               >
                 <Slack className="w-3 h-3" />
@@ -387,7 +355,7 @@ export default function NotificacoesRealtimeSection() {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => alert("Notificação de teste enviada para WhatsApp!")}
+                onClick={() => toast.success("Notificação de teste enviada para WhatsApp!")}
                 className="gap-1 text-xs flex-1"
               >
                 <MessageCircle className="w-3 h-3" />

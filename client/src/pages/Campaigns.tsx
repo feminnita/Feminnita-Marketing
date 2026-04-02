@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { BarChart3, Trash2, Edit2, Play, Pause } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 
 interface Campaign {
   id: string;
@@ -33,25 +34,12 @@ interface Campaign {
 }
 
 export default function Campaigns() {
-  const [campanhas, setCampanhas] = useState<Campaign[]>([
-    {
-      id: "1",
-      nome: "Campanha Verão 2026",
-      plataforma: "instagram",
-      orcamento: 5000,
-      publico_alvo: "Mulheres 18-45 anos",
-      descricao: "Promoção de verão com até 50% de desconto",
-      data_inicio: "2026-01-15",
-      data_fim: "2026-02-28",
-      status: "ativa",
-      performance: {
-        impressoes: 125000,
-        cliques: 3500,
-        conversoes: 280,
-        roi: 2.8,
-      },
-    },
-  ]);
+  const { data: dbCampanhas = [], refetch: refetchCampanhas } = trpc.campaigns.listar.useQuery();
+  const [campanhas, setCampanhas] = useState<Campaign[]>([]);
+
+  useEffect(() => {
+    if (dbCampanhas.length > 0) setCampanhas(dbCampanhas as Campaign[]);
+  }, [dbCampanhas]);
 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -74,47 +62,41 @@ export default function Campaigns() {
   });
 
   const criarMutation = trpc.campaigns.criar.useMutation({
-    onSuccess: (result: any) => {
-      setCampanhas([...campanhas, result]);
+    onSuccess: () => {
+      refetchCampanhas();
       resetForm();
     },
   });
 
   const atualizarMutation = trpc.campaigns.atualizar.useMutation({
-    onSuccess: (result: any) => {
-      if (editingId) {
-        setCampanhas(
-          campanhas.map((c) =>
-            c.id === editingId ? { ...c, ...formData } : c
-          )
-        );
-      }
+    onSuccess: () => {
+      refetchCampanhas();
       resetForm();
     },
   });
 
   const deletarMutation = trpc.campaigns.deletar.useMutation({
     onSuccess: (result: any) => {
-      setCampanhas(campanhas.filter((c) => c.id !== editingId));
-      alert(result.mensagem);
+      refetchCampanhas();
+      toast.success(result.mensagem);
     },
   });
 
   const publicarMutation = trpc.campaigns.publicar.useMutation({
     onSuccess: (result: any) => {
-      alert(result.mensagem);
+      toast.success(result.mensagem);
     },
   });
 
   const pausarMutation = trpc.campaigns.pausar.useMutation({
     onSuccess: (result: any) => {
-      alert(result.mensagem);
+      toast.success(result.mensagem);
     },
   });
 
   const handleSaveCampaign = () => {
     if (!formData.nome || !formData.descricao) {
-      alert("Por favor, preencha todos os campos obrigatórios");
+      toast.error("Por favor, preencha todos os campos obrigatórios");
       return;
     }
 
@@ -143,10 +125,8 @@ export default function Campaigns() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Tem certeza que deseja deletar esta campanha?")) {
-      setEditingId(id);
-      deletarMutation.mutate({ id });
-    }
+    setEditingId(id);
+    deletarMutation.mutate({ id });
   };
 
   const handlePublish = (id: string) => {

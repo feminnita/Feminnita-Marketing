@@ -1,10 +1,11 @@
-import { router, protectedProcedure, publicProcedure } from "../_core/trpc";
+import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { notifyOwner } from "../_core/notification";
 import { TRPCError } from "@trpc/server";
 import { getDb } from "../db";
 import { conversationHistory } from "../../drizzle/schema";
 import { eq, and, desc } from "drizzle-orm";
+import { enviarMensagemWhatsApp } from "../integrations/whatsapp-api";
 
 /**
  * WhatsApp Business Router
@@ -43,10 +44,13 @@ Obrigada pela compra! 💕
 Feminnita Pijamas
         `.trim();
 
-        // Here you would integrate with WhatsApp Business API
-        // For now, we'll log and notify
-        console.log(`[WhatsApp] Sending payment confirmation to ${input.phoneNumber}`);
-        console.log(`[WhatsApp] Message: ${message}`);
+        const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
+        const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+        if (!accessToken || !phoneNumberId) {
+          throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Credenciais WhatsApp não configuradas" });
+        }
+
+        const result = await enviarMensagemWhatsApp(accessToken, phoneNumberId, input.phoneNumber, message);
 
         await notifyOwner({
           title: "Confirmação de pagamento enviada",
@@ -56,7 +60,7 @@ Feminnita Pijamas
         return {
           success: true,
           message: "Mensagem de confirmação enviada com sucesso",
-          messageId: `msg_${Date.now()}`,
+          messageId: result?.messages?.[0]?.id ?? "",
         };
       } catch (error) {
         console.error("Error sending payment confirmation:", error);
@@ -99,8 +103,13 @@ Qualquer dúvida, é só chamar! 💬
 Feminnita Pijamas
         `.trim();
 
-        console.log(`[WhatsApp] Sending tracking info to ${input.phoneNumber}`);
-        console.log(`[WhatsApp] Message: ${message}`);
+        const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
+        const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+        if (!accessToken || !phoneNumberId) {
+          throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Credenciais WhatsApp não configuradas" });
+        }
+
+        const result = await enviarMensagemWhatsApp(accessToken, phoneNumberId, input.phoneNumber, message);
 
         await notifyOwner({
           title: "Informação de rastreio enviada",
@@ -110,7 +119,7 @@ Feminnita Pijamas
         return {
           success: true,
           message: "Informação de rastreio enviada com sucesso",
-          messageId: `msg_${Date.now()}`,
+          messageId: result?.messages?.[0]?.id ?? "",
         };
       } catch (error) {
         console.error("Error sending tracking info:", error);
@@ -156,12 +165,18 @@ ${input.postContent}
 Feminnita Pijamas
         `.trim();
 
-        console.log(`[WhatsApp] Sending post for approval to ${input.phoneNumber}`);
+        const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
+        const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+        if (!accessToken || !phoneNumberId) {
+          throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Credenciais WhatsApp não configuradas" });
+        }
+
+        const result = await enviarMensagemWhatsApp(accessToken, phoneNumberId, input.phoneNumber, message);
 
         return {
           success: true,
           message: "Postagem enviada para aprovação",
-          messageId: `msg_${Date.now()}`,
+          messageId: result?.messages?.[0]?.id ?? "",
         };
       } catch (error) {
         console.error("Error sending post for approval:", error);
@@ -207,12 +222,18 @@ Depois eu preparo tudo e envio para aprovação! 🚀
 Feminnita Pijamas
         `.trim();
 
-        console.log(`[WhatsApp] Sending theme reminder to ${input.phoneNumber}`);
+        const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
+        const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+        if (!accessToken || !phoneNumberId) {
+          throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Credenciais WhatsApp não configuradas" });
+        }
+
+        const result = await enviarMensagemWhatsApp(accessToken, phoneNumberId, input.phoneNumber, message);
 
         return {
           success: true,
           message: "Lembrete de tema enviado",
-          messageId: `msg_${Date.now()}`,
+          messageId: result?.messages?.[0]?.id ?? "",
         };
       } catch (error) {
         console.error("Error sending theme reminder:", error);
@@ -249,9 +270,13 @@ Obrigada pela paciência! 💕
 Feminnita Pijamas
         `.trim();
 
-        console.log(`[WhatsApp] Routing conversation to agent`);
-        console.log(`[WhatsApp] Conversation ID: ${input.conversationId}`);
-        console.log(`[WhatsApp] Priority: ${input.priority || "normal"}`);
+        const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
+        const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+        if (!accessToken || !phoneNumberId) {
+          throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Credenciais WhatsApp não configuradas" });
+        }
+
+        await enviarMensagemWhatsApp(accessToken, phoneNumberId, input.phoneNumber, message);
 
         await notifyOwner({
           title: "Conversa roteada para atendente",

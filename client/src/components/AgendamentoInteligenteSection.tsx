@@ -3,115 +3,81 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Zap, TrendingUp, Calendar, AlertCircle } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
+
+const RECOMENDACOES = [
+  {
+    id: 1,
+    persona: "Carol (Renda Extra)",
+    tipo: "story",
+    horarioRecomendado: "19:30",
+    motivo: "Pessoas buscam renda extra após o trabalho — pico de atenção ao conteúdo de renda",
+    melhorHorario: "19:00–20:00",
+    diasMelhores: ["Terça", "Quinta", "Sexta"],
+    frequenciaOtima: "2x por dia",
+  },
+  {
+    id: 2,
+    persona: "Renata (Lojista)",
+    tipo: "reels",
+    horarioRecomendado: "09:00",
+    motivo: "Lojistas checam redes sociais pela manhã antes de abrir a loja",
+    melhorHorario: "08:30–10:00",
+    diasMelhores: ["Segunda", "Quarta", "Sexta"],
+    frequenciaOtima: "1x por dia",
+  },
+  {
+    id: 3,
+    persona: "Vanessa (Compra Coletiva)",
+    tipo: "tiktok",
+    horarioRecomendado: "20:00",
+    motivo: "Famílias se reúnem à noite para decidir compras coletivas",
+    melhorHorario: "19:30–21:00",
+    diasMelhores: ["Quinta", "Sexta", "Sábado"],
+    frequenciaOtima: "1x por dia",
+  },
+  {
+    id: 4,
+    persona: "Luiza (Trendsetter)",
+    tipo: "reels",
+    horarioRecomendado: "18:00",
+    motivo: "Trendsetters acompanham redes sociais no final da tarde para ver novidades",
+    melhorHorario: "17:30–19:00",
+    diasMelhores: ["Terça", "Quarta", "Quinta"],
+    frequenciaOtima: "1x por dia",
+  },
+];
+
+interface Agendamento {
+  id: number;
+  titulo: string;
+  persona: string;
+  tipo: string;
+  horarioAgendado: string;
+  data: string;
+  status: string;
+}
 
 export default function AgendamentoInteligenteSection() {
-  const [recomendacoes, setRecomendacoes] = useState([
-    {
-      id: 1,
-      persona: "Carol (Renda Extra)",
-      tipo: "story",
-      horarioRecomendado: "19:30",
-      confianca: 94,
-      engajamentoEstimado: 12.5,
-      conversoeEstimadas: 156,
-      motivo: "Pessoas buscam renda extra após trabalho",
-      dados: {
-        melhorHorario: "19:00-20:00",
-        diasMelhores: ["Terça", "Quinta", "Sexta"],
-        frequenciaOtima: "2x por dia",
-        taxaConversaoMedia: "8.2%"
-      }
-    },
-    {
-      id: 2,
-      persona: "Renata (Lojista)",
-      tipo: "reels",
-      horarioRecomendado: "09:00",
-      confianca: 88,
-      engajamentoEstimado: 9.8,
-      conversoeEstimadas: 134,
-      motivo: "Lojistas checam redes sociais pela manhã",
-      dados: {
-        melhorHorario: "08:30-10:00",
-        diasMelhores: ["Segunda", "Quarta", "Sexta"],
-        frequenciaOtima: "1x por dia",
-        taxaConversaoMedia: "6.5%"
-      }
-    },
-    {
-      id: 3,
-      persona: "Vanessa (Compra Coletiva)",
-      tipo: "tiktok",
-      horarioRecomendado: "20:00",
-      confianca: 91,
-      engajamentoEstimado: 15.3,
-      conversoeEstimadas: 189,
-      motivo: "Famílias se reúnem à noite para decidir compras",
-      dados: {
-        melhorHorario: "19:30-21:00",
-        diasMelhores: ["Quinta", "Sexta", "Sábado"],
-        frequenciaOtima: "1x por dia",
-        taxaConversaoMedia: "7.8%"
-      }
-    },
-    {
-      id: 4,
-      persona: "Luiza (Trendsetter)",
-      tipo: "reels",
-      horarioRecomendado: "18:00",
-      confianca: 86,
-      engajamentoEstimado: 11.2,
-      conversoeEstimadas: 145,
-      motivo: "Trendsetters acompanham redes sociais no final da tarde",
-      dados: {
-        melhorHorario: "17:30-19:00",
-        diasMelhores: ["Terça", "Quarta", "Quinta"],
-        frequenciaOtima: "1x por dia",
-        taxaConversaoMedia: "7.1%"
-      }
-    }
-  ]);
+  const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
 
-  const [agendamentos, setAgendamentos] = useState([
-    {
-      id: 1,
-      titulo: "Story - Renda Extra Carol",
-      persona: "Carol",
-      tipo: "story",
-      horarioAgendado: "19:30",
-      data: "2026-02-03",
-      status: "agendado",
-      confianca: 94
-    },
-    {
-      id: 2,
-      titulo: "Reels - Bastidores Renata",
-      persona: "Renata",
-      tipo: "reels",
-      horarioAgendado: "09:00",
-      data: "2026-02-04",
-      status: "agendado",
-      confianca: 88
-    }
-  ]);
-
-  const [novoAgendamento, setNovoAgendamento] = useState(false);
-
-  const agendar = (rec: any) => {
-    const hoje = new Date();
-    const amanha = new Date(hoje.getTime() + 24 * 60 * 60 * 1000);
-    const dataFormatada = amanha.toISOString().split('T')[0];
-
-    setAgendamentos([...agendamentos, {
-      id: agendamentos.length + 1,
+  const agendar = (rec: typeof RECOMENDACOES[0]) => {
+    const amanha = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const dataFormatada = amanha.toISOString().split("T")[0];
+    setAgendamentos(prev => [...prev, {
+      id: Date.now(),
       titulo: `${rec.tipo.charAt(0).toUpperCase() + rec.tipo.slice(1)} - ${rec.persona}`,
       persona: rec.persona,
       tipo: rec.tipo,
       horarioAgendado: rec.horarioRecomendado,
       data: dataFormatada,
       status: "agendado",
-      confianca: rec.confianca
     }]);
+    toast.success(`Agendado para amanhã às ${rec.horarioRecomendado}. Lembre de criar o conteúdo no app de agendamento.`);
+  };
+
+  const cancelar = (id: number) => {
+    setAgendamentos(prev => prev.filter(a => a.id !== id));
   };
 
   return (
@@ -119,77 +85,52 @@ export default function AgendamentoInteligenteSection() {
       <div>
         <h2 className="text-2xl font-bold text-slate-900 mb-2">Agendamento Inteligente</h2>
         <p className="text-slate-600">
-          Use machine learning para sugerir melhor horário de postagem baseado em histórico de engajamento de cada persona.
+          Horários recomendados baseados no comportamento de cada persona. Use como guia para agendar posts no app de sua preferência.
         </p>
       </div>
 
-      {/* Recomendações Inteligentes */}
+      {/* Recomendações */}
       <div className="space-y-4">
-        <h3 className="text-lg font-bold text-slate-900">🤖 Recomendações Inteligentes</h3>
-        
-        {recomendacoes.map((rec) => (
+        <h3 className="text-lg font-bold text-slate-900">Horários Recomendados por Persona</h3>
+
+        {RECOMENDACOES.map((rec) => (
           <Card key={rec.id} className="border-l-4 border-l-purple-400 hover:border-l-purple-600 transition">
             <CardHeader>
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <CardTitle className="text-base">{rec.persona} - {rec.tipo.toUpperCase()}</CardTitle>
+                  <CardTitle className="text-base">{rec.persona} — {rec.tipo.toUpperCase()}</CardTitle>
                   <CardDescription>{rec.motivo}</CardDescription>
                 </div>
-                <Badge className="bg-purple-600">
-                  {rec.confianca}% confiança
+                <Badge variant="outline" className="text-purple-700 border-purple-300">
+                  {rec.tipo}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Horário Recomendado */}
-              <div className="grid md:grid-cols-4 gap-3">
-                <div className="border border-purple-200 rounded-lg p-3 bg-purple-50">
-                  <p className="text-xs font-semibold text-purple-600 uppercase mb-1">Horário Ideal</p>
-                  <p className="text-2xl font-bold text-purple-900">{rec.horarioRecomendado}</p>
-                </div>
-                <div className="border border-slate-200 rounded-lg p-3">
-                  <p className="text-xs font-semibold text-slate-600 uppercase mb-1">Engajamento Est.</p>
-                  <p className="text-2xl font-bold text-blue-600">{rec.engajamentoEstimado}%</p>
-                </div>
-                <div className="border border-slate-200 rounded-lg p-3">
-                  <p className="text-xs font-semibold text-slate-600 uppercase mb-1">Conversões Est.</p>
-                  <p className="text-2xl font-bold text-green-600">{rec.conversoeEstimadas}</p>
-                </div>
-                <div className="border border-slate-200 rounded-lg p-3">
-                  <p className="text-xs font-semibold text-slate-600 uppercase mb-1">Taxa Conv.</p>
-                  <p className="text-2xl font-bold text-orange-600">{rec.dados.taxaConversaoMedia}</p>
-                </div>
-              </div>
-
-              {/* Dados Detalhados */}
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-2">
-                <div className="grid md:grid-cols-2 gap-3 text-sm">
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                <div className="grid md:grid-cols-3 gap-3 text-sm">
                   <div>
                     <p className="font-semibold text-slate-900">Melhor Horário</p>
-                    <p className="text-slate-600">{rec.dados.melhorHorario}</p>
+                    <p className="text-purple-700 font-bold text-lg">{rec.horarioRecomendado}</p>
+                    <p className="text-slate-500 text-xs">{rec.melhorHorario}</p>
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-900">Dias Melhores</p>
-                    <p className="text-slate-600">{rec.dados.diasMelhores.join(", ")}</p>
+                    <p className="font-semibold text-slate-900">Dias Recomendados</p>
+                    <p className="text-slate-600">{rec.diasMelhores.join(", ")}</p>
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-900">Frequência Ótima</p>
-                    <p className="text-slate-600">{rec.dados.frequenciaOtima}</p>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-slate-900">Taxa de Conversão</p>
-                    <p className="text-slate-600">{rec.dados.taxaConversaoMedia}</p>
+                    <p className="font-semibold text-slate-900">Frequência Ideal</p>
+                    <p className="text-slate-600">{rec.frequenciaOtima}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Botão Agendar */}
-              <Button 
+              <Button
                 onClick={() => agendar(rec)}
                 className="w-full bg-purple-600 hover:bg-purple-700 gap-2"
               >
                 <Calendar className="w-4 h-4" />
-                Agendar para Amanhã
+                Marcar para Amanhã às {rec.horarioRecomendado}
               </Button>
             </CardContent>
           </Card>
@@ -201,9 +142,9 @@ export default function AgendamentoInteligenteSection() {
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Clock className="w-5 h-5 text-blue-600" />
-            Agendamentos Confirmados
+            Agendamentos Anotados
           </CardTitle>
-          <CardDescription>Posts agendados para publicação automática</CardDescription>
+          <CardDescription>Lembretes de posts — crie o conteúdo no app de agendamento</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {agendamentos.length > 0 ? (
@@ -214,19 +155,17 @@ export default function AgendamentoInteligenteSection() {
                     <h4 className="font-bold text-slate-900">{ag.titulo}</h4>
                     <p className="text-xs text-slate-600">{ag.data} às {ag.horarioAgendado}</p>
                   </div>
-                  <Badge className="bg-green-600">✅ {ag.status}</Badge>
+                  <Badge className="bg-green-100 text-green-800 text-xs">agendado</Badge>
                 </div>
                 <div className="flex gap-2">
-                  <div className="flex-1 text-xs">
-                    <p className="text-slate-600">Confiança: <span className="font-bold text-slate-900">{ag.confianca}%</span></p>
-                  </div>
-                  <Button size="sm" variant="outline">Editar</Button>
-                  <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">Cancelar</Button>
+                  <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700" onClick={() => cancelar(ag.id)}>
+                    Cancelar
+                  </Button>
                 </div>
               </div>
             ))
           ) : (
-            <p className="text-sm text-slate-600 text-center py-4">Nenhum agendamento confirmado. Agende um post acima!</p>
+            <p className="text-sm text-slate-600 text-center py-4">Nenhum agendamento anotado. Use os botões acima para marcar um horário.</p>
           )}
         </CardContent>
       </Card>
@@ -236,42 +175,21 @@ export default function AgendamentoInteligenteSection() {
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-green-600" />
-            Análise de Padrões
+            Padrões Gerais de Engajamento
           </CardTitle>
-          <CardDescription>Padrões de engajamento por persona e tipo de conteúdo</CardDescription>
+          <CardDescription>Benchmarks do Instagram e comportamento do público feminino brasileiro</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid md:grid-cols-2 gap-4">
+        <CardContent>
+          <div className="grid md:grid-cols-3 gap-4">
             {[
-              {
-                titulo: "Melhor Horário Geral",
-                valor: "19:00-20:00",
-                descricao: "Pico de atividade após trabalho",
-                icon: "⏰"
-              },
-              {
-                titulo: "Melhor Dia da Semana",
-                valor: "Sexta-feira",
-                descricao: "Maior engajamento e conversões",
-                icon: "📅"
-              },
-              {
-                titulo: "Tipo de Conteúdo Top",
-                valor: "Reels",
-                descricao: "Maior taxa de compartilhamento",
-                icon: "🎬"
-              },
-              {
-                titulo: "Engajamento Médio",
-                valor: "12.2%",
-                descricao: "Acima da média do Instagram",
-                icon: "📊"
-              }
+              { titulo: "Melhor Horário Geral", valor: "19:00–20:00", descricao: "Pico de atividade após trabalho", icon: "⏰" },
+              { titulo: "Melhor Dia da Semana", valor: "Sexta-feira", descricao: "Maior engajamento e conversões", icon: "📅" },
+              { titulo: "Tipo de Conteúdo Top", valor: "Reels", descricao: "Maior taxa de compartilhamento", icon: "🎬" },
             ].map((item, idx) => (
               <div key={idx} className="border border-green-200 rounded-lg p-4 bg-white">
                 <p className="text-2xl mb-2">{item.icon}</p>
                 <p className="font-bold text-slate-900">{item.titulo}</p>
-                <p className="text-2xl font-bold text-green-600 my-1">{item.valor}</p>
+                <p className="text-lg font-bold text-green-600 my-1">{item.valor}</p>
                 <p className="text-xs text-slate-600">{item.descricao}</p>
               </div>
             ))}
@@ -279,48 +197,41 @@ export default function AgendamentoInteligenteSection() {
         </CardContent>
       </Card>
 
-      {/* Dicas de Agendamento */}
+      {/* Aviso */}
+      <Card className="border-amber-200 bg-amber-50">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-amber-600" />
+            Como Usar Este Guia
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm text-slate-700">
+          <p>Os horários acima são baseados em <strong>benchmarks de mercado</strong> para o público feminino brasileiro. Para recomendações baseadas no seu histórico real:</p>
+          <ul className="space-y-2">
+            <li>📊 Verifique <strong>Instagram Insights</strong> → "Audiência" → horários mais ativos dos seus seguidores</li>
+            <li>📈 Analise posts anteriores com maior engajamento para identificar padrões próprios</li>
+            <li>⏰ Poste consistentemente por 2-3 semanas e compare o engajamento por horário</li>
+            <li>🎯 Conecte a API do Instagram (Integrações) para sincronização automática de métricas</li>
+          </ul>
+        </CardContent>
+      </Card>
+
+      {/* Dicas */}
       <Card className="border-blue-200 bg-blue-50">
         <CardHeader>
           <CardTitle className="text-lg">Dicas para Máximo Engajamento</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           {[
-            "✅ Sempre respeite o horário recomendado pela IA",
-            "✅ Varie entre dias da semana para testar padrões",
-            "✅ Poste com consistência (mesma hora, dias específicos)",
-            "✅ Monitore engajamento nos primeiros 30 minutos",
-            "✅ Ajuste horário se engajamento cair abaixo de 8%",
-            "✅ Use a frequência ótima (não poste demais)",
-            "✅ Acompanhe padrões sazonais (feriados, datas especiais)"
+            "Varie entre dias da semana para testar padrões do seu público específico",
+            "Poste com consistência (mesma hora, dias específicos)",
+            "Monitore engajamento nos primeiros 30 minutos após publicar",
+            "Use a frequência ideal — não poste em excesso",
+            "Acompanhe padrões sazonais (feriados, datas especiais)",
+            "Responda comentários rapidamente para o algoritmo favorecer o post",
           ].map((dica, idx) => (
-            <p key={idx} className="text-slate-700">{dica}</p>
+            <p key={idx} className="text-slate-700">✅ {dica}</p>
           ))}
-        </CardContent>
-      </Card>
-
-      {/* Aviso de Otimização */}
-      <Card className="border-amber-200 bg-amber-50">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 text-amber-600" />
-            Como Funciona a IA de Agendamento
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm">
-          <p className="text-slate-700">
-            Nossa IA analisa <strong>histórico de 90 dias</strong> de engajamento para cada persona e tipo de conteúdo, considerando:
-          </p>
-          <ul className="space-y-2 text-slate-700">
-            <li>📊 Taxa de engajamento por horário</li>
-            <li>📈 Conversões por dia da semana</li>
-            <li>⏰ Padrões de atividade do público</li>
-            <li>🎯 Performance por tipo de conteúdo</li>
-            <li>🔄 Sazonalidade e eventos especiais</li>
-          </ul>
-          <p className="text-xs text-amber-700 mt-3">
-            Quanto mais dados históricos, mais precisa a recomendação. Comece com as sugestões da IA e ajuste conforme aprende padrões específicos do seu público.
-          </p>
         </CardContent>
       </Card>
     </div>

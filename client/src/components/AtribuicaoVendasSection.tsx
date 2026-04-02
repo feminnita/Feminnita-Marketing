@@ -1,206 +1,73 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BarChart3, TrendingUp, Target, Users, Video, DollarSign } from "lucide-react";
+import { BarChart3, TrendingUp, Target, Users, Video, AlertCircle, Plus } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
+
+interface Venda {
+  id: number;
+  cliente: string;
+  valor: number;
+  data: string;
+  persona: string;
+  roteiro: string;
+  campanha: string;
+  plataforma: string;
+}
+
+const PERSONAS = ["Carol (Renda Extra)", "Renata (Lojista)", "Vanessa (Compra Coletiva)", "Luiza (Trendsetter)"];
+const PLATAFORMAS = ["Instagram", "Facebook", "TikTok", "Google", "WhatsApp", "Email", "Orgânico"];
 
 export default function AtribuicaoVendasSection() {
-  const [vendas] = useState([
-    {
-      id: 1,
-      cliente: "Maria Silva",
-      valor: 249.90,
-      data: "2026-01-31 14:30",
-      persona: "Carol (Renda Extra)",
-      roteiro: "Como Ganhei R$ 2.500",
-      campanha: "Instagram Ads",
-      plataforma: "Instagram",
-      status: "completa"
-    },
-    {
-      id: 2,
-      cliente: "João Santos",
-      valor: 399.90,
-      data: "2026-01-31 13:15",
-      persona: "Renata (Lojista)",
-      roteiro: "Análise de Qualidade",
-      campanha: "Google Ads",
-      plataforma: "Google",
-      status: "completa"
-    },
-    {
-      id: 3,
-      cliente: "Ana Costa",
-      valor: 549.90,
-      data: "2026-01-31 12:00",
-      persona: "Vanessa (Compra Coletiva)",
-      roteiro: "Compra Coletiva com Amigas",
-      campanha: "TikTok Organic",
-      plataforma: "TikTok",
-      status: "completa"
-    },
-    {
-      id: 4,
-      cliente: "Carlos Oliveira",
-      valor: 199.90,
-      data: "2026-01-31 11:45",
-      persona: "Carol (Renda Extra)",
-      roteiro: "Bastidores da Produção",
-      campanha: "Instagram Reels",
-      plataforma: "Instagram",
-      status: "completa"
-    },
-    {
-      id: 5,
-      cliente: "Beatriz Lima",
-      valor: 299.90,
-      data: "2026-01-31 10:30",
-      persona: "Luiza (Trendsetter)",
-      roteiro: "ASMR Pijama",
-      campanha: "TikTok Ads",
-      plataforma: "TikTok",
-      status: "completa"
-    },
-    {
-      id: 6,
-      cliente: "Diego Martins",
-      valor: 449.90,
-      data: "2026-01-31 09:15",
-      persona: "Renata (Lojista)",
-      roteiro: "Educacional",
-      campanha: "Facebook Ads",
-      plataforma: "Facebook",
-      status: "completa"
-    }
-  ]);
+  const { data: campanhas = [] } = trpc.campaigns.listar.useQuery(undefined, { refetchInterval: 60_000 });
 
-  const [atribuicaoPorPersona] = useState([
-    {
-      persona: "Carol (Renda Extra)",
-      vendas: 3,
-      receita: 749.70,
-      percentual: 28.5,
-      roi: "320%",
-      cpa: 8.33
-    },
-    {
-      persona: "Renata (Lojista)",
-      vendas: 2,
-      receita: 849.80,
-      percentual: 32.3,
-      roi: "400%",
-      cpa: 7.50
-    },
-    {
-      persona: "Vanessa (Compra Coletiva)",
-      vendas: 1,
-      receita: 549.90,
-      percentual: 20.9,
-      roi: "350%",
-      cpa: 8.00
-    },
-    {
-      persona: "Luiza (Trendsetter)",
-      vendas: 1,
-      receita: 299.90,
-      percentual: 11.4,
-      roi: "280%",
-      cpa: 9.50
-    }
-  ]);
+  const [vendas, setVendas] = useState<Venda[]>([]);
+  const [novaVenda, setNovaVenda] = useState(false);
+  const [form, setForm] = useState({
+    cliente: '', valor: '', data: '', persona: PERSONAS[0],
+    roteiro: '', campanha: '', plataforma: PLATAFORMAS[0],
+  });
 
-  const [atribuicaoPorRoteiro] = useState([
-    {
-      roteiro: "Como Ganhei R$ 2.500",
-      vendas: 2,
-      receita: 449.80,
-      percentual: 17.1,
-      roi: "350%"
-    },
-    {
-      roteiro: "Análise de Qualidade",
-      vendas: 2,
-      receita: 849.80,
-      percentual: 32.3,
-      roi: "400%"
-    },
-    {
-      roteiro: "Compra Coletiva com Amigas",
-      vendas: 1,
-      receita: 549.90,
-      percentual: 20.9,
-      roi: "350%"
-    },
-    {
-      roteiro: "Bastidores da Produção",
-      vendas: 1,
-      receita: 199.90,
-      percentual: 7.6,
-      roi: "300%"
-    },
-    {
-      roteiro: "ASMR Pijama",
-      vendas: 1,
-      receita: 299.90,
-      percentual: 11.4,
-      roi: "280%"
-    },
-    {
-      roteiro: "Educacional",
-      vendas: 1,
-      receita: 449.90,
-      percentual: 17.1,
-      roi: "320%"
+  const registrarVenda = () => {
+    if (!form.cliente.trim() || !form.valor) {
+      toast.error('Preencha nome do cliente e valor.');
+      return;
     }
-  ]);
+    const nova: Venda = {
+      id: Date.now(),
+      cliente: form.cliente,
+      valor: parseFloat(form.valor),
+      data: form.data || new Date().toLocaleString('pt-BR'),
+      persona: form.persona,
+      roteiro: form.roteiro,
+      campanha: form.campanha,
+      plataforma: form.plataforma,
+    };
+    setVendas(prev => [nova, ...prev]);
+    setForm({ cliente: '', valor: '', data: '', persona: PERSONAS[0], roteiro: '', campanha: '', plataforma: PLATAFORMAS[0] });
+    setNovaVenda(false);
+    toast.success('Venda registrada com atribuição completa.');
+  };
 
-  const [atribuicaoPorCampanha] = useState([
-    {
-      campanha: "Instagram Ads",
-      vendas: 1,
-      receita: 249.90,
-      percentual: 9.5,
-      roi: "320%"
-    },
-    {
-      campanha: "Google Ads",
-      vendas: 2,
-      receita: 849.80,
-      percentual: 32.3,
-      roi: "400%"
-    },
-    {
-      campanha: "TikTok Organic",
-      vendas: 1,
-      receita: 549.90,
-      percentual: 20.9,
-      roi: "350%"
-    },
-    {
-      campanha: "Instagram Reels",
-      vendas: 1,
-      receita: 199.90,
-      percentual: 7.6,
-      roi: "300%"
-    },
-    {
-      campanha: "TikTok Ads",
-      vendas: 1,
-      receita: 299.90,
-      percentual: 11.4,
-      roi: "280%"
-    },
-    {
-      campanha: "Facebook Ads",
-      vendas: 1,
-      receita: 449.90,
-      percentual: 17.1,
-      roi: "320%"
-    }
-  ]);
+  const removerVenda = (id: number) => {
+    setVendas(prev => prev.filter(v => v.id !== id));
+  };
 
   const totalVendas = vendas.length;
   const totalReceita = vendas.reduce((a, v) => a + v.valor, 0);
+  const ticketMedio = totalVendas > 0 ? totalReceita / totalVendas : 0;
+
+  // Atribuição por persona (calculada das vendas registradas)
+  const porPersona = PERSONAS.map(persona => {
+    const vendasPersona = vendas.filter(v => v.persona === persona);
+    const receita = vendasPersona.reduce((a, v) => a + v.valor, 0);
+    return { persona, vendas: vendasPersona.length, receita };
+  }).filter(p => p.vendas > 0).sort((a, b) => b.receita - a.receita);
+
+  // Atribuição por campanha (campanhas do banco + vendas manuais)
+  const campanhasAtivas = (campanhas as any[]).filter(c => c.status === 'ativa');
 
   return (
     <div className="space-y-8">
@@ -211,240 +78,252 @@ export default function AtribuicaoVendasSection() {
         </p>
       </div>
 
-      {/* Resumo */}
-      <Card className="border-l-4 border-l-purple-500 bg-gradient-to-r from-purple-50 to-pink-50">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-purple-600" />
-            Resumo de Vendas
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-4 gap-3">
-            {[
-              { titulo: "Total Vendas", valor: totalVendas, icon: "🛒", cor: "text-blue-600" },
-              { titulo: "Receita Total", valor: `R$ ${totalReceita.toLocaleString('pt-BR', {maximumFractionDigits: 2})}`, icon: "💰", cor: "text-green-600" },
-              { titulo: "Ticket Médio", valor: `R$ ${(totalReceita / totalVendas).toLocaleString('pt-BR', {maximumFractionDigits: 2})}`, icon: "📊", cor: "text-orange-600" },
-              { titulo: "Período", valor: "Hoje", icon: "📅", cor: "text-purple-600" }
-            ].map((item, idx) => (
-              <div key={idx} className="text-center p-3 bg-white rounded-lg border border-slate-200">
-                <p className="text-2xl mb-1">{item.icon}</p>
-                <p className="text-xs font-semibold text-slate-600 uppercase mb-1">{item.titulo}</p>
-                <p className={`text-lg font-bold ${item.cor}`}>{item.valor}</p>
-              </div>
-            ))}
+      {/* Aviso integração */}
+      <Card className="border-l-4 border-l-amber-500 bg-amber-50">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-900">Atribuição automática requer integração com e-commerce</p>
+              <p className="text-sm text-slate-600 mt-1">
+                Para atribuição automática de pedidos, conecte o Bling ERP. Enquanto isso, registre vendas manualmente abaixo para rastrear atribuição por persona, roteiro e canal.
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Vendas Detalhadas */}
+      {/* Resumo */}
+      <div className="grid md:grid-cols-3 gap-4">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+          <p className="text-xs font-semibold text-slate-600 uppercase mb-1">Total Vendas</p>
+          <p className="text-2xl font-bold text-blue-600">{totalVendas}</p>
+        </div>
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+          <p className="text-xs font-semibold text-slate-600 uppercase mb-1">Receita Total</p>
+          <p className="text-2xl font-bold text-green-600">
+            {totalReceita > 0 ? `R$ ${totalReceita.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '—'}
+          </p>
+        </div>
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 text-center">
+          <p className="text-xs font-semibold text-slate-600 uppercase mb-1">Ticket Médio</p>
+          <p className="text-2xl font-bold text-orange-600">
+            {ticketMedio > 0 ? `R$ ${ticketMedio.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '—'}
+          </p>
+        </div>
+      </div>
+
+      {/* Botão registrar */}
+      <Button onClick={() => setNovaVenda(!novaVenda)} className="w-full bg-purple-600 hover:bg-purple-700 gap-2" size="lg">
+        <Plus className="w-5 h-5" />
+        Registrar Nova Venda
+      </Button>
+
+      {/* Formulário */}
+      {novaVenda && (
+        <Card className="border-purple-200 bg-purple-50">
+          <CardHeader>
+            <CardTitle className="text-lg">Nova Venda com Atribuição</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-semibold text-slate-700 mb-1 block">Cliente</label>
+                <input
+                  type="text" placeholder="Nome do cliente"
+                  className="w-full px-3 py-2 border border-slate-300 rounded"
+                  value={form.cliente}
+                  onChange={e => setForm(f => ({ ...f, cliente: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-slate-700 mb-1 block">Valor (R$)</label>
+                <input
+                  type="number" min="0" step="0.01" placeholder="0,00"
+                  className="w-full px-3 py-2 border border-slate-300 rounded"
+                  value={form.valor}
+                  onChange={e => setForm(f => ({ ...f, valor: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-semibold text-slate-700 mb-1 block">Persona</label>
+                <select
+                  className="w-full px-3 py-2 border border-slate-300 rounded"
+                  value={form.persona}
+                  onChange={e => setForm(f => ({ ...f, persona: e.target.value }))}
+                >
+                  {PERSONAS.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-slate-700 mb-1 block">Plataforma</label>
+                <select
+                  className="w-full px-3 py-2 border border-slate-300 rounded"
+                  value={form.plataforma}
+                  onChange={e => setForm(f => ({ ...f, plataforma: e.target.value }))}
+                >
+                  {PLATAFORMAS.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-semibold text-slate-700 mb-1 block">Roteiro / Conteúdo</label>
+                <input
+                  type="text" placeholder="Ex: Análise de Qualidade"
+                  className="w-full px-3 py-2 border border-slate-300 rounded"
+                  value={form.roteiro}
+                  onChange={e => setForm(f => ({ ...f, roteiro: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-slate-700 mb-1 block">Campanha</label>
+                <select
+                  className="w-full px-3 py-2 border border-slate-300 rounded"
+                  value={form.campanha}
+                  onChange={e => setForm(f => ({ ...f, campanha: e.target.value }))}
+                >
+                  <option value="">— Selecione —</option>
+                  {campanhasAtivas.map((c: any) => (
+                    <option key={c.id} value={c.nome}>{c.nome}</option>
+                  ))}
+                  <option value="Orgânico">Orgânico (sem campanha)</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={registrarVenda} className="flex-1 bg-green-600 hover:bg-green-700">Registrar Venda</Button>
+              <Button variant="outline" className="flex-1" onClick={() => setNovaVenda(false)}>Cancelar</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Lista de vendas */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Vendas Rastreadas</CardTitle>
           <CardDescription>Cada venda com atribuição completa</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
-          {vendas.map((venda) => (
-            <div key={venda.id} className="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:bg-blue-50 transition">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h4 className="font-bold text-slate-900">{venda.cliente}</h4>
-                  <p className="text-xs text-slate-600">{venda.data}</p>
-                </div>
-                <p className="text-2xl font-bold text-green-600">R$ {venda.valor.toLocaleString('pt-BR', {maximumFractionDigits: 2})}</p>
-              </div>
-
-              <div className="grid grid-cols-4 gap-2 text-xs mb-3">
-                <div>
-                  <p className="text-slate-600">Persona</p>
-                  <p className="font-bold text-slate-900">{venda.persona}</p>
-                </div>
-                <div>
-                  <p className="text-slate-600">Roteiro</p>
-                  <p className="font-bold text-slate-900">{venda.roteiro}</p>
-                </div>
-                <div>
-                  <p className="text-slate-600">Campanha</p>
-                  <p className="font-bold text-slate-900">{venda.campanha}</p>
-                </div>
-                <div>
-                  <p className="text-slate-600">Plataforma</p>
-                  <p className="font-bold text-slate-900">{venda.plataforma}</p>
-                </div>
-              </div>
-
-              <Badge className="bg-green-600">✅ {venda.status}</Badge>
+        <CardContent>
+          {vendas.length === 0 ? (
+            <div className="py-10 text-center">
+              <BarChart3 className="w-10 h-10 mx-auto mb-3 text-slate-300" />
+              <p className="text-slate-500">Nenhuma venda registrada ainda.</p>
+              <p className="text-sm text-slate-400 mt-1">Use o botão acima para registrar vendas com atribuição por persona, roteiro e canal.</p>
             </div>
-          ))}
+          ) : (
+            <div className="space-y-3">
+              {vendas.map((venda) => (
+                <div key={venda.id} className="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:bg-blue-50 transition">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h4 className="font-bold text-slate-900">{venda.cliente}</h4>
+                      <p className="text-xs text-slate-600">{venda.data}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xl font-bold text-green-600">R$ {venda.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                      <Button size="sm" variant="outline" className="text-red-600 text-xs" onClick={() => removerVenda(venda.id)}>✕</Button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                    <div><p className="text-slate-500">Persona</p><p className="font-semibold text-slate-900">{venda.persona}</p></div>
+                    <div><p className="text-slate-500">Plataforma</p><p className="font-semibold text-slate-900">{venda.plataforma}</p></div>
+                    {venda.roteiro && <div><p className="text-slate-500">Roteiro</p><p className="font-semibold text-slate-900">{venda.roteiro}</p></div>}
+                    {venda.campanha && <div><p className="text-slate-500">Campanha</p><p className="font-semibold text-slate-900">{venda.campanha}</p></div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {/* Atribuição por Persona */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Users className="w-5 h-5 text-blue-600" />
-            Atribuição por Persona
-          </CardTitle>
-          <CardDescription>Qual persona gerou mais vendas</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {atribuicaoPorPersona.map((attr) => (
-            <div key={attr.persona} className="border border-slate-200 rounded-lg p-4">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <h4 className="font-bold text-slate-900">{attr.persona}</h4>
-                  <p className="text-xs text-slate-600">{attr.vendas} vendas • R$ {attr.receita.toLocaleString('pt-BR', {maximumFractionDigits: 2})}</p>
+      {porPersona.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Users className="w-5 h-5 text-blue-600" />
+              Atribuição por Persona
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {porPersona.map((attr) => {
+              const pct = totalReceita > 0 ? (attr.receita / totalReceita) * 100 : 0;
+              return (
+                <div key={attr.persona} className="border border-slate-200 rounded-lg p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <h4 className="font-bold text-slate-900">{attr.persona}</h4>
+                      <p className="text-xs text-slate-600">{attr.vendas} vendas • R$ {attr.receita.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                    </div>
+                    <Badge className="bg-blue-600">{pct.toFixed(1)}%</Badge>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-2">
+                    <div className="h-2 rounded-full bg-blue-600" style={{ width: `${pct}%` }} />
+                  </div>
                 </div>
-                <Badge className="bg-blue-600">{attr.percentual}%</Badge>
-              </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
 
-              <div className="w-full bg-slate-200 rounded-full h-2 mb-3">
-                <div 
-                  className="h-2 rounded-full bg-blue-600"
-                  style={{ width: `${attr.percentual}%` }}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div>
-                  <p className="text-slate-600">ROI</p>
-                  <p className="font-bold text-green-600">{attr.roi}</p>
-                </div>
-                <div>
-                  <p className="text-slate-600">CPA</p>
-                  <p className="font-bold text-slate-900">R$ {attr.cpa.toFixed(2)}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      {/* Atribuição por Roteiro */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Video className="w-5 h-5 text-purple-600" />
-            Atribuição por Roteiro
-          </CardTitle>
-          <CardDescription>Qual roteiro teve melhor performance</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {atribuicaoPorRoteiro.map((attr) => (
-            <div key={attr.roteiro} className="border border-slate-200 rounded-lg p-4">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <h4 className="font-bold text-slate-900">{attr.roteiro}</h4>
-                  <p className="text-xs text-slate-600">{attr.vendas} vendas • R$ {attr.receita.toLocaleString('pt-BR', {maximumFractionDigits: 2})}</p>
-                </div>
-                <Badge className="bg-purple-600">{attr.percentual}%</Badge>
-              </div>
-
-              <div className="w-full bg-slate-200 rounded-full h-2 mb-2">
-                <div 
-                  className="h-2 rounded-full bg-purple-600"
-                  style={{ width: `${attr.percentual}%` }}
-                />
-              </div>
-
-              <p className="text-xs text-slate-600">ROI: <strong className="text-green-600">{attr.roi}</strong></p>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      {/* Atribuição por Campanha */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Target className="w-5 h-5 text-orange-600" />
-            Atribuição por Campanha
-          </CardTitle>
-          <CardDescription>Qual campanha teve melhor ROI</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {atribuicaoPorCampanha.map((attr) => (
-            <div key={attr.campanha} className="border border-slate-200 rounded-lg p-4">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <h4 className="font-bold text-slate-900">{attr.campanha}</h4>
-                  <p className="text-xs text-slate-600">{attr.vendas} vendas • R$ {attr.receita.toLocaleString('pt-BR', {maximumFractionDigits: 2})}</p>
-                </div>
-                <Badge className="bg-orange-600">{attr.percentual}%</Badge>
-              </div>
-
-              <div className="w-full bg-slate-200 rounded-full h-2 mb-2">
-                <div 
-                  className="h-2 rounded-full bg-orange-600"
-                  style={{ width: `${attr.percentual}%` }}
-                />
-              </div>
-
-              <p className="text-xs text-slate-600">ROI: <strong className="text-green-600">{attr.roi}</strong></p>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      {/* Recomendações */}
-      <Card className="border-green-200 bg-green-50">
-        <CardHeader>
-          <CardTitle className="text-lg">Recomendações Baseadas em Dados</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {[
-            {
-              titulo: "Aumentar Budget em Google Ads",
-              descricao: "Melhor ROI (400%) e CPA (R$ 7,50)",
-              acao: "Aumentar"
-            },
-            {
-              titulo: "Focar em Persona Renata",
-              descricao: "Maior receita por venda (R$ 849,80)",
-              acao: "Focar"
-            },
-            {
-              titulo: "Otimizar Roteiro Análise de Qualidade",
-              descricao: "Melhor performance (32,3% das vendas)",
-              acao: "Otimizar"
-            },
-            {
-              titulo: "Reduzir Budget em Facebook",
-              descricao: "Menor ROI (320%) e CPA mais alto",
-              acao: "Reduzir"
-            }
-          ].map((rec, idx) => (
-            <div key={idx} className="border border-green-200 rounded-lg p-3 bg-white">
-              <div className="flex items-start justify-between mb-1">
-                <div>
-                  <p className="font-semibold text-slate-900">{rec.titulo}</p>
-                  <p className="text-xs text-slate-600">{rec.descricao}</p>
-                </div>
-                <Badge variant="outline">{rec.acao}</Badge>
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+      {/* Campanhas ativas do banco */}
+      {campanhasAtivas.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Target className="w-5 h-5 text-orange-600" />
+              Campanhas Ativas (dados reais)
+            </CardTitle>
+            <CardDescription>Conversões registradas nas campanhas cadastradas</CardDescription>
+          </CardHeader>
+          <CardContent className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200">
+                  <th className="text-left py-2 px-2 font-semibold">Campanha</th>
+                  <th className="text-left py-2 px-2 font-semibold">Plataforma</th>
+                  <th className="text-right py-2 px-2 font-semibold">Conversões</th>
+                  <th className="text-right py-2 px-2 font-semibold">ROI</th>
+                </tr>
+              </thead>
+              <tbody>
+                {campanhasAtivas.map((c: any) => (
+                  <tr key={c.id} className="border-b border-slate-100 hover:bg-slate-50">
+                    <td className="py-2 px-2 font-medium">{c.nome}</td>
+                    <td className="py-2 px-2 capitalize">{c.plataforma}</td>
+                    <td className="py-2 px-2 text-right font-semibold text-green-600">{c.conversoes ?? 0}</td>
+                    <td className="py-2 px-2 text-right font-semibold text-purple-600">
+                      {c.roi ? `${parseFloat(c.roi).toFixed(0)}%` : '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Dicas */}
       <Card className="border-blue-200 bg-blue-50">
         <CardHeader>
           <CardTitle className="text-lg">Dicas para Maximizar ROI</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3 text-sm">
+        <CardContent className="space-y-2 text-sm">
           {[
-            "✅ Rastreie cada venda até sua origem (persona/roteiro/campanha)",
-            "✅ Calcule ROI por persona para identificar melhor público",
-            "✅ Aumente budget em roteiros com melhor performance",
-            "✅ Pause roteiros com ROI < 250%",
-            "✅ Teste novas variações dos roteiros top",
-            "✅ Compare CPA entre personas para otimizar gastos",
-            "✅ Monitore atribuição semanalmente",
-            "✅ Use dados para prever performance de novos roteiros"
+            "Rastreie cada venda até sua origem (persona/roteiro/campanha)",
+            "Calcule ROI por persona para identificar melhor público",
+            "Aumente budget em roteiros com melhor performance",
+            "Compare CPA entre personas para otimizar gastos",
+            "Monitore atribuição semanalmente",
+            "Conecte Bling ERP para atribuição automática por pedido",
           ].map((dica, idx) => (
-            <p key={idx} className="text-slate-700">{dica}</p>
+            <p key={idx} className="text-slate-700">✅ {dica}</p>
           ))}
         </CardContent>
       </Card>

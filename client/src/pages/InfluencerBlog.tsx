@@ -122,9 +122,7 @@ export default function InfluencerBlog() {
   };
 
   const handleDelete = (postId: number) => {
-    if (confirm("Tem certeza que deseja deletar este post?")) {
-      deletePostMutation.mutate({ postId });
-    }
+    deletePostMutation.mutate({ postId });
   };
 
   const handlePublishNow = (postId: number) => {

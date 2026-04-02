@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Activity, TrendingUp, Users, Eye, Heart, MessageCircle } from "lucide-react";
+import { Activity, TrendingUp, Users, Eye, Heart, MessageCircle, AlertCircle } from "lucide-react";
 import { useState } from "react";
 
 export default function DashboardMonitoramentoSection() {
@@ -84,6 +84,21 @@ export default function DashboardMonitoramentoSection() {
           Simule e acompanhe as métricas da campanha ao vivo. Veja como os números evoluem nas primeiras 24 horas.
         </p>
       </div>
+
+      {/* Aviso de simulação */}
+      <Card className="border-l-4 border-l-amber-500 bg-amber-50">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-900">Simulador com benchmarks de mercado — não dados reais</p>
+              <p className="text-sm text-slate-600 mt-1">
+                Os números abaixo (visualizações, engajamentos, CPV, CPS) são valores de referência baseados em médias de mercado para campanhas de pijamas/moda. Para monitorar dados reais da sua campanha, integre a Meta Ads API ou TikTok Ads API.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Controles de Simulação */}
       <Card className="border-l-4 border-l-blue-400 bg-gradient-to-r from-blue-50 to-indigo-50">

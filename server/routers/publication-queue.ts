@@ -1,8 +1,8 @@
 import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
-import { eq, and, lte } from "drizzle-orm";
+import { eq, and, lte, inArray } from "drizzle-orm";
 import { getDb } from "../db";
-import { influencerPosts, instagramAccounts, publicationQueueJobs } from "../../drizzle/schema";
+import { influencerPosts, influencers, instagramAccounts, publicationQueueJobs } from "../../drizzle/schema";
 
 /**
  * Calcula o delay para retry exponencial (em ms)
@@ -25,9 +25,15 @@ export const publicationQueueRouter = router({
         maxRetries: z.number().default(5),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
+
+      // Verify ownership: post must belong to a user-owned influencer
+      const [post] = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq(influencerPosts.id, input.postId)).limit(1);
+      if (!post) throw new Error("Post não encontrado");
+      const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and(eq(influencers.id, post.influencerId ?? 0), eq(influencers.userId, ctx.user.id))).limit(1);
+      if (!owned) throw new Error("Acesso negado");
 
       const existing = await db
         .select()
@@ -69,24 +75,23 @@ export const publicationQueueRouter = router({
   /**
    * Obter status da fila (do banco de dados)
    */
-  getQueueStatus: protectedProcedure.query(async () => {
+  getQueueStatus: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return { totalJobs: 0, readyToPublish: 0, waiting: 0, failed: 0, jobs: [] };
 
-    const jobs = await db
-      .select()
-      .from(publicationQueueJobs)
-      .where(
-        and(
-          eq(publicationQueueJobs.status, "ready"),
-          eq(publicationQueueJobs.status, "waiting")
-        )
-      )
-      .limit(100);
+    // Filter by user's influencers → their posts → their jobs
+    const myInfluencers = await db.select({ id: influencers.id }).from(influencers).where(eq(influencers.userId, ctx.user.id));
+    const myInfluencerIds = myInfluencers.map((i: any) => i.id);
+    if (myInfluencerIds.length === 0) return { totalJobs: 0, readyToPublish: 0, waiting: 0, failed: 0, jobs: [] };
+
+    const myPosts = await db.select({ id: influencerPosts.id }).from(influencerPosts).where(inArray(influencerPosts.influencerId, myInfluencerIds));
+    const myPostIds = myPosts.map((p: any) => p.id);
+    if (myPostIds.length === 0) return { totalJobs: 0, readyToPublish: 0, waiting: 0, failed: 0, jobs: [] };
 
     const allActive = await db
       .select()
-      .from(publicationQueueJobs);
+      .from(publicationQueueJobs)
+      .where(inArray(publicationQueueJobs.postId, myPostIds));
 
     const now = new Date();
     const mapped = allActive.map((j) => ({
@@ -290,9 +295,14 @@ export const publicationQueueRouter = router({
    */
   removeFromQueue: protectedProcedure
     .input(z.object({ postId: z.number() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
+
+      const [post] = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq(influencerPosts.id, input.postId)).limit(1);
+      if (!post) throw new Error("Post não encontrado");
+      const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and(eq(influencers.id, post.influencerId ?? 0), eq(influencers.userId, ctx.user.id))).limit(1);
+      if (!owned) throw new Error("Acesso negado");
 
       await db
         .update(publicationQueueJobs)
@@ -307,9 +317,14 @@ export const publicationQueueRouter = router({
    */
   retryNow: protectedProcedure
     .input(z.object({ postId: z.number() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
+
+      const [post] = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq(influencerPosts.id, input.postId)).limit(1);
+      if (!post) throw new Error("Post não encontrado");
+      const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and(eq(influencers.id, post.influencerId ?? 0), eq(influencers.userId, ctx.user.id))).limit(1);
+      if (!owned) throw new Error("Acesso negado");
 
       await db
         .update(publicationQueueJobs)
@@ -324,9 +339,14 @@ export const publicationQueueRouter = router({
    */
   getJobDetails: protectedProcedure
     .input(z.object({ postId: z.number() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return null;
+
+      const [post] = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq(influencerPosts.id, input.postId)).limit(1);
+      if (!post) return null;
+      const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and(eq(influencers.id, post.influencerId ?? 0), eq(influencers.userId, ctx.user.id))).limit(1);
+      if (!owned) return null;
 
       const rows = await db
         .select()

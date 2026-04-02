@@ -163,7 +163,8 @@ export const aiCustomerSupportRouter = router({
 
         return {
           success: true,
-          escalationReason: "Limite de mensagens atingido",
+          response: aiResponse,
+          escalated: false,
           mentionedProducts: relevantProducts,
         };
       } catch (error) {

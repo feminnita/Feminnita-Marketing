@@ -72,9 +72,12 @@ export const socialMediaRouter = router({
 
   getInfluencerAccounts: protectedProcedure
     .input(z.object({ influencerId: z.number() }))
-    .query(async ({ input }: any) => {
+    .query(async ({ input, ctx }: any) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
+
+      const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and(eq(influencers.id, input.influencerId), eq(influencers.userId, ctx.user.id))).limit(1);
+      if (!owned) return { influencerId: input.influencerId, email: "", instagram: "", tiktok: "", facebook: "", whatsapp: "", youtube: "" };
 
       const [accounts] = await db
         .select()
@@ -159,6 +162,10 @@ export const socialMediaRouter = router({
     .mutation(async ({ input, ctx }: any) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
+
+      // Verify ownership
+      const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and(eq(influencers.id, input.influencerId), eq(influencers.userId, ctx.user.id))).limit(1);
+      if (!owned) throw new Error("Influenciadora não encontrada");
 
       // Insert draft post per platform, queued for immediate publishing via publication worker
       const now = new Date();

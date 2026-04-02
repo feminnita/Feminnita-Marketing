@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Download, FileText, BarChart3, TrendingUp, Calendar, Mail } from "lucide-react";
 import { useState } from "react";
 import PersonaAvatar from "./PersonaAvatar";
+import { toast } from "sonner";
 
 export default function ExportadorRelatoriosPersonaSection() {
   const [selectedPersona, setSelectedPersona] = useState("Carol");
@@ -69,7 +70,31 @@ export default function ExportadorRelatoriosPersonaSection() {
   ];
 
   const handleExport = () => {
-    alert(`Gerando relatório de ${selectedPersona} em formato ${reportFormat.toUpperCase()}...`);
+    try {
+      const content = JSON.stringify(
+        {
+          persona: selectedPersona,
+          formato: reportFormat.toUpperCase(),
+          secoes: reportSections.map(s => ({ nome: s.name, descricao: s.description })),
+          templates: reportTemplates.map(t => ({ nome: t.name, descricao: t.description, frequencia: t.frequency })),
+          geradoEm: new Date().toISOString(),
+        },
+        null,
+        2
+      );
+      const blob = new Blob([content], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `relatorio_${selectedPersona.toLowerCase()}_${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success(`Relatório de ${selectedPersona} exportado com sucesso!`);
+    } catch {
+      toast.error("Erro ao exportar relatório");
+    }
   };
 
   return (

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -51,14 +51,19 @@ interface Competitor {
 }
 
 interface Recommendation {
-  text: string;
+  action: string;
+  rationale?: string;
   priority?: "alta" | "media" | "baixa";
+}
+
+interface CompetitorInsights {
+  competitors?: Competitor[];
 }
 
 interface MarketReport {
   weeklyStrategy?: string;
   audienceInsights?: string;
-  competitors?: Competitor[];
+  competitorInsights?: CompetitorInsights;
   trendingHashtags?: string[];
   contentOpportunities?: string[];
   recommendations?: Recommendation[];
@@ -88,7 +93,7 @@ const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   published: { label: "Publicado", className: "bg-purple-100 text-purple-700" },
 };
 
-const TYPE_ICON: Record<string, JSX.Element> = {
+const TYPE_ICON: Record<string, React.ReactElement> = {
   carousel: <LayoutGrid className="w-4 h-4" />,
   reel: <Film className="w-4 h-4" />,
   story: <BookOpen className="w-4 h-4" />,
@@ -164,7 +169,7 @@ function GeneratedContentView({
   if (briefType === "reel") {
     return (
       <div className="space-y-3">
-        {c.hook && (
+        {(c.hook as React.ReactNode) && (
           <div>
             <p className="font-semibold text-sm text-gray-700 mb-1">Hook</p>
             <p className="text-sm text-gray-600 bg-yellow-50 p-2 rounded">{String(c.hook)}</p>
@@ -181,7 +186,7 @@ function GeneratedContentView({
             ))}
           </div>
         )}
-        {c.cta && (
+        {(c.cta as React.ReactNode) && (
           <div>
             <p className="font-semibold text-sm text-gray-700 mb-1">CTA</p>
             <p className="text-sm text-gray-600 bg-green-50 p-2 rounded">{String(c.cta)}</p>
@@ -222,7 +227,7 @@ function GeneratedContentView({
   // post (default)
   return (
     <div className="space-y-3">
-      {c.caption && (
+      {(c.caption as React.ReactNode) && (
         <div>
           <p className="font-semibold text-sm text-gray-700 mb-1">Caption</p>
           <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded whitespace-pre-wrap">
@@ -230,7 +235,7 @@ function GeneratedContentView({
           </p>
         </div>
       )}
-      {c.hashtags && (
+      {(c.hashtags as React.ReactNode) && (
         <div>
           <p className="font-semibold text-sm text-gray-700 mb-1">Hashtags</p>
           <p className="text-sm text-pink-600 bg-pink-50 p-2 rounded">{String(c.hashtags)}</p>
@@ -261,7 +266,7 @@ export default function MarketingTeamPage() {
     trpc.marketResearch.getLatestReport.useQuery();
 
   const { data: briefs, refetch: refetchBriefs } =
-    trpc.marketResearch.listBriefs.useQuery();
+    trpc.marketResearch.listContentBriefs.useQuery();
 
   const generateReport = trpc.marketResearch.generateNow.useMutation({
     onSuccess: () => refetchReport(),
@@ -286,7 +291,7 @@ export default function MarketingTeamPage() {
     },
   });
 
-  const filteredBriefs = (briefs ?? []).filter((b: Brief) => {
+  const filteredBriefs = (briefs ?? []).filter((b) => {
     const statusOk = briefStatusFilter === "all" || b.status === briefStatusFilter;
     const typeOk = briefTypeFilter === "all" || b.briefType === briefTypeFilter;
     return statusOk && typeOk;
@@ -388,13 +393,13 @@ export default function MarketingTeamPage() {
               </div>
 
               {/* Concorrentes */}
-              {typedReport.competitors && typedReport.competitors.length > 0 && (
+              {typedReport.competitorInsights?.competitors && typedReport.competitorInsights.competitors.length > 0 && (
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm">Concorrentes</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {typedReport.competitors.map((c, i) => (
+                    {typedReport.competitorInsights!.competitors!.map((c, i) => (
                       <div key={i} className="border-b last:border-0 pb-3 last:pb-0">
                         <p className="font-medium text-sm text-gray-900">{c.name}</p>
                         {c.strategy && (
@@ -402,13 +407,14 @@ export default function MarketingTeamPage() {
                             <span className="font-medium">Estratégia:</span> {c.strategy}
                           </p>
                         )}
-                        {c.strengths && c.strengths.length > 0 && (
+                        {c.strengths && (
                           <div className="flex flex-wrap gap-1 mt-1">
-                            {c.strengths.map((s, j) => (
-                              <Badge key={j} variant="secondary" className="text-xs">
-                                {s}
-                              </Badge>
-                            ))}
+                            {(Array.isArray(c.strengths) ? c.strengths : String(c.strengths).split(","))
+                              .map((s: string, j: number) => (
+                                <Badge key={j} variant="secondary" className="text-xs">
+                                  {s.trim()}
+                                </Badge>
+                              ))}
                           </div>
                         )}
                       </div>
@@ -488,7 +494,9 @@ export default function MarketingTeamPage() {
                         >
                           {rec.priority ?? "baixa"}
                         </Badge>
-                        <p className="text-sm text-gray-700">{rec.text}</p>
+                        <p className="text-sm text-gray-700">
+                          {rec.action}{rec.rationale ? ` — ${rec.rationale}` : ""}
+                        </p>
                       </div>
                     ))}
                   </CardContent>
@@ -585,7 +593,7 @@ export default function MarketingTeamPage() {
                     onClick={() =>
                       createBrief.mutate({
                         topic: newTopic,
-                        briefType: newBriefType,
+                        briefType: newBriefType as "carousel" | "reel" | "story" | "post" | "feed",
                         targetAudience: newAudience,
                       })
                     }
@@ -605,7 +613,7 @@ export default function MarketingTeamPage() {
             </div>
           ) : (
             <div className="grid gap-3">
-              {filteredBriefs.map((brief: Brief) => {
+              {filteredBriefs.map((brief) => {
                 const statusInfo =
                   STATUS_BADGE[brief.status ?? "pending"] ?? STATUS_BADGE["pending"];
                 const icon = TYPE_ICON[brief.briefType ?? "post"] ?? TYPE_ICON["post"];
@@ -615,7 +623,7 @@ export default function MarketingTeamPage() {
                     className="hover:shadow-sm transition-shadow cursor-pointer"
                     onClick={() =>
                       brief.status === "generated" || brief.status === "approved"
-                        ? setSelectedBrief(brief)
+                        ? setSelectedBrief(brief as unknown as Brief)
                         : undefined
                     }
                   >
@@ -638,9 +646,9 @@ export default function MarketingTeamPage() {
                               </Badge>
                             )}
                           </div>
-                          {brief.influencerName && (
+                          {(brief as unknown as Brief).influencerName && (
                             <p className="text-xs text-gray-400 mt-0.5">
-                              Influenciadora: {brief.influencerName}
+                              Influenciadora: {(brief as unknown as Brief).influencerName}
                             </p>
                           )}
                           {brief.targetAudience && (
@@ -658,7 +666,7 @@ export default function MarketingTeamPage() {
                             className="gap-1 text-xs"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setSelectedBrief(brief);
+                              setSelectedBrief(brief as unknown as Brief);
                             }}
                           >
                             <Eye className="w-3.5 h-3.5" />

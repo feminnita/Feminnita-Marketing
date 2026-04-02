@@ -63,12 +63,31 @@ interface BlogPost {
   }>;
 }
 
+const DEFAULT_COSMETICS = {
+  color: "from-gray-400 to-gray-600",
+  bgColor: "bg-gray-50",
+  accentColor: "text-gray-600",
+  image: "👤",
+  feminnita_url: "https://www.feminnita.com.br",
+  name: "",
+  title: "",
+};
+
 export default function InfluencerBlogPage() {
   const [, params] = useRoute("/blog/:id");
   const influencerId = params?.id ? parseInt(params.id) : 1;
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
-  const profile = INFLUENCER_PROFILES[influencerId as keyof typeof INFLUENCER_PROFILES];
+  // Fetch live influencer data from DB
+  const { data: influencersData } = trpc.autonomousInfluencers.listInfluencers.useQuery();
+  const dbInfluencer = influencersData?.influencers?.find((i: any) => i.id === influencerId);
+
+  const cosmetics = INFLUENCER_PROFILES[influencerId as keyof typeof INFLUENCER_PROFILES] ?? DEFAULT_COSMETICS;
+  const profile = dbInfluencer
+    ? { ...cosmetics, name: dbInfluencer.name, title: dbInfluencer.personality ?? cosmetics.title ?? "" }
+    : cosmetics.name
+    ? cosmetics
+    : null;
 
   // Get posts for influencer
   const { data: posts = [], isLoading: postsLoading } = trpc.influencerBlog.getPosts.useQuery(

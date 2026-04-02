@@ -2,7 +2,7 @@ import { z } from "zod";
 import { router, protectedProcedure } from "../_core/trpc";
 import { getDb } from "../db";
 import { influencerAccounts, influencers } from "../../drizzle/schema";
-import { eq, sql, inArray } from "drizzle-orm";
+import { eq, sql, inArray, and } from "drizzle-orm";
 
 export const influencerAccountsRouter = router({
   saveAccounts: protectedProcedure
@@ -17,15 +17,20 @@ export const influencerAccountsRouter = router({
         youtube: z.string().optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       console.log("[saveAccounts] Input recebido:", input);
-      
+
       const db = await getDb();
       if (!db) {
         throw new Error("Database not available");
       }
 
       try {
+        // Verify ownership
+        const owned = await db.select({ id: influencers.id }).from(influencers)
+          .where(and(eq(influencers.id, input.influencerId), eq(influencers.userId, ctx.user.id))).limit(1);
+        if (owned.length === 0) throw new Error("Influencer não encontrado ou acesso negado");
+
         const { influencerId, email, instagram, tiktok, facebook, whatsapp, youtube } = input;
 
         // Use raw SQL to avoid Drizzle's default value issues
@@ -67,13 +72,18 @@ export const influencerAccountsRouter = router({
 
   getAccounts: protectedProcedure
     .input(z.object({ influencerId: z.number() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       console.log("[getAccounts] Buscando para influencerId:", input.influencerId);
-      
+
       const db = await getDb();
       if (!db) return null;
 
       try {
+        // Verify ownership
+        const owned = await db.select({ id: influencers.id }).from(influencers)
+          .where(and(eq(influencers.id, input.influencerId), eq(influencers.userId, ctx.user.id))).limit(1);
+        if (owned.length === 0) return null;
+
         const result = await db
           .select()
           .from(influencerAccounts)
@@ -81,7 +91,7 @@ export const influencerAccountsRouter = router({
           .limit(1);
 
         console.log("[getAccounts] Resultado:", result);
-        
+
         return result.length > 0 ? result[0] : null;
       } catch (error) {
         console.error("[getAccounts] Erro:", error);
@@ -91,15 +101,20 @@ export const influencerAccountsRouter = router({
 
   deleteAccounts: protectedProcedure
     .input(z.object({ influencerId: z.number() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       console.log("[deleteAccounts] Deletando para influencerId:", input.influencerId);
-      
+
       const db = await getDb();
       if (!db) {
         throw new Error("Database not available");
       }
 
       try {
+        // Verify ownership before deleting
+        const owned = await db.select({ id: influencers.id }).from(influencers)
+          .where(and(eq(influencers.id, input.influencerId), eq(influencers.userId, ctx.user.id))).limit(1);
+        if (owned.length === 0) return { success: false, message: "Acesso negado" };
+
         await db
           .delete(influencerAccounts)
           .where(eq(influencerAccounts.influencerId, input.influencerId));

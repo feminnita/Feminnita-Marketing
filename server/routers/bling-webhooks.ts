@@ -1,4 +1,4 @@
-import { router, publicProcedure } from "../_core/trpc";
+import { router, publicProcedure, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { notifyOwner } from "../_core/notification";
 import * as crypto from "crypto";
@@ -145,7 +145,7 @@ export const blingWebhooksRouter = router({
       return { success: true, productId: input.data.produtoId, newQuantity: input.data.quantidade };
     }),
 
-  getWebhookConfig: publicProcedure.query(async () => {
+  getWebhookConfig: protectedProcedure.query(async () => {
     const baseUrl = process.env.WEBHOOK_BASE_URL || process.env.VITE_APP_URL || "https://api.example.com";
     return {
       webhooks: [

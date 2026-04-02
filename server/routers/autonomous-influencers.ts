@@ -5,7 +5,7 @@ import { influencers, influencerPosts, influencerTrends, influencerPerformance }
 import { invokeLLM } from "../_core/llm";
 import { notifyOwner } from "../_core/notification";
 import { TRPCError } from "@trpc/server";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 
 /**
  * Autonomous Influencers Router
@@ -26,12 +26,14 @@ export const autonomousInfluencersRouter = router({
         contentType: z.enum(["image", "video", "carousel", "story"]),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database not available");
 
-        const influencerResult = await db.select().from(influencers).where(eq(influencers.id, input.influencerId)).limit(1);
+        const influencerResult = await db.select().from(influencers)
+          .where(and(eq(influencers.id, input.influencerId), eq(influencers.userId, ctx.user.id)))
+          .limit(1);
         const influencer = influencerResult.length > 0 ? influencerResult[0] : null;
 
         if (!influencer) {
@@ -106,10 +108,15 @@ Retorne um JSON com caption, hashtags, contentIdeas, bestTimeToPost e estimatedR
         platform: z.enum(["instagram", "tiktok", "youtube"]),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database not available");
+
+        // Verify ownership
+        const owned = await db.select({ id: influencers.id }).from(influencers)
+          .where(and(eq(influencers.id, input.influencerId), eq(influencers.userId, ctx.user.id))).limit(1);
+        if (owned.length === 0) throw new TRPCError({ code: "NOT_FOUND", message: "Influencer não encontrado" });
 
         const prompt = `
 Analise as tendências atuais do ${input.platform} para conteúdo de moda/pijamas.
@@ -172,10 +179,18 @@ Retorne um JSON com um array de trends contendo: name, category, relevanceScore,
         platform: z.enum(["instagram", "tiktok", "youtube", "blog"]),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database not available");
+
+        // Verify the post belongs to a user-owned influencer
+        const post = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts)
+          .where(eq(influencerPosts.id, input.postId)).limit(1);
+        if (post.length === 0) throw new TRPCError({ code: "NOT_FOUND", message: "Post não encontrado" });
+        const owned = await db.select({ id: influencers.id }).from(influencers)
+          .where(and(eq(influencers.id, post[0].influencerId ?? 0), eq(influencers.userId, ctx.user.id))).limit(1);
+        if (owned.length === 0) throw new TRPCError({ code: "FORBIDDEN", message: "Acesso negado" });
 
         await db
           .update(influencerPosts)
@@ -214,10 +229,15 @@ Retorne um JSON com um array de trends contendo: name, category, relevanceScore,
         days: z.number().default(30),
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database not available");
+
+        // Verify ownership
+        const owned = await db.select({ id: influencers.id }).from(influencers)
+          .where(and(eq(influencers.id, input.influencerId), eq(influencers.userId, ctx.user.id))).limit(1);
+        if (owned.length === 0) throw new TRPCError({ code: "NOT_FOUND", message: "Influencer não encontrado" });
 
         const metrics = await db.select().from(influencerPerformance).where(eq(influencerPerformance.influencerId, input.influencerId)).orderBy(desc(influencerPerformance.date)).limit(input.days);
 
@@ -255,12 +275,12 @@ Retorne um JSON com um array de trends contendo: name, category, relevanceScore,
   /**
    * List all influencers
    */
-  listInfluencers: protectedProcedure.query(async () => {
+  listInfluencers: protectedProcedure.query(async ({ ctx }) => {
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
-      const allInfluencers = await db.select().from(influencers);
+      const allInfluencers = await db.select().from(influencers).where(eq(influencers.userId, ctx.user.id));
 
       return {
         success: true,
@@ -282,17 +302,18 @@ Retorne um JSON com um array de trends contendo: name, category, relevanceScore,
   createInfluencer: protectedProcedure
     .input(
       z.object({
-        name: z.enum(["Carol", "Renata", "Vanessa", "Luiza"]),
+        name: z.string().min(1),
         personality: z.string(),
         bio: z.string(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database not available");
 
         const result = await db.insert(influencers).values({
+          userId: ctx.user.id,
           name: input.name,
           personality: input.personality,
           bio: input.bio,
@@ -327,10 +348,15 @@ Retorne um JSON com um array de trends contendo: name, category, relevanceScore,
         influencerId: z.number(),
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database not available");
+
+        // Verify ownership
+        const owned = await db.select({ id: influencers.id }).from(influencers)
+          .where(and(eq(influencers.id, input.influencerId), eq(influencers.userId, ctx.user.id))).limit(1);
+        if (owned.length === 0) throw new TRPCError({ code: "NOT_FOUND", message: "Influencer não encontrado" });
 
         const posts = await db.select().from(influencerPosts).where(eq(influencerPosts.influencerId, input.influencerId)).orderBy(desc(influencerPosts.scheduledAt));
 

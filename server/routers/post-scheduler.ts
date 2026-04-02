@@ -3,7 +3,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { notifyOwner } from "../_core/notification";
 import { getDb } from "../db";
-import { influencerPosts } from "../../drizzle/schema";
+import { influencerPosts, influencers } from "../../drizzle/schema";
 import { eq, and, gte, desc } from "drizzle-orm";
 
 /**
@@ -225,12 +225,18 @@ export const postSchedulerRouter = router({
         influencerId: z.number(),
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) {
           return { success: true, posts: [], totalScheduled: 0, nextPosting: getNextPostingDay() };
         }
+
+        // Verify ownership
+        const owned = await db.select({ id: influencers.id }).from(influencers)
+          .where(and(eq(influencers.id, input.influencerId), eq(influencers.userId, ctx.user.id)))
+          .limit(1);
+        if (owned.length === 0) return { success: true, posts: [], totalScheduled: 0, nextPosting: getNextPostingDay() };
 
         const rows = await db
           .select()

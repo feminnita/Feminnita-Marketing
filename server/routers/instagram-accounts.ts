@@ -1,6 +1,6 @@
 import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
-import { eq, inArray, or } from "drizzle-orm";
+import { eq, inArray, or, and } from "drizzle-orm";
 import { getDb } from "../db";
 import { instagramAccounts, igPostPublications, influencers } from "../../drizzle/schema";
 
@@ -123,10 +123,14 @@ export const instagramAccountsRouter = router({
         influencerId: z.number(),
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) return [];
+
+        const owned = await db.select({ id: influencers.id }).from(influencers)
+          .where(and(eq(influencers.id, input.influencerId), eq(influencers.userId, ctx.user.id))).limit(1);
+        if (owned.length === 0) return [];
 
         const accounts = await db
           .select()
@@ -151,10 +155,18 @@ export const instagramAccountsRouter = router({
         expiresIn: z.number().optional(), // segundos até expiração
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database not available");
+
+        const account = await db.select().from(instagramAccounts).where(eq(instagramAccounts.id, input.accountId)).limit(1);
+        if (!account || account.length === 0) throw new Error("Conta não encontrada");
+        if (account[0].accountType === "influencer" && account[0].influencerId) {
+          const owned = await db.select({ id: influencers.id }).from(influencers)
+            .where(and(eq(influencers.id, account[0].influencerId), eq(influencers.userId, ctx.user.id))).limit(1);
+          if (owned.length === 0) throw new Error("Acesso negado");
+        }
 
         const expiresAt = input.expiresIn
           ? new Date(Date.now() + input.expiresIn * 1000)
@@ -186,10 +198,18 @@ export const instagramAccountsRouter = router({
         accountId: z.number(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database not available");
+
+        const account = await db.select().from(instagramAccounts).where(eq(instagramAccounts.id, input.accountId)).limit(1);
+        if (!account || account.length === 0) throw new Error("Conta não encontrada");
+        if (account[0].accountType === "influencer" && account[0].influencerId) {
+          const owned = await db.select({ id: influencers.id }).from(influencers)
+            .where(and(eq(influencers.id, account[0].influencerId), eq(influencers.userId, ctx.user.id))).limit(1);
+          if (owned.length === 0) throw new Error("Acesso negado");
+        }
 
         await db
           .update(instagramAccounts)
@@ -216,10 +236,18 @@ export const instagramAccountsRouter = router({
         limit: z.number().default(20),
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) return [];
+
+        const account = await db.select().from(instagramAccounts).where(eq(instagramAccounts.id, input.accountId)).limit(1);
+        if (!account || account.length === 0) return [];
+        if (account[0].accountType === "influencer" && account[0].influencerId) {
+          const owned = await db.select({ id: influencers.id }).from(influencers)
+            .where(and(eq(influencers.id, account[0].influencerId), eq(influencers.userId, ctx.user.id))).limit(1);
+          if (owned.length === 0) return [];
+        }
 
         const publications = await db
           .select()
@@ -246,10 +274,18 @@ export const instagramAccountsRouter = router({
         postsCount: z.number().optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database not available");
+
+        const account = await db.select().from(instagramAccounts).where(eq(instagramAccounts.id, input.accountId)).limit(1);
+        if (!account || account.length === 0) throw new Error("Conta não encontrada");
+        if (account[0].accountType === "influencer" && account[0].influencerId) {
+          const owned = await db.select({ id: influencers.id }).from(influencers)
+            .where(and(eq(influencers.id, account[0].influencerId), eq(influencers.userId, ctx.user.id))).limit(1);
+          if (owned.length === 0) throw new Error("Acesso negado");
+        }
 
         await db
           .update(instagramAccounts)

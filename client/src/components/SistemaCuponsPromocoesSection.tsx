@@ -1,29 +1,52 @@
+import { useState } from "react";
+import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Ticket, Plus, Copy, TrendingUp, Users, DollarSign } from "lucide-react";
-import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Ticket, Plus, Copy, Trash2, ToggleLeft, ToggleRight } from "lucide-react";
+
+const TIPO_LABELS: Record<string, string> = {
+  percentual: "Desconto %",
+  valor_fixo: "Valor Fixo",
+  frete_gratis: "Frete Grátis",
+};
 
 export default function SistemaCuponsPromocoesSection() {
-  const [cupons] = useState([
-    { id: 1, codigo: "INVERNO20", desconto: "20%", tipo: "Desconto", persona: "Carol", campanha: "Renda Extra", usos: 342, conversao: "18,5%", receita: 12400 },
-    { id: 2, codigo: "LOJA40", desconto: "R$ 40", tipo: "Valor Fixo", persona: "Renata", campanha: "Lojistas", usos: 156, conversao: "22,3%", receita: 8900 },
-    { id: 3, codigo: "FAMILIA15", desconto: "15%", tipo: "Desconto", persona: "Vanessa", campanha: "Compra Coletiva", usos: 89, conversao: "25,1%", receita: 5600 },
-    { id: 4, codigo: "PRIMEIRACOMPRA25", desconto: "25%", tipo: "Desconto", persona: "Luiza", campanha: "Trendsetter", usos: 234, conversao: "19,8%", receita: 14200 },
-    { id: 5, codigo: "FRETE10", desconto: "Frete Grátis", tipo: "Frete", persona: "Todos", campanha: "Geral", usos: 567, conversao: "12,3%", receita: 8900 },
-    { id: 6, codigo: "REABASTECIMENTO30", desconto: "30%", tipo: "Desconto", persona: "Renata", campanha: "Lojistas", usos: 78, conversao: "31,2%", receita: 7200 }
-  ]);
-
-  const [novosCupons] = useState([
-    { titulo: "Gerar Cupom Automático", descricao: "Crie cupons únicos por persona/campanha", icone: "🎟️" },
-    { titulo: "Cupom por Referência", descricao: "Cliente refere amigo e recebe desconto", icone: "👥" },
-    { titulo: "Cupom Progressivo", descricao: "Desconto aumenta com quantidade", icone: "📈" },
-    { titulo: "Cupom Sazonal", descricao: "Desconto automático em datas especiais", icone: "🎄" },
-    { titulo: "Cupom de Reabastecimento", descricao: "Desconto para clientes que recompram", icone: "🔄" },
-    { titulo: "Cupom VIP", descricao: "Desconto exclusivo para top clientes", icone: "👑" }
-  ]);
-
+  const { data: cupons = [], refetch } = trpc.cupons.listar.useQuery();
+  const [showForm, setShowForm] = useState(false);
   const [copiado, setCopiado] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    codigo: "",
+    desconto: "",
+    tipo: "percentual" as "percentual" | "valor_fixo" | "frete_gratis",
+    persona: "",
+    campanha: "",
+    maxUsos: "",
+    dataExpiracao: "",
+  });
+
+  const criar = trpc.cupons.criar.useMutation({
+    onSuccess: () => {
+      toast.success("Cupom criado!");
+      setShowForm(false);
+      setForm({ codigo: "", desconto: "", tipo: "percentual", persona: "", campanha: "", maxUsos: "", dataExpiracao: "" });
+      refetch();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const deletar = trpc.cupons.deletar.useMutation({
+    onSuccess: () => { toast.success("Cupom removido"); refetch(); },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const atualizar = trpc.cupons.atualizar.useMutation({
+    onSuccess: () => refetch(),
+    onError: (e) => toast.error(e.message),
+  });
 
   const copiarCodigo = (codigo: string) => {
     navigator.clipboard.writeText(codigo);
@@ -31,190 +54,230 @@ export default function SistemaCuponsPromocoesSection() {
     setTimeout(() => setCopiado(null), 2000);
   };
 
+  const totalUsos = (cupons as any[]).reduce((s, c) => s + (c.usos ?? 0), 0);
+  const ativos = (cupons as any[]).filter(c => c.ativo).length;
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-slate-900 mb-2">Sistema de Cupons e Promoções</h2>
-        <p className="text-slate-600">
-          Gere cupons automáticos para cada persona/campanha e rastreie qual cupom gera mais conversões.
+        <p className="text-slate-600 text-sm">
+          Crie e gerencie cupons por persona e campanha. Rastreie usos e otimize o que converte mais.
         </p>
       </div>
 
-      {/* Cupons Ativos */}
+      {/* KPIs */}
+      <div className="grid grid-cols-3 gap-4">
+        <Card><CardContent className="pt-4">
+          <p className="text-xs text-slate-500 mb-1">Total de Cupons</p>
+          <p className="text-2xl font-bold text-purple-600">{(cupons as any[]).length}</p>
+        </CardContent></Card>
+        <Card><CardContent className="pt-4">
+          <p className="text-xs text-slate-500 mb-1">Cupons Ativos</p>
+          <p className="text-2xl font-bold text-green-600">{ativos}</p>
+        </CardContent></Card>
+        <Card><CardContent className="pt-4">
+          <p className="text-xs text-slate-500 mb-1">Total de Usos</p>
+          <p className="text-2xl font-bold text-amber-600">{totalUsos.toLocaleString("pt-BR")}</p>
+        </CardContent></Card>
+      </div>
+
+      {/* Cupons existentes */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Ticket className="w-5 h-5 text-purple-600" />
-            Cupons Ativos
-          </CardTitle>
-          <CardDescription>Cupons em uso e sua performance</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {cupons.map((cupom) => (
-            <div key={cupom.id} className="border-2 border-slate-200 rounded-lg p-4 hover:border-purple-300 hover:bg-purple-50 transition">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <code className="bg-slate-900 text-white px-3 py-1 rounded text-sm font-bold">{cupom.codigo}</code>
-                    <Badge className="bg-green-600">{cupom.desconto}</Badge>
-                    <Badge variant="outline" className="text-xs">{cupom.tipo}</Badge>
-                  </div>
-                  <p className="text-xs text-slate-600">👤 {cupom.persona} • 📢 {cupom.campanha}</p>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => copiarCodigo(cupom.codigo)}
-                  className={copiado === cupom.codigo ? "bg-green-100 border-green-500" : ""}
-                >
-                  {copiado === cupom.codigo ? "✅ Copiado" : <Copy className="w-4 h-4" />}
-                </Button>
-              </div>
-
-              <div className="grid grid-cols-4 gap-2 text-xs">
-                <div className="p-2 bg-blue-50 rounded border border-blue-200">
-                  <p className="text-slate-600">Usos</p>
-                  <p className="font-bold text-blue-600">{cupom.usos}</p>
-                </div>
-                <div className="p-2 bg-green-50 rounded border border-green-200">
-                  <p className="text-slate-600">Taxa Conversão</p>
-                  <p className="font-bold text-green-600">{cupom.conversao}</p>
-                </div>
-                <div className="p-2 bg-orange-50 rounded border border-orange-200">
-                  <p className="text-slate-600">Receita Gerada</p>
-                  <p className="font-bold text-orange-600">R$ {cupom.receita.toLocaleString()}</p>
-                </div>
-                <div className="p-2 bg-purple-50 rounded border border-purple-200">
-                  <p className="text-slate-600">ROI</p>
-                  <p className="font-bold text-purple-600">{((cupom.receita / cupom.usos) * 100).toFixed(0)}%</p>
-                </div>
-              </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Ticket className="w-5 h-5 text-purple-600" />
+                Cupons Cadastrados
+              </CardTitle>
+              <CardDescription>Clique no código para copiar</CardDescription>
             </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      {/* Tipos de Cupons Disponíveis */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Plus className="w-5 h-5 text-green-600" />
-            Gerar Novo Cupom
-          </CardTitle>
-          <CardDescription>Tipos de cupons que você pode criar</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-3 gap-3">
-            {novosCupons.map((cupom, idx) => (
-              <div key={idx} className="border-2 border-slate-200 rounded-lg p-4 hover:border-green-300 hover:bg-green-50 transition cursor-pointer">
-                <p className="text-3xl mb-2">{cupom.icone}</p>
-                <p className="font-bold text-slate-900 mb-1">{cupom.titulo}</p>
-                <p className="text-xs text-slate-600 mb-3">{cupom.descricao}</p>
-                <Button size="sm" className="w-full bg-green-600 hover:bg-green-700">Criar</Button>
-              </div>
-            ))}
+            <Button onClick={() => setShowForm(!showForm)} className="gap-2">
+              <Plus className="w-4 h-4" />
+              Novo Cupom
+            </Button>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Análise de Performance */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Análise de Performance por Persona</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          {[
-            { persona: "Carol (Renda Extra)", cupom: "INVERNO20", usos: 342, conversao: "18,5%", receita: "R$ 12.400", trending: "↑ 5.2%" },
-            { persona: "Renata (Lojistas)", cupom: "LOJA40", usos: 156, conversao: "22,3%", receita: "R$ 8.900", trending: "↑ 8.1%" },
-            { persona: "Vanessa (Coletiva)", cupom: "FAMILIA15", usos: 89, conversao: "25,1%", receita: "R$ 5.600", trending: "↑ 12,3%" },
-            { persona: "Luiza (Trendsetter)", cupom: "PRIMEIRACOMPRA25", usos: 234, conversao: "19,8%", receita: "R$ 14.200", trending: "↑ 3.7%" }
-          ].map((item, idx) => (
-            <div key={idx} className="border border-slate-200 rounded-lg p-3 hover:border-blue-300 hover:bg-blue-50 transition">
-              <div className="flex items-center justify-between mb-2">
+        <CardContent className="space-y-4">
+          {/* Formulário */}
+          {showForm && (
+            <Card className="border-2 border-amber-300 bg-amber-50 p-4 space-y-4">
+              <h3 className="font-semibold text-slate-900">Novo Cupom</h3>
+              <div className="grid md:grid-cols-2 gap-3">
                 <div>
-                  <p className="font-bold text-slate-900">{item.persona}</p>
-                  <p className="text-xs text-slate-600">Cupom: <code className="bg-slate-100 px-2 py-1 rounded">{item.cupom}</code></p>
+                  <Label className="text-xs">Código *</Label>
+                  <Input
+                    value={form.codigo}
+                    onChange={e => setForm({ ...form, codigo: e.target.value.toUpperCase() })}
+                    placeholder="Ex: INVERNO20"
+                    className="mt-1 text-sm font-mono"
+                  />
                 </div>
-                <Badge className="bg-green-600">{item.trending}</Badge>
+                <div>
+                  <Label className="text-xs">Tipo *</Label>
+                  <select
+                    value={form.tipo}
+                    onChange={e => setForm({ ...form, tipo: e.target.value as any })}
+                    className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-md text-sm"
+                  >
+                    <option value="percentual">Desconto %</option>
+                    <option value="valor_fixo">Valor Fixo (R$)</option>
+                    <option value="frete_gratis">Frete Grátis</option>
+                  </select>
+                </div>
+                <div>
+                  <Label className="text-xs">Desconto *</Label>
+                  <Input
+                    value={form.desconto}
+                    onChange={e => setForm({ ...form, desconto: e.target.value })}
+                    placeholder={form.tipo === "percentual" ? "20%" : form.tipo === "valor_fixo" ? "R$ 40" : "Frete Grátis"}
+                    className="mt-1 text-sm"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Persona</Label>
+                  <Input
+                    value={form.persona}
+                    onChange={e => setForm({ ...form, persona: e.target.value })}
+                    placeholder="Ex: Carol, Renata, Todos"
+                    className="mt-1 text-sm"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Campanha</Label>
+                  <Input
+                    value={form.campanha}
+                    onChange={e => setForm({ ...form, campanha: e.target.value })}
+                    placeholder="Ex: Renda Extra, Lojistas"
+                    className="mt-1 text-sm"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Máx. Usos (opcional)</Label>
+                  <Input
+                    type="number"
+                    value={form.maxUsos}
+                    onChange={e => setForm({ ...form, maxUsos: e.target.value })}
+                    placeholder="Ilimitado"
+                    className="mt-1 text-sm"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Expiração (opcional)</Label>
+                  <Input
+                    type="date"
+                    value={form.dataExpiracao}
+                    onChange={e => setForm({ ...form, dataExpiracao: e.target.value })}
+                    className="mt-1 text-sm"
+                  />
+                </div>
               </div>
-              <div className="grid grid-cols-4 gap-2 text-xs">
-                <div><p className="text-slate-600">Usos</p><p className="font-bold">{item.usos}</p></div>
-                <div><p className="text-slate-600">Conversão</p><p className="font-bold text-green-600">{item.conversao}</p></div>
-                <div><p className="text-slate-600">Receita</p><p className="font-bold text-orange-600">{item.receita}</p></div>
-                <div><p className="text-slate-600">ROI</p><p className="font-bold text-purple-600">{((parseInt(item.receita.replace(/\D/g, '')) / item.usos) * 100).toFixed(0)}%</p></div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => criar.mutate({
+                    codigo: form.codigo,
+                    desconto: form.desconto,
+                    tipo: form.tipo,
+                    persona: form.persona || undefined,
+                    campanha: form.campanha || undefined,
+                    maxUsos: form.maxUsos ? parseInt(form.maxUsos) : undefined,
+                    dataExpiracao: form.dataExpiracao || undefined,
+                  })}
+                  disabled={!form.codigo.trim() || !form.desconto.trim() || criar.isPending}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {criar.isPending ? "Salvando..." : "Salvar Cupom"}
+                </Button>
+                <Button variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>
               </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+            </Card>
+          )}
 
-      {/* Estatísticas Gerais */}
-      <Card className="border-l-4 border-l-orange-500 bg-gradient-to-r from-orange-50 to-yellow-50">
-        <CardHeader>
-          <CardTitle className="text-lg">Estatísticas Gerais de Cupons</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-4 gap-3">
-            {[
-              { titulo: "Total de Cupons", valor: "6", icon: "🎟️" },
-              { titulo: "Total de Usos", valor: "1.466", icon: "📊" },
-              { titulo: "Receita Gerada", valor: "R$ 57.200", icon: "💰" },
-              { titulo: "Taxa Conversão Média", valor: "19,9%", icon: "📈" }
-            ].map((item, idx) => (
-              <div key={idx} className="text-center p-4 bg-white rounded-lg border-2 border-slate-200">
-                <p className="text-3xl mb-2">{item.icon}</p>
-                <p className="text-xs font-semibold text-slate-600 uppercase mb-1">{item.titulo}</p>
-                <p className="text-lg font-bold text-slate-900">{item.valor}</p>
+          {/* Lista */}
+          {(cupons as any[]).length === 0 && !showForm ? (
+            <div className="text-center py-8 text-slate-500">
+              <Ticket className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+              <p>Nenhum cupom criado ainda.</p>
+              <p className="text-sm">Crie seu primeiro cupom para rastrear conversões por campanha.</p>
+            </div>
+          ) : (
+            (cupons as any[]).map((cupom: any) => (
+              <div key={cupom.id} className="border-2 border-slate-200 rounded-lg p-4 hover:border-purple-300 transition">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <button
+                        onClick={() => copiarCodigo(cupom.codigo)}
+                        className="bg-slate-900 text-white px-3 py-1 rounded text-sm font-bold font-mono hover:bg-slate-700 transition flex items-center gap-1"
+                      >
+                        {cupom.codigo}
+                        {copiado === cupom.codigo ? " ✓" : <Copy className="w-3 h-3 ml-1" />}
+                      </button>
+                      <Badge className="bg-amber-600 text-xs">{cupom.desconto}</Badge>
+                      <Badge variant="outline" className="text-xs">{TIPO_LABELS[cupom.tipo] ?? cupom.tipo}</Badge>
+                      <Badge className={cupom.ativo ? "bg-green-100 text-green-800 text-xs" : "bg-slate-100 text-slate-600 text-xs"}>
+                        {cupom.ativo ? "Ativo" : "Inativo"}
+                      </Badge>
+                    </div>
+                    {(cupom.persona || cupom.campanha) && (
+                      <p className="text-xs text-slate-500">
+                        {cupom.persona && `👤 ${cupom.persona}`}
+                        {cupom.persona && cupom.campanha && " · "}
+                        {cupom.campanha && `📢 ${cupom.campanha}`}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex gap-1 ml-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => atualizar.mutate({ id: cupom.id, ativo: !cupom.ativo })}
+                      className="text-xs h-7 px-2"
+                      title={cupom.ativo ? "Pausar" : "Ativar"}
+                    >
+                      {cupom.ativo ? <ToggleRight className="w-4 h-4 text-green-600" /> : <ToggleLeft className="w-4 h-4" />}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => deletar.mutate({ id: cupom.id })}
+                      className="text-red-600 hover:bg-red-50 h-7 px-2"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-xs">
+                  <div className="p-2 bg-blue-50 rounded">
+                    <p className="text-slate-500">Usos</p>
+                    <p className="font-bold text-blue-600">{cupom.usos ?? 0}</p>
+                  </div>
+                  <div className="p-2 bg-slate-50 rounded">
+                    <p className="text-slate-500">Máx. Usos</p>
+                    <p className="font-bold">{cupom.maxUsos ? cupom.maxUsos.toLocaleString("pt-BR") : "∞"}</p>
+                  </div>
+                  <div className="p-2 bg-orange-50 rounded">
+                    <p className="text-slate-500">Expira</p>
+                    <p className="font-bold text-orange-600">{cupom.dataExpiracao ?? "—"}</p>
+                  </div>
+                </div>
               </div>
-            ))}
-          </div>
+            ))
+          )}
         </CardContent>
       </Card>
 
       {/* Dicas */}
-      <Card className="border-blue-200 bg-blue-50">
-        <CardHeader>
-          <CardTitle className="text-lg">Como Usar</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm">
-          {[
-            "✅ Crie cupom único para cada persona",
-            "✅ Teste diferentes tipos (%, valor fixo, frete)",
-            "✅ Rastreie qual cupom converte melhor",
-            "✅ Aumente desconto em cupons com baixa conversão",
-            "✅ Reduza desconto em cupons com alta conversão",
-            "✅ Use cupons de reabastecimento para clientes recorrentes",
-            "✅ Crie cupons sazonais para datas especiais",
-            "✅ Exporte dados de cupons para análise"
-          ].map((dica, idx) => (
-            <p key={idx} className="text-slate-700">{dica}</p>
-          ))}
-        </CardContent>
-      </Card>
-
-      {/* Benefícios */}
-      <Card className="border-green-200 bg-green-50">
-        <CardHeader>
-          <CardTitle className="text-lg">Benefícios Esperados</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {[
-            { titulo: "Aumento de Conversão", descricao: "Cupons aumentam conversão em 15-30%" },
-            { titulo: "Rastreamento Preciso", descricao: "Veja qual cupom gera mais vendas" },
-            { titulo: "Otimização Contínua", descricao: "Ajuste descontos baseado em performance" },
-            { titulo: "Fidelização", descricao: "Cupons de reabastecimento retêm clientes" },
-            { titulo: "Redução de Estoque", descricao: "Promova produtos com estoque alto" },
-            { titulo: "Análise de ROI", descricao: "Veja exato retorno de cada cupom" }
-          ].map((beneficio, idx) => (
-            <div key={idx} className="flex gap-3 p-3 border border-green-200 rounded bg-white">
-              <span className="text-lg">✨</span>
-              <div>
-                <p className="font-semibold text-slate-900">{beneficio.titulo}</p>
-                <p className="text-xs text-slate-600">{beneficio.descricao}</p>
-              </div>
-            </div>
-          ))}
-        </CardContent>
+      <Card className="bg-green-50 border-green-200 p-4">
+        <h4 className="font-semibold text-sm mb-3">✅ Boas Práticas de Cupons</h4>
+        <ul className="text-sm space-y-2 text-slate-700">
+          <li>• <strong>Crie 1 cupom por persona</strong> — assim você sabe qual canal converte mais</li>
+          <li>• <strong>Teste tipos diferentes</strong> — % vs valor fixo vs frete grátis</li>
+          <li>• <strong>Defina expiração</strong> — cria urgência e controla promoções sazonais</li>
+          <li>• <strong>Limite de usos</strong> — garante exclusividade para cupons especiais</li>
+          <li>• <strong>Cupons de reabastecimento</strong> — reativam clientes inativos</li>
+        </ul>
       </Card>
     </div>
   );

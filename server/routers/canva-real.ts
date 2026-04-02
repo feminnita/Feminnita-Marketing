@@ -2,7 +2,7 @@ import { publicProcedure, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
 import { oauthCredentials } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 /**
  * Canva API Integration Router - REAL IMPLEMENTATION
@@ -85,7 +85,7 @@ export const canvaRealRouter = {
       width: z.number().optional(),
       height: z.number().optional(),
     }))
-    .mutation(async ({ input }: any) => {
+    .mutation(async ({ input, ctx }: any) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database connection failed");
@@ -94,7 +94,7 @@ export const canvaRealRouter = {
         const credentials = await db
           .select()
           .from(oauthCredentials)
-          .where(eq(oauthCredentials.platform, "canva"));
+          .where(and(eq(oauthCredentials.platform, "canva"), eq(oauthCredentials.userId, ctx.user.id)));
 
         if (!credentials || credentials.length === 0) {
           throw new Error("Credenciais do Canva não configuradas");
@@ -140,7 +140,7 @@ export const canvaRealRouter = {
     .input(z.object({
       designId: z.string(),
     }))
-    .query(async ({ input }: any) => {
+    .query(async ({ input, ctx }: any) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database connection failed");
@@ -149,7 +149,7 @@ export const canvaRealRouter = {
         const credentials = await db
           .select()
           .from(oauthCredentials)
-          .where(eq(oauthCredentials.platform, "canva"));
+          .where(and(eq(oauthCredentials.platform, "canva"), eq(oauthCredentials.userId, ctx.user.id)));
 
         if (!credentials || credentials.length === 0) {
           throw new Error("Credenciais do Canva não configuradas");
@@ -189,7 +189,7 @@ export const canvaRealRouter = {
       designId: z.string(),
       format: z.enum(["PNG", "PDF", "JPG"]).optional(),
     }))
-    .mutation(async ({ input }: any) => {
+    .mutation(async ({ input, ctx }: any) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database connection failed");
@@ -198,7 +198,7 @@ export const canvaRealRouter = {
         const credentials = await db
           .select()
           .from(oauthCredentials)
-          .where(eq(oauthCredentials.platform, "canva"));
+          .where(and(eq(oauthCredentials.platform, "canva"), eq(oauthCredentials.userId, ctx.user.id)));
 
         if (!credentials || credentials.length === 0) {
           throw new Error("Credenciais do Canva não configuradas");
@@ -247,7 +247,7 @@ export const canvaRealRouter = {
       const credentials = await db
         .select()
         .from(oauthCredentials)
-        .where(eq(oauthCredentials.platform, "canva"));
+        .where(and(eq(oauthCredentials.platform, "canva"), eq(oauthCredentials.userId, ctx.user.id)));
 
       if (!credentials || credentials.length === 0) {
         throw new Error("Credenciais do Canva não configuradas");
@@ -295,7 +295,7 @@ export const canvaRealRouter = {
           accessToken: null,
           refreshToken: null,
         })
-        .where(eq(oauthCredentials.platform, "canva"));
+        .where(and(eq(oauthCredentials.platform, "canva"), eq(oauthCredentials.userId, ctx.user.id)));
 
       return {
         success: true,

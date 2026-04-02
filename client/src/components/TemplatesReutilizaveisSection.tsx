@@ -1,208 +1,285 @@
+import { useState } from "react";
+import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Copy, Save, Trash2, Plus, Star, Clock, Users } from "lucide-react";
-import { useState } from "react";
+
+const TIPOS = [
+  { id: "story", nome: "Story", icon: "📱" },
+  { id: "reels", nome: "Reels", icon: "🎬" },
+  { id: "tiktok", nome: "TikTok", icon: "🎵" },
+  { id: "ads", nome: "Ads", icon: "📢" },
+  { id: "email", nome: "Email", icon: "📧" },
+  { id: "whatsapp", nome: "WhatsApp", icon: "💬" },
+] as const;
+
+const TIPO_ICONS: Record<string, string> = Object.fromEntries(TIPOS.map(t => [t.id, t.icon]));
 
 export default function TemplatesReutilizaveisSection() {
-  const [templates, setTemplates] = useState([
-    {
-      id: 1,
-      nome: "Story - Renda Extra",
-      tipo: "story",
-      descricao: "Template para captar pessoas buscando renda extra",
-      conteudo: "Como ganhei R$ 500 em 1 semana revendendo pijamas...",
-      uso: 12,
-      favorito: true,
-      criado: "2026-01-31"
-    },
-    {
-      id: 2,
-      nome: "Reels - Bastidores",
-      tipo: "reels",
-      descricao: "Template de bastidores da produção",
-      conteudo: "Mostrando o caos criativo por trás das fotos...",
-      uso: 8,
-      favorito: true,
-      criado: "2026-01-30"
-    },
-    {
-      id: 3,
-      nome: "Ads - Compra Familiar",
-      tipo: "ads",
-      descricao: "Template para captar famílias",
-      conteudo: "Pijama para toda a família por menos que uma blusa...",
-      uso: 5,
-      favorito: false,
-      criado: "2026-01-29"
-    },
-    {
-      id: 4,
-      nome: "Story - Enquete",
-      tipo: "story",
-      descricao: "Template com enquete interativa",
-      conteudo: "Qual cor você prefere? Azul, Rosa ou Verde?",
-      uso: 15,
-      favorito: true,
-      criado: "2026-01-28"
-    },
-    {
-      id: 5,
-      nome: "Reels - Transformação",
-      tipo: "reels",
-      descricao: "Template antes/depois",
-      conteudo: "Mostrando transformação com pijama novo...",
-      uso: 10,
-      favorito: false,
-      criado: "2026-01-27"
-    },
-    {
-      id: 6,
-      nome: "TikTok - ASMR",
-      tipo: "tiktok",
-      descricao: "Template com sons satisfatórios",
-      conteudo: "Sons do tecido premium do pijama...",
-      uso: 7,
-      favorito: false,
-      criado: "2026-01-26"
-    }
-  ]);
-
+  const { data: templates = [], refetch } = trpc.contentTemplates.listar.useQuery();
   const [filtro, setFiltro] = useState("todos");
-  const [copiado, setCopiado] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [copiadoId, setCopiadoId] = useState<number | null>(null);
+  const [form, setForm] = useState({
+    nome: "",
+    tipo: "story" as typeof TIPOS[number]["id"],
+    descricao: "",
+    conteudo: "",
+    tags: "",
+  });
 
-  const templatesFiltrados = filtro === "todos" 
-    ? templates 
-    : filtro === "favoritos"
-    ? templates.filter(t => t.favorito)
-    : templates.filter(t => t.tipo === filtro);
+  const criar = trpc.contentTemplates.criar.useMutation({
+    onSuccess: () => {
+      toast.success("Template salvo!");
+      setShowForm(false);
+      setForm({ nome: "", tipo: "story", descricao: "", conteudo: "", tags: "" });
+      refetch();
+    },
+    onError: (e) => toast.error(e.message),
+  });
 
-  const copiarTemplate = (conteudo: string) => {
-    navigator.clipboard.writeText(conteudo);
-    setCopiado(true);
-    setTimeout(() => setCopiado(false), 2000);
+  const atualizar = trpc.contentTemplates.atualizar.useMutation({
+    onSuccess: () => refetch(),
+    onError: (e) => toast.error(e.message),
+  });
+
+  const incrementarUso = trpc.contentTemplates.incrementarUso.useMutation({
+    onSuccess: () => refetch(),
+  });
+
+  const deletar = trpc.contentTemplates.deletar.useMutation({
+    onSuccess: () => { toast.success("Template removido"); refetch(); },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const copiarTemplate = (template: any) => {
+    navigator.clipboard.writeText(template.conteudo);
+    setCopiadoId(template.id);
+    setTimeout(() => setCopiadoId(null), 2000);
+    incrementarUso.mutate({ id: template.id });
   };
 
-  const toggleFavorito = (id: number) => {
-    setTemplates(templates.map(t => 
-      t.id === id ? { ...t, favorito: !t.favorito } : t
-    ));
-  };
+  const templatesFiltrados = (templates as any[]).filter(t => {
+    if (filtro === "todos") return true;
+    if (filtro === "favoritos") return t.favorito;
+    return t.tipo === filtro;
+  });
 
-  const deletarTemplate = (id: number) => {
-    setTemplates(templates.filter(t => t.id !== id));
-  };
-
-  const tipos = [
-    { id: "story", nome: "Stories", icon: "📱" },
-    { id: "reels", nome: "Reels", icon: "🎬" },
-    { id: "tiktok", nome: "TikTok", icon: "🎵" },
-    { id: "ads", nome: "Ads", icon: "📢" }
-  ];
+  const totalFavoritos = (templates as any[]).filter(t => t.favorito).length;
+  const maxUsos = (templates as any[]).reduce((max, t) => Math.max(max, t.usos ?? 0), 0);
+  const criados7dias = (templates as any[]).filter(t => {
+    const dias = (Date.now() - new Date(t.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+    return dias <= 7;
+  }).length;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-slate-900 mb-2">Sistema de Templates Reutilizáveis</h2>
-        <p className="text-slate-600">
-          Crie, salve e reutilize templates de Stories, Reels, TikTok e Ads. Economize tempo e mantenha consistência.
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">Templates Reutilizáveis</h2>
+        <p className="text-slate-600 text-sm">
+          Salve seus melhores roteiros como templates para reutilizar em campanhas futuras.
         </p>
       </div>
 
-      {/* Filtros */}
-      <Card className="border-l-4 border-l-purple-400 bg-gradient-to-r from-purple-50 to-indigo-50">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Plus className="w-5 h-5 text-purple-600" />
-            Filtrar Templates
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-2 flex-wrap">
-            <Button
-              variant={filtro === "todos" ? "default" : "outline"}
-              onClick={() => setFiltro("todos")}
-            >
-              Todos ({templates.length})
-            </Button>
-            <Button
-              variant={filtro === "favoritos" ? "default" : "outline"}
-              onClick={() => setFiltro("favoritos")}
-            >
-              ⭐ Favoritos ({templates.filter(t => t.favorito).length})
-            </Button>
-            {tipos.map(tipo => (
+      {/* KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: "Total de Templates", valor: (templates as any[]).length, cor: "text-blue-600" },
+          { label: "Favoritos", valor: totalFavoritos, cor: "text-yellow-600" },
+          { label: "Mais Usado (usos)", valor: maxUsos, cor: "text-green-600" },
+          { label: "Criados esta semana", valor: criados7dias, cor: "text-purple-600" },
+        ].map((kpi, i) => (
+          <Card key={i}><CardContent className="pt-4">
+            <p className="text-xs text-slate-500 mb-1">{kpi.label}</p>
+            <p className={`text-2xl font-bold ${kpi.cor}`}>{kpi.valor}</p>
+          </CardContent></Card>
+        ))}
+      </div>
+
+      {/* Filtros + botão novo */}
+      <div className="flex flex-wrap gap-2 items-center justify-between">
+        <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            variant={filtro === "todos" ? "default" : "outline"}
+            onClick={() => setFiltro("todos")}
+          >
+            Todos ({(templates as any[]).length})
+          </Button>
+          <Button
+            size="sm"
+            variant={filtro === "favoritos" ? "default" : "outline"}
+            onClick={() => setFiltro("favoritos")}
+          >
+            ⭐ Favoritos ({totalFavoritos})
+          </Button>
+          {TIPOS.map(tipo => {
+            const count = (templates as any[]).filter(t => t.tipo === tipo.id).length;
+            if (count === 0 && filtro !== tipo.id) return null;
+            return (
               <Button
                 key={tipo.id}
+                size="sm"
                 variant={filtro === tipo.id ? "default" : "outline"}
                 onClick={() => setFiltro(tipo.id)}
               >
-                {tipo.icon} {tipo.nome} ({templates.filter(t => t.tipo === tipo.id).length})
+                {tipo.icon} {tipo.nome} ({count})
               </Button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            );
+          })}
+        </div>
+        <Button onClick={() => setShowForm(!showForm)} className="gap-2">
+          <Plus className="w-4 h-4" />
+          Novo Template
+        </Button>
+      </div>
 
-      {/* Lista de Templates */}
-      <div className="space-y-3">
-        {templatesFiltrados.length > 0 ? (
-          templatesFiltrados.map((template) => (
-            <Card key={template.id} className="hover:border-purple-300 hover:shadow-md transition">
-              <CardContent className="pt-6">
-                <div className="flex items-start justify-between mb-3">
+      {/* Formulário de criação */}
+      {showForm && (
+        <Card className="border-2 border-green-300 bg-green-50 p-4 space-y-4">
+          <h3 className="font-semibold text-slate-900">Novo Template</h3>
+          <div className="grid md:grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs">Nome *</Label>
+              <Input
+                value={form.nome}
+                onChange={e => setForm({ ...form, nome: e.target.value })}
+                placeholder="Ex: Story — Renda Extra"
+                className="mt-1 text-sm"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Tipo *</Label>
+              <select
+                value={form.tipo}
+                onChange={e => setForm({ ...form, tipo: e.target.value as typeof form.tipo })}
+                className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-md text-sm"
+              >
+                {TIPOS.map(t => <option key={t.id} value={t.id}>{t.icon} {t.nome}</option>)}
+              </select>
+            </div>
+            <div className="md:col-span-2">
+              <Label className="text-xs">Descrição</Label>
+              <Input
+                value={form.descricao}
+                onChange={e => setForm({ ...form, descricao: e.target.value })}
+                placeholder="Descreva o propósito deste template"
+                className="mt-1 text-sm"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <Label className="text-xs">Conteúdo *</Label>
+              <Textarea
+                value={form.conteudo}
+                onChange={e => setForm({ ...form, conteudo: e.target.value })}
+                placeholder="Cole o roteiro ou conteúdo aqui..."
+                rows={5}
+                className="mt-1 text-sm font-mono"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <Label className="text-xs">Tags (separadas por vírgula)</Label>
+              <Input
+                value={form.tags}
+                onChange={e => setForm({ ...form, tags: e.target.value })}
+                placeholder="Ex: inverno, renda-extra, carol"
+                className="mt-1 text-sm"
+              />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => criar.mutate(form)}
+              disabled={!form.nome.trim() || !form.conteudo.trim() || criar.isPending}
+              className="bg-green-600 hover:bg-green-700 gap-2"
+            >
+              <Save className="w-4 h-4" />
+              {criar.isPending ? "Salvando..." : "Salvar Template"}
+            </Button>
+            <Button variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>
+          </div>
+        </Card>
+      )}
+
+      {/* Lista */}
+      {templatesFiltrados.length === 0 ? (
+        <Card className="border-dashed">
+          <CardContent className="py-12 text-center">
+            {(templates as any[]).length === 0 ? (
+              <>
+                <p className="text-slate-500 mb-2">Nenhum template criado ainda.</p>
+                <p className="text-sm text-slate-400">Crie seu primeiro template para reutilizar conteúdo.</p>
+              </>
+            ) : (
+              <p className="text-slate-500">Nenhum template nesta categoria.</p>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {templatesFiltrados.map((template: any) => (
+            <Card key={template.id} className="hover:border-purple-300 transition">
+              <CardContent className="pt-4">
+                <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <h4 className="font-bold text-slate-900">{template.nome}</h4>
                       <Badge variant="secondary" className="text-xs">
-                        {tipos.find(t => t.id === template.tipo)?.icon} {template.tipo}
+                        {TIPO_ICONS[template.tipo]} {template.tipo}
                       </Badge>
-                      {template.favorito && (
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                      )}
+                      {template.favorito && <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />}
                     </div>
-                    <p className="text-sm text-slate-700 mb-2">{template.descricao}</p>
-                    <p className="text-xs text-slate-600 italic mb-3 p-2 bg-slate-50 rounded border border-slate-200">
+                    {template.descricao && (
+                      <p className="text-sm text-slate-600 mb-2">{template.descricao}</p>
+                    )}
+                    <p className="text-xs italic text-slate-600 p-2 bg-slate-50 rounded border border-slate-200 mb-3 line-clamp-2">
                       "{template.conteudo}"
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <div className="flex gap-3 text-xs text-slate-600">
+                  <div className="flex gap-3 text-xs text-slate-500">
                     <span className="flex items-center gap-1">
                       <Clock className="w-3 h-3" />
-                      {template.criado}
+                      {new Date(template.createdAt).toLocaleDateString("pt-BR")}
                     </span>
                     <span className="flex items-center gap-1">
                       <Users className="w-3 h-3" />
-                      {template.uso} usos
+                      {template.usos ?? 0} usos
                     </span>
+                    {template.tags && (
+                      <span className="text-amber-600">{template.tags}</span>
+                    )}
                   </div>
-
                   <div className="flex gap-2">
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => copiarTemplate(template.conteudo)}
-                      className="gap-1"
+                      onClick={() => copiarTemplate(template)}
+                      className="gap-1 text-xs"
                     >
                       <Copy className="w-3 h-3" />
-                      {copiado ? "Copiado!" : "Copiar"}
+                      {copiadoId === template.id ? "Copiado!" : "Copiar"}
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => toggleFavorito(template.id)}
+                      onClick={() => atualizar.mutate({ id: template.id, favorito: !template.favorito })}
+                      title={template.favorito ? "Remover dos favoritos" : "Adicionar aos favoritos"}
                     >
                       {template.favorito ? "⭐" : "☆"}
                     </Button>
                     <Button
                       size="sm"
-                      variant="outline"
-                      onClick={() => deletarTemplate(template.id)}
-                      className="text-red-600 hover:text-red-700"
+                      variant="ghost"
+                      onClick={() => deletar.mutate({ id: template.id })}
+                      className="text-red-600 hover:bg-red-50"
                     >
                       <Trash2 className="w-3 h-3" />
                     </Button>
@@ -210,130 +287,20 @@ export default function TemplatesReutilizaveisSection() {
                 </div>
               </CardContent>
             </Card>
-          ))
-        ) : (
-          <Card className="border-dashed">
-            <CardContent className="pt-12 pb-12 text-center">
-              <p className="text-slate-600 mb-4">Nenhum template encontrado nesta categoria</p>
-              <Button onClick={() => setFiltro("todos")}>Ver todos os templates</Button>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {/* Criar Novo Template */}
-      <Card className="border-l-4 border-l-green-400 bg-gradient-to-r from-green-50 to-emerald-50">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Plus className="w-5 h-5 text-green-600" />
-            Criar Novo Template
-          </CardTitle>
-          <CardDescription>Salve seus melhores roteiros como templates para reutilizar depois</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-semibold text-slate-700 mb-2 block">Nome do Template</label>
-              <input 
-                type="text" 
-                placeholder="Ex: Story - Renda Extra"
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-semibold text-slate-700 mb-2 block">Tipo</label>
-              <select className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
-                <option>Story</option>
-                <option>Reels</option>
-                <option>TikTok</option>
-                <option>Ads</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm font-semibold text-slate-700 mb-2 block">Descrição</label>
-            <input 
-              type="text" 
-              placeholder="Descreva o propósito deste template"
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-semibold text-slate-700 mb-2 block">Conteúdo</label>
-            <textarea 
-              placeholder="Cole o roteiro ou conteúdo aqui..."
-              rows={5}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 font-mono text-sm"
-            />
-          </div>
-
-          <Button className="w-full bg-green-600 hover:bg-green-700 gap-2">
-            <Save className="w-4 h-4" />
-            Salvar Template
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Estatísticas */}
-      <div className="grid md:grid-cols-4 gap-4">
-        {[
-          { titulo: "Total de Templates", valor: templates.length, cor: "blue" },
-          { titulo: "Favoritos", valor: templates.filter(t => t.favorito).length, cor: "yellow" },
-          { titulo: "Mais Usado", valor: Math.max(...templates.map(t => t.uso)), cor: "green" },
-          { titulo: "Criado Esta Semana", valor: templates.filter(t => {
-            const dias = Math.floor((new Date().getTime() - new Date(t.criado).getTime()) / (1000 * 60 * 60 * 24));
-            return dias <= 7;
-          }).length, cor: "purple" }
-        ].map((stat, idx) => (
-          <Card key={idx} className="border-2">
-            <CardContent className="pt-6">
-              <p className="text-xs font-semibold text-slate-500 uppercase mb-2">{stat.titulo}</p>
-              <p className="text-3xl font-bold text-slate-900">{stat.valor}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Dicas de Uso */}
-      <Card className="border-blue-200 bg-blue-50">
-        <CardHeader>
-          <CardTitle className="text-lg">Dicas para Usar Templates</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm">
-          {[
-            { titulo: "Salve Seus Melhores", descricao: "Quando um roteiro funciona bem, salve como template para reutilizar." },
-            { titulo: "Customize Conforme Necessário", descricao: "Use templates como base, mas sempre customize para cada campanha." },
-            { titulo: "Organize por Tipo", descricao: "Crie templates separados para Stories, Reels, TikTok e Ads." },
-            { titulo: "Marque Favoritos", descricao: "Marque seus templates mais usados como favoritos para acesso rápido." },
-            { titulo: "Acompanhe Uso", descricao: "Veja quantas vezes cada template foi usado para identificar os mais eficazes." },
-            { titulo: "Atualize Regularmente", descricao: "Revise e atualize templates conforme aprende o que funciona melhor." }
-          ].map((dica, idx) => (
-            <div key={idx} className="flex gap-3 pb-3 border-b border-blue-200 last:border-0">
-              <span className="text-blue-600 font-bold">{idx + 1}.</span>
-              <div>
-                <p className="font-semibold text-slate-900">{dica.titulo}</p>
-                <p className="text-xs text-slate-600">{dica.descricao}</p>
-              </div>
-            </div>
           ))}
-        </CardContent>
-      </Card>
+        </div>
+      )}
 
-      {/* Próximas Ações */}
-      <Card className="border-green-200 bg-green-50">
-        <CardHeader>
-          <CardTitle className="text-lg">Próximas Ações</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm">
-          <p>✅ Explore os templates existentes</p>
-          <p>⭐ Marque seus favoritos para acesso rápido</p>
-          <p>📋 Copie templates para usar em suas campanhas</p>
-          <p>➕ Crie novos templates a partir de roteiros bem-sucedidos</p>
-          <p>📊 Acompanhe qual template é mais eficaz</p>
-          <p>🔄 Reutilize e customize conforme necessário</p>
-        </CardContent>
+      {/* Dicas */}
+      <Card className="bg-blue-50 border-blue-200 p-4">
+        <h4 className="font-semibold text-sm mb-3">💡 Boas Práticas</h4>
+        <ul className="text-sm space-y-2 text-slate-700">
+          <li>• <strong>Salve o que funciona</strong> — quando um roteiro gera engajamento, transforme em template</li>
+          <li>• <strong>Use tags</strong> — facilita encontrar templates por campanha ou persona</li>
+          <li>• <strong>Copiar registra uso</strong> — você pode ver quais templates são mais usados</li>
+          <li>• <strong>Marque favoritos</strong> — para acesso rápido aos melhores</li>
+          <li>• <strong>Customize após copiar</strong> — templates são pontos de partida, não finais</li>
+        </ul>
       </Card>
     </div>
   );

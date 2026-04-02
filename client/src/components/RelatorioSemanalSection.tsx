@@ -1,117 +1,29 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Mail, BarChart3, TrendingUp, AlertCircle, CheckCircle, Calendar, Send, Download } from "lucide-react";
-
-const RELATORIOS = [
-  {
-    id: 1,
-    semana: "31 Jan - 06 Fev",
-    data: "2026-02-06",
-    status: "Enviado",
-    vendas: 1245,
-    roi: "285%",
-    engajamento: "11.2%",
-    conversoes: 892,
-    receita: "R$ 45.678",
-    destaque: "Semana recorde de vendas!"
-  },
-  {
-    id: 2,
-    semana: "24 - 30 Jan",
-    data: "2026-01-30",
-    status: "Enviado",
-    vendas: 987,
-    roi: "245%",
-    engajamento: "9.8%",
-    conversoes: 712,
-    receita: "R$ 36.450",
-    destaque: "Reels tiveram melhor performance"
-  },
-  {
-    id: 3,
-    semana: "17 - 23 Jan",
-    data: "2026-01-23",
-    status: "Enviado",
-    vendas: 756,
-    roi: "198%",
-    engajamento: "8.5%",
-    conversoes: 534,
-    receita: "R$ 27.890",
-    destaque: "Início promissor da estratégia"
-  },
-];
-
-const METRICAS_DETALHADAS = [
-  {
-    categoria: "Visualizações",
-    valor: "125.4K",
-    variacao: "+18.5%",
-    meta: "100K",
-    status: "Acima"
-  },
-  {
-    categoria: "Cliques",
-    valor: "8.9K",
-    variacao: "+22.3%",
-    meta: "7K",
-    status: "Acima"
-  },
-  {
-    categoria: "Conversões",
-    valor: "892",
-    variacao: "+28.9%",
-    meta: "700",
-    status: "Acima"
-  },
-  {
-    categoria: "Engajamento",
-    valor: "11.2%",
-    variacao: "+1.4pp",
-    meta: "10%",
-    status: "Acima"
-  },
-  {
-    categoria: "CPV",
-    valor: "R$ 0.0033",
-    variacao: "-12.5%",
-    meta: "R$ 0.005",
-    status: "Abaixo"
-  },
-  {
-    categoria: "CPS",
-    valor: "R$ 0.83",
-    variacao: "-15.2%",
-    meta: "R$ 1.00",
-    status: "Abaixo"
-  },
-];
-
-const RECOMENDACOES = [
-  {
-    tipo: "Oportunidade",
-    titulo: "Aumentar investimento em Reels",
-    descricao: "Reels tiveram 14.2% engagement. Considere aumentar budget em 20%.",
-    impacto: "Potencial +R$ 8K em receita"
-  },
-  {
-    tipo: "Alerta",
-    titulo: "TikTok com performance abaixo",
-    descricao: "Taxa de conversão caiu 8% comparado à semana anterior.",
-    impacto: "Investigar mudanças no algoritmo"
-  },
-  {
-    tipo: "Sucesso",
-    titulo: "Persona Luiza em alta",
-    descricao: "Luiza gerou 245 conversões, 28% acima da meta.",
-    impacto: "Replicar estratégia para outras personas"
-  },
-];
+import { Mail, AlertCircle, CheckCircle, Send } from "lucide-react";
+import { trpc } from "@/lib/trpc";
 
 export default function RelatorioSemanalSection() {
-  const [selectedRelatorio, setSelectedRelatorio] = useState<number | null>(null);
+  const { data: campaigns = [] } = trpc.campaigns.listar.useQuery(undefined, {
+    refetchInterval: 60_000,
+  });
+  const { data: alertsData } = trpc.smartAlerts.listActiveAlerts.useQuery({}, {
+    refetchInterval: 60_000,
+  });
+
+  const ativas = (campaigns as any[]).filter((c) => c.status === "ativa");
+  const totalImpressoes = ativas.reduce((s: number, c: any) => s + (c.impressoes ?? 0), 0);
+  const totalCliques = ativas.reduce((s: number, c: any) => s + (c.cliques ?? 0), 0);
+  const totalConversoes = ativas.reduce((s: number, c: any) => s + (c.conversoes ?? 0), 0);
+  const totalOrcamento = ativas.reduce((s: number, c: any) => s + parseFloat(c.orcamento ?? "0"), 0);
+  const avgRoi = ativas.length > 0
+    ? ativas.reduce((s: number, c: any) => s + parseFloat(c.roi ?? "0"), 0) / ativas.length
+    : 0;
+  const ctr = totalImpressoes > 0 ? ((totalCliques / totalImpressoes) * 100).toFixed(1) : "0.0";
+
+  const alertas: any[] = alertsData?.alerts ?? [];
+
   const [emailConfig, setEmailConfig] = useState({
     email: "seu@email.com",
     dia: "Segunda",
@@ -192,135 +104,65 @@ export default function RelatorioSemanalSection() {
             </Card>
           </div>
 
-          {/* Histórico de Relatórios */}
+          {/* Métricas Atuais das Campanhas */}
           <div>
-            <h3 className="font-semibold text-sm mb-3">📋 Histórico de Relatórios</h3>
-            <div className="space-y-3">
-              {RELATORIOS.map(relatorio => (
-                <Card
-                  key={relatorio.id}
-                  className="p-4 hover:shadow-md transition-shadow cursor-pointer"
-                  onClick={() => setSelectedRelatorio(selectedRelatorio === relatorio.id ? null : relatorio.id)}
-                >
-                  <div className="flex items-start justify-between gap-4 mb-2">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-semibold text-sm">{relatorio.semana}</h4>
-                        <Badge variant="outline" className="text-xs">
-                          {relatorio.status}
-                        </Badge>
-                        <span className="text-xs text-slate-600">{relatorio.data}</span>
-                      </div>
-                      <p className="text-xs text-slate-600 mb-2">{relatorio.destaque}</p>
-
-                      <div className="flex flex-wrap gap-3 text-xs">
-                        <div className="bg-green-50 px-2 py-1 rounded">
-                          <span className="text-slate-600">Vendas:</span>
-                          <span className="font-semibold text-green-600 ml-1">{relatorio.vendas}</span>
-                        </div>
-                        <div className="bg-blue-50 px-2 py-1 rounded">
-                          <span className="text-slate-600">ROI:</span>
-                          <span className="font-semibold text-blue-600 ml-1">{relatorio.roi}</span>
-                        </div>
-                        <div className="bg-purple-50 px-2 py-1 rounded">
-                          <span className="text-slate-600">Engajamento:</span>
-                          <span className="font-semibold text-purple-600 ml-1">{relatorio.engajamento}</span>
-                        </div>
-                        <div className="bg-orange-50 px-2 py-1 rounded">
-                          <span className="text-slate-600">Receita:</span>
-                          <span className="font-semibold text-orange-600 ml-1">{relatorio.receita}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}
-                      className="gap-1 text-xs"
-                    >
-                      <Download className="w-3 h-3" />
-                      PDF
-                    </Button>
-                  </div>
-
-                  {selectedRelatorio === relatorio.id && (
-                    <div className="mt-4 pt-4 border-t border-slate-200">
-                      <h4 className="font-semibold text-sm mb-3">Métricas Detalhadas</h4>
-                      <div className="grid md:grid-cols-3 gap-3">
-                        <div className="bg-slate-50 p-3 rounded">
-                          <p className="text-xs text-slate-600 mb-1">Total de Conversões</p>
-                          <div className="text-lg font-bold text-slate-900">{relatorio.conversoes}</div>
-                        </div>
-                        <div className="bg-slate-50 p-3 rounded">
-                          <p className="text-xs text-slate-600 mb-1">Receita Total</p>
-                          <div className="text-lg font-bold text-slate-900">{relatorio.receita}</div>
-                        </div>
-                        <div className="bg-slate-50 p-3 rounded">
-                          <p className="text-xs text-slate-600 mb-1">ROI</p>
-                          <div className="text-lg font-bold text-slate-900">{relatorio.roi}</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </Card>
-              ))}
-            </div>
+            <h3 className="font-semibold text-sm mb-3">📊 Métricas Atuais (Campanhas Ativas)</h3>
+            {ativas.length === 0 ? (
+              <Card className="p-4 bg-slate-50 text-center">
+                <p className="text-sm text-slate-500">Nenhuma campanha ativa. Crie campanhas para ver métricas aqui.</p>
+              </Card>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-3">
+                {[
+                  { categoria: "Impressões", valor: totalImpressoes.toLocaleString("pt-BR"), cor: "text-blue-600", bg: "bg-blue-50" },
+                  { categoria: "Cliques", valor: totalCliques.toLocaleString("pt-BR"), cor: "text-green-600", bg: "bg-green-50" },
+                  { categoria: "Conversões", valor: totalConversoes.toLocaleString("pt-BR"), cor: "text-orange-600", bg: "bg-orange-50" },
+                  { categoria: "Orçamento Total", valor: `R$ ${totalOrcamento.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, cor: "text-purple-600", bg: "bg-purple-50" },
+                  { categoria: "CTR", valor: `${ctr}%`, cor: "text-slate-900", bg: "bg-slate-50" },
+                  { categoria: "ROI Médio", valor: `${avgRoi.toFixed(0)}%`, cor: "text-emerald-600", bg: "bg-emerald-50" },
+                ].map((m, idx) => (
+                  <Card key={idx} className={`p-4 ${m.bg}`}>
+                    <p className="text-xs text-slate-600 mb-1">{m.categoria}</p>
+                    <div className={`text-lg font-bold ${m.cor}`}>{m.valor}</div>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Métricas Detalhadas */}
+          {/* Alertas como Recomendações */}
           <div>
-            <h3 className="font-semibold text-sm mb-3">📊 Métricas Detalhadas (Semana Atual)</h3>
-            <div className="grid md:grid-cols-2 gap-3">
-              {METRICAS_DETALHADAS.map((metrica, idx) => (
-                <Card key={idx} className="p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <p className="text-xs text-slate-600 mb-1">{metrica.categoria}</p>
-                      <div className="text-lg font-bold text-slate-900">{metrica.valor}</div>
+            <h3 className="font-semibold text-sm mb-3">💡 Alertas e Recomendações</h3>
+            {alertas.length === 0 ? (
+              <Card className="p-4 bg-slate-50 text-center">
+                <p className="text-sm text-slate-500">Nenhum alerta ativo. Os alertas de performance aparecerão aqui.</p>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {alertas.slice(0, 5).map((alerta: any) => (
+                  <Card key={alerta.id} className={`p-4 border-l-4 ${
+                    alerta.severity === "critical" ? "border-l-red-500 bg-red-50" :
+                    alerta.severity === "warning" ? "border-l-amber-500 bg-amber-50" :
+                    "border-l-blue-500 bg-blue-50"
+                  }`}>
+                    <div className="flex items-start gap-3">
+                      <div>
+                        {alerta.severity === "critical" && <AlertCircle className="w-5 h-5 text-red-600" />}
+                        {alerta.severity === "warning" && <AlertCircle className="w-5 h-5 text-amber-600" />}
+                        {alerta.severity === "info" && <CheckCircle className="w-5 h-5 text-blue-600" />}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-sm mb-1">{alerta.title}</h4>
+                        <p className="text-xs text-slate-600 mb-1">{alerta.message}</p>
+                        {alerta.recommendation && (
+                          <p className="text-xs font-semibold text-slate-700">💡 {alerta.recommendation}</p>
+                        )}
+                      </div>
                     </div>
-                    <Badge
-                      variant={metrica.status === "Acima" ? "default" : "secondary"}
-                      className="text-xs"
-                    >
-                      {metrica.variacao}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-slate-600">
-                    Meta: {metrica.meta} {metrica.status === "Acima" ? "✓" : "⚠️"}
-                  </p>
-                </Card>
-              ))}
-            </div>
-          </div>
-
-          {/* Recomendações */}
-          <div>
-            <h3 className="font-semibold text-sm mb-3">💡 Recomendações para Próxima Semana</h3>
-            <div className="space-y-3">
-              {RECOMENDACOES.map((rec, idx) => (
-                <Card key={idx} className={`p-4 border-l-4 ${
-                  rec.tipo === "Oportunidade" ? "border-l-green-500 bg-green-50" :
-                  rec.tipo === "Alerta" ? "border-l-red-500 bg-red-50" :
-                  "border-l-blue-500 bg-blue-50"
-                }`}>
-                  <div className="flex items-start gap-3">
-                    <div>
-                      {rec.tipo === "Oportunidade" && <TrendingUp className="w-5 h-5 text-green-600" />}
-                      {rec.tipo === "Alerta" && <AlertCircle className="w-5 h-5 text-red-600" />}
-                      {rec.tipo === "Sucesso" && <CheckCircle className="w-5 h-5 text-blue-600" />}
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-sm mb-1">{rec.titulo}</h4>
-                      <p className="text-xs text-slate-600 mb-2">{rec.descricao}</p>
-                      <p className="text-xs font-semibold text-slate-700">📈 {rec.impacto}</p>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Preview do Email */}
@@ -330,35 +172,35 @@ export default function RelatorioSemanalSection() {
               <div className="space-y-4">
                 <div>
                   <h2 className="text-lg font-bold text-slate-900">📊 Relatório Semanal - Feminnita</h2>
-                  <p className="text-sm text-slate-600">31 Jan - 06 Fev 2026</p>
+                  <p className="text-sm text-slate-600">{new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}</p>
                 </div>
 
                 <div className="border-t border-slate-200 pt-4">
                   <p className="text-sm text-slate-700 mb-3">
-                    Olá! Aqui está seu relatório semanal com as principais métricas e recomendações.
+                    Olá! Aqui está seu relatório com as principais métricas das campanhas ativas.
                   </p>
 
                   <div className="grid md:grid-cols-4 gap-3 mb-4">
                     <div className="bg-green-50 p-3 rounded">
-                      <p className="text-xs text-slate-600">Vendas</p>
-                      <p className="text-lg font-bold text-green-600">1.245</p>
+                      <p className="text-xs text-slate-600">Conversões</p>
+                      <p className="text-lg font-bold text-green-600">{totalConversoes.toLocaleString("pt-BR")}</p>
                     </div>
                     <div className="bg-blue-50 p-3 rounded">
-                      <p className="text-xs text-slate-600">ROI</p>
-                      <p className="text-lg font-bold text-blue-600">285%</p>
+                      <p className="text-xs text-slate-600">ROI Médio</p>
+                      <p className="text-lg font-bold text-blue-600">{avgRoi.toFixed(0)}%</p>
                     </div>
                     <div className="bg-purple-50 p-3 rounded">
-                      <p className="text-xs text-slate-600">Engajamento</p>
-                      <p className="text-lg font-bold text-purple-600">11.2%</p>
+                      <p className="text-xs text-slate-600">CTR</p>
+                      <p className="text-lg font-bold text-purple-600">{ctr}%</p>
                     </div>
                     <div className="bg-orange-50 p-3 rounded">
-                      <p className="text-xs text-slate-600">Receita</p>
-                      <p className="text-lg font-bold text-orange-600">R$ 45.6K</p>
+                      <p className="text-xs text-slate-600">Orçamento</p>
+                      <p className="text-lg font-bold text-orange-600">R$ {(totalOrcamento / 1000).toFixed(1)}K</p>
                     </div>
                   </div>
 
                   <p className="text-sm text-slate-700 mt-4">
-                    Semana recorde de vendas! Continue acompanhando a plataforma para mais detalhes.
+                    {ativas.length} campanha{ativas.length !== 1 ? "s" : ""} ativa{ativas.length !== 1 ? "s" : ""} · {totalCliques.toLocaleString("pt-BR")} cliques no total.
                   </p>
                 </div>
 

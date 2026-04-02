@@ -1,4 +1,4 @@
-import { router, publicProcedure, protectedProcedure } from "../_core/trpc";
+import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { fetchInstagramPosts, publishInstagramPost, publishFacebookPost } from "../instagram";
 
@@ -6,7 +6,7 @@ export const instagramRouter = router({
   /**
    * Busca os últimos posts do Instagram da Feminnita
    */
-  fetchPosts: publicProcedure
+  fetchPosts: protectedProcedure
     .input(z.object({
       limit: z.number().default(15),
     }))
@@ -19,8 +19,7 @@ export const instagramRouter = router({
           throw new Error("Instagram credentials not configured");
         }
 
-        // Usar o Instagram Account ID correto
-        const realInstagramAccountId = "59536615191";
+        const realInstagramAccountId = process.env.INSTAGRAM_ACCOUNT_ID || instagramAccountId;
 
         const posts = await fetchInstagramPosts(
           realInstagramAccountId,

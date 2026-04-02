@@ -1,4 +1,4 @@
-import { publicProcedure, router } from "../_core/trpc";
+import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import {
   enviarMensagemWhatsApp,
@@ -16,7 +16,7 @@ export const whatsappRouter = router({
   /**
    * Envia uma mensagem de texto
    */
-  enviarMensagem: publicProcedure
+  enviarMensagem: protectedProcedure
     .input(
       z.object({
         accessToken: z.string(),
@@ -49,7 +49,7 @@ export const whatsappRouter = router({
   /**
    * Envia uma mensagem com template
    */
-  enviarTemplate: publicProcedure
+  enviarTemplate: protectedProcedure
     .input(
       z.object({
         accessToken: z.string(),
@@ -84,7 +84,7 @@ export const whatsappRouter = router({
   /**
    * Envia uma mídia (imagem, vídeo, documento)
    */
-  enviarMidia: publicProcedure
+  enviarMidia: protectedProcedure
     .input(
       z.object({
         accessToken: z.string(),
@@ -121,7 +121,7 @@ export const whatsappRouter = router({
   /**
    * Marca uma mensagem como lida
    */
-  marcarComoLida: publicProcedure
+  marcarComoLida: protectedProcedure
     .input(
       z.object({
         accessToken: z.string(),
@@ -151,7 +151,7 @@ export const whatsappRouter = router({
   /**
    * Obtém informações sobre um contato
    */
-  obterContato: publicProcedure
+  obterContato: protectedProcedure
     .input(
       z.object({
         accessToken: z.string(),
@@ -181,7 +181,7 @@ export const whatsappRouter = router({
   /**
    * Obtém histórico de mensagens
    */
-  obterHistorico: publicProcedure
+  obterHistorico: protectedProcedure
     .input(
       z.object({
         accessToken: z.string(),
@@ -212,7 +212,7 @@ export const whatsappRouter = router({
   /**
    * Cria um template de mensagem
    */
-  criarTemplate: publicProcedure
+  criarTemplate: protectedProcedure
     .input(
       z.object({
         accessToken: z.string(),

@@ -2,7 +2,7 @@ import { publicProcedure, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
 import { oauthCredentials } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 /**
  * Bling ERP API Integration Router - REAL IMPLEMENTATION
@@ -90,7 +90,7 @@ export const blingRealRouter = {
       const credentials = await db
         .select()
         .from(oauthCredentials)
-        .where(eq(oauthCredentials.platform, "bling"));
+        .where(and(eq(oauthCredentials.platform, "bling"), eq(oauthCredentials.userId, ctx.user.id)));
 
       if (!credentials || credentials.length === 0) {
         throw new Error("Credenciais do Bling não configuradas");
@@ -135,7 +135,7 @@ export const blingRealRouter = {
       const credentials = await db
         .select()
         .from(oauthCredentials)
-        .where(eq(oauthCredentials.platform, "bling"));
+        .where(and(eq(oauthCredentials.platform, "bling"), eq(oauthCredentials.userId, ctx.user.id)));
 
       if (!credentials || credentials.length === 0) {
         throw new Error("Credenciais do Bling não configuradas");
@@ -180,7 +180,7 @@ export const blingRealRouter = {
       const credentials = await db
         .select()
         .from(oauthCredentials)
-        .where(eq(oauthCredentials.platform, "bling"));
+        .where(and(eq(oauthCredentials.platform, "bling"), eq(oauthCredentials.userId, ctx.user.id)));
 
       if (!credentials || credentials.length === 0) {
         throw new Error("Credenciais do Bling não configuradas");
@@ -220,7 +220,7 @@ export const blingRealRouter = {
     .input(z.object({
       productId: z.string(),
     }))
-    .query(async ({ input }: any) => {
+    .query(async ({ input, ctx }: any) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database connection failed");
@@ -229,7 +229,7 @@ export const blingRealRouter = {
         const credentials = await db
           .select()
           .from(oauthCredentials)
-          .where(eq(oauthCredentials.platform, "bling"));
+          .where(and(eq(oauthCredentials.platform, "bling"), eq(oauthCredentials.userId, ctx.user.id)));
 
         if (!credentials || credentials.length === 0) {
           throw new Error("Credenciais do Bling não configuradas");
@@ -268,7 +268,7 @@ export const blingRealRouter = {
     .input(z.object({
       productId: z.string(),
     }))
-    .query(async ({ input }: any) => {
+    .query(async ({ input, ctx }: any) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database connection failed");
@@ -277,7 +277,7 @@ export const blingRealRouter = {
         const credentials = await db
           .select()
           .from(oauthCredentials)
-          .where(eq(oauthCredentials.platform, "bling"));
+          .where(and(eq(oauthCredentials.platform, "bling"), eq(oauthCredentials.userId, ctx.user.id)));
 
         if (!credentials || credentials.length === 0) {
           throw new Error("Credenciais do Bling não configuradas");
@@ -326,7 +326,7 @@ export const blingRealRouter = {
           accessToken: null,
           refreshToken: null,
         })
-        .where(eq(oauthCredentials.platform, "bling"));
+        .where(and(eq(oauthCredentials.platform, "bling"), eq(oauthCredentials.userId, ctx.user.id)));
 
       return {
         success: true,

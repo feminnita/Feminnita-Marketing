@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Copy, Heart, MessageCircle, Share2, Eye, Zap, TrendingUp } from "lucide-react";
 import PersonaAvatar from "./PersonaAvatar";
+import { toast } from "sonner";
 
 export default function EstrategiaGrowthViralSection() {
   const viralStrategies = [
@@ -84,7 +85,7 @@ export default function EstrategiaGrowthViralSection() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    alert("Copiado!");
+    toast.success("Copiado!");
   };
 
   return (

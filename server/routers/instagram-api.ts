@@ -3,7 +3,7 @@ import { z } from "zod";
 import axios, { AxiosError } from "axios";
 import { getDb } from "../db";
 import { instagramAccounts } from "../../drizzle/schema";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 const INSTAGRAM_GRAPH_API_BASE = "https://graph.instagram.com/v19.0";
 
@@ -360,7 +360,7 @@ export const instagramApiRouter = router({
       const accounts = await db
         .select()
         .from(instagramAccounts)
-        .where(and(eq(instagramAccounts.userId, ctx.user.id), eq(instagramAccounts.isActive, true)))
+        .where(eq(instagramAccounts.isActive, true))
         .limit(1);
 
       if (accounts.length > 0) {

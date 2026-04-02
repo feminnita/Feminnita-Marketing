@@ -2,96 +2,84 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, Send, Sparkles, Clock, TrendingUp } from "lucide-react";
-import { useState } from "react";
+import { MessageCircle, Send, Sparkles } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { trpc } from "@/lib/trpc";
 
-const PRODUTOS_FEMINNITA = [
-  { id: 1, nome: "Pijama Suede Rosa", preco: 89.90, url: "https://www.feminnita.com.br/pijama-suede-rosa", tamanhos: ["P", "M", "G", "GG"], descricao: "Premium em rosa claro" },
-  { id: 2, nome: "Pijama Inverno Azul", preco: 94.90, url: "https://www.feminnita.com.br/pijama-inverno-azul", tamanhos: ["P", "M", "G", "GG"], descricao: "Coleção Inverno 2026" },
-  { id: 3, nome: "Pijama Algodão", preco: 79.90, url: "https://www.feminnita.com.br/pijama-algodao", tamanhos: ["P", "M", "G", "GG"], descricao: "100% algodão confortável" },
-  { id: 4, nome: "Pijama Inverno Vinho", preco: 94.90, url: "https://www.feminnita.com.br/pijama-inverno-vinho", tamanhos: ["P", "M", "G", "GG"], descricao: "Inverno 2026 - Vinho" },
-  { id: 5, nome: "Pijama Inverno Cinza", preco: 94.90, url: "https://www.feminnita.com.br/pijama-inverno-cinza", tamanhos: ["P", "M", "G", "GG"], descricao: "Inverno 2026 - Cinza" },
-  { id: 6, nome: "Pijama Inverno Preto", preco: 94.90, url: "https://www.feminnita.com.br/pijama-inverno-preto", tamanhos: ["P", "M", "G", "GG"], descricao: "Inverno 2026 - Preto" }
-];
+interface Mensagem {
+  id: number;
+  tipo: "cliente" | "ia";
+  texto: string;
+  hora: string;
+}
+
+const PHONE_SIMULADO = "demo-chat-ui";
 
 export default function ChatIASection() {
-  const [mensagens, setMensagens] = useState([
+  const [mensagens, setMensagens] = useState<Mensagem[]>([
     {
       id: 1,
-      tipo: "cliente",
-      texto: "Qual é o tamanho M?",
-      hora: "14:30"
-    },
-    {
-      id: 2,
       tipo: "ia",
-      texto: "Ótima pergunta! O tamanho M (Médio) é ideal para pessoas com altura entre 1,60m e 1,75m. Temos pijamas em Suede, Algodão e Inverno. Qual você prefere? 😊",
-      hora: "14:30"
+      texto: "Olá! Sou a assistente virtual da Feminnita Pijamas. Como posso te ajudar hoje? 😊",
+      hora: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
     },
-    {
-      id: 3,
-      tipo: "cliente",
-      texto: "Qual a melhor forma de pagar?",
-      hora: "14:31"
-    },
-    {
-      id: 4,
-      tipo: "ia",
-      texto: "Aceitamos várias formas de pagamento: 💳 Cartão de Crédito (até 12x), 💰 PIX (à vista com 5% OFF), 🏦 Transferência Bancária e 📱 WhatsApp Pay. Qual você prefere?",
-      hora: "14:31"
-    },
-    {
-      id: 5,
-      tipo: "cliente",
-      texto: "Vocês têm pijama de inverno?",
-      hora: "14:32"
-    },
-    {
-      id: 6,
-      tipo: "ia",
-      texto: "Sim! Temos a Coleção Inverno 2026 com 4 cores exclusivas: Azul Marinho, Cinza, Vinho e Preto. Todos com tecido premium e conforto máximo. Quer ver as opções? 🔗",
-      hora: "14:32"
-    }
   ]);
 
   const [novaMensagem, setNovaMensagem] = useState("");
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const processMessage = trpc.aiCustomerSupport.processMessage.useMutation({
+    onSuccess: (data) => {
+      const iaMensagem: Mensagem = {
+        id: Date.now(),
+        tipo: "ia",
+        texto: data.response as string,
+        hora: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+      };
+      setMensagens((prev) => [...prev, iaMensagem]);
+    },
+    onError: () => {
+      const errMensagem: Mensagem = {
+        id: Date.now(),
+        tipo: "ia",
+        texto: "Desculpe, tive um problema técnico. Tente novamente em instantes.",
+        hora: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+      };
+      setMensagens((prev) => [...prev, errMensagem]);
+    },
+  });
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [mensagens]);
 
   const enviarMensagem = () => {
-    if (novaMensagem.trim()) {
-      const clienteMensagem = {
-        id: mensagens.length + 1,
-        tipo: "cliente",
-        texto: novaMensagem,
-        hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-      };
+    const texto = novaMensagem.trim();
+    if (!texto || processMessage.isPending) return;
 
-      setMensagens([...mensagens, clienteMensagem]);
+    const clienteMensagem: Mensagem = {
+      id: Date.now(),
+      tipo: "cliente",
+      texto,
+      hora: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+    };
 
-      setTimeout(() => {
-        let respostaIA = "Obrigada pela pergunta! Estou aqui para ajudar. ";
-        
-        if (novaMensagem.toLowerCase().includes("pijama") || 
-            novaMensagem.toLowerCase().includes("inverno") ||
-            novaMensagem.toLowerCase().includes("qual")) {
-          const produtoRecomendado = PRODUTOS_FEMINNITA[Math.floor(Math.random() * PRODUTOS_FEMINNITA.length)];
-          respostaIA = `Ótima escolha! Recomendo nosso ${produtoRecomendado.nome} por apenas R$ ${produtoRecomendado.preco}. ${produtoRecomendado.descricao}. Confira: ${produtoRecomendado.url} 🛍️`;
-        } else if (novaMensagem.toLowerCase().includes("preço")) {
-          respostaIA = `Nossos pijamas variam de R$ 79,90 a R$ 94,90. Temos várias opções: Suede (R$ 89,90), Algodão (R$ 79,90) e Coleção Inverno (R$ 94,90). Qual você prefere?`;
-        } else if (novaMensagem.toLowerCase().includes("tamanho")) {
-          respostaIA = `Temos tamanhos P, M, G e GG. Qual é seu tamanho? Posso recomendar o melhor pijama para você!`;
-        }
-        
-        const iaMensagem = {
-          id: mensagens.length + 2,
-          tipo: "ia",
-          texto: respostaIA,
-          hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-        };
-        setMensagens(prev => [...prev, iaMensagem]);
-      }, 1000);
+    const contexto = mensagens.map((m) => ({
+      role: m.tipo === "cliente" ? ("user" as const) : ("assistant" as const),
+      content: m.texto,
+    }));
 
-      setNovaMensagem("");
-    }
+    setMensagens((prev) => [...prev, clienteMensagem]);
+    setNovaMensagem("");
+
+    processMessage.mutate({
+      whatsappPhoneNumber: PHONE_SIMULADO,
+      whatsappContactName: "Demo UI",
+      userMessage: texto,
+      conversationContext: contexto,
+    });
   };
 
   return (
@@ -103,39 +91,17 @@ export default function ChatIASection() {
         </p>
       </div>
 
-      {/* Produtos Disponíveis */}
-      <Card className="border-l-4 border-l-green-500 bg-green-50">
-        <CardHeader>
-          <CardTitle className="text-lg">Produtos Disponíveis (IA tem acesso)</CardTitle>
-          <CardDescription>A IA recomenda estes produtos quando solicitado</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-3 gap-3">
-            {PRODUTOS_FEMINNITA.map((prod) => (
-              <div key={prod.id} className="border border-green-200 rounded-lg p-3 bg-white">
-                <h4 className="font-bold text-slate-900 text-sm mb-1">{prod.nome}</h4>
-                <p className="text-xs text-slate-600 mb-2">{prod.descricao}</p>
-                <div className="flex items-center justify-between">
-                  <p className="font-bold text-green-600">R$ {prod.preco.toFixed(2)}</p>
-                  <a href={prod.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">Ver →</a>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Chat Simulado */}
+      {/* Chat */}
       <Card className="border-l-4 border-l-blue-500">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <MessageCircle className="w-5 h-5 text-blue-600" />
             Chat com Cliente
           </CardTitle>
-          <CardDescription>Exemplo de conversa com IA (tente perguntar sobre pijamas!)</CardDescription>
+          <CardDescription>Teste a IA de atendimento ao vivo</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="bg-slate-50 rounded-lg p-4 h-80 overflow-y-auto space-y-3">
+          <div ref={scrollRef} className="bg-slate-50 rounded-lg p-4 h-80 overflow-y-auto space-y-3">
             {mensagens.map((msg) => (
               <div key={msg.id} className={`flex ${msg.tipo === "cliente" ? "justify-end" : "justify-start"}`}>
                 <div className={`max-w-xs px-4 py-2 rounded-lg ${msg.tipo === "cliente" ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-900"}`}>
@@ -144,6 +110,13 @@ export default function ChatIASection() {
                 </div>
               </div>
             ))}
+            {processMessage.isPending && (
+              <div className="flex justify-start">
+                <div className="bg-slate-200 text-slate-500 px-4 py-2 rounded-lg text-sm animate-pulse">
+                  Digitando...
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-2">
@@ -151,10 +124,15 @@ export default function ChatIASection() {
               placeholder="Digite sua mensagem..."
               value={novaMensagem}
               onChange={(e) => setNovaMensagem(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && enviarMensagem()}
+              onKeyDown={(e) => e.key === "Enter" && enviarMensagem()}
               className="flex-1"
+              disabled={processMessage.isPending}
             />
-            <Button onClick={enviarMensagem} className="bg-blue-600 hover:bg-blue-700 gap-2">
+            <Button
+              onClick={enviarMensagem}
+              disabled={processMessage.isPending || !novaMensagem.trim()}
+              className="bg-blue-600 hover:bg-blue-700 gap-2"
+            >
               <Send className="w-4 h-4" />
               Enviar
             </Button>
@@ -170,95 +148,44 @@ export default function ChatIASection() {
         <CardContent>
           <div className="grid md:grid-cols-2 gap-3">
             {[
-              { categoria: "Produtos", respostas: 18, exemplo: "Qual pijama vocês têm?" },
-              { categoria: "Tamanhos", respostas: 12, exemplo: "Qual é o tamanho M?" },
-              { categoria: "Preços", respostas: 15, exemplo: "Qual é o preço do pijama?" },
-              { categoria: "Pagamento", respostas: 8, exemplo: "Qual a melhor forma de pagar?" },
-              { categoria: "Entrega", respostas: 10, exemplo: "Quanto tempo demora a entrega?" },
-              { categoria: "Promoções", respostas: 14, exemplo: "Vocês têm desconto?" }
+              { categoria: "Produtos", exemplo: "Qual pijama vocês têm?" },
+              { categoria: "Tamanhos", exemplo: "Qual é o tamanho M?" },
+              { categoria: "Preços", exemplo: "Qual é o preço do pijama?" },
+              { categoria: "Pagamento", exemplo: "Qual a melhor forma de pagar?" },
+              { categoria: "Entrega", exemplo: "Quanto tempo demora a entrega?" },
+              { categoria: "Promoções", exemplo: "Vocês têm desconto?" },
             ].map((item, idx) => (
-              <div key={idx} className="border border-slate-200 rounded-lg p-3 hover:border-blue-300 hover:bg-blue-50 transition">
+              <div
+                key={idx}
+                className="border border-slate-200 rounded-lg p-3 hover:border-blue-300 hover:bg-blue-50 transition cursor-pointer"
+                onClick={() => setNovaMensagem(item.exemplo)}
+              >
                 <div className="flex items-start justify-between mb-2">
                   <h4 className="font-bold text-slate-900">{item.categoria}</h4>
-                  <Badge className="bg-blue-600">{item.respostas}</Badge>
                 </div>
-                <p className="text-xs text-slate-600 italic">Ex: "{item.exemplo}"</p>
+                <p className="text-xs text-slate-600 italic">"{item.exemplo}"</p>
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Métricas */}
-      <Card className="border-l-4 border-l-purple-500 bg-gradient-to-r from-purple-50 to-pink-50">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-600" />
-            Métricas de Engajamento
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-5 gap-3">
-            {[
-              { titulo: "Mensagens", valor: "892", icon: "💬", cor: "text-blue-600" },
-              { titulo: "Satisfação", valor: "94,5%", icon: "😊", cor: "text-green-600" },
-              { titulo: "Conversão", valor: "22,3%", icon: "🎯", cor: "text-orange-600" },
-              { titulo: "Tempo Médio", valor: "2.1min", icon: "⏱️", cor: "text-purple-600" },
-              { titulo: "Disponibilidade", valor: "24/7", icon: "🔄", cor: "text-red-600" }
-            ].map((item, idx) => (
-              <div key={idx} className="text-center p-3 bg-white rounded-lg border border-slate-200">
-                <p className="text-2xl mb-1">{item.icon}</p>
-                <p className="text-xs font-semibold text-slate-600 uppercase mb-1">{item.titulo}</p>
-                <p className={`text-lg font-bold ${item.cor}`}>{item.valor}</p>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Dicas */}
-      <Card className="border-blue-200 bg-blue-50">
-        <CardHeader>
-          <CardTitle className="text-lg">Como Usar o Chat IA</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm">
-          {[
-            "✅ IA responde automaticamente 24/7",
-            "✅ Tem acesso ao catálogo completo de produtos",
-            "✅ Envia links diretos quando cliente pede recomendação",
-            "✅ Responde sobre tamanhos, preços, pagamento, entrega",
-            "✅ Aprende com cada conversa e melhora respostas",
-            "✅ Integra com WhatsApp, Instagram, Facebook",
-            "✅ Reduz carga de atendimento em 70%",
-            "✅ Aumenta conversão em 15-25%"
-          ].map((dica, idx) => (
-            <p key={idx} className="text-slate-700">{dica}</p>
-          ))}
         </CardContent>
       </Card>
 
       {/* Benefícios */}
-      <Card className="border-green-200 bg-green-50">
+      <Card className="border-l-4 border-l-purple-500 bg-gradient-to-r from-purple-50 to-pink-50">
         <CardHeader>
-          <CardTitle className="text-lg">Benefícios Esperados</CardTitle>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-purple-600" />
+            Como Funciona
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          {[
-            { titulo: "Atendimento 24/7", descricao: "Responda clientes a qualquer hora" },
-            { titulo: "Redução de Carga", descricao: "Equipe foca em vendas complexas" },
-            { titulo: "Aumento de Conversão", descricao: "Recomendações personalizadas aumentam vendas" },
-            { titulo: "Satisfação do Cliente", descricao: "Respostas rápidas e precisas" },
-            { titulo: "Dados de Clientes", descricao: "Aprenda preferências e padrões" },
-            { titulo: "Escalabilidade", descricao: "Gerencie múltiplos clientes simultaneamente" }
-          ].map((beneficio, idx) => (
-            <div key={idx} className="flex gap-3 p-3 border border-green-200 rounded bg-white">
-              <span className="text-lg">✨</span>
-              <div>
-                <p className="font-semibold text-slate-900">{beneficio.titulo}</p>
-                <p className="text-xs text-slate-600">{beneficio.descricao}</p>
-              </div>
-            </div>
-          ))}
+        <CardContent>
+          <ul className="text-sm space-y-2 text-slate-700">
+            <li>• <strong>Base de conhecimento</strong> treinada com seus produtos e FAQs</li>
+            <li>• <strong>Contexto de conversa</strong> mantido entre mensagens</li>
+            <li>• <strong>Escalação automática</strong> quando o cliente solicita humano</li>
+            <li>• <strong>Histórico salvo</strong> no banco para análise e melhoria</li>
+            <li>• <strong>Treine a IA</strong> na aba "Treinamento IA" com exemplos reais</li>
+          </ul>
         </CardContent>
       </Card>
     </div>

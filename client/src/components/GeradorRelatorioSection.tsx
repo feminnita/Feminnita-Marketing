@@ -1,44 +1,89 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, FileText, Mail, Share2 } from "lucide-react";
+import { Download, FileText, Mail } from "lucide-react";
 import { useState } from "react";
+import { trpc } from "@/lib/trpc";
+
+const MESES_PT = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
 export default function GeradorRelatorioSection() {
   const [relatorioGerado, setRelatorioGerado] = useState(false);
   const [formato, setFormato] = useState("pdf");
 
-  const gerarRelatorio = () => {
-    // Simular geração de relatório
-    setRelatorioGerado(true);
-    
-    // Aqui você poderia integrar uma biblioteca como jsPDF ou html2pdf
-    // Por enquanto, vamos simular o download
-    setTimeout(() => {
-      const conteudo = `
-RELATÓRIO DE ESTRATÉGIA DE MARKETING DIGITAL - FEMINNITA PIJAMAS
-================================================================
+  const { data: campanhas = [] } = trpc.campaigns.listar.useQuery(undefined, { refetchInterval: 60_000 });
 
-DATA: ${new Date().toLocaleDateString('pt-BR')}
-PERÍODO: Semana 1 - Lançamento de Pijama de Inverno
+  const todas = campanhas as any[];
+  const ativas = todas.filter(c => c.status === "ativa");
+  const totalImpressoes = todas.reduce((s, c) => s + (c.impressoes ?? 0), 0);
+  const totalCliques = todas.reduce((s, c) => s + (c.cliques ?? 0), 0);
+  const totalConversoes = todas.reduce((s, c) => s + (c.conversoes ?? 0), 0);
+  const totalOrcamento = todas.reduce((s, c) => s + parseFloat(c.orcamento ?? "0"), 0);
+  const roisValidos = todas.filter(c => parseFloat(c.roi ?? "0") > 0);
+  const roiMedio = roisValidos.length > 0
+    ? roisValidos.reduce((s, c) => s + parseFloat(c.roi ?? "0"), 0) / roisValidos.length
+    : 0;
+  const ctr = totalImpressoes > 0 ? ((totalCliques / totalImpressoes) * 100).toFixed(1) : "—";
+
+  const porPlataforma = todas.reduce((acc, c) => {
+    acc[c.plataforma] = (acc[c.plataforma] || 0) + (c.conversoes ?? 0);
+    return acc;
+  }, {} as Record<string, number>);
+  const plataformasOrdenadas = Object.entries(porPlataforma)
+    .sort(([, a], [, b]) => (b as number) - (a as number));
+
+  const top5 = [...todas]
+    .sort((a, b) => (b.conversoes ?? 0) - (a.conversoes ?? 0))
+    .slice(0, 5);
+
+  const gerarRelatorio = () => {
+    setRelatorioGerado(true);
+    const agora = new Date();
+    const mesAtual = `${MESES_PT[agora.getMonth()]} ${agora.getFullYear()}`;
+
+    const linhasPlataformas = plataformasOrdenadas.length > 0
+      ? plataformasOrdenadas.map(([p, c]) => `  - ${p.charAt(0).toUpperCase() + p.slice(1)}: ${c} conversões`).join("\n")
+      : "  Nenhuma campanha cadastrada.";
+
+    const linhasCampanhas = top5.length > 0
+      ? top5.map((c, i) => `  ${i + 1}. ${c.nome} (${c.plataforma}) — ${c.conversoes ?? 0} conv. · ROI ${parseFloat(c.roi ?? "0").toFixed(0)}%`).join("\n")
+      : "  Nenhuma campanha cadastrada.";
+
+    const conteudo = `
+RELATÓRIO DE MARKETING DIGITAL - FEMINNITA PIJAMAS
+===================================================
+
+DATA: ${agora.toLocaleDateString('pt-BR')}
+PERÍODO: ${mesAtual}
+GERADO POR: Plataforma Feminnita Marketing
 
 1. RESUMO EXECUTIVO
 ===================
-Investimento Total: R$ 500
-Duração: 3 dias (Sexta, Sábado, Domingo)
-Visualizações Esperadas: 150K-250K
-Novos Seguidores: 600-1.2K
-Lucro Esperado: R$ 1.350
-ROI: 270%
+Campanhas cadastradas: ${todas.length}
+Campanhas ativas: ${ativas.length}
+Total de impressões: ${totalImpressoes.toLocaleString("pt-BR")}
+Total de cliques: ${totalCliques.toLocaleString("pt-BR")}
+Total de conversões: ${totalConversoes.toLocaleString("pt-BR")}
+CTR médio: ${ctr}%
+Orçamento total: R$ ${totalOrcamento.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+ROI médio: ${roiMedio > 0 ? `${roiMedio.toFixed(0)}%` : "N/A"}
 
-2. PERSONAS DE INFLUENCIADORAS
+2. PERFORMANCE POR PLATAFORMA
+==============================
+${linhasPlataformas}
+
+3. TOP CAMPANHAS POR CONVERSÃO
+================================
+${linhasCampanhas}
+
+4. PERSONAS DE INFLUENCIADORAS
 ==============================
 - Carol: Empreendedora Iniciante (Renda Extra)
 - Renata: Dona de Loja (Revendedora)
 - Vanessa: Líder de Grupo (Compra Coletiva)
 - Luiza: Trendsetter (Lifestyle)
 
-3. PLANEJAMENTO SEMANAL
+5. PLANEJAMENTO SEMANAL
 ======================
 Segunda: Teaser + Anúncio
 Terça: Cores + Enquete
@@ -48,57 +93,45 @@ Sexta: Votação de Promoção + Urgência
 Sábado: Lifestyle + Inspiração
 Domingo: Fechamento + Último Chamado
 
-4. ROTEIROS DE VÍDEOS
-====================
-- Stories: 3 roteiros personalizados por persona
-- TikTok: 3 roteiros com formatos virais
-- Instagram Reels: Bastidores + Lançamento
-- Ads: Renda Extra + Compra Familiar
-
-5. ANÁLISE DE CUSTOS
-===================
-CPV Médio: R$ 0,0027
-CPS Médio: R$ 0,63
-CPA Médio: R$ 0,040
-
 6. RECOMENDAÇÕES
 ================
-✅ Poste o Reels organicamente sexta-feira 20h
-✅ Deixe rodar 2-3 horas sem ads
-✅ Verifique performance inicial
-✅ Se bom, comece ads com R$ 500
-✅ Monitore CPV e CPS em tempo real
-✅ Responda comentários rapidamente
-
-7. PRÓXIMAS AÇÕES
-================
-1. Produzir as imagens em lote
-2. Criar calendário de agendamento
-3. Preparar sistema de monitoramento
-4. Executar campanha
-5. Compilar dados
+✅ Concentre orçamento nas plataformas com mais conversões
+✅ Replique a estratégia das campanhas com maior ROI
+✅ Teste novos criativos se CTR estiver abaixo de 1%
+✅ Registre dados no Bling para cruzar com histórico de pedidos
+✅ Ative Smart Alerts para monitorar performance em tempo real
+✅ Responda comentários nos primeiros 30 minutos após publicar
 
 ---
 Relatório gerado automaticamente pela Plataforma Feminnita
-      `;
+Dados extraídos do banco de dados em ${agora.toISOString()}
+    `;
 
-      const element = document.createElement('a');
-      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(conteudo));
-      element.setAttribute('download', `Relatorio_Feminnita_${new Date().getTime()}.txt`);
-      element.style.display = 'none';
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
-
-      setTimeout(() => setRelatorioGerado(false), 2000);
-    }, 1500);
+    const element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(conteudo));
+    element.setAttribute('download', `Relatorio_Feminnita_${agora.getFullYear()}${String(agora.getMonth() + 1).padStart(2, "0")}.txt`);
+    element.style.display = 'none';
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    setRelatorioGerado(false);
   };
 
   const secoes = [
     {
       titulo: "Resumo Executivo",
-      descricao: "Visão geral da campanha com métricas principais",
-      itens: ["Investimento", "ROI", "Métricas esperadas", "Timeline"]
+      descricao: "KPIs reais: impressões, cliques, conversões, CTR, orçamento e ROI médio",
+      itens: ["Total Campanhas", "Conversões", "CTR", "ROI Médio"]
+    },
+    {
+      titulo: "Performance por Plataforma",
+      descricao: "Conversões agrupadas por canal (Instagram, Facebook, TikTok, Email, WhatsApp)",
+      itens: ["Instagram", "TikTok", "Email", "WhatsApp"]
+    },
+    {
+      titulo: "Top 5 Campanhas",
+      descricao: "Campanhas com maior conversão — nome, plataforma e ROI",
+      itens: ["Nome da campanha", "Plataforma", "Conversões", "ROI"]
     },
     {
       titulo: "4 Personas",
@@ -108,43 +141,40 @@ Relatório gerado automaticamente pela Plataforma Feminnita
     {
       titulo: "Planejamento Semanal",
       descricao: "Calendário de 7 dias com temas e CTAs",
-      itens: ["Temas diários", "Tipos de conteúdo", "Personas responsáveis", "Horários de postagem"]
+      itens: ["Temas diários", "Tipos de conteúdo", "Personas responsáveis", "Horários"]
     },
     {
-      titulo: "Roteiros de Vídeos",
-      descricao: "Todos os roteiros com timing e especificações",
-      itens: ["Stories (3x)", "TikTok (3x)", "Reels (2x)", "Ads (2x)"]
+      titulo: "Recomendações",
+      descricao: "6 ações baseadas nos dados reais coletados",
+      itens: ["Alocação de orçamento", "Criativos", "Bling ERP", "Smart Alerts"]
     },
-    {
-      titulo: "42 Stories Completos",
-      descricao: "Textos, descrições visuais e elementos interativos",
-      itens: ["Textos prontos", "Descrições visuais", "Enquetes/Votações", "Horários"]
-    },
-    {
-      titulo: "Análise de Ads",
-      descricao: "3 cenários com CPV, CPS, ROI e benchmarks",
-      itens: ["Conservador", "Moderado", "Agressivo", "Comparação"]
-    },
-    {
-      titulo: "Tendências TikTok",
-      descricao: "6 formatos virais que já venderam milhares",
-      itens: ["Provador Rápido", "Tour Fábrica", "Renda Extra", "Pijama na Rua", "Compra Coletiva", "ASMR"]
-    },
-    {
-      titulo: "Legendas Instagram",
-      descricao: "3 legendas com 3 versões cada e CTAs",
-      itens: ["Promoção Relâmpago", "Lançamento Verão", "Abastecimento Estoque", "Múltiplas versões"]
-    }
   ];
 
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-bold text-slate-900 mb-2">Gerador de Relatório PDF Exportável</h2>
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">Gerador de Relatório Exportável</h2>
         <p className="text-slate-600">
-          Gere um relatório completo em PDF com toda a sua estratégia de marketing. Perfeito para apresentar a clientes ou compartilhar com sua equipe.
+          Gere um relatório com dados reais das suas campanhas. Perfeito para apresentar a clientes ou compartilhar com sua equipe.
         </p>
       </div>
+
+      {/* KPIs reais */}
+      {todas.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { label: "Campanhas", valor: String(todas.length), cor: "bg-blue-50 text-blue-700" },
+            { label: "Conversões", valor: totalConversoes.toLocaleString("pt-BR"), cor: "bg-green-50 text-green-700" },
+            { label: "CTR Médio", valor: `${ctr}%`, cor: "bg-purple-50 text-purple-700" },
+            { label: "ROI Médio", valor: roiMedio > 0 ? `${roiMedio.toFixed(0)}%` : "—", cor: "bg-orange-50 text-orange-700" },
+          ].map((kpi, i) => (
+            <div key={i} className={`${kpi.cor} rounded-lg p-4 text-center`}>
+              <p className="text-xs font-medium opacity-70 mb-1">{kpi.label}</p>
+              <p className="text-xl font-bold">{kpi.valor}</p>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Opções de Geração */}
       <Card className="border-l-4 border-l-purple-400 bg-gradient-to-r from-purple-50 to-indigo-50">
@@ -158,7 +188,7 @@ Relatório gerado automaticamente pela Plataforma Feminnita
           <div>
             <p className="text-sm font-semibold text-slate-700 mb-3">Escolha o formato:</p>
             <div className="flex gap-3 flex-wrap">
-              <Button 
+              <Button
                 variant={formato === "pdf" ? "default" : "outline"}
                 onClick={() => setFormato("pdf")}
                 className="gap-2"
@@ -166,7 +196,7 @@ Relatório gerado automaticamente pela Plataforma Feminnita
                 <FileText className="w-4 h-4" />
                 PDF (Recomendado)
               </Button>
-              <Button 
+              <Button
                 variant={formato === "txt" ? "default" : "outline"}
                 onClick={() => setFormato("txt")}
                 className="gap-2"
@@ -174,7 +204,7 @@ Relatório gerado automaticamente pela Plataforma Feminnita
                 <FileText className="w-4 h-4" />
                 Texto (.txt)
               </Button>
-              <Button 
+              <Button
                 variant={formato === "email" ? "default" : "outline"}
                 onClick={() => setFormato("email")}
                 className="gap-2"
@@ -186,7 +216,7 @@ Relatório gerado automaticamente pela Plataforma Feminnita
           </div>
 
           <div className="pt-4 border-t border-purple-200">
-            <Button 
+            <Button
               onClick={gerarRelatorio}
               className="w-full bg-purple-600 hover:bg-purple-700 gap-2"
               size="lg"
@@ -205,7 +235,7 @@ Relatório gerado automaticamente pela Plataforma Feminnita
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Conteúdo do Relatório</CardTitle>
-          <CardDescription>O relatório inclui as seguintes seções:</CardDescription>
+          <CardDescription>O relatório inclui as seguintes seções com dados reais do banco de dados:</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-2 gap-4">
@@ -239,7 +269,7 @@ Relatório gerado automaticamente pela Plataforma Feminnita
         <CardContent>
           <div className="grid md:grid-cols-2 gap-4">
             {[
-              { titulo: "Profissionalismo", descricao: "Apresente sua estratégia de forma profissional e organizada" },
+              { titulo: "Dados Reais", descricao: "Métricas extraídas do banco de dados — sem números inventados" },
               { titulo: "Compartilhamento", descricao: "Compartilhe facilmente com clientes, equipe ou parceiros" },
               { titulo: "Referência", descricao: "Mantenha um registro completo da sua estratégia" },
               { titulo: "Apresentações", descricao: "Use como base para apresentações e reuniões" },
@@ -265,14 +295,14 @@ Relatório gerado automaticamente pela Plataforma Feminnita
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           {[
-            "Customize o relatório com seu logo e cores da marca",
-            "Adicione sua assinatura digital antes de enviar",
-            "Inclua um índice para fácil navegação",
-            "Use como documento de proposta para novos clientes",
-            "Atualize regularmente com resultados reais",
+            "Exporte mensalmente para acompanhar a evolução das campanhas",
+            "Adicione sua assinatura digital antes de enviar para clientes",
+            "Use como documento de proposta para novos parceiros",
+            "Atualize regularmente com novos resultados reais",
+            "Compare relatórios de meses diferentes para identificar tendências",
             "Compartilhe versões resumidas em redes sociais",
             "Mantenha cópias arquivadas para referência futura",
-            "Use como base para próximas campanhas"
+            "Use como base para planejar campanhas do próximo período"
           ].map((dica, idx) => (
             <div key={idx} className="flex gap-2">
               <span className="text-purple-600 font-bold">{idx + 1}.</span>

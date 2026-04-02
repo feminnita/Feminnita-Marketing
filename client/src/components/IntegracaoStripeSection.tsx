@@ -1,50 +1,16 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { CreditCard, CheckCircle, AlertCircle, TrendingUp, DollarSign, ShoppingCart } from "lucide-react";
-
-const PRODUTOS_FEMINNITA = [
-  { id: 1, nome: "Pijama Suede Rosa", preco: 49.90, estoque: 150, imagem: "🎀" },
-  { id: 2, nome: "Pijama Algodão Azul", preco: 39.90, estoque: 200, imagem: "💙" },
-  { id: 3, nome: "Pijama Inverno Cinza", preco: 59.90, estoque: 80, imagem: "❄️" },
-  { id: 4, nome: "Pijama Premium Vinho", preco: 69.90, estoque: 120, imagem: "🍷" },
-  { id: 5, nome: "Pijama Básico Branco", preco: 29.90, estoque: 300, imagem: "⚪" },
-  { id: 6, nome: "Pijama Floral Amarelo", preco: 44.90, estoque: 90, imagem: "🌼" },
-];
-
-const PEDIDOS_RECENTES = [
-  { id: "PED-001", cliente: "Carol Silva", produto: "Pijama Suede Rosa", valor: 49.90, status: "Pago", data: "31 Jan 2026" },
-  { id: "PED-002", cliente: "Renata Costa", produto: "Pijama Inverno Cinza", valor: 59.90, status: "Pago", data: "30 Jan 2026" },
-  { id: "PED-003", cliente: "Vanessa Oliveira", produto: "Pijama Premium Vinho", valor: 69.90, status: "Pendente", data: "29 Jan 2026" },
-];
+import { CreditCard, CheckCircle, AlertCircle, DollarSign, Package } from "lucide-react";
 
 export default function IntegracaoStripeSection() {
-  const [carrinho, setCarrinho] = useState<typeof PRODUTOS_FEMINNITA>([]);
-  const [conectado, setConectado] = useState(true);
+  const [conectado, setConectado] = useState(false);
   const [processando, setProcessando] = useState(false);
 
-  const adicionarAoCarrinho = (produto: typeof PRODUTOS_FEMINNITA[0]) => {
-    setCarrinho([...carrinho, produto]);
-  };
-
-  const removerDoCarrinho = (id: number) => {
-    setCarrinho(carrinho.filter(p => p.id !== id));
-  };
-
-  const totalCarrinho = carrinho.reduce((sum, p) => sum + p.preco, 0);
-
   const processarPagamento = async () => {
-    setProcessando(true);
-    setTimeout(() => {
-      setProcessando(false);
-      alert("Pagamento processado com sucesso! Pedido confirmado.");
-      setCarrinho([]);
-    }, 2000);
+    toast.error("Integração Stripe não configurada. Adicione sua chave de API Stripe nas configurações para processar pagamentos reais.");
   };
-
-  const receita = PEDIDOS_RECENTES.reduce((sum, p) => sum + p.valor, 0);
-  const pedidosPagos = PEDIDOS_RECENTES.filter(p => p.status === "Pago").length;
 
   return (
     <div className="space-y-6">
@@ -89,152 +55,30 @@ export default function IntegracaoStripeSection() {
             </div>
           </Card>
 
-          {/* Métricas */}
-          <div className="grid md:grid-cols-3 gap-3">
-            <Card className="p-4 bg-slate-50">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-semibold">Receita (30 dias)</h4>
-                <DollarSign className="w-4 h-4 text-green-600" />
-              </div>
-              <p className="text-2xl font-bold text-green-600">R$ {receita.toFixed(2)}</p>
-              <p className="text-xs text-slate-600 mt-1">+15% vs mês anterior</p>
-            </Card>
-
-            <Card className="p-4 bg-slate-50">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-semibold">Pedidos Pagos</h4>
-                <CheckCircle className="w-4 h-4 text-blue-600" />
-              </div>
-              <p className="text-2xl font-bold text-blue-600">{pedidosPagos}</p>
-              <p className="text-xs text-slate-600 mt-1">Taxa de conversão: 98.5%</p>
-            </Card>
-
-            <Card className="p-4 bg-slate-50">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-semibold">Ticket Médio</h4>
-                <TrendingUp className="w-4 h-4 text-purple-600" />
-              </div>
-              <p className="text-2xl font-bold text-purple-600">R$ {(receita / pedidosPagos).toFixed(2)}</p>
-              <p className="text-xs text-slate-600 mt-1">+8% vs mês anterior</p>
-            </Card>
-          </div>
+          {/* Métricas — disponíveis após conectar o Stripe */}
+          <Card className="p-4 bg-slate-50 border border-dashed border-slate-300">
+            <div className="flex items-center gap-3 text-slate-500">
+              <DollarSign className="w-5 h-5 flex-shrink-0" />
+              <p className="text-sm">Métricas de receita, pedidos pagos e ticket médio serão exibidas aqui após conectar o Stripe.</p>
+            </div>
+          </Card>
 
           {/* Catálogo de Produtos */}
           <div>
             <h3 className="font-semibold text-sm mb-3">📦 Catálogo de Produtos</h3>
-            <div className="grid md:grid-cols-3 gap-3">
-              {PRODUTOS_FEMINNITA.map(produto => (
-                <Card key={produto.id} className="p-4 hover:shadow-md transition-shadow">
-                  <div className="text-center mb-3">
-                    <div className="text-4xl mb-2">{produto.imagem}</div>
-                    <h4 className="font-semibold text-sm">{produto.nome}</h4>
-                  </div>
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="text-lg font-bold text-green-600">R$ {produto.preco.toFixed(2)}</p>
-                    <Badge variant="outline" className="text-xs">
-                      {produto.estoque} em estoque
-                    </Badge>
-                  </div>
-                  <Button
-                    size="sm"
-                    onClick={() => adicionarAoCarrinho(produto)}
-                    className="w-full text-xs"
-                  >
-                    Adicionar
-                  </Button>
-                </Card>
-              ))}
-            </div>
-          </div>
-
-          {/* Carrinho de Compras */}
-          <div>
-            <h3 className="font-semibold text-sm mb-3">
-              🛒 Carrinho ({carrinho.length} itens)
-            </h3>
-            {carrinho.length > 0 ? (
-              <Card className="p-4 bg-slate-50">
-                <div className="space-y-2 mb-4">
-                  {carrinho.map((produto, idx) => (
-                    <div key={idx} className="flex items-center justify-between pb-2 border-b border-slate-200">
-                      <div>
-                        <p className="text-sm font-semibold">{produto.nome}</p>
-                        <p className="text-xs text-slate-600">R$ {produto.preco.toFixed(2)}</p>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => removerDoCarrinho(produto.id)}
-                        className="text-xs"
-                      >
-                        Remover
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="bg-white p-3 rounded border border-slate-200 mb-4">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-sm">Subtotal:</span>
-                    <span className="font-semibold">R$ {totalCarrinho.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between mb-2">
-                    <span className="text-sm">Frete:</span>
-                    <span className="font-semibold">R$ 10.00</span>
-                  </div>
-                  <div className="border-t border-slate-200 pt-2 flex justify-between">
-                    <span className="font-semibold">Total:</span>
-                    <span className="text-lg font-bold text-green-600">
-                      R$ {(totalCarrinho + 10).toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-
-                <Button
-                  onClick={processarPagamento}
-                  disabled={processando || !conectado}
-                  className="w-full gap-2"
-                >
-                  <CreditCard className="w-4 h-4" />
-                  {processando ? "Processando..." : "Pagar com Stripe"}
-                </Button>
-              </Card>
-            ) : (
-              <Card className="p-4 bg-slate-50 text-center">
-                <p className="text-sm text-slate-600">Carrinho vazio. Adicione produtos acima.</p>
-              </Card>
-            )}
+            <Card className="p-4 border-dashed border-slate-300 bg-slate-50 text-center">
+              <Package className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+              <p className="text-sm text-slate-500 font-medium">Produtos sincronizados via Bling ERP</p>
+              <p className="text-xs text-slate-400 mt-1">Conecte o Bling na aba <strong>Integrações &gt; Bling ERP</strong> para exibir seu catálogo com preços e estoque reais.</p>
+            </Card>
           </div>
 
           {/* Pedidos Recentes */}
           <div>
             <h3 className="font-semibold text-sm mb-3">📋 Pedidos Recentes</h3>
-            <div className="space-y-2">
-              {PEDIDOS_RECENTES.map(pedido => (
-                <Card key={pedido.id} className="p-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="font-semibold text-sm">{pedido.id}</p>
-                        <Badge
-                          variant={pedido.status === "Pago" ? "default" : "outline"}
-                          className="text-xs"
-                        >
-                          {pedido.status}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-slate-600">
-                        {pedido.cliente} • {pedido.produto}
-                      </p>
-                      <p className="text-xs text-slate-500">{pedido.data}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-green-600">R$ {pedido.valor.toFixed(2)}</p>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
+            <Card className="p-4 bg-slate-50 text-center">
+              <p className="text-sm text-slate-500">Conecte o Stripe para ver pedidos reais aqui.</p>
+            </Card>
           </div>
 
           {/* Configurações */}

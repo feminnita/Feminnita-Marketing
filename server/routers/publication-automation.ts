@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
+import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { scheduledPosts, postHistory, instagramAccounts, oauthTokens, contentItems, influencerPosts, influencers } from "../../drizzle/schema";
 import { eq, and, lte, desc } from "drizzle-orm";
@@ -101,11 +101,11 @@ export const publicationAutomationRouter = router({
         const db = await getDb();
         if (!db) throw new Error("Database not available");
 
-        // Obter post
+        // Obter post verificando ownership
         const post = await db
           .select()
           .from(scheduledPosts)
-          .where(eq(scheduledPosts.id, input.postId));
+          .where(and(eq(scheduledPosts.id, input.postId), eq(scheduledPosts.userId, ctx.user.id)));
 
         if (!post || post.length === 0) {
           throw new Error("Post not found");

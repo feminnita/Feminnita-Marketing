@@ -58,14 +58,12 @@ export default function ConfigureCredentials() {
   };
 
   const handleDeleteCredentials = async (platform: string) => {
-    if (confirm(`Deseja deletar as credenciais de ${platform}?`)) {
-      try {
-        await deleteCredentialsMutation.mutateAsync({
-          platform: platform as any,
-        });
-      } catch (error) {
-        console.error("Erro ao deletar credenciais:", error);
-      }
+    try {
+      await deleteCredentialsMutation.mutateAsync({
+        platform: platform as any,
+      });
+    } catch (error) {
+      console.error("Erro ao deletar credenciais:", error);
     }
   };
 

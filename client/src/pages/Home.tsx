@@ -141,6 +141,9 @@ import SidebarNavegacao from '@/components/SidebarNavegacao';
 import RentabilidadeDetalhadaSection from '@/components/RentabilidadeDetalhadaSection';
 import AutomacaoRelatoriosAgendadosSection from '@/components/AutomacaoRelatoriosAgendadosSection';
 import IntegracaoAfiliados from '@/components/IntegracaoAfiliados';
+import DropsPlannerSection from '@/components/DropsPlannerSection';
+import UGCCollectorSection from '@/components/UGCCollectorSection';
+import RecuperacaoAbandonoSection from '@/components/RecuperacaoAbandonoSection';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("personas");
@@ -1303,6 +1306,18 @@ export default function Home() {
 
           <TabsContent value="afiliados" className="space-y-6">
             <IntegracaoAfiliados />
+          </TabsContent>
+
+          <TabsContent value="drops-planner" className="space-y-6">
+            <DropsPlannerSection />
+          </TabsContent>
+
+          <TabsContent value="ugc-collector" className="space-y-6">
+            <UGCCollectorSection />
+          </TabsContent>
+
+          <TabsContent value="abandono-recovery" className="space-y-6">
+            <RecuperacaoAbandonoSection />
           </TabsContent>
         </Tabs>
       </section>

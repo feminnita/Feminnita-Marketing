@@ -1,4 +1,4 @@
-import { protectedProcedure as publicProcedure, router } from "../_core/trpc";
+import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import {
   obterCampanhasMetaAds,
@@ -15,7 +15,7 @@ export const metaAdsRouter = router({
   /**
    * Obtém campanhas da Meta Ads
    */
-  obterCampanhas: publicProcedure
+  obterCampanhas: protectedProcedure
     .input(
       z.object({
         accessToken: z.string(),
@@ -44,7 +44,7 @@ export const metaAdsRouter = router({
   /**
    * Obtém insights de uma campanha
    */
-  obterInsights: publicProcedure
+  obterInsights: protectedProcedure
     .input(
       z.object({
         accessToken: z.string(),
@@ -72,7 +72,7 @@ export const metaAdsRouter = router({
   /**
    * Cria uma nova campanha
    */
-  criarCampanha: publicProcedure
+  criarCampanha: protectedProcedure
     .input(
       z.object({
         accessToken: z.string(),
@@ -105,7 +105,7 @@ export const metaAdsRouter = router({
   /**
    * Atualiza uma campanha
    */
-  atualizarCampanha: publicProcedure
+  atualizarCampanha: protectedProcedure
     .input(
       z.object({
         accessToken: z.string(),
@@ -136,7 +136,7 @@ export const metaAdsRouter = router({
   /**
    * Obtém anúncios de uma campanha
    */
-  obterAnuncios: publicProcedure
+  obterAnuncios: protectedProcedure
     .input(
       z.object({
         accessToken: z.string(),
@@ -165,7 +165,7 @@ export const metaAdsRouter = router({
   /**
    * Obtém performance de um anúncio
    */
-  obterPerformanceAnuncio: publicProcedure
+  obterPerformanceAnuncio: protectedProcedure
     .input(
       z.object({
         accessToken: z.string(),

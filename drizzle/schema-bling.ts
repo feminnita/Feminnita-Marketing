@@ -17,8 +17,8 @@ export const blingCredentials = mysqlTable(
     refreshToken: text("refresh_token"),
     expiresAt: datetime("expires_at").notNull(),
     scope: varchar("scope", { length: 255 }),
-    createdAt: datetime("created_at").defaultNow(),
-    updatedAt: datetime("updated_at").defaultNow().onUpdateNow(),
+    createdAt: datetime("created_at").$defaultFn(() => new Date()),
+    updatedAt: datetime("updated_at").$defaultFn(() => new Date()).$onUpdateFn(() => new Date()),
   },
   (table) => ({
     userIdIdx: index("bling_credentials_user_id_idx").on(table.userId),
@@ -44,7 +44,7 @@ export const blingProdutos = mysqlTable(
     dimensoes: json("dimensoes"),
     imagens: json("imagens"),
     dataAtualizacao: datetime("data_atualizacao"),
-    sincronizadoEm: datetime("sincronizado_em").defaultNow(),
+    sincronizadoEm: datetime("sincronizado_em").$defaultFn(() => new Date()),
   },
   (table) => ({
     userIdIdx: index("bling_produtos_user_id_idx").on(table.userId),
@@ -75,7 +75,7 @@ export const blingPedidos = mysqlTable(
     rastreamento: varchar("rastreamento", { length: 255 }),
     itens: json("itens"),
     dataAtualizacao: datetime("data_atualizacao"),
-    sincronizadoEm: datetime("sincronizado_em").defaultNow(),
+    sincronizadoEm: datetime("sincronizado_em").$defaultFn(() => new Date()),
   },
   (table) => ({
     userIdIdx: index("bling_pedidos_user_id_idx").on(table.userId),
@@ -99,7 +99,7 @@ export const blingContatos = mysqlTable(
     tipo: varchar("tipo", { length: 50 }).notNull(),
     endereco: json("endereco"),
     dataAtualizacao: datetime("data_atualizacao"),
-    sincronizadoEm: datetime("sincronizado_em").defaultNow(),
+    sincronizadoEm: datetime("sincronizado_em").$defaultFn(() => new Date()),
   },
   (table) => ({
     userIdIdx: index("bling_contatos_user_id_idx").on(table.userId),
@@ -120,7 +120,7 @@ export const blingEstoque = mysqlTable(
     quantidadeReservada: int("quantidade_reservada").notNull().default(0),
     quantidadeDisponivel: int("quantidade_disponivel").notNull().default(0),
     dataAtualizacao: datetime("data_atualizacao"),
-    sincronizadoEm: datetime("sincronizado_em").defaultNow(),
+    sincronizadoEm: datetime("sincronizado_em").$defaultFn(() => new Date()),
   },
   (table) => ({
     userIdIdx: index("bling_estoque_user_id_idx").on(table.userId),
@@ -142,8 +142,8 @@ export const blingStatusSincronizacao = mysqlTable(
     statusEstoque: varchar("status_estoque", { length: 50 }).default("pendente"),
     statusContatos: varchar("status_contatos", { length: 50 }).default("pendente"),
     erros: json("erros"),
-    createdAt: datetime("created_at").defaultNow(),
-    updatedAt: datetime("updated_at").defaultNow().onUpdateNow(),
+    createdAt: datetime("created_at").$defaultFn(() => new Date()),
+    updatedAt: datetime("updated_at").$defaultFn(() => new Date()).$onUpdateFn(() => new Date()),
   },
   (table) => ({
     userIdIdx: index("bling_status_user_id_idx").on(table.userId),

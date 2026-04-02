@@ -46,8 +46,6 @@ export default function CollaboratorsManagement() {
   };
 
   const handleDeleteCollaborator = async (id: any) => {
-    if (!confirm("Tem certeza que deseja deletar este colaborador?")) return;
-
     try {
       await deleteMutation.mutateAsync({ collaboratorId: id });
       toast.success("Colaborador deletado com sucesso");

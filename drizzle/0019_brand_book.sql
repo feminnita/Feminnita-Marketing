@@ -1,0 +1,23 @@
+CREATE TABLE `brand_book` (
+  `id` int AUTO_INCREMENT PRIMARY KEY,
+  `userId` int NOT NULL UNIQUE,
+  `corPrimaria` varchar(7) DEFAULT '#D97706',
+  `corSecundaria` varchar(7) DEFAULT '#F59E0B',
+  `corAcento` varchar(7) DEFAULT '#FDE68A',
+  `corTexto` varchar(7) DEFAULT '#1E293B',
+  `fontePrimaria` varchar(100) DEFAULT 'Inter',
+  `fonteSecundaria` varchar(100) DEFAULT 'Playfair Display',
+  `tomInstagram` text,
+  `tomTikTok` text,
+  `tomWhatsApp` text,
+  `tomEmail` text,
+  `hashtagsOficiais` text,
+  `hashtagsProibidas` text,
+  `palavrasChave` text,
+  `palavrasProibidas` text,
+  `propostaValor` text,
+  `diferenciais` text,
+  `publicoAlvo` text,
+  `createdAt` timestamp NOT NULL DEFAULT NOW(),
+  `updatedAt` timestamp NOT NULL DEFAULT NOW()
+);

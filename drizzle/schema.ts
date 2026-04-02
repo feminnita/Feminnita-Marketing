@@ -139,6 +139,7 @@ import { sql } from "drizzle-orm";
 
 export const influencers = mysqlTable("influencers", {
   id: int("id").primaryKey().autoincrement(),
+  userId: int("userId").notNull(),
   name: varchar("name", { length: 255 }).notNull(), // Carol, Renata, Vanessa, Luiza
   bio: text("bio"),
   personality: varchar("personality", { length: 255 }), // Unique personality traits
@@ -917,3 +918,212 @@ export type InsertProductCollection = typeof productCollections.$inferInsert;
 
 // Re-exportar tabelas Bling
 export * from "./schema-bling";
+
+// === MÓDULO AFILIADAS ===
+export const afiliadas = mysqlTable("afiliadas", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  nome: varchar("nome", { length: 255 }).notNull(),
+  email: varchar("email", { length: 320 }),
+  whatsapp: varchar("whatsapp", { length: 20 }),
+  cidade: varchar("cidade", { length: 100 }),
+  estado: varchar("estado", { length: 2 }),
+  linkCode: varchar("linkCode", { length: 32 }).notNull().unique(),
+  comissaoPercent: varchar("comissaoPercent", { length: 10 }).default("10"),
+  totalVendas: int("totalVendas").default(0),
+  totalReceita: varchar("totalReceita", { length: 20 }).default("0"),
+  status: mysqlEnum("status", ["ativa", "inativa", "pendente"]).default("pendente").notNull(),
+  nivel: mysqlEnum("nivel", ["bronze", "prata", "ouro", "diamante"]).default("bronze").notNull(),
+  observacoes: text("observacoes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+export type Afiliada = typeof afiliadas.$inferSelect;
+export type InsertAfiliada = typeof afiliadas.$inferInsert;
+
+export const afiliadaCliques = mysqlTable("afiliada_cliques", {
+  id: int("id").autoincrement().primaryKey(),
+  afiliadaId: int("afiliadaId").notNull(),
+  origem: varchar("origem", { length: 100 }),
+  ip: varchar("ip", { length: 45 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export const afiliadaVendas = mysqlTable("afiliada_vendas", {
+  id: int("id").autoincrement().primaryKey(),
+  afiliadaId: int("afiliadaId").notNull(),
+  userId: int("userId").notNull(),
+  pedidoId: varchar("pedidoId", { length: 100 }),
+  produto: varchar("produto", { length: 255 }),
+  valor: varchar("valor", { length: 20 }).notNull(),
+  comissaoValor: varchar("comissaoValor", { length: 20 }).notNull(),
+  status: mysqlEnum("status", ["pendente", "pago", "cancelado"]).default("pendente").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type AfiliadaVenda = typeof afiliadaVendas.$inferSelect;
+
+// === MÓDULO RECUPERAÇÃO DE ABANDONO ===
+export const abandonamentoSequencias = mysqlTable("abandonamento_sequencias", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  nome: varchar("nome", { length: 255 }).notNull(),
+  ativo: boolean("ativo").default(true).notNull(),
+  etapa1Horas: int("etapa1Horas").default(1),
+  etapa1Mensagem: text("etapa1Mensagem"),
+  etapa2Horas: int("etapa2Horas").default(24),
+  etapa2Mensagem: text("etapa2Mensagem"),
+  etapa3Horas: int("etapa3Horas").default(72),
+  etapa3Mensagem: text("etapa3Mensagem"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+export type AbandonamentoSequencia = typeof abandonamentoSequencias.$inferSelect;
+
+export const abandonamentoLogs = mysqlTable("abandonamento_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  sequenciaId: int("sequenciaId").notNull(),
+  pedidoId: varchar("pedidoId", { length: 100 }),
+  clienteNome: varchar("clienteNome", { length: 255 }),
+  clienteWhatsapp: varchar("clienteWhatsapp", { length: 20 }).notNull(),
+  etapaAtual: int("etapaAtual").default(0),
+  status: mysqlEnum("status", ["ativo", "convertido", "cancelado", "concluido"]).default("ativo").notNull(),
+  convertidoEm: timestamp("convertidoEm"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+export type AbandonamentoLog = typeof abandonamentoLogs.$inferSelect;
+
+// === BRAND BOOK ===
+export const brandBook = mysqlTable("brand_book", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  // Identidade Visual
+  corPrimaria: varchar("corPrimaria", { length: 7 }).default("#D97706"),
+  corSecundaria: varchar("corSecundaria", { length: 7 }).default("#F59E0B"),
+  corAcento: varchar("corAcento", { length: 7 }).default("#FDE68A"),
+  corTexto: varchar("corTexto", { length: 7 }).default("#1E293B"),
+  fontePrimaria: varchar("fontePrimaria", { length: 100 }).default("Inter"),
+  fonteSecundaria: varchar("fonteSecundaria", { length: 100 }).default("Playfair Display"),
+  // Tom de Voz
+  tomInstagram: text("tomInstagram"),
+  tomTikTok: text("tomTikTok"),
+  tomWhatsApp: text("tomWhatsApp"),
+  tomEmail: text("tomEmail"),
+  // Hashtags
+  hashtagsOficiais: text("hashtagsOficiais"),
+  hashtagsProibidas: text("hashtagsProibidas"),
+  // Valores
+  palavrasChave: text("palavrasChave"),
+  palavrasProibidas: text("palavrasProibidas"),
+  // Proposta de valor
+  propostaValor: text("propostaValor"),
+  diferenciais: text("diferenciais"),
+  publicoAlvo: text("publicoAlvo"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+export type BrandBook = typeof brandBook.$inferSelect;
+export type InsertBrandBook = typeof brandBook.$inferInsert;
+
+// === DROPS SAZONAIS ===
+export const drops = mysqlTable("drops", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  nome: varchar("nome", { length: 255 }).notNull(),
+  descricao: text("descricao"),
+  dataLancamento: timestamp("dataLancamento").notNull(),
+  status: mysqlEnum("status", ["rascunho", "agendado", "ativo", "encerrado"]).default("rascunho").notNull(),
+  categoria: mysqlEnum("categoria", ["inverno", "verao", "natal", "dia_das_maes", "dia_dos_namorados", "black_friday", "lancamento", "outro"]).default("lancamento").notNull(),
+  metaVendas: int("metaVendas"),
+  vendasRealizadas: int("vendasRealizadas").default(0),
+  preListaWhatsapp: int("preListaWhatsapp").default(0),
+  imagemUrl: text("imagemUrl"),
+  precoMinimo: varchar("precoMinimo", { length: 20 }),
+  precoMaximo: varchar("precoMaximo", { length: 20 }),
+  ativo: boolean("ativo").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+export type Drop = typeof drops.$inferSelect;
+export type InsertDrop = typeof drops.$inferInsert;
+
+// === UGC COLLECTOR ===
+export const ugcSubmissions = mysqlTable("ugc_submissions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  plataforma: mysqlEnum("plataforma", ["instagram", "tiktok", "whatsapp", "twitter", "outro"]).notNull(),
+  autorHandle: varchar("autorHandle", { length: 255 }),
+  autorNome: varchar("autorNome", { length: 255 }),
+  conteudoUrl: text("conteudoUrl"),
+  conteudoTexto: text("conteudoTexto"),
+  thumbnail: text("thumbnail"),
+  tipo: mysqlEnum("tipo", ["foto", "video", "story", "reels", "depoimento"]).default("foto").notNull(),
+  status: mysqlEnum("status", ["pendente", "aprovado", "rejeitado", "republicado"]).default("pendente").notNull(),
+  autorizacaoObtida: boolean("autorizacaoObtida").default(false).notNull(),
+  tags: text("tags"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+export type UGCSubmission = typeof ugcSubmissions.$inferSelect;
+export type InsertUGCSubmission = typeof ugcSubmissions.$inferInsert;
+
+// === TIKTOK LIVE COMMERCE ===
+export const tiktokLives = mysqlTable("tiktok_lives", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  titulo: varchar("titulo", { length: 255 }).notNull(),
+  dataAgendada: timestamp("dataAgendada"),
+  duracao: int("duracao").default(120), // minutos
+  status: mysqlEnum("status", ["rascunho", "agendada", "ao_vivo", "encerrada"]).default("rascunho").notNull(),
+  roteiro: text("roteiro"),
+  produtosDestaque: text("produtosDestaque"),
+  metaViewers: int("metaViewers"),
+  metaVendas: int("metaVendas"),
+  viewersReais: int("viewersReais").default(0),
+  vendasReais: int("vendasReais").default(0),
+  receitaGerada: varchar("receitaGerada", { length: 20 }).default("0"),
+  tiktokLiveUrl: text("tiktokLiveUrl"),
+  observacoes: text("observacoes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+export type TiktokLive = typeof tiktokLives.$inferSelect;
+export type InsertTiktokLive = typeof tiktokLives.$inferInsert;
+
+// === SISTEMA DE CUPONS E PROMOÇÕES ===
+export const cupons = mysqlTable("cupons", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  codigo: varchar("codigo", { length: 50 }).notNull(),
+  desconto: varchar("desconto", { length: 50 }).notNull(), // ex: "20%", "R$ 40", "Frete Grátis"
+  tipo: mysqlEnum("tipo", ["percentual", "valor_fixo", "frete_gratis"]).notNull().default("percentual"),
+  persona: varchar("persona", { length: 100 }), // Carol, Renata, etc
+  campanha: varchar("campanha", { length: 200 }),
+  usos: int("usos").notNull().default(0),
+  maxUsos: int("maxUsos"),
+  ativo: boolean("ativo").notNull().default(true),
+  dataExpiracao: varchar("dataExpiracao", { length: 20 }), // ISO date string
+  observacoes: text("observacoes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+export type Cupom = typeof cupons.$inferSelect;
+export type InsertCupom = typeof cupons.$inferInsert;
+
+// === TEMPLATES REUTILIZÁVEIS ===
+export const contentTemplates = mysqlTable("content_templates", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  nome: varchar("nome", { length: 255 }).notNull(),
+  tipo: mysqlEnum("tipo", ["story", "reels", "tiktok", "ads", "email", "whatsapp"]).notNull(),
+  descricao: varchar("descricao", { length: 500 }),
+  conteudo: text("conteudo").notNull(),
+  favorito: boolean("favorito").notNull().default(false),
+  usos: int("usos").notNull().default(0),
+  tags: varchar("tags", { length: 500 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+export type ContentTemplate = typeof contentTemplates.$inferSelect;
+export type InsertContentTemplate = typeof contentTemplates.$inferInsert;

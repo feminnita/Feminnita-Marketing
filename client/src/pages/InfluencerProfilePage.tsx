@@ -99,6 +99,18 @@ const INFLUENCER_PROFILES = {
   },
 };
 
+const DEFAULT_COSMETICS = {
+  color: "from-gray-400 to-gray-600",
+  bgColor: "bg-gray-50",
+  accentColor: "text-gray-600",
+  image: "👤",
+  dailyLife: [] as string[],
+  feminnita: [] as string[],
+  title: "",
+  bio: "",
+  name: "",
+};
+
 export default function InfluencerProfilePage() {
   const [, params] = useRoute("/influenciadora/:id");
   const influencerId = params?.id ? parseInt(params.id) : 1;
@@ -107,7 +119,22 @@ export default function InfluencerProfilePage() {
   const [newPostCaption, setNewPostCaption] = useState("");
   const [editingPostId, setEditingPostId] = useState<number | null>(null);
 
-  const profile = INFLUENCER_PROFILES[influencerId as keyof typeof INFLUENCER_PROFILES];
+  // Fetch live influencer data from DB
+  const { data: influencersData } = trpc.autonomousInfluencers.listInfluencers.useQuery();
+  const dbInfluencer = influencersData?.influencers?.find((i: any) => i.id === influencerId);
+
+  // Static cosmetics (colors, emoji) with DB name/bio taking priority
+  const cosmetics = INFLUENCER_PROFILES[influencerId as keyof typeof INFLUENCER_PROFILES] ?? DEFAULT_COSMETICS;
+  const profile = dbInfluencer
+    ? {
+        ...cosmetics,
+        name: dbInfluencer.name,
+        title: dbInfluencer.personality ?? cosmetics.title ?? "",
+        bio: dbInfluencer.bio ?? cosmetics.bio ?? "",
+      }
+    : cosmetics.name
+    ? cosmetics
+    : null;
 
   // Get posts for influencer
   const { data: posts = [], isLoading: postsLoading, refetch: refetchPosts } = trpc.influencerBlog.getPosts.useQuery(
@@ -147,12 +174,10 @@ export default function InfluencerProfilePage() {
   };
 
   const handleDeletePost = async (postId: number) => {
-    if (confirm("Tem certeza que deseja deletar este post?")) {
-      try {
-        await deletePostMutation.mutateAsync({ postId });
-      } catch (error) {
-        console.error("Erro ao deletar post:", error);
-      }
+    try {
+      await deletePostMutation.mutateAsync({ postId });
+    } catch (error) {
+      console.error("Erro ao deletar post:", error);
     }
   };
 

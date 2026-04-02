@@ -164,7 +164,7 @@ export const marketResearchRouter = router({
       .insert(marketingResearchReports)
       .values({
         userId: ctx.user.id,
-        reportDate: today,
+        reportDate: new Date(today),
         competitorInsights: {
           competitors: research.competitors,
           gaps: [],

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
+import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { scheduledPosts, contentItems, postHistory, ScheduledPost } from "../../drizzle/schema";
 import { sql, and, eq } from "drizzle-orm";
@@ -163,11 +163,11 @@ export const scheduledPostsRouter = router({
         const db = await getDb();
         if (!db) throw new Error("Database not available");
         
-        // Atualizar status para processing
+        // Atualizar status para processing (com userId para garantir ownership)
         await db
           .update(scheduledPosts)
           .set({ status: "processing", updatedAt: new Date() })
-          .where(eq(scheduledPosts.id, input.id));
+          .where(and(eq(scheduledPosts.id, input.id), eq(scheduledPosts.userId, ctx.user.id)));
 
         // Simular publicação em plataformas
         const results = await Promise.all(
@@ -221,17 +221,17 @@ export const scheduledPostsRouter = router({
     }),
 
   // Obter próximos posts a publicar
-  getUpcoming: publicProcedure
+  getUpcoming: protectedProcedure
     .input(
       z.object({
         hours: z.number().default(24),
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database not available");
-        
+
         const now = new Date();
         const futureDate = new Date(now.getTime() + input.hours * 60 * 60 * 1000);
 
@@ -240,6 +240,7 @@ export const scheduledPostsRouter = router({
           .from(scheduledPosts)
           .where(
             and(
+              eq(scheduledPosts.userId, ctx.user.id),
               eq(scheduledPosts.status, "pending"),
               sql`${scheduledPosts.scheduledAt} BETWEEN ${now} AND ${futureDate}`
             )

@@ -51,7 +51,7 @@ export default function OAuthCredentials() {
     setLoading(true);
     try {
       await saveMutation.mutateAsync({
-        platform,
+        platform: platform as "bling" | "canva" | "meta" | "tiktok" | "google_drive" | "whatsapp" | "email_marketing" | "tray",
         clientId: cred.clientId,
         clientSecret: cred.clientSecret,
         redirectUri: cred.redirectUri || `${window.location.origin}/api/oauth/${platform}/callback`

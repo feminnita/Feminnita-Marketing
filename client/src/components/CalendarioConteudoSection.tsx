@@ -1,131 +1,81 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Link2, CheckCircle, AlertCircle, X } from "lucide-react";
+import { Calendar, Link2, AlertCircle, Plus, X } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
+
+interface Evento {
+  id: number;
+  data: string;
+  hora: string;
+  tipo: string;
+  titulo: string;
+  persona: string;
+  plataforma: string;
+  roteiro: string;
+  duracao: string;
+  hashtags: string;
+}
+
+const INTEGRACOES = [
+  { id: 1, nome: "Google Calendar", icon: "📅", descricao: "Sincronize postagens com seu calendário Google" },
+  { id: 2, nome: "Notion", icon: "📝", descricao: "Organize conteúdo em banco de dados Notion" },
+  { id: 3, nome: "Asana", icon: "✓", descricao: "Crie tarefas de conteúdo no Asana" },
+];
+
+const PERSONAS = ["Carol (Renda Extra)", "Renata (Lojista)", "Vanessa (Compra Coletiva)", "Luiza (Trendsetter)"];
+const PLATAFORMAS = ["Instagram", "TikTok", "Facebook", "WhatsApp", "YouTube"];
+const TIPOS = ["Story", "Reels", "Ads", "Post", "TikTok", "Live"];
 
 export default function CalendarioConteudoSection() {
-  const [integracoes, setIntegracoes] = useState([
-    {
-      id: 1,
-      nome: "Google Calendar",
-      status: "conectado",
-      icon: "📅",
-      descricao: "Sincronize postagens com seu calendário Google",
-      eventos: 42,
-      ultimaSincronizacao: "2026-01-31 14:30"
-    },
-    {
-      id: 2,
-      nome: "Notion",
-      status: "desconectado",
-      icon: "📝",
-      descricao: "Organize conteúdo em banco de dados Notion",
-      eventos: 0,
-      ultimaSincronizacao: "-"
-    },
-    {
-      id: 3,
-      nome: "Asana",
-      status: "desconectado",
-      icon: "✓",
-      descricao: "Crie tarefas de conteúdo no Asana",
-      eventos: 0,
-      ultimaSincronizacao: "-"
+  const [eventos, setEventos] = useState<Evento[]>([]);
+  const [eventoSelecionado, setEventoSelecionado] = useState<Evento | null>(null);
+  const [novoEvento, setNovoEvento] = useState(false);
+  const [form, setForm] = useState({
+    data: '', hora: '09:00', tipo: 'Reels', titulo: '',
+    persona: PERSONAS[0], plataforma: 'Instagram',
+    roteiro: '', duracao: '', hashtags: '',
+  });
+
+  const adicionarEvento = () => {
+    if (!form.titulo.trim() || !form.data) {
+      toast.error('Preencha título e data.');
+      return;
     }
-  ]);
+    const novo: Evento = {
+      id: Date.now(),
+      data: form.data,
+      hora: form.hora,
+      tipo: form.tipo,
+      titulo: form.titulo,
+      persona: form.persona,
+      plataforma: form.plataforma,
+      roteiro: form.roteiro,
+      duracao: form.duracao,
+      hashtags: form.hashtags,
+    };
+    setEventos(prev => [...prev, novo].sort((a, b) => a.data.localeCompare(b.data) || a.hora.localeCompare(b.hora)));
+    setForm({ data: '', hora: '09:00', tipo: 'Reels', titulo: '', persona: PERSONAS[0], plataforma: 'Instagram', roteiro: '', duracao: '', hashtags: '' });
+    setNovoEvento(false);
+    toast.success('Evento adicionado ao calendário.');
+  };
 
-  const [eventos] = useState([
-    {
-      id: 1,
-      data: "2026-02-03 (Seg)",
-      hora: "09:00",
-      tipo: "Story",
-      titulo: "Teaser Lançamento",
-      persona: "Carol",
-      plataforma: "Instagram",
-      status: "agendado",
-      descricao: "Vídeo de teaser do novo lançamento de pijamas com a persona Carol",
-      roteiro: "Renda Extra e Primeiro Investimento",
-      duracao: "15 segundos",
-      hashtags: "#FeminnitaLançamento #PijamaNovoModelo"
-    },
-    {
-      id: 2,
-      data: "2026-02-03 (Seg)",
-      hora: "13:00",
-      tipo: "Reels",
-      titulo: "Bastidores Produção",
-      persona: "Vanessa",
-      plataforma: "Instagram",
-      status: "agendado",
-      descricao: "Mostrando bastidores da produção de conteúdo com a família",
-      roteiro: "Compra Coletiva e Economia Familiar",
-      duracao: "30 segundos",
-      hashtags: "#BastidoresFeminnita #FamiliaUnida"
-    },
-    {
-      id: 3,
-      data: "2026-02-03 (Seg)",
-      hora: "19:00",
-      tipo: "Ads",
-      titulo: "Renda Extra",
-      persona: "Carol",
-      plataforma: "TikTok",
-      status: "agendado",
-      descricao: "Anúncio focado em renda extra para iniciantes",
-      roteiro: "Renda Extra e Primeiro Investimento",
-      duracao: "20 segundos",
-      hashtags: "#RendaExtra #FeminnitaLucro"
-    },
-    {
-      id: 4,
-      data: "2026-02-04 (Ter)",
-      hora: "09:00",
-      tipo: "Story",
-      titulo: "Enquete Cores",
-      persona: "Renata",
-      plataforma: "Instagram",
-      status: "agendado",
-      descricao: "Enquete interativa sobre cores de pijamas preferidas",
-      roteiro: "Qualidade e Variedade para Lojistas",
-      duracao: "15 segundos",
-      hashtags: "#EnqueteInterativa #VocêEscolhe"
-    },
-    {
-      id: 5,
-      data: "2026-02-04 (Ter)",
-      hora: "20:00",
-      tipo: "Reels",
-      titulo: "Análise Qualidade",
-      persona: "Renata",
-      plataforma: "Instagram",
-      status: "agendado",
-      descricao: "Análise detalhada da qualidade dos tecidos Feminnita",
-      roteiro: "Qualidade e Variedade para Lojistas",
-      duracao: "30 segundos",
-      hashtags: "#QualidadeFeminnita #TecidoPremium"
-    }
-  ]);
-
-  const [eventoSelecionado, setEventoSelecionado] = useState<typeof eventos[0] | null>(null);
-
-  const conectarIntegracao = (id: number) => {
-    setIntegracoes(integracoes.map(int => 
-      int.id === id ? { ...int, status: "conectado", ultimaSincronizacao: new Date().toLocaleString('pt-BR') } : int
-    ));
+  const removerEvento = (id: number) => {
+    setEventos(prev => prev.filter(e => e.id !== id));
+    setEventoSelecionado(null);
   };
 
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-bold text-slate-900 mb-2">Integração com Calendário de Conteúdo</h2>
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">Calendário de Conteúdo</h2>
         <p className="text-slate-600">
-          Sincronize automaticamente o planejamento semanal com Google Calendar, Notion ou Asana para facilitar coordenação com equipe.
+          Planeje e organize posts por data, persona e plataforma. Conecte ferramentas externas para sincronização automática.
         </p>
       </div>
 
-      {/* Integrações Disponíveis */}
+      {/* Aviso integrações */}
       <Card className="border-l-4 border-l-blue-500">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
@@ -135,167 +85,183 @@ export default function CalendarioConteudoSection() {
           <CardDescription>Conecte com ferramentas que sua equipe já usa</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          {integracoes.map((int) => (
-            <div key={int.id} className={`border-2 rounded-lg p-4 ${int.status === "conectado" ? "border-green-200 bg-green-50" : "border-slate-200 bg-white"}`}>
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex items-start gap-3 flex-1">
+          <div className="flex items-start gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg mb-2">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <p className="text-sm text-slate-700">Integração com Google Calendar, Notion e Asana requer configuração de OAuth no backend. Por enquanto, adicione eventos manualmente abaixo.</p>
+          </div>
+          {INTEGRACOES.map((int) => (
+            <div key={int.id} className="border border-slate-200 bg-white rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-start gap-3">
                   <span className="text-3xl">{int.icon}</span>
                   <div>
                     <h4 className="font-bold text-slate-900">{int.nome}</h4>
                     <p className="text-xs text-slate-600">{int.descricao}</p>
                   </div>
                 </div>
-                <Badge className={int.status === "conectado" ? "bg-green-600" : "bg-slate-400"}>
-                  {int.status === "conectado" ? "✅ Conectado" : "⚪ Desconectado"}
-                </Badge>
-              </div>
-
-              <div className="flex items-center justify-between text-xs">
-                <p className="text-slate-600">
-                  {int.status === "conectado" 
-                    ? `${int.eventos} eventos sincronizados • Última atualização: ${int.ultimaSincronizacao}` 
-                    : "Clique para conectar"}
-                </p>
-                {int.status === "desconectado" && (
-                  <Button 
+                <div className="flex items-center gap-3">
+                  <Badge variant="secondary">⚪ Desconectado</Badge>
+                  <Button
                     size="sm"
-                    onClick={() => conectarIntegracao(int.id)}
                     className="bg-blue-600 hover:bg-blue-700"
+                    onClick={() => toast.error(`Integração com ${int.nome} requer configuração no backend. Entre em contato com o desenvolvedor.`)}
                   >
                     Conectar
                   </Button>
-                )}
+                </div>
               </div>
             </div>
           ))}
         </CardContent>
       </Card>
 
-      {/* Eventos Sincronizados */}
+      {/* Botão adicionar evento */}
+      <Button onClick={() => setNovoEvento(!novoEvento)} className="w-full bg-purple-600 hover:bg-purple-700 gap-2" size="lg">
+        <Plus className="w-5 h-5" />
+        Adicionar Evento ao Calendário
+      </Button>
+
+      {/* Formulário */}
+      {novoEvento && (
+        <Card className="border-purple-200 bg-purple-50">
+          <CardHeader>
+            <CardTitle className="text-lg">Novo Evento</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-semibold text-slate-700 mb-1 block">Título</label>
+                <input
+                  type="text" placeholder="Ex: Story - Renda Extra"
+                  className="w-full px-3 py-2 border border-slate-300 rounded"
+                  value={form.titulo}
+                  onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-slate-700 mb-1 block">Tipo</label>
+                <select className="w-full px-3 py-2 border border-slate-300 rounded" value={form.tipo} onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))}>
+                  {TIPOS.map(t => <option key={t}>{t}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="grid md:grid-cols-3 gap-4">
+              <div>
+                <label className="text-sm font-semibold text-slate-700 mb-1 block">Data</label>
+                <input type="date" className="w-full px-3 py-2 border border-slate-300 rounded" value={form.data} onChange={e => setForm(f => ({ ...f, data: e.target.value }))} />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-slate-700 mb-1 block">Hora</label>
+                <input type="time" className="w-full px-3 py-2 border border-slate-300 rounded" value={form.hora} onChange={e => setForm(f => ({ ...f, hora: e.target.value }))} />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-slate-700 mb-1 block">Plataforma</label>
+                <select className="w-full px-3 py-2 border border-slate-300 rounded" value={form.plataforma} onChange={e => setForm(f => ({ ...f, plataforma: e.target.value }))}>
+                  {PLATAFORMAS.map(p => <option key={p}>{p}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-semibold text-slate-700 mb-1 block">Persona</label>
+                <select className="w-full px-3 py-2 border border-slate-300 rounded" value={form.persona} onChange={e => setForm(f => ({ ...f, persona: e.target.value }))}>
+                  {PERSONAS.map(p => <option key={p}>{p}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-slate-700 mb-1 block">Roteiro (opcional)</label>
+                <input type="text" placeholder="Ex: Compra Coletiva com Amigas" className="w-full px-3 py-2 border border-slate-300 rounded" value={form.roteiro} onChange={e => setForm(f => ({ ...f, roteiro: e.target.value }))} />
+              </div>
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-semibold text-slate-700 mb-1 block">Duração (opcional)</label>
+                <input type="text" placeholder="Ex: 30 segundos" className="w-full px-3 py-2 border border-slate-300 rounded" value={form.duracao} onChange={e => setForm(f => ({ ...f, duracao: e.target.value }))} />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-slate-700 mb-1 block">Hashtags (opcional)</label>
+                <input type="text" placeholder="#Feminnita #PijamaQualidade" className="w-full px-3 py-2 border border-slate-300 rounded" value={form.hashtags} onChange={e => setForm(f => ({ ...f, hashtags: e.target.value }))} />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={adicionarEvento} className="flex-1 bg-green-600 hover:bg-green-700">Adicionar Evento</Button>
+              <Button variant="outline" className="flex-1" onClick={() => setNovoEvento(false)}>Cancelar</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Lista de eventos */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Calendar className="w-5 h-5 text-purple-600" />
-            Eventos Agendados (Semana)
+            Eventos Agendados
           </CardTitle>
-          <CardDescription>Todos os posts sincronizados com calendário</CardDescription>
+          <CardDescription>Posts planejados por data e hora</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
-          {eventos.map((evt) => (
-            <div key={evt.id} className="border border-slate-200 rounded-lg p-4 hover:border-purple-300 hover:bg-purple-50 transition">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <h4 className="font-bold text-slate-900">{evt.titulo}</h4>
-                  <p className="text-xs text-slate-600">{evt.data} às {evt.hora}</p>
-                </div>
-                <Badge className="bg-purple-600">{evt.tipo}</Badge>
-              </div>
-
-              <div className="grid grid-cols-4 gap-2 text-xs">
-                <div>
-                  <p className="text-slate-600">Persona</p>
-                  <p className="font-bold text-slate-900">{evt.persona}</p>
-                </div>
-                <div>
-                  <p className="text-slate-600">Plataforma</p>
-                  <p className="font-bold text-slate-900">{evt.plataforma}</p>
-                </div>
-                <div>
-                  <p className="text-slate-600">Status</p>
-                  <p className="font-bold text-green-600">✅ {evt.status}</p>
-                </div>
-                <div className="text-right">
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => setEventoSelecionado(evt)}
-                  >
-                    Ver Detalhes
-                  </Button>
-                </div>
-              </div>
+        <CardContent>
+          {eventos.length === 0 ? (
+            <div className="py-10 text-center">
+              <Calendar className="w-10 h-10 mx-auto mb-3 text-slate-300" />
+              <p className="text-slate-500">Nenhum evento adicionado ainda.</p>
+              <p className="text-sm text-slate-400 mt-1">Use o botão acima para planejar posts no calendário.</p>
             </div>
-          ))}
+          ) : (
+            <div className="space-y-3">
+              {eventos.map((evt) => (
+                <div key={evt.id} className="border border-slate-200 rounded-lg p-4 hover:border-purple-300 hover:bg-purple-50 transition">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <h4 className="font-bold text-slate-900">{evt.titulo}</h4>
+                      <p className="text-xs text-slate-600">{evt.data} às {evt.hora}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-purple-600">{evt.tipo}</Badge>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-xs mb-3">
+                    <div><p className="text-slate-500">Persona</p><p className="font-semibold">{evt.persona}</p></div>
+                    <div><p className="text-slate-500">Plataforma</p><p className="font-semibold">{evt.plataforma}</p></div>
+                    {evt.duracao && <div><p className="text-slate-500">Duração</p><p className="font-semibold">{evt.duracao}</p></div>}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => setEventoSelecionado(evt)}>Ver Detalhes</Button>
+                    <Button size="sm" variant="outline" className="text-red-600" onClick={() => removerEvento(evt.id)}>Remover</Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Modal de Detalhes */}
+      {/* Modal */}
       {eventoSelecionado && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-4 border-b">
-              <div className="flex-1">
+              <div>
                 <CardTitle className="text-2xl">{eventoSelecionado.titulo}</CardTitle>
-                <CardDescription className="mt-2">{eventoSelecionado.descricao}</CardDescription>
+                <CardDescription className="mt-1">{eventoSelecionado.tipo} • {eventoSelecionado.plataforma}</CardDescription>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setEventoSelecionado(null)}
-                className="h-8 w-8 p-0"
-              >
+              <Button variant="ghost" size="sm" onClick={() => setEventoSelecionado(null)} className="h-8 w-8 p-0">
                 <X className="h-4 w-4" />
               </Button>
             </CardHeader>
-
-            <CardContent className="space-y-6 pt-6">
-              {/* Informações Básicas */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Data e Hora</p>
-                  <p className="text-sm font-medium text-slate-900">{eventoSelecionado.data} às {eventoSelecionado.hora}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Tipo</p>
-                  <Badge className="bg-purple-600">{eventoSelecionado.tipo}</Badge>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Persona</p>
-                  <p className="text-sm font-medium text-slate-900">{eventoSelecionado.persona}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Plataforma</p>
-                  <p className="text-sm font-medium text-slate-900">{eventoSelecionado.plataforma}</p>
-                </div>
+            <CardContent className="space-y-4 pt-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div><p className="text-slate-500 text-xs">Data e Hora</p><p className="font-medium">{eventoSelecionado.data} às {eventoSelecionado.hora}</p></div>
+                <div><p className="text-slate-500 text-xs">Persona</p><p className="font-medium">{eventoSelecionado.persona}</p></div>
+                {eventoSelecionado.roteiro && <div><p className="text-slate-500 text-xs">Roteiro</p><p className="font-medium">{eventoSelecionado.roteiro}</p></div>}
+                {eventoSelecionado.duracao && <div><p className="text-slate-500 text-xs">Duração</p><p className="font-medium">{eventoSelecionado.duracao}</p></div>}
               </div>
-
-              {/* Detalhes do Conteúdo */}
-              <div className="space-y-3 border-t pt-4">
-                <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Roteiro Utilizado</p>
-                  <p className="text-sm text-slate-700">{eventoSelecionado.roteiro}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Duração</p>
-                  <p className="text-sm text-slate-700">{eventoSelecionado.duracao}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Hashtags</p>
-                  <p className="text-sm text-slate-700">{eventoSelecionado.hashtags}</p>
-                </div>
-              </div>
-
-              {/* Status */}
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p className="text-xs font-semibold text-green-600 uppercase mb-1">Status</p>
-                <p className="text-sm font-medium text-green-900">✅ {eventoSelecionado.status}</p>
-              </div>
-
-              {/* Ações */}
-              <div className="flex gap-2 pt-4 border-t">
-                <Button className="flex-1 bg-purple-600 hover:bg-purple-700">
-                  Editar Evento
-                </Button>
-                <Button variant="outline" className="flex-1">
-                  Duplicar
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setEventoSelecionado(null)}
-                  className="flex-1"
-                >
-                  Fechar
-                </Button>
+              {eventoSelecionado.hashtags && (
+                <div><p className="text-slate-500 text-xs mb-1">Hashtags</p><p className="text-sm">{eventoSelecionado.hashtags}</p></div>
+              )}
+              <div className="flex gap-2 pt-2">
+                <Button variant="outline" className="flex-1 text-red-600" onClick={() => removerEvento(eventoSelecionado.id)}>Remover</Button>
+                <Button variant="outline" className="flex-1" onClick={() => setEventoSelecionado(null)}>Fechar</Button>
               </div>
             </CardContent>
           </Card>
@@ -304,46 +270,16 @@ export default function CalendarioConteudoSection() {
 
       {/* Dicas */}
       <Card className="border-blue-200 bg-blue-50">
-        <CardHeader>
-          <CardTitle className="text-lg">Como Usar</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm">
+        <CardHeader><CardTitle className="text-lg">Como Usar</CardTitle></CardHeader>
+        <CardContent className="space-y-2 text-sm">
           {[
-            "✅ Conecte Google Calendar para visualizar posts em seu calendário pessoal",
-            "✅ Use Notion para manter banco de dados centralizado de conteúdo",
-            "✅ Integre Asana para atribuir tarefas de conteúdo à equipe",
-            "✅ Sincronização automática acontece a cada 1 hora",
-            "✅ Todos os posts aparecem com data, hora e persona",
-            "✅ Equipe pode comentar e colaborar no calendário",
-            "✅ Receba notificações quando posts são agendados",
-            "✅ Exporte calendário em iCal para qualquer aplicativo"
+            "Adicione eventos com antecedência para visualizar a semana completa",
+            "Use as integrações (quando configuradas) para sincronizar com Google Calendar",
+            "Organize por persona para garantir diversidade de conteúdo",
+            "Registre roteiro e hashtags para facilitar a produção",
+            "Monitore frequência por plataforma para manter consistência",
           ].map((dica, idx) => (
-            <p key={idx} className="text-slate-700">{dica}</p>
-          ))}
-        </CardContent>
-      </Card>
-
-      {/* Benefícios */}
-      <Card className="border-green-200 bg-green-50">
-        <CardHeader>
-          <CardTitle className="text-lg">Benefícios</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {[
-            { titulo: "Coordenação em Equipe", descricao: "Todos veem o calendário centralizado" },
-            { titulo: "Sem Duplicação", descricao: "Evita posts duplicados ou conflitos" },
-            { titulo: "Lembretes Automáticos", descricao: "Receba notificações antes de postar" },
-            { titulo: "Histórico Completo", descricao: "Acompanhe tudo que foi postado" },
-            { titulo: "Integração Nativa", descricao: "Funciona com ferramentas que já usa" },
-            { titulo: "Escalabilidade", descricao: "Gerencie múltiplas contas e equipes" }
-          ].map((beneficio, idx) => (
-            <div key={idx} className="flex gap-3 p-3 border border-green-200 rounded bg-white">
-              <span className="text-lg">✨</span>
-              <div>
-                <p className="font-semibold text-slate-900">{beneficio.titulo}</p>
-                <p className="text-xs text-slate-600">{beneficio.descricao}</p>
-              </div>
-            </div>
+            <p key={idx} className="text-slate-700">✅ {dica}</p>
           ))}
         </CardContent>
       </Card>

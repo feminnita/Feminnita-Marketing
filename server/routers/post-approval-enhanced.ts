@@ -2,7 +2,7 @@ import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
 import { influencerPosts, influencers } from "../../drizzle/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, inArray } from "drizzle-orm";
 import { notifyOwner } from "../_core/notification";
 import { invokeLLM } from "../_core/llm";
 
@@ -70,17 +70,22 @@ export const postApprovalEnhancedRouter = router({
         includeGenerating: z.boolean().default(true),
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) return [];
 
+        const myInfluencers = await db.select({ id: influencers.id }).from(influencers).where(eq(influencers.userId, ctx.user.id));
+        const myIds = myInfluencers.map((i: any) => i.id);
+        if (myIds.length === 0) return [];
+
         const whereClause = input.influencerId
           ? and(
               eq(influencerPosts.status, "draft"),
-              eq(influencerPosts.influencerId, input.influencerId)
+              eq(influencerPosts.influencerId, input.influencerId),
+              inArray(influencerPosts.influencerId, myIds)
             )
-          : eq(influencerPosts.status, "draft");
+          : and(eq(influencerPosts.status, "draft"), inArray(influencerPosts.influencerId, myIds));
 
         const posts = await db
           .select()
@@ -114,19 +119,21 @@ export const postApprovalEnhancedRouter = router({
     .input(
       z.object({
         influencerId: z.number(),
-        influencerNickname: z.enum(["carol", "renata", "vanessa", "luiza"]),
+        influencerNickname: z.string(),
         includeProduct: z.boolean().default(true),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
       const influencerRows = await db
         .select()
         .from(influencers)
-        .where(eq(influencers.id, input.influencerId))
+        .where(and(eq(influencers.id, input.influencerId), eq(influencers.userId, ctx.user.id)))
         .limit(1);
+
+      if (influencerRows.length === 0) throw new Error("Influencer não encontrado ou acesso negado");
 
       const influencer = influencerRows[0] || {
         id: input.influencerId,
@@ -184,14 +191,14 @@ export const postApprovalEnhancedRouter = router({
         includeProducts: z.boolean().default(true),
       })
     )
-    .mutation(async () => {
+    .mutation(async ({ ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
       const influencerList = await db
         .select()
         .from(influencers)
-        .where(eq(influencers.isActive, true));
+        .where(and(eq(influencers.isActive, true), eq(influencers.userId, ctx.user.id)));
 
       const results = [];
 
@@ -253,15 +260,19 @@ export const postApprovalEnhancedRouter = router({
     }),
 
   // Obter contagem de posts pendentes
-  getPendingCount: protectedProcedure.query(async () => {
+  getPendingCount: protectedProcedure.query(async ({ ctx }) => {
     try {
       const db = await getDb();
       if (!db) return 0;
 
+      const myInfluencers = await db.select({ id: influencers.id }).from(influencers).where(eq(influencers.userId, ctx.user.id));
+      const myIds = myInfluencers.map((i: any) => i.id);
+      if (myIds.length === 0) return 0;
+
       const posts = await db
         .select()
         .from(influencerPosts)
-        .where(eq(influencerPosts.status, "draft"));
+        .where(and(eq(influencerPosts.status, "draft"), inArray(influencerPosts.influencerId, myIds)));
 
       return posts.length;
     } catch (error) {
@@ -271,15 +282,19 @@ export const postApprovalEnhancedRouter = router({
   }),
 
   // Obter posts pendentes por influenciadora
-  getPendingByInfluencer: protectedProcedure.query(async () => {
+  getPendingByInfluencer: protectedProcedure.query(async ({ ctx }) => {
     try {
       const db = await getDb();
       if (!db) return {};
 
+      const myInfluencers = await db.select({ id: influencers.id }).from(influencers).where(eq(influencers.userId, ctx.user.id));
+      const myIds = myInfluencers.map((i: any) => i.id);
+      if (myIds.length === 0) return {};
+
       const posts = await db
         .select()
         .from(influencerPosts)
-        .where(eq(influencerPosts.status, "draft"));
+        .where(and(eq(influencerPosts.status, "draft"), inArray(influencerPosts.influencerId, myIds)));
 
       const byInfluencer: Record<number, number> = {};
       posts.forEach((post: any) => {

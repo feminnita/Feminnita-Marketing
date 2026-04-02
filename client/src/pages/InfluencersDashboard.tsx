@@ -8,21 +8,16 @@ import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { Loader2, Check } from "lucide-react";
 
-interface InfluencerData {
-  id: number;
-  name: string;
-  description: string;
-}
-
-const influencers: InfluencerData[] = [
-  { id: 1, name: "Carol", description: "Gerenciar contas de redes sociais" },
-  { id: 2, name: "Renata", description: "Gerenciar contas de redes sociais" },
-  { id: 3, name: "Vanessa", description: "Gerenciar contas de redes sociais" },
-  { id: 4, name: "Luiza", description: "Gerenciar contas de redes sociais" },
-];
-
 export default function InfluencersDashboard() {
-  const [selectedInfluencer, setSelectedInfluencer] = useState<number>(1);
+  const { data: influencersData } = trpc.autonomousInfluencers.listInfluencers.useQuery();
+  const influencers = (influencersData?.influencers ?? []).map((inf: any) => ({
+    id: inf.id,
+    name: inf.name,
+    description: inf.personality || "Gerenciar contas de redes sociais",
+  }));
+
+  const [selectedInfluencer, setSelectedInfluencer] = useState<number | null>(null);
+  const effectiveInfluencer = selectedInfluencer ?? influencers[0]?.id ?? 1;
   const [formData, setFormData] = useState({
     email: "",
     instagram: "",
@@ -60,13 +55,13 @@ export default function InfluencersDashboard() {
   };
 
   const handleSave = () => {
-    if (!selectedInfluencer) {
+    if (!effectiveInfluencer) {
       toast.error("Selecione uma influenciadora");
       return;
     }
 
     saveAccountsMutation.mutate({
-      influencerId: selectedInfluencer,
+      influencerId: effectiveInfluencer,
       email: formData.email || undefined,
       instagram: formData.instagram || undefined,
       tiktok: formData.tiktok || undefined,
@@ -76,7 +71,7 @@ export default function InfluencersDashboard() {
     });
   };
 
-  const currentInfluencer = influencers.find((i) => i.id === selectedInfluencer);
+  const currentInfluencer = influencers.find((i) => i.id === effectiveInfluencer);
 
   return (
     <div className="container py-8">

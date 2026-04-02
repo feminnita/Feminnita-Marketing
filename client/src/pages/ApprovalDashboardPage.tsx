@@ -5,25 +5,32 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle, XCircle, Edit2, MessageSquare, TrendingUp } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 
-const INFLUENCER_COLORS = {
-  carol: "bg-pink-100 text-pink-800",
-  renata: "bg-blue-100 text-blue-800",
-  vanessa: "bg-purple-100 text-purple-800",
-  luiza: "bg-green-100 text-green-800",
-};
-
-const INFLUENCER_NAMES = {
-  carol: "Carol - A Mãe Moderna",
-  renata: "Renata - A Executiva",
-  vanessa: "Vanessa - A Criativa",
-  luiza: "Luiza - A Fitness",
-};
+const BADGE_COLORS = [
+  "bg-pink-100 text-pink-800",
+  "bg-blue-100 text-blue-800",
+  "bg-purple-100 text-purple-800",
+  "bg-green-100 text-green-800",
+  "bg-yellow-100 text-yellow-800",
+  "bg-orange-100 text-orange-800",
+];
 
 export default function ApprovalDashboardPage() {
+  const { data: influencersData } = trpc.autonomousInfluencers.listInfluencers.useQuery();
+  const influencerMap = new Map(
+    (influencersData?.influencers ?? []).map((inf: any, i: number) => [
+      inf.id as number,
+      { name: inf.name as string, color: BADGE_COLORS[i % BADGE_COLORS.length] },
+    ])
+  );
+  const getInfluencerName = (id: number) => influencerMap.get(id)?.name ?? `Influenciadora #${id}`;
+  const getInfluencerColor = (id: number) => influencerMap.get(id)?.color ?? "bg-gray-100 text-gray-800";
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editedCaption, setEditedCaption] = useState("");
+  const [rejectPostId, setRejectPostId] = useState<number | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
 
   // Buscar posts pendentes
   const { data: pendingPosts = [] } = trpc.postApproval.listPendingPosts.useQuery({
@@ -49,24 +56,21 @@ export default function ApprovalDashboardPage() {
         postId,
         platforms: ["instagram", "tiktok"],
       });
-      alert("Post aprovado com sucesso!");
+      toast.success("Post aprovado com sucesso!");
     } catch (error) {
-      alert("Erro ao aprovar post");
+      toast.error("Erro ao aprovar post");
     }
   };
 
-  const handleReject = async (postId: number) => {
-    const reason = prompt("Por que rejeitar este post?");
-    if (reason) {
-      try {
-        await rejectMutation.mutateAsync({
-          postId,
-          reason,
-        });
-        alert("Post rejeitado!");
-      } catch (error) {
-        alert("Erro ao rejeitar post");
-      }
+  const handleRejectSubmit = async () => {
+    if (!rejectPostId || !rejectReason.trim()) return;
+    try {
+      await rejectMutation.mutateAsync({ postId: rejectPostId, reason: rejectReason });
+      toast.success("Post rejeitado!");
+      setRejectPostId(null);
+      setRejectReason("");
+    } catch (error) {
+      toast.error("Erro ao rejeitar post");
     }
   };
 
@@ -83,10 +87,10 @@ export default function ApprovalDashboardPage() {
           postId: selectedPost.id,
           caption: editedCaption,
         });
-        alert("Post editado com sucesso!");
+        toast.success("Post editado com sucesso!");
         setShowEditModal(false);
       } catch (error) {
-        alert("Erro ao editar post");
+        toast.error("Erro ao editar post");
       }
     }
   };
@@ -172,8 +176,8 @@ export default function ApprovalDashboardPage() {
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-2">
-                        <Badge className={INFLUENCER_COLORS[post.influencerId as keyof typeof INFLUENCER_COLORS]}>
-                          {INFLUENCER_NAMES[post.influencerId as keyof typeof INFLUENCER_NAMES]}
+                        <Badge className={getInfluencerColor(post.influencerId)}>
+                          {getInfluencerName(post.influencerId)}
                         </Badge>
                         <Badge variant="outline">{post.topic}</Badge>
                       </div>
@@ -250,7 +254,7 @@ export default function ApprovalDashboardPage() {
                     <Button
                       size="sm"
                       className="bg-red-600 hover:bg-red-700"
-                      onClick={() => handleReject(post.id)}
+                      onClick={() => { setRejectPostId(post.id); setRejectReason(""); }}
                       disabled={rejectMutation.isPending}
                     >
                       <XCircle className="w-4 h-4 mr-2" />
@@ -277,8 +281,8 @@ export default function ApprovalDashboardPage() {
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div>
-                      <Badge className={INFLUENCER_COLORS[post.influencerId as keyof typeof INFLUENCER_COLORS]}>
-                        {INFLUENCER_NAMES[post.influencerId as keyof typeof INFLUENCER_NAMES]}
+                      <Badge className={getInfluencerColor(post.influencerId)}>
+                        {getInfluencerName(post.influencerId)}
                       </Badge>
                       <CardDescription className="mt-2">
                         Publicado em {new Date(post.publishedAt).toLocaleString("pt-BR")}
@@ -320,7 +324,7 @@ export default function ApprovalDashboardPage() {
             <CardHeader>
               <CardTitle>Editar Post</CardTitle>
               <CardDescription>
-                Editando post de {INFLUENCER_NAMES[selectedPost.influencerId as keyof typeof INFLUENCER_NAMES]}
+                Editando post de {getInfluencerName(selectedPost.influencerId)}
               </CardDescription>
             </CardHeader>
 
@@ -346,6 +350,41 @@ export default function ApprovalDashboardPage() {
                   variant="outline"
                   onClick={() => setShowEditModal(false)}
                 >
+                  Cancelar
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Modal de Rejeição */}
+      {rejectPostId !== null && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle>Rejeitar Post</CardTitle>
+              <CardDescription>Informe o motivo da rejeição</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold mb-2">Motivo</label>
+                <textarea
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="Por que rejeitar este post?"
+                  className="w-full border rounded p-3 min-h-24"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  className="bg-red-600 hover:bg-red-700"
+                  onClick={handleRejectSubmit}
+                  disabled={rejectMutation.isPending || !rejectReason.trim()}
+                >
+                  Confirmar Rejeição
+                </Button>
+                <Button variant="outline" onClick={() => setRejectPostId(null)}>
                   Cancelar
                 </Button>
               </div>

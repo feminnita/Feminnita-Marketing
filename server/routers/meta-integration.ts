@@ -2,7 +2,7 @@ import { publicProcedure, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
 import { oauthCredentials } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 /**
  * Meta (Facebook/Instagram) API Integration Router
@@ -48,7 +48,7 @@ export const metaIntegrationRouter = {
         const existing = await db
           .select()
           .from(oauthCredentials)
-          .where(eq(oauthCredentials.platform, "meta"));
+          .where(and(eq(oauthCredentials.platform, "meta"), eq(oauthCredentials.userId, ctx.user.id)));
 
         if (existing && existing.length > 0) {
           // Update existing credentials
@@ -61,7 +61,7 @@ export const metaIntegrationRouter = {
               isConnected: true,
               lastValidated: new Date(),
             })
-            .where(eq(oauthCredentials.platform, "meta"));
+            .where(and(eq(oauthCredentials.platform, "meta"), eq(oauthCredentials.userId, ctx.user.id)));
         } else {
           // Create new credentials
           await db.insert(oauthCredentials).values({
@@ -98,7 +98,7 @@ export const metaIntegrationRouter = {
         const credentials = await db
           .select()
           .from(oauthCredentials)
-          .where(eq(oauthCredentials.platform, "meta"));
+          .where(and(eq(oauthCredentials.platform, "meta"), eq(oauthCredentials.userId, ctx.user.id)));
 
         if (!credentials || credentials.length === 0) {
           throw new Error("Credenciais do Meta não configuradas");
@@ -106,20 +106,25 @@ export const metaIntegrationRouter = {
 
         const accessToken = credentials[0].accessToken;
 
-        // In production, you would call Meta API here
-        // const response = await fetch(`https://graph.instagram.com/v18.0/me/adaccounts?access_token=${accessToken}`);
-        // const data = await response.json();
+        const response = await fetch(
+          `https://graph.facebook.com/v18.0/me/adaccounts?fields=id,name,account_status,currency&access_token=${accessToken}`
+        );
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error?.message || "Erro ao buscar contas de anúncios");
+        }
+
+        const accounts = (data.data || []).map((acc: any) => ({
+          id: acc.id,
+          name: acc.name,
+          status: acc.account_status === 1 ? "ACTIVE" : "INACTIVE",
+          currency: acc.currency,
+        }));
 
         return {
           success: true,
-          accounts: [
-            {
-              id: "act_123456789",
-              name: "Feminnita Ads Account",
-              status: "ACTIVE",
-              currency: "BRL",
-            },
-          ],
+          accounts,
         };
       } catch (error: any) {
         throw new Error(`Erro ao buscar contas de anúncios: ${error.message}`);
@@ -153,37 +158,52 @@ export const metaIntegrationRouter = {
         const credentials = await db
           .select()
           .from(oauthCredentials)
-          .where(eq(oauthCredentials.platform, "meta"));
+          .where(and(eq(oauthCredentials.platform, "meta"), eq(oauthCredentials.userId, ctx.user.id)));
 
         if (!credentials || credentials.length === 0) {
           throw new Error("Credenciais do Meta não configuradas");
         }
 
-        // In production, you would call Meta API here
-        // const response = await fetch(`https://graph.instagram.com/v18.0/act_123456789/campaigns`, {
-        //   method: 'POST',
-        //   headers: {
-        //     'Authorization': `Bearer ${credentials[0].accessToken}`,
-        //     'Content-Type': 'application/json',
-        //   },
-        //   body: JSON.stringify({
-        //     name: input.name,
-        //     objective: input.objective,
-        //     daily_budget: input.budget * 100, // Convert to cents
-        //     start_time: input.startDate.toISOString(),
-        //     end_time: input.endDate?.toISOString(),
-        //   }),
-        // });
+        const accessToken = credentials[0].accessToken;
+        const adAccountId = process.env.META_AD_ACCOUNT_ID;
+        if (!adAccountId) {
+          throw new Error("META_AD_ACCOUNT_ID não configurado nas variáveis de ambiente");
+        }
+
+        const response = await fetch(
+          `https://graph.facebook.com/v18.0/${adAccountId}/campaigns`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              name: input.name,
+              objective: input.objective,
+              daily_budget: Math.round(input.budget * 100), // centavos
+              start_time: input.startDate.toISOString(),
+              ...(input.endDate ? { end_time: input.endDate.toISOString() } : {}),
+              status: "PAUSED",
+            }),
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error?.message || "Erro ao criar campanha no Meta");
+        }
 
         return {
           success: true,
           message: "Campanha criada com sucesso",
           campaign: {
-            id: `campaign_${Date.now()}`,
+            id: data.id,
             name: input.name,
             objective: input.objective,
             budget: input.budget,
-            status: "DRAFT",
+            status: "PAUSED",
             createdAt: new Date(),
           },
         };
@@ -201,17 +221,46 @@ export const metaIntegrationRouter = {
     }))
     .query(async ({ ctx, input }: any) => {
       try {
-        // In production, you would call Meta API here
+        const db = await getDb();
+        if (!db) throw new Error("Database connection failed");
+
+        const credentials = await db
+          .select()
+          .from(oauthCredentials)
+          .where(and(eq(oauthCredentials.platform, "meta"), eq(oauthCredentials.userId, ctx.user.id)));
+
+        if (!credentials || credentials.length === 0) {
+          throw new Error("Credenciais do Meta não configuradas");
+        }
+
+        const accessToken = credentials[0].accessToken;
+
+        const response = await fetch(
+          `https://graph.facebook.com/v18.0/${input.campaignId}/insights?fields=impressions,clicks,spend,actions,cpc,ctr&access_token=${accessToken}`
+        );
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error?.message || "Erro ao buscar métricas");
+        }
+
+        const insights = data.data?.[0] || {};
+        const conversions = (insights.actions || [])
+          .filter((a: any) => a.action_type === "purchase" || a.action_type === "lead")
+          .reduce((sum: number, a: any) => sum + Number(a.value || 0), 0);
+        const spend = parseFloat(insights.spend || "0");
+        const roas = spend > 0 ? conversions / spend : 0;
+
         return {
           success: true,
           metrics: {
-            impressions: 125000,
-            clicks: 3500,
-            conversions: 450,
-            spend: 1250.50,
-            roas: 3.2,
-            cpc: 0.36,
-            ctr: 2.8,
+            impressions: parseInt(insights.impressions || "0"),
+            clicks: parseInt(insights.clicks || "0"),
+            conversions,
+            spend,
+            roas: parseFloat(roas.toFixed(2)),
+            cpc: parseFloat(insights.cpc || "0"),
+            ctr: parseFloat(insights.ctr || "0"),
           },
         };
       } catch (error: any) {
@@ -228,14 +277,23 @@ export const metaIntegrationRouter = {
     }))
     .mutation(async ({ ctx, input }: any) => {
       try {
-        // In production, you would call Meta API here
+        const db = await getDb();
+        if (!db) throw new Error("Database connection failed");
+        const credentials = await db.select().from(oauthCredentials).where(and(eq(oauthCredentials.platform, "meta"), eq(oauthCredentials.userId, ctx.user.id)));
+        if (!credentials || credentials.length === 0) throw new Error("Credenciais do Meta não configuradas");
+
+        const response = await fetch(`https://graph.facebook.com/v18.0/${input.campaignId}`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${credentials[0].accessToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "PAUSED" }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error?.message || "Erro ao pausar campanha");
+
         return {
           success: true,
           message: "Campanha pausada com sucesso",
-          campaign: {
-            id: input.campaignId,
-            status: "PAUSED",
-          },
+          campaign: { id: input.campaignId, status: "PAUSED" },
         };
       } catch (error: any) {
         throw new Error(`Erro ao pausar campanha: ${error.message}`);
@@ -251,14 +309,23 @@ export const metaIntegrationRouter = {
     }))
     .mutation(async ({ ctx, input }: any) => {
       try {
-        // In production, you would call Meta API here
+        const db = await getDb();
+        if (!db) throw new Error("Database connection failed");
+        const credentials = await db.select().from(oauthCredentials).where(and(eq(oauthCredentials.platform, "meta"), eq(oauthCredentials.userId, ctx.user.id)));
+        if (!credentials || credentials.length === 0) throw new Error("Credenciais do Meta não configuradas");
+
+        const response = await fetch(`https://graph.facebook.com/v18.0/${input.campaignId}`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${credentials[0].accessToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "ACTIVE" }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error?.message || "Erro ao retomar campanha");
+
         return {
           success: true,
           message: "Campanha retomada com sucesso",
-          campaign: {
-            id: input.campaignId,
-            status: "ACTIVE",
-          },
+          campaign: { id: input.campaignId, status: "ACTIVE" },
         };
       } catch (error: any) {
         throw new Error(`Erro ao retomar campanha: ${error.message}`);
@@ -281,7 +348,7 @@ export const metaIntegrationRouter = {
             accessToken: null,
             refreshToken: null,
           })
-          .where(eq(oauthCredentials.platform, "meta"));
+          .where(and(eq(oauthCredentials.platform, "meta"), eq(oauthCredentials.userId, ctx.user.id)));
 
         return {
           success: true,

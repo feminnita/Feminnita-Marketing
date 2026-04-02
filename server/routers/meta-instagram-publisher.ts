@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { scheduledPosts } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { scheduledPosts, influencers } from "../../drizzle/schema";
+import { eq, and } from "drizzle-orm";
 
 const META_API_VERSION = "v18.0";
 const META_GRAPH_URL = `https://graph.instagram.com/${META_API_VERSION}`;
@@ -30,6 +30,13 @@ export const metaInstagramPublisherRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       try {
+        const db = await getDb();
+        if (db) {
+          const [owned] = await db.select({ id: influencers.id }).from(influencers)
+            .where(and(eq(influencers.id, input.influencerId), eq(influencers.userId, ctx.user.id))).limit(1);
+          if (!owned) throw new Error("Influencer não encontrado ou acesso negado");
+        }
+
         const accessToken = process.env.META_ACCESS_TOKEN;
         const pageId = process.env.META_PAGE_ID;
 
@@ -82,6 +89,13 @@ export const metaInstagramPublisherRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       try {
+        const db = await getDb();
+        if (db) {
+          const [owned] = await db.select({ id: influencers.id }).from(influencers)
+            .where(and(eq(influencers.id, input.influencerId), eq(influencers.userId, ctx.user.id))).limit(1);
+          if (!owned) throw new Error("Influencer não encontrado ou acesso negado");
+        }
+
         const accessToken = process.env.META_ACCESS_TOKEN;
         const pageId = process.env.META_PAGE_ID;
 
@@ -107,7 +121,7 @@ export const metaInstagramPublisherRouter = router({
         const post = await db
           .select()
           .from(scheduledPosts)
-          .where(eq(scheduledPosts.id, input.postId));
+          .where(and(eq(scheduledPosts.id, input.postId), eq(scheduledPosts.userId, ctx.user.id)));
 
         if (!post || post.length === 0) {
           throw new Error("Post not found");

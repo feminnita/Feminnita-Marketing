@@ -3,7 +3,7 @@
  */
 
 import { z } from "zod";
-import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
+import { protectedProcedure, router } from "../_core/trpc";
 import { saveOAuthToken } from "../db";
 import {
   sincronizarProdutos,

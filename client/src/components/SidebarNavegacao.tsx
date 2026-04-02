@@ -8,6 +8,7 @@ interface AbaItem {
   id: string;
   label: string;
   icon: React.ReactNode;
+  href?: string;
 }
 
 interface Categoria {
@@ -95,8 +96,20 @@ const categorias: Categoria[] = [
       { id: 'relatorio', label: 'Relatórios', icon: '📊' },
       { id: 'exportar', label: 'Exportar', icon: '📥' },
       { id: 'crm', label: 'CRM', icon: '👥' },
-      { id: 'afiliados', label: 'Afiliados', icon: '🤝' },
+      { id: 'afiliados', label: 'Afiliados (Legado)', icon: '🤝' },
       { id: 'notificacoes', label: 'Notificações', icon: '🔔' },
+    ],
+  },
+  {
+    nome: 'Vendas & Crescimento 🚀',
+    icon: '🚀',
+    abas: [
+      { id: 'afiliadas-page', label: 'Afiliadas/Revendedoras', icon: '🤝', href: '/afiliadas' },
+      { id: 'tiktok-live-page', label: 'TikTok Live Commerce', icon: '🎥', href: '/tiktok-live' },
+      { id: 'drops-planner', label: 'Drops & Coleções', icon: '🧥' },
+      { id: 'ugc-collector', label: 'UGC de Clientes', icon: '📸' },
+      { id: 'abandono-recovery', label: 'Recuperação Abandono', icon: '💌' },
+      { id: 'brand-book-page', label: 'Brand Book', icon: '🎨', href: '/brand-book' },
     ],
   },
 ];
@@ -213,8 +226,12 @@ export default function SidebarNavegacao({ onSelectTab, activeTab }: SidebarNave
                           <button
                             key={aba.id}
                             onClick={() => {
-                              onSelectTab(aba.id);
-                              setIsOpen(false);
+                              if (aba.href) {
+                                window.location.href = aba.href;
+                              } else {
+                                onSelectTab(aba.id);
+                                setIsOpen(false);
+                              }
                             }}
                             className={`w-full flex items-center gap-2 p-2 rounded text-sm transition-colors text-left ${
                               activeTab === aba.id
@@ -249,7 +266,13 @@ export default function SidebarNavegacao({ onSelectTab, activeTab }: SidebarNave
                         {categoria.abas.map((aba) => (
                           <button
                             key={aba.id}
-                            onClick={() => onSelectTab(aba.id)}
+                            onClick={() => {
+                              if (aba.href) {
+                                window.location.href = aba.href;
+                              } else {
+                                onSelectTab(aba.id);
+                              }
+                            }}
                             className={`w-full flex justify-center p-2 rounded text-sm transition-colors ${
                               activeTab === aba.id
                                 ? 'bg-amber-100'
@@ -271,7 +294,7 @@ export default function SidebarNavegacao({ onSelectTab, activeTab }: SidebarNave
           {/* Footer */}
           {isOpen && (
             <div className="p-4 border-t border-amber-200 text-xs text-slate-500">
-              <p>138 abas disponíveis</p>
+              <p>144 abas disponíveis</p>
             </div>
           )}
         </div>

@@ -1,6 +1,6 @@
 import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { storagePut } from "../storage";
 import { getDb } from "../db";
 import { mediaFiles, contentItems } from "../../drizzle/schema";
@@ -36,7 +36,7 @@ export const mediaUploadRouter = router({
 
         // Gerar nome único
         const timestamp = Date.now();
-        const random = Math.random().toString(36).substring(7);
+        const random = (await import("crypto")).randomBytes(8).toString("hex");
         const fileKey = `media/${input.contentId}/${timestamp}-${random}-${input.fileName}`;
 
         // Upload para S3
@@ -80,7 +80,7 @@ export const mediaUploadRouter = router({
         contentId: z.number(),
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) return [];
@@ -88,7 +88,7 @@ export const mediaUploadRouter = router({
         const images = await db
           .select()
           .from(mediaFiles)
-          .where(eq(mediaFiles.contentId, input.contentId));
+          .where(and(eq(mediaFiles.contentId, input.contentId), eq(mediaFiles.userId, ctx.user.id)));
 
         return images;
       } catch (error) {
@@ -106,12 +106,12 @@ export const mediaUploadRouter = router({
         fileId: z.number(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database not available");
 
-        await db.delete(mediaFiles).where(eq(mediaFiles.id, input.fileId));
+        await db.delete(mediaFiles).where(and(eq(mediaFiles.id, input.fileId), eq(mediaFiles.userId, ctx.user.id)));
 
         return { success: true };
       } catch (error) {

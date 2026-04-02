@@ -1,8 +1,8 @@
-import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
+import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import crypto from "crypto";
 import { getDb } from "../db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { oauthCredentials } from "../../drizzle/schema";
 
 /**
@@ -83,8 +83,10 @@ export const metaCapiRouter = router({
           .select()
           .from(oauthCredentials)
           .where(
-            eq(oauthCredentials.userId, ctx.user.id) &&
-            eq(oauthCredentials.platform, "meta")
+            and(
+              eq(oauthCredentials.userId, ctx.user.id),
+              eq(oauthCredentials.platform, "meta")
+            )
           )
           .limit(1);
 
@@ -222,8 +224,10 @@ export const metaCapiRouter = router({
           .select()
           .from(oauthCredentials)
           .where(
-            eq(oauthCredentials.userId, ctx.user.id) &&
-            eq(oauthCredentials.platform, "meta")
+            and(
+              eq(oauthCredentials.userId, ctx.user.id),
+              eq(oauthCredentials.platform, "meta")
+            )
           )
           .limit(1);
 
@@ -362,8 +366,10 @@ export const metaCapiRouter = router({
           .select()
           .from(oauthCredentials)
           .where(
-            eq(oauthCredentials.userId, ctx.user.id) &&
-            eq(oauthCredentials.platform, "meta")
+            and(
+              eq(oauthCredentials.userId, ctx.user.id),
+              eq(oauthCredentials.platform, "meta")
+            )
           )
           .limit(1);
 
@@ -518,8 +524,10 @@ export const metaCapiRouter = router({
         .select()
         .from(oauthCredentials)
         .where(
-          eq(oauthCredentials.userId, ctx.user.id) &&
-          eq(oauthCredentials.platform, "meta")
+          and(
+            eq(oauthCredentials.userId, ctx.user.id),
+            eq(oauthCredentials.platform, "meta")
+          )
         )
         .limit(1);
 

@@ -2,7 +2,7 @@ import { router, protectedProcedure, publicProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { collaborators } from "../../drizzle/schema";
 import { getDb } from "../db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import * as crypto from "crypto";
 
 // Rate limiter simples em memória para login
@@ -151,7 +151,7 @@ export const collaboratorsRouter = router({
         githubUsername: z.string(),
       })
     )
-    .mutation(async ({ input }: any) => {
+    .mutation(async ({ input, ctx }: any) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
@@ -161,12 +161,12 @@ export const collaboratorsRouter = router({
           githubId: input.githubId,
           githubUsername: input.githubUsername,
         })
-        .where(eq(collaborators.id, input.collaboratorId));
+        .where(and(eq(collaborators.id, input.collaboratorId), eq(collaborators.userId, ctx.user.id)));
 
       const result = await db
         .select()
         .from(collaborators)
-        .where(eq(collaborators.id, input.collaboratorId))
+        .where(and(eq(collaborators.id, input.collaboratorId), eq(collaborators.userId, ctx.user.id)))
         .limit(1);
 
       return {
@@ -207,7 +207,7 @@ export const collaboratorsRouter = router({
         isActive: z.boolean().optional(),
       })
     )
-    .mutation(async ({ input }: any) => {
+    .mutation(async ({ input, ctx }: any) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
@@ -219,12 +219,12 @@ export const collaboratorsRouter = router({
       await db
         .update(collaborators)
         .set(updates)
-        .where(eq(collaborators.id, input.collaboratorId));
+        .where(and(eq(collaborators.id, input.collaboratorId), eq(collaborators.userId, ctx.user.id)));
 
       const result = await db
         .select()
         .from(collaborators)
-        .where(eq(collaborators.id, input.collaboratorId))
+        .where(and(eq(collaborators.id, input.collaboratorId), eq(collaborators.userId, ctx.user.id)))
         .limit(1);
 
       return {
@@ -236,13 +236,13 @@ export const collaboratorsRouter = router({
   // Deletar colaborador
   deleteCollaborator: protectedProcedure
     .input(z.object({ collaboratorId: z.number() }))
-    .mutation(async ({ input }: any) => {
+    .mutation(async ({ input, ctx }: any) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
       await db
         .delete(collaborators)
-        .where(eq(collaborators.id, input.collaboratorId));
+        .where(and(eq(collaborators.id, input.collaboratorId), eq(collaborators.userId, ctx.user.id)));
 
       return { success: true };
     }),
@@ -255,7 +255,7 @@ export const collaboratorsRouter = router({
         newPassword: z.string().min(6),
       })
     )
-    .mutation(async ({ input }: any) => {
+    .mutation(async ({ input, ctx }: any) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
@@ -264,12 +264,12 @@ export const collaboratorsRouter = router({
       await db
         .update(collaborators)
         .set({ passwordHash })
-        .where(eq(collaborators.id, input.collaboratorId));
+        .where(and(eq(collaborators.id, input.collaboratorId), eq(collaborators.userId, ctx.user.id)));
 
       const result = await db
         .select()
         .from(collaborators)
-        .where(eq(collaborators.id, input.collaboratorId))
+        .where(and(eq(collaborators.id, input.collaboratorId), eq(collaborators.userId, ctx.user.id)))
         .limit(1);
 
       return {

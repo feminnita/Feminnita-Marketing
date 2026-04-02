@@ -57,6 +57,14 @@ import { publicationQueueRouter } from "./routers/publication-queue";
 import { metaAdsCampaignsRouter } from "./routers/meta-ads-campaigns";
 import { marketResearchRouter } from "./routers/market-research";
 import { assetLibraryRouter } from "./routers/asset-library";
+import { afiliadasRouter } from "./routers/afiliadas";
+import { abandonoRecoveryRouter } from "./routers/abandono-recovery";
+import { brandBookRouter } from "./routers/brand-book";
+import { dropsRouter } from "./routers/drops";
+import { ugcRouter } from "./routers/ugc";
+import { tiktokLiveRouter } from "./routers/tiktok-live";
+import { cuponsRouter } from "./routers/cupons";
+import { contentTemplatesRouter } from "./routers/content-templates";
 import { getDb } from "./db";
 import { influencers } from "../drizzle/schema";
 
@@ -144,12 +152,21 @@ export const appRouter = router({
   metaAdsCampaigns: metaAdsCampaignsRouter,
   marketResearch: marketResearchRouter,
   assetLibrary: assetLibraryRouter,
+  afiliadas: afiliadasRouter,
+  abandonoRecovery: abandonoRecoveryRouter,
+  brandBook: brandBookRouter,
+  drops: dropsRouter,
+  ugc: ugcRouter,
+  tiktokLive: tiktokLiveRouter,
+  cupons: cuponsRouter,
+  contentTemplates: contentTemplatesRouter,
   influencers: router({
-    list: protectedProcedure.query(async () => {
+    list: protectedProcedure.query(async ({ ctx }) => {
       try {
         const db = await getDb();
         if (!db) return [];
-        const allInfluencers = await db.select().from(influencers);
+        const { eq } = await import("drizzle-orm");
+        const allInfluencers = await db.select().from(influencers).where(eq(influencers.userId, ctx.user.id));
         return allInfluencers;
       } catch (error) {
         console.error('[Influencers] Erro ao listar:', error);

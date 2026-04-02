@@ -72,7 +72,7 @@ export default function AssetLibraryPage() {
   const [colAssetIds, setColAssetIds] = useState<number[]>([]);
 
   const { data: assets, refetch: refetchAssets } =
-    trpc.assetLibrary.listAssets.useQuery();
+    trpc.assetLibrary.listAssets.useQuery({});
   const { data: collections, refetch: refetchCollections } =
     trpc.assetLibrary.listCollections.useQuery();
 
@@ -132,8 +132,8 @@ export default function AssetLibraryPage() {
       url: imgUrl,
       name: imgName,
       description: imgDescription,
-      category: imgCategory,
-      platform: imgPlatform,
+      category: imgCategory as "produto" | "lifestyle" | "modelo" | "colecao" | "background" | "logo" | "outro",
+      platform: imgPlatform as "instagram" | "tiktok" | "todos",
       tags: imgTags
         .split(",")
         .map((t) => t.trim())
@@ -145,7 +145,7 @@ export default function AssetLibraryPage() {
     createCollection.mutate({
       name: colName,
       description: colDescription,
-      collectionType: colType,
+      collectionType: colType as "produto" | "colecao" | "campanha" | "temporada",
       season: colSeason,
       assetIds: colAssetIds,
     });
@@ -303,11 +303,10 @@ export default function AssetLibraryPage() {
                         <SelectValue placeholder="Selecione" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="lancamento">Lançamento</SelectItem>
-                        <SelectItem value="promocao">Promoção</SelectItem>
-                        <SelectItem value="sazonal">Sazonal</SelectItem>
-                        <SelectItem value="evergreen">Evergreen</SelectItem>
-                        <SelectItem value="collab">Collab</SelectItem>
+                        <SelectItem value="produto">Produto</SelectItem>
+                        <SelectItem value="colecao">Coleção</SelectItem>
+                        <SelectItem value="campanha">Campanha</SelectItem>
+                        <SelectItem value="temporada">Temporada</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -424,14 +423,7 @@ export default function AssetLibraryPage() {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {filteredAssets.map(
-                (asset: {
-                  id: number;
-                  name: string;
-                  url?: string;
-                  thumbnailUrl?: string;
-                  category?: string;
-                  ai_analysis?: string;
-                }) => (
+                (asset) => (
                   <Card
                     key={asset.id}
                     className="overflow-hidden group hover:shadow-md transition-shadow"
@@ -469,9 +461,9 @@ export default function AssetLibraryPage() {
                           {asset.category}
                         </Badge>
                       )}
-                      {asset.ai_analysis && (
+                      {asset.aiAnalysis && (
                         <p className="text-xs text-gray-400 mt-1 line-clamp-2">
-                          {asset.ai_analysis}
+                          {asset.aiAnalysis}
                         </p>
                       )}
                     </CardContent>
@@ -493,15 +485,7 @@ export default function AssetLibraryPage() {
           ) : (
             <div className="space-y-3">
               {collections.map(
-                (col: {
-                  id: number;
-                  name: string;
-                  description?: string;
-                  collectionType?: string;
-                  status?: string;
-                  briefsGenerated?: number;
-                  season?: string;
-                }) => {
+                (col) => {
                   const statusInfo =
                     STATUS_BADGE[col.status ?? "rascunho"] ??
                     STATUS_BADGE["rascunho"];

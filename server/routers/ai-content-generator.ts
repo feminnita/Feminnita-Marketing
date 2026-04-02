@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
 import { invokeLLM } from "../_core/llm";
+import { getDb } from "../db";
+import { influencers } from "../../drizzle/schema";
+import { eq, and } from "drizzle-orm";
 
 // Perfis das influenciadoras para contexto de IA
 const INFLUENCER_PROFILES = {
@@ -44,16 +47,31 @@ export const aiContentGeneratorRouter = router({
     .input(
       z.object({
         influencerId: z.number(),
-        influencerName: z.enum(["carol", "renata", "vanessa", "luiza"]),
+        influencerName: z.string(),
         topic: z.string(),
         type: z.enum(["product", "lifestyle", "tip", "story"]),
         productName: z.string().optional(),
         additionalContext: z.string().optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
-        const profile = INFLUENCER_PROFILES[input.influencerName];
+        const db = await getDb();
+        if (db) {
+          const owned = await db.select({ id: influencers.id }).from(influencers)
+            .where(and(eq(influencers.id, input.influencerId), eq(influencers.userId, ctx.user.id))).limit(1);
+          if (owned.length === 0) throw new Error("Influencer não encontrado ou acesso negado");
+        }
+
+        const nameKey = input.influencerName.toLowerCase() as keyof typeof INFLUENCER_PROFILES;
+        const profile = INFLUENCER_PROFILES[nameKey] ?? {
+          name: input.influencerName,
+          persona: input.influencerName,
+          description: "",
+          topics: [],
+          tone: "autêntico",
+          hashtags: [],
+        };
 
         const prompt = buildCaptionPrompt(profile, input);
 
@@ -96,15 +114,30 @@ export const aiContentGeneratorRouter = router({
     .input(
       z.object({
         influencerId: z.number(),
-        influencerName: z.enum(["carol", "renata", "vanessa", "luiza"]),
+        influencerName: z.string(),
         caption: z.string(),
         topic: z.string(),
         count: z.number().default(10),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
-        const profile = INFLUENCER_PROFILES[input.influencerName];
+        const db = await getDb();
+        if (db) {
+          const owned = await db.select({ id: influencers.id }).from(influencers)
+            .where(and(eq(influencers.id, input.influencerId), eq(influencers.userId, ctx.user.id))).limit(1);
+          if (owned.length === 0) throw new Error("Influencer não encontrado ou acesso negado");
+        }
+
+        const nameKey = input.influencerName.toLowerCase() as keyof typeof INFLUENCER_PROFILES;
+        const profile = INFLUENCER_PROFILES[nameKey] ?? {
+          name: input.influencerName,
+          persona: input.influencerName,
+          description: "",
+          topics: [],
+          tone: "autêntico",
+          hashtags: [],
+        };
 
         const prompt = `Gere ${input.count} hashtags relevantes para este post:
         
@@ -157,16 +190,31 @@ Retorne apenas as hashtags separadas por espaço, começando com #.`;
     .input(
       z.object({
         influencerId: z.number(),
-        influencerName: z.enum(["carol", "renata", "vanessa", "luiza"]),
+        influencerName: z.string(),
         topic: z.string(),
         type: z.enum(["product", "lifestyle", "tip", "story"]),
         productName: z.string().optional(),
         additionalContext: z.string().optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
-        const profile = INFLUENCER_PROFILES[input.influencerName];
+        const db = await getDb();
+        if (db) {
+          const owned = await db.select({ id: influencers.id }).from(influencers)
+            .where(and(eq(influencers.id, input.influencerId), eq(influencers.userId, ctx.user.id))).limit(1);
+          if (owned.length === 0) throw new Error("Influencer não encontrado ou acesso negado");
+        }
+
+        const nameKey = input.influencerName.toLowerCase() as keyof typeof INFLUENCER_PROFILES;
+        const profile = INFLUENCER_PROFILES[nameKey] ?? {
+          name: input.influencerName,
+          persona: input.influencerName,
+          description: "",
+          topics: [],
+          tone: "autêntico",
+          hashtags: [],
+        };
 
         // Gerar caption
         const captionPrompt = buildCaptionPrompt(profile, input);
@@ -239,15 +287,165 @@ Retorne apenas as hashtags separadas por espaço.`;
       }
     }),
 
+  // Otimizar legenda existente — gera 4 versões melhoradas
+  optimizeCaption: protectedProcedure
+    .input(
+      z.object({
+        originalCaption: z.string().min(1).max(2000),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const response = await invokeLLM({
+        messages: [
+          {
+            role: "system",
+            content: `Você é um especialista em marketing de moda feminina no Brasil (Instagram, TikTok).
+Dado uma legenda original, gere 4 versões otimizadas com abordagens distintas:
+1. Urgência + Emojis (gatilho de escassez)
+2. Storytelling + Prova Social (depoimento fictício de cliente)
+3. Educacional + Benefícios (produto e diferenciais)
+4. Comunidade + Inclusão (pertencimento e desconto)
+
+Para cada versão inclua hashtags relevantes para pijamas/moda feminina brasileira.
+Retorne JSON com array "versions", cada item com: title (string), caption (string), rationale (string).`,
+          },
+          {
+            role: "user",
+            content: `Legenda original: "${input.originalCaption}"\n\nGere as 4 versões otimizadas em JSON.`,
+          },
+        ],
+        outputSchema: {
+          name: "optimize_caption",
+          schema: {
+            type: "object",
+            properties: {
+              versions: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    title: { type: "string" },
+                    caption: { type: "string" },
+                    rationale: { type: "string" },
+                  },
+                  required: ["title", "caption", "rationale"],
+                },
+              },
+            },
+            required: ["versions"],
+            additionalProperties: false,
+          },
+          strict: true,
+        },
+      });
+
+      const raw = response.choices?.[0]?.message?.content;
+      if (!raw) throw new Error("LLM retornou resposta vazia");
+      const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+      return { versions: parsed.versions as { title: string; caption: string; rationale: string }[] };
+    }),
+
+  // Gerar legendas sem necessidade de influencer ID (uso geral)
+  generateCaptionFree: protectedProcedure
+    .input(z.object({
+      persona: z.enum(["carol", "renata", "vanessa", "luiza", "generico"]),
+      topic: z.string().min(3).max(300),
+      type: z.enum(["product", "lifestyle", "tip", "story"]),
+      productName: z.string().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const profileMap = {
+        carol: INFLUENCER_PROFILES.carol,
+        renata: INFLUENCER_PROFILES.renata,
+        vanessa: INFLUENCER_PROFILES.vanessa,
+        luiza: INFLUENCER_PROFILES.luiza,
+        generico: {
+          name: "Feminnita",
+          persona: "Pijamas Femininos Premium",
+          description: "Marca de pijamas femininos de qualidade premium, com foco em conforto e estilo",
+          topics: ["conforto", "moda feminina", "qualidade", "renda extra", "compra coletiva"],
+          tone: "acolhedor e premium",
+          hashtags: ["#Feminnita", "#PijamaConforto", "#ModaFeminina", "#QualidadePremium"],
+        },
+      };
+
+      const profile = profileMap[input.persona];
+      const typeLabels: Record<string, string> = {
+        product: "destaque de produto", lifestyle: "lifestyle e cotidiano",
+        tip: "dica útil", story: "story / reel curto",
+      };
+
+      const prompt = `Você é especialista em marketing de moda feminina brasileira (Instagram, TikTok).
+Crie 3 versões distintas de legenda para a persona "${profile.persona}" da Feminnita Pijamas.
+
+Tema: ${input.topic}
+Tipo de conteúdo: ${typeLabels[input.type] || input.type}
+${input.productName ? `Produto em destaque: ${input.productName}` : ""}
+Tom da persona: ${profile.tone}
+Tópicos relevantes: ${profile.topics.join(", ")}
+Hashtags da marca: ${profile.hashtags.slice(0, 5).join(", ")}
+
+Cada versão deve ter abordagem diferente:
+1. Urgência e gatilho emocional (escassez, FOMO)
+2. Storytelling e benefício concreto
+3. CTA direto e simples com prova social
+
+Retorne JSON com array "captions", cada item com: approach (string com nome da abordagem), text (string com a legenda completa), hashtags (array de strings com 3-5 hashtags relevantes).`;
+
+      const response = await invokeLLM({
+        messages: [
+          { role: "system", content: "Especialista em conteúdo para redes sociais no Brasil. Retorne apenas JSON válido." },
+          { role: "user", content: prompt },
+        ],
+        outputSchema: {
+          name: "generate_captions_free",
+          schema: {
+            type: "object",
+            properties: {
+              captions: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    approach: { type: "string" },
+                    text: { type: "string" },
+                    hashtags: { type: "array", items: { type: "string" } },
+                  },
+                  required: ["approach", "text", "hashtags"],
+                  additionalProperties: false,
+                },
+              },
+            },
+            required: ["captions"],
+            additionalProperties: false,
+          },
+          strict: true,
+        },
+      });
+
+      const raw = response.choices?.[0]?.message?.content;
+      if (!raw) throw new Error("LLM retornou resposta vazia");
+      const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+      return { captions: parsed.captions as { approach: string; text: string; hashtags: string[] }[] };
+    }),
+
   // Obter sugestões de tópicos para influenciadora
   getSuggestedTopics: protectedProcedure
     .input(
       z.object({
-        influencerName: z.enum(["carol", "renata", "vanessa", "luiza"]),
+        influencerName: z.string(),
       })
     )
     .query(async ({ input }) => {
-      const profile = INFLUENCER_PROFILES[input.influencerName];
+      const nameKey = input.influencerName.toLowerCase() as keyof typeof INFLUENCER_PROFILES;
+      const profile = INFLUENCER_PROFILES[nameKey] ?? {
+        name: input.influencerName,
+        persona: input.influencerName,
+        description: "",
+        topics: [],
+        tone: "autêntico",
+        hashtags: [],
+      };
 
       return {
         success: true,

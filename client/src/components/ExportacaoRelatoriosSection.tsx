@@ -1,101 +1,91 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, FileText, Sheet, Presentation, Mail, CheckCircle, Clock, DollarSign } from "lucide-react";
+import { Download, FileText, Sheet, Presentation, Clock, AlertCircle, Plus, Trash2 } from "lucide-react";
+
+interface Agendamento {
+  id: number;
+  relatorio: string;
+  formato: string;
+  frequencia: string;
+  email: string;
+  ativo: boolean;
+}
 
 const RELATORIOS_DISPONIVEIS = [
-  {
-    id: "completo",
-    titulo: "Relatório Completo",
-    descricao: "Todas as seções: personas, planejamento, roteiros, análise, tendências",
-    secoes: 8,
-    tamanho: "2.4 MB"
-  },
-  {
-    id: "executivo",
-    titulo: "Resumo Executivo",
-    descricao: "Métricas principais, ROI, recomendações - ideal para apresentações",
-    secoes: 3,
-    tamanho: "0.8 MB"
-  },
-  {
-    id: "performance",
-    titulo: "Performance",
-    descricao: "Análise detalhada de métricas, gráficos, benchmarks",
-    secoes: 4,
-    tamanho: "1.5 MB"
-  },
-  {
-    id: "estrategia",
-    titulo: "Estratégia",
-    descricao: "Personas, planejamento, roteiros, tendências",
-    secoes: 5,
-    tamanho: "1.8 MB"
-  },
+  { id: "completo", titulo: "Relatório Completo", descricao: "Todas as seções: personas, planejamento, roteiros, análise, tendências", secoes: 8 },
+  { id: "executivo", titulo: "Resumo Executivo", descricao: "Métricas principais, ROI, recomendações - ideal para apresentações", secoes: 3 },
+  { id: "performance", titulo: "Performance", descricao: "Análise detalhada de métricas, gráficos, benchmarks", secoes: 4 },
+  { id: "estrategia", titulo: "Estratégia", descricao: "Personas, planejamento, roteiros, tendências", secoes: 5 },
 ];
 
 const FORMATOS = [
-  {
-    id: "pdf",
-    nome: "PDF",
-    icon: FileText,
-    cor: "text-red-600",
-    descricao: "Profissional, compartilhável, compatível com todos os dispositivos",
-    tempo: "2-5 seg"
-  },
-  {
-    id: "excel",
-    nome: "Excel",
-    icon: Sheet,
-    cor: "text-green-600",
-    descricao: "Editável, com gráficos, ideal para análise de dados",
-    tempo: "3-7 seg"
-  },
-  {
-    id: "ppt",
-    nome: "PowerPoint",
-    icon: Presentation,
-    cor: "text-orange-600",
-    descricao: "Apresentação pronta, com slides, animações, design profissional",
-    tempo: "5-10 seg"
-  },
-];
-
-const AGENDAMENTOS = [
-  {
-    id: 1,
-    relatorio: "Relatório Completo",
-    formato: "PDF",
-    frequencia: "Toda segunda-feira",
-    email: "seu@email.com",
-    proxima: "06 de Fevereiro",
-    ativo: true
-  },
-  {
-    id: 2,
-    relatorio: "Resumo Executivo",
-    formato: "PowerPoint",
-    frequencia: "Toda sexta-feira",
-    email: "seu@email.com",
-    proxima: "07 de Fevereiro",
-    ativo: true
-  },
+  { id: "pdf", nome: "PDF", icon: FileText, cor: "text-red-600", descricao: "Profissional, compartilhável, compatível com todos os dispositivos" },
+  { id: "excel", nome: "Excel", icon: Sheet, cor: "text-green-600", descricao: "Editável, com gráficos, ideal para análise de dados" },
+  { id: "ppt", nome: "PowerPoint", icon: Presentation, cor: "text-orange-600", descricao: "Apresentação pronta, com slides, animações, design profissional" },
 ];
 
 export default function ExportacaoRelatoriosSection() {
   const [selectedRelatorio, setSelectedRelatorio] = useState("completo");
   const [selectedFormato, setSelectedFormato] = useState("pdf");
   const [exportando, setExportando] = useState(false);
+  const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
+  const [novoAgendamento, setNovoAgendamento] = useState(false);
+  const [formA, setFormA] = useState({ relatorio: 'completo', formato: 'pdf', frequencia: 'Toda segunda-feira', email: '' });
 
-  const handleExport = async () => {
+  const handleExport = () => {
+    const relatorio = RELATORIOS_DISPONIVEIS.find(r => r.id === selectedRelatorio);
+    if (!relatorio) return;
     setExportando(true);
-    // Simular exportação
-    setTimeout(() => {
+    try {
+      const content = JSON.stringify(
+        { relatorio: relatorio.titulo, descricao: relatorio.descricao, formato: selectedFormato.toUpperCase(), geradoEm: new Date().toISOString() },
+        null, 2
+      );
+      const blob = new Blob([content], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${relatorio.id}_${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success(`Relatório "${relatorio.titulo}" exportado com sucesso!`);
+    } catch {
+      toast.error("Erro ao exportar relatório");
+    } finally {
       setExportando(false);
-      alert(`Relatório exportado com sucesso em ${selectedFormato.toUpperCase()}!`);
-    }, 2000);
+    }
+  };
+
+  const adicionarAgendamento = () => {
+    if (!formA.email.trim()) { toast.error('Informe o email de destino.'); return; }
+    const relNome = RELATORIOS_DISPONIVEIS.find(r => r.id === formA.relatorio)?.titulo || formA.relatorio;
+    const fmtNome = FORMATOS.find(f => f.id === formA.formato)?.nome || formA.formato;
+    const novo: Agendamento = {
+      id: Date.now(),
+      relatorio: relNome,
+      formato: fmtNome,
+      frequencia: formA.frequencia,
+      email: formA.email,
+      ativo: true,
+    };
+    setAgendamentos(prev => [...prev, novo]);
+    setFormA({ relatorio: 'completo', formato: 'pdf', frequencia: 'Toda segunda-feira', email: '' });
+    setNovoAgendamento(false);
+    toast.success('Agendamento criado. Envio automático requer configuração de backend.');
+  };
+
+  const toggleAtivo = (id: number) => {
+    setAgendamentos(prev => prev.map(a => a.id === id ? { ...a, ativo: !a.ativo } : a));
+  };
+
+  const removerAgendamento = (id: number) => {
+    setAgendamentos(prev => prev.filter(a => a.id !== id));
   };
 
   const relatorio = RELATORIOS_DISPONIVEIS.find(r => r.id === selectedRelatorio);
@@ -115,7 +105,21 @@ export default function ExportacaoRelatoriosSection() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Exportação Rápida */}
+          {/* Aviso */}
+          <Card className="border-l-4 border-l-amber-500 bg-amber-50">
+            <CardContent className="pt-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-slate-900">Envio automático requer configuração no backend</p>
+                  <p className="text-sm text-slate-600 mt-1">
+                    Para envio automático por email, configure um serviço de email (SendGrid, Resend, etc.) no servidor. Exportação manual via download está disponível agora.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Tabs defaultValue="rapida" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="rapida">⚡ Exportação Rápida</TabsTrigger>
@@ -130,19 +134,12 @@ export default function ExportacaoRelatoriosSection() {
                   {RELATORIOS_DISPONIVEIS.map(rel => (
                     <Card
                       key={rel.id}
-                      className={`p-4 cursor-pointer transition-all ${
-                        selectedRelatorio === rel.id
-                          ? "border-2 border-orange-500 bg-orange-50"
-                          : "hover:shadow-md"
-                      }`}
+                      className={`p-4 cursor-pointer transition-all ${selectedRelatorio === rel.id ? "border-2 border-orange-500 bg-orange-50" : "hover:shadow-md"}`}
                       onClick={() => setSelectedRelatorio(rel.id)}
                     >
                       <h4 className="font-semibold text-sm mb-1">{rel.titulo}</h4>
                       <p className="text-xs text-slate-600 mb-2">{rel.descricao}</p>
-                      <div className="flex gap-2 text-xs">
-                        <Badge variant="outline">{rel.secoes} seções</Badge>
-                        <Badge variant="outline">{rel.tamanho}</Badge>
-                      </div>
+                      <Badge variant="outline">{rel.secoes} seções</Badge>
                     </Card>
                   ))}
                 </div>
@@ -155,28 +152,17 @@ export default function ExportacaoRelatoriosSection() {
                   {FORMATOS.map(fmt => (
                     <Card
                       key={fmt.id}
-                      className={`p-4 cursor-pointer transition-all ${
-                        selectedFormato === fmt.id
-                          ? "border-2 border-orange-500 bg-orange-50"
-                          : "hover:shadow-md"
-                      }`}
+                      className={`p-4 cursor-pointer transition-all ${selectedFormato === fmt.id ? "border-2 border-orange-500 bg-orange-50" : "hover:shadow-md"}`}
                       onClick={() => setSelectedFormato(fmt.id)}
                     >
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h4 className="font-semibold text-sm">{fmt.nome}</h4>
-                          <p className={`text-xs font-semibold ${fmt.cor} mt-1`}>
-                            {fmt.tempo}
-                          </p>
-                        </div>
-                      </div>
+                      <h4 className="font-semibold text-sm mb-1">{fmt.nome}</h4>
                       <p className="text-xs text-slate-600">{fmt.descricao}</p>
                     </Card>
                   ))}
                 </div>
               </div>
 
-              {/* Preview e Botão de Exportação */}
+              {/* Preview e Exportação */}
               <Card className="p-4 bg-slate-50">
                 <div className="mb-4">
                   <h4 className="font-semibold text-sm mb-2">📋 Preview</h4>
@@ -190,18 +176,13 @@ export default function ExportacaoRelatoriosSection() {
                     </div>
                   </div>
                 </div>
-
-                <Button
-                  onClick={handleExport}
-                  disabled={exportando}
-                  className="w-full gap-2"
-                >
+                <Button onClick={handleExport} disabled={exportando} className="w-full gap-2">
                   <Download className="w-4 h-4" />
                   {exportando ? "Exportando..." : "Exportar Agora"}
                 </Button>
               </Card>
 
-              {/* Opções Adicionais */}
+              {/* Opções */}
               <Card className="p-4 bg-slate-50">
                 <h4 className="font-semibold text-sm mb-3">⚙️ Opções</h4>
                 <div className="space-y-3">
@@ -226,124 +207,93 @@ export default function ExportacaoRelatoriosSection() {
             </TabsContent>
 
             <TabsContent value="agendada" className="space-y-4">
-              {/* Agendamentos Existentes */}
+              {/* Agendamentos */}
               <div>
-                <h3 className="font-semibold text-sm mb-3">Agendamentos Ativos</h3>
-                <div className="space-y-3">
-                  {AGENDAMENTOS.map(agend => (
-                    <Card key={agend.id} className="p-4">
-                      <div className="flex items-start justify-between gap-3 mb-2">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-semibold text-sm">{agend.relatorio}</h4>
-                            <Badge variant="default" className="text-xs">
-                              {agend.formato}
-                            </Badge>
-                            {agend.ativo && (
-                              <Badge variant="outline" className="text-xs">
-                                ✓ Ativo
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-xs text-slate-600 mb-1">{agend.frequencia}</p>
-                          <p className="text-xs text-slate-600">
-                            📧 {agend.email} | Próximo: {agend.proxima}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex gap-2 pt-2 border-t border-slate-200">
-                        <Button size="sm" variant="outline" className="text-xs flex-1">
-                          Editar
-                        </Button>
-                        <Button size="sm" variant="outline" className="text-xs flex-1">
-                          Desativar
-                        </Button>
-                      </div>
-                    </Card>
-                  ))}
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-sm">Agendamentos Ativos</h3>
+                  <Button size="sm" variant="outline" className="text-xs gap-1" onClick={() => setNovoAgendamento(!novoAgendamento)}>
+                    <Plus className="w-3 h-3" />
+                    Novo
+                  </Button>
                 </div>
-              </div>
 
-              {/* Criar Novo Agendamento */}
-              <div>
-                <h3 className="font-semibold text-sm mb-3">➕ Novo Agendamento</h3>
-                <Card className="p-4 bg-slate-50">
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-sm font-semibold block mb-2">Relatório</label>
-                      <select className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
-                        {RELATORIOS_DISPONIVEIS.map(rel => (
-                          <option key={rel.id} value={rel.id}>
-                            {rel.titulo}
-                          </option>
-                        ))}
-                      </select>
+                {novoAgendamento && (
+                  <Card className="p-4 bg-orange-50 border-orange-200 mb-3">
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-sm font-semibold block mb-1">Relatório</label>
+                        <select className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm" value={formA.relatorio} onChange={e => setFormA(f => ({ ...f, relatorio: e.target.value }))}>
+                          {RELATORIOS_DISPONIVEIS.map(rel => <option key={rel.id} value={rel.id}>{rel.titulo}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-semibold block mb-1">Formato</label>
+                        <select className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm" value={formA.formato} onChange={e => setFormA(f => ({ ...f, formato: e.target.value }))}>
+                          {FORMATOS.map(fmt => <option key={fmt.id} value={fmt.id}>{fmt.nome}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-semibold block mb-1">Frequência</label>
+                        <select className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm" value={formA.frequencia} onChange={e => setFormA(f => ({ ...f, frequencia: e.target.value }))}>
+                          <option>Diário</option>
+                          <option>Toda segunda-feira</option>
+                          <option>Toda sexta-feira</option>
+                          <option>Primeira segunda do mês</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-semibold block mb-1">Email</label>
+                        <input type="email" placeholder="seu@email.com" className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm" value={formA.email} onChange={e => setFormA(f => ({ ...f, email: e.target.value }))} />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button onClick={adicionarAgendamento} className="flex-1 bg-orange-600 hover:bg-orange-700 gap-2">
+                          <Clock className="w-4 h-4" />
+                          Agendar
+                        </Button>
+                        <Button variant="outline" className="flex-1" onClick={() => setNovoAgendamento(false)}>Cancelar</Button>
+                      </div>
                     </div>
+                  </Card>
+                )}
 
-                    <div>
-                      <label className="text-sm font-semibold block mb-2">Formato</label>
-                      <select className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
-                        {FORMATOS.map(fmt => (
-                          <option key={fmt.id} value={fmt.id}>
-                            {fmt.nome}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-semibold block mb-2">Frequência</label>
-                      <select className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
-                        <option>Diário</option>
-                        <option>Toda segunda-feira</option>
-                        <option>Toda sexta-feira</option>
-                        <option>Primeira segunda do mês</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-semibold block mb-2">Email</label>
-                      <input
-                        type="email"
-                        placeholder="seu@email.com"
-                        className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
-                      />
-                    </div>
-
-                    <Button className="w-full gap-2">
-                      <Clock className="w-4 h-4" />
-                      Agendar Relatório
-                    </Button>
+                {agendamentos.length === 0 ? (
+                  <div className="py-8 text-center border border-dashed border-slate-300 rounded-lg">
+                    <Clock className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                    <p className="text-slate-500 text-sm">Nenhum agendamento criado.</p>
+                    <p className="text-xs text-slate-400 mt-1">Crie um agendamento para receber relatórios por email automaticamente.</p>
                   </div>
-                </Card>
+                ) : (
+                  <div className="space-y-3">
+                    {agendamentos.map(agend => (
+                      <Card key={agend.id} className="p-4">
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-semibold text-sm">{agend.relatorio}</h4>
+                              <Badge variant="default" className="text-xs">{agend.formato}</Badge>
+                              <Badge variant="outline" className={`text-xs ${agend.ativo ? 'text-green-700' : 'text-slate-500'}`}>
+                                {agend.ativo ? '✓ Ativo' : 'Inativo'}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-slate-600 mb-1">{agend.frequencia}</p>
+                            <p className="text-xs text-slate-600">📧 {agend.email}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 pt-2 border-t border-slate-200">
+                          <Button size="sm" variant="outline" className="text-xs flex-1" onClick={() => toggleAtivo(agend.id)}>
+                            {agend.ativo ? 'Desativar' : 'Ativar'}
+                          </Button>
+                          <Button size="sm" variant="outline" className="text-red-600 text-xs" onClick={() => removerAgendamento(agend.id)}>
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </div>
             </TabsContent>
           </Tabs>
-
-          {/* Histórico de Exportações */}
-          <div>
-            <h3 className="font-semibold text-sm mb-3">📜 Histórico de Exportações</h3>
-            <div className="space-y-2">
-              {[
-                { data: "05 Fev 2026", relatorio: "Relatório Completo", formato: "PDF", tamanho: "2.4 MB" },
-                { data: "03 Fev 2026", relatorio: "Resumo Executivo", formato: "PowerPoint", tamanho: "0.8 MB" },
-                { data: "31 Jan 2026", relatorio: "Performance", formato: "Excel", tamanho: "1.5 MB" },
-              ].map((item, idx) => (
-                <Card key={idx} className="p-3 flex items-center justify-between">
-                  <div className="text-sm">
-                    <p className="font-semibold text-slate-900">{item.relatorio}</p>
-                    <p className="text-xs text-slate-600">{item.data} • {item.formato}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs font-semibold text-slate-600">{item.tamanho}</p>
-                    <Button size="sm" variant="ghost" className="text-xs">
-                      <Download className="w-3 h-3" />
-                    </Button>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </div>
 
           {/* Dicas */}
           <Card className="bg-green-50 border-green-200 p-4">

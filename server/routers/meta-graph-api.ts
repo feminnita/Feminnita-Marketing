@@ -1,4 +1,4 @@
-import { publicProcedure, protectedProcedure, router } from "../_core/trpc";
+import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import axios from "axios";
 
@@ -294,7 +294,7 @@ export const metaGraphRouter = router({
   /**
    * Testar conexão com Meta Graph API
    */
-  testConnection: publicProcedure.query(async () => {
+  testConnection: protectedProcedure.query(async () => {
     try {
       const accessToken = process.env.META_ACCESS_TOKEN;
       const pageId = process.env.META_PAGE_ID;

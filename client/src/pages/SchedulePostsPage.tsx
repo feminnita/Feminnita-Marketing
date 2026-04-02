@@ -9,13 +9,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
 
-const INFLUENCERS = [
-  { id: 1, name: 'Carol - A Mãe Moderna', color: 'bg-yellow-50' },
-  { id: 2, name: 'Renata - A Executiva Elegante', color: 'bg-purple-50' },
-  { id: 3, name: 'Vanessa - A Criativa Artística', color: 'bg-pink-50' },
-  { id: 4, name: 'Luiza - A Fitness Aventureira', color: 'bg-green-50' },
-];
-
 const PLATFORMS = [
   { id: 'instagram', name: 'Instagram', icon: '📷' },
   { id: 'tiktok', name: 'TikTok', icon: '🎵' },
@@ -23,6 +16,13 @@ const PLATFORMS = [
 ];
 
 export default function SchedulePostsPage() {
+  const { data: influencersData } = trpc.autonomousInfluencers.listInfluencers.useQuery();
+  const INFLUENCERS = (influencersData?.influencers ?? []).map((inf: any) => ({
+    id: inf.id,
+    name: inf.personality ? `${inf.name} - ${inf.personality}` : inf.name,
+    color: 'bg-slate-50',
+  }));
+
   const [selectedInfluencer, setSelectedInfluencer] = useState<number | null>(null);
   const [content, setContent] = useState('');
   const [caption, setCaption] = useState('');
@@ -41,6 +41,24 @@ export default function SchedulePostsPage() {
     );
   };
 
+  const schedulePostMutation = trpc.scheduledPosts.create.useMutation({
+    onSuccess: (result) => {
+      setScheduledPosts((prev) => [...prev, result as any]);
+      setContent('');
+      setCaption('');
+      setHashtags('');
+      setScheduledDate('');
+      setScheduledTime('');
+      setSelectedPlatforms(['instagram']);
+      toast.success('Post agendado com sucesso!');
+      setIsLoading(false);
+    },
+    onError: (error) => {
+      toast.error(`Erro ao agendar post: ${error.message}`);
+      setIsLoading(false);
+    },
+  });
+
   const handleSchedulePost = async () => {
     if (!selectedInfluencer || !content || !scheduledDate || !scheduledTime) {
       toast.error('Preencha todos os campos obrigatórios');
@@ -48,37 +66,15 @@ export default function SchedulePostsPage() {
     }
 
     setIsLoading(true);
-    try {
-      const scheduledDateTime = new Date(`${scheduledDate}T${scheduledTime}`);
-      
-      const newPost = {
-        id: Date.now(),
-        influencer: INFLUENCERS.find(i => i.id === selectedInfluencer)?.name,
-        content,
-        caption,
-        hashtags,
-        platforms: selectedPlatforms,
-        scheduledAt: scheduledDateTime,
-        status: 'pending',
-        createdAt: new Date(),
-      };
-
-      setScheduledPosts([...scheduledPosts, newPost]);
-      
-      // Reset form
-      setContent('');
-      setCaption('');
-      setHashtags('');
-      setScheduledDate('');
-      setScheduledTime('');
-      setSelectedPlatforms(['instagram']);
-
-      toast.success('Post agendado com sucesso!');
-    } catch (error) {
-      toast.error('Erro ao agendar post');
-    } finally {
-      setIsLoading(false);
-    }
+    const scheduledDateTime = new Date(`${scheduledDate}T${scheduledTime}`);
+    schedulePostMutation.mutate({
+      influencerId: selectedInfluencer,
+      content,
+      caption: caption || undefined,
+      hashtags: hashtags || undefined,
+      platforms: selectedPlatforms,
+      scheduledAt: scheduledDateTime,
+    });
   };
 
   return (

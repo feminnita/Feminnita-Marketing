@@ -1,23 +1,30 @@
-import { router, publicProcedure, protectedProcedure } from "../_core/trpc";
+import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
 import { influencerPosts, influencers, publicationQueueJobs } from "../../drizzle/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 
 export const influencerBlogRouter = router({
   /**
    * Obter posts de uma influencer
    */
-  getPosts: publicProcedure
+  getPosts: protectedProcedure
     .input(
       z.object({
         influencerId: z.number(),
       })
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) return [];
+        // Verify the influencer belongs to the authenticated user
+        const owned = await db
+          .select({ id: influencers.id })
+          .from(influencers)
+          .where(and(eq(influencers.id, input.influencerId), eq(influencers.userId, ctx.user.id)))
+          .limit(1);
+        if (owned.length === 0) return [];
         const posts = await db
           .select()
           .from(influencerPosts)
@@ -176,11 +183,11 @@ export const influencerBlogRouter = router({
   /**
    * Listar todas as influencers
    */
-  listInfluencers: publicProcedure.query(async () => {
+  listInfluencers: protectedProcedure.query(async ({ ctx }) => {
     try {
       const db = await getDb();
       if (!db) return [];
-      const allInfluencers = await db.select().from(influencers);
+      const allInfluencers = await db.select().from(influencers).where(eq(influencers.userId, ctx.user.id));
       return allInfluencers;
     } catch (error) {
       console.error('[Influencer Blog] Erro ao listar influencers:', error);

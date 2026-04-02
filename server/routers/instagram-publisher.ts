@@ -1,8 +1,8 @@
 import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { getDb } from "../db";
-import { igPostPublications, instagramAccounts, influencerPosts } from "../../drizzle/schema";
+import { igPostPublications, instagramAccounts, influencerPosts, influencers } from "../../drizzle/schema";
 
 export const instagramPublisherRouter = router({
   /**
@@ -18,7 +18,7 @@ export const instagramPublisherRouter = router({
         mediaUrls: z.array(z.string()).optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database not available");
@@ -35,6 +35,13 @@ export const instagramPublisherRouter = router({
         }
 
         const igAccount = account[0];
+
+        // Verify ownership: influencer accounts must belong to this user
+        if (igAccount.accountType === "influencer" && igAccount.influencerId) {
+          const owned = await db.select({ id: influencers.id }).from(influencers)
+            .where(and(eq(influencers.id, igAccount.influencerId), eq(influencers.userId, ctx.user.id))).limit(1);
+          if (owned.length === 0) throw new Error("Acesso negado");
+        }
 
         // Montar caption completa
         const caption = input.caption;
@@ -199,10 +206,19 @@ export const instagramPublisherRouter = router({
         scheduledFor: z.date(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database not available");
+
+        // Verify account ownership
+        const account = await db.select().from(instagramAccounts).where(eq(instagramAccounts.id, input.accountId)).limit(1);
+        if (!account || account.length === 0) throw new Error("Conta Instagram não encontrada");
+        if (account[0].accountType === "influencer" && account[0].influencerId) {
+          const owned = await db.select({ id: influencers.id }).from(influencers)
+            .where(and(eq(influencers.id, account[0].influencerId), eq(influencers.userId, ctx.user.id))).limit(1);
+          if (owned.length === 0) throw new Error("Acesso negado");
+        }
 
         // Registrar publicação agendada
         await db.insert(igPostPublications).values({
@@ -272,7 +288,7 @@ export const instagramPublisherRouter = router({
         accountId: z.number(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
         const db = await getDb();
         if (!db) throw new Error("Database not available");
@@ -286,6 +302,13 @@ export const instagramPublisherRouter = router({
 
         if (!account || account.length === 0) {
           throw new Error("Conta Instagram não encontrada");
+        }
+
+        // Verify ownership
+        if (account[0].accountType === "influencer" && account[0].influencerId) {
+          const owned = await db.select({ id: influencers.id }).from(influencers)
+            .where(and(eq(influencers.id, account[0].influencerId), eq(influencers.userId, ctx.user.id))).limit(1);
+          if (owned.length === 0) throw new Error("Acesso negado");
         }
 
         const igAccount = account[0];

@@ -1,374 +1,220 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Download, TrendingUp, BarChart3, Calendar, Mail, CheckCircle, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { FileText, Download, CheckCircle, Calendar } from "lucide-react";
+import { trpc } from "@/lib/trpc";
 import { useState } from "react";
+import { toast } from "sonner";
+
+const MESES_PT = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+function agruparPorMes(campanhas: any[]) {
+  const mapa: Record<string, { mes: string; label: string; campanhas: any[] }> = {};
+  for (const c of campanhas) {
+    if (!c.dataInicio) continue;
+    const d = new Date(c.dataInicio);
+    const chave = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    if (!mapa[chave]) {
+      mapa[chave] = {
+        mes: chave,
+        label: `${MESES_PT[d.getMonth()]} ${d.getFullYear()}`,
+        campanhas: [],
+      };
+    }
+    mapa[chave].campanhas.push(c);
+  }
+  return Object.values(mapa).sort((a, b) => b.mes.localeCompare(a.mes)).slice(0, 6);
+}
+
+const SECOES_RELATORIO = [
+  { titulo: "Resumo Executivo", descricao: "KPIs principais, ROI, conversões e recomendações", paginas: 2 },
+  { titulo: "Performance por Plataforma", descricao: "Análise de Instagram, Facebook, TikTok, Email e WhatsApp", paginas: 6 },
+  { titulo: "Análise de Campanhas", descricao: "Performance individual de cada campanha ativa e encerrada", paginas: 4 },
+  { titulo: "Conversões e Investimento", descricao: "ROI por canal, cliques, impressões e conversões", paginas: 3 },
+  { titulo: "Recomendações de Otimização", descricao: "Ações específicas para aumentar ROI e conversão", paginas: 3 },
+];
 
 export default function SistemaRelatoriosMensaisSection() {
-  const [selectedMonth, setSelectedMonth] = useState(0);
+  const { data: campanhas = [] } = trpc.campaigns.listar.useQuery(undefined, { refetchInterval: 60_000 });
+  const [mesSelecionado, setMesSelecionado] = useState(0);
 
-  const relatorios = [
-    {
-      id: 1,
-      mes: "Janeiro 2026",
-      status: "Disponível",
-      dataGeracao: "31 Jan",
-      personas: 4,
-      campanhas: 12,
-      roi: 385,
-      conversoes: 2850,
-      views: 485000,
-      engajamento: 13.8,
-      tamanho: "2.4 MB",
-    },
-    {
-      id: 2,
-      mes: "Dezembro 2025",
-      status: "Disponível",
-      dataGeracao: "31 Dec",
-      personas: 4,
-      campanhas: 10,
-      roi: 372,
-      conversoes: 2650,
-      views: 420000,
-      engajamento: 12.9,
-      tamanho: "2.1 MB",
-    },
-    {
-      id: 3,
-      mes: "Novembro 2025",
-      status: "Disponível",
-      dataGeracao: "30 Nov",
-      personas: 4,
-      campanhas: 9,
-      roi: 358,
-      conversoes: 2420,
-      views: 385000,
-      engajamento: 12.5,
-      tamanho: "1.9 MB",
-    },
-  ];
+  const grupos = agruparPorMes(campanhas as any[]);
+  const grupoAtual = grupos[mesSelecionado];
 
-  const currentRelatorio = relatorios[selectedMonth];
+  const calcularStats = (camp: any[]) => {
+    const total = camp.length;
+    const impressoes = camp.reduce((s, c) => s + (c.impressoes ?? 0), 0);
+    const conversoes = camp.reduce((s, c) => s + (c.conversoes ?? 0), 0);
+    const orcamento = camp.reduce((s, c) => s + parseFloat(c.orcamento ?? "0"), 0);
+    const rois = camp.filter(c => parseFloat(c.roi ?? "0") > 0);
+    const roiMedio = rois.length > 0 ? rois.reduce((s, c) => s + parseFloat(c.roi ?? "0"), 0) / rois.length : 0;
+    const cliques = camp.reduce((s, c) => s + (c.cliques ?? 0), 0);
+    return { total, impressoes, conversoes, orcamento, roiMedio, cliques };
+  };
 
-  const secoes = [
-    {
-      titulo: "Resumo Executivo",
-      descricao: "KPIs principais, ROI, conversões e recomendações",
-      paginas: 2,
-      incluido: true,
-    },
-    {
-      titulo: "Performance por Persona",
-      descricao: "Análise detalhada de cada persona (Carol, Renata, Vanessa, Luiza)",
-      paginas: 8,
-      incluido: true,
-    },
-    {
-      titulo: "Análise de Campanhas",
-      descricao: "Performance de Google Ads, Meta Ads, TikTok Ads",
-      paginas: 6,
-      incluido: true,
-    },
-    {
-      titulo: "Trends e Oportunidades",
-      descricao: "Trends virais identificadas e recomendações de conteúdo",
-      paginas: 4,
-      incluido: true,
-    },
-    {
-      titulo: "Análise de Concorrentes",
-      descricao: "Benchmarking e estratégias dos concorrentes",
-      paginas: 3,
-      incluido: true,
-    },
-    {
-      titulo: "Recomendações de Otimização",
-      descricao: "Ações específicas para aumentar ROI e conversão",
-      paginas: 5,
-      incluido: true,
-    },
-  ];
+  const stats = grupoAtual ? calcularStats(grupoAtual.campanhas) : null;
 
-  const metricas = [
-    {
-      titulo: "Visualizações",
-      valor: (currentRelatorio.views / 1000).toFixed(0) + "K",
-      mudanca: "+15%",
-      cor: "blue",
-    },
-    {
-      titulo: "Conversões",
-      valor: currentRelatorio.conversoes,
-      mudanca: "+18%",
-      cor: "green",
-    },
-    {
-      titulo: "Engajamento",
-      valor: currentRelatorio.engajamento + "%",
-      mudanca: "+8%",
-      cor: "purple",
-    },
-    {
-      titulo: "ROI",
-      valor: currentRelatorio.roi + "%",
-      mudanca: "+12%",
-      cor: "pink",
-    },
-  ];
-
-  const agendamento = [
-    { dia: "Último dia do mês", hora: "23:59", ativo: true },
-    { dia: "Primeiro dia do mês", hora: "08:00", ativo: true },
-    { dia: "Toda segunda-feira", hora: "09:00", ativo: false },
-  ];
+  const exportarJSON = () => {
+    if (!grupoAtual) return;
+    const dados = {
+      periodo: grupoAtual.label,
+      geradoEm: new Date().toISOString(),
+      resumo: stats,
+      campanhas: grupoAtual.campanhas,
+    };
+    const blob = new Blob([JSON.stringify(dados, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `relatorio_${grupoAtual.mes}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Relatório exportado!");
+  };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="space-y-2">
-        <h2 className="text-2xl font-bold text-slate-900">Sistema de Relatórios Mensais Automáticos</h2>
-        <p className="text-slate-600">Gere PDFs com análise completa de performance, ROI por persona e recomendações</p>
+      <div>
+        <h2 className="text-2xl font-bold text-slate-900 mb-1">Relatórios Mensais</h2>
+        <p className="text-slate-600 text-sm">Análise de performance de campanhas agrupadas por mês.</p>
       </div>
 
-      {/* Relatórios Disponíveis */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="w-5 h-5" />
-            Relatórios Disponíveis
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {relatorios.map((rel, idx) => (
-              <button
-                key={rel.id}
-                onClick={() => setSelectedMonth(idx)}
-                className={`w-full p-4 rounded-lg border-2 transition text-left ${
-                  selectedMonth === idx
-                    ? "border-pink-500 bg-pink-50"
-                    : "border-slate-200 hover:border-slate-300"
-                }`}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <p className="font-semibold text-slate-900">{rel.mes}</p>
-                    <p className="text-sm text-slate-600">Gerado em {rel.dataGeracao}</p>
-                  </div>
-                  <Badge className="bg-green-100 text-green-800">{rel.status}</Badge>
-                </div>
-
-                <div className="grid grid-cols-4 gap-3 pt-3 border-t border-slate-100 text-sm">
-                  <div>
-                    <p className="text-xs text-slate-600">Personas</p>
-                    <p className="font-bold text-slate-900">{rel.personas}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-600">Campanhas</p>
-                    <p className="font-bold text-slate-900">{rel.campanhas}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-600">ROI</p>
-                    <p className="font-bold text-green-600">{rel.roi}%</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-600">Tamanho</p>
-                    <p className="font-bold text-slate-900">{rel.tamanho}</p>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Detalhes do Relatório */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{currentRelatorio.mes}</CardTitle>
-          <CardDescription>Relatório completo com {secoes.length} seções</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Métricas Principais */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {metricas.map((metrica, idx) => (
-              <div key={idx} className={`bg-${metrica.cor}-50 rounded-lg p-4`}>
-                <p className="text-sm text-slate-600">{metrica.titulo}</p>
-                <p className="text-2xl font-bold text-slate-900 mt-1">{metrica.valor}</p>
-                <p className={`text-sm font-semibold text-${metrica.cor}-600 mt-1`}>{metrica.mudanca}</p>
+      {grupos.length === 0 ? (
+        <Card className="border-dashed">
+          <CardContent className="py-12 text-center">
+            <FileText className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+            <p className="text-slate-500">Nenhuma campanha com data de início cadastrada.</p>
+            <p className="text-sm text-slate-400 mt-1">Crie campanhas na aba "Campanhas" e defina a data de início para gerar relatórios mensais.</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          {/* Lista de meses */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                Períodos Disponíveis
+              </CardTitle>
+              <CardDescription>Cada período agrupa campanhas com dataInício no mesmo mês</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {grupos.map((grupo, idx) => {
+                  const s = calcularStats(grupo.campanhas);
+                  return (
+                    <button
+                      key={grupo.mes}
+                      onClick={() => setMesSelecionado(idx)}
+                      className={`w-full p-4 rounded-lg border-2 transition text-left ${
+                        mesSelecionado === idx ? "border-pink-500 bg-pink-50" : "border-slate-200 hover:border-slate-300"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="font-semibold text-slate-900">{grupo.label}</p>
+                        <Badge className="bg-green-100 text-green-800 text-xs">{s.total} campanha{s.total !== 1 ? "s" : ""}</Badge>
+                      </div>
+                      <div className="grid grid-cols-3 gap-3 text-xs text-slate-600">
+                        <div><span className="font-bold text-slate-900">{s.impressoes.toLocaleString("pt-BR")}</span> impressões</div>
+                        <div><span className="font-bold text-slate-900">{s.conversoes.toLocaleString("pt-BR")}</span> conversões</div>
+                        <div><span className="font-bold text-green-700">{s.roiMedio > 0 ? `${s.roiMedio.toFixed(0)}% ROI` : "—"}</span></div>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
-            ))}
-          </div>
+            </CardContent>
+          </Card>
 
-          {/* Seções do Relatório */}
-          <div>
-            <h3 className="font-semibold text-slate-900 mb-3">Seções Incluídas</h3>
-            <div className="space-y-2">
-              {secoes.map((secao, idx) => (
-                <div key={idx} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
-                  <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="font-medium text-slate-900">{secao.titulo}</p>
-                    <p className="text-sm text-slate-600">{secao.descricao}</p>
-                  </div>
-                  <Badge variant="outline" className="text-xs">{secao.paginas}p</Badge>
+          {/* Detalhes do período selecionado */}
+          {grupoAtual && stats && (
+            <Card>
+              <CardHeader>
+                <CardTitle>{grupoAtual.label}</CardTitle>
+                <CardDescription>{stats.total} campanha{stats.total !== 1 ? "s" : ""} · {SECOES_RELATORIO.length} seções de análise</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* KPIs reais */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {[
+                    { label: "Impressões", valor: stats.impressoes.toLocaleString("pt-BR"), cor: "bg-blue-50 text-blue-700" },
+                    { label: "Cliques", valor: stats.cliques.toLocaleString("pt-BR"), cor: "bg-purple-50 text-purple-700" },
+                    { label: "Conversões", valor: stats.conversoes.toLocaleString("pt-BR"), cor: "bg-green-50 text-green-700" },
+                    { label: "Orçamento", valor: `R$ ${stats.orcamento.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, cor: "bg-orange-50 text-orange-700" },
+                    { label: "ROI Médio", valor: stats.roiMedio > 0 ? `${stats.roiMedio.toFixed(0)}%` : "—", cor: "bg-pink-50 text-pink-700" },
+                    { label: "Campanhas", valor: String(stats.total), cor: "bg-slate-50 text-slate-700" },
+                  ].map((kpi, i) => (
+                    <div key={i} className={`${kpi.cor} rounded-lg p-4`}>
+                      <p className="text-xs font-medium opacity-70 mb-1">{kpi.label}</p>
+                      <p className="text-xl font-bold">{kpi.valor}</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Botões de Ação */}
-          <div className="grid grid-cols-2 gap-3">
-            <button className="py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:from-blue-600 hover:to-cyan-600 transition font-semibold flex items-center justify-center gap-2">
-              <Download className="w-5 h-5" />
-              Baixar PDF
-            </button>
-            <button className="py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition font-semibold flex items-center justify-center gap-2">
-              <Mail className="w-5 h-5" />
-              Enviar por Email
-            </button>
-          </div>
-        </CardContent>
-      </Card>
+                {/* Seções do relatório */}
+                <div>
+                  <h3 className="font-semibold text-slate-900 mb-3">Seções do Relatório</h3>
+                  <div className="space-y-2">
+                    {SECOES_RELATORIO.map((secao, idx) => (
+                      <div key={idx} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
+                        <CheckCircle className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="font-medium text-slate-900">{secao.titulo}</p>
+                          <p className="text-sm text-slate-600">{secao.descricao}</p>
+                        </div>
+                        <Badge variant="outline" className="text-xs">{secao.paginas}p</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-      {/* Agendamento Automático */}
+                {/* Campanhas do período */}
+                <div>
+                  <h3 className="font-semibold text-slate-900 mb-3">Campanhas do Período</h3>
+                  <div className="space-y-2">
+                    {grupoAtual.campanhas.map((c: any) => (
+                      <div key={c.id} className="flex items-center justify-between p-3 border border-slate-200 rounded-lg text-sm">
+                        <div>
+                          <p className="font-medium text-slate-900">{c.nome}</p>
+                          <p className="text-xs text-slate-500">{c.plataforma} · {c.status}</p>
+                        </div>
+                        <div className="text-right text-xs">
+                          <p className="font-bold text-green-700">{c.conversoes ?? 0} conv.</p>
+                          <p className="text-slate-500">ROI {parseFloat(c.roi ?? "0").toFixed(0)}%</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Exportar */}
+                <Button onClick={exportarJSON} className="w-full gap-2" variant="outline">
+                  <Download className="w-4 h-4" />
+                  Exportar Dados do Período (JSON)
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </>
+      )}
+
+      {/* Agendamento (UI informativo) */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="w-5 h-5" />
-            Agendamento Automático
+            Geração Automática
           </CardTitle>
-          <CardDescription>Configure quando os relatórios devem ser gerados automaticamente</CardDescription>
+          <CardDescription>Configure relatórios automáticos por email</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {agendamento.map((agenda, idx) => (
-            <label key={idx} className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={agenda.ativo}
-                className="w-5 h-5"
-                readOnly
-              />
-              <div className="flex-1">
-                <p className="font-medium text-slate-900">{agenda.dia}</p>
-                <p className="text-sm text-slate-600">Às {agenda.hora}</p>
-              </div>
-              <Badge className={agenda.ativo ? "bg-green-100 text-green-800" : "bg-slate-100 text-slate-800"}>
-                {agenda.ativo ? "Ativo" : "Inativo"}
-              </Badge>
-            </label>
-          ))}
-        </CardContent>
-      </Card>
-
-      {/* Distribuição de Email */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Distribuição Automática por Email</CardTitle>
-          <CardDescription>Envie relatórios automaticamente para stakeholders</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-900 mb-2">Destinatários</label>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <span className="text-slate-900">seu.email@feminnita.com.br</span>
-              </div>
-              <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <span className="text-slate-900">gerente@feminnita.com.br</span>
-              </div>
-              <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <span className="text-slate-900">financeiro@feminnita.com.br</span>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-900 mb-2">Adicionar Novo Destinatário</label>
-            <div className="flex gap-2">
-              <input
-                type="email"
-                placeholder="novo.email@feminnita.com.br"
-                className="flex-1 border border-slate-300 rounded-lg px-3 py-2"
-              />
-              <button className="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition font-semibold">
-                Adicionar
-              </button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Personalização */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Personalização do Relatório</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
-            <input type="checkbox" defaultChecked className="w-5 h-5" />
-            <div>
-              <p className="font-medium text-slate-900">Incluir Gráficos de Performance</p>
-              <p className="text-sm text-slate-600">Visualizações de ROI, conversões e engajamento</p>
-            </div>
-          </label>
-
-          <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
-            <input type="checkbox" defaultChecked className="w-5 h-5" />
-            <div>
-              <p className="font-medium text-slate-900">Análise Comparativa Mensal</p>
-              <p className="text-sm text-slate-600">Compare performance com mês anterior</p>
-            </div>
-          </label>
-
-          <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
-            <input type="checkbox" defaultChecked className="w-5 h-5" />
-            <div>
-              <p className="font-medium text-slate-900">Recomendações Personalizadas</p>
-              <p className="text-sm text-slate-600">Sugestões de otimização por persona</p>
-            </div>
-          </label>
-
-          <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
-            <input type="checkbox" defaultChecked className="w-5 h-5" />
-            <div>
-              <p className="font-medium text-slate-900">Análise de Concorrentes</p>
-              <p className="text-sm text-slate-600">Benchmarking com marcas similares</p>
-            </div>
-          </label>
-        </CardContent>
-      </Card>
-
-      {/* Histórico de Relatórios */}
-      <Card className="bg-blue-50 border-blue-200">
-        <CardHeader>
-          <CardTitle className="text-blue-900">📊 Histórico de Relatórios</CardTitle>
-        </CardHeader>
-        <CardContent className="text-blue-900 space-y-3">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm font-semibold">Total Gerado</p>
-              <p className="text-2xl font-bold">12</p>
-              <p className="text-xs mt-1">relatórios</p>
-            </div>
-            <div>
-              <p className="text-sm font-semibold">Tamanho Total</p>
-              <p className="text-2xl font-bold">24.8</p>
-              <p className="text-xs mt-1">MB</p>
-            </div>
-            <div>
-              <p className="text-sm font-semibold">Tempo Economizado</p>
-              <p className="text-2xl font-bold">48h</p>
-              <p className="text-xs mt-1">por ano</p>
-            </div>
-            <div>
-              <p className="text-sm font-semibold">Emails Enviados</p>
-              <p className="text-2xl font-bold">36</p>
-              <p className="text-xs mt-1">automaticamente</p>
-            </div>
+        <CardContent>
+          <p className="text-sm text-slate-600 mb-4">
+            Para receber relatórios automáticos por email, configure na aba <strong>Relatórios &gt; Relatório Semanal</strong>.
+          </p>
+          <div className="space-y-2 text-sm text-slate-500">
+            <p>• Relatórios semanais com métricas de campanhas ativas</p>
+            <p>• Alertas automáticos de performance via Smart Alerts</p>
+            <p>• Export manual disponível acima para cada período</p>
           </div>
         </CardContent>
       </Card>

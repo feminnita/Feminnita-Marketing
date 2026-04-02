@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Zap, Trash2, Edit2, Play, CheckCircle } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 
 interface Automation {
   id: string;
@@ -26,28 +27,15 @@ interface Automation {
 }
 
 export default function Automations() {
-  const [automacoes, setAutomacoes] = useState<Automation[]>([
-    {
-      id: "1",
-      nome: "Post Instagram Diário",
-      tipo: "post",
-      plataforma: "instagram",
-      conteudo: "Novo look da semana! 👗✨",
-      agendamento: "Diariamente às 10:00",
-      status: "ativo",
-      proxima_execucao: "Hoje às 10:00",
-    },
-    {
-      id: "2",
-      nome: "WhatsApp VIP",
-      tipo: "mensagem",
-      plataforma: "whatsapp",
-      conteudo: "Olá! Temos uma promoção especial para você 🎉",
-      agendamento: "Terças e Quintas às 14:00",
-      status: "ativo",
-      proxima_execucao: "Terça às 14:00",
-    },
-  ]);
+  const { data: dbAutomacoes = [], isLoading: loadingAutomacoes, refetch: refetchAutomacoes } = trpc.automations.listar.useQuery();
+
+  const [automacoes, setAutomacoes] = useState<Automation[]>([]);
+
+  useEffect(() => {
+    if (dbAutomacoes.length > 0) {
+      setAutomacoes(dbAutomacoes as unknown as Automation[]);
+    }
+  }, [dbAutomacoes]);
 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -67,15 +55,8 @@ export default function Automations() {
 
   // Usar tRPC para criar automação
   const criarMutation = trpc.automations.criar.useMutation({
-    onSuccess: (result: any) => {
-      setAutomacoes([
-        ...automacoes,
-        {
-          ...result,
-          status: "agendado",
-          proxima_execucao: "Próxima execução: " + formData.agendamento,
-        },
-      ]);
+    onSuccess: () => {
+      refetchAutomacoes();
       resetForm();
     },
   });
@@ -83,20 +64,14 @@ export default function Automations() {
   // Usar tRPC para executar automação
   const executarMutation = trpc.automations.executar.useMutation({
     onSuccess: (result: any) => {
-      alert(result.mensagem);
+      toast.success(result.mensagem);
     },
   });
 
   // Usar tRPC para atualizar automação
   const atualizarMutation = trpc.automations.atualizar.useMutation({
-    onSuccess: (result: any) => {
-      if (editingId) {
-        setAutomacoes(
-          automacoes.map((a) =>
-            a.id === editingId ? { ...a, ...formData } : a
-          )
-        );
-      }
+    onSuccess: () => {
+      refetchAutomacoes();
       resetForm();
     },
   });
@@ -104,14 +79,14 @@ export default function Automations() {
   // Usar tRPC para deletar automação
   const deletarMutation = trpc.automations.deletar.useMutation({
     onSuccess: (result: any) => {
-      setAutomacoes(automacoes.filter((a) => a.id !== editingId));
-      alert(result.mensagem);
+      refetchAutomacoes();
+      toast.success(result.mensagem);
     },
   });
 
   const handleAddAutomation = () => {
     if (!formData.nome || !formData.conteudo) {
-      alert("Por favor, preencha todos os campos");
+      toast.error("Por favor, preencha todos os campos");
       return;
     }
 
@@ -140,10 +115,8 @@ export default function Automations() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Tem certeza que deseja deletar esta automação?")) {
-      setEditingId(id);
-      deletarMutation.mutate({ id });
-    }
+    setEditingId(id);
+    deletarMutation.mutate({ id });
   };
 
   const handleExecute = (automacao: Automation) => {

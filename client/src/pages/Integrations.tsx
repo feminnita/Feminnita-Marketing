@@ -1,4 +1,4 @@
-import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,12 +7,6 @@ import { AlertCircle, CheckCircle2, Loader2, LogOut } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Integrations() {
-  const [blingApiKey, setBlingApiKey] = useState("");
-  const [canvaClientId, setCanvaClientId] = useState("");
-  const [canvaClientSecret, setCanvaClientSecret] = useState("");
-  const [metaAppId, setMetaAppId] = useState("");
-  const [metaAppSecret, setMetaAppSecret] = useState("");
-
   return (
     <div className="space-y-8">
       <div>

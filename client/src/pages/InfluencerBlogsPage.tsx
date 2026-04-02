@@ -7,23 +7,26 @@ import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Loader2, Plus, Trash2, Send } from "lucide-react";
 
-const INFLUENCERS = [
-  { id: 1, name: "Carol", color: "bg-pink-100" },
-  { id: 2, name: "Renata", color: "bg-purple-100" },
-  { id: 3, name: "Vanessa", color: "bg-blue-100" },
-  { id: 4, name: "Luiza", color: "bg-green-100" },
-];
+const COLORS = ["bg-pink-100", "bg-purple-100", "bg-blue-100", "bg-green-100", "bg-yellow-100", "bg-orange-100"];
 
 export default function InfluencerBlogsPage() {
   const { user, loading: authLoading } = useAuth();
-  const [selectedInfluencer, setSelectedInfluencer] = useState(1);
+  const { data: influencersData } = trpc.autonomousInfluencers.listInfluencers.useQuery();
+  const INFLUENCERS = (influencersData?.influencers ?? []).map((inf: any, i: number) => ({
+    id: inf.id,
+    name: inf.name,
+    color: COLORS[i % COLORS.length],
+  }));
+
+  const [selectedInfluencer, setSelectedInfluencer] = useState<number | null>(null);
+  const effectiveInfluencer = selectedInfluencer ?? INFLUENCERS[0]?.id ?? 1;
   const [newPostContent, setNewPostContent] = useState("");
   const [newPostCaption, setNewPostCaption] = useState("");
 
   // Get posts for selected influencer
   const { data: posts = [], isLoading: postsLoading, refetch: refetchPosts } = trpc.influencerBlog.getPosts.useQuery(
-    { influencerId: selectedInfluencer },
-    { enabled: !!selectedInfluencer }
+    { influencerId: effectiveInfluencer },
+    { enabled: !!effectiveInfluencer }
   );
 
   // Create post mutation
@@ -54,7 +57,7 @@ export default function InfluencerBlogsPage() {
 
     try {
       await createPostMutation.mutateAsync({
-        influencerId: selectedInfluencer,
+        influencerId: effectiveInfluencer,
         content: newPostContent,
         caption: newPostCaption,
         platform: "blog",
@@ -65,12 +68,10 @@ export default function InfluencerBlogsPage() {
   };
 
   const handleDeletePost = async (postId: number) => {
-    if (confirm("Tem certeza que deseja deletar este post?")) {
-      try {
-        await deletePostMutation.mutateAsync({ postId });
-      } catch (error) {
-        console.error("Erro ao deletar post:", error);
-      }
+    try {
+      await deletePostMutation.mutateAsync({ postId });
+    } catch (error) {
+      console.error("Erro ao deletar post:", error);
     }
   };
 
@@ -90,7 +91,7 @@ export default function InfluencerBlogsPage() {
     );
   }
 
-  const selectedInfluencerData = INFLUENCERS.find((i) => i.id === selectedInfluencer);
+  const selectedInfluencerData = INFLUENCERS.find((i) => i.id === effectiveInfluencer);
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -106,7 +107,7 @@ export default function InfluencerBlogsPage() {
             key={influencer.id}
             onClick={() => setSelectedInfluencer(influencer.id)}
             className={`p-4 rounded-lg border-2 transition-all ${
-              selectedInfluencer === influencer.id
+              effectiveInfluencer === influencer.id
                 ? `${influencer.color} border-gray-400`
                 : "bg-white border-gray-200 hover:border-gray-300"
             }`}

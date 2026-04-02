@@ -6,10 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { TrendingUp, AlertCircle, CheckCircle2, XCircle, RefreshCw } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 
-const INFLUENCER_NAMES = ["carol", "renata", "vanessa", "luiza"];
-
 export default function PerformanceReportPage() {
-  const [selectedInfluencer, setSelectedInfluencer] = useState<string>("carol");
+  const [selectedInfluencer, setSelectedInfluencer] = useState<string | null>(null);
 
   const { data: stats, isLoading, refetch } = trpc.postApproval.getApprovalStats.useQuery();
 
@@ -22,16 +20,18 @@ export default function PerformanceReportPage() {
   }
 
   const byInfluencer = stats?.byInfluencer ?? {};
+  const influencerKeys = Object.keys(byInfluencer);
 
   // Build per-influencer stats from real data
-  const influencerStats = INFLUENCER_NAMES.map((key) => {
+  const influencerStats = influencerKeys.map((key) => {
     const data = byInfluencer[key] ?? { approved: 0, rejected: 0, pending: 0 };
     const total = data.approved + data.rejected + data.pending;
     const approvalRate = total > 0 ? Math.round((data.approved / total) * 100) : 0;
     return { key, name: key.charAt(0).toUpperCase() + key.slice(1), total, approvalRate, ...data };
   });
 
-  const current = influencerStats.find((i) => i.key === selectedInfluencer) ?? influencerStats[0];
+  const effectiveSelected = selectedInfluencer ?? influencerKeys[0] ?? null;
+  const current = influencerStats.find((i) => i.key === effectiveSelected) ?? influencerStats[0];
 
   // Month-over-month from global stats
   const globalTotal = stats?.totalGenerated ?? 0;
@@ -105,7 +105,7 @@ export default function PerformanceReportPage() {
           {influencerStats.map((inf) => (
             <Button
               key={inf.key}
-              variant={selectedInfluencer === inf.key ? "default" : "outline"}
+              variant={effectiveSelected === inf.key ? "default" : "outline"}
               onClick={() => setSelectedInfluencer(inf.key)}
             >
               {inf.name}

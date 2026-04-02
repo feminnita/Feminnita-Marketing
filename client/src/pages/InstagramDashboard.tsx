@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Heart, MessageCircle, Eye, Share2, TrendingUp, Users, BarChart3, RefreshCw, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
 interface InstagramPost {
   id: string;
@@ -65,7 +66,7 @@ export default function InstagramDashboard() {
       });
 
       if (result.success && result.data) {
-        alert(`✅ Conexão estabelecida com sucesso!\nConta: ${result.data.accountName}`);
+        toast.success(`Conexão estabelecida! Conta: ${result.data.accountName}`);
       } else {
         setError(result.message);
       }
@@ -96,7 +97,7 @@ export default function InstagramDashboard() {
 
       if (result.success && result.data) {
         setPosts(result.data);
-        alert(`✅ Posts sincronizados com sucesso!`);
+        toast.success("Posts sincronizados com sucesso!");
       } else {
         setError("Erro ao sincronizar posts");
       }

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { conversationHistory, escalationQueue } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 /**
  * Router para integração com WhatsApp Business API
@@ -209,7 +209,10 @@ export const whatsappAIIntegrationRouter = router({
           updatedAt: new Date(),
         })
         .where(
-          eq(conversationHistory.whatsappPhoneNumber, input.whatsappPhoneNumber)
+          and(
+            eq(conversationHistory.whatsappPhoneNumber, input.whatsappPhoneNumber),
+            eq(conversationHistory.userId, ctx.user.id)
+          )
         );
 
       return { success: true };
@@ -232,7 +235,10 @@ export const whatsappAIIntegrationRouter = router({
         .select()
         .from(conversationHistory)
         .where(
-          eq(conversationHistory.whatsappPhoneNumber, input.whatsappPhoneNumber)
+          and(
+            eq(conversationHistory.whatsappPhoneNumber, input.whatsappPhoneNumber),
+            eq(conversationHistory.userId, ctx.user.id)
+          )
         );
 
       return {

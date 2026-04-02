@@ -1,8 +1,8 @@
-import { publicProcedure, protectedProcedure } from "../_core/trpc";
+import { protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
 import { oauthCredentials } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 /**
  * Canva API Integration Router
@@ -35,7 +35,7 @@ export const canvaIntegrationRouter = {
         const credentials = await db
           .select()
           .from(oauthCredentials)
-          .where(eq(oauthCredentials.platform, "canva"));
+          .where(and(eq(oauthCredentials.platform, "canva"), eq(oauthCredentials.userId, ctx.user.id)));
 
         if (!credentials || credentials.length === 0) {
           throw new Error("Credenciais do Canva não configuradas");
@@ -133,7 +133,7 @@ export const canvaIntegrationRouter = {
   /**
    * Get available Canva templates
    */
-  getTemplates: publicProcedure
+  getTemplates: protectedProcedure
     .input(z.object({
       designType: z.enum(["instagram_post", "instagram_story", "tiktok", "youtube_thumbnail", "blog_header"]).optional(),
     }))
@@ -253,22 +253,13 @@ export const canvaIntegrationRouter = {
       scheduleTime: z.date().optional(),
     }))
     .mutation(async ({ ctx, input }: any) => {
-      try {
-        // In production, this would integrate with Meta API or platform-specific APIs
-        
-        return {
-          success: true,
-          message: `Design publicado no ${input.platform}`,
-          design: {
-            id: input.designId,
-            platform: input.platform,
-            status: input.scheduleTime ? "scheduled" : "published",
-            publishedAt: input.scheduleTime || new Date(),
-          },
-        };
-      } catch (error: any) {
-        throw new Error(`Erro ao publicar design: ${error.message}`);
-      }
+      // Publicar um design do Canva requer exportar a imagem via Canva API
+      // e então publicar via Meta Graph API. Configure CANVA_ACCESS_TOKEN e
+      // META_ACCESS_TOKEN para habilitar esta funcionalidade.
+      throw new Error(
+        "Publicação de designs do Canva ainda não implementada. " +
+        "Exporte o design manualmente do Canva e publique via Meta Business Suite."
+      );
     }),
 
   /**
@@ -302,13 +293,64 @@ export const canvaIntegrationRouter = {
     }))
     .mutation(async ({ ctx, input }: any) => {
       try {
-        const designs = input.posts.map((post: any, index: any) => ({
-          id: `design_${Date.now()}_${index}`,
-          title: post.title,
-          type: post.designType,
-          status: "draft",
-          createdAt: new Date(),
-        }));
+        const db = await getDb();
+        if (!db) throw new Error("Database connection failed");
+
+        const credentials = await db
+          .select()
+          .from(oauthCredentials)
+          .where(and(eq(oauthCredentials.platform, "canva"), eq(oauthCredentials.userId, ctx.user.id)));
+
+        if (!credentials || credentials.length === 0) {
+          throw new Error("Credenciais do Canva não configuradas");
+        }
+
+        const accessToken = credentials[0].clientSecret;
+        const designs = [];
+
+        for (const post of input.posts) {
+          try {
+            const canvaRes = await fetch("https://api.canva.com/rest/v1/designs", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                title: post.title,
+                design_type: { name: post.designType },
+                asset_id: input.templateId,
+              }),
+            });
+
+            if (canvaRes.ok) {
+              const canvaData = await canvaRes.json() as { design?: { id?: string; title?: string; urls?: { edit_url?: string } } };
+              designs.push({
+                id: canvaData.design?.id ?? `design_${Date.now()}`,
+                title: canvaData.design?.title ?? post.title,
+                type: post.designType,
+                status: "draft",
+                editUrl: canvaData.design?.urls?.edit_url ?? null,
+                createdAt: new Date(),
+              });
+            } else {
+              designs.push({
+                id: `design_${Date.now()}`,
+                title: post.title,
+                type: post.designType,
+                status: "pending_token",
+                editUrl: null,
+                createdAt: new Date(),
+              });
+            }
+          } catch {
+            designs.push({
+              id: `design_${Date.now()}`,
+              title: post.title,
+              type: post.designType,
+              status: "pending_token",
+              editUrl: null,
+              createdAt: new Date(),
+            });
+          }
+        }
 
         return {
           success: true,

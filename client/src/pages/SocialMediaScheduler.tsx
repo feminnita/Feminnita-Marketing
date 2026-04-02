@@ -1,13 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar, Clock, Instagram, Facebook, MessageCircle, Plus, Edit, Trash2, Send, AlertCircle, Download, X } from "lucide-react";
+import { Calendar, Clock, Instagram, Facebook, MessageCircle, Plus, Edit, Trash2, Send, AlertCircle, X } from "lucide-react";
 import { trpc } from "@/lib/trpc";
-import { preloadedPosts } from "@/data/preloadedPostsWithImages";
-import { postsCreativos } from "@/data/postsCreativos";
+import { toast } from "sonner";
 
 interface ScheduledPost {
   id: string | number;
@@ -23,30 +22,6 @@ interface ScheduledPost {
 export default function SocialMediaScheduler() {
   const { user, isAuthenticated } = useAuth();
   const [posts, setPosts] = useState<ScheduledPost[]>([]);
-  const [postsLoaded, setPostsLoaded] = useState(false);
-
-  // Carregar postagens pré-carregadas na primeira vez
-  useEffect(() => {
-    if (!postsLoaded && preloadedPosts.length > 0) {
-      const convertedPosts = preloadedPosts.map((post: any) => {
-        const dateStr = post.scheduledDate instanceof Date 
-          ? post.scheduledDate.toISOString().split('T')[0]
-          : String(post.scheduledDate);
-        return {
-          id: String(post.id),
-          caption: post.caption,
-          platforms: post.platform,
-          scheduledDate: dateStr,
-          scheduledTime: post.scheduledTime,
-          status: "scheduled" as const,
-          imageUrl: post.type === 'single' ? post.imageUrl : (post.slides?.[0]?.imageUrl || ""),
-          carouselSlides: post.type === 'carousel' ? post.slides?.length || 0 : 0,
-        };
-      });
-      setPosts(convertedPosts);
-      setPostsLoaded(true);
-    }
-  }, [postsLoaded]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingPost, setEditingPost] = useState<ScheduledPost | null>(null);
   const [formData, setFormData] = useState({
@@ -60,7 +35,7 @@ export default function SocialMediaScheduler() {
 
   const handleAddPost = () => {
     if (!formData.caption || !formData.scheduledDate) {
-      alert("Preencha todos os campos obrigatórios!");
+      toast.error("Preencha todos os campos obrigatórios!");
       return;
     }
 
@@ -105,14 +80,14 @@ export default function SocialMediaScheduler() {
   const handlePublishNow = async (post: ScheduledPost) => {
     try {
       if (!post.imageUrl) {
-        alert("Post sem imagem nao pode ser publicado");
+        toast.error("Post sem imagem não pode ser publicado");
         return;
       }
 
       const platformsToPublish = post.platforms.filter((p) => p !== "whatsapp") as ("instagram" | "facebook")[];
 
       if (platformsToPublish.length === 0) {
-        alert("Selecione pelo menos Instagram ou Facebook para publicar");
+        toast.error("Selecione pelo menos Instagram ou Facebook para publicar");
         return;
       }
 
@@ -123,15 +98,15 @@ export default function SocialMediaScheduler() {
       });
 
       if (result.success) {
-        alert(`Publicado com sucesso em: ${platformsToPublish.join(", ")}`);
+        toast.success(`Publicado com sucesso em: ${platformsToPublish.join(", ")}`);
         setPosts(posts.map((p) => (p.id === post.id ? { ...p, status: "published" as const } : p)));
       } else {
-        alert(`Erro ao publicar: ${result.error}`);
+        toast.error(`Erro ao publicar: ${result.error}`);
         setPosts(posts.map((p) => (p.id === post.id ? { ...p, status: "failed" as const } : p)));
       }
     } catch (error) {
       console.error("Erro ao publicar:", error);
-      alert(`Erro ao publicar o post: ${error instanceof Error ? error.message : "Erro desconhecido"}`);
+      toast.error(`Erro ao publicar o post: ${error instanceof Error ? error.message : "Erro desconhecido"}`);
       setPosts(posts.map((p) => (p.id === post.id ? { ...p, status: "failed" as const } : p)));
     }
   };
@@ -195,27 +170,6 @@ export default function SocialMediaScheduler() {
                 <Plus className="w-5 h-5" />
                 Nova Postagem
               </CardTitle>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const convertedPosts = postsCreativos.map((post: any) => ({
-                    id: String(post.id),
-                    caption: post.caption,
-                    platforms: ["instagram", "facebook"] as ("instagram" | "facebook" | "whatsapp")[],
-                    scheduledDate: post.scheduledDate.toISOString().split('T')[0],
-                    scheduledTime: post.scheduledDate.toISOString().split('T')[1].substring(0, 5),
-                    status: "scheduled" as const,
-                    imageUrl: post.imageUrl,
-                    carouselSlides: 1,
-                  }));
-                  setPosts(convertedPosts);
-                }}
-                className="w-full mt-2"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Carregar 15 Postagens Criativas
-              </Button>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Caption */}
@@ -325,25 +279,6 @@ export default function SocialMediaScheduler() {
                   <div className="text-center text-gray-500 space-y-4">
                     <AlertCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
                     <p>Nenhuma postagem agendada ainda</p>
-                    <Button
-                      onClick={() => {
-                        const convertedPosts = postsCreativos.map((post: any) => ({
-                          id: String(post.id),
-                          caption: post.caption,
-                          platforms: ["instagram", "facebook"] as ("instagram" | "facebook" | "whatsapp")[],
-                          scheduledDate: post.scheduledDate.toISOString().split('T')[0],
-                          scheduledTime: post.scheduledDate.toISOString().split('T')[1].substring(0, 5),
-                          status: "scheduled" as const,
-                          imageUrl: post.imageUrl,
-                          carouselSlides: 1,
-                        }));
-                        setPosts(convertedPosts);
-                      }}
-                      className="w-full"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Carregar 15 Postagens Criativas
-                    </Button>
                   </div>
                 </CardContent>
               </Card>

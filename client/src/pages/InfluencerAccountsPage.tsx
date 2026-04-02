@@ -15,15 +15,12 @@ interface AccountFormData {
   youtube: string;
 }
 
-const INFLUENCERS = [
-  { id: 1, name: "Carol" },
-  { id: 2, name: "Renata" },
-  { id: 3, name: "Vanessa" },
-  { id: 4, name: "Luiza" },
-];
-
 export default function InfluencerAccountsPage() {
-  const [selectedInfluencer, setSelectedInfluencer] = useState<number>(1);
+  const { data: influencersData } = trpc.autonomousInfluencers.listInfluencers.useQuery();
+  const INFLUENCERS = (influencersData?.influencers ?? []).map((inf: any) => ({ id: inf.id, name: inf.name }));
+
+  const [selectedInfluencer, setSelectedInfluencer] = useState<number | null>(null);
+  const resolvedInfluencer = selectedInfluencer ?? INFLUENCERS[0]?.id ?? 1;
   const [formData, setFormData] = useState<AccountFormData>({
     email: "",
     instagram: "",
@@ -37,7 +34,7 @@ export default function InfluencerAccountsPage() {
 
   // Buscar contas existentes
   const { data: existingAccounts } = trpc.influencerAccounts.getAccounts.useQuery({
-    influencerId: selectedInfluencer,
+    influencerId: resolvedInfluencer,
   });
 
   // Preencher formulário quando mudar de influenciadora ou carregar dados
@@ -62,7 +59,7 @@ export default function InfluencerAccountsPage() {
         youtube: "",
       });
     }
-  }, [existingAccounts, selectedInfluencer]);
+  }, [existingAccounts, resolvedInfluencer]);
 
   // Mutation para salvar
   const saveAccountsMutation = trpc.influencerAccounts.saveAccounts.useMutation({
@@ -91,12 +88,12 @@ export default function InfluencerAccountsPage() {
     setMessage(null);
 
     saveAccountsMutation.mutate({
-      influencerId: selectedInfluencer,
+      influencerId: resolvedInfluencer,
       ...formData,
     });
   };
 
-  const currentInfluencer = INFLUENCERS.find((inf) => inf.id === selectedInfluencer);
+  const currentInfluencer = INFLUENCERS.find((inf) => inf.id === resolvedInfluencer);
 
   return (
     <div className="container py-8">
