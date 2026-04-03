@@ -87,5 +87,5 @@ ALTER TABLE `ai_settings` ADD CONSTRAINT `ai_settings_userId_users_id_fk` FOREIG
 ALTER TABLE `ai_training_data` ADD CONSTRAINT `ai_training_data_userId_users_id_fk` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `conversation_history` ADD CONSTRAINT `conversation_history_userId_users_id_fk` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `escalation_queue` ADD CONSTRAINT `escalation_queue_userId_users_id_fk` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `escalation_queue` ADD CONSTRAINT `escalation_queue_conversationHistoryId_conversation_history_id_fk` FOREIGN KEY (`conversationHistoryId`) REFERENCES `conversation_history`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `escalation_queue` ADD CONSTRAINT `escalation_queue_convHistoryId_conv_history_id_fk` FOREIGN KEY (`conversationHistoryId`) REFERENCES `conversation_history`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `knowledge_base` ADD CONSTRAINT `knowledge_base_userId_users_id_fk` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;

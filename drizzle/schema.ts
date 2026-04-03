@@ -18,7 +18,7 @@ export const users = mysqlTable("users", {
   name: text("name"),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
 });
 
@@ -44,7 +44,7 @@ export const integrations = mysqlTable("integrations", {
   isConnected: boolean("isConnected").default(false).notNull(),
   lastValidated: timestamp("lastValidated"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 
 export type Integration = typeof integrations.$inferSelect;
@@ -70,7 +70,7 @@ export const webhooks = mysqlTable("webhooks", {
   isActive: boolean("isActive").default(true).notNull(),
   lastTriggered: timestamp("lastTriggered"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 
 export type Webhook = typeof webhooks.$inferSelect;
@@ -126,7 +126,7 @@ export const oauthTokens = mysqlTable("oauth_tokens", {
   isActive: boolean("isActive").default(true).notNull(),
   lastUsed: timestamp("lastUsed"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 
 export type OAuthToken = typeof oauthTokens.$inferSelect;
@@ -153,23 +153,23 @@ export const influencers = mysqlTable("influencers", {
   youtubeAccessToken: varchar("youtube_access_token", { length: 512 }),
   isActive: boolean("is_active").default(true),
   createdAt: datetime("created_at").default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: datetime("updated_at").default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(() => new Date()),
+  updatedAt: datetime("updated_at").default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(()=>new Date()),
 });
 
 export const influencerKnowledgeBase = mysqlTable("influencer_knowledge_base", {
   id: int("id").primaryKey().autoincrement(),
-  influencerId: int("influencer_id").notNull().references(() => influencers.id),
+  influencerId: int("influencer_id").notNull(),
   category: varchar("category", { length: 255 }), // "products", "policies", "faqs", "trends"
   content: longtext("content"),
   embedding: varchar("embedding", { length: 2048 }), // Vector embedding for RAG
   source: varchar("source", { length: 255 }), // "catalog", "manual", "feedback"
   createdAt: datetime("created_at").default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: datetime("updated_at").default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(() => new Date()),
+  updatedAt: datetime("updated_at").default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(()=>new Date()),
 });
 
 export const influencerPosts = mysqlTable("influencer_posts", {
   id: int("id").primaryKey().autoincrement(),
-  influencerId: int("influencer_id").notNull().references(() => influencers.id),
+  influencerId: int("influencer_id").notNull(),
   platform: varchar("platform", { length: 50 }), // "instagram", "tiktok", "youtube", "blog"
   postId: varchar("post_id", { length: 255 }), // Platform-specific post ID
   content: longtext("content"),
@@ -190,12 +190,12 @@ export const influencerPosts = mysqlTable("influencer_posts", {
   approvedBy: varchar("approved_by", { length: 255 }),
   approvedAt: datetime("approved_at"),
   createdAt: datetime("created_at").default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: datetime("updated_at").default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(() => new Date()),
+  updatedAt: datetime("updated_at").default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(()=>new Date()),
 });
 
 export const influencerTrends = mysqlTable("influencer_trends", {
   id: int("id").primaryKey().autoincrement(),
-  influencerId: int("influencer_id").notNull().references(() => influencers.id),
+  influencerId: int("influencer_id").notNull(),
   platform: varchar("platform", { length: 50 }),
   trendName: varchar("trend_name", { length: 255 }).notNull(),
   trendCategory: varchar("trend_category", { length: 100 }), // "hashtag", "sound", "challenge", "topic"
@@ -209,7 +209,7 @@ export const influencerTrends = mysqlTable("influencer_trends", {
 
 export const influencerPerformance = mysqlTable("influencer_performance", {
   id: int("id").primaryKey().autoincrement(),
-  influencerId: int("influencer_id").notNull().references(() => influencers.id),
+  influencerId: int("influencer_id").notNull(),
   date: date("date").notNull(),
   platform: varchar("platform", { length: 50 }),
   totalFollowers: int("total_followers"),
@@ -227,7 +227,7 @@ export const influencerPerformance = mysqlTable("influencer_performance", {
 
 export const influencerInteractions = mysqlTable("influencer_interactions", {
   id: int("id").primaryKey().autoincrement(),
-  influencerId: int("influencer_id").notNull().references(() => influencers.id),
+  influencerId: int("influencer_id").notNull(),
   platform: varchar("platform", { length: 50 }),
   interactionType: varchar("interaction_type", { length: 50 }), // "comment", "dm", "mention"
   followerUsername: varchar("follower_username", { length: 255 }),
@@ -266,7 +266,7 @@ export const collaborators = mysqlTable("collaborators", {
   isActive: boolean("isActive").default(true).notNull(),
   lastLogin: timestamp("lastLogin"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 
 export type Collaborator = typeof collaborators.$inferSelect;
@@ -294,7 +294,7 @@ export const oauthCredentials = mysqlTable("oauth_credentials", {
   isConnected: boolean("isConnected").default(false).notNull(),
   lastValidated: timestamp("lastValidated"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 
 export type OAuthCredential = typeof oauthCredentials.$inferSelect;
@@ -304,7 +304,7 @@ export type InsertOAuthCredential = typeof oauthCredentials.$inferInsert;
 // Tabelas para CMS de Gerenciamento de Conteúdo
 export const contentItems = mysqlTable("content_items", {
   id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull().references(() => users.id),
+  userId: int("userId").notNull(),
   section: varchar("section", { length: 100 }).notNull(), // "personas", "planejamento", "roteiros", etc
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
@@ -312,7 +312,7 @@ export const contentItems = mysqlTable("content_items", {
   hashtags: text("hashtags"), // JSON array de hashtags
   status: mysqlEnum("status", ["draft", "scheduled", "published", "archived"]).default("draft").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 
 export type ContentItem = typeof contentItems.$inferSelect;
@@ -321,8 +321,8 @@ export type InsertContentItem = typeof contentItems.$inferInsert;
 // Tabela para armazenar arquivos de mídia (vídeos, imagens)
 export const mediaFiles = mysqlTable("media_files", {
   id: int("id").autoincrement().primaryKey(),
-  contentId: int("contentId").notNull().references(() => contentItems.id),
-  userId: int("userId").notNull().references(() => users.id),
+  contentId: int("contentId").notNull(),
+  userId: int("userId").notNull(),
   fileName: varchar("fileName", { length: 255 }).notNull(),
   fileType: varchar("fileType", { length: 50 }).notNull(), // "video", "image"
   mimeType: varchar("mimeType", { length: 100 }).notNull(), // "video/mp4", "image/jpeg"
@@ -342,14 +342,14 @@ export type InsertMediaFile = typeof mediaFiles.$inferInsert;
 // Tabela para agendamento de publicações
 export const scheduledPosts = mysqlTable("scheduled_posts", {
   id: int("id").autoincrement().primaryKey(),
-  contentId: int("contentId").notNull().references(() => contentItems.id),
-  userId: int("userId").notNull().references(() => users.id),
+  contentId: int("contentId").notNull(),
+  userId: int("userId").notNull(),
   platforms: varchar("platforms", { length: 500 }).notNull(), // JSON array: ["instagram", "facebook", "tiktok", "whatsapp"]
   scheduledAt: timestamp("scheduledAt").notNull(),
   status: mysqlEnum("status", ["pending", "processing", "published", "failed", "cancelled"]).default("pending").notNull(),
   failureReason: text("failureReason"), // Motivo da falha, se houver
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 
 export type ScheduledPost = typeof scheduledPosts.$inferSelect;
@@ -358,9 +358,9 @@ export type InsertScheduledPost = typeof scheduledPosts.$inferInsert;
 // Tabela para histórico de publicações
 export const postHistory = mysqlTable("post_history", {
   id: int("id").autoincrement().primaryKey(),
-  scheduledPostId: int("scheduledPostId").notNull().references(() => scheduledPosts.id),
-  contentId: int("contentId").notNull().references(() => contentItems.id),
-  userId: int("userId").notNull().references(() => users.id),
+  scheduledPostId: int("scheduledPostId").notNull(),
+  contentId: int("contentId").notNull(),
+  userId: int("userId").notNull(),
   platform: varchar("platform", { length: 50 }).notNull(), // "instagram", "facebook", "tiktok", "whatsapp"
   postId: varchar("postId", { length: 255 }), // ID da publicação na plataforma
   postUrl: text("postUrl"), // URL da publicação
@@ -380,7 +380,7 @@ export type InsertPostHistory = typeof postHistory.$inferInsert;
 // Tabela para armazenar contas das influenciadoras (email, Instagram, TikTok, Facebook, WhatsApp)
 export const influencerAccounts = mysqlTable("influencer_accounts", {
   id: int("id").autoincrement().primaryKey(),
-  influencerId: int("influencerId").notNull().references(() => influencers.id),
+  influencerId: int("influencerId").notNull(),
   email: varchar("email", { length: 320 }),
   instagram: varchar("instagram", { length: 255 }),
   tiktok: varchar("tiktok", { length: 255 }),
@@ -389,7 +389,7 @@ export const influencerAccounts = mysqlTable("influencer_accounts", {
   youtube: varchar("youtube", { length: 255 }),
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 
 export type InfluencerAccount = typeof influencerAccounts.$inferSelect;
@@ -441,7 +441,7 @@ export const metaCampaignAlerts = mysqlTable("meta_campaign_alerts", {
   isResolved: boolean("isResolved").default(false).notNull(),
   resolvedAt: timestamp("resolvedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 
 export type MetaCampaignAlert = typeof metaCampaignAlerts.$inferSelect;
@@ -459,7 +459,7 @@ export const instagramAccounts = mysqlTable("instagram_accounts", {
   
   // Identificação
   accountType: mysqlEnum("accountType", ["feminnita", "influencer"]).notNull(),
-  influencerId: int("influencerId").references(() => influencers.id), // NULL para Feminnita
+  influencerId: int("influencerId"), // NULL para Feminnita
   
   // Dados da conta Instagram
   instagramId: varchar("instagramId", { length: 255 }).notNull().unique(), // ID numérico do Instagram
@@ -486,7 +486,7 @@ export const instagramAccounts = mysqlTable("instagram_accounts", {
   
   // Auditoria
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 
 export type InstagramAccount = typeof instagramAccounts.$inferSelect;
@@ -499,8 +499,8 @@ export const igPostPublications = mysqlTable("ig_post_publications", {
   id: int("id").autoincrement().primaryKey(),
   
   // Relações
-  postId: int("postId").notNull().references(() => influencerPosts.id),
-  instagramAccountId: int("instagramAccountId").notNull().references(() => instagramAccounts.id),
+  postId: int("postId").notNull(),
+  instagramAccountId: int("instagramAccountId").notNull(),
   
   // Dados da publicação
   instagramPostId: varchar("instagramPostId", { length: 255 }), // ID retornado pelo Instagram
@@ -526,7 +526,7 @@ export const igPostPublications = mysqlTable("ig_post_publications", {
   
   // Auditoria
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 
 export type IgPostPublication = typeof igPostPublications.$inferSelect;
@@ -543,13 +543,13 @@ export const instagramAppCredentials = mysqlTable("instagram_app_credentials", {
   businessAccountId: varchar("businessAccountId", { length: 255 }).notNull(),
   
   // Credenciais do usuário que autorizou
-  userId: int("userId").notNull().references(() => users.id),
+  userId: int("userId").notNull(),
   
   // Status
   isActive: boolean("isActive").default(true).notNull(),
   
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 
 export type InstagramAppCredentials = typeof instagramAppCredentials.$inferSelect;
@@ -563,7 +563,7 @@ export type InsertInstagramAppCredentials = typeof instagramAppCredentials.$infe
 // Base de conhecimento com informações de produtos
 export const knowledgeBase = mysqlTable("knowledge_base", {
   id: int("id").primaryKey().autoincrement(),
-  userId: int("userId").notNull().references(() => users.id),
+  userId: int("userId").notNull(),
   
   // Tipo de conteúdo
   contentType: mysqlEnum("contentType", [
@@ -594,7 +594,7 @@ export const knowledgeBase = mysqlTable("knowledge_base", {
   isActive: boolean("isActive").default(true).notNull(),
   
   createdAt: datetime("createdAt").default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: datetime("updatedAt").default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(() => new Date()),
+  updatedAt: datetime("updatedAt").default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(()=>new Date()),
 });
 
 export type KnowledgeBase = typeof knowledgeBase.$inferSelect;
@@ -603,7 +603,7 @@ export type InsertKnowledgeBase = typeof knowledgeBase.$inferInsert;
 // Dados de treinamento para a IA
 export const aiTrainingData = mysqlTable("ai_training_data", {
   id: int("id").primaryKey().autoincrement(),
-  userId: int("userId").notNull().references(() => users.id),
+  userId: int("userId").notNull(),
   
   // Exemplos de entrada e saída esperada
   userMessage: longtext("userMessage").notNull(),
@@ -628,7 +628,7 @@ export const aiTrainingData = mysqlTable("ai_training_data", {
   isActive: boolean("isActive").default(true).notNull(),
   
   createdAt: datetime("createdAt").default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: datetime("updatedAt").default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(() => new Date()),
+  updatedAt: datetime("updatedAt").default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(()=>new Date()),
 });
 
 export type AITrainingData = typeof aiTrainingData.$inferSelect;
@@ -637,7 +637,7 @@ export type InsertAITrainingData = typeof aiTrainingData.$inferInsert;
 // Histórico de conversas
 export const conversationHistory = mysqlTable("conversation_history", {
   id: int("id").primaryKey().autoincrement(),
-  userId: int("userId").notNull().references(() => users.id),
+  userId: int("userId").notNull(),
   
   // Identificador do cliente no WhatsApp
   whatsappPhoneNumber: varchar("whatsappPhoneNumber", { length: 20 }).notNull(),
@@ -676,7 +676,7 @@ export const conversationHistory = mysqlTable("conversation_history", {
   ]).default("open").notNull(),
   
   createdAt: datetime("createdAt").default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: datetime("updatedAt").default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(() => new Date()),
+  updatedAt: datetime("updatedAt").default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(()=>new Date()),
 });
 
 export type ConversationHistory = typeof conversationHistory.$inferSelect;
@@ -685,10 +685,10 @@ export type InsertConversationHistory = typeof conversationHistory.$inferInsert;
 // Fila de escalação para atendimento humano
 export const escalationQueue = mysqlTable("escalation_queue", {
   id: int("id").primaryKey().autoincrement(),
-  userId: int("userId").notNull().references(() => users.id),
+  userId: int("userId").notNull(),
   
   // Referência à conversa
-  conversationHistoryId: int("conversationHistoryId").notNull().references(() => conversationHistory.id),
+  conversationHistoryId: int("conversationHistoryId").notNull(),
   
   // Cliente
   whatsappPhoneNumber: varchar("whatsappPhoneNumber", { length: 20 }).notNull(),
@@ -713,7 +713,7 @@ export const escalationQueue = mysqlTable("escalation_queue", {
   createdAt: datetime("createdAt").default(sql`CURRENT_TIMESTAMP`),
   startedAt: datetime("startedAt"),
   resolvedAt: datetime("resolvedAt"),
-  updatedAt: datetime("updatedAt").default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(() => new Date()),
+  updatedAt: datetime("updatedAt").default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(()=>new Date()),
 });
 
 export type EscalationQueue = typeof escalationQueue.$inferSelect;
@@ -722,7 +722,7 @@ export type InsertEscalationQueue = typeof escalationQueue.$inferInsert;
 // Configurações de IA por usuário
 export const aiSettings = mysqlTable("ai_settings", {
   id: int("id").primaryKey().autoincrement(),
-  userId: int("userId").notNull().references(() => users.id).unique(),
+  userId: int("userId").notNull().unique(),
   
   // Comportamento da IA
   systemPrompt: longtext("systemPrompt"),
@@ -741,7 +741,7 @@ export const aiSettings = mysqlTable("ai_settings", {
   isEnabled: boolean("isEnabled").default(true).notNull(),
   
   createdAt: datetime("createdAt").default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: datetime("updatedAt").default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(() => new Date()),
+  updatedAt: datetime("updatedAt").default(sql`CURRENT_TIMESTAMP`).$onUpdateFn(()=>new Date()),
 });
 
 export type AISettings = typeof aiSettings.$inferSelect;
@@ -752,7 +752,7 @@ export type InsertAISettings = typeof aiSettings.$inferInsert;
 
 export const campaigns = mysqlTable("campaigns", {
   id: int("id").primaryKey().autoincrement(),
-  userId: int("userId").notNull().references(() => users.id),
+  userId: int("userId").notNull(),
   nome: varchar("nome", { length: 255 }).notNull(),
   plataforma: mysqlEnum("plataforma", ["instagram", "facebook", "tiktok", "whatsapp", "email"]).notNull(),
   orcamento: decimal("orcamento", { precision: 10, scale: 2 }).notNull(),
@@ -766,7 +766,7 @@ export const campaigns = mysqlTable("campaigns", {
   conversoes: int("conversoes").default(0),
   roi: decimal("roi", { precision: 6, scale: 2 }).default("0"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 
 export type Campaign = typeof campaigns.$inferSelect;
@@ -777,7 +777,7 @@ export type InsertCampaign = typeof campaigns.$inferInsert;
 
 export const automations = mysqlTable("automations", {
   id: int("id").primaryKey().autoincrement(),
-  userId: int("userId").notNull().references(() => users.id),
+  userId: int("userId").notNull(),
   nome: varchar("nome", { length: 255 }).notNull(),
   tipo: mysqlEnum("tipo", ["post", "mensagem", "email", "whatsapp"]).notNull(),
   plataforma: mysqlEnum("plataforma", ["instagram", "facebook", "tiktok", "whatsapp", "email"]).notNull(),
@@ -787,7 +787,7 @@ export const automations = mysqlTable("automations", {
   proximaExecucao: timestamp("proxima_execucao"),
   ultimaExecucao: timestamp("ultima_execucao"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 
 export type Automation = typeof automations.$inferSelect;
@@ -798,7 +798,7 @@ export type InsertAutomation = typeof automations.$inferInsert;
 
 export const publicationQueueJobs = mysqlTable("publication_queue_jobs", {
   id: int("id").primaryKey().autoincrement(),
-  postId: int("postId").notNull().references(() => influencerPosts.id),
+  postId: int("postId").notNull(),
   accountId: int("accountId").notNull(),
   retryCount: int("retryCount").default(0).notNull(),
   maxRetries: int("maxRetries").default(5).notNull(),
@@ -806,7 +806,7 @@ export const publicationQueueJobs = mysqlTable("publication_queue_jobs", {
   nextRetryTime: timestamp("nextRetryTime"),
   status: mysqlEnum("status", ["ready", "waiting", "processing", "failed", "done"]).default("ready").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 
 export type PublicationQueueJob = typeof publicationQueueJobs.$inferSelect;
@@ -817,7 +817,7 @@ export type InsertPublicationQueueJob = typeof publicationQueueJobs.$inferInsert
 
 export const marketingResearchReports = mysqlTable("marketing_research_reports", {
   id: int("id").primaryKey().autoincrement(),
-  userId: int("userId").notNull().references(() => users.id),
+  userId: int("userId").notNull(),
   reportDate: date("report_date").notNull(),
   competitorInsights: json("competitor_insights").$type<{
     competitors: Array<{ name: string; strategy: string; topContent: string; strengths: string }>;
@@ -838,8 +838,8 @@ export type InsertMarketingResearchReport = typeof marketingResearchReports.$inf
 
 export const contentBriefs = mysqlTable("content_briefs", {
   id: int("id").primaryKey().autoincrement(),
-  userId: int("userId").notNull().references(() => users.id),
-  influencerId: int("influencer_id").references(() => influencers.id),
+  userId: int("userId").notNull(),
+  influencerId: int("influencer_id"),
   briefType: mysqlEnum("brief_type", ["carousel", "reel", "story", "post", "feed"]).notNull(),
   topic: varchar("topic", { length: 500 }).notNull(),
   targetAudience: text("target_audience"),
@@ -851,7 +851,7 @@ export const contentBriefs = mysqlTable("content_briefs", {
   status: mysqlEnum("status", ["pending", "generated", "approved", "published"]).default("pending").notNull(),
   researchReportId: int("research_report_id"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 
 export type ContentBrief = typeof contentBriefs.$inferSelect;
@@ -878,7 +878,7 @@ export type InsertCompetitorData = typeof competitorData.$inferInsert;
 
 export const assetLibrary = mysqlTable("asset_library", {
   id: int("id").primaryKey().autoincrement(),
-  userId: int("userId").notNull().references(() => users.id),
+  userId: int("userId").notNull(),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
   category: mysqlEnum("category", ["produto", "lifestyle", "modelo", "colecao", "background", "logo", "outro"]).notNull(),
@@ -891,7 +891,7 @@ export const assetLibrary = mysqlTable("asset_library", {
   aiAnalysis: text("ai_analysis"),
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 
 export type AssetLibraryItem = typeof assetLibrary.$inferSelect;
@@ -899,18 +899,18 @@ export type InsertAssetLibraryItem = typeof assetLibrary.$inferInsert;
 
 export const productCollections = mysqlTable("product_collections", {
   id: int("id").primaryKey().autoincrement(),
-  userId: int("userId").notNull().references(() => users.id),
+  userId: int("userId").notNull(),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
   collectionType: mysqlEnum("collection_type", ["produto", "colecao", "campanha", "temporada"]).notNull(),
   season: varchar("season", { length: 100 }),
   launchDate: timestamp("launch_date"),
   status: mysqlEnum("status", ["rascunho", "ativo", "arquivado"]).default("rascunho").notNull(),
-  assetIds: json("asset_ids").$type<number[]>().default([]),
+  assetIds: json("asset_ids").$type<number[]>(),
   briefsGenerated: boolean("briefs_generated").default(false).notNull(),
   contentPlan: json("content_plan").$type<Record<string, unknown>>(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 
 export type ProductCollection = typeof productCollections.$inferSelect;
@@ -936,7 +936,7 @@ export const afiliadas = mysqlTable("afiliadas", {
   nivel: mysqlEnum("nivel", ["bronze", "prata", "ouro", "diamante"]).default("bronze").notNull(),
   observacoes: text("observacoes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 export type Afiliada = typeof afiliadas.$inferSelect;
 export type InsertAfiliada = typeof afiliadas.$inferInsert;
@@ -975,7 +975,7 @@ export const abandonamentoSequencias = mysqlTable("abandonamento_sequencias", {
   etapa3Horas: int("etapa3Horas").default(72),
   etapa3Mensagem: text("etapa3Mensagem"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 export type AbandonamentoSequencia = typeof abandonamentoSequencias.$inferSelect;
 
@@ -990,7 +990,7 @@ export const abandonamentoLogs = mysqlTable("abandonamento_logs", {
   status: mysqlEnum("status", ["ativo", "convertido", "cancelado", "concluido"]).default("ativo").notNull(),
   convertidoEm: timestamp("convertidoEm"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 export type AbandonamentoLog = typeof abandonamentoLogs.$inferSelect;
 
@@ -1021,7 +1021,7 @@ export const brandBook = mysqlTable("brand_book", {
   diferenciais: text("diferenciais"),
   publicoAlvo: text("publicoAlvo"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 export type BrandBook = typeof brandBook.$inferSelect;
 export type InsertBrandBook = typeof brandBook.$inferInsert;
@@ -1043,7 +1043,7 @@ export const drops = mysqlTable("drops", {
   precoMaximo: varchar("precoMaximo", { length: 20 }),
   ativo: boolean("ativo").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 export type Drop = typeof drops.$inferSelect;
 export type InsertDrop = typeof drops.$inferInsert;
@@ -1063,7 +1063,7 @@ export const ugcSubmissions = mysqlTable("ugc_submissions", {
   autorizacaoObtida: boolean("autorizacaoObtida").default(false).notNull(),
   tags: text("tags"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 export type UGCSubmission = typeof ugcSubmissions.$inferSelect;
 export type InsertUGCSubmission = typeof ugcSubmissions.$inferInsert;
@@ -1086,7 +1086,7 @@ export const tiktokLives = mysqlTable("tiktok_lives", {
   tiktokLiveUrl: text("tiktokLiveUrl"),
   observacoes: text("observacoes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 export type TiktokLive = typeof tiktokLives.$inferSelect;
 export type InsertTiktokLive = typeof tiktokLives.$inferInsert;
@@ -1106,7 +1106,7 @@ export const cupons = mysqlTable("cupons", {
   dataExpiracao: varchar("dataExpiracao", { length: 20 }), // ISO date string
   observacoes: text("observacoes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 export type Cupom = typeof cupons.$inferSelect;
 export type InsertCupom = typeof cupons.$inferInsert;
@@ -1123,7 +1123,7 @@ export const contentTemplates = mysqlTable("content_templates", {
   usos: int("usos").notNull().default(0),
   tags: varchar("tags", { length: 500 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 export type ContentTemplate = typeof contentTemplates.$inferSelect;
 export type InsertContentTemplate = typeof contentTemplates.$inferInsert;
@@ -1143,7 +1143,7 @@ export const designHistory = mysqlTable("design_history", {
   campaignId: int("campaignId"),
   notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(()=>new Date()).notNull(),
 });
 export type DesignHistory = typeof designHistory.$inferSelect;
 export type InsertDesignHistory = typeof designHistory.$inferInsert;
