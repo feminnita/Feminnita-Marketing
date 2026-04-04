@@ -1,398 +1,185 @@
-import { TrendingUp, Users, BarChart3, Calendar, DollarSign, Target } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { trpc } from "@/lib/trpc";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
+import { BarChart3, TrendingUp, Users, Target, AlertCircle } from "lucide-react";
+
+const PERSONA_COLORS = [
+  { bg: 'bg-rose-50',   text: 'text-rose-700',   border: 'border-rose-200'   },
+  { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
+  { bg: 'bg-blue-50',   text: 'text-blue-700',   border: 'border-blue-200'   },
+  { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
+];
+
+const CHANNEL_RECOMMENDATIONS = [
+  { persona: "Carol",   channel: "Instagram",  reason: "Persona jovem — Reels e Stories têm alto engajamento" },
+  { persona: "Renata",  channel: "Facebook",   reason: "Público 30-45 anos mais presente no Facebook Ads" },
+  { persona: "Vanessa", channel: "TikTok",     reason: "Conteúdo materno viraliza bem no TikTok" },
+  { persona: "Luiza",   channel: "Email",      reason: "Influenciadora — listas segmentadas convertem mais" },
+];
 
 export function RelatorioInfluenciadoresSection() {
-  const [periodo, setPeriodo] = useState("30dias");
+  const { data: campanhas = [], isLoading } = trpc.campaigns.listar.useQuery();
 
-  const personas = [
-    {
-      id: 1,
-      nome: "Carol",
-      descricao: "Jovem, descontraída, moderna",
-      cor: "bg-pink-100",
-      corTexto: "text-pink-700"
-    },
-    {
-      id: 2,
-      nome: "Renata",
-      descricao: "Profissional, elegante, sofisticada",
-      cor: "bg-purple-100",
-      corTexto: "text-purple-700"
-    },
-    {
-      id: 3,
-      nome: "Vanessa",
-      descricao: "Mãe, acolhedora, prática",
-      cor: "bg-blue-100",
-      corTexto: "text-blue-700"
-    },
-    {
-      id: 4,
-      nome: "Luiza",
-      descricao: "Influenciadora, criativa, viral",
-      cor: "bg-orange-100",
-      corTexto: "text-orange-700"
-    }
-  ];
+  if (isLoading) return (
+    <div className="flex justify-center py-16">
+      <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#8B2635', borderTopColor: 'transparent' }} />
+    </div>
+  );
 
-  const performancePorPersona = [
-    {
-      persona: "Carol",
-      conversoes: 1.250,
-      receita: "R$ 156.250",
-      roi: "2.85x",
-      canal: "Instagram",
-      ltv: "R$ 125",
-      churn: "8%"
-    },
-    {
-      persona: "Renata",
-      conversoes: 890,
-      receita: "R$ 178.000",
-      roi: "3.12x",
-      canal: "Facebook",
-      ltv: "R$ 200",
-      churn: "5%"
-    },
-    {
-      persona: "Vanessa",
-      conversoes: 2.150,
-      receita: "R$ 215.000",
-      roi: "2.45x",
-      canal: "TikTok",
-      ltv: "R$ 100",
-      churn: "12%"
-    },
-    {
-      persona: "Luiza",
-      conversoes: 1.680,
-      receita: "R$ 302.400",
-      roi: "3.45x",
-      canal: "Email",
-      ltv: "R$ 180",
-      churn: "6%"
-    }
-  ];
+  // Group campaigns by persona (extracted from campaign name)
+  const personas = ["Carol", "Renata", "Vanessa", "Luiza"];
+  const byPersona = personas.map((name, idx) => {
+    const cs = campanhas.filter((c: any) =>
+      c.nome?.toLowerCase().includes(name.toLowerCase()) ||
+      c.descricao?.toLowerCase().includes(name.toLowerCase())
+    );
+    const totalConversoes = cs.reduce((s: number, c: any) => s + (c.performance?.conversoes ?? 0), 0);
+    const totalOrcamento = cs.reduce((s: number, c: any) => s + (c.performance?.orcamentoGasto ?? 0), 0);
+    const avgCTR = cs.length
+      ? cs.reduce((s: number, c: any) => s + (c.performance?.ctr ?? 0), 0) / cs.length
+      : 0;
+    const avgROI = cs.length
+      ? cs.reduce((s: number, c: any) => s + (c.performance?.roi ?? 0), 0) / cs.length
+      : 0;
 
-  const performancaPorCanal = [
-    {
-      persona: "Carol",
-      instagram: { conversoes: 1.250, roi: "2.85x", receita: "R$ 156.250" },
-      tiktok: { conversoes: 450, roi: "1.95x", receita: "R$ 45.000" },
-      facebook: { conversoes: 320, roi: "1.60x", receita: "R$ 32.000" },
-      email: { conversoes: 180, roi: "2.10x", receita: "R$ 18.000" }
-    },
-    {
-      persona: "Renata",
-      instagram: { conversoes: 650, roi: "2.50x", receita: "R$ 81.250" },
-      tiktok: { conversoes: 200, roi: "1.40x", receita: "R$ 20.000" },
-      facebook: { conversoes: 890, roi: "3.12x", receita: "R$ 178.000" },
-      email: { conversoes: 420, roi: "2.80x", receita: "R$ 84.000" }
-    },
-    {
-      persona: "Vanessa",
-      instagram: { conversoes: 800, roi: "2.10x", receita: "R$ 80.000" },
-      tiktok: { conversoes: 2.150, roi: "2.45x", receita: "R$ 215.000" },
-      facebook: { conversoes: 500, roi: "1.80x", receita: "R$ 50.000" },
-      email: { conversoes: 350, roi: "2.20x", receita: "R$ 35.000" }
-    },
-    {
-      persona: "Luiza",
-      instagram: { conversoes: 750, roi: "2.60x", receita: "R$ 93.750" },
-      tiktok: { conversoes: 600, roi: "2.15x", receita: "R$ 60.000" },
-      facebook: { conversoes: 400, roi: "1.85x", receita: "R$ 40.000" },
-      email: { conversoes: 1.680, roi: "3.45x", receita: "R$ 302.400" }
-    }
-  ];
+    const plataformas = [...new Set(cs.map((c: any) => c.plataforma).filter(Boolean))];
 
-  const recomendacoes = [
-    {
-      persona: "Carol",
-      acao: "Aumentar investimento em Instagram",
-      impacto: "+R$ 50K/mês",
-      prioridade: "Alta"
-    },
-    {
-      persona: "Renata",
-      acao: "Expandir Facebook Ads para 40% do budget",
-      impacto: "+R$ 35K/mês",
-      prioridade: "Alta"
-    },
-    {
-      persona: "Vanessa",
-      acao: "Dobrar investimento em TikTok",
-      impacto: "+R$ 80K/mês",
-      prioridade: "Crítica"
-    },
-    {
-      persona: "Luiza",
-      acao: "Aumentar frequência de emails",
-      impacto: "+R$ 60K/mês",
-      prioridade: "Alta"
-    }
-  ];
+    return {
+      name,
+      cs,
+      totalConversoes,
+      totalOrcamento,
+      avgCTR,
+      avgROI,
+      plataformas,
+      colors: PERSONA_COLORS[idx % PERSONA_COLORS.length],
+    };
+  });
+
+  const totalCampanhas = campanhas.length;
+  const totalConversoes = campanhas.reduce((s: number, c: any) => s + (c.performance?.conversoes ?? 0), 0);
 
   return (
     <div className="space-y-6">
-      {/* Período Seletor */}
-      <Card className="border-slate-200/50">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-blue-600" />
-              Período de Análise
-            </CardTitle>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setPeriodo("7dias")}
-                className={`px-3 py-1 rounded text-xs font-medium transition ${
-                  periodo === "7dias"
-                    ? "bg-blue-600 text-white"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                }`}
-              >
-                7 dias
-              </button>
-              <button
-                onClick={() => setPeriodo("30dias")}
-                className={`px-3 py-1 rounded text-xs font-medium transition ${
-                  periodo === "30dias"
-                    ? "bg-blue-600 text-white"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                }`}
-              >
-                30 dias
-              </button>
-              <button
-                onClick={() => setPeriodo("90dias")}
-                className={`px-3 py-1 rounded text-xs font-medium transition ${
-                  periodo === "90dias"
-                    ? "bg-blue-600 text-white"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                }`}
-              >
-                90 dias
-              </button>
-              <button
-                onClick={() => setPeriodo("custom")}
-                className={`px-3 py-1 rounded text-xs font-medium transition ${
-                  periodo === "custom"
-                    ? "bg-blue-600 text-white"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                }`}
-              >
-                Personalizado
-              </button>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
-
-      {/* Overview por Persona */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {personas.map((persona) => {
-          const dados = performancePorPersona.find((p) => p.persona === persona.nome);
-          return (
-            <Card key={persona.id} className={`border-slate-200/50 ${persona.cor}`}>
-              <CardHeader className="pb-3">
-                <CardTitle className={`text-lg ${persona.corTexto}`}>{persona.nome}</CardTitle>
-                <CardDescription className="text-xs">{persona.descricao}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div>
-                  <p className="text-xs text-slate-600">Conversões</p>
-                  <p className="text-2xl font-bold text-slate-900">{dados?.conversoes}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-slate-600">Receita</p>
-                  <p className="text-lg font-bold text-green-600">{dados?.receita}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-slate-600">ROI</p>
-                  <p className="text-lg font-bold text-blue-600">{dados?.roi}</p>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+      <div>
+        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Relatório por Influencer</h2>
+        <p className="text-slate-500 text-sm mt-1">Performance das personas baseada nas campanhas ativas</p>
       </div>
 
-      {/* Performance por Persona */}
-      <Card className="border-slate-200/50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-purple-600" />
-            Performance por Persona
-          </CardTitle>
-          <CardDescription>Métricas consolidadas de todas as personas</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {performancePorPersona.map((item, idx) => (
-              <div key={idx} className="border border-slate-200/50 rounded-lg p-4 hover:bg-slate-50/50 transition">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold text-slate-900">{item.persona}</h4>
-                  <Badge variant="secondary">{item.canal}</Badge>
-                </div>
-                <div className="grid grid-cols-3 md:grid-cols-6 gap-3 text-sm">
+      {campanhas.length === 0 ? (
+        <Card className="border-0 shadow-sm">
+          <CardContent className="pt-10 pb-10 text-center text-slate-400 space-y-2">
+            <BarChart3 className="w-10 h-10 mx-auto" />
+            <p className="text-sm">Nenhuma campanha cadastrada ainda.</p>
+            <p className="text-xs">Crie campanhas em <strong>Campanhas</strong> para ver performance por persona.</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          {/* Global KPIs */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card className="border-0 shadow-sm">
+              <CardContent className="pt-5 pb-5">
+                <p className="text-xs text-slate-500">Total campanhas</p>
+                <p className="text-2xl font-bold text-slate-900">{totalCampanhas}</p>
+              </CardContent>
+            </Card>
+            <Card className="border-0 shadow-sm">
+              <CardContent className="pt-5 pb-5">
+                <p className="text-xs text-slate-500">Total conversões</p>
+                <p className="text-2xl font-bold text-slate-900">{totalConversoes.toLocaleString('pt-BR')}</p>
+              </CardContent>
+            </Card>
+            <Card className="border-0 shadow-sm">
+              <CardContent className="pt-5 pb-5">
+                <p className="text-xs text-slate-500">Personas ativas</p>
+                <p className="text-2xl font-bold text-slate-900">{byPersona.filter(p => p.cs.length > 0).length}</p>
+              </CardContent>
+            </Card>
+            <Card className="border-0 shadow-sm">
+              <CardContent className="pt-5 pb-5">
+                <p className="text-xs text-slate-500">Plataformas</p>
+                <p className="text-2xl font-bold text-slate-900">
+                  {[...new Set(campanhas.map((c: any) => c.plataforma).filter(Boolean))].length}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Per persona cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {byPersona.map((p) => (
+              <Card key={p.name} className={`border-0 shadow-sm ${p.colors.bg}`}>
+                <CardHeader className="pb-2">
+                  <CardTitle className={`text-lg ${p.colors.text}`}>{p.name}</CardTitle>
+                  <p className="text-xs text-slate-500">{p.cs.length} campanha{p.cs.length !== 1 ? 's' : ''}</p>
+                </CardHeader>
+                <CardContent className="space-y-2">
                   <div>
-                    <p className="text-slate-500 text-xs">Conversões</p>
-                    <p className="font-bold text-slate-900">{item.conversoes}</p>
+                    <p className="text-xs text-slate-500">Conversões</p>
+                    <p className="text-xl font-bold text-slate-900">{p.totalConversoes.toLocaleString('pt-BR')}</p>
                   </div>
                   <div>
-                    <p className="text-slate-500 text-xs">Receita</p>
-                    <p className="font-bold text-green-600">{item.receita}</p>
+                    <p className="text-xs text-slate-500">CTR médio</p>
+                    <p className="text-lg font-bold text-slate-900">{p.avgCTR.toFixed(2)}%</p>
                   </div>
                   <div>
-                    <p className="text-slate-500 text-xs">ROI</p>
-                    <p className="font-bold text-blue-600">{item.roi}</p>
+                    <p className="text-xs text-slate-500">ROI médio</p>
+                    <p className="text-lg font-bold text-blue-700">{p.avgROI.toFixed(2)}%</p>
                   </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">LTV</p>
-                    <p className="font-bold text-slate-900">{item.ltv}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Churn</p>
-                    <p className="font-bold text-orange-600">{item.churn}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Ticket Médio</p>
-                    <p className="font-bold text-slate-900">R$ 125</p>
-                  </div>
-                </div>
-              </div>
+                  {p.plataformas.length > 0 && (
+                    <div className="flex flex-wrap gap-1 pt-1">
+                      {p.plataformas.map(pl => (
+                        <Badge key={pl} variant="secondary" className="text-xs">{pl}</Badge>
+                      ))}
+                    </div>
+                  )}
+                  {p.cs.length === 0 && (
+                    <p className="text-xs text-slate-400 italic">Sem campanhas ainda</p>
+                  )}
+                </CardContent>
+              </Card>
             ))}
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Performance por Canal */}
-      <Card className="border-slate-200/50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Target className="w-5 h-5 text-orange-600" />
-            Performance por Canal (Detalhado)
-          </CardTitle>
-          <CardDescription>Qual persona funciona melhor em cada canal</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {performancaPorCanal.map((item, idx) => (
-              <div key={idx} className="border border-slate-200/50 rounded-lg p-4">
-                <h4 className="font-semibold text-slate-900 mb-3">{item.persona}</h4>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                  <div className="bg-pink-50 rounded p-3">
-                    <p className="text-xs text-slate-600 font-semibold mb-2">📱 Instagram</p>
-                    <p className="text-xs text-slate-700">
-                      <strong>{item.instagram.conversoes}</strong> conversões
-                    </p>
-                    <p className="text-xs text-slate-700">
-                      ROI: <strong>{item.instagram.roi}</strong>
-                    </p>
-                    <p className="text-xs text-green-600 font-semibold mt-1">{item.instagram.receita}</p>
-                  </div>
-                  <div className="bg-purple-50 rounded p-3">
-                    <p className="text-xs text-slate-600 font-semibold mb-2">🎵 TikTok</p>
-                    <p className="text-xs text-slate-700">
-                      <strong>{item.tiktok.conversoes}</strong> conversões
-                    </p>
-                    <p className="text-xs text-slate-700">
-                      ROI: <strong>{item.tiktok.roi}</strong>
-                    </p>
-                    <p className="text-xs text-green-600 font-semibold mt-1">{item.tiktok.receita}</p>
-                  </div>
-                  <div className="bg-blue-50 rounded p-3">
-                    <p className="text-xs text-slate-600 font-semibold mb-2">👥 Facebook</p>
-                    <p className="text-xs text-slate-700">
-                      <strong>{item.facebook.conversoes}</strong> conversões
-                    </p>
-                    <p className="text-xs text-slate-700">
-                      ROI: <strong>{item.facebook.roi}</strong>
-                    </p>
-                    <p className="text-xs text-green-600 font-semibold mt-1">{item.facebook.receita}</p>
-                  </div>
-                  <div className="bg-green-50 rounded p-3">
-                    <p className="text-xs text-slate-600 font-semibold mb-2">📧 Email</p>
-                    <p className="text-xs text-slate-700">
-                      <strong>{item.email.conversoes}</strong> conversões
-                    </p>
-                    <p className="text-xs text-slate-700">
-                      ROI: <strong>{item.email.roi}</strong>
-                    </p>
-                    <p className="text-xs text-green-600 font-semibold mt-1">{item.email.receita}</p>
-                  </div>
-                </div>
+          {/* Channel recommendations */}
+          <Card className="border-0 shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Target className="w-4 h-4" style={{ color: '#8B2635' }} />
+                Canal recomendado por persona
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {CHANNEL_RECOMMENDATIONS.map((rec, idx) => {
+                  const p = byPersona.find(x => x.name === rec.persona)!;
+                  return (
+                    <div key={idx} className={`flex items-start gap-3 p-3 rounded-lg ${p.colors.bg} border ${p.colors.border}`}>
+                      <div className={`font-semibold text-sm w-20 flex-shrink-0 ${p.colors.text}`}>{rec.persona}</div>
+                      <div>
+                        <Badge variant="outline" className="text-xs mb-1">{rec.channel}</Badge>
+                        <p className="text-xs text-slate-600">{rec.reason}</p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
 
-      {/* Recomendações de Ação */}
-      <Card className="border-slate-200/50 bg-gradient-to-br from-green-50 to-emerald-50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-green-600" />
-            Recomendações de Investimento
-          </CardTitle>
-          <CardDescription>Ações para maximizar ROI por persona</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {recomendacoes.map((rec, idx) => (
-              <div key={idx} className="border border-green-200 rounded-lg p-4 bg-white">
-                <div className="flex items-start justify-between mb-2">
-                  <h4 className="font-semibold text-slate-900">{rec.persona}</h4>
-                  <Badge
-                    variant={
-                      rec.prioridade === "Crítica"
-                        ? "destructive"
-                        : rec.prioridade === "Alta"
-                        ? "default"
-                        : "secondary"
-                    }
-                  >
-                    {rec.prioridade}
-                  </Badge>
-                </div>
-                <p className="text-sm text-slate-700 mb-2">{rec.acao}</p>
-                <p className="text-sm font-semibold text-green-600">💰 Impacto: {rec.impacto}</p>
+          {/* LTV/Receita placeholder */}
+          <Card className="border-0 shadow-sm border-l-4 border-amber-400 bg-amber-50">
+            <CardContent className="pt-4 pb-4 flex gap-3 items-start">
+              <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-amber-800">
+                <strong>Receita, LTV e Churn</strong> por persona requerem integração com <strong>Bling ERP</strong>.
+                Os dados de conversão acima são derivados das campanhas de marketing.
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Insights */}
-      <Card className="border-slate-200/50 bg-gradient-to-br from-amber-50 to-orange-50">
-        <CardHeader>
-          <CardTitle className="text-slate-900">🎯 Insights Principais</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm text-slate-700">
-          <div className="flex items-start gap-3">
-            <span className="text-lg">⭐</span>
-            <p><strong>Luiza é a persona mais lucrativa:</strong> R$ 302.400 em receita com ROI 3.45x (melhor do portfólio)</p>
-          </div>
-          <div className="flex items-start gap-3">
-            <span className="text-lg">📈</span>
-            <p><strong>Vanessa tem maior volume:</strong> 2.150 conversões via TikTok (maior volume de vendas)</p>
-          </div>
-          <div className="flex items-start gap-3">
-            <span className="text-lg">💼</span>
-            <p><strong>Renata é a mais eficiente:</strong> LTV R$ 200 com churn apenas 5% (melhor retenção)</p>
-          </div>
-          <div className="flex items-start gap-3">
-            <span className="text-lg">🎬</span>
-            <p><strong>Email é o canal de Luiza:</strong> 1.680 conversões via email (canal mais forte)</p>
-          </div>
-          <div className="flex items-start gap-3">
-            <span className="text-lg">📱</span>
-            <p><strong>TikTok é o canal de Vanessa:</strong> 2.150 conversões (maior volume de vendas)</p>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </>
+      )}
     </div>
   );
 }
