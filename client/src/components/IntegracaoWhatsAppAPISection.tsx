@@ -7,21 +7,15 @@ import { useState } from "react";
 export default function IntegracaoWhatsAppAPISection() {
   const [conectado, setConectado] = useState(false);
   const [automacoes] = useState([
-    { id: 1, nome: "Confirmação de Compra", status: "ativo", mensagens: 342, conversao: "18,5%" },
-    { id: 2, nome: "Carrinho Abandonado", status: "ativo", mensagens: 156, conversao: "12,3%" },
-    { id: 3, nome: "Promoção Flash", status: "ativo", mensagens: 89, conversao: "22,1%" },
-    { id: 4, nome: "Recomendação Produto", status: "ativo", mensagens: 234, conversao: "15,7%" },
-    { id: 5, nome: "Feedback Pós-Compra", status: "ativo", mensagens: 198, conversao: "8,9%" },
-    { id: 6, nome: "Reabastecimento", status: "ativo", mensagens: 67, conversao: "25,3%" }
+    { id: 1, nome: "Confirmação de Compra", status: "ativo" },
+    { id: 2, nome: "Carrinho Abandonado", status: "ativo" },
+    { id: 3, nome: "Promoção Flash", status: "ativo" },
+    { id: 4, nome: "Recomendação Produto", status: "ativo" },
+    { id: 5, nome: "Feedback Pós-Compra", status: "ativo" },
+    { id: 6, nome: "Reabastecimento", status: "ativo" },
   ]);
 
-  const [conversas] = useState([
-    { id: 1, cliente: "Maria Silva", mensagem: "Qual é o preço do pijama inverno?", hora: "14:32", status: "respondida" },
-    { id: 2, cliente: "João Santos", mensagem: "Vocês têm tamanho GG?", hora: "14:28", status: "respondida" },
-    { id: 3, cliente: "Ana Costa", mensagem: "Qual a forma de pagamento?", hora: "14:15", status: "respondida" },
-    { id: 4, cliente: "Carlos Oliveira", mensagem: "Quanto tempo demora a entrega?", hora: "13:45", status: "respondida" },
-    { id: 5, cliente: "Fernanda Lima", mensagem: "Vocês têm promoção?", hora: "13:22", status: "respondida" }
-  ]);
+  const [conversas] = useState<Array<{ id: number; cliente: string; mensagem: string; hora: string; status: string }>>([]);
 
   return (
     <div className="space-y-8">
@@ -58,9 +52,9 @@ export default function IntegracaoWhatsAppAPISection() {
           {conectado && (
             <div className="grid md:grid-cols-3 gap-3">
               {[
-                { titulo: "Conversas Ativas", valor: "5", icon: "💬" },
-                { titulo: "Mensagens Hoje", valor: "1.087", icon: "📨" },
-                { titulo: "Taxa Resposta", valor: "98,5%", icon: "✅" }
+                { titulo: "Conversas Ativas", valor: conversas.length.toString(), icon: "💬" },
+                { titulo: "Automações Ativas", valor: automacoes.length.toString(), icon: "📨" },
+                { titulo: "Status", valor: "Conectado", icon: "✅" }
               ].map((item, idx) => (
                 <div key={idx} className="text-center p-3 bg-white rounded-lg border border-slate-200">
                   <p className="text-2xl mb-1">{item.icon}</p>
@@ -87,18 +81,8 @@ export default function IntegracaoWhatsAppAPISection() {
                   <h4 className="font-bold text-slate-900">{auto.nome}</h4>
                   <Badge className="bg-green-600">✅ {auto.status}</Badge>
                 </div>
-                <div className="grid grid-cols-3 gap-3 text-xs">
-                  <div>
-                    <p className="text-slate-600">Mensagens Enviadas</p>
-                    <p className="font-bold text-slate-900">{auto.mensagens}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-600">Taxa Conversão</p>
-                    <p className="font-bold text-green-600">{auto.conversao}</p>
-                  </div>
-                  <div className="text-right">
-                    <Button size="sm" variant="outline">Editar</Button>
-                  </div>
+                <div className="flex justify-end">
+                  <Button size="sm" variant="outline">Editar</Button>
                 </div>
               </div>
             ))}
@@ -113,19 +97,8 @@ export default function IntegracaoWhatsAppAPISection() {
             <CardTitle className="text-lg">Conversas Recentes</CardTitle>
             <CardDescription>Últimas interações com clientes</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {conversas.map((conv) => (
-              <div key={conv.id} className="border border-slate-200 rounded-lg p-3 hover:border-blue-300 hover:bg-blue-50 transition">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <p className="font-bold text-slate-900">{conv.cliente}</p>
-                    <p className="text-xs text-slate-600">"{conv.mensagem}"</p>
-                  </div>
-                  <Badge className="bg-green-600">✅ {conv.status}</Badge>
-                </div>
-                <p className="text-xs text-slate-600">Hora: {conv.hora}</p>
-              </div>
-            ))}
+          <CardContent>
+            <p className="text-sm text-slate-400 text-center py-4">Mensagens reais aparecerão aqui após conectar o WhatsApp Business API.</p>
           </CardContent>
         </Card>
       )}
