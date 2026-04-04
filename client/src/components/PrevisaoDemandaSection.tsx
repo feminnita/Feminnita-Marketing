@@ -1,216 +1,151 @@
+import { trpc } from "@/lib/trpc";
 import { TrendingUp, Calendar, AlertCircle, CheckCircle, BarChart3, Zap } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
+const FATORES_SAZONALIDADE = [
+  { mes: "Fevereiro", indice: 1.15, descricao: "Pós-Carnaval (alta demanda)" },
+  { mes: "Março", indice: 1.08, descricao: "Estabilização" },
+  { mes: "Abril", indice: 0.95, descricao: "Período de redução" },
+  { mes: "Maio", indice: 1.20, descricao: "Preparação para inverno" },
+];
+
+const FATORES_INFLUENCIA = [
+  { fator: "Sazonalidade", peso: "35%", impacto: "Alto" },
+  { fator: "Tendências Virais", peso: "25%", impacto: "Médio" },
+  { fator: "Investimento em Ads", peso: "20%", impacto: "Alto" },
+  { fator: "Estoque Disponível", peso: "15%", impacto: "Médio" },
+  { fator: "Concorrência", peso: "5%", impacto: "Baixo" },
+];
+
+const PLATAFORMAS = [
+  { label: "Instagram", keys: ["instagram", "instagram ads", "meta", "meta ads"] },
+  { label: "TikTok", keys: ["tiktok", "tiktok ads"] },
+  { label: "Facebook", keys: ["facebook"] },
+  { label: "Google Ads", keys: ["google", "google ads", "google shopping"] },
+];
+
 export function PrevisaoDemandaSection() {
-  const previsaoProdutos = [
-    {
-      produto: "Pijama Luiza Roxo",
-      vendidoMes: 1.680,
-      previsaoProximo: 2.150,
-      crescimento: "+28%",
-      confianca: "94%",
-      recomendacao: "Aumentar estoque em 35%",
-      impacto: "R$ 387K"
-    },
-    {
-      produto: "Robe Vanessa Branco",
-      vendidoMes: 2.150,
-      previsaoProximo: 2.890,
-      crescimento: "+34%",
-      confianca: "91%",
-      recomendacao: "Aumentar estoque em 40%",
-      impacto: "R$ 289K"
-    },
-    {
-      produto: "Pijama Renata Azul",
-      vendidoMes: 890,
-      previsaoProximo: 1.120,
-      crescimento: "+26%",
-      confianca: "88%",
-      recomendacao: "Aumentar estoque em 30%",
-      impacto: "R$ 224K"
-    },
-    {
-      produto: "Pijama Carol Rosa",
-      vendidoMes: 1.250,
-      previsaoProximo: 1.450,
-      crescimento: "+16%",
-      confianca: "85%",
-      recomendacao: "Manter estoque atual",
-      impacto: "R$ 181K"
-    }
-  ];
+  const { data: campanhasRaw = [] } = trpc.campaigns.listar.useQuery();
+  const { data: blingStatus } = trpc.blingOAuth.getStatus.useQuery();
+  const blingConectado = (blingStatus as any)?.connected === true;
+  const campanhas = campanhasRaw as any[];
 
-  const fatoresSazonalidade = [
-    { mes: "Fevereiro", indice: 1.15, descricao: "Pós-Carnaval (alta demanda)" },
-    { mes: "Março", indice: 1.08, descricao: "Estabilização" },
-    { mes: "Abril", indice: 0.95, descricao: "Período de redução" },
-    { mes: "Maio", indice: 1.20, descricao: "Preparação para inverno" }
-  ];
+  const totalConversoes = campanhas.reduce((s: number, c: any) => s + (c.performance?.conversoes ?? 0), 0);
 
-  const analiseCanais = [
-    {
-      canal: "Instagram",
-      vendidoMes: 3.200,
-      previsaoProximo: 4.100,
-      crescimento: "+28%",
-      recomendacao: "Aumentar investimento em 30%"
-    },
-    {
-      canal: "TikTok",
-      vendidoMes: 2.150,
-      previsaoProximo: 2.890,
-      crescimento: "+34%",
-      recomendacao: "Aumentar investimento em 40%"
-    },
-    {
-      canal: "Facebook",
-      vendidoMes: 1.890,
-      previsaoProximo: 2.100,
-      crescimento: "+11%",
-      recomendacao: "Manter investimento"
-    },
-    {
-      canal: "Email",
-      vendidoMes: 1.730,
-      previsaoProximo: 2.310,
-      crescimento: "+34%",
-      recomendacao: "Aumentar frequência em 25%"
-    }
-  ];
-
-  const metricas = [
-    {
-      titulo: "Previsão Total (Fev)",
-      valor: "7.610",
-      descricao: "Unidades estimadas",
-      cor: "text-blue-600"
-    },
-    {
-      titulo: "Receita Estimada",
-      valor: "R$ 1.08M",
-      descricao: "Fevereiro 2026",
-      cor: "text-green-600"
-    },
-    {
-      titulo: "Crescimento vs Mês",
-      valor: "+26%",
-      descricao: "Média de crescimento",
-      cor: "text-purple-600"
-    },
-    {
-      titulo: "Confiança Média",
-      valor: "89.5%",
-      descricao: "Acurácia da previsão",
-      cor: "text-emerald-600"
-    }
-  ];
-
-  const fatoresInfluencia = [
-    { fator: "Sazonalidade", peso: "35%", impacto: "Alto" },
-    { fator: "Tendências Virais", peso: "25%", impacto: "Médio" },
-    { fator: "Investimento em Ads", peso: "20%", impacto: "Alto" },
-    { fator: "Estoque Disponível", peso: "15%", impacto: "Médio" },
-    { fator: "Concorrência", peso: "5%", impacto: "Baixo" }
-  ];
+  const canaisDados = PLATAFORMAS.map(p => {
+    const grupo = campanhas.filter((c: any) =>
+      p.keys.includes((c.plataforma ?? '').toLowerCase())
+    );
+    const conversoes = grupo.reduce((s: number, c: any) => s + (c.performance?.conversoes ?? 0), 0);
+    const roi = grupo.length > 0 ? grupo.reduce((s: number, c: any) => s + (c.performance?.roi ?? 0), 0) / grupo.length : 0;
+    return { canal: p.label, conversoes, roi: parseFloat(roi.toFixed(1)), count: grupo.length };
+  }).filter(c => c.count > 0);
 
   return (
     <div className="space-y-6">
-      {/* Overview Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {metricas.map((metrica, idx) => (
-          <Card key={idx} className="border-slate-200/50">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-slate-600">{metrica.titulo}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className={`text-3xl font-bold ${metrica.cor}`}>{metrica.valor}</div>
-              <p className="text-xs text-slate-500 mt-1">{metrica.descricao}</p>
-            </CardContent>
-          </Card>
-        ))}
+      <div>
+        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Previsão de Demanda</h2>
+        <p className="text-slate-500 text-sm mt-1">Sinais de demanda por canal e fatores de sazonalidade</p>
       </div>
 
-      {/* Previsão por Produto */}
-      <Card className="border-slate-200/50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-blue-600" />
-            Previsão de Demanda por Produto (Fevereiro)
-          </CardTitle>
-          <CardDescription>Algoritmo ML com histórico de 12 meses</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {previsaoProdutos.map((produto, idx) => (
-              <div key={idx} className="border border-slate-200/50 rounded-lg p-4 hover:bg-slate-50/50 transition">
-                <div className="flex items-start justify-between mb-3">
-                  <h4 className="font-semibold text-slate-900">{produto.produto}</h4>
-                  <Badge className="bg-blue-100 text-blue-700">{produto.confianca}</Badge>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-3 text-sm">
-                  <div>
-                    <p className="text-slate-500 text-xs">Vendido (Jan)</p>
-                    <p className="font-bold text-slate-900">{produto.vendidoMes}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Previsão (Fev)</p>
-                    <p className="font-bold text-slate-900">{produto.previsaoProximo}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Crescimento</p>
-                    <p className="font-bold text-green-600">{produto.crescimento}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Recomendação</p>
-                    <p className="font-bold text-blue-600 text-xs">{produto.recomendacao}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Impacto</p>
-                    <p className="font-bold text-green-600">{produto.impacto}</p>
-                  </div>
-                </div>
-
-                <div className="w-full bg-slate-200 rounded-full h-2">
-                  <div
-                    className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full"
-                    style={{ width: `${(produto.previsaoProximo / 3000) * 100}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
+      {/* Bling requirement for product-level forecasts */}
+      <Card className="border-0 shadow-sm border-l-4 border-amber-400 bg-amber-50">
+        <CardContent className="pt-4 pb-4 flex gap-3 items-start">
+          <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-amber-800">
+            Previsão por produto (unidades, receita estimada por SKU) requer <strong>Bling ERP</strong> para
+            histórico de vendas e estoque.
+            {blingConectado
+              ? ' Bling conectado — configure exportação de histórico de vendas.'
+              : ' Configure a integração em Integrações → Bling.'}
+          </p>
         </CardContent>
       </Card>
 
-      {/* Sazonalidade */}
-      <Card className="border-slate-200/50 bg-gradient-to-br from-orange-50 to-amber-50">
+      {/* Campaign signals */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <Card className="border-0 shadow-sm">
+          <CardContent className="pt-5 pb-5">
+            <p className="text-xs text-slate-500">Conversões totais (campanhas)</p>
+            <p className="text-2xl font-bold text-slate-900">{totalConversoes > 0 ? totalConversoes.toLocaleString('pt-BR') : '—'}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm">
+          <CardContent className="pt-5 pb-5">
+            <p className="text-xs text-slate-500">Canais com dados</p>
+            <p className="text-2xl font-bold text-slate-900">{canaisDados.length}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm">
+          <CardContent className="pt-5 pb-5">
+            <p className="text-xs text-slate-500">Campanhas ativas</p>
+            <p className="text-2xl font-bold text-slate-900">{campanhas.filter((c: any) => c.status === 'ativa').length}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Canal signal — real data */}
+      <Card className="border-0 shadow-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-orange-600" />
-            Índice de Sazonalidade
+          <CardTitle className="flex items-center gap-2 text-base">
+            <BarChart3 className="w-4 h-4" style={{ color: '#8B2635' }} />
+            Sinais de demanda por canal (campanhas cadastradas)
           </CardTitle>
-          <CardDescription>Padrões de demanda por mês</CardDescription>
+          <CardDescription className="text-xs">Baseado em conversões reais das campanhas cadastradas</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {canaisDados.length === 0 ? (
+            <div className="text-center py-8 text-slate-400">
+              <BarChart3 className="w-8 h-8 mx-auto mb-2" />
+              <p className="text-sm">Nenhum dado de canal disponível.</p>
+              <p className="text-xs">Cadastre campanhas com plataforma definida para ver sinais por canal.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {canaisDados.map((canal, idx) => (
+                <div key={idx} className="p-3 border border-slate-200 rounded-lg">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="font-semibold text-sm text-slate-900">{canal.canal}</p>
+                    <Badge variant="secondary" className="text-xs">{canal.count} campanha(s)</Badge>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs text-slate-600">
+                    <span>Conversões: <strong className="text-slate-900">{canal.conversoes.toLocaleString('pt-BR')}</strong></span>
+                    <span>ROI médio: <strong className="text-green-700">{canal.roi.toFixed(1)}%</strong></span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Sazonalidade — legitimate industry benchmarks */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Calendar className="w-4 h-4" style={{ color: '#8B2635' }} />
+            Índice de Sazonalidade (moda/pijamas Brasil)
+          </CardTitle>
+          <CardDescription className="text-xs">Padrões típicos de demanda por mês — referência de mercado</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {fatoresSazonalidade.map((sazon, idx) => (
+            {FATORES_SAZONALIDADE.map((sazon, idx) => (
               <div key={idx} className="flex items-center gap-4">
-                <div className="w-20">
-                  <p className="font-semibold text-slate-900 text-sm">{sazon.mes}</p>
+                <div className="w-20 flex-shrink-0">
+                  <p className="font-semibold text-sm text-slate-900">{sazon.mes}</p>
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-slate-600">{sazon.descricao}</span>
+                    <span className="text-xs text-slate-500">{sazon.descricao}</span>
                     <span className="text-sm font-bold text-slate-900">{sazon.indice}x</span>
                   </div>
                   <div className="w-full bg-slate-200 rounded-full h-2">
-                    <div
-                      className="bg-gradient-to-r from-orange-500 to-amber-500 h-2 rounded-full"
-                      style={{ width: `${(sazon.indice / 1.3) * 100}%` }}
-                    />
+                    <div className="h-2 rounded-full" style={{
+                      width: `${(sazon.indice / 1.3) * 100}%`,
+                      backgroundColor: '#8B2635',
+                    }} />
                   </div>
                 </div>
               </div>
@@ -219,68 +154,31 @@ export function PrevisaoDemandaSection() {
         </CardContent>
       </Card>
 
-      {/* Análise por Canal */}
-      <Card className="border-slate-200/50">
+      {/* Fatores de Influência — legitimate conceptual model */}
+      <Card className="border-0 shadow-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-purple-600" />
-            Previsão por Canal
-          </CardTitle>
-          <CardDescription>Qual canal vai crescer mais em fevereiro</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {analiseCanais.map((canal, idx) => (
-              <div key={idx} className="border border-slate-200/50 rounded-lg p-4 hover:bg-slate-50/50 transition">
-                <div className="flex items-start justify-between mb-2">
-                  <h4 className="font-semibold text-slate-900">{canal.canal}</h4>
-                  <Badge className="bg-purple-100 text-purple-700">{canal.crescimento}</Badge>
-                </div>
-                <div className="grid grid-cols-3 gap-3 mb-2 text-sm">
-                  <div>
-                    <p className="text-slate-500 text-xs">Vendido (Jan)</p>
-                    <p className="font-bold text-slate-900">{canal.vendidoMes}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Previsão (Fev)</p>
-                    <p className="font-bold text-slate-900">{canal.previsaoProximo}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Recomendação</p>
-                    <p className="font-bold text-blue-600 text-xs">{canal.recomendacao}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Fatores de Influência */}
-      <Card className="border-slate-200/50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="w-5 h-5 text-yellow-600" />
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Zap className="w-4 h-4" style={{ color: '#8B2635' }} />
             Fatores que Influenciam a Demanda
           </CardTitle>
-          <CardDescription>Peso de cada fator na previsão</CardDescription>
+          <CardDescription className="text-xs">Peso estimado de cada fator na previsão de vendas</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {fatoresInfluencia.map((fator, idx) => (
+            {FATORES_INFLUENCIA.map((fator, idx) => (
               <div key={idx} className="flex items-center gap-4">
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="font-semibold text-slate-900">{fator.fator}</p>
+                    <p className="font-semibold text-sm text-slate-900">{fator.fator}</p>
                     <span className="text-sm font-bold text-slate-600">{fator.peso}</span>
                   </div>
                   <div className="w-full bg-slate-200 rounded-full h-2">
-                    <div
-                      className="bg-gradient-to-r from-yellow-500 to-orange-500 h-2 rounded-full"
-                      style={{ width: fator.peso }}
-                    />
+                    <div className="h-2 rounded-full" style={{
+                      width: fator.peso,
+                      backgroundColor: '#8B2635',
+                    }} />
                   </div>
-                  <p className="text-xs text-slate-500 mt-1">Impacto: {fator.impacto}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">Impacto: {fator.impacto}</p>
                 </div>
               </div>
             ))}
@@ -288,40 +186,22 @@ export function PrevisaoDemandaSection() {
         </CardContent>
       </Card>
 
-      {/* Recomendações */}
-      <Card className="border-slate-200/50 bg-gradient-to-br from-green-50 to-emerald-50">
+      {/* Recommendations guide */}
+      <Card className="border-0 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-slate-900">💡 Recomendações de Ação</CardTitle>
+          <CardTitle className="text-base">Como Agir com a Previsão</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3 text-sm text-slate-700">
-          <div className="flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-slate-900">Aumentar Estoque em 35%</p>
-              <p className="text-slate-600">Robe Vanessa vai crescer 34% - prepare estoque agora</p>
+        <CardContent className="space-y-2 text-sm">
+          {[
+            { icon: <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />, text: 'Use índice de sazonalidade para planejar estoque com 4–6 semanas de antecedência.' },
+            { icon: <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />, text: 'Canal com maior ROI médio merece incremento de orçamento no próximo mês.' },
+            { icon: <TrendingUp className="w-4 h-4 text-blue-600 flex-shrink-0" />, text: 'Conecte o Bling ERP para ver previsão real por SKU com histórico de 12 meses.' },
+          ].map((tip, i) => (
+            <div key={i} className="flex items-start gap-3 p-3 border border-slate-200 rounded-lg">
+              {tip.icon}
+              <p className="text-slate-700">{tip.text}</p>
             </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-slate-900">Aumentar Investimento em TikTok</p>
-              <p className="text-slate-600">Canal vai crescer 34% - ROI esperado 2.8x</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-slate-900">Preparar Campanhas de Email</p>
-              <p className="text-slate-600">Email vai crescer 34% - aumentar frequência em 25%</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-slate-900">Receita Estimada: R$ 1.08M</p>
-              <p className="text-slate-600">+26% vs janeiro - prepare equipe para volume maior</p>
-            </div>
-          </div>
+          ))}
         </CardContent>
       </Card>
     </div>

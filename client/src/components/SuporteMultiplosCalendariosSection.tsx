@@ -59,12 +59,7 @@ export default function SuporteMultiplosCalendariosSection() {
 
   const currentCalendario = calendarios[selectedCalendario];
 
-  const membrosCompartilhados = [
-    { nome: "Ana Silva", email: "ana@feminnita.com", permissao: "Editor", adicionado: "15 Jan" },
-    { nome: "Bruno Costa", email: "bruno@feminnita.com", permissao: "Visualizador", adicionado: "20 Jan" },
-    { nome: "Carla Santos", email: "carla@feminnita.com", permissao: "Editor", adicionado: "25 Jan" },
-    { nome: "Diego Oliveira", email: "diego@feminnita.com", permissao: "Visualizador", adicionado: "28 Jan" },
-  ];
+  const membrosCompartilhados: Array<{ nome: string; email: string; permissao: string; adicionado: string }> = [];
 
   const eventosCompartilhados = [
     {
@@ -110,10 +105,8 @@ export default function SuporteMultiplosCalendariosSection() {
           </CardTitle>
         </CardHeader>
         <CardContent className="text-blue-900 space-y-2">
-          <p>✓ 4 calendários sincronizados</p>
-          <p>✓ 53 eventos totais</p>
-          <p>✓ 4 membros da equipe compartilhando</p>
-          <p className="text-sm">Taxa de sincronização: 100%</p>
+          <p>Configure calendários Google abaixo e convide membros da equipe para compartilhar.</p>
+          <p className="text-sm">Membros adicionados aparecerão na lista "Membros Compartilhados".</p>
         </CardContent>
       </Card>
 
@@ -227,20 +220,24 @@ export default function SuporteMultiplosCalendariosSection() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {membrosCompartilhados.map((membro) => (
-                <div key={membro.email} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition">
-                  <div className="flex-1">
-                    <p className="font-semibold text-slate-900">{membro.nome}</p>
-                    <p className="text-sm text-slate-600 mt-1">{membro.email}</p>
+            {membrosCompartilhados.length === 0 ? (
+              <p className="text-sm text-slate-400 text-center py-6">Nenhum membro adicionado ainda. Use o formulário abaixo para convidar a equipe.</p>
+            ) : (
+              <div className="space-y-3">
+                {membrosCompartilhados.map((membro) => (
+                  <div key={membro.email} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition">
+                    <div className="flex-1">
+                      <p className="font-semibold text-slate-900">{membro.nome}</p>
+                      <p className="text-sm text-slate-600 mt-1">{membro.email}</p>
+                    </div>
+                    <div className="text-right">
+                      <Badge className="bg-blue-100 text-blue-800 text-xs mb-2">{membro.permissao}</Badge>
+                      <p className="text-xs text-slate-600">Adicionado {membro.adicionado}</p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <Badge className="bg-blue-100 text-blue-800 text-xs mb-2">{membro.permissao}</Badge>
-                    <p className="text-xs text-slate-600">Adicionado {membro.adicionado}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -359,6 +356,9 @@ export default function SuporteMultiplosCalendariosSection() {
 
           <div className="pt-4 border-t border-slate-200">
             <p className="text-sm font-medium text-slate-900 mb-3">Membros Atuais</p>
+            {membrosCompartilhados.length === 0 ? (
+              <p className="text-xs text-slate-400 py-2">Nenhum membro adicionado.</p>
+            ) : (
             <div className="space-y-2">
               {membrosCompartilhados.map((membro) => (
                 <div key={membro.email} className="flex items-center justify-between p-2 bg-slate-50 rounded">
@@ -378,6 +378,7 @@ export default function SuporteMultiplosCalendariosSection() {
                 </div>
               ))}
             </div>
+            )}
           </div>
         </CardContent>
       </Card>
