@@ -15,8 +15,8 @@ export default function BibliotecaTemplatesSection() {
       duracao: "15s",
       plataforma: "Instagram",
       favorito: true,
-      uso: 12,
-      rating: 4.8
+      uso: 0,
+      rating: 0
     },
     {
       id: 2,
@@ -27,8 +27,8 @@ export default function BibliotecaTemplatesSection() {
       duracao: "45s",
       plataforma: "Instagram",
       favorito: false,
-      uso: 8,
-      rating: 4.6
+      uso: 0,
+      rating: 0
     },
     {
       id: 3,
@@ -39,8 +39,8 @@ export default function BibliotecaTemplatesSection() {
       duracao: "30s",
       plataforma: "TikTok",
       favorito: true,
-      uso: 15,
-      rating: 4.9
+      uso: 0,
+      rating: 0
     },
     {
       id: 4,
@@ -51,8 +51,8 @@ export default function BibliotecaTemplatesSection() {
       duracao: "N/A",
       plataforma: "Instagram",
       favorito: false,
-      uso: 24,
-      rating: 4.7
+      uso: 0,
+      rating: 0
     },
     {
       id: 5,
@@ -63,8 +63,8 @@ export default function BibliotecaTemplatesSection() {
       duracao: "20s",
       plataforma: "Instagram",
       favorito: true,
-      uso: 18,
-      rating: 4.5
+      uso: 0,
+      rating: 0
     },
     {
       id: 6,
@@ -75,8 +75,8 @@ export default function BibliotecaTemplatesSection() {
       duracao: "30s",
       plataforma: "Instagram/TikTok",
       favorito: false,
-      uso: 10,
-      rating: 4.8
+      uso: 0,
+      rating: 0
     }
   ]);
 
