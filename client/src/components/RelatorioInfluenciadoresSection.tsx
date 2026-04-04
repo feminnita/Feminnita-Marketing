@@ -42,7 +42,7 @@ export function RelatorioInfluenciadoresSection() {
       ? cs.reduce((s: number, c: any) => s + (c.performance?.roi ?? 0), 0) / cs.length
       : 0;
 
-    const plataformas = [...new Set(cs.map((c: any) => c.plataforma).filter(Boolean))];
+    const plataformas: string[] = [...new Set<string>(cs.map((c: any) => c.plataforma).filter(Boolean))];
 
     return {
       name,

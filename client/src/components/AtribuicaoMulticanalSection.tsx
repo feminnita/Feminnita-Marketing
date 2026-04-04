@@ -85,7 +85,7 @@ export function AtribuicaoMulticanalSection() {
               <p className="text-sm text-slate-400">Nenhuma conversão registrada ainda.</p>
             ) : (
               <div className="space-y-2">
-                {Object.entries(byPlatform).map(([platform, data]) => (
+                {Object.entries(byPlatform).map(([platform, data]: [string, any]) => (
                   <div key={platform} className="flex items-center gap-3">
                     <span className="text-sm font-medium text-slate-700 w-28 capitalize">{platform}</span>
                     <div className="flex-1 bg-slate-100 rounded-full h-2">
