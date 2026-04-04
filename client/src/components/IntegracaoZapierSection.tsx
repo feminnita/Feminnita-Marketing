@@ -8,32 +8,7 @@ import { useState } from "react";
 export default function IntegracaoZapierSection() {
   const [conectado, setConectado] = useState(false);
   const [zapierKey, setZapierKey] = useState("");
-  const [automacoes, setAutomacoes] = useState([
-    {
-      id: 1,
-      nome: "Publicar Story no Instagram",
-      descricao: "Automaticamente publica stories no Instagram",
-      status: "ativo",
-      acionamentos: 45,
-      criado: "2026-01-30"
-    },
-    {
-      id: 2,
-      nome: "Publicar Reels no Instagram",
-      descricao: "Automaticamente publica reels no Instagram",
-      status: "ativo",
-      acionamentos: 23,
-      criado: "2026-01-29"
-    },
-    {
-      id: 3,
-      nome: "Publicar Vídeo no TikTok",
-      descricao: "Automaticamente publica vídeos no TikTok",
-      status: "inativo",
-      acionamentos: 0,
-      criado: "2026-01-28"
-    }
-  ]);
+  const [automacoes, setAutomacoes] = useState<{ id: number; nome: string; descricao: string; status: string; acionamentos: number; criado: string }[]>([]);
 
   const conectarZapier = () => {
     if (zapierKey.trim()) {
@@ -169,7 +144,9 @@ export default function IntegracaoZapierSection() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {automacoes.map((auto) => (
+                {automacoes.length === 0 ? (
+                  <p className="text-sm text-slate-400 text-center py-6">Nenhuma automação criada ainda. Conecte o Zapier e use os templates abaixo para começar.</p>
+                ) : automacoes.map((auto) => (
                   <div key={auto.id} className="border border-slate-200 rounded-lg p-4 hover:border-yellow-300 hover:bg-yellow-50 transition">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">

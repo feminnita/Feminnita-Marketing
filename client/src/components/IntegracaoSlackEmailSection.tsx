@@ -7,9 +7,9 @@ import { useState } from "react";
 
 export default function IntegracaoSlackEmailSection() {
   const [slackConectado, setSlackConectado] = useState(false);
-  const [emailConectado, setEmailConectado] = useState(true);
+  const [emailConectado, setEmailConectado] = useState(false);
   const [slackWebhook, setSlackWebhook] = useState("");
-  const [email, setEmail] = useState("seu@email.com");
+  const [email, setEmail] = useState("");
 
   const [notificacoes, setNotificacoes] = useState([
     {
@@ -56,40 +56,7 @@ export default function IntegracaoSlackEmailSection() {
     }
   ]);
 
-  const [historico, setHistorico] = useState([
-    {
-      id: 1,
-      tipo: "sucesso",
-      titulo: "Meta de Vendas Atingida! 🎉",
-      descricao: "Você atingiu 156 vendas hoje (meta: 100)",
-      data: "2026-01-31 18:45",
-      canais: ["slack", "email"]
-    },
-    {
-      id: 2,
-      tipo: "alerta",
-      titulo: "CPA Acima do Limite",
-      descricao: "CPA em Google Ads: R$ 16,50 (limite: R$ 15)",
-      data: "2026-01-31 15:30",
-      canais: ["slack", "email"]
-    },
-    {
-      id: 3,
-      tipo: "info",
-      titulo: "Relatório Diário - 30 de Janeiro",
-      descricao: "Resumo diário de vendas — conecte Bling ERP para valores reais",
-      data: "2026-01-30 20:00",
-      canais: ["email"]
-    },
-    {
-      id: 4,
-      tipo: "alerta",
-      titulo: "ROI Abaixo do Esperado",
-      descricao: "Facebook Ads ROI: 150% (esperado: 200%)",
-      data: "2026-01-30 14:15",
-      canais: ["slack"]
-    }
-  ]);
+  const [historico, setHistorico] = useState<{ id: number; tipo: string; titulo: string; descricao: string; data: string; canais: string[] }[]>([]);
 
   const conectarSlack = () => {
     if (slackWebhook.trim()) {
@@ -260,7 +227,9 @@ export default function IntegracaoSlackEmailSection() {
           <CardDescription>Notificações enviadas recentemente</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          {historico.map((notif) => (
+          {historico.length === 0 ? (
+            <p className="text-sm text-slate-400 text-center py-6">Nenhuma notificação enviada ainda. Configure os canais e ative os alertas acima.</p>
+          ) : historico.map((notif) => (
             <div key={notif.id} className={`border-l-4 rounded-lg p-4 ${
               notif.tipo === "sucesso" ? "border-l-green-500 bg-green-50" :
               notif.tipo === "alerta" ? "border-l-red-500 bg-red-50" :
