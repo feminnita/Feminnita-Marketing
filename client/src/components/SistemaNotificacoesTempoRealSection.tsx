@@ -56,53 +56,7 @@ export default function SistemaNotificacoesTempoRealSection() {
 
   const currentAlert = alertas[selectedAlert];
 
-  const notificacoes = [
-    {
-      id: 1,
-      titulo: "🎉 Meta de Conversão Atingida!",
-      descricao: "Você atingiu 285 conversões hoje - 14% acima da meta!",
-      tipo: "sucesso",
-      timestamp: "há 2 horas",
-      persona: "Luiza",
-      acao: "Ver detalhes",
-    },
-    {
-      id: 2,
-      titulo: "🔥 Trend Viral Detectada",
-      descricao: "#PijamaChallenge cresceu 156% em 2 horas - Carol deveria postar agora!",
-      tipo: "oportunidade",
-      timestamp: "há 3 horas",
-      persona: "Carol",
-      acao: "Criar post",
-    },
-    {
-      id: 3,
-      titulo: "⚠️ Anomalia de Performance",
-      descricao: "Performance de Renata caiu 28% - Investigar possível problema com horário",
-      tipo: "alerta",
-      timestamp: "há 5 horas",
-      persona: "Renata",
-      acao: "Analisar",
-    },
-    {
-      id: 4,
-      titulo: "💡 Oportunidade: Micro-influenciador",
-      descricao: "Beatriz Rocha (18K seguidores, 10.5% engajamento) disponível por R$ 1.2K",
-      tipo: "oportunidade",
-      timestamp: "há 8 horas",
-      persona: "Geral",
-      acao: "Contratar",
-    },
-    {
-      id: 5,
-      titulo: "✅ Teste A/B Finalizado",
-      descricao: "Hook 2 venceu com 10.8% taxa de conversão (+8% vs Hook 1)",
-      tipo: "sucesso",
-      timestamp: "há 12 horas",
-      persona: "Carol",
-      acao: "Aplicar",
-    },
-  ];
+  const notificacoes: Array<{ id: number; titulo: string; descricao: string; tipo: string; timestamp: string; persona: string; acao: string }> = [];
 
   const regras = [
     {
@@ -136,12 +90,12 @@ export default function SistemaNotificacoesTempoRealSection() {
   ];
 
   const canais = [
-    { nome: "Email", ativo: true, notificacoes: 1250 },
-    { nome: "Push", ativo: true, notificacoes: 850 },
-    { nome: "SMS", ativo: false, notificacoes: 0 },
-    { nome: "WhatsApp", ativo: true, notificacoes: 420 },
-    { nome: "Slack", ativo: true, notificacoes: 320 },
-    { nome: "Discord", ativo: false, notificacoes: 0 },
+    { nome: "Email", ativo: true },
+    { nome: "Push", ativo: true },
+    { nome: "SMS", ativo: false },
+    { nome: "WhatsApp", ativo: true },
+    { nome: "Slack", ativo: true },
+    { nome: "Discord", ativo: false },
   ];
 
   const getNotificacaoColor = (tipo: string) => {
@@ -175,6 +129,13 @@ export default function SistemaNotificacoesTempoRealSection() {
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {notificacoes.length === 0 ? (
+            <div className="text-center py-8 text-slate-400 space-y-2">
+              <Bell className="w-8 h-8 mx-auto" />
+              <p className="text-sm">Nenhuma notificação recente.</p>
+              <p className="text-xs">Configure alertas abaixo para receber notificações automáticas.</p>
+            </div>
+          ) : (
           <div className="space-y-3">
             {notificacoes.map((notif) => (
               <div
@@ -206,6 +167,7 @@ export default function SistemaNotificacoesTempoRealSection() {
               </div>
             ))}
           </div>
+          )}
         </CardContent>
       </Card>
 
@@ -356,7 +318,6 @@ export default function SistemaNotificacoesTempoRealSection() {
                 />
                 <div className="flex-1">
                   <p className="font-medium text-slate-900">{canal.nome}</p>
-                  <p className="text-xs text-slate-600">{canal.notificacoes} este mês</p>
                 </div>
               </label>
             ))}

@@ -22,59 +22,21 @@ interface MetricaChat {
 }
 
 export function IntegracaoTawkIntercomSection() {
-  const [conversas, setConversas] = useState<ConversaChat[]>([
-    {
-      id: '1',
-      cliente: 'Maria S.',
-      persona: 'Carol',
-      status: 'ativa',
-      ultimaMensagem: 'Qual é o tamanho M?',
-      tempo: 'agora',
-      satisfacao: 5,
-    },
-    {
-      id: '2',
-      cliente: 'Ana P.',
-      persona: 'Renata',
-      status: 'ativa',
-      ultimaMensagem: 'Qual é o prazo de entrega?',
-      tempo: '2 min',
-      satisfacao: 4,
-    },
-    {
-      id: '3',
-      cliente: 'Julia M.',
-      persona: 'Vanessa',
-      status: 'aguardando',
-      ultimaMensagem: 'Agente respondendo...',
-      tempo: '5 min',
-    },
-    {
-      id: '4',
-      cliente: 'Beatriz L.',
-      persona: 'Carol',
-      status: 'encerrada',
-      ultimaMensagem: 'Obrigada! Compra realizada',
-      tempo: '15 min',
-      satisfacao: 5,
-    },
-    {
-      id: '5',
-      cliente: 'Fernanda T.',
-      persona: 'Luiza',
-      status: 'encerrada',
-      ultimaMensagem: 'Resolvido. Devolução autorizada',
-      tempo: '1 hora',
-      satisfacao: 3,
-    },
-  ]);
+  const [conversas, setConversas] = useState<ConversaChat[]>([]);
 
-  const [metricas] = useState<MetricaChat[]>([
-    { label: 'Chats Ativos', valor: 2, mudanca: '↑ 1 vs ontem', cor: 'text-green-600' },
-    { label: 'Tempo Médio de Resposta', valor: '2.3 min', mudanca: '↓ 0.5 min vs ontem', cor: 'text-green-600' },
-    { label: 'Taxa de Resolução', valor: '94%', mudanca: '↑ 3% vs ontem', cor: 'text-green-600' },
-    { label: 'Satisfação Média', valor: '4.5/5', mudanca: '↑ 0.2 vs ontem', cor: 'text-green-600' },
-  ]);
+  const ativas = conversas.filter(c => c.status === 'ativa').length;
+  const encerradas = conversas.filter(c => c.status === 'encerrada');
+  const avgSatisfacao = encerradas.filter(c => c.satisfacao).length > 0
+    ? encerradas.reduce((s, c) => s + (c.satisfacao ?? 0), 0) / encerradas.filter(c => c.satisfacao).length : 0;
+  const taxaResolucao = conversas.length > 0
+    ? Math.round((encerradas.length / conversas.length) * 100) : null;
+
+  const metricas: MetricaChat[] = [
+    { label: 'Chats Ativos', valor: ativas, mudanca: '', cor: 'text-slate-600' },
+    { label: 'Taxa de Resolução', valor: taxaResolucao !== null ? `${taxaResolucao}%` : '—', mudanca: '', cor: 'text-slate-600' },
+    { label: 'Satisfação Média', valor: avgSatisfacao > 0 ? `${avgSatisfacao.toFixed(1)}/5` : '—', mudanca: '', cor: 'text-slate-600' },
+    { label: 'Total Conversas', valor: conversas.length, mudanca: '', cor: 'text-slate-600' },
+  ];
 
   return (
     <div className="space-y-6">
@@ -84,10 +46,7 @@ export function IntegracaoTawkIntercomSection() {
           <h2 className="text-3xl font-bold text-slate-900">Chat ao Vivo - Tawk.io/Intercom</h2>
           <p className="text-slate-600 mt-1">Suporte imediato e coleta de feedback em tempo real</p>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
-          <div className="w-2 h-2 rounded-full bg-green-600 animate-pulse"></div>
-          <span className="text-sm font-medium text-green-700">Online</span>
-        </div>
+        <Badge variant="outline" className="text-xs text-slate-500">Requer integração</Badge>
       </div>
 
       {/* KPIs */}
@@ -115,6 +74,13 @@ export function IntegracaoTawkIntercomSection() {
           <CardDescription>Chat ao vivo com clientes</CardDescription>
         </CardHeader>
         <CardContent>
+          {conversas.length === 0 ? (
+            <div className="text-center py-8 text-slate-400 space-y-2">
+              <MessageCircle className="w-8 h-8 mx-auto" />
+              <p className="text-sm">Nenhuma conversa registrada.</p>
+              <p className="text-xs">Conversas aparecerão aqui após conectar Tawk.io ou Intercom.</p>
+            </div>
+          ) : (
           <div className="space-y-3">
             {conversas.map((conversa) => (
               <div key={conversa.id} className="p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition">
@@ -154,6 +120,7 @@ export function IntegracaoTawkIntercomSection() {
               </div>
             ))}
           </div>
+          )}
         </CardContent>
       </Card>
 
@@ -171,12 +138,12 @@ export function IntegracaoTawkIntercomSection() {
                   <div className="font-semibold text-slate-900">Tawk.io</div>
                   <div className="text-sm text-slate-600">Chat gratuito com IA</div>
                 </div>
-                <Badge className="bg-green-100 text-green-800">Conectado</Badge>
+                <Button size="sm" variant="outline">Conectar</Button>
               </div>
               <div className="space-y-2 text-sm text-slate-600">
-                <div>✓ 2 agentes online</div>
-                <div>✓ Histórico de 1000+ conversas</div>
-                <div>✓ IA respondendo 24/7</div>
+                <div>○ Chat ao vivo gratuito</div>
+                <div>○ IA para respostas automáticas</div>
+                <div>○ Integre em tawk.to/settings</div>
               </div>
             </div>
 
@@ -211,22 +178,22 @@ export function IntegracaoTawkIntercomSection() {
             <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-blue-200">
               <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <div className="font-medium text-slate-900">Dúvida mais comum: Tamanho/Medidas</div>
-                <div className="text-sm text-slate-600">45% das conversas. Criar FAQ visual com medidas</div>
+                <div className="font-medium text-slate-900">Responda em menos de 2 minutos</div>
+                <div className="text-sm text-slate-600">Tempo de resposta rápido aumenta taxa de conversão em 30%</div>
               </div>
             </div>
             <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-blue-200">
               <AlertCircle className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <div className="font-medium text-slate-900">Tempo de resposta acima da meta</div>
-                <div className="text-sm text-slate-600">Carol: 1.2 min vs meta 2 min. Excelente!</div>
+                <div className="font-medium text-slate-900">Crie FAQ das perguntas frequentes</div>
+                <div className="text-sm text-slate-600">Tamanho/medidas, prazo de entrega e formas de pagamento são as mais comuns</div>
               </div>
             </div>
             <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-blue-200">
               <Users className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <div className="font-medium text-slate-900">Personas mais ativas em chat</div>
-                <div className="text-sm text-slate-600">Carol (35%), Renata (28%), Vanessa (22%), Luiza (15%)</div>
+                <div className="font-medium text-slate-900">Configure respostas automáticas por persona</div>
+                <div className="text-sm text-slate-600">Adapte o tom da resposta: Carol (casual), Renata (profissional), Luiza (jovem)</div>
               </div>
             </div>
           </div>
