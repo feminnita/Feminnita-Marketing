@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Download, Share2, Copy, ExternalLink, Palette, Image } from "lucide-react";
+import { Download, Share2, Copy, ExternalLink, Palette, Image, AlertCircle } from "lucide-react";
 
 export default function IntegracaoPinterestCanvaSection() {
   const templates = [
@@ -120,6 +120,21 @@ export default function IntegracaoPinterestCanvaSection() {
         <h2 className="text-2xl font-bold text-slate-900">Pinterest & Canva - Templates Visuais</h2>
         <p className="text-slate-600">Crie designs profissionais para cada persona com templates pré-feitos e salve direto no Pinterest</p>
       </div>
+
+      {/* Disclaimer */}
+      <Card className="border-l-4 border-l-amber-500 bg-amber-50">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-900">Dados de exemplo — conecte sua conta para ver dados reais</p>
+              <p className="text-sm text-slate-600 mt-1">
+                Os templates, downloads e estatísticas abaixo são exemplos ilustrativos. Para usar templates reais do Canva e salvar pins no Pinterest, conecte suas contas nas configurações de integrações.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

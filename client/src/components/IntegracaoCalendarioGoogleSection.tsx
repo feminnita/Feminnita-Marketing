@@ -139,6 +139,21 @@ export default function IntegracaoCalendarioGoogleSection() {
         <p className="text-slate-600">Sincronize posts agendados com seu calendário pessoal</p>
       </div>
 
+      {/* Disclaimer */}
+      <Card className="border-l-4 border-l-amber-500 bg-amber-50">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-900">Dados de exemplo — Google Calendar não está conectado</p>
+              <p className="text-sm text-slate-600 mt-1">
+                Os eventos, calendários, histórico de sincronizações e estatísticas abaixo são ilustrativos. Para sincronizar posts reais com o Google Calendar, conecte sua conta Google nas configurações de integrações.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Status de Conexão */}
       <Card className="bg-green-50 border-green-200">
         <CardHeader>
