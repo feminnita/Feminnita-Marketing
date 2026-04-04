@@ -1,238 +1,218 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { trpc } from "@/lib/trpc";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, Users, DollarSign, CheckCircle, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { TrendingUp, Users, Plus, Trash2, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
+
+type Afiliado = {
+  id: number;
+  nome: string;
+  email: string;
+  persona: string;
+  vendas: number;
+  comissao: number;
+  status: 'ativo' | 'inativo';
+};
+
+const PERSONAS = ['Carol', 'Renata', 'Vanessa', 'Luiza', 'Todas'];
+
+const REGRAS_COMISSAO = [
+  { faixa: 'Até 500 vendas/mês', comissao: '5%', condicao: 'Padrão' },
+  { faixa: '501 a 1000 vendas/mês', comissao: '6%', condicao: 'Bom desempenho' },
+  { faixa: '1001+ vendas/mês', comissao: '7%', condicao: 'Excelente desempenho' },
+  { faixa: 'Bônus: 50+ vendas/semana', comissao: '+1%', condicao: 'Incentivo semanal' },
+];
 
 export default function IntegracaoAfiliados() {
-  const [afiliados] = useState([
-    {
-      id: 1,
-      nome: 'Influenciadora Carol',
-      email: 'carol@influenciadora.com',
-      status: 'Ativo',
-      vendas: 1520,
-      receita: 285000,
-      comissao: 5,
-      comissaoPaga: 14250,
-      comissaoPendente: 0,
-      ultimaVenda: '2026-02-01',
-      taxa: 'Excelente',
-    },
-    {
-      id: 2,
-      nome: 'Influenciadora Renata',
-      email: 'renata@influenciadora.com',
-      status: 'Ativo',
-      vendas: 1040,
-      receita: 312000,
-      comissao: 6,
-      comissaoPaga: 18720,
-      comissaoPendente: 0,
-      ultimaVenda: '2026-02-01',
-      taxa: 'Excelente',
-    },
-    {
-      id: 3,
-      nome: 'Influenciadora Vanessa',
-      email: 'vanessa@influenciadora.com',
-      status: 'Ativo',
-      vendas: 880,
-      receita: 198000,
-      comissao: 5,
-      comissaoPaga: 9900,
-      comissaoPendente: 0,
-      ultimaVenda: '2026-02-01',
-      taxa: 'Bom',
-    },
-    {
-      id: 4,
-      nome: 'Influenciadora Luiza',
-      email: 'luiza@influenciadora.com',
-      status: 'Ativo',
-      vendas: 520,
-      receita: 156000,
-      comissao: 7,
-      comissaoPaga: 10920,
-      comissaoPendente: 0,
-      ultimaVenda: '2026-02-01',
-      taxa: 'Bom',
-    },
-  ]);
+  const { data: campanhas = [] } = trpc.campaigns.listar.useQuery();
+  const [afiliados, setAfiliados] = useState<Afiliado[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ nome: '', email: '', persona: 'Carol', vendas: '', comissao: '5' });
+  const nextId = afiliados.length > 0 ? Math.max(...afiliados.map(a => a.id)) + 1 : 1;
 
-  const totalVendas = afiliados.reduce((sum, a) => sum + a.vendas, 0);
-  const totalReceita = afiliados.reduce((sum, a) => sum + a.receita, 0);
-  const totalComissao = afiliados.reduce((sum, a) => sum + a.comissaoPaga, 0);
-  const totalPendente = afiliados.reduce((sum, a) => sum + a.comissaoPendente, 0);
+  const adicionar = () => {
+    if (!form.nome) { toast.error('Informe o nome do afiliado'); return; }
+    setAfiliados(prev => [...prev, {
+      id: nextId,
+      nome: form.nome,
+      email: form.email,
+      persona: form.persona,
+      vendas: parseInt(form.vendas) || 0,
+      comissao: parseFloat(form.comissao) || 5,
+      status: 'ativo',
+    }]);
+    setForm({ nome: '', email: '', persona: 'Carol', vendas: '', comissao: '5' });
+    setShowForm(false);
+    toast.success('Afiliado adicionado');
+  };
 
-  const metricas = [
-    { titulo: 'Total de Vendas', valor: totalVendas.toLocaleString(), icon: '📊' },
-    { titulo: 'Receita Gerada', valor: `R$ ${(totalReceita / 1000).toFixed(0)}K`, icon: '💰' },
-    { titulo: 'Comissões Pagas', valor: `R$ ${(totalComissao / 1000).toFixed(0)}K`, icon: '✅' },
-    { titulo: 'Comissões Pendentes', valor: `R$ ${(totalPendente / 1000).toFixed(0)}K`, icon: '⏳' },
-  ];
+  const remover = (id: number) => { setAfiliados(prev => prev.filter(a => a.id !== id)); toast.success('Removido'); };
+  const toggleStatus = (id: number) => setAfiliados(prev => prev.map(a =>
+    a.id === id ? { ...a, status: a.status === 'ativo' ? 'inativo' : 'ativo' } : a
+  ));
 
-  const regrasComissao = [
-    { faixa: 'Até 500 vendas/mês', comissao: '5%', condicao: 'Padrão' },
-    { faixa: '501 a 1000 vendas/mês', comissao: '6%', condicao: 'Bom desempenho' },
-    { faixa: '1001+ vendas/mês', comissao: '7%', condicao: 'Excelente desempenho' },
-    { faixa: 'Bônus: 50+ vendas/semana', comissao: '+1%', condicao: 'Incentivo' },
-  ];
-
-  const campanhasAfiliados = [
-    {
-      id: 1,
-      nome: 'Campanha Pijama Carol',
-      afiliados: 4,
-      vendas: 1520,
-      receita: 285000,
-      comissao: 14250,
-      roi: 20.0,
-      status: 'Ativa',
-    },
-    {
-      id: 2,
-      nome: 'Campanha Robe Renata',
-      afiliados: 4,
-      vendas: 1040,
-      receita: 312000,
-      comissao: 18720,
-      roi: 16.7,
-      status: 'Ativa',
-    },
-    {
-      id: 3,
-      nome: 'Campanha Pijama Vanessa',
-      afiliados: 3,
-      vendas: 880,
-      receita: 198000,
-      comissao: 9900,
-      roi: 20.0,
-      status: 'Ativa',
-    },
-  ];
+  const totalVendas = afiliados.reduce((s, a) => s + a.vendas, 0);
+  const ativos = afiliados.filter(a => a.status === 'ativo').length;
+  const totalConversoesCampanhas = (campanhas as any[]).reduce((s, c) => s + (c.performance?.conversoes ?? 0), 0);
 
   return (
     <div className="space-y-6">
-      {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {metricas.map((metrica, idx) => (
-          <Card key={idx}>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold text-slate-600">{metrica.titulo}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-slate-900">{metrica.valor}</div>
-              <p className="text-xs text-slate-500 mt-1">{metrica.icon}</p>
-            </CardContent>
-          </Card>
-        ))}
+      <div>
+        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Integração de Afiliados</h2>
+        <p className="text-slate-500 text-sm mt-1">Gerencie afiliadas e acompanhe vendas por parceiro</p>
       </div>
 
-      {/* Afiliados */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Afiliados Registrados</CardTitle>
-          <CardDescription>Rastreamento de vendas e comissões automáticas</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-200">
-                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Afiliado</th>
-                  <th className="text-right py-3 px-4 font-semibold text-slate-700">Vendas</th>
-                  <th className="text-right py-3 px-4 font-semibold text-slate-700">Receita</th>
-                  <th className="text-right py-3 px-4 font-semibold text-slate-700">Comissão %</th>
-                  <th className="text-right py-3 px-4 font-semibold text-slate-700">Comissão Paga</th>
-                  <th className="text-center py-3 px-4 font-semibold text-slate-700">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {afiliados.map((afl) => (
-                  <tr key={afl.id} className="border-b border-slate-100 hover:bg-slate-50">
-                    <td className="py-3 px-4">
-                      <div>
-                        <p className="font-semibold text-slate-900">{afl.nome}</p>
-                        <p className="text-xs text-slate-500">{afl.email}</p>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-right font-semibold text-slate-900">{afl.vendas.toLocaleString()}</td>
-                    <td className="py-3 px-4 text-right text-slate-900 font-semibold">R$ {(afl.receita / 1000).toFixed(0)}K</td>
-                    <td className="py-3 px-4 text-right">
-                      <Badge className="bg-blue-100 text-blue-700">{afl.comissao}%</Badge>
-                    </td>
-                    <td className="py-3 px-4 text-right text-green-600 font-semibold">R$ {(afl.comissaoPaga / 1000).toFixed(1)}K</td>
-                    <td className="py-3 px-4 text-center">
-                      <Badge className="bg-green-100 text-green-700">{afl.status}</Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      <Card className="border-0 shadow-sm border-l-4 border-amber-400 bg-amber-50">
+        <CardContent className="pt-4 pb-4 flex gap-3 items-start">
+          <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-amber-800">
+            Rastreamento automático de vendas por afiliado requer integração com <strong>Bling ERP</strong>
+            (cupons de desconto por afiliado) ou plataforma de afiliados. Registre afiliadas manualmente abaixo.
+          </p>
         </CardContent>
       </Card>
 
-      {/* Regras de Comissão */}
-      <Card>
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-4">
+        <Card className="border-0 shadow-sm">
+          <CardContent className="pt-5 pb-5">
+            <p className="text-xs text-slate-500">Afiliadas ativas</p>
+            <p className="text-2xl font-bold text-green-700">{ativos}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm">
+          <CardContent className="pt-5 pb-5">
+            <p className="text-xs text-slate-500">Vendas registradas</p>
+            <p className="text-2xl font-bold text-slate-900">{totalVendas.toLocaleString('pt-BR')}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm">
+          <CardContent className="pt-5 pb-5">
+            <p className="text-xs text-slate-500">Conversões (campanhas)</p>
+            <p className="text-2xl font-bold text-blue-700">{totalConversoesCampanhas.toLocaleString('pt-BR')}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Affiliates list */}
+      <Card className="border-0 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-lg">Regras de Comissão</CardTitle>
-          <CardDescription>Estrutura de comissões por desempenho</CardDescription>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Users className="w-4 h-4" style={{ color: '#8B2635' }} />
+              Afiliadas cadastradas
+            </CardTitle>
+            <Button size="sm" onClick={() => setShowForm(!showForm)} style={{ backgroundColor: '#8B2635' }} className="text-white">
+              <Plus className="w-3.5 h-3.5 mr-1.5" />Adicionar
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {regrasComissao.map((regra, idx) => (
-              <div key={idx} className="p-4 border border-slate-200 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-slate-900">{regra.faixa}</p>
-                    <p className="text-sm text-slate-600 mt-1">{regra.condicao}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-rose-600">{regra.comissao}</p>
-                  </div>
+          {showForm && (
+            <div className="mb-4 p-4 border border-slate-200 rounded-lg bg-slate-50 space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-slate-700 block mb-1">Nome</label>
+                  <Input placeholder="Ex: Maria Silva" value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-700 block mb-1">Email (opcional)</label>
+                  <Input type="email" placeholder="maria@email.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-700 block mb-1">Persona</label>
+                  <select value={form.persona} onChange={e => setForm(f => ({ ...f, persona: e.target.value }))}
+                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm">
+                    {PERSONAS.map(p => <option key={p}>{p}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-700 block mb-1">Comissão (%)</label>
+                  <Input type="number" min="1" max="20" value={form.comissao} onChange={e => setForm(f => ({ ...f, comissao: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-700 block mb-1">Vendas geradas</label>
+                  <Input type="number" min="0" placeholder="0" value={form.vendas} onChange={e => setForm(f => ({ ...f, vendas: e.target.value }))} />
                 </div>
               </div>
-            ))}
-          </div>
+              <div className="flex gap-2">
+                <Button onClick={adicionar} size="sm" style={{ backgroundColor: '#8B2635' }} className="text-white">
+                  <Plus className="w-3.5 h-3.5 mr-1.5" />Adicionar
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setShowForm(false)}>Cancelar</Button>
+              </div>
+            </div>
+          )}
+
+          {afiliados.length === 0 ? (
+            <div className="text-center py-10 text-slate-400 space-y-2">
+              <Users className="w-10 h-10 mx-auto" />
+              <p className="text-sm">Nenhuma afiliada cadastrada.</p>
+              <p className="text-xs">Adicione influenciadoras e revendedoras que promovem seus produtos.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-xs text-slate-500">
+                    <th className="text-left py-2 font-medium">Nome</th>
+                    <th className="text-left py-2 font-medium">Persona</th>
+                    <th className="text-right py-2 font-medium">Vendas</th>
+                    <th className="text-right py-2 font-medium">Comissão</th>
+                    <th className="text-right py-2 font-medium">Status</th>
+                    <th className="py-2 w-8"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {afiliados.sort((a, b) => b.vendas - a.vendas).map(a => (
+                    <tr key={a.id} className="border-b border-slate-50 hover:bg-slate-50">
+                      <td className="py-2">
+                        <p className="font-medium text-slate-900">{a.nome}</p>
+                        {a.email && <p className="text-xs text-slate-400">{a.email}</p>}
+                      </td>
+                      <td className="py-2"><Badge variant="secondary" className="text-xs">{a.persona}</Badge></td>
+                      <td className="text-right py-2 font-semibold text-slate-700">{a.vendas.toLocaleString('pt-BR')}</td>
+                      <td className="text-right py-2 text-green-700 font-medium">{a.comissao}%</td>
+                      <td className="text-right py-2">
+                        <button onClick={() => toggleStatus(a.id)}
+                          className={`text-xs px-2 py-0.5 rounded-full font-medium ${a.status === 'ativo' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                          {a.status}
+                        </button>
+                      </td>
+                      <td className="py-2 pl-2">
+                        <button onClick={() => remover(a.id)} className="text-slate-300 hover:text-red-500 transition-colors">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Campanhas de Afiliados */}
-      <Card>
+      {/* Commission rules */}
+      <Card className="border-0 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-lg">Campanhas de Afiliados</CardTitle>
-          <CardDescription>Performance por campanha</CardDescription>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <TrendingUp className="w-4 h-4" style={{ color: '#8B2635' }} />
+            Regras de comissão
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {campanhasAfiliados.map((camp) => (
-              <div key={camp.id} className="p-4 bg-gradient-to-r from-rose-50 to-pink-50 rounded-lg border border-rose-200">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h4 className="font-semibold text-slate-900">{camp.nome}</h4>
-                    <p className="text-sm text-slate-600 mt-1">{camp.afiliados} afiliados participando</p>
-                  </div>
-                  <Badge className="bg-green-100 text-green-700">{camp.status}</Badge>
+          <div className="space-y-2">
+            {REGRAS_COMISSAO.map((r, idx) => (
+              <div key={idx} className="flex items-center justify-between p-3 border border-slate-200 rounded-lg text-sm">
+                <div>
+                  <p className="font-medium text-slate-900">{r.faixa}</p>
+                  <p className="text-xs text-slate-500">{r.condicao}</p>
                 </div>
-                <div className="grid grid-cols-4 gap-4">
-                  <div>
-                    <p className="text-xs text-slate-500">Vendas</p>
-                    <p className="font-bold text-slate-900">{camp.vendas.toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500">Receita</p>
-                    <p className="font-bold text-slate-900">R$ {(camp.receita / 1000).toFixed(0)}K</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500">Comissão</p>
-                    <p className="font-bold text-green-600">R$ {(camp.comissao / 1000).toFixed(1)}K</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500">ROI</p>
-                    <p className="font-bold text-rose-600">{camp.roi.toFixed(1)}x</p>
-                  </div>
-                </div>
+                <Badge variant="secondary" className="text-sm font-bold">{r.comissao}</Badge>
               </div>
             ))}
           </div>

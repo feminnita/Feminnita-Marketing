@@ -1,377 +1,162 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { trpc } from "@/lib/trpc";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, DollarSign, Target, Eye, MousePointerClick, ShoppingCart, AlertCircle, CheckCircle } from "lucide-react";
-import { useState } from "react";
+import { TrendingUp, AlertCircle, Target, Eye, MousePointerClick, ShoppingCart, Settings } from "lucide-react";
+
+const SETUP_GUIDE = [
+  { plataforma: 'Google Ads', passo: 'Acesse Google Ads → Ferramentas → API Center → Crie um projeto OAuth 2.0' },
+  { plataforma: 'Google Ads', passo: 'Copie o Customer ID (XXX-XXX-XXXX) e o Developer Token' },
+  { plataforma: 'Meta Ads', passo: 'Acesse Meta Business → Configurações → Usuários → Usuários do sistema → Gere token' },
+  { plataforma: 'Meta Ads', passo: 'Permissões necessárias: ads_read, ads_management, business_management' },
+  { plataforma: 'TikTok Ads', passo: 'Acesse TikTok for Business → Assets → Business Account → API Access' },
+];
+
+const OPTIMIZATION_TIPS = [
+  { titulo: 'CPC acima de R$ 10', acao: 'Pausar o anúncio e testar novo criativo com hook diferente' },
+  { titulo: 'CTR abaixo de 1%', acao: 'Trocar a imagem/vídeo e reescrever o headline' },
+  { titulo: 'ROAS abaixo de 2x', acao: 'Refinar segmentação, excluir clientes já convertidos' },
+  { titulo: 'CPM subindo', acao: 'Ampliar público ou experimentar novas faixas etárias' },
+  { titulo: 'Frequência > 4', acao: 'Renovar criativos para evitar fadiga de anúncio' },
+];
 
 export default function IntegracaoAdsSection() {
-  const [selectedCampaign, setSelectedCampaign] = useState(0);
+  const { data: campanhas = [] } = trpc.campaigns.listar.useQuery();
 
-  const adsStats = [
-    {
-      title: "Gasto Total",
-      value: "R$ 15.2K",
-      change: "+22%",
-      icon: DollarSign,
-      color: "green",
-    },
-    {
-      title: "Impressões",
-      value: "2.8M",
-      change: "+35%",
-      icon: Eye,
-      color: "blue",
-    },
-    {
-      title: "Cliques",
-      value: "156K",
-      change: "+28%",
-      icon: MousePointerClick,
-      color: "purple",
-    },
-    {
-      title: "Conversões",
-      value: "2.3K",
-      change: "+42%",
-      icon: ShoppingCart,
-      color: "pink",
-    },
-  ];
+  const googleCamps = (campanhas as any[]).filter((c: any) =>
+    ['google', 'google ads', 'google shopping'].includes((c.plataforma ?? '').toLowerCase())
+  );
+  const metaCamps = (campanhas as any[]).filter((c: any) =>
+    ['meta', 'facebook', 'instagram', 'instagram ads', 'meta ads'].includes((c.plataforma ?? '').toLowerCase())
+  );
+  const tiktokCamps = (campanhas as any[]).filter((c: any) =>
+    ['tiktok', 'tiktok ads'].includes((c.plataforma ?? '').toLowerCase())
+  );
 
-  const campaigns = [
-    {
-      id: 1,
-      name: "Carol - Renda Extra (Google Ads)",
-      platform: "Google Ads",
-      persona: "Carol",
-      budget: "R$ 2.5K",
-      spent: "R$ 2.1K",
-      impressions: 450000,
-      clicks: 28500,
-      conversions: 285,
-      ctr: 6.3,
-      cpc: 7.4,
-      roi: 380,
-      status: "Ativo",
-    },
-    {
-      id: 2,
-      name: "Luiza - Trend Viral (Meta Ads)",
-      platform: "Meta Ads",
-      persona: "Luiza",
-      budget: "R$ 3.2K",
-      spent: "R$ 2.8K",
-      impressions: 850000,
-      clicks: 68000,
-      conversions: 612,
-      ctr: 8.0,
-      cpc: 4.1,
-      roi: 420,
-      status: "Ativo",
-    },
-    {
-      id: 3,
-      name: "Renata - B2B (Google Ads)",
-      platform: "Google Ads",
-      persona: "Renata",
-      budget: "R$ 2.0K",
-      spent: "R$ 1.8K",
-      impressions: 320000,
-      clicks: 19200,
-      conversions: 156,
-      ctr: 6.0,
-      cpc: 9.4,
-      roi: 340,
-      status: "Ativo",
-    },
-    {
-      id: 4,
-      name: "Vanessa - Compra Coletiva (Meta Ads)",
-      platform: "Meta Ads",
-      persona: "Vanessa",
-      budget: "R$ 1.8K",
-      spent: "R$ 1.5K",
-      impressions: 620000,
-      clicks: 40300,
-      conversions: 301,
-      ctr: 6.5,
-      cpc: 3.7,
-      roi: 390,
-      status: "Ativo",
-    },
-  ];
+  const totalCliques = (campanhas as any[]).reduce((s, c) => s + (c.performance?.cliques ?? 0), 0);
+  const totalConversoes = (campanhas as any[]).reduce((s, c) => s + (c.performance?.conversoes ?? 0), 0);
+  const avgCTR = (campanhas as any[]).length > 0
+    ? (campanhas as any[]).reduce((s, c) => s + (c.performance?.ctr ?? 0), 0) / (campanhas as any[]).length : 0;
+  const avgROI = (campanhas as any[]).length > 0
+    ? (campanhas as any[]).reduce((s, c) => s + (c.performance?.roi ?? 0), 0) / (campanhas as any[]).length : 0;
 
-  const currentCampaign = campaigns[selectedCampaign];
-
-  const dailyPerformance = [
-    { date: "01 Feb", impressions: 125000, clicks: 7875, conversions: 79, spend: 585 },
-    { date: "02 Feb", impressions: 142000, clicks: 9128, conversions: 95, spend: 672 },
-    { date: "03 Feb", impressions: 158000, clicks: 10608, conversions: 112, spend: 748 },
-    { date: "04 Feb", impressions: 135000, clicks: 8505, conversions: 88, spend: 630 },
-    { date: "05 Feb", impressions: 168000, clicks: 11424, conversions: 128, spend: 784 },
-    { date: "06 Feb", impressions: 152000, clicks: 9728, conversions: 105, spend: 712 },
-    { date: "07 Feb", impressions: 148000, clicks: 9408, conversions: 98, spend: 691 },
-  ];
-
-  const adCreatives = [
-    {
-      id: 1,
-      title: "Quanto Ganhei em Um Dia",
-      persona: "Carol",
-      platform: "Google Ads",
-      ctr: 7.2,
-      conversions: 45,
-      status: "Top Performer",
-    },
-    {
-      id: 2,
-      title: "Transformação Look Dia/Noite",
-      persona: "Luiza",
-      platform: "Meta Ads",
-      ctr: 9.1,
-      conversions: 89,
-      status: "Top Performer",
-    },
-    {
-      id: 3,
-      title: "Por que Feminnita é Melhor",
-      persona: "Renata",
-      platform: "Google Ads",
-      ctr: 5.8,
-      conversions: 28,
-      status: "Bom",
-    },
-    {
-      id: 4,
-      title: "Compra Coletiva Economizando",
-      persona: "Vanessa",
-      platform: "Meta Ads",
-      ctr: 6.9,
-      conversions: 52,
-      status: "Bom",
-    },
+  const platformStats = [
+    { label: 'Google Ads', count: googleCamps.length, conversoes: googleCamps.reduce((s: number, c: any) => s + (c.performance?.conversoes ?? 0), 0) },
+    { label: 'Meta/Instagram', count: metaCamps.length, conversoes: metaCamps.reduce((s: number, c: any) => s + (c.performance?.conversoes ?? 0), 0) },
+    { label: 'TikTok', count: tiktokCamps.length, conversoes: tiktokCamps.reduce((s: number, c: any) => s + (c.performance?.conversoes ?? 0), 0) },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="space-y-2">
-        <h2 className="text-2xl font-bold text-slate-900">Integração Google Ads & Meta Ads</h2>
-        <p className="text-slate-600">Gerencie campanhas pagas e rastreie ROI completo por persona</p>
+      <div>
+        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Integração de Ads</h2>
+        <p className="text-slate-500 text-sm mt-1">Gerencie campanhas Google Ads, Meta Ads e TikTok Ads</p>
       </div>
 
-      {/* Overall Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {adsStats.map((stat, idx) => {
-          const IconComponent = stat.icon;
-          return (
-            <Card key={idx}>
-              <CardContent className="pt-6">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <p className="text-sm text-slate-600">{stat.title}</p>
-                    <p className="text-2xl font-bold text-slate-900 mt-1">{stat.value}</p>
-                  </div>
-                  <div className={`p-2 rounded-lg bg-${stat.color}-100`}>
-                    <IconComponent className={`w-5 h-5 text-${stat.color}-600`} />
-                  </div>
-                </div>
-                <p className="text-sm font-semibold text-green-600">{stat.change}</p>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      {/* Campaign Selector */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Campanhas Ativas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {campaigns.map((campaign, idx) => (
-              <button
-                key={campaign.id}
-                onClick={() => setSelectedCampaign(idx)}
-                className={`p-4 rounded-lg border-2 transition text-left ${
-                  selectedCampaign === idx
-                    ? "border-pink-500 bg-pink-50"
-                    : "border-slate-200 hover:border-slate-300"
-                }`}
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <p className="font-semibold text-slate-900">{campaign.name}</p>
-                    <p className="text-sm text-slate-600">{campaign.platform}</p>
-                  </div>
-                  <Badge className="bg-green-100 text-green-800">{campaign.status}</Badge>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-700">
-                    <strong>ROI:</strong> {campaign.roi}%
-                  </span>
-                  <span className="text-slate-700">
-                    <strong>Gasto:</strong> {campaign.spent}
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
+      <Card className="border-0 shadow-sm border-l-4 border-amber-400 bg-amber-50">
+        <CardContent className="pt-4 pb-4 flex gap-3 items-start">
+          <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-amber-800">
+            Dados de impressões, gasto e CPC requerem conexão direta com as APIs do <strong>Google Ads</strong>,
+            <strong> Meta Ads</strong> e <strong>TikTok Ads</strong>. Abaixo estão métricas das campanhas cadastradas neste painel.
+          </p>
         </CardContent>
       </Card>
 
-      {/* Campaign Details */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{currentCampaign.name}</CardTitle>
-          <CardDescription>{currentCampaign.platform} • {currentCampaign.persona}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* KPIs */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-blue-50 rounded-lg p-4">
-              <p className="text-sm text-slate-600">Impressões</p>
-              <p className="text-2xl font-bold text-slate-900">{(currentCampaign.impressions / 1000).toFixed(0)}K</p>
-            </div>
-            <div className="bg-purple-50 rounded-lg p-4">
-              <p className="text-sm text-slate-600">Cliques</p>
-              <p className="text-2xl font-bold text-slate-900">{(currentCampaign.clicks / 1000).toFixed(0)}K</p>
-            </div>
-            <div className="bg-green-50 rounded-lg p-4">
-              <p className="text-sm text-slate-600">Conversões</p>
-              <p className="text-2xl font-bold text-slate-900">{currentCampaign.conversions}</p>
-            </div>
-            <div className="bg-pink-50 rounded-lg p-4">
-              <p className="text-sm text-slate-600">ROI</p>
-              <p className="text-2xl font-bold text-slate-900">{currentCampaign.roi}%</p>
-            </div>
-          </div>
+      {/* Campaign KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="border-0 shadow-sm">
+          <CardContent className="pt-5 pb-5">
+            <p className="text-xs text-slate-500 flex items-center gap-1"><MousePointerClick className="w-3 h-3" /> Cliques totais</p>
+            <p className="text-2xl font-bold text-slate-900">{totalCliques.toLocaleString('pt-BR')}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm">
+          <CardContent className="pt-5 pb-5">
+            <p className="text-xs text-slate-500 flex items-center gap-1"><ShoppingCart className="w-3 h-3" /> Conversões</p>
+            <p className="text-2xl font-bold text-slate-900">{totalConversoes.toLocaleString('pt-BR')}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm">
+          <CardContent className="pt-5 pb-5">
+            <p className="text-xs text-slate-500 flex items-center gap-1"><Eye className="w-3 h-3" /> CTR médio</p>
+            <p className="text-2xl font-bold text-blue-700">{avgCTR.toFixed(2)}%</p>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm">
+          <CardContent className="pt-5 pb-5">
+            <p className="text-xs text-slate-500 flex items-center gap-1"><TrendingUp className="w-3 h-3" /> ROI médio</p>
+            <p className="text-2xl font-bold text-green-700">{avgROI.toFixed(1)}%</p>
+          </CardContent>
+        </Card>
+      </div>
 
-          {/* Metrics */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="border border-slate-200 rounded-lg p-4">
-              <p className="text-sm text-slate-600 mb-1">CTR</p>
-              <p className="text-2xl font-bold text-slate-900">{currentCampaign.ctr}%</p>
+      {/* By platform */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Target className="w-4 h-4" style={{ color: '#8B2635' }} />
+            Campanhas por plataforma
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {(campanhas as any[]).length === 0 ? (
+            <p className="text-sm text-slate-400 text-center py-6">Nenhuma campanha cadastrada. Adicione campanhas na seção de Campanhas.</p>
+          ) : (
+            <div className="space-y-2">
+              {platformStats.filter(p => p.count > 0).map(p => (
+                <div key={p.label} className="flex items-center justify-between p-3 border border-slate-200 rounded-lg">
+                  <div>
+                    <p className="font-semibold text-sm text-slate-900">{p.label}</p>
+                    <p className="text-xs text-slate-500">{p.count} campanha(s)</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-slate-900">{p.conversoes.toLocaleString('pt-BR')}</p>
+                    <p className="text-xs text-slate-400">conversões</p>
+                  </div>
+                </div>
+              ))}
+              {platformStats.every(p => p.count === 0) && (
+                <p className="text-sm text-slate-400 text-center py-4">
+                  Nenhuma campanha associada a Google/Meta/TikTok. Edite as campanhas e defina a plataforma.
+                </p>
+              )}
             </div>
-            <div className="border border-slate-200 rounded-lg p-4">
-              <p className="text-sm text-slate-600 mb-1">CPC</p>
-              <p className="text-2xl font-bold text-slate-900">R$ {currentCampaign.cpc}</p>
-            </div>
-            <div className="border border-slate-200 rounded-lg p-4">
-              <p className="text-sm text-slate-600 mb-1">Budget Restante</p>
-              <p className="text-2xl font-bold text-slate-900">R$ {(parseFloat(currentCampaign.budget.replace('R$ ', '').replace('K', '000')) - parseFloat(currentCampaign.spent.replace('R$ ', '').replace('K', '000'))).toFixed(0)}</p>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Daily Performance */}
-      <Card>
+      {/* Setup guide */}
+      <Card className="border-0 shadow-sm">
         <CardHeader>
-          <CardTitle>Performance Diária</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Settings className="w-4 h-4" style={{ color: '#8B2635' }} />
+            Como conectar as APIs de Ads
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {dailyPerformance.map((day, idx) => (
-              <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                <div>
-                  <p className="font-semibold text-slate-900">{day.date}</p>
-                  <p className="text-sm text-slate-600">{day.impressions.toLocaleString()} impressões</p>
-                </div>
-                <div className="flex items-center gap-6 text-sm">
-                  <span className="text-slate-700">
-                    <strong>{day.clicks.toLocaleString()}</strong> cliques
-                  </span>
-                  <span className="text-slate-700">
-                    <strong>{day.conversions}</strong> conversões
-                  </span>
-                  <span className="text-slate-700">
-                    <strong>R$ {day.spend}</strong>
-                  </span>
-                </div>
+          <div className="space-y-2">
+            {SETUP_GUIDE.map((item, idx) => (
+              <div key={idx} className="flex gap-3 p-3 border border-slate-200 rounded-lg">
+                <Badge variant="secondary" className="text-xs flex-shrink-0 h-fit">{item.plataforma}</Badge>
+                <p className="text-sm text-slate-700">{item.passo}</p>
               </div>
             ))}
           </div>
         </CardContent>
       </Card>
 
-      {/* Top Performing Ads */}
-      <Card>
+      {/* Optimization tips */}
+      <Card className="border-0 shadow-sm">
         <CardHeader>
-          <CardTitle>Anúncios com Melhor Performance</CardTitle>
+          <CardTitle className="text-base">Quando otimizar seus anúncios</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {adCreatives.map((ad) => (
-              <div key={ad.id} className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <p className="font-semibold text-slate-900">{ad.title}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="outline">{ad.platform}</Badge>
-                      <Badge className="bg-pink-100 text-pink-800">{ad.persona}</Badge>
-                    </div>
-                  </div>
-                  <Badge className={ad.status === "Top Performer" ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"}>
-                    {ad.status}
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-sm">
-                  <span className="text-slate-600">CTR: <strong>{ad.ctr}%</strong></span>
-                  <span className="text-slate-600">Conversões: <strong>{ad.conversions}</strong></span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Optimization Tips */}
-      <Card className="bg-blue-50 border-blue-200">
-        <CardHeader>
-          <CardTitle className="text-blue-900">💡 Dicas de Otimização</CardTitle>
-        </CardHeader>
-        <CardContent className="text-blue-900 space-y-2 text-sm">
-          <p>✅ Aumentar budget para Luiza (Meta Ads) - ROI 420%, CTR 8.0%</p>
-          <p>✅ Testar novos criativos para Renata - CTR 5.8% está abaixo da média</p>
-          <p>✅ Replicar estratégia de Luiza para outras personas</p>
-          <p>✅ Pausar anúncios com CPC acima de R$ 10</p>
-          <p>✅ A/B testar landing pages para melhorar conversão</p>
-        </CardContent>
-      </Card>
-
-      {/* Create Campaign */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Criar Nova Campanha</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-900 mb-2">Plataforma</label>
-              <select className="w-full border border-slate-300 rounded-lg px-3 py-2">
-                <option>Google Ads</option>
-                <option>Meta Ads</option>
-                <option>TikTok Ads</option>
-              </select>
+        <CardContent className="space-y-2">
+          {OPTIMIZATION_TIPS.map((tip, idx) => (
+            <div key={idx} className="p-3 border border-slate-200 rounded-lg">
+              <p className="text-xs font-semibold text-slate-500 mb-0.5">Se: {tip.titulo}</p>
+              <p className="text-sm text-slate-700">→ {tip.acao}</p>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-900 mb-2">Persona</label>
-              <select className="w-full border border-slate-300 rounded-lg px-3 py-2">
-                <option>Carol</option>
-                <option>Renata</option>
-                <option>Vanessa</option>
-                <option>Luiza</option>
-              </select>
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-900 mb-2">Budget Diário</label>
-            <input type="number" placeholder="R$ 100" className="w-full border border-slate-300 rounded-lg px-3 py-2" />
-          </div>
-          <button className="w-full py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:from-blue-600 hover:to-cyan-600 transition font-semibold">
-            🚀 Criar Campanha
-          </button>
+          ))}
         </CardContent>
       </Card>
     </div>

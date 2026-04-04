@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Mail, Zap, Users, TrendingUp } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Mail, Zap, Users, TrendingUp, AlertCircle, Plus, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
-interface CampanhaEmail {
-  id: string;
+type CampanhaEmail = {
+  id: number;
   nome: string;
   persona: string;
   tipo: string;
@@ -14,270 +16,232 @@ interface CampanhaEmail {
   abertos: number;
   cliques: number;
   conversoes: number;
-  receita: number;
-}
+};
 
-interface MetricaEmail {
-  label: string;
-  valor: string | number;
-  mudanca: string;
-  cor: string;
-}
+const PERSONAS = ['Carol', 'Renata', 'Vanessa', 'Luiza', 'Todas'];
+const TIPOS = ['Onboarding', 'Recuperação', 'Reengajamento', 'Promoção', 'Lançamento', 'VIP', 'Newsletter'];
+
+const FLUXOS_GUIDE = [
+  { persona: 'Carol', fluxo: 'Onboarding (d0) → Primeiros passos (d3) → Upsell (d7) → VIP (d30)', emails: 4 },
+  { persona: 'Renata', fluxo: 'Abandono de carrinho (1h) → Lembrete (24h) → Desconto (72h)', emails: 3 },
+  { persona: 'Vanessa', fluxo: 'Inatividade 30d → Cupom reativação → Follow-up 7d', emails: 3 },
+  { persona: 'Luiza', fluxo: 'Primeira compra → Indicação de amigos → Programa de pontos', emails: 3 },
+];
+
+const getStatusColor = (status: string) => {
+  if (status === 'ativa') return 'bg-green-100 text-green-800';
+  if (status === 'agendada') return 'bg-blue-100 text-blue-800';
+  return 'bg-slate-100 text-slate-600';
+};
 
 export function IntegracaoEmailMarketingSection() {
-  const [campanhas, setCampanhas] = useState<CampanhaEmail[]>([
-    {
-      id: '1',
-      nome: 'Bem-vindo Carol',
-      persona: 'Carol',
-      tipo: 'Onboarding',
-      status: 'ativa',
-      enviados: 1240,
-      abertos: 868,
-      cliques: 434,
-      conversoes: 248,
-      receita: 46920,
-    },
-    {
-      id: '2',
-      nome: 'Abandono de Carrinho - Renata',
-      persona: 'Renata',
-      tipo: 'Recuperação',
-      status: 'ativa',
-      enviados: 980,
-      abertos: 627,
-      cliques: 282,
-      conversoes: 141,
-      receita: 23265,
-    },
-    {
-      id: '3',
-      nome: 'Reengajamento Vanessa',
-      persona: 'Vanessa',
-      tipo: 'Reengajamento',
-      status: 'ativa',
-      enviados: 1120,
-      abertos: 561,
-      cliques: 224,
-      conversoes: 84,
-      receita: 13440,
-    },
-    {
-      id: '4',
-      nome: 'Desconto Exclusivo Luiza',
-      persona: 'Luiza',
-      tipo: 'Promoção',
-      status: 'agendada',
-      enviados: 0,
-      abertos: 0,
-      cliques: 0,
-      conversoes: 0,
-      receita: 0,
-    },
-    {
-      id: '5',
-      nome: 'Novo Lançamento - Todas',
-      persona: 'Todas',
-      tipo: 'Lançamento',
-      status: 'finalizada',
-      enviados: 4190,
-      abertos: 2929,
-      cliques: 1257,
-      conversoes: 627,
-      receita: 118713,
-    },
-  ]);
+  const [campanhas, setCampanhas] = useState<CampanhaEmail[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ nome: '', persona: 'Carol', tipo: 'Onboarding', status: 'ativa' as CampanhaEmail['status'], enviados: '', abertos: '', cliques: '', conversoes: '' });
+  const nextId = campanhas.length > 0 ? Math.max(...campanhas.map(c => c.id)) + 1 : 1;
 
-  const [metricas] = useState<MetricaEmail[]>([
-    { label: 'Taxa de Abertura Média', valor: '68.2%', mudanca: '↑ 8% vs período anterior', cor: 'text-green-600' },
-    { label: 'Taxa de Clique Média', valor: '32.4%', mudanca: '↑ 12% vs período anterior', cor: 'text-green-600' },
-    { label: 'Taxa de Conversão Média', valor: '18.9%', mudanca: '↑ 5% vs período anterior', cor: 'text-green-600' },
-    { label: 'Receita por Email', valor: 'R$ 28.50', mudanca: '↑ 15% vs período anterior', cor: 'text-green-600' },
-  ]);
-
-  const getStatusColor = (status: string) => {
-    if (status === 'ativa') return 'bg-green-100 text-green-800';
-    if (status === 'agendada') return 'bg-blue-100 text-blue-800';
-    return 'bg-slate-100 text-slate-800';
+  const adicionar = () => {
+    if (!form.nome) { toast.error('Informe o nome da campanha'); return; }
+    setCampanhas(prev => [...prev, {
+      id: nextId,
+      nome: form.nome,
+      persona: form.persona,
+      tipo: form.tipo,
+      status: form.status,
+      enviados: parseInt(form.enviados) || 0,
+      abertos: parseInt(form.abertos) || 0,
+      cliques: parseInt(form.cliques) || 0,
+      conversoes: parseInt(form.conversoes) || 0,
+    }]);
+    setForm({ nome: '', persona: 'Carol', tipo: 'Onboarding', status: 'ativa', enviados: '', abertos: '', cliques: '', conversoes: '' });
+    setShowForm(false);
+    toast.success('Campanha adicionada');
   };
+
+  const remover = (id: number) => { setCampanhas(prev => prev.filter(c => c.id !== id)); };
+
+  const totalEnviados = campanhas.reduce((s, c) => s + c.enviados, 0);
+  const totalConversoes = campanhas.reduce((s, c) => s + c.conversoes, 0);
+  const avgAbertura = campanhas.filter(c => c.enviados > 0).length > 0
+    ? campanhas.filter(c => c.enviados > 0).reduce((s, c) => s + (c.abertos / c.enviados * 100), 0) / campanhas.filter(c => c.enviados > 0).length : 0;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold text-slate-900">Email Marketing - Klaviyo/Mailchimp</h2>
-          <p className="text-slate-600 mt-1">Sincronize segmentação de personas com campanhas automáticas</p>
-        </div>
-        <div className="flex gap-2">
-          <Badge className="bg-blue-100 text-blue-800">Klaviyo Conectado</Badge>
-          <Badge className="bg-purple-100 text-purple-800">Mailchimp Conectado</Badge>
-        </div>
+      <div>
+        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Email Marketing</h2>
+        <p className="text-slate-500 text-sm mt-1">Gerencie campanhas e automações de email por persona</p>
       </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {metricas.map((metrica, idx) => (
-          <Card key={idx}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">{metrica.label}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-slate-900">{metrica.valor}</div>
-              <p className={`text-xs ${metrica.cor} mt-1`}>{metrica.mudanca}</p>
+      <Card className="border-0 shadow-sm border-l-4 border-amber-400 bg-amber-50">
+        <CardContent className="pt-4 pb-4 flex gap-3 items-start">
+          <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-amber-800">
+            Sincronização automática com <strong>Klaviyo</strong> ou <strong>Mailchimp</strong> requer integração via API.
+            Configure as credenciais em Integrações → Email. Abaixo registre campanhas manualmente.
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Stats */}
+      {campanhas.length > 0 && (
+        <div className="grid grid-cols-3 gap-4">
+          <Card className="border-0 shadow-sm">
+            <CardContent className="pt-5 pb-5">
+              <p className="text-xs text-slate-500">Emails enviados</p>
+              <p className="text-2xl font-bold text-slate-900">{totalEnviados.toLocaleString('pt-BR')}</p>
             </CardContent>
           </Card>
-        ))}
-      </div>
+          <Card className="border-0 shadow-sm">
+            <CardContent className="pt-5 pb-5">
+              <p className="text-xs text-slate-500">Taxa de abertura média</p>
+              <p className={`text-2xl font-bold ${avgAbertura >= 60 ? 'text-green-700' : 'text-amber-600'}`}>
+                {avgAbertura > 0 ? `${avgAbertura.toFixed(1)}%` : '—'}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-sm">
+            <CardContent className="pt-5 pb-5">
+              <p className="text-xs text-slate-500">Conversões totais</p>
+              <p className="text-2xl font-bold text-slate-900">{totalConversoes.toLocaleString('pt-BR')}</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
-      {/* Campanhas Ativas */}
-      <Card>
+      {/* Campaign list */}
+      <Card className="border-0 shadow-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Mail className="w-5 h-5 text-blue-600" />
-            Campanhas de Email por Persona
-          </CardTitle>
-          <CardDescription>Automação de emails baseada em comportamento</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {campanhas.map((campanha) => (
-              <div key={campanha.id} className="p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold text-slate-900">{campanha.nome}</span>
-                      <Badge variant="outline" className="text-xs">{campanha.persona}</Badge>
-                      <Badge className={`text-xs ${getStatusColor(campanha.status)}`}>
-                        {campanha.status === 'ativa' ? '🟢 Ativa' : campanha.status === 'agendada' ? '🔵 Agendada' : '⚫ Finalizada'}
-                      </Badge>
-                    </div>
-                    <div className="text-sm text-slate-600">{campanha.tipo}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-green-600">R$ {campanha.receita.toLocaleString('pt-BR')}</div>
-                    <div className="text-xs text-slate-600">Receita</div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-5 gap-2 mb-3 text-sm">
-                  <div className="p-2 bg-slate-100 rounded">
-                    <div className="text-xs text-slate-600 mb-1">Enviados</div>
-                    <div className="font-bold text-slate-900">{campanha.enviados.toLocaleString('pt-BR')}</div>
-                  </div>
-                  <div className="p-2 bg-blue-100 rounded">
-                    <div className="text-xs text-blue-700 mb-1">Abertos</div>
-                    <div className="font-bold text-blue-900">{((campanha.abertos / campanha.enviados) * 100).toFixed(1)}%</div>
-                  </div>
-                  <div className="p-2 bg-purple-100 rounded">
-                    <div className="text-xs text-purple-700 mb-1">Cliques</div>
-                    <div className="font-bold text-purple-900">{((campanha.cliques / campanha.enviados) * 100).toFixed(1)}%</div>
-                  </div>
-                  <div className="p-2 bg-green-100 rounded">
-                    <div className="text-xs text-green-700 mb-1">Conversões</div>
-                    <div className="font-bold text-green-900">{((campanha.conversoes / campanha.enviados) * 100).toFixed(1)}%</div>
-                  </div>
-                  <div className="p-2 bg-orange-100 rounded">
-                    <div className="text-xs text-orange-700 mb-1">ROI</div>
-                    <div className="font-bold text-orange-900">+{((campanha.receita / (campanha.enviados * 0.5)) * 100).toFixed(0)}%</div>
-                  </div>
-                </div>
-
-                {campanha.status === 'agendada' && (
-                  <Button size="sm" className="w-full" variant="outline">
-                    Agendar Envio
-                  </Button>
-                )}
-              </div>
-            ))}
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Mail className="w-4 h-4" style={{ color: '#8B2635' }} />
+              Campanhas de email
+            </CardTitle>
+            <Button size="sm" onClick={() => setShowForm(!showForm)} style={{ backgroundColor: '#8B2635' }} className="text-white">
+              <Plus className="w-3.5 h-3.5 mr-1.5" />Adicionar
+            </Button>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Fluxos Automáticos */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="w-5 h-5 text-yellow-600" />
-            Fluxos Automáticos por Persona
-          </CardTitle>
-          <CardDescription>Automação de emails baseada em comportamento</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {[
-              {
-                persona: 'Carol',
-                fluxo: 'Onboarding → Upsell → VIP',
-                emails: 8,
-                taxa: '42%',
-                receita: 'R$ 18.5K',
-              },
-              {
-                persona: 'Renata',
-                fluxo: 'Abandono → Resgate → Reengajamento',
-                emails: 6,
-                taxa: '28%',
-                receita: 'R$ 12.3K',
-              },
-              {
-                persona: 'Vanessa',
-                fluxo: 'Inatividade → Desconto → Reativação',
-                emails: 5,
-                taxa: '18%',
-                receita: 'R$ 6.8K',
-              },
-              {
-                persona: 'Luiza',
-                fluxo: 'Primeira Compra → Fidelização',
-                emails: 4,
-                taxa: '12%',
-                receita: 'R$ 3.2K',
-              },
-            ].map((f, idx) => (
-              <div key={idx} className="p-4 border border-slate-200 rounded-lg">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <div className="font-semibold text-slate-900">{f.persona}</div>
-                    <div className="text-sm text-slate-600 mt-1">{f.fluxo}</div>
-                  </div>
-                  <div className="text-right">
-                    <Badge className="bg-green-100 text-green-800 mb-1">{f.taxa} conversão</Badge>
-                    <div className="text-sm font-bold text-slate-900">{f.receita}</div>
-                  </div>
+          {showForm && (
+            <div className="mb-4 p-4 border border-slate-200 rounded-lg bg-slate-50 space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="md:col-span-2">
+                  <label className="text-xs font-medium text-slate-700 block mb-1">Nome da campanha</label>
+                  <Input placeholder="Ex: Bem-vindo Carol" value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} />
                 </div>
-                <div className="text-xs text-slate-600">{f.emails} emails no fluxo</div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Segmentação */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-purple-600" />
-            Segmentação Sincronizada
-          </CardTitle>
-          <CardDescription>Personas sincronizadas com Klaviyo/Mailchimp</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {[
-              { persona: 'Carol', contatos: 1240, taxa: '82% retenção', status: 'Sincronizado' },
-              { persona: 'Renata', contatos: 980, taxa: '75% retenção', status: 'Sincronizado' },
-              { persona: 'Vanessa', contatos: 1120, taxa: '68% retenção', status: 'Sincronizado' },
-              { persona: 'Luiza', contatos: 850, taxa: '62% retenção', status: 'Sincronizado' },
-            ].map((seg, idx) => (
-              <div key={idx} className="p-3 border border-slate-200 rounded-lg flex items-center justify-between">
                 <div>
-                  <div className="font-semibold text-slate-900">{seg.persona}</div>
-                  <div className="text-sm text-slate-600">{seg.contatos.toLocaleString('pt-BR')} contatos</div>
+                  <label className="text-xs font-medium text-slate-700 block mb-1">Persona</label>
+                  <select value={form.persona} onChange={e => setForm(f => ({ ...f, persona: e.target.value }))}
+                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm">
+                    {PERSONAS.map(p => <option key={p}>{p}</option>)}
+                  </select>
                 </div>
-                <div className="text-right">
-                  <Badge className="bg-green-100 text-green-800 mb-1">{seg.status}</Badge>
-                  <div className="text-xs text-slate-600">{seg.taxa}</div>
+                <div>
+                  <label className="text-xs font-medium text-slate-700 block mb-1">Tipo</label>
+                  <select value={form.tipo} onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))}
+                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm">
+                    {TIPOS.map(t => <option key={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-700 block mb-1">Status</label>
+                  <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as CampanhaEmail['status'] }))}
+                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm">
+                    <option value="ativa">Ativa</option>
+                    <option value="agendada">Agendada</option>
+                    <option value="finalizada">Finalizada</option>
+                  </select>
+                </div>
+                {['enviados', 'abertos', 'cliques', 'conversoes'].map(field => (
+                  <div key={field}>
+                    <label className="text-xs font-medium text-slate-700 block mb-1 capitalize">{field}</label>
+                    <Input type="number" min="0" placeholder="0"
+                      value={form[field as keyof typeof form]}
+                      onChange={e => setForm(f => ({ ...f, [field]: e.target.value }))} />
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={adicionar} size="sm" style={{ backgroundColor: '#8B2635' }} className="text-white">
+                  <Plus className="w-3.5 h-3.5 mr-1.5" />Adicionar
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setShowForm(false)}>Cancelar</Button>
+              </div>
+            </div>
+          )}
+
+          {campanhas.length === 0 ? (
+            <div className="text-center py-10 text-slate-400 space-y-2">
+              <Mail className="w-10 h-10 mx-auto" />
+              <p className="text-sm">Nenhuma campanha de email cadastrada.</p>
+              <p className="text-xs">Adicione campanhas com métricas reais do seu provedor de email.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {campanhas.map(c => {
+                const taxaAbertura = c.enviados > 0 ? (c.abertos / c.enviados * 100).toFixed(1) : '—';
+                const taxaConversao = c.enviados > 0 ? (c.conversoes / c.enviados * 100).toFixed(1) : '—';
+                return (
+                  <div key={c.id} className="p-4 border border-slate-200 rounded-lg">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-sm text-slate-900">{c.nome}</p>
+                          <Badge variant="outline" className="text-xs">{c.persona}</Badge>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${getStatusColor(c.status)}`}>{c.status}</span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-0.5">{c.tipo}</p>
+                      </div>
+                      <button onClick={() => remover(c.id)} className="text-slate-300 hover:text-red-500 transition-colors">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    {c.enviados > 0 && (
+                      <div className="grid grid-cols-4 gap-2 text-xs mt-2">
+                        <div className="bg-slate-50 rounded p-2 text-center">
+                          <p className="text-slate-400">Enviados</p>
+                          <p className="font-bold text-slate-900">{c.enviados.toLocaleString('pt-BR')}</p>
+                        </div>
+                        <div className="bg-blue-50 rounded p-2 text-center">
+                          <p className="text-blue-500">Abertura</p>
+                          <p className="font-bold text-blue-900">{taxaAbertura}%</p>
+                        </div>
+                        <div className="bg-purple-50 rounded p-2 text-center">
+                          <p className="text-purple-500">Cliques</p>
+                          <p className="font-bold text-purple-900">{c.enviados > 0 ? (c.cliques / c.enviados * 100).toFixed(1) : '—'}%</p>
+                        </div>
+                        <div className="bg-green-50 rounded p-2 text-center">
+                          <p className="text-green-500">Conversão</p>
+                          <p className="font-bold text-green-900">{taxaConversao}%</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Automation flows guide */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Zap className="w-4 h-4" style={{ color: '#8B2635' }} />
+            Fluxos de automação recomendados por persona
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {FLUXOS_GUIDE.map((f, idx) => (
+              <div key={idx} className="p-3 border border-slate-200 rounded-lg">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="font-semibold text-sm text-slate-900">{f.persona}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">{f.fluxo}</p>
+                  </div>
+                  <Badge variant="secondary" className="text-xs flex-shrink-0">{f.emails} emails</Badge>
                 </div>
               </div>
             ))}
@@ -285,38 +249,20 @@ export function IntegracaoEmailMarketingSection() {
         </CardContent>
       </Card>
 
-      {/* Insights */}
-      <Card className="border-blue-200 bg-blue-50">
+      {/* Best practices */}
+      <Card className="border-0 shadow-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-blue-900">
-            <TrendingUp className="w-5 h-5" />
-            Insights de Email Marketing
+          <CardTitle className="flex items-center gap-2 text-base">
+            <TrendingUp className="w-4 h-4" style={{ color: '#8B2635' }} />
+            Benchmarks de email marketing para moda
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-blue-200">
-              <div className="w-2 h-2 rounded-full bg-green-500 mt-1.5 flex-shrink-0"></div>
-              <div className="flex-1">
-                <div className="font-medium text-slate-900">68.2% taxa de abertura</div>
-                <div className="text-sm text-slate-600">8% acima da média da indústria (60%). Carol tem 72% abertura</div>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-blue-200">
-              <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5 flex-shrink-0"></div>
-              <div className="flex-1">
-                <div className="font-medium text-slate-900">Fluxo de Onboarding mais eficaz</div>
-                <div className="text-sm text-slate-600">Carol: 42% conversão. Replicar para outras personas</div>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-blue-200">
-              <div className="w-2 h-2 rounded-full bg-purple-500 mt-1.5 flex-shrink-0"></div>
-              <div className="flex-1">
-                <div className="font-medium text-slate-900">Receita por email: R$ 28.50</div>
-                <div className="text-sm text-slate-600">Cada email gera R$ 28.50 em receita. Total: R$ 202.3K/mês</div>
-              </div>
-            </div>
-          </div>
+        <CardContent className="space-y-2 text-sm text-slate-700">
+          <p><span className="font-semibold" style={{ color: '#8B2635' }}>Taxa de abertura:</span> 55–70% (acima de 60% = bom)</p>
+          <p><span className="font-semibold" style={{ color: '#8B2635' }}>Taxa de clique:</span> 15–30% de quem abriu</p>
+          <p><span className="font-semibold" style={{ color: '#8B2635' }}>Taxa de conversão:</span> 10–25% de quem clicou</p>
+          <p><span className="font-semibold" style={{ color: '#8B2635' }}>Melhor horário:</span> terça a quinta, 10h–11h ou 19h–20h</p>
+          <p><span className="font-semibold" style={{ color: '#8B2635' }}>Frequência ideal:</span> 1–3 emails/semana por persona</p>
         </CardContent>
       </Card>
     </div>
