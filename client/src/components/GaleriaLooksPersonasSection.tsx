@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, ShoppingCart, Star } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import PersonaAvatar from "./PersonaAvatar";
 
 export default function GaleriaLooksPersonasSection() {
@@ -12,8 +12,6 @@ export default function GaleriaLooksPersonasSection() {
       description: "Pijama básico em cores neutras, perfeito para trabalhar de casa",
       products: ["Baby Doll Básico", "Calça Moletom", "Chinelo Fofinho"],
       image: "bg-gradient-to-br from-blue-100 to-blue-200",
-      rating: 4.8,
-      uses: 245,
     },
     {
       id: 2,
@@ -22,8 +20,6 @@ export default function GaleriaLooksPersonasSection() {
       description: "Pijama quentinho para noites frias de inverno",
       products: ["Pijama Flanela", "Meia Térmica", "Robe Aconchego"],
       image: "bg-gradient-to-br from-orange-100 to-red-200",
-      rating: 4.9,
-      uses: 312,
     },
     {
       id: 3,
@@ -32,8 +28,6 @@ export default function GaleriaLooksPersonasSection() {
       description: "Pijama premium para apresentações e fotos de catálogo",
       products: ["Pijama Seda", "Blazer Pijama", "Sapato Conforto"],
       image: "bg-gradient-to-br from-purple-100 to-pink-200",
-      rating: 4.7,
-      uses: 189,
     },
     {
       id: 4,
@@ -42,8 +36,6 @@ export default function GaleriaLooksPersonasSection() {
       description: "Coleção exclusiva tamanhos maiores com alta margem",
       products: ["Pijama Plus Size", "Camisola Alongada", "Bermuda Conforto"],
       image: "bg-gradient-to-br from-green-100 to-emerald-200",
-      rating: 4.6,
-      uses: 156,
     },
     {
       id: 5,
@@ -52,8 +44,6 @@ export default function GaleriaLooksPersonasSection() {
       description: "Kit pijama para toda a família em cores coordenadas",
       products: ["Pijama Adulto", "Pijama Infantil", "Pijama Bebê"],
       image: "bg-gradient-to-br from-rose-100 to-pink-200",
-      rating: 4.9,
-      uses: 428,
     },
     {
       id: 6,
@@ -62,8 +52,6 @@ export default function GaleriaLooksPersonasSection() {
       description: "Promoção especial para grupos de 5+ pessoas",
       products: ["Pijama Sortido", "Desconto Progressivo", "Frete Grátis"],
       image: "bg-gradient-to-br from-yellow-100 to-amber-200",
-      rating: 4.8,
-      uses: 367,
     },
     {
       id: 7,
@@ -72,8 +60,6 @@ export default function GaleriaLooksPersonasSection() {
       description: "Pijama que você pode usar na rua - moda e conforto",
       products: ["Pijama Oversized", "Cropped Pijama", "Tênis Conforto"],
       image: "bg-gradient-to-br from-cyan-100 to-blue-200",
-      rating: 4.9,
-      uses: 523,
     },
     {
       id: 8,
@@ -82,8 +68,6 @@ export default function GaleriaLooksPersonasSection() {
       description: "Combinações que explodem em visualizações",
       products: ["Pijama Estampado", "Acessórios Trendy", "Makeup Conforto"],
       image: "bg-gradient-to-br from-fuchsia-100 to-pink-200",
-      rating: 5.0,
-      uses: 612,
     },
   ];
 
@@ -112,10 +96,7 @@ export default function GaleriaLooksPersonasSection() {
                     <CardTitle className="text-sm">{look.title}</CardTitle>
                     <CardDescription className="text-xs mt-1">{look.persona}</CardDescription>
                   </div>
-                  <Badge variant="outline" className="text-xs">
-                    <Star className="w-3 h-3 mr-1 fill-yellow-400 text-yellow-400" />
-                    {look.rating}
-                  </Badge>
+                  <Badge variant="outline" className="text-xs">{look.persona}</Badge>
                 </div>
                 <p className="text-xs text-slate-600">{look.description}</p>
               </div>
@@ -132,13 +113,6 @@ export default function GaleriaLooksPersonasSection() {
                 ))}
               </div>
 
-              {/* Stats */}
-              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                <span className="text-xs text-slate-500">{look.uses} usos</span>
-                <button className="text-pink-600 hover:text-pink-700 text-xs font-medium">
-                  <Heart className="w-4 h-4" />
-                </button>
-              </div>
             </CardContent>
           </Card>
         ))}
