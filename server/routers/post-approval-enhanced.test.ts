@@ -7,7 +7,6 @@ const mockContext = {
     id: 1,
     name: "Test User",
     email: "test@example.com",
-    openId: "test-open-id",
     role: "admin" as const,
   },
 };

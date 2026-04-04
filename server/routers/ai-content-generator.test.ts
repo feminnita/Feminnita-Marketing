@@ -21,7 +21,6 @@ vi.mock("../server/_core/llm", () => ({
 describe("AI Content Generator Router", () => {
   const mockUser = {
     id: 1,
-    openId: "test-user",
     name: "Test User",
     email: "test@example.com",
     role: "user" as const,

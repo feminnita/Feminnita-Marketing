@@ -41,7 +41,6 @@ vi.mock("../db", () => ({
 describe("Publication Automation Router", () => {
   const mockUser = {
     id: 1,
-    openId: "test-user",
     name: "Test User",
     email: "test@example.com",
     role: "user" as const,
