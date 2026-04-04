@@ -1,355 +1,204 @@
-import { AlertTriangle, TrendingDown, Clock, Users, CheckCircle, Send } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { AlertCircle, TrendingDown, Users, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+
+type ClienteRisco = {
+  id: number;
+  nome: string;
+  email: string;
+  diasSemCompra: number;
+  acao: string;
+};
+
+const RISCO_LABEL = (dias: number) => {
+  if (dias >= 60) return { label: 'Alto', color: 'bg-red-100 text-red-700' };
+  if (dias >= 30) return { label: 'Médio', color: 'bg-orange-100 text-orange-700' };
+  return { label: 'Baixo', color: 'bg-yellow-100 text-yellow-700' };
+};
+
+const ACOES_SUGERIDAS = [
+  "Cupom 20%",
+  "Email exclusivo",
+  "Cupom 15% + Frete grátis",
+  "WhatsApp pessoal",
+  "Oferta VIP",
+];
 
 export function PrevisaoChurnSection() {
-  const clientesEmRisco = [
-    {
-      id: 1,
-      nome: "Fernanda Costa",
-      email: "fernanda@email.com",
-      risco: "95%",
-      diasSemCompra: 28,
-      ultimaCompra: "04/01/2026",
-      ltv: "R$ 2.800",
-      acao: "Cupom 20%",
-      impacto: "R$ 560"
-    },
-    {
-      id: 2,
-      nome: "Beatriz Silva",
-      email: "beatriz@email.com",
-      risco: "92%",
-      diasSemCompra: 26,
-      ultimaCompra: "06/01/2026",
-      ltv: "R$ 1.500",
-      acao: "Email exclusivo",
-      impacto: "R$ 300"
-    },
-    {
-      id: 3,
-      nome: "Camila Oliveira",
-      email: "camila@email.com",
-      risco: "88%",
-      diasSemCompra: 24,
-      ultimaCompra: "08/01/2026",
-      ltv: "R$ 3.200",
-      acao: "Cupom 15% + Frete",
-      impacto: "R$ 800"
-    },
-    {
-      id: 4,
-      nome: "Daniela Mendes",
-      email: "daniela@email.com",
-      risco: "85%",
-      diasSemCompra: 22,
-      ultimaCompra: "10/01/2026",
-      ltv: "R$ 2.100",
-      acao: "Resgate VIP",
-      impacto: "R$ 630"
-    },
-    {
-      id: 5,
-      nome: "Elisa Santos",
-      email: "elisa@email.com",
-      risco: "82%",
-      diasSemCompra: 20,
-      ultimaCompra: "12/01/2026",
-      ltv: "R$ 1.800",
-      acao: "Cupom 10%",
-      impacto: "R$ 180"
-    }
-  ];
+  const [clientes, setClientes] = useState<ClienteRisco[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ nome: '', email: '', diasSemCompra: '', acao: 'Cupom 20%' });
+  const nextId = clientes.length > 0 ? Math.max(...clientes.map(c => c.id)) + 1 : 1;
 
-  const metricas = [
-    {
-      titulo: "Clientes em Risco",
-      valor: "156",
-      descricao: "Próximos 30 dias",
-      cor: "text-red-600"
-    },
-    {
-      titulo: "LTV em Risco",
-      valor: "R$ 312K",
-      descricao: "Potencial de perda",
-      cor: "text-orange-600"
-    },
-    {
-      titulo: "Taxa de Recuperação",
-      valor: "68%",
-      descricao: "Com ações preventivas",
-      cor: "text-green-600"
-    },
-    {
-      titulo: "Impacto Potencial",
-      valor: "R$ 212K",
-      descricao: "Se recuperar 68%",
-      cor: "text-blue-600"
+  const adicionar = () => {
+    const dias = parseInt(form.diasSemCompra);
+    if (!form.nome || isNaN(dias) || dias < 1) {
+      toast.error('Preencha nome e dias sem compra');
+      return;
     }
-  ];
+    setClientes(prev => [...prev, { id: nextId, nome: form.nome, email: form.email, diasSemCompra: dias, acao: form.acao }]);
+    setForm({ nome: '', email: '', diasSemCompra: '', acao: 'Cupom 20%' });
+    setShowForm(false);
+    toast.success('Cliente adicionado');
+  };
 
-  const fatoresRisco = [
-    { fator: "Sem compra há 20+ dias", peso: "40%", clientes: 89 },
-    { fator: "Redução em frequência", peso: "25%", clientes: 45 },
-    { fator: "Ticket médio caiu", peso: "20%", clientes: 32 },
-    { fator: "Não abriu emails", peso: "15%", clientes: 28 }
-  ];
+  const remover = (id: number) => { setClientes(prev => prev.filter(c => c.id !== id)); toast.success('Removido'); };
 
-  const acoesCampanhas = [
-    {
-      nome: "Cupom 20% - Urgente",
-      segmento: "Risco 90%+",
-      clientes: 45,
-      roi: "3.2x",
-      status: "Ativa"
-    },
-    {
-      nome: "Email Exclusivo",
-      segmento: "Risco 80-89%",
-      clientes: 67,
-      roi: "2.1x",
-      status: "Ativa"
-    },
-    {
-      nome: "Frete Grátis",
-      segmento: "Risco 70-79%",
-      clientes: 89,
-      roi: "1.8x",
-      status: "Agendada"
-    },
-    {
-      nome: "Programa VIP",
-      segmento: "Risco 60-69%",
-      clientes: 112,
-      roi: "2.5x",
-      status: "Agendada"
-    }
-  ];
+  const alto = clientes.filter(c => c.diasSemCompra >= 60).length;
+  const medio = clientes.filter(c => c.diasSemCompra >= 30 && c.diasSemCompra < 60).length;
 
   return (
     <div className="space-y-6">
-      {/* Overview Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {metricas.map((metrica, idx) => (
-          <Card key={idx} className="border-slate-200/50">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-slate-600">{metrica.titulo}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className={`text-3xl font-bold ${metrica.cor}`}>{metrica.valor}</div>
-              <p className="text-xs text-slate-500 mt-1">{metrica.descricao}</p>
-            </CardContent>
-          </Card>
-        ))}
+      <div>
+        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Previsão de Churn</h2>
+        <p className="text-slate-500 text-sm mt-1">Monitore clientes em risco de abandono e defina ações de retenção</p>
       </div>
 
-      {/* Clientes em Risco */}
-      <Card className="border-slate-200/50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-red-600" />
-            Top 5 Clientes em Risco Imediato
-          </CardTitle>
-          <CardDescription>Próximos 30 dias - Ação recomendada agora</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {clientesEmRisco.map((cliente) => (
-              <div key={cliente.id} className="border border-red-200/50 rounded-lg p-4 bg-red-50/30 hover:bg-red-50/50 transition">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h4 className="font-semibold text-slate-900">{cliente.nome}</h4>
-                    <p className="text-xs text-slate-500">{cliente.email}</p>
-                  </div>
-                  <Badge className="bg-red-100 text-red-700 text-lg px-3 py-1">
-                    {cliente.risco}
-                  </Badge>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-3 text-sm">
-                  <div>
-                    <p className="text-slate-500 text-xs">Sem Compra</p>
-                    <p className="font-bold text-slate-900">{cliente.diasSemCompra} dias</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Última Compra</p>
-                    <p className="font-bold text-slate-900">{cliente.ultimaCompra}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">LTV</p>
-                    <p className="font-bold text-slate-900">{cliente.ltv}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Ação</p>
-                    <p className="font-bold text-blue-600">{cliente.acao}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Impacto</p>
-                    <p className="font-bold text-green-600">{cliente.impacto}</p>
-                  </div>
-                  <div className="flex items-end">
-                    <button className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 flex items-center gap-1 w-full justify-center">
-                      <Send className="w-3 h-3" />
-                      Enviar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+      <Card className="border-0 shadow-sm border-l-4 border-amber-400 bg-amber-50">
+        <CardContent className="pt-4 pb-4 flex gap-3 items-start">
+          <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-amber-800">
+            Detecção automática de churn requer integração com <strong>Bling ERP</strong> para analisar histórico
+            de pedidos. Aqui você pode registrar manualmente clientes identificados.
+          </p>
         </CardContent>
       </Card>
 
-      {/* Fatores de Risco */}
-      <Card className="border-slate-200/50">
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-4">
+        <Card className="border-0 shadow-sm">
+          <CardContent className="pt-5 pb-5">
+            <p className="text-xs text-slate-500">Total em risco</p>
+            <p className="text-2xl font-bold text-slate-900">{clientes.length}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm">
+          <CardContent className="pt-5 pb-5">
+            <p className="text-xs text-slate-500">Risco alto (60+ dias)</p>
+            <p className="text-2xl font-bold text-red-600">{alto}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm">
+          <CardContent className="pt-5 pb-5">
+            <p className="text-xs text-slate-500">Risco médio (30-59d)</p>
+            <p className="text-2xl font-bold text-orange-600">{medio}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* List */}
+      <Card className="border-0 shadow-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingDown className="w-5 h-5 text-orange-600" />
-            Fatores de Risco
-          </CardTitle>
-          <CardDescription>O que mais contribui para churn</CardDescription>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <TrendingDown className="w-4 h-4 text-red-500" />
+              Clientes em risco
+            </CardTitle>
+            <Button size="sm" onClick={() => setShowForm(!showForm)} style={{ backgroundColor: '#8B2635' }} className="text-white">
+              <Plus className="w-3.5 h-3.5 mr-1.5" />Adicionar
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {fatoresRisco.map((fator, idx) => (
-              <div key={idx} className="flex items-center gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="font-semibold text-slate-900">{fator.fator}</p>
-                    <span className="text-sm font-bold text-slate-600">{fator.peso}</span>
-                  </div>
-                  <div className="w-full bg-slate-200 rounded-full h-2">
-                    <div
-                      className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full"
-                      style={{ width: fator.peso }}
-                    />
-                  </div>
-                  <p className="text-xs text-slate-500 mt-1">{fator.clientes} clientes</p>
+          {/* Form */}
+          {showForm && (
+            <div className="mb-4 p-4 border border-slate-200 rounded-lg bg-slate-50 space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-slate-700 block mb-1">Nome</label>
+                  <Input placeholder="Ex: Maria Silva" value={form.nome}
+                    onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-700 block mb-1">Email (opcional)</label>
+                  <Input placeholder="maria@email.com" type="email" value={form.email}
+                    onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-700 block mb-1">Dias sem compra</label>
+                  <Input placeholder="45" type="number" min="1" value={form.diasSemCompra}
+                    onChange={e => setForm(f => ({ ...f, diasSemCompra: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-700 block mb-1">Ação recomendada</label>
+                  <select value={form.acao} onChange={e => setForm(f => ({ ...f, acao: e.target.value }))}
+                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm">
+                    {ACOES_SUGERIDAS.map(a => <option key={a}>{a}</option>)}
+                  </select>
                 </div>
               </div>
-            ))}
-          </div>
+              <div className="flex gap-2">
+                <Button onClick={adicionar} size="sm" style={{ backgroundColor: '#8B2635' }} className="text-white">
+                  <Plus className="w-3.5 h-3.5 mr-1.5" />Adicionar
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setShowForm(false)}>Cancelar</Button>
+              </div>
+            </div>
+          )}
+
+          {clientes.length === 0 ? (
+            <div className="text-center py-10 text-slate-400 space-y-2">
+              <Users className="w-10 h-10 mx-auto" />
+              <p className="text-sm">Nenhum cliente em risco registrado.</p>
+              <p className="text-xs">Identifique clientes inativos no Bling e registre aqui.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-xs text-slate-500">
+                    <th className="text-left py-2 font-medium">Cliente</th>
+                    <th className="text-right py-2 font-medium">Dias inativo</th>
+                    <th className="text-right py-2 font-medium">Risco</th>
+                    <th className="text-right py-2 font-medium">Ação</th>
+                    <th className="py-2 w-8"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {clientes
+                    .sort((a, b) => b.diasSemCompra - a.diasSemCompra)
+                    .map(c => {
+                      const r = RISCO_LABEL(c.diasSemCompra);
+                      return (
+                        <tr key={c.id} className="border-b border-slate-50 hover:bg-slate-50">
+                          <td className="py-2">
+                            <p className="font-medium text-slate-900">{c.nome}</p>
+                            {c.email && <p className="text-xs text-slate-400">{c.email}</p>}
+                          </td>
+                          <td className="text-right py-2 font-semibold text-slate-700">{c.diasSemCompra}d</td>
+                          <td className="text-right py-2">
+                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${r.color}`}>{r.label}</span>
+                          </td>
+                          <td className="text-right py-2 text-xs text-slate-600">{c.acao}</td>
+                          <td className="py-2 pl-2">
+                            <button onClick={() => remover(c.id)} className="text-slate-300 hover:text-red-500 transition-colors">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Campanhas de Retenção */}
-      <Card className="border-slate-200/50">
+      {/* Guide */}
+      <Card className="border-0 shadow-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-purple-600" />
-            Campanhas de Retenção Automáticas
-          </CardTitle>
-          <CardDescription>Ações automáticas por nível de risco</CardDescription>
+          <CardTitle className="text-base">Sinais de churn para monitorar</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {acoesCampanhas.map((campanha, idx) => (
-              <div key={idx} className="border border-slate-200/50 rounded-lg p-4 hover:bg-slate-50/50 transition">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <h4 className="font-semibold text-slate-900">{campanha.nome}</h4>
-                    <p className="text-xs text-slate-500">{campanha.segmento}</p>
-                  </div>
-                  <Badge variant={campanha.status === "Ativa" ? "default" : "secondary"}>
-                    {campanha.status}
-                  </Badge>
-                </div>
-                <div className="grid grid-cols-3 gap-3 text-sm">
-                  <div>
-                    <p className="text-slate-500 text-xs">Clientes</p>
-                    <p className="font-bold text-slate-900">{campanha.clientes}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">ROI</p>
-                    <p className="font-bold text-green-600">{campanha.roi}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Impacto Esperado</p>
-                    <p className="font-bold text-blue-600">R$ {Math.round(campanha.clientes * 125)}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Timeline de Previsão */}
-      <Card className="border-slate-200/50 bg-gradient-to-br from-blue-50 to-cyan-50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-blue-600" />
-            Timeline de Previsão
-          </CardTitle>
-          <CardDescription>Quando os clientes devem fazer churn</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {[
-              { dias: "0-7 dias", clientes: 45, risco: "Crítico", acao: "Cupom 20% + Urgente" },
-              { dias: "7-14 dias", clientes: 67, risco: "Alto", acao: "Email exclusivo" },
-              { dias: "14-21 dias", clientes: 89, risco: "Médio", acao: "Frete grátis" },
-              { dias: "21-30 dias", clientes: 112, risco: "Baixo", acao: "Programa VIP" }
-            ].map((timeline, idx) => (
-              <div key={idx} className="flex items-start gap-4">
-                <div className="bg-white rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0 font-bold text-blue-600 border-2 border-blue-200">
-                  {idx + 1}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <h4 className="font-semibold text-slate-900">{timeline.dias}</h4>
-                    <Badge variant={timeline.risco === "Crítico" ? "destructive" : "secondary"}>
-                      {timeline.risco}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-slate-600 mb-2">{timeline.clientes} clientes | {timeline.acao}</p>
-                  <div className="w-full bg-slate-200 rounded-full h-2">
-                    <div
-                      className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full"
-                      style={{ width: `${(timeline.clientes / 112) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Benefícios */}
-      <Card className="border-slate-200/50 bg-gradient-to-br from-green-50 to-emerald-50">
-        <CardHeader>
-          <CardTitle className="text-slate-900">✅ Impacto da Previsão de Churn</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm text-slate-700">
-          <div className="flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-slate-900">Recuperar R$ 212K em LTV</p>
-              <p className="text-slate-600">68% de taxa de recuperação com ações preventivas</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-slate-900">Reduzir churn em 50%</p>
-              <p className="text-slate-600">Agir 30 dias antes vs. depois que cliente saiu</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-slate-900">ROI médio 2.4x</p>
-              <p className="text-slate-600">Cada R$ 1 gasto em retenção retorna R$ 2,40</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-slate-900">Automação 24/7</p>
-              <p className="text-slate-600">Campanhas disparam automaticamente por nível de risco</p>
-            </div>
-          </div>
+        <CardContent className="space-y-2 text-sm text-slate-700">
+          <p><span className="font-semibold text-red-600">🔴 Alto risco:</span> Sem compra há 60+ dias, sem abrir emails por 3+ semanas</p>
+          <p><span className="font-semibold text-orange-600">🟡 Médio risco:</span> Sem compra há 30-60 dias, CTR de email caindo</p>
+          <p><span className="font-semibold text-yellow-600">🟨 Baixo risco:</span> Sem compra há 15-30 dias, menos engajamento</p>
+          <p className="pt-2 text-slate-500 text-xs">Fonte: histórico de pedidos no Bling + abertura de emails</p>
         </CardContent>
       </Card>
     </div>

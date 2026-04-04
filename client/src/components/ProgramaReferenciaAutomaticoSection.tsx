@@ -1,271 +1,235 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Share2, Gift, Users, TrendingUp } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Share2, Gift, Users, Plus, Trash2, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
-interface Referencia {
-  id: string;
+type Referencia = {
+  id: number;
   referidor: string;
   persona: string;
   amigo: string;
   status: 'ativa' | 'convertida' | 'pendente';
   dataReferencia: string;
-  recompensaReferidor: string;
-  recompensaAmigo: string;
   vendas: number;
-}
+};
 
-interface MetricaReferencia {
-  label: string;
-  valor: string | number;
-  mudanca: string;
-  cor: string;
-}
+const PERSONAS = ['Carol', 'Renata', 'Vanessa', 'Luiza'];
+const RECOMPENSAS_REFERIDOR: Record<string, string> = {
+  Carol: 'R$ 50 desconto',
+  Renata: 'R$ 45 desconto',
+  Vanessa: 'R$ 40 desconto',
+  Luiza: 'R$ 35 desconto',
+};
+const RECOMPENSAS_AMIGO: Record<string, string> = {
+  Carol: 'R$ 35 desconto',
+  Renata: 'R$ 30 desconto',
+  Vanessa: 'R$ 25 desconto',
+  Luiza: 'R$ 20 desconto',
+};
+
+const getStatusColor = (status: string) => {
+  if (status === 'convertida') return 'bg-green-100 text-green-800';
+  if (status === 'ativa') return 'bg-blue-100 text-blue-800';
+  return 'bg-yellow-100 text-yellow-800';
+};
 
 export function ProgramaReferenciaAutomaticoSection() {
-  const [referencias, setReferencias] = useState<Referencia[]>([
-    {
-      id: '1',
-      referidor: 'Maria S.',
-      persona: 'Carol',
-      amigo: 'Juliana T.',
-      status: 'convertida',
-      dataReferencia: '2026-01-28',
-      recompensaReferidor: 'R$ 45 (desconto)',
-      recompensaAmigo: 'R$ 30 (desconto)',
-      vendas: 3,
-    },
-    {
-      id: '2',
-      referidor: 'Ana P.',
-      persona: 'Renata',
-      amigo: 'Beatriz L.',
-      status: 'convertida',
-      dataReferencia: '2026-01-25',
-      recompensaReferidor: 'R$ 45 (desconto)',
-      recompensaAmigo: 'R$ 30 (desconto)',
-      vendas: 2,
-    },
-    {
-      id: '3',
-      referidor: 'Patricia M.',
-      persona: 'Vanessa',
-      amigo: 'Fernanda T.',
-      status: 'ativa',
-      dataReferencia: '2026-01-20',
-      recompensaReferidor: 'R$ 45 (pendente)',
-      recompensaAmigo: 'R$ 30 (pendente)',
-      vendas: 0,
-    },
-    {
-      id: '4',
-      referidor: 'Camila S.',
-      persona: 'Carol',
-      amigo: 'Debora L.',
-      status: 'convertida',
-      dataReferencia: '2026-01-15',
-      recompensaReferidor: 'R$ 45 (desconto)',
-      recompensaAmigo: 'R$ 30 (desconto)',
-      vendas: 4,
-    },
-    {
-      id: '5',
-      referidor: 'Elisa P.',
-      persona: 'Luiza',
-      amigo: 'Gabriela M.',
-      status: 'pendente',
-      dataReferencia: '2026-01-10',
-      recompensaReferidor: 'R$ 45 (pendente)',
-      recompensaAmigo: 'R$ 30 (pendente)',
-      vendas: 0,
-    },
-  ]);
+  const [referencias, setReferencias] = useState<Referencia[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ referidor: '', persona: 'Carol', amigo: '', status: 'pendente' as Referencia['status'], vendas: '' });
+  const nextId = referencias.length > 0 ? Math.max(...referencias.map(r => r.id)) + 1 : 1;
 
-  const [metricas] = useState<MetricaReferencia[]>([
-    { label: 'Referências Ativas', valor: 127, mudanca: '↑ 34 vs mês anterior', cor: 'text-green-600' },
-    { label: 'Taxa de Conversão', valor: '68%', mudanca: '↑ 12% vs mês anterior', cor: 'text-green-600' },
-    { label: 'Novos Clientes via Referência', valor: 86, mudanca: '↑ 42% vs mês anterior', cor: 'text-green-600' },
-    { label: 'Receita Referência', valor: 'R$ 32.8K', mudanca: '↑ 58% vs mês anterior', cor: 'text-green-600' },
-  ]);
-
-  const getStatusColor = (status: string) => {
-    if (status === 'convertida') return 'bg-green-100 text-green-800';
-    if (status === 'ativa') return 'bg-blue-100 text-blue-800';
-    return 'bg-yellow-100 text-yellow-800';
+  const adicionar = () => {
+    if (!form.referidor || !form.amigo) { toast.error('Preencha referidor e indicado'); return; }
+    setReferencias(prev => [...prev, {
+      id: nextId,
+      referidor: form.referidor,
+      persona: form.persona,
+      amigo: form.amigo,
+      status: form.status,
+      dataReferencia: new Date().toISOString().split('T')[0],
+      vendas: parseInt(form.vendas) || 0,
+    }]);
+    setForm({ referidor: '', persona: 'Carol', amigo: '', status: 'pendente', vendas: '' });
+    setShowForm(false);
+    toast.success('Referência adicionada');
   };
+
+  const remover = (id: number) => { setReferencias(prev => prev.filter(r => r.id !== id)); toast.success('Removida'); };
+
+  const convertidas = referencias.filter(r => r.status === 'convertida').length;
+  const ativas = referencias.filter(r => r.status === 'ativa').length;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-slate-900">Programa de Referência Automático</h2>
-          <p className="text-slate-600 mt-1">Recompense clientes que indicam amigos com pontos/descontos</p>
+          <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Programa de Referência</h2>
+          <p className="text-slate-500 text-sm mt-1">Recompense clientes que indicam amigos com descontos</p>
         </div>
-        <Button className="bg-green-600 hover:bg-green-700">
-          <Share2 className="w-4 h-4 mr-2" />
-          Compartilhar
-        </Button>
       </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {metricas.map((metrica, idx) => (
-          <Card key={idx}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">{metrica.label}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-slate-900">{metrica.valor}</div>
-              <p className={`text-xs ${metrica.cor} mt-1`}>{metrica.mudanca}</p>
-            </CardContent>
-          </Card>
-        ))}
+      <Card className="border-0 shadow-sm border-l-4 border-amber-400 bg-amber-50">
+        <CardContent className="pt-4 pb-4 flex gap-3 items-start">
+          <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-amber-800">
+            Rastreamento automático de referências requer integração com <strong>Bling ERP</strong> (histórico de pedidos)
+            e lógica de cupons. Registre manualmente as referências identificadas abaixo.
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-4">
+        <Card className="border-0 shadow-sm">
+          <CardContent className="pt-5 pb-5">
+            <p className="text-xs text-slate-500">Total registradas</p>
+            <p className="text-2xl font-bold text-slate-900">{referencias.length}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm">
+          <CardContent className="pt-5 pb-5">
+            <p className="text-xs text-slate-500">Convertidas</p>
+            <p className="text-2xl font-bold text-green-700">{convertidas}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm">
+          <CardContent className="pt-5 pb-5">
+            <p className="text-xs text-slate-500">Ativas</p>
+            <p className="text-2xl font-bold text-blue-700">{ativas}</p>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Referências */}
-      <Card>
+      {/* Referências list */}
+      <Card className="border-0 shadow-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-purple-600" />
-            Histórico de Referências
-          </CardTitle>
-          <CardDescription>Rastreie origem de cada novo cliente</CardDescription>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Users className="w-4 h-4" style={{ color: '#8B2635' }} />
+              Histórico de Referências
+            </CardTitle>
+            <Button size="sm" onClick={() => setShowForm(!showForm)} style={{ backgroundColor: '#8B2635' }} className="text-white">
+              <Plus className="w-3.5 h-3.5 mr-1.5" />Adicionar
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {referencias.map((ref) => (
-              <div key={ref.id} className="p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold text-slate-900">{ref.referidor}</span>
-                      <Badge variant="outline" className="text-xs">{ref.persona}</Badge>
-                      <Badge className={`text-xs ${getStatusColor(ref.status)}`}>
-                        {ref.status === 'convertida' ? '✓ Convertida' : ref.status === 'ativa' ? '⏳ Ativa' : '⏱ Pendente'}
-                      </Badge>
+          {showForm && (
+            <div className="mb-4 p-4 border border-slate-200 rounded-lg bg-slate-50 space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-slate-700 block mb-1">Referidor (quem indicou)</label>
+                  <Input placeholder="Ex: Maria Silva" value={form.referidor} onChange={e => setForm(f => ({ ...f, referidor: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-700 block mb-1">Persona</label>
+                  <select value={form.persona} onChange={e => setForm(f => ({ ...f, persona: e.target.value }))}
+                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm">
+                    {PERSONAS.map(p => <option key={p}>{p}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-700 block mb-1">Indicado (amigo)</label>
+                  <Input placeholder="Ex: Juliana Torres" value={form.amigo} onChange={e => setForm(f => ({ ...f, amigo: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-700 block mb-1">Status</label>
+                  <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as Referencia['status'] }))}
+                    className="w-full border border-slate-200 rounded px-3 py-2 text-sm">
+                    <option value="pendente">Pendente</option>
+                    <option value="ativa">Ativa</option>
+                    <option value="convertida">Convertida</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-700 block mb-1">Vendas geradas</label>
+                  <Input type="number" min="0" placeholder="0" value={form.vendas} onChange={e => setForm(f => ({ ...f, vendas: e.target.value }))} />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={adicionar} size="sm" style={{ backgroundColor: '#8B2635' }} className="text-white">
+                  <Plus className="w-3.5 h-3.5 mr-1.5" />Adicionar
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setShowForm(false)}>Cancelar</Button>
+              </div>
+            </div>
+          )}
+
+          {referencias.length === 0 ? (
+            <div className="text-center py-10 text-slate-400 space-y-2">
+              <Share2 className="w-10 h-10 mx-auto" />
+              <p className="text-sm">Nenhuma referência registrada.</p>
+              <p className="text-xs">Identifique clientes que indicaram amigos e registre aqui.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {referencias.map(ref => (
+                <div key={ref.id} className="p-4 border border-slate-200 rounded-lg">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm text-slate-900">{ref.referidor}</span>
+                        <Badge variant="outline" className="text-xs">{ref.persona}</Badge>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${getStatusColor(ref.status)}`}>
+                          {ref.status === 'convertida' ? '✓ Convertida' : ref.status === 'ativa' ? '⏳ Ativa' : '⏱ Pendente'}
+                        </span>
+                      </div>
+                      <p className="text-sm text-slate-500 mt-0.5">Indicou: <span className="font-medium text-slate-700">{ref.amigo}</span></p>
                     </div>
-                    <div className="text-sm text-slate-600">Indicou: <span className="font-medium">{ref.amigo}</span></div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <p className="text-xs text-slate-400">{ref.dataReferencia}</p>
+                        <p className="text-sm font-semibold text-slate-700">{ref.vendas} vendas</p>
+                      </div>
+                      <button onClick={() => remover(ref.id)} className="text-slate-300 hover:text-red-500 transition-colors">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-xs text-slate-600 mb-1">{ref.dataReferencia}</div>
-                    <div className="text-sm font-semibold text-slate-900">{ref.vendas} vendas</div>
+                  <div className="grid grid-cols-2 gap-2 text-xs mt-2">
+                    <div className="p-2 bg-green-50 rounded border border-green-100">
+                      <p className="text-green-600 mb-0.5">Recompensa referidor</p>
+                      <p className="font-semibold text-green-800">{RECOMPENSAS_REFERIDOR[ref.persona] ?? '—'}</p>
+                    </div>
+                    <div className="p-2 bg-blue-50 rounded border border-blue-100">
+                      <p className="text-blue-600 mb-0.5">Recompensa amigo</p>
+                      <p className="font-semibold text-blue-800">{RECOMPENSAS_AMIGO[ref.persona] ?? '—'}</p>
+                    </div>
                   </div>
                 </div>
-
-                <div className="grid grid-cols-2 gap-3 mb-3 text-sm">
-                  <div className="p-2 bg-green-50 rounded border border-green-200">
-                    <div className="text-xs text-green-700 mb-1">Recompensa Referidor</div>
-                    <div className="font-semibold text-green-900">{ref.recompensaReferidor}</div>
-                  </div>
-                  <div className="p-2 bg-blue-50 rounded border border-blue-200">
-                    <div className="text-xs text-blue-700 mb-1">Recompensa Amigo</div>
-                    <div className="font-semibold text-blue-900">{ref.recompensaAmigo}</div>
-                  </div>
-                </div>
-
-                {ref.status !== 'convertida' && (
-                  <Button size="sm" className="w-full" variant="outline">
-                    Acompanhar
-                  </Button>
-                )}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Estrutura de Recompensas */}
-      <Card>
+      {/* Reward structure guide */}
+      <Card className="border-0 shadow-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Gift className="w-5 h-5 text-pink-600" />
-            Estrutura de Recompensas
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Gift className="w-4 h-4" style={{ color: '#8B2635' }} />
+            Estrutura de recompensas por persona
           </CardTitle>
-          <CardDescription>Incentivos por persona</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {[
-              {
-                persona: 'Carol',
-                recompensaRef: 'R$ 50 desconto',
-                recompensaAmigo: 'R$ 35 desconto',
-                bonus: '+R$ 10 se amigo gasta 500+',
-              },
-              {
-                persona: 'Renata',
-                recompensaRef: 'R$ 45 desconto',
-                recompensaAmigo: 'R$ 30 desconto',
-                bonus: '+R$ 8 se amigo gasta 400+',
-              },
-              {
-                persona: 'Vanessa',
-                recompensaRef: 'R$ 40 desconto',
-                recompensaAmigo: 'R$ 25 desconto',
-                bonus: '+R$ 5 se amigo gasta 300+',
-              },
-              {
-                persona: 'Luiza',
-                recompensaRef: 'R$ 35 desconto',
-                recompensaAmigo: 'R$ 20 desconto',
-                bonus: '+R$ 3 se amigo gasta 200+',
-              },
-            ].map((r, idx) => (
-              <div key={idx} className="p-4 border border-slate-200 rounded-lg">
-                <div className="font-semibold text-slate-900 mb-2">{r.persona}</div>
-                <div className="grid grid-cols-3 gap-2 text-sm">
-                  <div>
-                    <div className="text-xs text-slate-600 mb-1">Referidor</div>
-                    <div className="font-medium text-slate-900">{r.recompensaRef}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-slate-600 mb-1">Novo Cliente</div>
-                    <div className="font-medium text-slate-900">{r.recompensaAmigo}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-slate-600 mb-1">Bônus</div>
-                    <div className="font-medium text-green-600">{r.bonus}</div>
-                  </div>
+          <div className="space-y-2">
+            {PERSONAS.map(persona => (
+              <div key={persona} className="p-3 border border-slate-200 rounded-lg grid grid-cols-3 gap-2 text-sm">
+                <div className="font-semibold text-slate-900">{persona}</div>
+                <div>
+                  <p className="text-xs text-slate-500">Referidor</p>
+                  <p className="font-medium">{RECOMPENSAS_REFERIDOR[persona]}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500">Amigo indicado</p>
+                  <p className="font-medium">{RECOMPENSAS_AMIGO[persona]}</p>
                 </div>
               </div>
             ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Insights */}
-      <Card className="border-purple-200 bg-purple-50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-purple-900">
-            <TrendingUp className="w-5 h-5" />
-            Insights do Programa
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-purple-200">
-              <div className="w-2 h-2 rounded-full bg-green-500 mt-1.5 flex-shrink-0"></div>
-              <div className="flex-1">
-                <div className="font-medium text-slate-900">68% taxa de conversão</div>
-                <div className="text-sm text-slate-600">Clientes indicados por amigos têm 3x mais chance de comprar</div>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-purple-200">
-              <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5 flex-shrink-0"></div>
-              <div className="flex-1">
-                <div className="font-medium text-slate-900">Carol gera 42% das referências</div>
-                <div className="text-sm text-slate-600">Aumentar incentivo para Carol pode gerar +R$ 15K/mês</div>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-purple-200">
-              <div className="w-2 h-2 rounded-full bg-pink-500 mt-1.5 flex-shrink-0"></div>
-              <div className="flex-1">
-                <div className="font-medium text-slate-900">LTV de clientes referidos: +45%</div>
-                <div className="text-sm text-slate-600">Clientes indicados gastam mais e têm maior retenção</div>
-              </div>
-            </div>
           </div>
         </CardContent>
       </Card>

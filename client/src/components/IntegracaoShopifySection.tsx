@@ -1,218 +1,97 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ShoppingCart, Zap, Users, TrendingUp } from 'lucide-react';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ShoppingCart, Zap, Users, TrendingUp, AlertCircle } from 'lucide-react';
 
-interface PedidoShopify {
-  id: string;
-  cliente: string;
-  persona: string;
-  produtos: string;
-  valor: number;
-  status: string;
-  data: string;
-}
+const BENEFITS = [
+  {
+    titulo: 'Dados em Tempo Real',
+    descricao: 'Pedidos, clientes e inventário sincronizados automaticamente',
+  },
+  {
+    titulo: 'Previsões Mais Precisas',
+    descricao: 'IA treinada com dados reais do Shopify aumenta a acurácia das previsões de demanda',
+  },
+  {
+    titulo: 'Segmentação Automática',
+    descricao: 'Clientes classificados automaticamente por persona (Carol, Renata, Vanessa, Luiza)',
+  },
+  {
+    titulo: 'Campanhas Personalizadas',
+    descricao: 'Email marketing automático baseado no histórico de compras do cliente',
+  },
+  {
+    titulo: 'LTV e Churn Reais',
+    descricao: 'Cálculo de Lifetime Value e detecção de clientes em risco com base em pedidos reais',
+  },
+];
 
-interface MetricaShopify {
-  label: string;
-  valor: string | number;
-  mudanca: string;
-  cor: string;
-}
+const SETUP_STEPS = [
+  'Acesse sua loja Shopify → Configurações → Apps e canais de vendas',
+  'Clique em "Desenvolver apps" e crie um app privado',
+  'Habilite as permissões: read_orders, read_customers, read_products, read_inventory',
+  'Copie o Access Token gerado',
+  'Cole o token em Configurações → Integrações → Shopify neste painel',
+  'Clique em "Testar conexão" para validar',
+];
 
 export function IntegracaoShopifySection() {
-  const [pedidos] = useState<PedidoShopify[]>([
-    {
-      id: '#SH-2026-001',
-      cliente: 'Maria Silva',
-      persona: 'Carol',
-      produtos: 'Pijama Carol Premium + Robe',
-      valor: 489,
-      status: 'Entregue',
-      data: '2026-01-31',
-    },
-    {
-      id: '#SH-2026-002',
-      cliente: 'Ana Costa',
-      persona: 'Renata',
-      produtos: 'Pijama Renata Conforto',
-      valor: 189,
-      status: 'Em Trânsito',
-      data: '2026-01-30',
-    },
-    {
-      id: '#SH-2026-003',
-      cliente: 'Patricia Gomes',
-      persona: 'Vanessa',
-      produtos: 'Pijama Vanessa Casual',
-      valor: 142,
-      status: 'Processando',
-      data: '2026-01-29',
-    },
-    {
-      id: '#SH-2026-004',
-      cliente: 'Camila Santos',
-      persona: 'Carol',
-      produtos: 'Pijama Carol Premium',
-      valor: 289,
-      status: 'Entregue',
-      data: '2026-01-28',
-    },
-    {
-      id: '#SH-2026-005',
-      cliente: 'Elisa Martins',
-      persona: 'Luiza',
-      produtos: 'Pijama Luiza Básico',
-      valor: 128,
-      status: 'Entregue',
-      data: '2026-01-27',
-    },
-  ]);
-
-  const [metricas] = useState<MetricaShopify[]>([
-    { label: 'Pedidos Sincronizados', valor: '1.247', mudanca: '↑ 34 vs período anterior', cor: 'text-green-600' },
-    { label: 'Clientes Sincronizados', valor: '4.190', mudanca: '↑ 289 vs período anterior', cor: 'text-green-600' },
-    { label: 'Receita Shopify', valor: 'R$ 236.3K', mudanca: '↑ 28% vs período anterior', cor: 'text-green-600' },
-    { label: 'Taxa de Sincronização', valor: '99.8%', mudanca: '↑ 0.2% vs período anterior', cor: 'text-green-600' },
-  ]);
-
-  const getStatusColor = (status: string) => {
-    if (status === 'Entregue') return 'bg-green-100 text-green-800';
-    if (status === 'Em Trânsito') return 'bg-blue-100 text-blue-800';
-    return 'bg-yellow-100 text-yellow-800';
-  };
-
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold text-slate-900">Integração com Shopify</h2>
-          <p className="text-slate-600 mt-1">Sincronize pedidos, clientes e produtos automaticamente</p>
-        </div>
-        <Badge className="bg-green-100 text-green-800 text-lg px-4 py-2">
-          ✓ Conectado
-        </Badge>
+      <div>
+        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Integração com Shopify</h2>
+        <p className="text-slate-500 text-sm mt-1">Sincronize pedidos, clientes e produtos automaticamente</p>
       </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {metricas.map((metrica, idx) => (
-          <Card key={idx}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">{metrica.label}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-slate-900">{metrica.valor}</div>
-              <p className={`text-xs ${metrica.cor} mt-1`}>{metrica.mudanca}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Pedidos Recentes */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ShoppingCart className="w-5 h-5 text-blue-600" />
-            Pedidos Recentes do Shopify
-          </CardTitle>
-          <CardDescription>Últimos 5 pedidos sincronizados</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {pedidos.map((pedido) => (
-              <div key={pedido.id} className="p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold text-slate-900">{pedido.id}</span>
-                      <Badge variant="outline" className="text-xs">{pedido.persona}</Badge>
-                      <Badge className={`text-xs ${getStatusColor(pedido.status)}`}>
-                        {pedido.status}
-                      </Badge>
-                    </div>
-                    <div className="text-sm text-slate-600">
-                      <span className="font-medium">{pedido.cliente}</span> • {pedido.produtos}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-green-600">R$ {pedido.valor}</div>
-                    <div className="text-xs text-slate-600">{pedido.data}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+      <Card className="border-0 shadow-sm border-l-4 border-amber-400 bg-amber-50">
+        <CardContent className="pt-4 pb-4 flex gap-3 items-start">
+          <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-amber-800">
+            A Feminnita utiliza <strong>Bling ERP</strong> como sistema de gestão principal.
+            A integração com Shopify é opcional e complementar — útil se você também opera uma loja Shopify.
+            Dados de vendas reais vêm do Bling.
+          </p>
         </CardContent>
       </Card>
 
-      {/* Sincronização de Dados */}
-      <Card>
+      {/* Setup guide */}
+      <Card className="border-0 shadow-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="w-5 h-5 text-yellow-600" />
-            Status de Sincronização
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Zap className="w-4 h-4" style={{ color: '#8B2635' }} />
+            Como conectar o Shopify
           </CardTitle>
-          <CardDescription>Dados sincronizados em tempo real</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {[
-              { tipo: 'Pedidos', total: '1.247', ultima: 'Agora', status: '✓ Ativo' },
-              { tipo: 'Clientes', total: '4.190', ultima: '2 min atrás', status: '✓ Ativo' },
-              { tipo: 'Produtos', total: '48', ultima: '5 min atrás', status: '✓ Ativo' },
-              { tipo: 'Inventário', total: 'Sincronizado', ultima: 'Tempo real', status: '✓ Ativo' },
-              { tipo: 'Análise', total: 'Completa', ultima: 'Atualizado', status: '✓ Ativo' },
-            ].map((sync, idx) => (
-              <div key={idx} className="p-4 border border-slate-200 rounded-lg flex items-center justify-between">
+          <ol className="space-y-3">
+            {SETUP_STEPS.map((step, idx) => (
+              <li key={idx} className="flex gap-3 items-start text-sm text-slate-700">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full text-white text-xs font-bold flex items-center justify-center"
+                  style={{ backgroundColor: '#8B2635' }}>
+                  {idx + 1}
+                </span>
+                <span>{step}</span>
+              </li>
+            ))}
+          </ol>
+        </CardContent>
+      </Card>
+
+      {/* Benefits */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <TrendingUp className="w-4 h-4" style={{ color: '#8B2635' }} />
+            O que a integração habilita
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {BENEFITS.map((b, idx) => (
+              <div key={idx} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: '#8B2635' }}></div>
                 <div>
-                  <div className="font-semibold text-slate-900">{sync.tipo}</div>
-                  <div className="text-sm text-slate-600">Total: {sync.total} • Última: {sync.ultima}</div>
-                </div>
-                <Badge className="bg-green-100 text-green-800">{sync.status}</Badge>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Análise de Clientes */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-purple-600" />
-            Análise de Clientes Shopify
-          </CardTitle>
-          <CardDescription>Segmentação automática por persona</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {[
-              { persona: 'Carol', clientes: 1240, receita: 'R$ 137.8K', ltv: 'R$ 2.340', taxa: '82%' },
-              { persona: 'Renata', clientes: 980, receita: 'R$ 58.7K', ltv: 'R$ 1.950', taxa: '75%' },
-              { persona: 'Vanessa', clientes: 1120, receita: 'R$ 42.3K', ltv: 'R$ 1.620', taxa: '68%' },
-              { persona: 'Luiza', clientes: 850, receita: 'R$ 27.5K', ltv: 'R$ 1.380', taxa: '62%' },
-            ].map((seg, idx) => (
-              <div key={idx} className="p-4 border border-slate-200 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="font-semibold text-slate-900">{seg.persona}</div>
-                  <div className="text-sm font-bold text-green-600">{seg.receita}</div>
-                </div>
-                <div className="grid grid-cols-3 gap-3 text-sm">
-                  <div>
-                    <div className="text-xs text-slate-600">Clientes</div>
-                    <div className="font-bold text-slate-900">{seg.clientes}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-slate-600">LTV</div>
-                    <div className="font-bold text-slate-900">{seg.ltv}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-slate-600">Retenção</div>
-                    <div className="font-bold text-slate-900">{seg.taxa}</div>
-                  </div>
+                  <p className="font-medium text-sm text-slate-900">{b.titulo}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{b.descricao}</p>
                 </div>
               </div>
             ))}
@@ -220,52 +99,28 @@ export function IntegracaoShopifySection() {
         </CardContent>
       </Card>
 
-      {/* Benefícios da Integração */}
-      <Card className="border-blue-200 bg-blue-50">
+      {/* Data that becomes available */}
+      <Card className="border-0 shadow-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-blue-900">
-            <TrendingUp className="w-5 h-5" />
-            Benefícios da Integração Shopify
+          <CardTitle className="flex items-center gap-2 text-base">
+            <ShoppingCart className="w-4 h-4" style={{ color: '#8B2635' }} />
+            Dados disponíveis após integração
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-blue-200">
-              <div className="w-2 h-2 rounded-full bg-green-500 mt-1.5 flex-shrink-0"></div>
-              <div className="flex-1">
-                <div className="font-medium text-slate-900">Dados em Tempo Real</div>
-                <div className="text-sm text-slate-600">Pedidos, clientes e inventário sincronizados automaticamente</div>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            {['Pedidos recentes', 'Clientes por persona', 'Produtos e estoque', 'Taxa de conversão do site',
+              'Abandono de carrinho', 'Receita por canal', 'LTV por segmento', 'Recompra e retenção'].map((item, idx) => (
+              <div key={idx} className="flex items-center gap-2 text-slate-600">
+                <span className="text-slate-300">—</span>
+                {item}
               </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-blue-200">
-              <div className="w-2 h-2 rounded-full bg-green-500 mt-1.5 flex-shrink-0"></div>
-              <div className="flex-1">
-                <div className="font-medium text-slate-900">Previsões Mais Precisas</div>
-                <div className="text-sm text-slate-600">IA treina com dados reais do Shopify, acurácia aumenta para 92%</div>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-blue-200">
-              <div className="w-2 h-2 rounded-full bg-green-500 mt-1.5 flex-shrink-0"></div>
-              <div className="flex-1">
-                <div className="font-medium text-slate-900">Segmentação Automática</div>
-                <div className="text-sm text-slate-600">Clientes classificados automaticamente por persona</div>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-blue-200">
-              <div className="w-2 h-2 rounded-full bg-green-500 mt-1.5 flex-shrink-0"></div>
-              <div className="flex-1">
-                <div className="font-medium text-slate-900">Campanhas Personalizadas</div>
-                <div className="text-sm text-slate-600">Email marketing automático baseado em histórico de compras</div>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-blue-200">
-              <div className="w-2 h-2 rounded-full bg-green-500 mt-1.5 flex-shrink-0"></div>
-              <div className="flex-1">
-                <div className="font-medium text-slate-900">Impacto: +R$ 47K/mês</div>
-                <div className="text-sm text-slate-600">Previsões mais precisas + automação = +21% receita</div>
-              </div>
-            </div>
+            ))}
           </div>
+          <p className="text-xs text-slate-400 mt-4">
+            Nota: a Feminnita opera principalmente via Bling ERP + loja própria. Conectar o Shopify é recomendado
+            apenas se você já usa o Shopify como plataforma de e-commerce.
+          </p>
         </CardContent>
       </Card>
     </div>
