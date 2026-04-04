@@ -77,7 +77,7 @@ export default function IntegracaoSlackEmailSection() {
       id: 3,
       tipo: "info",
       titulo: "Relatório Diário - 30 de Janeiro",
-      descricao: "Vendas: 134 | Receita: R$ 5.360 | ROI: 320%",
+      descricao: "Resumo diário de vendas — conecte Bling ERP para valores reais",
       data: "2026-01-30 20:00",
       canais: ["email"]
     },

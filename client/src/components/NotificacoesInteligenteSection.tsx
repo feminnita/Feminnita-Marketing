@@ -224,7 +224,7 @@ export default function NotificacoesInteligenteSection() {
             <p className="text-slate-600">📊 45 notificações enviadas</p>
             <p className="text-slate-600">✅ 38 ações tomadas (84% de taxa de ação)</p>
             <p className="text-slate-600">⏱️ Tempo médio de resposta: 12 minutos</p>
-            <p className="text-slate-600">💰 Impacto estimado: +R$ 125K em receita</p>
+            <p className="text-slate-600">💰 Impacto em receita: disponível com Bling ERP conectado</p>
           </div>
         </CardContent>
       </Card>
