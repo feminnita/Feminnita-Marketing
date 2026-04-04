@@ -1,5 +1,9 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { postSchedulerRouter } from "./post-scheduler";
+
+vi.mock("../_core/notification", () => ({
+  notifyOwner: vi.fn().mockResolvedValue(true),
+}));
 
 describe("Post Scheduler Router", () => {
   it("should schedule posting days", async () => {

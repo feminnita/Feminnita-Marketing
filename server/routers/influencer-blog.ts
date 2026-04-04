@@ -86,7 +86,7 @@ export const influencerBlogRouter = router({
             createdAt: new Date(),
             updatedAt: new Date(),
           });
-          return { success: true, id: (result as any).insertId };
+          return { success: true, id: (result as any)[0]?.insertId };
         }
       } catch (error) {
         console.error('[Influencer Blog] Erro ao criar post:', error);

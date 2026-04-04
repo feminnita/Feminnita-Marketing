@@ -1,8 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { aiContentGeneratorRouter } from "./ai-content-generator";
 
+// Mock DB — allows influencer ownership check to pass
+vi.mock("../db", () => ({
+  getDb: vi.fn(async () => ({
+    select: vi.fn().mockReturnThis(),
+    from: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockResolvedValue([{ id: 1 }]),
+  })),
+}));
+
 // Mock do invokeLLM
-vi.mock("../server/_core/llm", () => ({
+vi.mock("../_core/llm", () => ({
   invokeLLM: vi.fn(async (input) => {
     // Simular resposta da IA
     return {

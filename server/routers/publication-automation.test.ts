@@ -1,40 +1,37 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { publicationAutomationRouter } from "./publication-automation";
 
-// Mock do getDb
+const mockRow = {
+  id: 1, contentId: 1, userId: 1,
+  platforms: '["instagram", "tiktok"]',
+  scheduledAt: new Date("2026-02-10T10:00:00"),
+  status: "pending", failureReason: null,
+  createdAt: new Date(), updatedAt: new Date(),
+};
+
+// Thenable chain so both `await db.select().from().where()` (no .limit)
+// and `await db.select().from().where().orderBy().limit()` work.
+const makeThenableChain = (data: any[]) => {
+  const chain: any = {
+    from: vi.fn().mockImplementation(() => chain),
+    where: vi.fn().mockImplementation(() => chain),
+    orderBy: vi.fn().mockImplementation(() => chain),
+    limit: vi.fn().mockImplementation(() => Promise.resolve(data)),
+    then: (resolve: any, reject: any) => Promise.resolve(data).then(resolve, reject),
+    catch: (reject: any) => Promise.resolve(data).catch(reject),
+    finally: (fn: any) => Promise.resolve(data).finally(fn),
+  };
+  return chain;
+};
+
 vi.mock("../db", () => ({
   getDb: vi.fn(async () => ({
-    select: vi.fn().mockReturnThis(),
-    from: vi.fn().mockReturnThis(),
-    where: vi.fn().mockResolvedValue([
-      {
-        id: 1,
-        contentId: 1,
-        userId: 1,
-        platforms: '["instagram", "tiktok"]',
-        scheduledAt: new Date("2026-02-10T10:00:00"),
-        status: "pending",
-        failureReason: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ]),
-    update: vi.fn().mockReturnThis(),
-    set: vi.fn().mockReturnThis(),
-    orderBy: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockResolvedValue([
-      {
-        id: 1,
-        contentId: 1,
-        userId: 1,
-        platforms: '["instagram"]',
-        scheduledAt: new Date(),
-        status: "published",
-        failureReason: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ]),
+    select: vi.fn().mockImplementation(() => makeThenableChain([mockRow])),
+    update: vi.fn().mockImplementation(() => ({
+      set: vi.fn().mockImplementation(() => ({
+        where: vi.fn().mockResolvedValue(undefined),
+      })),
+    })),
   })),
 }));
 
@@ -52,7 +49,7 @@ describe("Publication Automation Router", () => {
 
   describe("checkPendingPosts", () => {
     it("deve retornar posts pendentes", async () => {
-      const caller = publicationAutomationRouter.createCaller({});
+      const caller = publicationAutomationRouter.createCaller(mockContext);
 
       const result = await caller.checkPendingPosts();
 

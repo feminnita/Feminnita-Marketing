@@ -1,5 +1,50 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { postApprovalEnhancedRouter } from "./post-approval-enhanced";
+
+vi.mock("../_core/notification", () => ({
+  notifyOwner: vi.fn().mockResolvedValue(true),
+}));
+
+vi.mock("../_core/llm", () => ({
+  invokeLLM: vi.fn().mockResolvedValue({
+    choices: [{ message: { content: JSON.stringify({ caption: "Test caption", hashtags: ["#test"], cta: "Visite a Feminnita", productMention: "Pijamas" }) } }],
+  }),
+}));
+
+// Thenable chain factory: resolves to `data` when awaited,
+// also supports .orderBy().limit() chaining.
+const makeChain = (data: any[]) => {
+  const chain: any = {
+    from: vi.fn().mockImplementation(() => chain),
+    where: vi.fn().mockImplementation(() => chain),
+    orderBy: vi.fn().mockImplementation(() => chain),
+    limit: vi.fn().mockImplementation(() => Promise.resolve(data)),
+    then: (resolve: any, reject: any) => Promise.resolve(data).then(resolve, reject),
+    catch: (reject: any) => Promise.resolve(data).catch(reject),
+    finally: (fn: any) => Promise.resolve(data).finally(fn),
+  };
+  return chain;
+};
+
+vi.mock("../db", () => ({
+  getDb: vi.fn(async () => {
+    let selectCallCount = 0;
+    return {
+      select: vi.fn().mockImplementation(() => {
+        selectCallCount++;
+        if (selectCallCount === 1) {
+          // First select: influencer ownership check → return influencer
+          return makeChain([{ id: 1, name: "carol", bio: null, personality: null, userId: 1 }]);
+        }
+        // Subsequent selects: post lookup after insert
+        return makeChain([{ id: 123, influencerId: 1, status: "draft" }]);
+      }),
+      insert: vi.fn().mockImplementation(() => ({
+        values: vi.fn().mockResolvedValue([{ insertId: 1 }]),
+      })),
+    };
+  }),
+}));
 
 // Mock context com user autenticado
 const mockContext = {

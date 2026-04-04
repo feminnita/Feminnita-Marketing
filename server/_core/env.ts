@@ -13,4 +13,9 @@ export const ENV = {
     ? `act_${process.env.META_AD_ACCOUNT_ID}`
     : "",
   metaPixelId: process.env.META_PIXEL_ID ?? "",
+  metaPageId: process.env.META_PAGE_ID ?? "",
+  blingClientId: process.env.BLING_CLIENT_ID ?? "",
+  blingClientSecret: process.env.BLING_CLIENT_SECRET ?? "",
+  blingRedirectUri: process.env.BLING_REDIRECT_URI ?? "",
+  melhorEnvioToken: process.env.MELHOR_ENVIO_TOKEN ?? "",
 };
