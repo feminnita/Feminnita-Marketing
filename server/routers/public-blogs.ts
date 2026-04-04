@@ -42,7 +42,7 @@ export const publicBlogsRouter = router({
 
         return {
           influencer: influencer[0],
-          posts: posts.filter((p) => p.status === "published"),
+          posts: posts.filter((p: any) => p.status === "published"),
         };
       } catch (error) {
         console.error("[Public Blogs] Erro ao obter blog:", error);
@@ -125,7 +125,7 @@ export const publicBlogsRouter = router({
           .limit(input.limit);
 
         return posts.filter(
-          (p) =>
+          (p: any) =>
             p.status === "published" &&
             (p.content?.toLowerCase().includes(input.keyword.toLowerCase()) ||
               p.caption?.toLowerCase().includes(input.keyword.toLowerCase()))
@@ -171,7 +171,7 @@ export const publicBlogsRouter = router({
           .limit(input.limit + 1);
 
         return relatedPosts
-          .filter((p) => p.status === "published" && p.id !== input.postId)
+          .filter((p: any) => p.status === "published" && p.id !== input.postId)
           .slice(0, input.limit);
       } catch (error) {
         console.error("[Public Blogs] Erro ao obter posts relacionados:", error);
@@ -198,9 +198,9 @@ export const publicBlogsRouter = router({
           .from(influencerPosts)
           .where(eq(influencerPosts.influencerId, input.influencerId));
 
-        const publishedPosts = posts.filter((p) => p.status === "published");
-        const totalLikes = publishedPosts.reduce((sum, p) => sum + ((p as any).likes || 0), 0);
-        const totalComments = publishedPosts.reduce((sum, p) => sum + ((p as any).comments || 0), 0);
+        const publishedPosts = posts.filter((p: any) => p.status === "published");
+        const totalLikes = publishedPosts.reduce((sum: any, p: any) => sum + ((p as any).likes || 0), 0);
+        const totalComments = publishedPosts.reduce((sum: any, p: any) => sum + ((p as any).comments || 0), 0);
 
         return {
           totalPosts: publishedPosts.length,

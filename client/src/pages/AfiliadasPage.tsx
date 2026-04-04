@@ -310,7 +310,7 @@ export default function AfiliadasPage() {
               </CardContent>
             </Card>
           ) : (
-            lista.map(afiliada => {
+            lista.map((afiliada: any) => {
               const nivel = (afiliada.nivel ?? "bronze") as NivelKey;
               const nConfig = nivelConfig[nivel] ?? nivelConfig.bronze;
               const sConfig = statusConfig[afiliada.status] ?? statusConfig.pendente;

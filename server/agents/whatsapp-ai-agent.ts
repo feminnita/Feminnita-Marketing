@@ -25,7 +25,7 @@ export async function processWhatsAppMessage(
 
     // Checar se deve escalar por palavras-chave
     const escalationKeywords = config.escalationKeywords ?? [];
-    const shouldEscalate = escalationKeywords.some(kw =>
+    const shouldEscalate = escalationKeywords.some((kw: any) =>
       message.toLowerCase().includes(kw.toLowerCase())
     );
     if (shouldEscalate) return null; // Deixa para humano
@@ -35,7 +35,7 @@ export async function processWhatsAppMessage(
       .where(and(eq(knowledgeBase.userId, userId), eq(knowledgeBase.isActive, true)))
       .limit(config.searchResultsLimit ?? 3);
 
-    const knowledgeContext = knowledge.map(k =>
+    const knowledgeContext = knowledge.map((k: any) =>
       `[${k.contentType}] ${k.title}: ${k.description ?? ""}`
     ).join("\n");
 
@@ -44,7 +44,7 @@ export async function processWhatsAppMessage(
       .where(and(eq(conversationHistory.userId, userId), eq(conversationHistory.whatsappPhoneNumber, phoneNumber)))
       .limit(5);
 
-    const historyContext = history.map(h =>
+    const historyContext = history.map((h: any) =>
       `Cliente: ${h.userMessage}\nAtendente: ${h.aiResponse}`
     ).join("\n---\n");
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,13 +37,28 @@ export default function ExportacaoRelatoriosSection() {
   const [novoAgendamento, setNovoAgendamento] = useState(false);
   const [formA, setFormA] = useState({ relatorio: 'completo', formato: 'pdf', frequencia: 'Toda segunda-feira', email: '' });
 
+  const { data: campanhas = [] } = trpc.campaigns.listar.useQuery();
+  type Camp = (typeof campanhas)[number];
+
   const handleExport = () => {
     const relatorio = RELATORIOS_DISPONIVEIS.find(r => r.id === selectedRelatorio);
     if (!relatorio) return;
     setExportando(true);
     try {
+      const totalOrcamento = campanhas.reduce((s: number, c: Camp) => s + (Number(c.orcamento) || 0), 0);
+      const totalConversoes = campanhas.reduce((s: number, c: Camp) => s + (Number(c.performance.conversoes) || 0), 0);
+      const avgROI = campanhas.length > 0
+        ? campanhas.reduce((s: number, c: Camp) => s + (Number(c.performance.roi) || 0), 0) / campanhas.length
+        : 0;
       const content = JSON.stringify(
-        { relatorio: relatorio.titulo, descricao: relatorio.descricao, formato: selectedFormato.toUpperCase(), geradoEm: new Date().toISOString() },
+        {
+          relatorio: relatorio.titulo,
+          descricao: relatorio.descricao,
+          formato: selectedFormato.toUpperCase(),
+          geradoEm: new Date().toISOString(),
+          resumo: { totalCampanhas: campanhas.length, ativas: campanhas.filter((c: Camp) => c.status === 'ativa').length, totalOrcamento, totalConversoes, avgROI: avgROI.toFixed(0) + '%' },
+          campanhas: campanhas.map((c: Camp) => ({ nome: c.nome, plataforma: c.plataforma, status: c.status, orcamento: c.orcamento, roi: c.performance.roi, conversoes: c.performance.conversoes })),
+        },
         null, 2
       );
       const blob = new Blob([content], { type: "application/json" });

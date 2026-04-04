@@ -127,8 +127,8 @@ export const abandonoRecoveryRouter = router({
     if (!db) return { total: 0, ativos: 0, convertidos: 0, taxaConversao: "0" };
     const logs = await db.select().from(abandonamentoLogs).where(eq(abandonamentoLogs.userId, ctx.user.id));
     const total = logs.length;
-    const ativos = logs.filter(l => l.status === "ativo").length;
-    const convertidos = logs.filter(l => l.status === "convertido").length;
+    const ativos = logs.filter((l: any) => l.status === "ativo").length;
+    const convertidos = logs.filter((l: any) => l.status === "convertido").length;
     const taxaConversao = total > 0 ? ((convertidos / total) * 100).toFixed(1) : "0";
     return { total, ativos, convertidos, taxaConversao };
   }),

@@ -14,17 +14,17 @@ export default function DashboardPerformanceRealtimeSection() {
   );
 
   const ativas = campaigns.filter((c: any) => c.status === "ativa");
-  const totalImpressoes = ativas.reduce((s: number, c: any) => s + (c.impressoes ?? 0), 0);
-  const totalCliques = ativas.reduce((s: number, c: any) => s + (c.cliques ?? 0), 0);
-  const totalConversoes = ativas.reduce((s: number, c: any) => s + (c.conversoes ?? 0), 0);
+  const totalImpressoes = ativas.reduce((s: number, c: any) => s + (Number(c.performance?.impressoes) || 0), 0);
+  const totalCliques = ativas.reduce((s: number, c: any) => s + (Number(c.performance?.cliques) || 0), 0);
+  const totalConversoes = ativas.reduce((s: number, c: any) => s + (Number(c.performance?.conversoes) || 0), 0);
   const totalOrcamento = ativas.reduce((s: number, c: any) => s + parseFloat(c.orcamento ?? "0"), 0);
   const avgRoi = ativas.length > 0
-    ? ativas.reduce((s: number, c: any) => s + parseFloat(c.roi ?? "0"), 0) / ativas.length
+    ? ativas.reduce((s: number, c: any) => s + (Number(c.performance?.roi) || 0), 0) / ativas.length
     : 0;
   const ctr = totalImpressoes > 0 ? ((totalCliques / totalImpressoes) * 100).toFixed(1) : "0.0";
 
   const topCampaigns = [...ativas]
-    .sort((a: any, b: any) => (b.impressoes ?? 0) - (a.impressoes ?? 0))
+    .sort((a: any, b: any) => (Number(b.performance?.impressoes) || 0) - (Number(a.performance?.impressoes) || 0))
     .slice(0, 5);
 
   const ultimaAtualizacao = dataUpdatedAt
@@ -103,15 +103,15 @@ export default function DashboardPerformanceRealtimeSection() {
                 <div className="grid grid-cols-5 gap-2 text-xs">
                   <div className="p-2 bg-blue-50 rounded border border-blue-200">
                     <p className="text-slate-600">Impressões</p>
-                    <p className="font-bold text-blue-600">{(camp.impressoes ?? 0).toLocaleString("pt-BR")}</p>
+                    <p className="font-bold text-blue-600">{(Number(camp.performance?.impressoes) || 0).toLocaleString("pt-BR")}</p>
                   </div>
                   <div className="p-2 bg-green-50 rounded border border-green-200">
                     <p className="text-slate-600">Cliques</p>
-                    <p className="font-bold text-green-600">{(camp.cliques ?? 0).toLocaleString("pt-BR")}</p>
+                    <p className="font-bold text-green-600">{(Number(camp.performance?.cliques) || 0).toLocaleString("pt-BR")}</p>
                   </div>
                   <div className="p-2 bg-orange-50 rounded border border-orange-200">
                     <p className="text-slate-600">Conversões</p>
-                    <p className="font-bold text-orange-600">{camp.conversoes ?? 0}</p>
+                    <p className="font-bold text-orange-600">{Number(camp.performance?.conversoes) || 0}</p>
                   </div>
                   <div className="p-2 bg-purple-50 rounded border border-purple-200">
                     <p className="text-slate-600">Orçamento</p>
@@ -119,7 +119,7 @@ export default function DashboardPerformanceRealtimeSection() {
                   </div>
                   <div className="p-2 bg-slate-50 rounded border border-slate-200">
                     <p className="text-slate-600">ROI</p>
-                    <p className="font-bold text-slate-900">{parseFloat(camp.roi ?? "0").toFixed(0)}%</p>
+                    <p className="font-bold text-slate-900">{(Number(camp.performance?.roi) || 0).toFixed(0)}%</p>
                   </div>
                 </div>
               </div>

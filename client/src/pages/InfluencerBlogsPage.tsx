@@ -91,7 +91,7 @@ export default function InfluencerBlogsPage() {
     );
   }
 
-  const selectedInfluencerData = INFLUENCERS.find((i) => i.id === effectiveInfluencer);
+  const selectedInfluencerData = INFLUENCERS.find((i: any) => i.id === effectiveInfluencer);
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -102,7 +102,7 @@ export default function InfluencerBlogsPage() {
 
       {/* Influencer Selection */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        {INFLUENCERS.map((influencer) => (
+        {INFLUENCERS.map((influencer: any) => (
           <button
             key={influencer.id}
             onClick={() => setSelectedInfluencer(influencer.id)}
@@ -191,7 +191,7 @@ export default function InfluencerBlogsPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {posts.map((post) => (
+                  {posts.map((post: any) => (
                     <div key={post.id} className="border rounded-lg p-4 hover:bg-gray-50">
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex-1">
@@ -242,7 +242,7 @@ export default function InfluencerBlogsPage() {
 
                       {post.hashtags && post.hashtags.length > 0 && (
                         <div className="flex flex-wrap gap-2">
-                          {post.hashtags.map((tag, idx) => (
+                          {post.hashtags.map((tag: any, idx: any) => (
                             <span key={idx} className="text-sm text-blue-600">
                               #{tag}
                             </span>

@@ -21,12 +21,12 @@ export default function MetaBusinessSuiteSection() {
   );
   const ativas = metaCampanhas.filter(c => c.status === "ativa");
 
-  const totalImpressoes = ativas.reduce((s, c) => s + (c.impressoes ?? 0), 0);
-  const totalAlcance = ativas.reduce((s, c) => s + (c.cliques ?? 0), 0);
-  const totalEngajamentos = ativas.reduce((s, c) => s + (c.conversoes ?? 0), 0);
+  const totalImpressoes = ativas.reduce((s, c) => s + (Number(c.performance?.impressoes) || 0), 0);
+  const totalAlcance = ativas.reduce((s, c) => s + (Number(c.performance?.cliques) || 0), 0);
+  const totalEngajamentos = ativas.reduce((s, c) => s + (Number(c.performance?.conversoes) || 0), 0);
   const totalOrcamento = ativas.reduce((s, c) => s + parseFloat(c.orcamento ?? "0"), 0);
-  const rois = ativas.filter(c => parseFloat(c.roi ?? "0") > 0);
-  const roiMedio = rois.length > 0 ? rois.reduce((s, c) => s + parseFloat(c.roi ?? "0"), 0) / rois.length : 0;
+  const rois = ativas.filter(c => (Number(c.performance?.roi) || 0) > 0);
+  const roiMedio = rois.length > 0 ? rois.reduce((s, c) => s + (Number(c.performance?.roi) || 0), 0) / rois.length : 0;
 
   const isConnected = tokenStatus?.connected === true;
 
@@ -135,19 +135,19 @@ export default function MetaBusinessSuiteSection() {
                     <div className="grid grid-cols-4 gap-2 text-xs">
                       <div>
                         <p className="text-slate-500">Impressões</p>
-                        <p className="font-bold">{(c.impressoes ?? 0).toLocaleString("pt-BR")}</p>
+                        <p className="font-bold">{(Number(c.performance?.impressoes) || 0).toLocaleString("pt-BR")}</p>
                       </div>
                       <div>
                         <p className="text-slate-500">Cliques</p>
-                        <p className="font-bold">{(c.cliques ?? 0).toLocaleString("pt-BR")}</p>
+                        <p className="font-bold">{(Number(c.performance?.cliques) || 0).toLocaleString("pt-BR")}</p>
                       </div>
                       <div>
                         <p className="text-slate-500">Conversões</p>
-                        <p className="font-bold text-green-700">{(c.conversoes ?? 0).toLocaleString("pt-BR")}</p>
+                        <p className="font-bold text-green-700">{(Number(c.performance?.conversoes) || 0).toLocaleString("pt-BR")}</p>
                       </div>
                       <div>
                         <p className="text-slate-500">ROI</p>
-                        <p className="font-bold text-purple-700">{parseFloat(c.roi ?? "0").toFixed(0)}%</p>
+                        <p className="font-bold text-purple-700">{(Number(c.performance?.roi) || 0).toFixed(0)}%</p>
                       </div>
                     </div>
                   </div>

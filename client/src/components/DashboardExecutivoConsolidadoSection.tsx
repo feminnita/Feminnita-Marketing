@@ -7,20 +7,22 @@ import { trpc } from '@/lib/trpc';
 export function DashboardExecutivoConsolidadoSection() {
   const { data: campanhas = [] } = trpc.campaigns.listar.useQuery(undefined, { refetchInterval: 60_000 });
 
-  const todas = campanhas as any[];
-  const ativas = todas.filter(c => c.status === 'ativa');
-  const totalConversoes = todas.reduce((s, c) => s + (c.conversoes ?? 0), 0);
-  const totalImpressoes = todas.reduce((s, c) => s + (c.impressoes ?? 0), 0);
-  const totalCliques = todas.reduce((s, c) => s + (c.cliques ?? 0), 0);
-  const totalOrcamento = todas.reduce((s, c) => s + parseFloat(c.orcamento ?? '0'), 0);
-  const roisValidos = todas.filter(c => parseFloat(c.roi ?? '0') > 0);
+  type Camp = (typeof campanhas)[number];
+  const todas = campanhas;
+  const ativas = todas.filter((c: Camp) => c.status === 'ativa');
+  const totalConversoes = todas.reduce((s: number, c: Camp) => s + (Number(c.performance.conversoes) || 0), 0);
+  const totalImpressoes = todas.reduce((s: number, c: Camp) => s + (Number(c.performance.impressoes) || 0), 0);
+  const totalCliques = todas.reduce((s: number, c: Camp) => s + (Number(c.performance.cliques) || 0), 0);
+  const totalOrcamento = todas.reduce((s: number, c: Camp) => s + (Number(c.orcamento) || 0), 0);
+  const roisValidos = todas.filter((c: Camp) => (Number(c.performance.roi) || 0) > 0);
   const roiMedio = roisValidos.length > 0
-    ? roisValidos.reduce((s, c) => s + parseFloat(c.roi ?? '0'), 0) / roisValidos.length
+    ? roisValidos.reduce((s: number, c: Camp) => s + (Number(c.performance.roi) || 0), 0) / roisValidos.length
     : 0;
   const ctr = totalImpressoes > 0 ? (totalCliques / totalImpressoes) * 100 : 0;
 
-  const porPlataforma = todas.reduce((acc, c) => {
-    acc[c.plataforma] = (acc[c.plataforma] || 0) + (c.conversoes ?? 0);
+  const porPlataforma = todas.reduce((acc: Record<string, number>, c: Camp) => {
+    const p = c.plataforma || 'outros';
+    acc[p] = (acc[p] || 0) + (Number(c.performance.conversoes) || 0);
     return acc;
   }, {} as Record<string, number>);
   const melhorPlataforma = Object.entries(porPlataforma)
@@ -81,7 +83,7 @@ export function DashboardExecutivoConsolidadoSection() {
   ];
 
   const top5 = [...todas]
-    .sort((a, b) => (b.conversoes ?? 0) - (a.conversoes ?? 0))
+    .sort((a: Camp, b: Camp) => (Number(b.performance.conversoes) || 0) - (Number(a.performance.conversoes) || 0))
     .slice(0, 5);
 
   return (
@@ -140,7 +142,7 @@ export function DashboardExecutivoConsolidadoSection() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {top5.map((c: any, i) => (
+                  {top5.map((c: Camp, i: number) => (
                     <div key={c.id} className="flex items-center justify-between p-3 border border-slate-200 rounded-lg">
                       <div className="flex items-center gap-3">
                         <span className="text-sm font-bold text-slate-400 w-5">#{i + 1}</span>
@@ -150,8 +152,8 @@ export function DashboardExecutivoConsolidadoSection() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-green-700 text-sm">{c.conversoes ?? 0} conv.</p>
-                        <p className="text-xs text-slate-500">ROI {parseFloat(c.roi ?? '0').toFixed(0)}%</p>
+                        <p className="font-bold text-green-700 text-sm">{c.performance.conversoes ?? 0} conv.</p>
+                        <p className="text-xs text-slate-500">ROI {Number(c.performance.roi || 0).toFixed(0)}%</p>
                       </div>
                     </div>
                   ))}

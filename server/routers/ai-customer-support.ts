@@ -442,7 +442,7 @@ export const aiCustomerSupportRouter = router({
       .where(eq(conversationHistory.userId, ctx.user.id));
 
     const escalatedConversations = totalConversations.filter(
-      (c) => c.escalated
+      (c: any) => c.escalated
     );
 
     const trainingExamples = await db

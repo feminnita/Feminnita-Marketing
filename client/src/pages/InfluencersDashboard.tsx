@@ -71,7 +71,7 @@ export default function InfluencersDashboard() {
     });
   };
 
-  const currentInfluencer = influencers.find((i) => i.id === effectiveInfluencer);
+  const currentInfluencer = influencers.find((i: any) => i.id === effectiveInfluencer);
 
   return (
     <div className="container py-8">
@@ -95,7 +95,7 @@ export default function InfluencersDashboard() {
                 <CardTitle>Selecione uma Influenciadora</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {influencers.map((influencer) => (
+                {influencers.map((influencer: any) => (
                   <button
                     key={influencer.id}
                     onClick={() => setSelectedInfluencer(influencer.id)}

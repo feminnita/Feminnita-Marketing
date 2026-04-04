@@ -24,8 +24,8 @@ export default function ApprovalDashboardPage() {
       { name: inf.name as string, color: BADGE_COLORS[i % BADGE_COLORS.length] },
     ])
   );
-  const getInfluencerName = (id: number) => influencerMap.get(id)?.name ?? `Influenciadora #${id}`;
-  const getInfluencerColor = (id: number) => influencerMap.get(id)?.color ?? "bg-gray-100 text-gray-800";
+  const getInfluencerName = (id: number) => (influencerMap.get(id) as any)?.name ?? `Influenciadora #${id}`;
+  const getInfluencerColor = (id: number) => (influencerMap.get(id) as any)?.color ?? "bg-gray-100 text-gray-800";
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editedCaption, setEditedCaption] = useState("");
@@ -170,7 +170,7 @@ export default function ApprovalDashboardPage() {
               </CardContent>
             </Card>
           ) : (
-            pendingPosts.map((post) => (
+            pendingPosts.map((post: any) => (
               <Card key={post.id} className="overflow-hidden">
                 <CardHeader>
                   <div className="flex items-start justify-between">
@@ -276,7 +276,7 @@ export default function ApprovalDashboardPage() {
               </CardContent>
             </Card>
           ) : (
-            publishedHistory.map((post) => (
+            publishedHistory.map((post: any) => (
               <Card key={post.id}>
                 <CardHeader>
                   <div className="flex items-start justify-between">

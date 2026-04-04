@@ -266,7 +266,7 @@ export default function AITrainingDashboardPage() {
 
                 <div className="space-y-3">
                   {trainingExamples && trainingExamples.length > 0 ? (
-                    trainingExamples.map((example, idx) => (
+                    trainingExamples.map((example: any, idx: any) => (
                       <div key={idx} className="p-4 border border-slate-200 rounded-lg">
                         <div className="flex justify-between items-start mb-2">
                           <div className="flex-1">
@@ -422,7 +422,7 @@ export default function AITrainingDashboardPage() {
 
                 <div className="space-y-3">
                   {knowledgeItems && knowledgeItems.length > 0 ? (
-                    knowledgeItems.map((item, idx) => (
+                    knowledgeItems.map((item: any, idx: any) => (
                       <div key={idx} className="p-4 border border-slate-200 rounded-lg">
                         <div className="flex justify-between items-start mb-2">
                           <div className="flex-1">

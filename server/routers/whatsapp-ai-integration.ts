@@ -244,7 +244,7 @@ export const whatsappAIIntegrationRouter = router({
       return {
         phoneNumber: input.whatsappPhoneNumber,
         totalMessages: conversations.length,
-        escalated: conversations.some((c) => c.escalated),
+        escalated: conversations.some((c: any) => c.escalated),
         lastMessage: conversations[conversations.length - 1],
         messages: conversations,
       };
@@ -345,7 +345,7 @@ export const whatsappAIIntegrationRouter = router({
         }
       >();
 
-      conversations.forEach((conv) => {
+      conversations.forEach((conv: any) => {
         const key = conv.whatsappPhoneNumber;
         const existing = grouped.get(key);
 

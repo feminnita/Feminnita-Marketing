@@ -297,9 +297,9 @@ export default function AtribuicaoVendasSection() {
                   <tr key={c.id} className="border-b border-slate-100 hover:bg-slate-50">
                     <td className="py-2 px-2 font-medium">{c.nome}</td>
                     <td className="py-2 px-2 capitalize">{c.plataforma}</td>
-                    <td className="py-2 px-2 text-right font-semibold text-green-600">{c.conversoes ?? 0}</td>
+                    <td className="py-2 px-2 text-right font-semibold text-green-600">{Number(c.performance?.conversoes) || 0}</td>
                     <td className="py-2 px-2 text-right font-semibold text-purple-600">
-                      {c.roi ? `${parseFloat(c.roi).toFixed(0)}%` : '—'}
+                      {c.performance?.roi ? `${Number(c.performance.roi).toFixed(0)}%` : '—'}
                     </td>
                   </tr>
                 ))}

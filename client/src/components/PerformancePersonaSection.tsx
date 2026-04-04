@@ -10,31 +10,32 @@ export default function PerformancePersonaSection() {
   const { data: campanhas = [], isLoading } = trpc.campaigns.listar.useQuery(undefined, {
     refetchInterval: 60_000,
   });
+  type Camp = (typeof campanhas)[number];
 
   // Group campaigns by persona based on campaign name
   const porPersona = PERSONAS.map(persona => {
-    const campPersona = campanhas.filter(c =>
+    const campPersona = campanhas.filter((c: Camp) =>
       c.nome?.toLowerCase().includes(persona.toLowerCase())
     );
-    const totalConversoes = campPersona.reduce((s, c) => s + (Number(c.performance.conversoes) || 0), 0);
-    const totalOrcamento = campPersona.reduce((s, c) => s + (Number(c.orcamento) || 0), 0);
+    const totalConversoes = campPersona.reduce((s: number, c: Camp) => s + (Number(c.performance.conversoes) || 0), 0);
+    const totalOrcamento = campPersona.reduce((s: number, c: Camp) => s + (Number(c.orcamento) || 0), 0);
     const avgCTR = campPersona.length > 0
-      ? campPersona.reduce((s, c) => s + (c.performance.impressoes > 0 ? c.performance.cliques / c.performance.impressoes * 100 : 0), 0) / campPersona.length
+      ? campPersona.reduce((s: number, c: Camp) => s + (c.performance.impressoes > 0 ? c.performance.cliques / c.performance.impressoes * 100 : 0), 0) / campPersona.length
       : 0;
     const avgROI = campPersona.length > 0
-      ? campPersona.reduce((s, c) => s + (Number(c.performance.roi) || 0), 0) / campPersona.length
+      ? campPersona.reduce((s: number, c: Camp) => s + (Number(c.performance.roi) || 0), 0) / campPersona.length
       : 0;
-    const ativas = campPersona.filter(c => c.status === 'ativa').length;
+    const ativas = campPersona.filter((c: Camp) => c.status === 'ativa').length;
     return { persona, campPersona, totalConversoes, totalOrcamento, avgCTR, avgROI, ativas };
   }).filter(p => p.campPersona.length > 0);
 
-  const totalConversoes = campanhas.reduce((s, c) => s + (Number(c.performance.conversoes) || 0), 0);
-  const totalOrcamento = campanhas.reduce((s, c) => s + (Number(c.orcamento) || 0), 0);
+  const totalConversoes = campanhas.reduce((s: number, c: Camp) => s + (Number(c.performance.conversoes) || 0), 0);
+  const totalOrcamento = campanhas.reduce((s: number, c: Camp) => s + (Number(c.orcamento) || 0), 0);
   const avgROI = campanhas.length > 0
-    ? campanhas.reduce((s, c) => s + (Number(c.performance.roi) || 0), 0) / campanhas.length
+    ? campanhas.reduce((s: number, c: Camp) => s + (Number(c.performance.roi) || 0), 0) / campanhas.length
     : 0;
   const avgCTR = campanhas.length > 0
-    ? campanhas.reduce((s, c) => s + (c.performance.impressoes > 0 ? c.performance.cliques / c.performance.impressoes * 100 : 0), 0) / campanhas.length
+    ? campanhas.reduce((s: number, c: Camp) => s + (c.performance.impressoes > 0 ? c.performance.cliques / c.performance.impressoes * 100 : 0), 0) / campanhas.length
     : 0;
 
   return (
@@ -64,7 +65,7 @@ export default function PerformancePersonaSection() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-slate-600">Campanhas Ativas</p>
-                <p className="text-2xl font-bold text-slate-900">{campanhas.filter(c => c.status === 'ativa').length}</p>
+                <p className="text-2xl font-bold text-slate-900">{campanhas.filter((c: Camp) => c.status === 'ativa').length}</p>
               </div>
               <Eye className="w-5 h-5 text-blue-500" />
             </div>

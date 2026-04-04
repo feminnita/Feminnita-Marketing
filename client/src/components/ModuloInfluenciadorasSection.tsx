@@ -1,425 +1,300 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Users, Star, TrendingUp, MessageCircle, Heart, Eye, CheckCircle, AlertCircle } from "lucide-react";
 import { useState } from "react";
+import { trpc } from "@/lib/trpc";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Sparkles, Instagram, Music2, Send, Trash2, Clock, CheckCircle2, FileText } from "lucide-react";
+
+const ACCENT_COLORS = ['#8B2635', '#A63D4A', '#6B7A3A', '#3A5A6B'];
+const BG_COLORS = ['#fdf0e8', '#fce8ea', '#eef5e8', '#e8f2f5'];
+
+const PLATFORM_LABELS: Record<string, string> = {
+  instagram: 'Instagram',
+  tiktok: 'TikTok',
+  youtube: 'YouTube',
+  blog: 'Blog',
+};
+
+const STATUS_LABELS: Record<string, { label: string; color: string }> = {
+  draft: { label: 'Rascunho', color: 'bg-slate-100 text-slate-600' },
+  scheduled: { label: 'Agendado', color: 'bg-blue-100 text-blue-700' },
+  published: { label: 'Publicado', color: 'bg-green-100 text-green-700' },
+  failed: { label: 'Falhou', color: 'bg-red-100 text-red-700' },
+};
+
+type ContentForm = {
+  theme: string;
+  platform: "instagram" | "tiktok" | "youtube" | "blog";
+  contentType: "image" | "video" | "carousel" | "story";
+  style: string;
+};
 
 export default function ModuloInfluenciadorasSection() {
-  const [selectedInfluencer, setSelectedInfluencer] = useState(0);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [form, setForm] = useState<ContentForm>({
+    theme: "",
+    platform: "instagram",
+    contentType: "video",
+    style: "",
+  });
+  const [generatedContent, setGeneratedContent] = useState<any>(null);
 
-  const influencers = [
-    {
-      id: 1,
-      name: "Carol Silva",
-      persona: "Carol",
-      platform: "Instagram + TikTok",
-      followers: 45000,
-      engagement: 12.8,
-      niche: "Renda Extra & Empreendedorismo",
-      rate: "R$ 2.5K",
-      status: "Parceria Ativa",
-      lastPost: "há 2 dias",
-      avgViews: 28000,
-      avgLikes: 3584,
-      audience: "Mulheres 22-35, empreendedoras",
-    },
-    {
-      id: 2,
-      name: "Luiza Costa",
-      persona: "Luiza",
-      platform: "TikTok + Instagram",
-      followers: 78000,
-      engagement: 14.8,
-      niche: "Lifestyle & Moda",
-      rate: "R$ 3.5K",
-      status: "Parceria Ativa",
-      lastPost: "há 1 dia",
-      avgViews: 45000,
-      avgLikes: 6750,
-      audience: "Mulheres 18-28, fashion lovers",
-    },
-    {
-      id: 3,
-      name: "Renata Oliveira",
-      persona: "Renata",
-      platform: "Instagram + YouTube",
-      followers: 32000,
-      engagement: 11.2,
-      niche: "B2B & Negócios",
-      rate: "R$ 2K",
-      status: "Parceria Ativa",
-      lastPost: "há 3 dias",
-      avgViews: 18000,
-      avgLikes: 2016,
-      audience: "Mulheres 28-45, revendedoras",
-    },
-    {
-      id: 4,
-      name: "Vanessa Martins",
-      persona: "Vanessa",
-      platform: "TikTok + Instagram",
-      followers: 31000,
-      engagement: 13.5,
-      niche: "Compra Coletiva & Comunidade",
-      rate: "R$ 2.2K",
-      status: "Parceria Ativa",
-      lastPost: "há 1 dia",
-      avgViews: 35000,
-      avgLikes: 4725,
-      audience: "Mulheres 20-40, comunidade",
-    },
-  ];
+  const { data: influencers = [], isLoading } = trpc.influencers.list.useQuery();
+  type Inf = (typeof influencers)[number];
+  const selected = influencers.find((i: Inf) => i.id === selectedId) ?? null;
+  const selectedIdx = influencers.findIndex((i: Inf) => i.id === selectedId);
 
-  const currentInfluencer = influencers[selectedInfluencer];
+  const { data: posts = [], refetch: refetchPosts } = trpc.influencers.getPosts.useQuery(
+    { influencerId: selectedId!, limit: 10 },
+    { enabled: selectedId !== null }
+  );
 
-  const campaigns = [
-    {
-      id: 1,
-      name: "Quanto Ganhei Vendendo Pijamas",
-      influencer: "Carol",
-      status: "Ativo",
-      startDate: "01 Feb",
-      endDate: "28 Feb",
-      budget: "R$ 2.5K",
-      views: 125000,
-      engagement: 15,
-      roi: 380,
+  const generate = trpc.autonomousInfluencers.generateContent.useMutation({
+    onSuccess: (data) => {
+      setGeneratedContent(data.content);
+      refetchPosts();
     },
-    {
-      id: 2,
-      name: "Transformação Look Dia/Noite",
-      influencer: "Luiza",
-      status: "Ativo",
-      startDate: "01 Feb",
-      endDate: "28 Feb",
-      budget: "R$ 3.5K",
-      views: 185000,
-      engagement: 18,
-      roi: 420,
-    },
-    {
-      id: 3,
-      name: "Por que Feminnita é Melhor",
-      influencer: "Renata",
-      status: "Planejado",
-      startDate: "05 Feb",
-      endDate: "28 Feb",
-      budget: "R$ 2K",
-      views: 0,
-      engagement: 0,
-      roi: 0,
-    },
-    {
-      id: 4,
-      name: "Compra Coletiva Economizando",
-      influencer: "Vanessa",
-      status: "Ativo",
-      startDate: "01 Feb",
-      endDate: "28 Feb",
-      budget: "R$ 2.2K",
-      views: 95000,
-      engagement: 16,
-      roi: 390,
-    },
-  ];
+  });
 
-  const microInfluencers = [
-    {
-      name: "Ana Paula",
-      followers: 12500,
-      engagement: 9.2,
-      niche: "Lifestyle",
-      rate: "R$ 800",
-      status: "Disponível",
-    },
-    {
-      name: "Beatriz Rocha",
-      followers: 18000,
-      engagement: 10.5,
-      niche: "Moda",
-      rate: "R$ 1.2K",
-      status: "Disponível",
-    },
-    {
-      name: "Camila Santos",
-      followers: 15000,
-      engagement: 8.8,
-      niche: "Comunidade",
-      rate: "R$ 900",
-      status: "Disponível",
-    },
-    {
-      name: "Daniela Lima",
-      followers: 22000,
-      engagement: 11.3,
-      niche: "Empreendedorismo",
-      rate: "R$ 1.5K",
-      status: "Disponível",
-    },
-  ];
+  const deletePost = trpc.influencers.deletePost.useMutation({
+    onSuccess: () => refetchPosts(),
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-16">
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#8B2635' }} />
+      </div>
+    );
+  }
+
+  if (influencers.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <div className="text-4xl mb-3">👤</div>
+        <p className="text-slate-600">Vá em <strong>Personas</strong> e crie as influencers primeiro.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="space-y-2">
-        <h2 className="text-2xl font-bold text-slate-900">Módulo de Influenciadores</h2>
-        <p className="text-slate-600">Gerencie parcerias com micro-influenciadores para amplificar alcance</p>
+      <div>
+        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Módulo Influenciadoras</h2>
+        <p className="text-slate-500 text-sm mt-1">Selecione uma influencer para gerar conteúdo com a voz dela usando IA.</p>
       </div>
 
-      {/* Influencer Selector */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5" />
-            Influenciadoras Parceiras
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-            {influencers.map((influencer, idx) => (
-              <button
-                key={influencer.id}
-                onClick={() => setSelectedInfluencer(idx)}
-                className={`p-4 rounded-lg border-2 transition text-left ${
-                  selectedInfluencer === idx
-                    ? "border-pink-500 bg-pink-50"
-                    : "border-slate-200 hover:border-slate-300"
-                }`}
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <p className="font-semibold text-slate-900">{influencer.name}</p>
-                    <p className="text-xs text-slate-600">{influencer.platform}</p>
-                  </div>
-                  <Badge className="bg-green-100 text-green-800 text-xs">Ativa</Badge>
+      {/* Seletor de influencer */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {influencers.map((inf: Inf, idx: number) => (
+          <button
+            key={inf.id}
+            onClick={() => { setSelectedId(inf.id); setGeneratedContent(null); }}
+            className={`rounded-xl p-4 text-left transition-all border-2 ${
+              selectedId === inf.id ? 'border-current shadow-md' : 'border-transparent hover:border-slate-200'
+            }`}
+            style={selectedId === inf.id
+              ? { backgroundColor: BG_COLORS[idx % BG_COLORS.length], borderColor: ACCENT_COLORS[idx % ACCENT_COLORS.length] }
+              : { backgroundColor: '#f8f8f8' }
+            }
+          >
+            <div className="w-10 h-10 rounded-full overflow-hidden mb-2 border-2"
+              style={{ borderColor: ACCENT_COLORS[idx % ACCENT_COLORS.length] }}>
+              {inf.avatar ? (
+                <img src={inf.avatar} alt={inf.name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-sm font-bold text-white"
+                  style={{ backgroundColor: ACCENT_COLORS[idx % ACCENT_COLORS.length] }}>
+                  {inf.name[0]}
                 </div>
-                <div className="flex items-center gap-1 text-xs text-slate-600">
-                  <Users className="w-3 h-3" />
-                  {(influencer.followers / 1000).toFixed(0)}K
-                </div>
-              </button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Influencer Details */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{currentInfluencer.name}</CardTitle>
-          <CardDescription>{currentInfluencer.persona} • {currentInfluencer.niche}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-blue-50 rounded-lg p-4">
-              <p className="text-sm text-slate-600">Seguidores</p>
-              <p className="text-2xl font-bold text-slate-900">{(currentInfluencer.followers / 1000).toFixed(0)}K</p>
+              )}
             </div>
-            <div className="bg-purple-50 rounded-lg p-4">
-              <p className="text-sm text-slate-600">Engajamento</p>
-              <p className="text-2xl font-bold text-slate-900">{currentInfluencer.engagement}%</p>
-            </div>
-            <div className="bg-green-50 rounded-lg p-4">
-              <p className="text-sm text-slate-600">Média de Views</p>
-              <p className="text-2xl font-bold text-slate-900">{(currentInfluencer.avgViews / 1000).toFixed(0)}K</p>
-            </div>
-            <div className="bg-pink-50 rounded-lg p-4">
-              <p className="text-sm text-slate-600">Taxa por Post</p>
-              <p className="text-2xl font-bold text-slate-900">{currentInfluencer.rate}</p>
-            </div>
-          </div>
-
-          {/* Audience */}
-          <div className="border border-slate-200 rounded-lg p-4">
-            <p className="font-semibold text-slate-900 mb-2">Público-Alvo</p>
-            <p className="text-sm text-slate-600">{currentInfluencer.audience}</p>
-          </div>
-
-          {/* Performance */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="border border-slate-200 rounded-lg p-4 text-center">
-              <p className="text-sm text-slate-600 mb-1">Média de Likes</p>
-              <p className="text-2xl font-bold text-slate-900">{(currentInfluencer.avgLikes / 1000).toFixed(1)}K</p>
-            </div>
-            <div className="border border-slate-200 rounded-lg p-4 text-center">
-              <p className="text-sm text-slate-600 mb-1">Último Post</p>
-              <p className="text-sm font-bold text-slate-900">{currentInfluencer.lastPost}</p>
-            </div>
-            <div className="border border-slate-200 rounded-lg p-4 text-center">
-              <p className="text-sm text-slate-600 mb-1">Status</p>
-              <Badge className="bg-green-100 text-green-800">{currentInfluencer.status}</Badge>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Active Campaigns */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Campanhas Ativas</CardTitle>
-          <CardDescription>Parcerias em andamento com influenciadores</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {campaigns.map((campaign) => (
-              <div key={campaign.id} className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <p className="font-semibold text-slate-900">{campaign.name}</p>
-                    <p className="text-sm text-slate-600">{campaign.influencer}</p>
-                  </div>
-                  <Badge className={campaign.status === "Ativo" ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"}>
-                    {campaign.status}
-                  </Badge>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 pt-3 border-t border-slate-100">
-                  <div>
-                    <p className="text-xs text-slate-600">Período</p>
-                    <p className="font-bold text-slate-900 text-sm">{campaign.startDate} - {campaign.endDate}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-600">Budget</p>
-                    <p className="font-bold text-slate-900 text-sm">{campaign.budget}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-600">Views</p>
-                    <p className="font-bold text-slate-900 text-sm">{campaign.views > 0 ? (campaign.views / 1000).toFixed(0) + "K" : "-"}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-600">Engajamento</p>
-                    <p className="font-bold text-slate-900 text-sm">{campaign.engagement > 0 ? campaign.engagement + "%" : "-"}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-600">ROI</p>
-                    <p className="font-bold text-green-600 text-sm">{campaign.roi > 0 ? campaign.roi + "%" : "-"}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Micro-Influencers Available */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Micro-Influenciadoras Disponíveis</CardTitle>
-          <CardDescription>Oportunidades de parcerias com menor investimento</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {microInfluencers.map((micro, idx) => (
-              <div key={idx} className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <p className="font-semibold text-slate-900">{micro.name}</p>
-                    <p className="text-sm text-slate-600">{micro.niche}</p>
-                  </div>
-                  <Badge className="bg-blue-100 text-blue-800">{micro.status}</Badge>
-                </div>
-
-                <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                  <div className="flex items-center gap-4 text-sm">
-                    <span className="text-slate-600">
-                      <strong>{(micro.followers / 1000).toFixed(0)}K</strong> seguidores
-                    </span>
-                    <span className="text-slate-600">
-                      <strong>{micro.engagement}%</strong> engajamento
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-900">{micro.rate}</span>
-                    <button className="px-3 py-1 bg-pink-500 text-white rounded hover:bg-pink-600 transition text-sm">
-                      Contratar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Create Partnership */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Criar Nova Parceria</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-900 mb-2">Influenciadora</label>
-            <select className="w-full border border-slate-300 rounded-lg px-3 py-2">
-              <option>Selecionar influenciadora...</option>
-              <option>Ana Paula (12.5K)</option>
-              <option>Beatriz Rocha (18K)</option>
-              <option>Camila Santos (15K)</option>
-              <option>Daniela Lima (22K)</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-900 mb-2">Tipo de Campanha</label>
-            <select className="w-full border border-slate-300 rounded-lg px-3 py-2">
-              <option>Post Único</option>
-              <option>Série de 3 Posts</option>
-              <option>Série de 5 Posts</option>
-              <option>Parceria Mensal</option>
-            </select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-900 mb-2">Data Início</label>
-              <input type="date" className="w-full border border-slate-300 rounded-lg px-3 py-2" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-900 mb-2">Data Fim</label>
-              <input type="date" className="w-full border border-slate-300 rounded-lg px-3 py-2" />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-900 mb-2">Budget</label>
-            <input type="number" placeholder="R$ 1.000" className="w-full border border-slate-300 rounded-lg px-3 py-2" />
-          </div>
-
-          <button className="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-lg hover:from-pink-600 hover:to-purple-600 transition font-semibold">
-            🤝 Criar Parceria
+            <p className="font-semibold text-sm text-slate-800">{inf.name}</p>
+            {inf.instagramHandle && (
+              <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
+                <Instagram className="w-3 h-3" />{inf.instagramHandle}
+              </p>
+            )}
           </button>
-        </CardContent>
-      </Card>
+        ))}
+      </div>
 
-      {/* Performance Summary */}
-      <Card className="bg-green-50 border-green-200">
-        <CardHeader>
-          <CardTitle className="text-green-900">📊 Performance de Influenciadores</CardTitle>
-        </CardHeader>
-        <CardContent className="text-green-900 space-y-3">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm font-semibold">Parcerias Ativas</p>
-              <p className="text-2xl font-bold">4</p>
-              <p className="text-xs mt-1">influenciadoras</p>
-            </div>
-            <div>
-              <p className="text-sm font-semibold">Alcance Total</p>
-              <p className="text-2xl font-bold">186K</p>
-              <p className="text-xs mt-1">seguidores</p>
-            </div>
-            <div>
-              <p className="text-sm font-semibold">Views Geradas</p>
-              <p className="text-2xl font-bold">405K</p>
-              <p className="text-xs mt-1">este mês</p>
-            </div>
-            <div>
-              <p className="text-sm font-semibold">ROI Médio</p>
-              <p className="text-2xl font-bold">397%</p>
-              <p className="text-xs mt-1">por campanha</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {selected && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Formulário de geração */}
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Sparkles className="w-4 h-4" style={{ color: ACCENT_COLORS[selectedIdx % ACCENT_COLORS.length] }} />
+                Gerar conteúdo como {selected.name}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-slate-700 block mb-1">Tema do conteúdo</label>
+                <Input
+                  value={form.theme}
+                  onChange={e => setForm(f => ({ ...f, theme: e.target.value }))}
+                  placeholder="Ex: lançamento pijama inverno, dica de look noturno..."
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-medium text-slate-700 block mb-1">Plataforma</label>
+                  <select
+                    value={form.platform}
+                    onChange={e => setForm(f => ({ ...f, platform: e.target.value as ContentForm['platform'] }))}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                    style={{ '--tw-ring-color': ACCENT_COLORS[selectedIdx % ACCENT_COLORS.length] } as any}
+                  >
+                    <option value="instagram">Instagram</option>
+                    <option value="tiktok">TikTok</option>
+                    <option value="youtube">YouTube</option>
+                    <option value="blog">Blog</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-700 block mb-1">Tipo</label>
+                  <select
+                    value={form.contentType}
+                    onChange={e => setForm(f => ({ ...f, contentType: e.target.value as ContentForm['contentType'] }))}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none"
+                  >
+                    <option value="video">Vídeo / Reel</option>
+                    <option value="image">Imagem</option>
+                    <option value="carousel">Carrossel</option>
+                    <option value="story">Story</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-slate-700 block mb-1">Estilo (opcional)</label>
+                <Input
+                  value={form.style}
+                  onChange={e => setForm(f => ({ ...f, style: e.target.value }))}
+                  placeholder="Ex: divertido, emocionante, educativo..."
+                />
+              </div>
+
+              <Button
+                className="w-full text-white"
+                style={{ backgroundColor: ACCENT_COLORS[selectedIdx % ACCENT_COLORS.length] }}
+                disabled={generate.isPending || !form.theme.trim()}
+                onClick={() => generate.mutate({
+                  influencerId: selected.id,
+                  theme: form.theme,
+                  platform: form.platform,
+                  contentType: form.contentType,
+                  style: form.style || undefined,
+                })}
+              >
+                {generate.isPending
+                  ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Gerando com IA...</>
+                  : <><Sparkles className="w-4 h-4 mr-2" /> Gerar Conteúdo</>
+                }
+              </Button>
+
+              {generate.isError && (
+                <p className="text-sm text-red-500 text-center">Erro ao gerar. Verifique se a chave de IA está configurada.</p>
+              )}
+
+              {/* Resultado gerado */}
+              {generatedContent && (
+                <div className="mt-2 rounded-xl p-4 space-y-3 border"
+                  style={{ backgroundColor: BG_COLORS[selectedIdx % BG_COLORS.length], borderColor: ACCENT_COLORS[selectedIdx % ACCENT_COLORS.length] + '40' }}>
+                  <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: ACCENT_COLORS[selectedIdx % ACCENT_COLORS.length] }}>
+                    Conteúdo gerado
+                  </p>
+                  {generatedContent.caption && (
+                    <div>
+                      <p className="text-xs font-medium text-slate-600 mb-1">Legenda</p>
+                      <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">{generatedContent.caption}</p>
+                    </div>
+                  )}
+                  {generatedContent.hashtags?.length > 0 && (
+                    <div>
+                      <p className="text-xs font-medium text-slate-600 mb-1">Hashtags</p>
+                      <p className="text-sm text-blue-600">{generatedContent.hashtags.join(' ')}</p>
+                    </div>
+                  )}
+                  {generatedContent.bestTimeToPost && (
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <Clock className="w-3 h-3" />
+                      Melhor horário: {generatedContent.bestTimeToPost}
+                    </div>
+                  )}
+                  {generatedContent.estimatedReach && (
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Alcance estimado: {generatedContent.estimatedReach.toLocaleString('pt-BR')} pessoas
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Posts salvos */}
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <FileText className="w-4 h-4 text-slate-400" />
+                Posts de {selected.name}
+                {posts.length > 0 && <Badge variant="secondary">{posts.length}</Badge>}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {posts.length === 0 ? (
+                <div className="text-center py-8 text-slate-400 text-sm">
+                  Nenhum post ainda. Gere o primeiro conteúdo ao lado.
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+                  {posts.map((post: (typeof posts)[number]) => {
+                    const statusInfo = STATUS_LABELS[post.status ?? 'draft'] ?? STATUS_LABELS.draft;
+                    return (
+                      <div key={post.id} className="border border-slate-100 rounded-xl p-3 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Badge className={statusInfo.color + ' border-0 text-xs'}>{statusInfo.label}</Badge>
+                            {post.platform && (
+                              <span className="text-xs text-slate-400">{PLATFORM_LABELS[post.platform] ?? post.platform}</span>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => deletePost.mutate({ postId: post.id })}
+                            className="p-1 hover:bg-red-50 rounded transition-colors text-slate-300 hover:text-red-400"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        {post.caption && (
+                          <p className="text-sm text-slate-700 leading-relaxed line-clamp-3">{post.caption}</p>
+                        )}
+                        {post.createdAt && (
+                          <p className="text-xs text-slate-400">
+                            {new Date(post.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {!selected && (
+        <div className="text-center py-8 text-slate-400">
+          Selecione uma influencer acima para começar.
+        </div>
+      )}
     </div>
   );
 }

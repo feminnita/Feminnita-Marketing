@@ -110,7 +110,7 @@ export default function SchedulePostsPage() {
                       <SelectValue placeholder="Selecione uma influenciadora" />
                     </SelectTrigger>
                     <SelectContent>
-                      {INFLUENCERS.map(inf => (
+                      {INFLUENCERS.map((inf: any) => (
                         <SelectItem key={inf.id} value={inf.id.toString()}>
                           {inf.name}
                         </SelectItem>

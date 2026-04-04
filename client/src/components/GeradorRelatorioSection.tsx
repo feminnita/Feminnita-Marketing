@@ -15,25 +15,25 @@ export default function GeradorRelatorioSection() {
 
   const todas = campanhas as any[];
   const ativas = todas.filter(c => c.status === "ativa");
-  const totalImpressoes = todas.reduce((s, c) => s + (c.impressoes ?? 0), 0);
-  const totalCliques = todas.reduce((s, c) => s + (c.cliques ?? 0), 0);
-  const totalConversoes = todas.reduce((s, c) => s + (c.conversoes ?? 0), 0);
+  const totalImpressoes = todas.reduce((s, c) => s + (Number(c.performance?.impressoes) || 0), 0);
+  const totalCliques = todas.reduce((s, c) => s + (Number(c.performance?.cliques) || 0), 0);
+  const totalConversoes = todas.reduce((s, c) => s + (Number(c.performance?.conversoes) || 0), 0);
   const totalOrcamento = todas.reduce((s, c) => s + parseFloat(c.orcamento ?? "0"), 0);
-  const roisValidos = todas.filter(c => parseFloat(c.roi ?? "0") > 0);
+  const roisValidos = todas.filter(c => (Number(c.performance?.roi) || 0) > 0);
   const roiMedio = roisValidos.length > 0
-    ? roisValidos.reduce((s, c) => s + parseFloat(c.roi ?? "0"), 0) / roisValidos.length
+    ? roisValidos.reduce((s, c) => s + (Number(c.performance?.roi) || 0), 0) / roisValidos.length
     : 0;
   const ctr = totalImpressoes > 0 ? ((totalCliques / totalImpressoes) * 100).toFixed(1) : "—";
 
   const porPlataforma = todas.reduce((acc, c) => {
-    acc[c.plataforma] = (acc[c.plataforma] || 0) + (c.conversoes ?? 0);
+    acc[c.plataforma] = (acc[c.plataforma] || 0) + (Number(c.performance?.conversoes) || 0);
     return acc;
   }, {} as Record<string, number>);
   const plataformasOrdenadas = Object.entries(porPlataforma)
     .sort(([, a], [, b]) => (b as number) - (a as number));
 
   const top5 = [...todas]
-    .sort((a, b) => (b.conversoes ?? 0) - (a.conversoes ?? 0))
+    .sort((a, b) => (Number(b.performance?.conversoes) || 0) - (Number(a.performance?.conversoes) || 0))
     .slice(0, 5);
 
   const gerarRelatorio = () => {
@@ -46,7 +46,7 @@ export default function GeradorRelatorioSection() {
       : "  Nenhuma campanha cadastrada.";
 
     const linhasCampanhas = top5.length > 0
-      ? top5.map((c, i) => `  ${i + 1}. ${c.nome} (${c.plataforma}) — ${c.conversoes ?? 0} conv. · ROI ${parseFloat(c.roi ?? "0").toFixed(0)}%`).join("\n")
+      ? top5.map((c, i) => `  ${i + 1}. ${c.nome} (${c.plataforma}) — ${Number(c.performance?.conversoes) || 0} conv. · ROI ${(Number(c.performance?.roi) || 0).toFixed(0)}%`).join("\n")
       : "  Nenhuma campanha cadastrada.";
 
     const conteudo = `

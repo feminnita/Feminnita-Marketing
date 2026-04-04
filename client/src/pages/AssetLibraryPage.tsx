@@ -423,7 +423,7 @@ export default function AssetLibraryPage() {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {filteredAssets.map(
-                (asset) => (
+                (asset: any) => (
                   <Card
                     key={asset.id}
                     className="overflow-hidden group hover:shadow-md transition-shadow"
@@ -485,7 +485,7 @@ export default function AssetLibraryPage() {
           ) : (
             <div className="space-y-3">
               {collections.map(
-                (col) => {
+                (col: any) => {
                   const statusInfo =
                     STATUS_BADGE[col.status ?? "rascunho"] ??
                     STATUS_BADGE["rascunho"];

@@ -32,11 +32,11 @@ export function SistemaRecomendacaoInteligenteSection() {
   const { data: campanhas = [] } = trpc.campaigns.listar.useQuery(undefined, { refetchInterval: 60_000 });
 
   const todas = campanhas as any[];
-  const comConversao = todas.filter(c => (c.conversoes ?? 0) > 0);
+  const comConversao = todas.filter(c => (Number(c.performance?.conversoes) || 0) > 0);
   const topCampanhas = [...comConversao]
-    .sort((a, b) => (b.conversoes ?? 0) - (a.conversoes ?? 0))
+    .sort((a, b) => (Number(b.performance?.conversoes) || 0) - (Number(a.performance?.conversoes) || 0))
     .slice(0, 3);
-  const totalConversoes = todas.reduce((s, c) => s + (c.conversoes ?? 0), 0);
+  const totalConversoes = todas.reduce((s, c) => s + (Number(c.performance?.conversoes) || 0), 0);
   const totalCampanhas = todas.length;
 
   return (
@@ -74,7 +74,7 @@ export function SistemaRecomendacaoInteligenteSection() {
                       <p className="text-xs text-slate-500 capitalize">{c.plataforma}</p>
                     </div>
                   </div>
-                  <Badge className="bg-green-100 text-green-800">{c.conversoes} conv.</Badge>
+                  <Badge className="bg-green-100 text-green-800">{c.performance?.conversoes} conv.</Badge>
                 </div>
               ))}
             </div>

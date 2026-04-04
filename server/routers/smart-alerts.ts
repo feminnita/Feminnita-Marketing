@@ -78,7 +78,7 @@ export const smartAlertsRouter = router({
         .orderBy(desc(metaCampaignAlerts.createdAt))
         .limit(50);
 
-      let alerts = rows.map((a) => ({
+      let alerts = rows.map((a: any) => ({
         id: String(a.id),
         campaignId: a.campaignId,
         campaignName: a.campaignName,
@@ -94,18 +94,18 @@ export const smartAlertsRouter = router({
       }));
 
       if (input.campaignIds?.length) {
-        alerts = alerts.filter((a) => input.campaignIds!.includes(a.campaignId));
+        alerts = alerts.filter((a: any) => input.campaignIds!.includes(a.campaignId));
       }
       if (input.severity) {
-        alerts = alerts.filter((a) => a.severity === input.severity);
+        alerts = alerts.filter((a: any) => a.severity === input.severity);
       }
 
       return {
         alerts,
         totalAlerts: alerts.length,
-        criticalCount: alerts.filter((a) => a.severity === "critical").length,
-        warningCount: alerts.filter((a) => a.severity === "warning").length,
-        infoCount: alerts.filter((a) => a.severity === "info").length,
+        criticalCount: alerts.filter((a: any) => a.severity === "critical").length,
+        warningCount: alerts.filter((a: any) => a.severity === "warning").length,
+        infoCount: alerts.filter((a: any) => a.severity === "info").length,
       };
     }),
 
@@ -195,8 +195,8 @@ export const smartAlertsRouter = router({
         );
 
       const recommendations = alerts
-        .filter((a) => a.recommendation)
-        .map((a, idx) => ({
+        .filter((a: any) => a.recommendation)
+        .map((a: any, idx: any) => ({
           id: `rec_${a.id}`,
           priority: a.severity === "critical" ? "high" : a.severity === "warning" ? "medium" : "low",
           title: a.title,
@@ -209,7 +209,7 @@ export const smartAlertsRouter = router({
         campaignId: input.campaignId,
         recommendations,
         totalRecommendations: recommendations.length,
-        highPriority: recommendations.filter((r) => r.priority === "high").length,
+        highPriority: recommendations.filter((r: any) => r.priority === "high").length,
       };
     }),
 

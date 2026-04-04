@@ -13,12 +13,12 @@ export default function RelatorioSemanalSection() {
   });
 
   const ativas = (campaigns as any[]).filter((c) => c.status === "ativa");
-  const totalImpressoes = ativas.reduce((s: number, c: any) => s + (c.impressoes ?? 0), 0);
-  const totalCliques = ativas.reduce((s: number, c: any) => s + (c.cliques ?? 0), 0);
-  const totalConversoes = ativas.reduce((s: number, c: any) => s + (c.conversoes ?? 0), 0);
+  const totalImpressoes = ativas.reduce((s: number, c: any) => s + (Number(c.performance?.impressoes) || 0), 0);
+  const totalCliques = ativas.reduce((s: number, c: any) => s + (Number(c.performance?.cliques) || 0), 0);
+  const totalConversoes = ativas.reduce((s: number, c: any) => s + (Number(c.performance?.conversoes) || 0), 0);
   const totalOrcamento = ativas.reduce((s: number, c: any) => s + parseFloat(c.orcamento ?? "0"), 0);
   const avgRoi = ativas.length > 0
-    ? ativas.reduce((s: number, c: any) => s + parseFloat(c.roi ?? "0"), 0) / ativas.length
+    ? ativas.reduce((s: number, c: any) => s + (Number(c.performance?.roi) || 0), 0) / ativas.length
     : 0;
   const ctr = totalImpressoes > 0 ? ((totalCliques / totalImpressoes) * 100).toFixed(1) : "0.0";
 

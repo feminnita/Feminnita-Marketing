@@ -12,28 +12,28 @@ import { Badge } from "@/components/ui/badge";
 export default function Performance() {
   const { data: campaigns = [], isLoading, refetch } = trpc.campaigns.listar.useQuery();
 
-  const metaCampaigns = campaigns.filter((c) =>
+  const metaCampaigns = campaigns.filter((c: any) =>
     c.plataforma?.toLowerCase().includes("meta") || c.plataforma?.toLowerCase().includes("facebook") || c.plataforma?.toLowerCase().includes("instagram")
   );
-  const googleCampaigns = campaigns.filter((c) =>
+  const googleCampaigns = campaigns.filter((c: any) =>
     c.plataforma?.toLowerCase().includes("google")
   );
 
-  const totalImpressions = campaigns.reduce((s, c) => s + (c.performance?.impressoes ?? 0), 0);
-  const totalClicks = campaigns.reduce((s, c) => s + (c.performance?.cliques ?? 0), 0);
-  const totalConversions = campaigns.reduce((s, c) => s + (c.performance?.conversoes ?? 0), 0);
+  const totalImpressions = campaigns.reduce((s: any, c: any) => s + (c.performance?.impressoes ?? 0), 0);
+  const totalClicks = campaigns.reduce((s: any, c: any) => s + (c.performance?.cliques ?? 0), 0);
+  const totalConversions = campaigns.reduce((s: any, c: any) => s + (c.performance?.conversoes ?? 0), 0);
   const avgROI = campaigns.length > 0
-    ? (campaigns.reduce((s, c) => s + (c.performance?.roi ?? 0), 0) / campaigns.length).toFixed(1)
+    ? (campaigns.reduce((s: any, c: any) => s + (c.performance?.roi ?? 0), 0) / campaigns.length).toFixed(1)
     : "0.0";
 
-  const metaChartData = metaCampaigns.map((c) => ({
+  const metaChartData = metaCampaigns.map((c: any) => ({
     name: c.nome.length > 15 ? c.nome.slice(0, 14) + "…" : c.nome,
     impressoes: c.performance?.impressoes ?? 0,
     cliques: c.performance?.cliques ?? 0,
     conversoes: c.performance?.conversoes ?? 0,
   }));
 
-  const googleChartData = googleCampaigns.map((c) => ({
+  const googleChartData = googleCampaigns.map((c: any) => ({
     name: c.nome.length > 15 ? c.nome.slice(0, 14) + "…" : c.nome,
     gasto: c.orcamento ?? 0,
     conversoes: c.performance?.conversoes ?? 0,
@@ -142,7 +142,7 @@ export default function Performance() {
               </Card>
 
               <div className="space-y-2">
-                {metaCampaigns.map((c) => (
+                {metaCampaigns.map((c: any) => (
                   <Card key={c.id}>
                     <CardContent className="flex items-center justify-between py-3">
                       <div>
@@ -205,7 +205,7 @@ export default function Performance() {
               </Card>
 
               <div className="space-y-2">
-                {googleCampaigns.map((c) => (
+                {googleCampaigns.map((c: any) => (
                   <Card key={c.id}>
                     <CardContent className="flex items-center justify-between py-3">
                       <div>

@@ -21,7 +21,7 @@ export const integrationsRouter = router({
       meta: { connected: false },
     };
 
-    credentials.forEach((cred) => {
+    credentials.forEach((cred: any) => {
       if (cred.platform === "bling") {
         status.bling = {
           connected: true,

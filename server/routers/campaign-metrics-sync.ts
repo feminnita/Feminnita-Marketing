@@ -98,7 +98,7 @@ export const campaignMetricsSyncRouter = router({
         .orderBy(metaSyncHistory.createdAt)
         .limit(input.days * 2);
 
-      const history = syncRows.map(row => ({
+      const history = syncRows.map((row: any) => ({
         date: row.createdAt.toISOString().split("T")[0],
         impressions: row.totalCampaigns ?? 0,
         clicks: row.updatedCampaigns ?? 0,
@@ -160,10 +160,10 @@ export const campaignMetricsSyncRouter = router({
         .limit(50);
 
       const filtered = input.campaignIds?.length
-        ? alertRows.filter(a => input.campaignIds!.includes(a.campaignId))
+        ? alertRows.filter((a: any) => input.campaignIds!.includes(a.campaignId))
         : alertRows;
 
-      const alerts = filtered.map(a => ({
+      const alerts = filtered.map((a: any) => ({
         type: a.alertType,
         severity: a.severity,
         message: a.description,
@@ -174,7 +174,7 @@ export const campaignMetricsSyncRouter = router({
         createdAt: a.createdAt,
       }));
 
-      return { alerts, totalAlerts: alerts.length, criticalCount: alerts.filter(a => a.severity === "critical").length, warningCount: alerts.filter(a => a.severity === "warning").length };
+      return { alerts, totalAlerts: alerts.length, criticalCount: alerts.filter((a: any) => a.severity === "critical").length, warningCount: alerts.filter((a: any) => a.severity === "warning").length };
     }),
 
   configureAutoSync: protectedProcedure

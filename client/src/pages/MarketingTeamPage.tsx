@@ -291,7 +291,7 @@ export default function MarketingTeamPage() {
     },
   });
 
-  const filteredBriefs = (briefs ?? []).filter((b) => {
+  const filteredBriefs = (briefs ?? []).filter((b: any) => {
     const statusOk = briefStatusFilter === "all" || b.status === briefStatusFilter;
     const typeOk = briefTypeFilter === "all" || b.briefType === briefTypeFilter;
     return statusOk && typeOk;
@@ -613,7 +613,7 @@ export default function MarketingTeamPage() {
             </div>
           ) : (
             <div className="grid gap-3">
-              {filteredBriefs.map((brief) => {
+              {filteredBriefs.map((brief: any) => {
                 const statusInfo =
                   STATUS_BADGE[brief.status ?? "pending"] ?? STATUS_BADGE["pending"];
                 const icon = TYPE_ICON[brief.briefType ?? "post"] ?? TYPE_ICON["post"];

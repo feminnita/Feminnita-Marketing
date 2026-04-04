@@ -93,7 +93,7 @@ export default function InfluencerAccountsPage() {
     });
   };
 
-  const currentInfluencer = INFLUENCERS.find((inf) => inf.id === resolvedInfluencer);
+  const currentInfluencer = INFLUENCERS.find((inf: any) => inf.id === resolvedInfluencer);
 
   return (
     <div className="container py-8">
@@ -114,7 +114,7 @@ export default function InfluencerAccountsPage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {INFLUENCERS.map((influencer) => (
+              {INFLUENCERS.map((influencer: any) => (
                 <button
                   key={influencer.id}
                   onClick={() => setSelectedInfluencer(influencer.id)}

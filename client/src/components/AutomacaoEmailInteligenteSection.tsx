@@ -1,339 +1,198 @@
-import { Mail, Zap, Users, TrendingUp, CheckCircle, Clock, Send } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
+import { trpc } from "@/lib/trpc";
+import { Mail, Zap, Users, Clock, Send, Plus, Loader2, Play, Pause, Trash2, RefreshCw } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+
+const TEMPLATES = [
+  { label: "Carrinho Abandonado", subject: "Você esqueceu algo 😊", body: "Olá! Notamos que você deixou itens no carrinho. Seus pijamas favoritos ainda estão esperando. Complete sua compra e ganhe frete grátis." },
+  { label: "Pós-Compra Upsell",   subject: "Obrigada pela sua compra! 💕", body: "Sua compra foi confirmada. Que tal completar o look? Selecionamos peças que combinam perfeitamente com o que você escolheu." },
+  { label: "Reengajamento",       subject: "Sentimos sua falta! 🌙", body: "Faz um tempinho que você não nos visita. Preparamos uma seleção especial com 15% de desconto exclusivo para você." },
+  { label: "Nova Coleção",        subject: "Nova coleção chegou! ✨", body: "A coleção mais esperada do ano chegou! Pijamas macios, elegantes e perfeitos. Seja a primeira a conferir." },
+];
+
+const TIMING_TIPS = [
+  { dia: "Terça", hora: "10h", taxa: "38%", desc: "Pico de abertura" },
+  { dia: "Quarta", hora: "14h", taxa: "35%", desc: "Pós-almoço" },
+  { dia: "Quinta", hora: "10h", taxa: "36%", desc: "Pré-fim de semana" },
+  { dia: "Sexta", hora: "17h", taxa: "42%", desc: "Maior conversão" },
+];
 
 export function AutomacaoEmailInteligenteSection() {
-  const fluxosAutomacao = [
-    {
-      nome: "Carrinho Abandonado",
-      trigger: "Cliente deixa produto no carrinho por 2h",
-      emails: 3,
-      sequencia: "1º (2h) → Lembrete | 2º (24h) → Cupom 10% | 3º (48h) → Frete Grátis",
-      taxa: "28%",
-      receita: "R$ 125K/mês",
-      status: "Ativo"
-    },
-    {
-      nome: "Produto Visualizado",
-      trigger: "Cliente visualiza produto mas não compra",
-      emails: 2,
-      sequencia: "1º (4h) → Recomendação | 2º (24h) → Desconto Exclusivo",
-      taxa: "18%",
-      receita: "R$ 68K/mês",
-      status: "Ativo"
-    },
-    {
-      nome: "Pós-Compra Upsell",
-      trigger: "Cliente compra produto (imediatamente após)",
-      emails: 2,
-      sequencia: "1º (1h) → Obrigado + Cross-sell | 2º (24h) → Recomendação Personalizada",
-      taxa: "22%",
-      receita: "R$ 95K/mês",
-      status: "Ativo"
-    },
-    {
-      nome: "Cliente em Risco",
-      trigger: "Sem compra há 20+ dias",
-      emails: 3,
-      sequencia: "1º (imediato) → Cupom 15% | 2º (3 dias) → Novidades | 3º (7 dias) → VIP",
-      taxa: "32%",
-      receita: "R$ 142K/mês",
-      status: "Ativo"
-    },
-    {
-      nome: "Reengajamento",
-      trigger: "Não abriu email há 30 dias",
-      emails: 2,
-      sequencia: "1º (imediato) → Novidades | 2º (5 dias) → Exclusivo",
-      taxa: "15%",
-      receita: "R$ 52K/mês",
-      status: "Ativo"
-    },
-    {
-      nome: "VIP Exclusivo",
-      trigger: "Cliente LTV > R$ 2.000",
-      emails: 1,
-      sequencia: "1º (semanal) → Acesso Exclusivo a Novidades",
-      taxa: "45%",
-      receita: "R$ 187K/mês",
-      status: "Ativo"
-    }
-  ];
+  const [showForm, setShowForm] = useState(false);
+  const [subject, setSubject] = useState("");
+  const [body, setBody] = useState("");
+  const [schedule, setSchedule] = useState("");
 
-  const personalizacao = [
-    {
-      campo: "Nome",
-      exemplo: "Olá [Nome]!",
-      uso: "100%",
-      impacto: "+15% taxa de abertura"
-    },
-    {
-      campo: "Produto Visualizado",
-      exemplo: "Você deixou [Produto] no carrinho",
-      uso: "85%",
-      impacto: "+28% taxa de conversão"
-    },
-    {
-      campo: "Persona",
-      exemplo: "Especial para [Persona]",
-      uso: "92%",
-      impacto: "+22% taxa de clique"
-    },
-    {
-      campo: "Segmento",
-      exemplo: "Oferta para [Segmento]",
-      uso: "78%",
-      impacto: "+18% taxa de conversão"
-    },
-    {
-      campo: "LTV",
-      exemplo: "Cupom [Desconto] para VIPs",
-      uso: "88%",
-      impacto: "+35% taxa de conversão"
-    }
-  ];
+  const { data: automacoes = [], isLoading, refetch } = trpc.automations.listar.useQuery();
+  type Auto = (typeof automacoes)[number];
+  const emailAutos = automacoes.filter((a: Auto) => a.tipo === "email" || a.plataforma === "email");
 
-  const metricas = [
-    {
-      titulo: "Emails Enviados/Mês",
-      valor: "125.450",
-      descricao: "Automações ativas",
-      cor: "text-blue-600"
-    },
-    {
-      titulo: "Taxa de Abertura",
-      valor: "34.2%",
-      descricao: "Média de todos os fluxos",
-      cor: "text-green-600"
-    },
-    {
-      titulo: "Taxa de Clique",
-      valor: "8.7%",
-      descricao: "CTR médio",
-      cor: "text-purple-600"
-    },
-    {
-      titulo: "Receita Gerada",
-      valor: "R$ 669K",
-      descricao: "Mensal via automações",
-      cor: "text-emerald-600"
-    }
-  ];
-
-  const segmentosPersonalizacao = [
-    {
-      segmento: "Carol",
-      template: "Descontraído, emojis, linguagem casual",
-      assunto: "🎉 Carol, tá esperando o quê?",
-      cta: "Aproveita agora!"
-    },
-    {
-      segmento: "Renata",
-      template: "Elegante, profissional, destaque em qualidade",
-      assunto: "Renata, sua seleção exclusiva chegou",
-      cta: "Descobrir coleção"
-    },
-    {
-      segmento: "Vanessa",
-      template: "Acolhedor, prático, foco em benefícios",
-      assunto: "Vanessa, pensamos em você",
-      cta: "Ver recomendações"
-    },
-    {
-      segmento: "Luiza",
-      template: "Criativo, viral, tendências, urgência",
-      assunto: "⚡ Luiza, isso vai viralizar",
-      cta: "Ser a primeira"
-    }
-  ];
+  const criar = trpc.automations.criar.useMutation({
+    onSuccess: () => { refetch(); setShowForm(false); setSubject(""); setBody(""); setSchedule(""); },
+  });
+  const atualizar = trpc.automations.atualizar.useMutation({ onSuccess: () => refetch() });
+  const deletar = trpc.automations.deletar.useMutation({ onSuccess: () => refetch() });
 
   return (
     <div className="space-y-6">
-      {/* Overview Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {metricas.map((metrica, idx) => (
-          <Card key={idx} className="border-slate-200/50">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-slate-600">{metrica.titulo}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className={`text-3xl font-bold ${metrica.cor}`}>{metrica.valor}</div>
-              <p className="text-xs text-slate-500 mt-1">{metrica.descricao}</p>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Automação de Email</h2>
+          <p className="text-slate-500 text-sm mt-1">Fluxos automáticos que enviam o email certo, na hora certa.</p>
+        </div>
+        <Button style={{ backgroundColor: '#8B2635' }} className="text-white" onClick={() => setShowForm(v => !v)}>
+          <Plus className="w-4 h-4 mr-2" />
+          Nova Automação
+        </Button>
       </div>
 
-      {/* Fluxos de Automação */}
-      <Card className="border-slate-200/50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="w-5 h-5 text-blue-600" />
-            Fluxos de Automação de Email
+      {/* Form */}
+      {showForm && (
+        <Card className="border-0 shadow-sm border-l-4" style={{ borderLeftColor: '#8B2635' }}>
+          <CardContent className="pt-5 space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              {TEMPLATES.map(t => (
+                <button key={t.label} onClick={() => { setSubject(t.subject); setBody(t.body); }}
+                  className="p-2 text-xs border rounded-lg hover:bg-slate-50 text-left transition-colors">
+                  <p className="font-medium text-slate-700">{t.label}</p>
+                  <p className="text-slate-400 truncate">{t.subject}</p>
+                </button>
+              ))}
+            </div>
+            <Input placeholder="Assunto do email" value={subject} onChange={e => setSubject(e.target.value)} />
+            <Textarea placeholder="Corpo do email..." value={body} onChange={e => setBody(e.target.value)} rows={3} />
+            <div className="flex gap-3 flex-wrap">
+              <Input type="datetime-local" value={schedule} onChange={e => setSchedule(e.target.value)} className="flex-1" />
+              <Button style={{ backgroundColor: '#8B2635' }} className="text-white"
+                disabled={!subject || !body || criar.isPending}
+                onClick={() => criar.mutate({ nome: subject, tipo: "email", plataforma: "email", conteudo: body, agendamento: schedule })}>
+                {criar.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Send className="w-4 h-4 mr-2" />}
+                Criar
+              </Button>
+              <Button variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Real automations */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm font-medium text-slate-600">
+            {isLoading ? "Carregando..." : `${emailAutos.length} automação${emailAutos.length !== 1 ? 'ões' : ''} de email`}
+          </p>
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
+            <RefreshCw className="w-3.5 h-3.5 mr-1" />Atualizar
+          </Button>
+        </div>
+
+        {isLoading ? (
+          <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" style={{ color: '#8B2635' }} /></div>
+        ) : emailAutos.length === 0 ? (
+          <div className="text-center py-10 border-2 border-dashed border-slate-200 rounded-xl">
+            <Mail className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+            <p className="text-slate-500 text-sm">Nenhuma automação de email criada.</p>
+            <p className="text-xs text-slate-400 mt-1">Clique em "Nova Automação" para começar.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {emailAutos.map((a: Auto) => (
+              <Card key={a.id} className="border-0 shadow-sm">
+                <CardContent className="pt-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Mail className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                        <p className="font-medium text-slate-800 text-sm truncate">
+                          {a.nome ?? "Sem assunto"}
+                        </p>
+                        <Badge className={a.status === 'ativo' ? 'bg-green-100 text-green-700 border-0' : 'bg-yellow-100 text-yellow-700 border-0'}>
+                          {a.status === 'ativo' ? 'Ativo' : 'Pausado'}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-slate-400 ml-6">
+                        {a.conteudo?.slice(0, 80) ?? ""}...
+                      </p>
+                      {a.agendamento && (
+                        <p className="text-xs text-slate-400 ml-6 mt-1 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {new Date(a.agendamento).toLocaleString('pt-BR')}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex gap-1 flex-shrink-0">
+                      <Button size="sm" variant="outline"
+                        disabled={atualizar.isPending}
+                        onClick={() => atualizar.mutate({ id: a.id, status: a.status === 'ativo' ? 'pausado' : 'ativo' })}>
+                        {a.status === 'ativo' ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                      </Button>
+                      <Button size="sm" variant="outline" className="text-red-500 hover:text-red-700"
+                        disabled={deletar.isPending}
+                        onClick={() => deletar.mutate({ id: a.id })}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Timing guide */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Clock className="w-4 h-4 text-amber-500" />
+            Horários com Maior Taxa de Abertura
           </CardTitle>
-          <CardDescription>6 fluxos automáticos gerando R$ 669K/mês</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {fluxosAutomacao.map((fluxo, idx) => (
-              <div key={idx} className="border border-slate-200/50 rounded-lg p-4 hover:bg-slate-50/50 transition">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h4 className="font-semibold text-slate-900">{fluxo.nome}</h4>
-                    <p className="text-xs text-slate-500 mt-1">{fluxo.trigger}</p>
-                  </div>
-                  <Badge className="bg-green-100 text-green-700">{fluxo.status}</Badge>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-3 text-sm">
-                  <div>
-                    <p className="text-slate-500 text-xs">Emails</p>
-                    <p className="font-bold text-slate-900">{fluxo.emails}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Taxa Conversão</p>
-                    <p className="font-bold text-green-600">{fluxo.taxa}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Receita/Mês</p>
-                    <p className="font-bold text-green-600">{fluxo.receita}</p>
-                  </div>
-                  <div className="md:col-span-2">
-                    <p className="text-slate-500 text-xs">Sequência</p>
-                    <p className="font-bold text-slate-900 text-xs">{fluxo.sequencia}</p>
-                  </div>
-                </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {TIMING_TIPS.map((t, i) => (
+              <div key={i} className="bg-slate-50 rounded-xl p-3 text-center">
+                <p className="font-bold text-slate-800 text-sm">{t.dia} {t.hora}</p>
+                <p className="text-xs text-slate-500 mt-0.5">{t.desc}</p>
+                <p className="text-lg font-bold mt-1" style={{ color: '#8B2635' }}>{t.taxa}</p>
               </div>
             ))}
           </div>
         </CardContent>
       </Card>
 
-      {/* Personalização por Persona */}
-      <Card className="border-slate-200/50 bg-gradient-to-br from-purple-50 to-pink-50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-purple-600" />
+      {/* Persona personalization */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Users className="w-4 h-4 text-purple-500" />
             Personalização por Persona
           </CardTitle>
-          <CardDescription>Cada persona recebe mensagem customizada</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {segmentosPersonalizacao.map((seg, idx) => (
-              <div key={idx} className="border border-slate-200/50 rounded-lg p-4 bg-white">
-                <h4 className="font-semibold text-slate-900 mb-3">{seg.segmento}</h4>
-                <div className="space-y-2 text-sm">
-                  <div>
-                    <p className="text-slate-500 text-xs">Estilo</p>
-                    <p className="font-bold text-slate-900">{seg.template}</p>
-                  </div>
-                  <div className="bg-slate-50 rounded p-2">
-                    <p className="text-slate-500 text-xs">Assunto</p>
-                    <p className="font-bold text-slate-900 text-xs">{seg.assunto}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">CTA</p>
-                    <p className="font-bold text-blue-600">{seg.cta}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Campos de Personalização */}
-      <Card className="border-slate-200/50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Mail className="w-5 h-5 text-orange-600" />
-            Campos de Personalização Utilizados
-          </CardTitle>
-          <CardDescription>Dinâmica que aumenta engajamento</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {personalizacao.map((campo, idx) => (
-              <div key={idx} className="border border-slate-200/50 rounded-lg p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <h4 className="font-semibold text-slate-900">{campo.campo}</h4>
-                    <p className="text-xs text-slate-500 mt-1">Exemplo: {campo.exemplo}</p>
-                  </div>
-                  <Badge className="bg-orange-100 text-orange-700">{campo.uso}</Badge>
-                </div>
-                <div className="bg-green-50 rounded p-2">
-                  <p className="text-xs text-green-700 font-semibold">{campo.impacto}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Timeline de Envio */}
-      <Card className="border-slate-200/50 bg-gradient-to-br from-blue-50 to-cyan-50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-blue-600" />
-            Timing Otimizado de Envio
-          </CardTitle>
-          <CardDescription>Quando enviar para máxima abertura</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {[
-              { dia: "Terça-Feira", hora: "10:00 AM", taxa: "38%", motivo: "Pico de abertura" },
-              { dia: "Quarta-Feira", hora: "02:00 PM", taxa: "35%", motivo: "Pós-almoço" },
-              { dia: "Quinta-Feira", hora: "10:00 AM", taxa: "36%", motivo: "Preparação para fim de semana" },
-              { dia: "Sexta-Feira", hora: "05:00 PM", taxa: "42%", motivo: "Maior taxa de conversão" }
-            ].map((timing, idx) => (
-              <div key={idx} className="flex items-center justify-between p-3 border border-slate-200/50 rounded-lg bg-white">
-                <div>
-                  <p className="font-semibold text-slate-900">{timing.dia} às {timing.hora}</p>
-                  <p className="text-xs text-slate-500">{timing.motivo}</p>
+              { persona: "Carol",   estilo: "Descontraído, emojis, casual",        cta: "Aproveita agora!" },
+              { persona: "Renata",  estilo: "Elegante, profissional, qualidade",    cta: "Descobrir coleção" },
+              { persona: "Vanessa", estilo: "Acolhedor, prático, benefícios",       cta: "Ver recomendações" },
+              { persona: "Luiza",   estilo: "Criativo, viral, urgência",            cta: "Ser a primeira" },
+            ].map((p, i) => (
+              <div key={i} className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                  style={{ backgroundColor: ['#8B2635','#A63D4A','#6B7A3A','#3A5A6B'][i] }}>
+                  {p.persona[0]}
                 </div>
-                <Badge className="bg-blue-100 text-blue-700">{timing.taxa}</Badge>
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">{p.persona}</p>
+                  <p className="text-xs text-slate-500">{p.estilo}</p>
+                  <p className="text-xs font-medium mt-0.5" style={{ color: '#8B2635' }}>CTA: {p.cta}</p>
+                </div>
               </div>
             ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Benefícios */}
-      <Card className="border-slate-200/50 bg-gradient-to-br from-green-50 to-emerald-50">
-        <CardHeader>
-          <CardTitle className="text-slate-900">✅ Benefícios da Automação</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm text-slate-700">
-          <div className="flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-slate-900">R$ 669K/mês em Receita</p>
-              <p className="text-slate-600">6 fluxos automáticos gerando vendas 24/7</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-slate-900">34.2% Taxa de Abertura</p>
-              <p className="text-slate-600">Acima da média de mercado (20%)</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-slate-900">Personalização por Persona</p>
-              <p className="text-slate-600">Cada persona recebe mensagem customizada</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-slate-900">Sem Trabalho Manual</p>
-              <p className="text-slate-600">Tudo automático baseado em comportamento</p>
-            </div>
           </div>
         </CardContent>
       </Card>

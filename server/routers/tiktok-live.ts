@@ -122,9 +122,9 @@ Seja específico, use linguagem brasileira natural, inclua emojis TikTok, CTAs d
     const all = await db.select().from(tiktokLives).where(eq(tiktokLives.userId, ctx.user.id));
     return {
       total: all.length,
-      agendadas: all.filter(l => l.status === "agendada").length,
-      totalVendas: all.reduce((s, l) => s + (l.vendasReais ?? 0), 0),
-      totalReceita: all.reduce((s, l) => s + parseFloat(l.receitaGerada ?? "0"), 0).toFixed(2),
+      agendadas: all.filter((l: any) => l.status === "agendada").length,
+      totalVendas: all.reduce((s: any, l: any) => s + (l.vendasReais ?? 0), 0),
+      totalReceita: all.reduce((s: any, l: any) => s + parseFloat(l.receitaGerada ?? "0"), 0).toFixed(2),
     };
   }),
 });

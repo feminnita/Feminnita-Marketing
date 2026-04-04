@@ -10,6 +10,7 @@ import {
   renovarAccessToken,
   tokenExpirado,
 } from "../integrations/bling-oauth";
+import { getOAuthToken, saveOAuthToken } from "../db";
 
 export const blingOAuthRouter = router({
   /**
@@ -126,4 +127,39 @@ export const blingOAuthRouter = router({
         };
       }
     }),
+
+  /**
+   * Retorna status da conexão com Bling para o usuário logado
+   */
+  getStatus: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const token = await getOAuthToken(ctx.user.id, "bling");
+      if (!token || !token.isActive) {
+        return { conectado: false, expirado: false };
+      }
+      const expirado = token.expiresAt ? tokenExpirado(new Date(token.expiresAt)) : false;
+      return {
+        conectado: true,
+        expirado,
+        expiresAt: token.expiresAt,
+        scope: token.scope,
+      };
+    } catch {
+      return { conectado: false, expirado: false };
+    }
+  }),
+
+  /**
+   * Desconecta o Bling (marca token como inativo)
+   */
+  desconectar: protectedProcedure.mutation(async ({ ctx }) => {
+    const db = await (await import("../db")).getDb();
+    if (!db) throw new Error("Database not available");
+    const { oauthTokens } = await import("../../drizzle/schema");
+    const { eq, and } = await import("drizzle-orm");
+    await db.update(oauthTokens)
+      .set({ isActive: false })
+      .where(and(eq(oauthTokens.userId, ctx.user.id), eq(oauthTokens.plataforma, "bling")));
+    return { sucesso: true };
+  }),
 });

@@ -50,9 +50,9 @@ export function SegmentacaoClientesSection() {
   const { data: campanhas = [] } = trpc.campaigns.listar.useQuery(undefined, { refetchInterval: 60_000 });
 
   const todas = campanhas as any[];
-  const totalConversoes = todas.reduce((s, c) => s + (c.conversoes ?? 0), 0);
+  const totalConversoes = todas.reduce((s, c) => s + (Number(c.performance?.conversoes) || 0), 0);
   const porPlataforma = todas.reduce((acc, c) => {
-    acc[c.plataforma] = (acc[c.plataforma] || 0) + (c.conversoes ?? 0);
+    acc[c.plataforma] = (acc[c.plataforma] || 0) + (Number(c.performance?.conversoes) || 0);
     return acc;
   }, {} as Record<string, number>);
   const plataformasOrdenadas = Object.entries(porPlataforma)

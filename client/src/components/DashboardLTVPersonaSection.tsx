@@ -43,10 +43,10 @@ export function DashboardLTVPersonaSection() {
     const campDaPersona = todas.filter(c =>
       c.nome?.toLowerCase().includes(p.toLowerCase())
     );
-    const totalConv = campDaPersona.reduce((s, c) => s + (c.conversoes ?? 0), 0);
-    const roisValidos = campDaPersona.filter(c => parseFloat(c.roi ?? '0') > 0);
+    const totalConv = campDaPersona.reduce((s, c) => s + (Number(c.performance?.conversoes) || 0), 0);
+    const roisValidos = campDaPersona.filter(c => ( Number(c.performance?.roi) || 0) > 0);
     const roiMedio = roisValidos.length > 0
-      ? roisValidos.reduce((s, c) => s + parseFloat(c.roi ?? '0'), 0) / roisValidos.length
+      ? roisValidos.reduce((s, c) => s + ( Number(c.performance?.roi) || 0), 0) / roisValidos.length
       : 0;
     return { persona: p, campanhas: campDaPersona.length, conversoes: totalConv, roiMedio };
   }).filter(p => p.campanhas > 0);

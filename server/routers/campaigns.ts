@@ -68,7 +68,7 @@ export const campaignsRouter = router({
       .where(eq(campaigns.userId, ctx.user.id))
       .orderBy(desc(campaigns.createdAt));
 
-    return rows.map((c) => ({
+    return rows.map((c: any) => ({
       id: String(c.id),
       nome: c.nome,
       plataforma: c.plataforma,

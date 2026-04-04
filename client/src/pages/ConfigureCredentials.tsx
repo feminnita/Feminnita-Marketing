@@ -97,7 +97,7 @@ export default function ConfigureCredentials() {
               </CardHeader>
               <CardContent className="space-y-2">
                 {PLATFORMS.map((platform) => {
-                  const isConnected = credentials?.some((c) => c.platform === platform.id && c.isConnected);
+                  const isConnected = credentials?.some((c: any) => c.platform === platform.id && c.isConnected);
                   return (
                     <button
                       key={platform.id}
@@ -270,7 +270,7 @@ export default function ConfigureCredentials() {
           <div className="mt-8">
             <h2 className="text-xl font-bold text-slate-900 mb-4">Credenciais Configuradas</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {credentials.map((cred) => {
+              {credentials.map((cred: any) => {
                 const platform = PLATFORMS.find((p) => p.id === cred.platform);
                 return (
                   <Card key={cred.id} className={`border-2 ${platform?.color}`}>

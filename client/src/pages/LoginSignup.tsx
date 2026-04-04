@@ -39,7 +39,7 @@ export default function LoginSignup() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Feminnita</h1>
+          <h1 className="text-4xl font-bold mb-2" style={{ color: '#E8C99A' }}>Feminnita</h1>
           <p className="text-slate-400">Estratégia de Marketing Digital</p>
         </div>
 
@@ -116,7 +116,7 @@ export default function LoginSignup() {
               <Button
                 type="submit"
                 disabled={isPending}
-                className="w-full bg-pink-600 hover:bg-pink-700 text-white"
+                className="w-full bg-[#8B2635] hover:bg-[#6B1E28] text-white"
               >
                 {isPending ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Processando...</>
@@ -128,13 +128,13 @@ export default function LoginSignup() {
               {mode === "login" ? (
                 <>Não tem conta?{" "}
                   <button onClick={() => { setMode("signup"); setError(""); }}
-                    className="text-pink-500 hover:text-pink-400 font-medium">
+                    className="text-[#8B2635] hover:text-[#C4A882] font-medium">
                     Criar uma
                   </button></>
               ) : (
                 <>Já tem conta?{" "}
                   <button onClick={() => { setMode("login"); setError(""); }}
-                    className="text-pink-500 hover:text-pink-400 font-medium">
+                    className="text-[#8B2635] hover:text-[#C4A882] font-medium">
                     Entrar
                   </button></>
               )}

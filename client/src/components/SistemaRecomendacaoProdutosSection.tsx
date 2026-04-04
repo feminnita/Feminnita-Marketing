@@ -12,13 +12,13 @@ export default function SistemaRecomendacaoProdutosSection() {
   const { data: campanhas = [] } = trpc.campaigns.listar.useQuery(undefined, { refetchInterval: 60_000 });
 
   const todas = campanhas as any[];
-  const comConversao = todas.filter(c => (c.conversoes ?? 0) > 0);
-  const top5 = [...comConversao].sort((a, b) => (b.conversoes ?? 0) - (a.conversoes ?? 0)).slice(0, 5);
+  const comConversao = todas.filter(c => (Number(c.performance?.conversoes) || 0) > 0);
+  const top5 = [...comConversao].sort((a, b) => (Number(b.performance?.conversoes) || 0) - (Number(a.performance?.conversoes) || 0)).slice(0, 5);
 
-  const totalConversoes = todas.reduce((s, c) => s + (c.conversoes ?? 0), 0);
+  const totalConversoes = todas.reduce((s, c) => s + (Number(c.performance?.conversoes) || 0), 0);
   const totalCampanhas = todas.length;
   const porPlataforma = todas.reduce((acc, c) => {
-    acc[c.plataforma] = (acc[c.plataforma] || 0) + (c.conversoes ?? 0);
+    acc[c.plataforma] = (acc[c.plataforma] || 0) + (Number(c.performance?.conversoes) || 0);
     return acc;
   }, {} as Record<string, number>);
   const melhoresPlataformas = Object.entries(porPlataforma)
@@ -26,10 +26,10 @@ export default function SistemaRecomendacaoProdutosSection() {
     .slice(0, 3);
 
   const ctrMedio = (() => {
-    const valid = todas.filter(c => (c.impressoes ?? 0) > 0);
+    const valid = todas.filter(c => (Number(c.performance?.impressoes) || 0) > 0);
     if (valid.length === 0) return 0;
-    const totalImpressoes = valid.reduce((s, c) => s + (c.impressoes ?? 0), 0);
-    const totalCliques = valid.reduce((s, c) => s + (c.cliques ?? 0), 0);
+    const totalImpressoes = valid.reduce((s, c) => s + (Number(c.performance?.impressoes) || 0), 0);
+    const totalCliques = valid.reduce((s, c) => s + (Number(c.performance?.cliques) || 0), 0);
     return (totalCliques / totalImpressoes) * 100;
   })();
 
@@ -118,8 +118,8 @@ export default function SistemaRecomendacaoProdutosSection() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-green-700">{c.conversoes} conv.</p>
-                          <p className="text-xs text-slate-500">ROI {parseFloat(c.roi ?? "0").toFixed(0)}%</p>
+                          <p className="font-bold text-green-700">{c.performance?.conversoes} conv.</p>
+                          <p className="text-xs text-slate-500">ROI {(Number(c.performance?.roi) || 0).toFixed(0)}%</p>
                         </div>
                       </div>
                     ))}

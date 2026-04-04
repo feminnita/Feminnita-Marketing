@@ -251,6 +251,7 @@ export default function DropsPlannerSection() {
     });
   };
 
+  type Drop = (typeof drops)[number];
   // Group drops by month for timeline
   const dropsByMonth: Record<string, typeof drops> = {};
   for (const drop of drops) {
@@ -355,7 +356,7 @@ export default function DropsPlannerSection() {
             <div className="h-px flex-1 bg-slate-200" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {monthDrops.map(drop => (
+            {monthDrops.map((drop: Drop) => (
               <DropCard
                 key={drop.id}
                 drop={{

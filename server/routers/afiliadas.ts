@@ -123,7 +123,7 @@ export const afiliadasRouter = router({
         .where(eq(afiliadaVendas.userId, ctx.user.id))
         .orderBy(desc(afiliadaVendas.createdAt))
         .limit(100);
-      if (input.afiliadaId) return rows.filter(r => r.afiliadaId === input.afiliadaId);
+      if (input.afiliadaId) return rows.filter((r: any) => r.afiliadaId === input.afiliadaId);
       return rows;
     }),
 
@@ -134,9 +134,9 @@ export const afiliadasRouter = router({
     const vendas = await db.select().from(afiliadaVendas).where(eq(afiliadaVendas.userId, ctx.user.id));
     return {
       total: all.length,
-      ativas: all.filter(a => a.status === "ativa").length,
+      ativas: all.filter((a: any) => a.status === "ativa").length,
       totalVendas: vendas.length,
-      totalComissoes: vendas.reduce((s, v) => s + parseFloat(v.comissaoValor ?? "0"), 0).toFixed(2),
+      totalComissoes: vendas.reduce((s: any, v: any) => s + parseFloat(v.comissaoValor ?? "0"), 0).toFixed(2),
     };
   }),
 });

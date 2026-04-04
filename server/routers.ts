@@ -79,7 +79,7 @@ import { tiktokLiveRouter } from "./routers/tiktok-live";
 import { cuponsRouter } from "./routers/cupons";
 import { contentTemplatesRouter } from "./routers/content-templates";
 import { getDb } from "./db";
-import { influencers } from "../drizzle/schema";
+import { influencers, influencerPosts } from "../drizzle/schema";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -209,6 +209,174 @@ export const appRouter = router({
         return [];
       }
     }),
+
+    create: protectedProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        bio: z.string().optional(),
+        personality: z.string().optional(),
+        avatar: z.string().optional(),
+        instagramHandle: z.string().optional(),
+        tiktokHandle: z.string().optional(),
+        contentStyle: z.string().optional(),
+        targetAudience: z.string().optional(),
+        keywords: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        const { eq } = await import("drizzle-orm");
+        const result = await db.insert(influencers).values({
+          userId: ctx.user.id,
+          name: input.name,
+          bio: input.bio,
+          personality: input.personality,
+          avatar: input.avatar,
+          instagramHandle: input.instagramHandle,
+          tiktokHandle: input.tiktokHandle,
+          isActive: true,
+        });
+        const created = await db.select().from(influencers)
+          .where(eq(influencers.id, (result[0] as any).insertId)).limit(1);
+        return created[0];
+      }),
+
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().min(1).optional(),
+        bio: z.string().optional(),
+        personality: z.string().optional(),
+        avatar: z.string().optional(),
+        instagramHandle: z.string().optional(),
+        tiktokHandle: z.string().optional(),
+        isActive: z.boolean().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        const { eq, and } = await import("drizzle-orm");
+        const owned = await db.select({ id: influencers.id }).from(influencers)
+          .where(and(eq(influencers.id, input.id), eq(influencers.userId, ctx.user.id))).limit(1);
+        if (owned.length === 0) throw new Error("Influencer não encontrado");
+        const { id, ...updates } = input;
+        await db.update(influencers).set(updates).where(eq(influencers.id, id));
+        const updated = await db.select().from(influencers).where(eq(influencers.id, id)).limit(1);
+        return updated[0];
+      }),
+
+    upsertDefaults: protectedProcedure.mutation(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      const { eq } = await import("drizzle-orm");
+
+      const defaults = [
+        {
+          name: "Carol",
+          bio: "Carol é a influenciadora jovem e animada da Feminnita. Ama mostrar looks de pijama no dia a dia, reels divertidos e stories de rotina noturna. Seu tom é descontraído, próximo e cheio de energia.",
+          personality: "Jovem, animada, divertida, usa gírias, faz trends do TikTok, conecta com a geração Z e millennials jovens",
+          avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Carol&backgroundColor=ffdfbf",
+          instagramHandle: "@carol.feminnita",
+          tiktokHandle: "@carolfeminnita",
+        },
+        {
+          name: "Renata",
+          bio: "Renata é a influenciadora sofisticada da Feminnita. Foco em bem-estar, autocuidado e rotinas noturnas premium. Fala com mulheres que investem em qualidade de vida.",
+          personality: "Elegante, sofisticada, fala sobre autocuidado e bem-estar, tom calmo e inspirador, conecta com mulheres 30-45 anos",
+          avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Renata&backgroundColor=ffd5dc",
+          instagramHandle: "@renata.feminnita",
+          tiktokHandle: "@renatafeminnita",
+        },
+        {
+          name: "Vanessa",
+          bio: "Vanessa é a influenciadora prática da Feminnita. Foco em custo-benefício, kits família, pijamas infantis. Fala com mães que buscam qualidade a bom preço.",
+          personality: "Prática, objetiva, fala de custo-benefício e família, dicas de como montar kit, tom acolhedor e direto",
+          avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Vanessa&backgroundColor=c0e8d5",
+          instagramHandle: "@vanessa.feminnita",
+          tiktokHandle: "@vanessafeminnita",
+        },
+        {
+          name: "Luiza",
+          bio: "Luiza é a influenciadora fashionista da Feminnita. Foco em tendências, lançamentos e looks estilosos de pijama. Conecta com o público que quer estar na moda mesmo em casa.",
+          personality: "Fashionista, antenada em tendências, fala sobre lançamentos e drops, tom animado e visual, conecta com público 20-35 anos",
+          avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Luiza&backgroundColor=ffe4b5",
+          instagramHandle: "@luiza.feminnita",
+          tiktokHandle: "@luizafeminnita",
+        },
+      ];
+
+      const existing = await db.select({ name: influencers.name })
+        .from(influencers).where(eq(influencers.userId, ctx.user.id));
+      const existingNames = existing.map((i: { name: string }) => i.name);
+
+      let created = 0;
+      for (const inf of defaults) {
+        if (!existingNames.includes(inf.name)) {
+          await db.insert(influencers).values({ ...inf, userId: ctx.user.id, isActive: true });
+          created++;
+        }
+      }
+      return { created, message: `${created} influencers criadas` };
+    }),
+
+    getPosts: protectedProcedure
+      .input(z.object({
+        influencerId: z.number(),
+        status: z.enum(["draft", "scheduled", "published", "failed"]).optional(),
+        limit: z.number().default(20),
+      }))
+      .query(async ({ input, ctx }) => {
+        const db = await getDb();
+        if (!db) return [];
+        const { eq, and, desc } = await import("drizzle-orm");
+        const owned = await db.select({ id: influencers.id }).from(influencers)
+          .where(and(eq(influencers.id, input.influencerId), eq(influencers.userId, ctx.user.id))).limit(1);
+        if (owned.length === 0) return [];
+        const conditions = [eq(influencerPosts.influencerId, input.influencerId)];
+        if (input.status) {
+          conditions.push(eq(influencerPosts.status, input.status));
+        }
+        return db.select().from(influencerPosts)
+          .where(and(...conditions))
+          .orderBy(desc(influencerPosts.createdAt))
+          .limit(input.limit);
+      }),
+
+    deletePost: protectedProcedure
+      .input(z.object({ postId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const db = await getDb();
+        if (!db) throw new Error("Database not available");
+        const { eq, and } = await import("drizzle-orm");
+        const post = await db.select({ influencerId: influencerPosts.influencerId })
+          .from(influencerPosts).where(eq(influencerPosts.id, input.postId)).limit(1);
+        if (post.length === 0) throw new Error("Post não encontrado");
+        const owned = await db.select({ id: influencers.id }).from(influencers)
+          .where(and(eq(influencers.id, post[0].influencerId ?? 0), eq(influencers.userId, ctx.user.id))).limit(1);
+        if (owned.length === 0) throw new Error("Acesso negado");
+        await db.delete(influencerPosts).where(eq(influencerPosts.id, input.postId));
+        return { success: true };
+      }),
+
+    getAllPosts: protectedProcedure
+      .input(z.object({ limit: z.number().default(200) }))
+      .query(async ({ input, ctx }) => {
+        const db = await getDb();
+        if (!db) return [];
+        const { eq, desc, inArray } = await import("drizzle-orm");
+        const myInfluencers = await db.select({ id: influencers.id, name: influencers.name })
+          .from(influencers).where(eq(influencers.userId, ctx.user.id));
+        if (myInfluencers.length === 0) return [];
+        const ids = myInfluencers.map((i: { id: number; name: string }) => i.id);
+        const posts = await db.select().from(influencerPosts)
+          .where(inArray(influencerPosts.influencerId, ids))
+          .orderBy(desc(influencerPosts.createdAt))
+          .limit(input.limit);
+        return posts.map((post: typeof influencerPosts.$inferSelect) => ({
+          ...post,
+          influencerName: myInfluencers.find((i: { id: number; name: string }) => i.id === post.influencerId)?.name ?? '',
+        }));
+      }),
   }),
 
   // TODO: add feature routers here, e.g.

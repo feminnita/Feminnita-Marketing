@@ -423,7 +423,7 @@ export default function TiktokLivePage() {
 
       {/* Lives list */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {lives.map(live => (
+        {lives.map((live: any) => (
           <LiveCard
             key={live.id}
             live={live as LiveItem}

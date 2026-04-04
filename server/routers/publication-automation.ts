@@ -79,7 +79,7 @@ export const publicationAutomationRouter = router({
         success: true,
         data: {
           count: pendingPosts.length,
-          posts: pendingPosts.map((post) => ({
+          posts: pendingPosts.map((post: any) => ({
             id: post.id,
             contentId: post.contentId,
             scheduledAt: post.scheduledAt,
@@ -191,7 +191,7 @@ export const publicationAutomationRouter = router({
 
         return {
           success: true,
-          data: history.map((post) => ({
+          data: history.map((post: any) => ({
             id: post.id,
             contentId: post.contentId,
             status: post.status,
@@ -221,10 +221,10 @@ export const publicationAutomationRouter = router({
 
       const stats = {
         total: allPosts.length,
-        published: allPosts.filter((p) => p.status === "published").length,
-        failed: allPosts.filter((p) => p.status === "failed").length,
-        pending: allPosts.filter((p) => p.status === "pending").length,
-        cancelled: allPosts.filter((p) => p.status === "cancelled").length,
+        published: allPosts.filter((p: any) => p.status === "published").length,
+        failed: allPosts.filter((p: any) => p.status === "failed").length,
+        pending: allPosts.filter((p: any) => p.status === "pending").length,
+        cancelled: allPosts.filter((p: any) => p.status === "cancelled").length,
       };
 
       return {

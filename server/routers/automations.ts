@@ -82,7 +82,7 @@ export const automationsRouter = router({
       .where(eq(automations.userId, ctx.user.id))
       .orderBy(desc(automations.createdAt));
 
-    return rows.map((a) => ({
+    return rows.map((a: any) => ({
       id: String(a.id),
       nome: a.nome,
       tipo: a.tipo,

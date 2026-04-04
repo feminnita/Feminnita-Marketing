@@ -1,553 +1,249 @@
-import { Palette, TrendingUp, CheckCircle, Zap, Users, Target, ExternalLink, Copy, Eye } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Palette, ExternalLink, BookOpen, Image, FileText, Layout } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+
+const BRAND_KIT_ID = "kAGCCKIsNnA";
+
+const DESIGNS = [
+  {
+    id: "DAGPOx2wA_Y",
+    title: "CATÁLOGO FEMINNITA 2025",
+    pages: 98,
+    category: "Catálogo",
+    editUrl: "https://www.canva.com/d/wmVPPo8M2H1ropd",
+    icon: <BookOpen className="w-4 h-4" />,
+    color: "#8B2635",
+    bg: "#fdf0e8",
+  },
+  {
+    id: "DAGD4_ibkgI",
+    title: "CATÁLOGO FEMINNITA ATACADO",
+    pages: 49,
+    category: "Catálogo",
+    editUrl: "https://www.canva.com/d/7-4VpImG71m2XZm",
+    icon: <BookOpen className="w-4 h-4" />,
+    color: "#8B2635",
+    bg: "#fdf0e8",
+  },
+  {
+    id: "DAGzVbIq3xY",
+    title: "Identidade visual Feminnita",
+    pages: 4,
+    category: "Branding",
+    editUrl: "https://www.canva.com/d/fTDNe-XVZy9sCxz",
+    icon: <Palette className="w-4 h-4" />,
+    color: "#6B7A3A",
+    bg: "#f0f4e8",
+  },
+  {
+    id: "DAGE2cL0IHI",
+    title: "Stories",
+    pages: 117,
+    category: "Social",
+    editUrl: "https://www.canva.com/d/NkpE4O4rh14iGEc",
+    icon: <Image className="w-4 h-4" />,
+    color: "#3A5A6B",
+    bg: "#e8f0f4",
+  },
+  {
+    id: "DAGJFCpNrWQ",
+    title: "SITE VALORES FEMINNITA 2026",
+    pages: 4,
+    category: "Site",
+    editUrl: "https://www.canva.com/design/DAGJFCpNrWQ/edit",
+    icon: <Layout className="w-4 h-4" />,
+    color: "#A63D4A",
+    bg: "#fdecea",
+  },
+  {
+    id: "DAG0dn9qXU4",
+    title: "BANNER HEAD PC",
+    pages: 14,
+    category: "Site",
+    editUrl: "https://www.canva.com/design/DAG0dn9qXU4/edit",
+    icon: <Layout className="w-4 h-4" />,
+    color: "#A63D4A",
+    bg: "#fdecea",
+  },
+  {
+    id: "DAGF9CTgMMc",
+    title: "Banner site Desktop",
+    pages: 43,
+    category: "Site",
+    editUrl: "https://www.canva.com/design/DAGF9CTgMMc/edit",
+    icon: <Layout className="w-4 h-4" />,
+    color: "#A63D4A",
+    bg: "#fdecea",
+  },
+  {
+    id: "DAHFDTzrcxk",
+    title: "Porque escolher feminnita?",
+    pages: 6,
+    category: "Marketing",
+    editUrl: "https://www.canva.com/design/DAHFDTzrcxk/edit",
+    icon: <FileText className="w-4 h-4" />,
+    color: "#6B7A3A",
+    bg: "#f0f4e8",
+  },
+  {
+    id: "social_consumidor",
+    title: "Post Semana do Consumidor",
+    pages: null,
+    category: "Social",
+    editUrl: "https://www.canva.com/search?q=Feminnita",
+    icon: <Image className="w-4 h-4" />,
+    color: "#3A5A6B",
+    bg: "#e8f0f4",
+  },
+  {
+    id: "social_feedback",
+    title: "Story momento feedback",
+    pages: null,
+    category: "Social",
+    editUrl: "https://www.canva.com/search?q=Feminnita",
+    icon: <Image className="w-4 h-4" />,
+    color: "#3A5A6B",
+    bg: "#e8f0f4",
+  },
+];
+
+const CATEGORIES = ["Todos", "Catálogo", "Branding", "Social", "Site", "Marketing"];
+
+const CATEGORY_COLORS: Record<string, string> = {
+  Catálogo: "bg-rose-100 text-rose-700",
+  Branding: "bg-green-100 text-green-700",
+  Social: "bg-blue-100 text-blue-700",
+  Site: "bg-orange-100 text-orange-700",
+  Marketing: "bg-purple-100 text-purple-700",
+};
 
 export function IntegracaoCanvaSection() {
-  const metricas = [
-    {
-      titulo: "Templates Criados",
-      valor: "48",
-      descricao: "Designs prontos para usar",
-      cor: "text-purple-600"
-    },
-    {
-      titulo: "Tempo Economizado",
-      valor: "120h/mês",
-      descricao: "Design manual eliminado",
-      cor: "text-blue-600"
-    },
-    {
-      titulo: "Engajamento",
-      valor: "+34%",
-      descricao: "Posts com design profissional",
-      cor: "text-green-600"
-    },
-    {
-      titulo: "Receita Gerada",
-      valor: "R$ 180K",
-      descricao: "Via posts otimizados",
-      cor: "text-emerald-600"
-    }
-  ];
-
-  const templates = [
-    {
-      categoria: "Stories Instagram",
-      quantidade: 12,
-      personas: "Carol, Renata, Vanessa, Luiza",
-      performance: "18.5% engajamento",
-      tempo: "2 min por post",
-      impacto: "R$ 45K/mês"
-    },
-    {
-      categoria: "Posts Feed Instagram",
-      quantidade: 8,
-      personas: "Todas",
-      performance: "12.3% engajamento",
-      tempo: "3 min por post",
-      impacto: "R$ 38K/mês"
-    },
-    {
-      categoria: "Carrosséis",
-      quantidade: 6,
-      personas: "Carol, Luiza",
-      performance: "22.1% engajamento",
-      tempo: "5 min por post",
-      impacto: "R$ 52K/mês"
-    },
-    {
-      categoria: "Posts TikTok",
-      quantidade: 12,
-      personas: "Carol, Luiza",
-      performance: "28.5% engajamento",
-      tempo: "2 min por post",
-      impacto: "R$ 65K/mês"
-    },
-    {
-      categoria: "Banners Email",
-      quantidade: 6,
-      personas: "Todas",
-      performance: "15.2% CTR",
-      tempo: "1 min por post",
-      impacto: "R$ 25K/mês"
-    },
-    {
-      categoria: "Anúncios Pagos",
-      quantidade: 4,
-      personas: "Todas",
-      performance: "8.7% CTR",
-      tempo: "4 min por post",
-      impacto: "R$ 18K/mês"
-    }
-  ];
-
-  const fluxoTrabalho = [
-    {
-      etapa: "1. Selecionar Template",
-      descricao: "Escolher template por persona/rede",
-      tempo: "1 min",
-      ferramentas: "Canva"
-    },
-    {
-      etapa: "2. Adicionar Dados",
-      descricao: "Inserir dados de performance (CTR, conversão, ROI)",
-      tempo: "2 min",
-      ferramentas: "Dashboard Feminnita"
-    },
-    {
-      etapa: "3. Customizar Design",
-      descricao: "Ajustar cores, fontes, imagens",
-      tempo: "3 min",
-      ferramentas: "Canva Editor"
-    },
-    {
-      etapa: "4. Adicionar CTA",
-      descricao: "Incluir call-to-action com cupom/link",
-      tempo: "1 min",
-      ferramentas: "Canva"
-    },
-    {
-      etapa: "5. Exportar e Publicar",
-      descricao: "Baixar e publicar nas redes",
-      tempo: "2 min",
-      ferramentas: "Canva + Buffer"
-    }
-  ];
-
-  const templatesPorPersona = [
-    {
-      persona: "Carol",
-      estilo: "Descontraído, viral, emojis",
-      templates: 12,
-      melhorPerformance: "Stories TikTok (28.5%)",
-      exemplo: "Pijama Carol em trending",
-      receita: "R$ 65K/mês"
-    },
-    {
-      persona: "Renata",
-      estilo: "Premium, elegante, sofisticado",
-      templates: 10,
-      melhorPerformance: "Carrosséis (22.1%)",
-      exemplo: "Coleção Premium",
-      receita: "R$ 48K/mês"
-    },
-    {
-      persona: "Vanessa",
-      estilo: "Prático, funcional, acessível",
-      templates: 8,
-      melhorPerformance: "Posts Feed (12.3%)",
-      exemplo: "Combo Econômico",
-      receita: "R$ 35K/mês"
-    },
-    {
-      persona: "Luiza",
-      estilo: "Criativo, tendências, influência",
-      templates: 18,
-      melhorPerformance: "Carrosséis (22.1%)",
-      exemplo: "Edição Limitada",
-      receita: "R$ 72K/mês"
-    }
-  ];
-
-  const integracoes = [
-    {
-      integracao: "Buffer",
-      funcao: "Agendar posts nas redes",
-      beneficio: "Publicar automaticamente",
-      status: "Ativo"
-    },
-    {
-      integracao: "Zapier",
-      funcao: "Conectar com CRM",
-      beneficio: "Sincronizar dados de clientes",
-      status: "Ativo"
-    },
-    {
-      integracao: "Google Analytics",
-      funcao: "Rastrear performance",
-      beneficio: "Medir ROI de cada post",
-      status: "Ativo"
-    },
-    {
-      integracao: "Mailchimp",
-      funcao: "Enviar banners por email",
-      beneficio: "Campanhas integradas",
-      status: "Ativo"
-    }
-  ];
-
-  const metricsTemplate = [
-    {
-      template: "Story Carol",
-      impressoes: "125K",
-      cliques: "18.5%",
-      conversoes: "2.8%",
-      roi: "12.5x",
-      receita: "R$ 8.5K"
-    },
-    {
-      template: "Carrossel Renata",
-      impressoes: "95K",
-      cliques: "22.1%",
-      conversoes: "3.5%",
-      roi: "14.2x",
-      receita: "R$ 9.2K"
-    },
-    {
-      template: "Post Vanessa",
-      impressoes: "45K",
-      cliques: "12.3%",
-      conversoes: "1.8%",
-      roi: "8.5x",
-      receita: "R$ 3.8K"
-    },
-    {
-      template: "TikTok Luiza",
-      impressoes: "280K",
-      cliques: "28.5%",
-      conversoes: "4.2%",
-      roi: "16.8x",
-      receita: "R$ 15.2K"
-    }
-  ];
-
-  const beneficios = [
-    {
-      beneficio: "Designs Profissionais",
-      descricao: "Templates prontos com dados de performance",
-      impacto: "+34% engajamento"
-    },
-    {
-      beneficio: "Economia de Tempo",
-      descricao: "120h/mês economizadas em design",
-      impacto: "R$ 12K/mês em custos"
-    },
-    {
-      beneficio: "Consistência Visual",
-      descricao: "Todos os posts seguem brand guidelines",
-      impacto: "+18% reconhecimento"
-    },
-    {
-      beneficio: "ROI Otimizado",
-      descricao: "Dados de performance integrados",
-      impacto: "+R$ 180K/mês"
-    }
-  ];
-
-  const handleOpenCanva = (categoria: string) => {
-    window.open(`https://www.canva.com/search?q=${encodeURIComponent(categoria)}`, '_blank');
-    toast.success(`Abrindo templates de ${categoria} no Canva`);
-  };
-
-  const handleCopyCategory = (categoria: string) => {
-    navigator.clipboard.writeText(categoria);
-    toast.success(`Categoria copiada: ${categoria}`);
-  };
-
-  const handleViewDetails = (categoria: string, quantidade: number) => {
-    toast.info(`${quantidade} templates disponíveis para ${categoria}`);
-  };
-
   return (
     <div className="space-y-6">
-      {/* Overview Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {metricas.map((metrica, idx) => (
-          <Card key={idx} className="border-slate-200/50">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-slate-600">{metrica.titulo}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className={`text-3xl font-bold ${metrica.cor}`}>{metrica.valor}</div>
-              <p className="text-xs text-slate-500 mt-1">{metrica.descricao}</p>
+      <div>
+        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Canva — Designs Feminnita</h2>
+        <p className="text-slate-500 text-sm mt-1">
+          Seus designs reais no Canva. Clique em qualquer card para editar diretamente.
+        </p>
+      </div>
+
+      {/* Brand kit info */}
+      <Card className="border-0 shadow-sm" style={{ backgroundColor: '#fdf0e8' }}>
+        <CardContent className="pt-4 pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#8B2635' }}>
+                <Palette className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="font-semibold text-slate-800">Brand Kit Feminnita</p>
+                <p className="text-xs text-slate-500 font-mono mt-0.5">{BRAND_KIT_ID}</p>
+              </div>
+            </div>
+            <a
+              href={`https://www.canva.com/brand/kits/${BRAND_KIT_ID}`}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg"
+              style={{ color: '#8B2635', backgroundColor: 'rgba(139,38,53,0.08)' }}
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              Abrir brand kit
+            </a>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: "Designs", value: "25+" },
+          { label: "Páginas totais", value: "330+" },
+          { label: "Categorias", value: String(CATEGORIES.length - 1) },
+        ].map(({ label, value }) => (
+          <Card key={label} className="border-0 shadow-sm">
+            <CardContent className="pt-4 pb-4 text-center">
+              <p className="text-2xl font-bold" style={{ color: '#8B2635' }}>{value}</p>
+              <p className="text-xs text-slate-500 mt-0.5">{label}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Templates por Categoria */}
-      <Card className="border-slate-200/50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Palette className="w-5 h-5 text-purple-600" />
-            48 Templates Canva Prontos
+      {/* Design grid */}
+      <div>
+        <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">Seus Designs</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {DESIGNS.map((d) => (
+            <a
+              key={d.id}
+              href={d.editUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="block group"
+            >
+              <Card className="border-0 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div
+                        className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
+                        style={{ backgroundColor: d.bg, color: d.color }}
+                      >
+                        {d.icon}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-slate-800 text-sm leading-tight truncate group-hover:underline">
+                          {d.title}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                          <Badge className={`text-xs ${CATEGORY_COLORS[d.category] ?? 'bg-slate-100 text-slate-600'}`}>
+                            {d.category}
+                          </Badge>
+                          {d.pages && (
+                            <span className="text-xs text-slate-400">{d.pages} páginas</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <ExternalLink className="w-4 h-4 text-slate-300 group-hover:text-slate-500 flex-shrink-0 mt-1 transition-colors" />
+                  </div>
+                </CardContent>
+              </Card>
+            </a>
+          ))}
+        </div>
+      </div>
+
+      {/* Quick actions */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Palette className="w-4 h-4" style={{ color: '#8B2635' }} />
+            Atalhos rápidos
           </CardTitle>
-          <CardDescription>Designs otimizados com dados de performance</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {templates.map((temp, idx) => (
-              <div key={idx} className="border border-slate-200/50 rounded-lg p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h4 className="font-semibold text-slate-900">{temp.categoria}</h4>
-                    <Badge className="bg-purple-100 text-purple-700 mt-1">{temp.quantidade} templates</Badge>
-                  </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {[
+              { label: "Todos os designs", url: "https://www.canva.com/your-projects/", desc: "Ver biblioteca completa" },
+              { label: "Criar novo design", url: "https://www.canva.com/create/", desc: "Começar do zero" },
+              { label: "Buscar Feminnita", url: "https://www.canva.com/search?q=Feminnita", desc: "Buscar por nome" },
+            ].map(({ label, url, desc }) => (
+              <a
+                key={label}
+                href={url}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors"
+              >
+                <ExternalLink className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#8B2635' }} />
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">{label}</p>
+                  <p className="text-xs text-slate-500">{desc}</p>
                 </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm mb-4">
-                  <div>
-                    <p className="text-slate-500 text-xs">Personas</p>
-                    <p className="font-bold text-slate-900 text-xs">{temp.personas}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Performance</p>
-                    <p className="font-bold text-green-600">{temp.performance}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Tempo/Post</p>
-                    <p className="font-bold text-slate-900">{temp.tempo}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Impacto</p>
-                    <p className="font-bold text-green-600">{temp.impacto}</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-2 flex-wrap">
-                  <Button
-                    size="sm"
-                    variant="default"
-                    onClick={() => handleOpenCanva(temp.categoria)}
-                    className="gap-2"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    Abrir no Canva
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleCopyCategory(temp.categoria)}
-                    className="gap-2"
-                  >
-                    <Copy className="w-4 h-4" />
-                    Copiar
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleViewDetails(temp.categoria, temp.quantidade)}
-                    className="gap-2"
-                  >
-                    <Eye className="w-4 h-4" />
-                    Detalhes
-                  </Button>
-                </div>
-              </div>
+              </a>
             ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Fluxo de Trabalho */}
-      <Card className="border-slate-200/50 bg-gradient-to-br from-blue-50 to-cyan-50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="w-5 h-5 text-blue-600" />
-            Fluxo de Trabalho (9 Minutos)
-          </CardTitle>
-          <CardDescription>Do template ao post publicado</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {fluxoTrabalho.map((fluxo, idx) => (
-              <div key={idx} className="border border-slate-200/50 rounded-lg p-4 bg-white">
-                <div className="flex items-start justify-between mb-2">
-                  <h4 className="font-semibold text-slate-900">{fluxo.etapa}</h4>
-                  <Badge className="bg-blue-100 text-blue-700">{fluxo.tempo}</Badge>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <p className="text-slate-500 text-xs">Descrição</p>
-                    <p className="font-bold text-slate-900">{fluxo.descricao}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Ferramentas</p>
-                    <p className="font-bold text-slate-900">{fluxo.ferramentas}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Templates por Persona */}
-      <Card className="border-slate-200/50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-pink-600" />
-            Templates Customizados por Persona
-          </CardTitle>
-          <CardDescription>Cada persona tem seu próprio estilo</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {templatesPorPersona.map((pers, idx) => (
-              <div key={idx} className="border border-slate-200/50 rounded-lg p-4">
-                <h4 className="font-semibold text-slate-900 mb-3">{pers.persona}</h4>
-                <div className="space-y-2 text-sm">
-                  <div>
-                    <p className="text-slate-500 text-xs">Estilo</p>
-                    <p className="font-bold text-slate-900">{pers.estilo}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Templates</p>
-                    <p className="font-bold text-slate-900">{pers.templates}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Melhor Performance</p>
-                    <p className="font-bold text-green-600 text-xs">{pers.melhorPerformance}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Exemplo</p>
-                    <p className="font-bold text-slate-900 text-xs">{pers.exemplo}</p>
-                  </div>
-                  <div className="bg-green-50 rounded p-2">
-                    <p className="text-slate-500 text-xs">Receita/Mês</p>
-                    <p className="font-bold text-green-600">{pers.receita}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Integrações */}
-      <Card className="border-slate-200/50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Target className="w-5 h-5 text-orange-600" />
-            4 Integrações Ativas
-          </CardTitle>
-          <CardDescription>Canva conectado com ferramentas essenciais</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {integracoes.map((integ, idx) => (
-              <div key={idx} className="border border-slate-200/50 rounded-lg p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <h4 className="font-semibold text-slate-900">{integ.integracao}</h4>
-                  <Badge className="bg-green-100 text-green-700">{integ.status}</Badge>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <p className="text-slate-500 text-xs">Função</p>
-                    <p className="font-bold text-slate-900 text-xs">{integ.funcao}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Benefício</p>
-                    <p className="font-bold text-green-600 text-xs">{integ.beneficio}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Performance de Templates */}
-      <Card className="border-slate-200/50 bg-gradient-to-br from-green-50 to-emerald-50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-green-600" />
-            Performance dos Templates
-          </CardTitle>
-          <CardDescription>Dados de 4 templates principais</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {metricsTemplate.map((met, idx) => (
-              <div key={idx} className="border border-slate-200/50 rounded-lg p-4 bg-white">
-                <h4 className="font-semibold text-slate-900 mb-3">{met.template}</h4>
-
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
-                  <div>
-                    <p className="text-slate-500 text-xs">Impressões</p>
-                    <p className="font-bold text-slate-900">{met.impressoes}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Cliques</p>
-                    <p className="font-bold text-purple-600">{met.cliques}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Conversões</p>
-                    <p className="font-bold text-green-600">{met.conversoes}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">ROI</p>
-                    <p className="font-bold text-green-600">{met.roi}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Receita</p>
-                    <p className="font-bold text-green-600">{met.receita}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Benefícios */}
-      <Card className="border-slate-200/50">
-        <CardHeader>
-          <CardTitle className="text-slate-900">✅ 4 Principais Benefícios</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {beneficios.map((ben, idx) => (
-              <div key={idx} className="border border-slate-200/50 rounded-lg p-4">
-                <div className="flex items-start gap-3 mb-2">
-                  <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                  <h4 className="font-semibold text-slate-900">{ben.beneficio}</h4>
-                </div>
-                <p className="text-sm text-slate-600 mb-2">{ben.descricao}</p>
-                <p className="text-sm font-bold text-green-600">→ {ben.impacto}</p>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Recomendação */}
-      <Card className="border-slate-200/50 bg-gradient-to-br from-purple-50 to-pink-50">
-        <CardHeader>
-          <CardTitle className="text-slate-900">🎨 Como Começar</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm text-slate-700">
-          <div className="flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-slate-900">1. Acessar Canva</p>
-              <p className="text-slate-600">Abrir canva.com e fazer login</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-slate-900">2. Selecionar Template</p>
-              <p className="text-slate-600">Escolher categoria (Stories, Posts, Carrosséis, etc)</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-slate-900">3. Adicionar Dados</p>
-              <p className="text-slate-600">Inserir informações de performance do dashboard</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-slate-900">4. Publicar</p>
-              <p className="text-slate-600">Exportar e agendar nas redes via Buffer</p>
-            </div>
           </div>
         </CardContent>
       </Card>

@@ -176,7 +176,7 @@ Responda em JSON com este formato:
         .from(influencers)
         .where(and(eq(influencers.userId, ctx.user.id), eq(influencers.isActive, true)));
 
-      return rows.map((inf) => ({
+      return rows.map((inf: any) => ({
         id: inf.id,
         name: inf.name,
         persona: inf.personality || inf.name,

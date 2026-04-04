@@ -56,7 +56,7 @@ export const webhooksRouter = router({
       .from(webhooks)
       .where(eq(webhooks.userId, ctx.user.id));
 
-    return result.map((w) => ({
+    return result.map((w: any) => ({
       id: w.id,
       plataforma: w.plataforma,
       webhookUrl: w.webhookUrl,
@@ -118,10 +118,10 @@ export const webhooksRouter = router({
         .where(eq(webhookEvents.userId, ctx.user.id));
 
       const filtered = input.webhookId
-        ? rows.filter((e) => e.webhookId === input.webhookId)
+        ? rows.filter((e: any) => e.webhookId === input.webhookId)
         : rows;
 
-      return filtered.map((e) => ({
+      return filtered.map((e: any) => ({
         id: e.id,
         webhookId: e.webhookId,
         plataforma: e.plataforma,

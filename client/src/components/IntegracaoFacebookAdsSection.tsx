@@ -19,13 +19,13 @@ export function IntegracaoFacebookAdsSection() {
   );
   const ativas = metaCampanhas.filter(c => c.status === 'ativa');
 
-  const totalImpressoes = metaCampanhas.reduce((s, c) => s + (c.impressoes ?? 0), 0);
-  const totalCliques = metaCampanhas.reduce((s, c) => s + (c.cliques ?? 0), 0);
-  const totalConversoes = metaCampanhas.reduce((s, c) => s + (c.conversoes ?? 0), 0);
+  const totalImpressoes = metaCampanhas.reduce((s, c) => s + (Number(c.performance?.impressoes) || 0), 0);
+  const totalCliques = metaCampanhas.reduce((s, c) => s + (Number(c.performance?.cliques) || 0), 0);
+  const totalConversoes = metaCampanhas.reduce((s, c) => s + (Number(c.performance?.conversoes) || 0), 0);
   const totalOrcamento = metaCampanhas.reduce((s, c) => s + parseFloat(c.orcamento ?? '0'), 0);
-  const roisValidos = metaCampanhas.filter(c => parseFloat(c.roi ?? '0') > 0);
+  const roisValidos = metaCampanhas.filter(c => ( Number(c.performance?.roi) || 0) > 0);
   const roiMedio = roisValidos.length > 0
-    ? roisValidos.reduce((s, c) => s + parseFloat(c.roi ?? '0'), 0) / roisValidos.length
+    ? roisValidos.reduce((s, c) => s + ( Number(c.performance?.roi) || 0), 0) / roisValidos.length
     : 0;
 
   const isConnected = tokenStatus?.connected === true;
@@ -145,19 +145,19 @@ export function IntegracaoFacebookAdsSection() {
                     <div className="grid grid-cols-4 gap-2 text-xs">
                       <div>
                         <p className="text-slate-500">Impressões</p>
-                        <p className="font-bold">{(c.impressoes ?? 0).toLocaleString('pt-BR')}</p>
+                        <p className="font-bold">{(Number(c.performance?.impressoes) || 0).toLocaleString('pt-BR')}</p>
                       </div>
                       <div>
                         <p className="text-slate-500">Cliques</p>
-                        <p className="font-bold">{(c.cliques ?? 0).toLocaleString('pt-BR')}</p>
+                        <p className="font-bold">{(Number(c.performance?.cliques) || 0).toLocaleString('pt-BR')}</p>
                       </div>
                       <div>
                         <p className="text-slate-500">Conversões</p>
-                        <p className="font-bold text-green-700">{(c.conversoes ?? 0).toLocaleString('pt-BR')}</p>
+                        <p className="font-bold text-green-700">{(Number(c.performance?.conversoes) || 0).toLocaleString('pt-BR')}</p>
                       </div>
                       <div>
                         <p className="text-slate-500">ROI</p>
-                        <p className="font-bold text-purple-700">{parseFloat(c.roi ?? '0').toFixed(0)}%</p>
+                        <p className="font-bold text-purple-700">{( Number(c.performance?.roi) || 0).toFixed(0)}%</p>
                       </div>
                     </div>
                   </div>

@@ -10,30 +10,32 @@ export default function DashboardUnificadoSection() {
   const { data: campanhas = [], isLoading: loadingCampanhas } = trpc.campaigns.listar.useQuery(undefined, {
     refetchInterval: 60_000,
   });
+  type Camp = (typeof campanhas)[number];
   const { data: alertasData } = trpc.smartAlerts.listActiveAlerts.useQuery({}, {
     refetchInterval: 60_000,
   });
+  type Alerta = NonNullable<typeof alertasData>['alerts'][number];
   const alertas = alertasData?.alerts ?? [];
 
-  const ativas = campanhas.filter(c => c.status === 'ativa');
-  const pausadas = campanhas.filter(c => c.status === 'pausada');
-  const totalConversoes = campanhas.reduce((s, c) => s + (Number(c.performance.conversoes) || 0), 0);
-  const totalOrcamento = campanhas.reduce((s, c) => s + (Number(c.orcamento) || 0), 0);
+  const ativas = campanhas.filter((c: Camp) => c.status === 'ativa');
+  const pausadas = campanhas.filter((c: Camp) => c.status === 'pausada');
+  const totalConversoes = campanhas.reduce((s: number, c: Camp) => s + (Number(c.performance.conversoes) || 0), 0);
+  const totalOrcamento = campanhas.reduce((s: number, c: Camp) => s + (Number(c.orcamento) || 0), 0);
   const avgROI = campanhas.length > 0
-    ? campanhas.reduce((s, c) => s + (Number(c.performance.roi) || 0), 0) / campanhas.length
+    ? campanhas.reduce((s: number, c: Camp) => s + (Number(c.performance.roi) || 0), 0) / campanhas.length
     : 0;
   const avgCTR = campanhas.length > 0
-    ? campanhas.reduce((s, c) => s + (c.performance.impressoes > 0 ? c.performance.cliques / c.performance.impressoes * 100 : 0), 0) / campanhas.length
+    ? campanhas.reduce((s: number, c: Camp) => s + (c.performance.impressoes > 0 ? c.performance.cliques / c.performance.impressoes * 100 : 0), 0) / campanhas.length
     : 0;
 
   // Top campaigns by conversoes
   const topCampanhas = [...campanhas]
-    .sort((a, b) => (Number(b.performance.conversoes) || 0) - (Number(a.performance.conversoes) || 0))
+    .sort((a: Camp, b: Camp) => (Number(b.performance.conversoes) || 0) - (Number(a.performance.conversoes) || 0))
     .slice(0, 4);
 
   // Performance by platform
   const porPlataforma: Record<string, { conversoes: number; roi: number; count: number }> = {};
-  campanhas.forEach(c => {
+  campanhas.forEach((c: Camp) => {
     const plat = c.plataforma || 'outros';
     if (!porPlataforma[plat]) porPlataforma[plat] = { conversoes: 0, roi: 0, count: 0 };
     porPlataforma[plat].conversoes += Number(c.performance.conversoes) || 0;
@@ -125,7 +127,7 @@ export default function DashboardUnificadoSection() {
               <p className="text-slate-500 text-sm">Nenhum alerta ativo no momento.</p>
             </div>
           ) : (
-            alertas.slice(0, 4).map((alerta, idx) => (
+            alertas.slice(0, 4).map((alerta: Alerta, idx: number) => (
               <div key={idx} className={`border-l-4 p-4 rounded ${
                 alerta.severity === 'info' ? 'border-green-500 bg-green-50' :
                 alerta.severity === 'warning' ? 'border-yellow-500 bg-yellow-50' :

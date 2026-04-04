@@ -250,7 +250,7 @@ export const postSchedulerRouter = router({
           .orderBy(desc(influencerPosts.scheduledAt))
           .limit(20);
 
-        const posts = rows.map((p) => ({
+        const posts = rows.map((p: any) => ({
           id: String(p.id),
           influencerId: p.influencerId,
           platform: p.platform,

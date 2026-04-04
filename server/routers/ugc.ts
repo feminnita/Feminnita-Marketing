@@ -14,7 +14,7 @@ export const ugcRouter = router({
         .where(eq(ugcSubmissions.userId, ctx.user.id))
         .orderBy(desc(ugcSubmissions.createdAt))
         .limit(200);
-      if (input.status) return rows.filter(r => r.status === input.status);
+      if (input.status) return rows.filter((r: any) => r.status === input.status);
       return rows;
     }),
 
@@ -91,9 +91,9 @@ export const ugcRouter = router({
     const all = await db.select().from(ugcSubmissions).where(eq(ugcSubmissions.userId, ctx.user.id));
     return {
       total: all.length,
-      pendentes: all.filter(u => u.status === "pendente").length,
-      aprovados: all.filter(u => u.status === "aprovado").length,
-      republicados: all.filter(u => u.status === "republicado").length,
+      pendentes: all.filter((u: any) => u.status === "pendente").length,
+      aprovados: all.filter((u: any) => u.status === "aprovado").length,
+      republicados: all.filter((u: any) => u.status === "republicado").length,
     };
   }),
 });

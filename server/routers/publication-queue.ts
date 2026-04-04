@@ -94,7 +94,7 @@ export const publicationQueueRouter = router({
       .where(inArray(publicationQueueJobs.postId, myPostIds));
 
     const now = new Date();
-    const mapped = allActive.map((j) => ({
+    const mapped = allActive.map((j: any) => ({
       jobId: j.id,
       postId: j.postId,
       accountId: j.accountId,
@@ -107,9 +107,9 @@ export const publicationQueueRouter = router({
 
     return {
       totalJobs: mapped.length,
-      readyToPublish: mapped.filter((j) => j.status === "ready").length,
-      waiting: mapped.filter((j) => j.status === "waiting").length,
-      failed: mapped.filter((j) => j.status === "failed").length,
+      readyToPublish: mapped.filter((j: any) => j.status === "ready").length,
+      waiting: mapped.filter((j: any) => j.status === "waiting").length,
+      failed: mapped.filter((j: any) => j.status === "failed").length,
       jobs: mapped,
     };
   }),

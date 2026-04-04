@@ -212,7 +212,7 @@ export default function InfluencerProfilePage() {
                   </CardContent>
                 </Card>
               ) : (
-                posts.map((post) => (
+                posts.map((post: any) => (
                   <Card key={post.id} className="hover:shadow-lg transition-shadow">
                     <CardContent className="pt-6">
                       {/* Post Header */}
@@ -257,7 +257,7 @@ export default function InfluencerProfilePage() {
 
                         {post.hashtags && post.hashtags.length > 0 && (
                           <div className="flex flex-wrap gap-2 mt-3">
-                            {post.hashtags.map((tag, idx) => (
+                            {post.hashtags.map((tag: any, idx: any) => (
                               <span key={idx} className="text-sm text-blue-600 hover:underline cursor-pointer">
                                 #{tag}
                               </span>

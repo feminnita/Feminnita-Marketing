@@ -1,373 +1,229 @@
-import { AlertCircle, CheckCircle, Pause, Play, Settings, TrendingDown, TrendingUp, Zap } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { trpc } from "@/lib/trpc";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  CheckCircle2, AlertCircle, Loader2, Package, ShoppingCart,
+  Users, BarChart3, Link2, LogOut, RefreshCw, Zap
+} from "lucide-react";
+
+const SYNC_ACTIONS = [
+  { key: "produtos",  label: "Produtos",  icon: <Package className="w-4 h-4" />,      desc: "Catálogo e preços" },
+  { key: "pedidos",   label: "Pedidos",   icon: <ShoppingCart className="w-4 h-4" />,  desc: "Histórico de vendas" },
+  { key: "contatos",  label: "Clientes",  icon: <Users className="w-4 h-4" />,         desc: "Base de contatos" },
+  { key: "estoque",   label: "Estoque",   icon: <BarChart3 className="w-4 h-4" />,     desc: "Quantidades disponíveis" },
+] as const;
 
 export function AutomacaoBlingSection() {
-  const produtos = [
-    {
-      id: 1,
-      nome: "Pijama Carol Rosa",
-      sku: "CAROL-ROSA-P",
-      estoque: 0,
-      minimo: 1,
-      status: "Pausado",
-      campanhas: "Meta Ads, Google Ads",
-      economia: "R$ 2.400/mês"
-    },
-    {
-      id: 2,
-      nome: "Pijama Renata Azul",
-      sku: "RENATA-AZUL-M",
-      estoque: 15,
-      minimo: 1,
-      status: "Ativo",
-      campanhas: "Meta Ads, Google Ads",
-      economia: "—"
-    },
-    {
-      id: 3,
-      nome: "Robe Vanessa Branco",
-      sku: "VANESSA-BRANCO-G",
-      estoque: 0,
-      minimo: 1,
-      status: "Pausado",
-      campanhas: "Meta Ads, Google Ads",
-      economia: "R$ 1.800/mês"
-    },
-    {
-      id: 4,
-      nome: "Pijama Luiza Roxo",
-      sku: "LUIZA-ROXO-P",
-      estoque: 8,
-      minimo: 1,
-      status: "Ativo",
-      campanhas: "Meta Ads, Google Ads",
-      economia: "—"
-    },
-    {
-      id: 5,
-      nome: "Pijama Carol Azul",
-      sku: "CAROL-AZUL-M",
-      estoque: 0,
-      minimo: 1,
-      status: "Pausado",
-      campanhas: "Meta Ads, Google Ads",
-      economia: "R$ 1.200/mês"
-    }
-  ];
+  const [syncResults, setSyncResults] = useState<Record<string, any>>({});
+  const utils = trpc.useUtils();
 
-  const historico = [
-    {
-      data: "01/02/2026 14:30",
-      produto: "Pijama Carol Rosa",
-      acao: "Pausou campanhas",
-      motivo: "Estoque zerou",
-      economia: "R$ 2.400/mês"
-    },
-    {
-      data: "31/01/2026 09:15",
-      produto: "Pijama Renata Azul",
-      acao: "Reativou campanhas",
-      motivo: "Reabastecimento recebido",
-      economia: "Retomou vendas"
-    },
-    {
-      data: "30/01/2026 16:45",
-      produto: "Robe Vanessa Branco",
-      acao: "Pausou campanhas",
-      motivo: "Estoque zerou",
-      economia: "R$ 1.800/mês"
-    },
-    {
-      data: "29/01/2026 11:20",
-      produto: "Pijama Luiza Roxo",
-      acao: "Reativou campanhas",
-      motivo: "Reabastecimento recebido",
-      economia: "Retomou vendas"
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("bling") === "connected" || params.get("bling") === "error") {
+      utils.blingOAuth.getStatus.invalidate();
+      window.history.replaceState({}, "", window.location.pathname);
     }
-  ];
+  }, []);
 
-  const metricas = [
-    {
-      titulo: "Economia/Mês",
-      valor: "R$ 5.400",
-      descricao: "Evitando gastos em produtos sem estoque"
-    },
-    {
-      titulo: "Economia/Ano",
-      valor: "R$ 64.800",
-      descricao: "Impacto anual da automação"
-    },
-    {
-      titulo: "Produtos Monitorados",
-      valor: "5",
-      descricao: "Todos os SKUs principais"
-    },
-    {
-      titulo: "Campanhas Pausadas",
-      valor: "3",
-      descricao: "Atualmente sem estoque"
-    }
-  ];
+  const { data: status, isLoading: loadingStatus } = trpc.blingOAuth.getStatus.useQuery();
+  const { data: urlData } = trpc.blingOAuth.gerarUrlAutorizacao.useQuery(undefined, {
+    enabled: !status?.conectado,
+  });
 
-  const fluxoAutomacao = [
-    {
-      numero: 1,
-      titulo: "Sincronização com Bling",
-      descricao: "A cada 1 hora, verifica estoque no Bling ERP",
-      icone: "🔄"
-    },
-    {
-      numero: 2,
-      titulo: "Comparação com Limite",
-      descricao: "Se estoque < 1 unidade → produto sem estoque",
-      icone: "⚖️"
-    },
-    {
-      numero: 3,
-      titulo: "Pausa Automática",
-      descricao: "Pausa Meta Ads e Google Ads automaticamente",
-      icone: "⏸️"
-    },
-    {
-      numero: 4,
-      titulo: "Notificação",
-      descricao: "Envia alerta para dashboard e email",
-      icone: "📧"
-    },
-    {
-      numero: 5,
-      titulo: "Reativação",
-      descricao: "Quando estoque > 1, reativa campanhas",
-      icone: "▶️"
-    },
-    {
-      numero: 6,
-      titulo: "Relatório",
-      descricao: "Registra ação no histórico com economia calculada",
-      icone: "📊"
+  const desconectar = trpc.blingOAuth.desconectar.useMutation({
+    onSuccess: () => utils.blingOAuth.getStatus.invalidate(),
+  });
+
+  const syncProdutos = trpc.bling.sincronizarProdutos.useMutation();
+  const syncPedidos  = trpc.bling.sincronizarPedidos.useMutation();
+  const syncContatos = trpc.bling.sincronizarContatos.useMutation();
+  const syncEstoque  = trpc.bling.sincronizarEstoque.useMutation();
+
+  const doSync = async (key: string) => {
+    // Token is managed server-side via stored OAuth token
+    // Pass empty string; server will use stored token
+    const accessToken = "";
+    try {
+      let result: any;
+      if (key === "produtos") result = await syncProdutos.mutateAsync({ accessToken, pagina: 1, limite: 100 });
+      else if (key === "pedidos") result = await syncPedidos.mutateAsync({ accessToken });
+      else if (key === "contatos") result = await syncContatos.mutateAsync({ accessToken });
+      else if (key === "estoque") result = await syncEstoque.mutateAsync({ accessToken });
+      setSyncResults(prev => ({ ...prev, [key]: result }));
+    } catch (err: any) {
+      setSyncResults(prev => ({ ...prev, [key]: { error: err?.message ?? "Erro na sincronização" } }));
     }
-  ];
+  };
+
+  if (loadingStatus) {
+    return (
+      <div className="flex justify-center py-16">
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#8B2635' }} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Overview Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {metricas.map((metrica, idx) => (
-          <Card key={idx} className="border-slate-200/50">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-slate-600">{metrica.titulo}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-slate-900">{metrica.valor}</div>
-              <p className="text-xs text-slate-500 mt-1">{metrica.descricao}</p>
-            </CardContent>
-          </Card>
-        ))}
+      <div>
+        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Bling ERP</h2>
+        <p className="text-slate-500 text-sm mt-1">
+          Sincronize produtos, pedidos, clientes e estoque direto do Bling.
+        </p>
       </div>
 
-      {/* Fluxo de Automação */}
-      <Card className="border-slate-200/50 bg-gradient-to-br from-blue-50 to-cyan-50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="w-5 h-5 text-blue-600" />
-            Como Funciona a Automação
-          </CardTitle>
-          <CardDescription>Processo automático que sincroniza Bling com campanhas</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {fluxoAutomacao.map((etapa) => (
-              <div key={etapa.numero} className="flex items-start gap-4">
-                <div className="bg-white rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0 font-bold text-blue-600 border-2 border-blue-200">
-                  {etapa.numero}
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold text-slate-900">{etapa.titulo}</h4>
-                  <p className="text-sm text-slate-600 mt-1">{etapa.descricao}</p>
-                </div>
-                <div className="text-2xl">{etapa.icone}</div>
+      {/* Status */}
+      <Card className="border-0 shadow-sm">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-4">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${status?.conectado ? 'bg-green-50' : 'bg-slate-100'}`}>
+                {status?.conectado
+                  ? <CheckCircle2 className="w-6 h-6 text-green-600" />
+                  : <Link2 className="w-6 h-6 text-slate-400" />
+                }
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Status de Produtos */}
-      <Card className="border-slate-200/50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 text-orange-600" />
-            Status de Produtos
-          </CardTitle>
-          <CardDescription>Sincronização em tempo real com Bling ERP</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {produtos.map((produto) => (
-              <div key={produto.id} className="border border-slate-200/50 rounded-lg p-4 hover:bg-slate-50/50 transition">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h4 className="font-semibold text-slate-900">{produto.nome}</h4>
-                    <p className="text-xs text-slate-500">SKU: {produto.sku}</p>
-                  </div>
-                  <Badge variant={produto.status === "Ativo" ? "default" : "destructive"}>
-                    {produto.status}
-                  </Badge>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-3 text-sm">
-                  <div>
-                    <p className="text-slate-500 text-xs">Estoque</p>
-                    <p className="font-bold text-slate-900">{produto.estoque} un</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Mínimo</p>
-                    <p className="font-bold text-slate-900">{produto.minimo} un</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Campanhas</p>
-                    <p className="text-xs text-slate-600">{produto.campanhas}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Economia</p>
-                    <p className="font-bold text-green-600">{produto.economia}</p>
-                  </div>
-                  <div className="flex items-end">
-                    {produto.status === "Pausado" ? (
-                      <button className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200 flex items-center gap-1">
-                        <Pause className="w-3 h-3" />
-                        Pausado
-                      </button>
-                    ) : (
-                      <button className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200 flex items-center gap-1">
-                        <Play className="w-3 h-3" />
-                        Ativo
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {produto.status === "Pausado" && (
-                  <div className="bg-red-50 border border-red-200 rounded p-2 text-xs text-red-700">
-                    ⚠️ Campanhas pausadas automaticamente para economizar budget
-                  </div>
-                )}
+              <div>
+                <p className="font-semibold text-slate-800">
+                  {status?.conectado ? "Bling conectado" : "Bling não conectado"}
+                </p>
+                <p className="text-sm text-slate-500 mt-0.5">
+                  {status?.conectado
+                    ? status.expirado ? "Token expirado — reconecte" : "Conexão ativa"
+                    : "Clique em Conectar para autorizar"
+                  }
+                </p>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </div>
 
-      {/* Histórico de Ações */}
-      <Card className="border-slate-200/50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingDown className="w-5 h-5 text-purple-600" />
-            Histórico de Automações
-          </CardTitle>
-          <CardDescription>Últimas ações executadas automaticamente</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {historico.map((item, idx) => (
-              <div key={idx} className="border border-slate-200/50 rounded-lg p-3 hover:bg-slate-50/50 transition">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <h4 className="font-semibold text-slate-900 text-sm">{item.produto}</h4>
-                    <p className="text-xs text-slate-500">{item.data}</p>
-                  </div>
-                  {item.acao.includes("Pausou") ? (
-                    <Badge className="bg-red-100 text-red-700">Pausado</Badge>
-                  ) : (
-                    <Badge className="bg-green-100 text-green-700">Reativado</Badge>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div>
-                    <p className="text-slate-500">Ação</p>
-                    <p className="text-slate-700 font-medium">{item.acao}</p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500">Motivo</p>
-                    <p className="text-slate-700 font-medium">{item.motivo}</p>
-                  </div>
-                </div>
-                <div className="mt-2 text-xs font-semibold text-green-600">💰 {item.economia}</div>
+            <div className="flex gap-2">
+              {status?.conectado ? (
+                <Button variant="outline" size="sm" disabled={desconectar.isPending}
+                  onClick={() => desconectar.mutate()}>
+                  {desconectar.isPending
+                    ? <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    : <LogOut className="w-4 h-4 mr-2" />}
+                  Desconectar
+                </Button>
+              ) : (
+                <Button style={{ backgroundColor: '#8B2635' }} className="text-white"
+                  disabled={!urlData?.url}
+                  onClick={() => { if (urlData?.url) window.location.href = urlData.url; }}>
+                  <Link2 className="w-4 h-4 mr-2" />
+                  Conectar Bling
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {!status?.conectado && (
+            <div className="mt-4 p-4 rounded-xl bg-amber-50 border border-amber-200 text-sm space-y-2">
+              <p className="font-semibold text-amber-800">Antes de conectar, adicione no .env:</p>
+              <div className="font-mono text-xs bg-amber-100 rounded-lg p-3 space-y-1 text-amber-900">
+                <p>BLING_CLIENT_ID=seu_client_id</p>
+                <p>BLING_CLIENT_SECRET=seu_client_secret</p>
+                <p>BLING_REDIRECT_URI=http://localhost:5000/api/bling/callback</p>
               </div>
-            ))}
-          </div>
+              <p className="text-amber-700 text-xs">
+                Crie o aplicativo em: <strong>bling.com.br → Configurações → API → Aplicativos</strong>
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Configurações */}
-      <Card className="border-slate-200/50 bg-gradient-to-br from-purple-50 to-pink-50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="w-5 h-5 text-purple-600" />
-            Configurações da Automação
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 text-sm text-slate-700">
-          <div className="flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-slate-900">API Key Bling Conectada</p>
-              <p className="text-slate-600">Sincronizando estoque a cada 1 hora</p>
-            </div>
+      {/* Sincronização */}
+      {status?.conectado && !status.expirado && (
+        <>
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-slate-600">Sincronizar dados</p>
+            <Button variant="outline" size="sm"
+              onClick={() => SYNC_ACTIONS.forEach(a => doSync(a.key))}>
+              <RefreshCw className="w-3.5 h-3.5 mr-2" />
+              Sincronizar tudo
+            </Button>
           </div>
-          <div className="flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-slate-900">Limite Mínimo: 1 unidade</p>
-              <p className="text-slate-600">Pausa campanhas quando estoque ≤ 0</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-slate-900">Campanhas Monitoradas</p>
-              <p className="text-slate-600">Meta Ads (Facebook + Instagram) e Google Ads</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-slate-900">Produtos Monitorados</p>
-              <p className="text-slate-600">Todos os 5 SKUs principais</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Benefícios */}
-      <Card className="border-slate-200/50 bg-gradient-to-br from-green-50 to-emerald-50">
-        <CardHeader>
-          <CardTitle className="text-slate-900">✅ Benefícios da Automação</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm text-slate-700">
-          <div className="flex items-start gap-3">
-            <span className="text-lg">💰</span>
-            <p><strong>Economia de R$ 64.800/ano:</strong> Não gasta em publicidade de produtos sem estoque</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {SYNC_ACTIONS.map(({ key, label, icon, desc }) => {
+              const result = syncResults[key];
+              const isRunning =
+                (key === "produtos" && syncProdutos.isPending) ||
+                (key === "pedidos"  && syncPedidos.isPending)  ||
+                (key === "contatos" && syncContatos.isPending) ||
+                (key === "estoque"  && syncEstoque.isPending);
+
+              return (
+                <Card key={key} className="border-0 shadow-sm">
+                  <CardContent className="pt-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3 flex-1">
+                        <div className="p-2 rounded-lg bg-slate-50 text-slate-500 flex-shrink-0">{icon}</div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-slate-800 text-sm">{label}</p>
+                          <p className="text-xs text-slate-400">{desc}</p>
+
+                          {result && !result.error && (
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                              {[
+                                result.totalSincronizados != null && `${result.totalSincronizados} itens`,
+                                result.totalPedidos != null && `${result.totalPedidos} pedidos`,
+                                result.totalContatos != null && `${result.totalContatos} contatos`,
+                                result.totalEstoque != null && `${result.totalEstoque} itens`,
+                              ].filter(Boolean).map((label, i) => (
+                                <Badge key={i} variant="secondary" className="text-xs">{label as string}</Badge>
+                              ))}
+                              <Badge className="bg-green-100 text-green-700 border-0 text-xs">
+                                <CheckCircle2 className="w-3 h-3 mr-1 inline" />Sincronizado
+                              </Badge>
+                            </div>
+                          )}
+
+                          {result?.error && (
+                            <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
+                              <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                              {result.error}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <Button size="sm" variant="outline" disabled={isRunning}
+                        onClick={() => doSync(key)} className="flex-shrink-0">
+                        {isRunning
+                          ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          : <RefreshCw className="w-3.5 h-3.5" />}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
-          <div className="flex items-start gap-3">
-            <span className="text-lg">⏱️</span>
-            <p><strong>Automação 24/7:</strong> Funciona automaticamente, sem intervenção manual</p>
-          </div>
-          <div className="flex items-start gap-3">
-            <span className="text-lg">📊</span>
-            <p><strong>Dados em Tempo Real:</strong> Sincroniza com Bling a cada 1 hora</p>
-          </div>
-          <div className="flex items-start gap-3">
-            <span className="text-lg">🎯</span>
-            <p><strong>Melhor ROI:</strong> Investe apenas em produtos disponíveis</p>
-          </div>
-          <div className="flex items-start gap-3">
-            <span className="text-lg">📈</span>
-            <p><strong>Sem Decepção de Cliente:</strong> Não atrai clientes para produtos sem estoque</p>
-          </div>
-        </CardContent>
-      </Card>
+        </>
+      )}
+
+      {/* Webhook */}
+      {status?.conectado && (
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Zap className="w-4 h-4 text-amber-500" />
+              Webhook — atualizações em tempo real
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-slate-500 mb-3">
+              Configure no Bling (Configurações → Webhooks) para receber atualizações automáticas de estoque e pedidos.
+            </p>
+            <div className="bg-slate-50 rounded-lg p-3 font-mono text-xs text-slate-700 select-all break-all">
+              {window.location.origin}/api/bling/webhook
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

@@ -147,12 +147,15 @@ const RecuperacaoAbandonoSection = lazy(() => import("@/components/RecuperacaoAb
 
 const SuspenseFallback = (
   <div className="flex justify-center py-8">
-    <div className="w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full animate-spin" />
+    <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#8B2635', borderTopColor: 'transparent' }} />
   </div>
 );
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState("personas");
+  const [activeTab, setActiveTab] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("tab") ?? "personas";
+  });
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
@@ -166,9 +169,7 @@ export default function Home() {
         <div className="container py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">
-                Feminnita
-              </h1>
+              <h1 className="text-3xl font-bold" style={{ color: '#8B2635' }}>Feminnita</h1>
               <p className="text-sm text-slate-600 mt-1">Estratégia de Marketing Digital Completa</p>
             </div>
             <Badge variant="secondary" className="text-xs">
@@ -180,7 +181,7 @@ export default function Home() {
 
       {/* Hero Section */}
       <section className="container py-12">
-        <div className="bg-gradient-to-r from-rose-50 to-pink-50 rounded-2xl border border-rose-200/50 p-8">
+        <div className="rounded-2xl border p-8" style={{ background: 'linear-gradient(to right, #fdf6ee, #f9efe0)', borderColor: '#e8c99a50' }}>
           <div className="max-w-3xl">
             <h2 className="text-2xl font-bold text-slate-900 mb-3">
               Sua Estratégia de Marketing Digital Personalizada

@@ -19,20 +19,20 @@ export default function AnalyticsAvancadoFunilSection() {
   const { data: campanhas = [] } = trpc.campaigns.listar.useQuery(undefined, { refetchInterval: 60_000 });
 
   const todas = campanhas as any[];
-  const totalImpressoes = todas.reduce((s, c) => s + (c.impressoes ?? 0), 0);
-  const totalCliques = todas.reduce((s, c) => s + (c.cliques ?? 0), 0);
-  const totalConversoes = todas.reduce((s, c) => s + (c.conversoes ?? 0), 0);
+  const totalImpressoes = todas.reduce((s, c) => s + (Number(c.performance?.impressoes) || 0), 0);
+  const totalCliques = todas.reduce((s, c) => s + (Number(c.performance?.cliques) || 0), 0);
+  const totalConversoes = todas.reduce((s, c) => s + (Number(c.performance?.conversoes) || 0), 0);
   const ctr = totalImpressoes > 0 ? ((totalCliques / totalImpressoes) * 100) : 0;
   const taxaConvCliques = totalCliques > 0 ? ((totalConversoes / totalCliques) * 100) : 0;
 
   const porPlataforma = todas.reduce((acc, c) => {
     const p = c.plataforma;
     if (!acc[p]) acc[p] = { impressoes: 0, cliques: 0, conversoes: 0, orcamento: 0, rois: [] as number[] };
-    acc[p].impressoes += (c.impressoes ?? 0);
-    acc[p].cliques += (c.cliques ?? 0);
-    acc[p].conversoes += (c.conversoes ?? 0);
+    acc[p].impressoes += (Number(c.performance?.impressoes) || 0);
+    acc[p].cliques += (Number(c.performance?.cliques) || 0);
+    acc[p].conversoes += (Number(c.performance?.conversoes) || 0);
     acc[p].orcamento += parseFloat(c.orcamento ?? "0");
-    if (parseFloat(c.roi ?? "0") > 0) acc[p].rois.push(parseFloat(c.roi ?? "0"));
+    if ((Number(c.performance?.roi) || 0) > 0) acc[p].rois.push(Number(c.performance?.roi) || 0);
     return acc;
   }, {} as Record<string, { impressoes: number; cliques: number; conversoes: number; orcamento: number; rois: number[] }>);
 
@@ -43,7 +43,7 @@ export default function AnalyticsAvancadoFunilSection() {
       ctr: d.impressoes > 0 ? ((d.cliques / d.impressoes) * 100).toFixed(1) : "—",
       roiMedio: d.rois.length > 0 ? (d.rois.reduce((a, b) => a + b, 0) / d.rois.length).toFixed(0) : "—",
     }))
-    .sort((a, b) => b.conversoes - a.conversoes);
+    .sort((a, b) => b.conversoes - a.conversoes); // sorted by already-calculated `conversoes` field on the grouped object
 
   const funilDisponivel = [
     { stage: "Impressões", value: totalImpressoes, icon: "👁️", color: "bg-blue-500" },

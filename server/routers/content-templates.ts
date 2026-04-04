@@ -17,8 +17,8 @@ export const contentTemplatesRouter = router({
         .where(eq(contentTemplates.userId, ctx.user.id))
         .orderBy(desc(contentTemplates.updatedAt));
       let result = rows;
-      if (input?.tipo) result = result.filter(t => t.tipo === input.tipo);
-      if (input?.favorito !== undefined) result = result.filter(t => t.favorito === input.favorito);
+      if (input?.tipo) result = result.filter((t: any) => t.tipo === input.tipo);
+      if (input?.favorito !== undefined) result = result.filter((t: any) => t.favorito === input.favorito);
       return result;
     }),
 

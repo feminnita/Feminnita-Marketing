@@ -4,7 +4,8 @@
 
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
-import { saveOAuthToken } from "../db";
+import { saveOAuthToken, getOAuthToken } from "../db";
+import { tokenExpirado, renovarAccessToken } from "../integrations/bling-oauth";
 import {
   sincronizarProdutos,
   sincronizarPedidos,
@@ -13,6 +14,23 @@ import {
   formatarErroBlng,
   BlingAPIError,
 } from "../integrations/bling";
+
+/** Gets the stored Bling access token, auto-refreshing if expired. */
+async function getBlingToken(userId: number): Promise<string> {
+  const token = await getOAuthToken(userId, "bling");
+  if (!token || !token.isActive) throw new Error("Bling não conectado. Conecte sua conta Bling primeiro.");
+  if (token.expiresAt && tokenExpirado(new Date(token.expiresAt))) {
+    if (!token.refreshToken) throw new Error("Token Bling expirado. Reconecte sua conta.");
+    const renewed = await renovarAccessToken(token.refreshToken);
+    await saveOAuthToken(userId, "bling", {
+      accessToken: renewed.access_token,
+      refreshToken: token.refreshToken,
+      expiresIn: renewed.expires_in,
+    });
+    return renewed.access_token;
+  }
+  return token.accessToken;
+}
 
 export const blingRouter = router({
   /**
@@ -49,29 +67,23 @@ export const blingRouter = router({
   sincronizarProdutos: protectedProcedure
     .input(
       z.object({
-        accessToken: z.string(),
+        accessToken: z.string().optional().default(""),
         pagina: z.number().optional().default(1),
         limite: z.number().optional().default(100),
       })
     )
-    .mutation(async ({ input }: any) => {
+    .mutation(async ({ ctx, input }: any) => {
       try {
-        const response = await sincronizarProdutos(
-          input.accessToken,
-          input.pagina,
-          input.limite
-        );
-
+        const token = await getBlingToken(ctx.user.id);
+        const response = await sincronizarProdutos(token, input.pagina, input.limite);
         return {
           success: true,
-          total: response.paginacao?.total || 0,
+          totalSincronizados: response.paginacao?.total || response.data?.length || 0,
           produtos: response.data,
           paginacao: response.paginacao,
         };
       } catch (error: unknown) {
-        if (error instanceof BlingAPIError) {
-          throw new Error(formatarErroBlng(error));
-        }
+        if (error instanceof BlingAPIError) throw new Error(formatarErroBlng(error));
         throw error;
       }
     }),
@@ -82,33 +94,25 @@ export const blingRouter = router({
   sincronizarPedidos: protectedProcedure
     .input(
       z.object({
-        accessToken: z.string(),
+        accessToken: z.string().optional().default(""),
         pagina: z.number().optional().default(1),
         limite: z.number().optional().default(100),
         dataInicio: z.string().optional(),
         dataFim: z.string().optional(),
       })
     )
-    .mutation(async ({ input }: any) => {
+    .mutation(async ({ ctx, input }: any) => {
       try {
-        const response = await sincronizarPedidos(
-          input.accessToken,
-          input.pagina,
-          input.limite,
-          input.dataInicio,
-          input.dataFim
-        );
-
+        const token = await getBlingToken(ctx.user.id);
+        const response = await sincronizarPedidos(token, input.pagina, input.limite, input.dataInicio, input.dataFim);
         return {
           success: true,
-          total: response.paginacao?.total || 0,
+          totalPedidos: response.paginacao?.total || response.data?.length || 0,
           pedidos: response.data,
           paginacao: response.paginacao,
         };
       } catch (error: unknown) {
-        if (error instanceof BlingAPIError) {
-          throw new Error(formatarErroBlng(error));
-        }
+        if (error instanceof BlingAPIError) throw new Error(formatarErroBlng(error));
         throw error;
       }
     }),
@@ -119,29 +123,23 @@ export const blingRouter = router({
   sincronizarContatos: protectedProcedure
     .input(
       z.object({
-        accessToken: z.string(),
+        accessToken: z.string().optional().default(""),
         pagina: z.number().optional().default(1),
         limite: z.number().optional().default(100),
       })
     )
-    .mutation(async ({ input }: any) => {
+    .mutation(async ({ ctx, input }: any) => {
       try {
-        const response = await sincronizarContatos(
-          input.accessToken,
-          input.pagina,
-          input.limite
-        );
-
+        const token = await getBlingToken(ctx.user.id);
+        const response = await sincronizarContatos(token, input.pagina, input.limite);
         return {
           success: true,
-          total: response.paginacao?.total || 0,
+          totalContatos: response.paginacao?.total || response.data?.length || 0,
           contatos: response.data,
           paginacao: response.paginacao,
         };
       } catch (error: unknown) {
-        if (error instanceof BlingAPIError) {
-          throw new Error(formatarErroBlng(error));
-        }
+        if (error instanceof BlingAPIError) throw new Error(formatarErroBlng(error));
         throw error;
       }
     }),
@@ -152,28 +150,22 @@ export const blingRouter = router({
   sincronizarEstoque: protectedProcedure
     .input(
       z.object({
-        accessToken: z.string(),
+        accessToken: z.string().optional().default(""),
         pagina: z.number().optional().default(1),
         limite: z.number().optional().default(100),
       })
     )
-    .mutation(async ({ input }: any) => {
+    .mutation(async ({ ctx, input }: any) => {
       try {
-        const response = await sincronizarEstoque(
-          input.accessToken,
-          input.pagina,
-          input.limite
-        );
-
+        const token = await getBlingToken(ctx.user.id);
+        const response = await sincronizarEstoque(token, input.pagina, input.limite);
         return {
           success: true,
-          total: response.data.length,
+          totalEstoque: response.data?.length || 0,
           estoque: response.data,
         };
       } catch (error: unknown) {
-        if (error instanceof BlingAPIError) {
-          throw new Error(formatarErroBlng(error));
-        }
+        if (error instanceof BlingAPIError) throw new Error(formatarErroBlng(error));
         throw error;
       }
     }),
@@ -182,18 +174,15 @@ export const blingRouter = router({
    * Sincroniza todos os dados do Bling (produtos, pedidos, contatos, estoque)
    */
   sincronizarTodosDados: protectedProcedure
-    .input(
-      z.object({
-        accessToken: z.string(),
-      })
-    )
-    .mutation(async ({ input }: any) => {
+    .input(z.object({ accessToken: z.string().optional().default("") }))
+    .mutation(async ({ ctx }: any) => {
       try {
+        const token = await getBlingToken(ctx.user.id);
         const [produtos, pedidos, contatos, estoque] = await Promise.all([
-          sincronizarProdutos(input.accessToken),
-          sincronizarPedidos(input.accessToken),
-          sincronizarContatos(input.accessToken),
-          sincronizarEstoque(input.accessToken),
+          sincronizarProdutos(token),
+          sincronizarPedidos(token),
+          sincronizarContatos(token),
+          sincronizarEstoque(token),
         ]);
 
         return {

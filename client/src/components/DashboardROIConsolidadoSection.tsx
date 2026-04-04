@@ -12,14 +12,15 @@ export default function DashboardROIConsolidadoSection() {
   const { data: campanhas = [], isLoading } = trpc.campaigns.listar.useQuery(undefined, {
     refetchInterval: 60_000,
   });
+  type Camp = (typeof campanhas)[number];
 
   const campanhasFiltradas = plataformaSelecionada === "todas"
     ? campanhas
-    : campanhas.filter(c => c.plataforma === plataformaSelecionada);
+    : campanhas.filter((c: Camp) => c.plataforma === plataformaSelecionada);
 
   // Group by platform
   const porPlataforma: Record<string, { orcamento: number; conversoes: number; ctr: number; count: number; roi: number }> = {};
-  campanhas.forEach(c => {
+  campanhas.forEach((c: Camp) => {
     const plat = c.plataforma || "outros";
     if (!porPlataforma[plat]) porPlataforma[plat] = { orcamento: 0, conversoes: 0, ctr: 0, count: 0, roi: 0 };
     porPlataforma[plat].orcamento += Number(c.orcamento) || 0;
@@ -29,13 +30,13 @@ export default function DashboardROIConsolidadoSection() {
     porPlataforma[plat].count += 1;
   });
 
-  const totalOrcamento = campanhas.reduce((s, c) => s + (Number(c.orcamento) || 0), 0);
-  const totalConversoes = campanhas.reduce((s, c) => s + (Number(c.performance.conversoes) || 0), 0);
+  const totalOrcamento = campanhas.reduce((s: number, c: Camp) => s + (Number(c.orcamento) || 0), 0);
+  const totalConversoes = campanhas.reduce((s: number, c: Camp) => s + (Number(c.performance.conversoes) || 0), 0);
   const totalROI = campanhas.length > 0
-    ? (campanhas.reduce((s, c) => s + (Number(c.performance.roi) || 0), 0) / campanhas.length).toFixed(0)
+    ? (campanhas.reduce((s: number, c: Camp) => s + (Number(c.performance.roi) || 0), 0) / campanhas.length).toFixed(0)
     : "—";
   const avgCTR = campanhas.length > 0
-    ? (campanhas.reduce((s, c) => s + (c.performance.impressoes > 0 ? c.performance.cliques / c.performance.impressoes * 100 : 0), 0) / campanhas.length).toFixed(2)
+    ? (campanhas.reduce((s: number, c: Camp) => s + (c.performance.impressoes > 0 ? c.performance.cliques / c.performance.impressoes * 100 : 0), 0) / campanhas.length).toFixed(2)
     : "—";
 
   const exportarRelatorio = () => {
@@ -44,7 +45,7 @@ Data: ${new Date().toLocaleDateString('pt-BR')}
 Período: Últimos ${periodo === "7dias" ? "7 dias" : periodo === "30dias" ? "30 dias" : "90 dias"}
 
 === RESUMO EXECUTIVO ===
-Campanhas Ativas: ${campanhas.filter(c => c.status === 'ativa').length}
+Campanhas Ativas: ${campanhas.filter((c: Camp) => c.status === 'ativa').length}
 Orçamento Total: R$ ${totalOrcamento.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
 Conversões: ${totalConversoes}
 ROI Médio: ${totalROI}%
@@ -61,7 +62,7 @@ ${plat.toUpperCase()}:
 `).join('')}
 
 === CAMPANHAS ===
-${campanhasFiltradas.map(c => `
+${campanhasFiltradas.map((c: Camp) => `
 ${c.nome}:
 - Plataforma: ${c.plataforma}
 - Orçamento: R$ ${Number(c.orcamento).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -116,7 +117,7 @@ ${c.nome}:
           <label className="text-sm font-semibold text-slate-700 mb-2 block">Plataforma</label>
           <select value={plataformaSelecionada} onChange={e => setPlataformaSelecionada(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded">
             <option value="todas">Todas as Plataformas</option>
-            {Array.from(new Set(campanhas.map(c => c.plataforma).filter(Boolean))).map(p => (
+            {(Array.from(new Set(campanhas.map((c: Camp) => c.plataforma).filter(Boolean))) as string[]).map((p: string) => (
               <option key={p} value={p}>{p}</option>
             ))}
           </select>
@@ -143,7 +144,7 @@ ${c.nome}:
           ) : (
             <div className="grid md:grid-cols-4 gap-4">
               {[
-                { titulo: "Campanhas Ativas", valor: campanhas.filter(c => c.status === 'ativa').length, icon: "🎯", cor: "text-blue-600" },
+                { titulo: "Campanhas Ativas", valor: campanhas.filter((c: Camp) => c.status === 'ativa').length, icon: "🎯", cor: "text-blue-600" },
                 { titulo: "Orçamento Total", valor: `R$ ${totalOrcamento.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, icon: "💰", cor: "text-purple-600" },
                 { titulo: "Conversões", valor: totalConversoes, icon: "✅", cor: "text-orange-600" },
                 { titulo: "ROI Médio", valor: totalROI !== "—" ? `${totalROI}%` : "—", icon: "📈", cor: "text-green-600" },
@@ -222,7 +223,7 @@ ${c.nome}:
             </div>
           ) : (
             <div className="space-y-3">
-              {campanhasFiltradas.map(camp => (
+              {campanhasFiltradas.map((camp: Camp) => (
                 <div key={camp.id} className={`border-2 rounded-lg p-4 ${camp.status === 'ativa' ? 'border-green-200 bg-green-50' : 'border-slate-200 bg-slate-50'}`}>
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">

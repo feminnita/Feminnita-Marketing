@@ -7,13 +7,13 @@ import { Input } from '@/components/ui/input';
 interface AbaItem {
   id: string;
   label: string;
-  icon: React.ReactNode;
+  icon: string;
   href?: string;
 }
 
 interface Categoria {
   nome: string;
-  icon: React.ReactNode;
+  icon: string;
   abas: AbaItem[];
 }
 
@@ -24,13 +24,22 @@ interface SidebarNavegacaoProps {
 
 const categorias: Categoria[] = [
   {
+    nome: 'Início',
+    icon: '🏠',
+    abas: [
+      { id: 'dashboard-exec', label: 'Dashboard', icon: '📊' },
+      { id: 'tendencias', label: 'Tendências Virais', icon: '📈' },
+      { id: 'calendario-conteudo', label: 'Calendário', icon: '📆' },
+      { id: 'notificacoes', label: 'Notificações', icon: '🔔' },
+    ],
+  },
+  {
     nome: 'Personas & Planejamento',
     icon: '👥',
     abas: [
       { id: 'personas', label: 'Personas', icon: '👤' },
-      { id: 'planejamento', label: 'Planejamento', icon: '📅' },
-      { id: 'tendencias', label: 'Tendências', icon: '📈' },
-      { id: 'calendario-conteudo', label: 'Calendário', icon: '📆' },
+      { id: 'planejamento', label: 'Planejamento Semanal', icon: '📅' },
+      { id: 'performance', label: 'Performance por Persona', icon: '🎯' },
     ],
   },
   {
@@ -38,77 +47,60 @@ const categorias: Categoria[] = [
     icon: '🎬',
     abas: [
       { id: 'roteiros', label: 'Roteiros', icon: '📹' },
-      { id: 'imagens', label: 'Imagens IG', icon: '🖼️' },
-      { id: 'legendas', label: 'Legendas', icon: '✍️' },
       { id: 'reels', label: 'Reels', icon: '🎞️' },
       { id: 'tiktok', label: 'TikTok', icon: '🎵' },
+      { id: 'imagens', label: 'Imagens Instagram', icon: '🖼️' },
+      { id: 'legendas', label: 'Legendas', icon: '✍️' },
       { id: 'canva-integracao', label: 'Canva', icon: '🎨' },
-    ],
-  },
-  {
-    nome: 'Análise & Dados',
-    icon: '📊',
-    abas: [
-      { id: 'dashboard-exec', label: 'Dashboard Executivo', icon: '📊' },
-      { id: 'google-analytics', label: 'Google Analytics 4', icon: '📈' },
-      { id: 'roi-consolidado', label: 'ROI Consolidado', icon: '💰' },
-      { id: 'performance-persona', label: 'Performance Persona', icon: '👥' },
-      { id: 'metricas-realtime', label: 'Métricas Real-time', icon: '⚡' },
     ],
   },
   {
     nome: 'Marketing & Campanhas',
     icon: '📢',
     abas: [
+      { id: 'meta', label: 'Meta Ads', icon: '📱' },
+      { id: 'googleads', label: 'Google Ads', icon: '🔍' },
       { id: 'email-marketing', label: 'Email Marketing', icon: '📧' },
-      { id: 'meta-ads', label: 'Meta Ads', icon: '📱' },
-      { id: 'google-ads', label: 'Google Ads', icon: '🔍' },
       { id: 'whatsapp', label: 'WhatsApp', icon: '💬' },
-      { id: 'automacao-email', label: 'Automação Email', icon: '🤖' },
     ],
   },
   {
-    nome: 'Integrações',
-    icon: '🔗',
+    nome: 'Análise & Relatórios',
+    icon: '📊',
     abas: [
-      { id: 'bling', label: 'Bling ERP', icon: '📦' },
-      { id: 'tray', label: 'Tray', icon: '🛒' },
-      { id: 'zapier', label: 'Zapier', icon: '⚙️' },
-      { id: 'slack', label: 'Slack', icon: '💼' },
-      { id: 'google-drive', label: 'Google Drive', icon: '☁️' },
+      { id: 'google-analytics', label: 'Google Analytics 4', icon: '📈' },
+      { id: 'roi', label: 'ROI Consolidado', icon: '💰' },
+      { id: 'relatorios', label: 'Relatórios', icon: '📄' },
+      { id: 'exportacao', label: 'Exportar Dados', icon: '📥' },
     ],
   },
   {
     nome: 'IA & Automação',
     icon: '🤖',
     abas: [
+      { id: 'gerador-ia', label: 'Geração de Conteúdo', icon: '✨' },
       { id: 'chatbot', label: 'Chatbot IA', icon: '💬' },
-      { id: 'geracao-conteudo', label: 'Geração Conteúdo', icon: '✨' },
-      { id: 'previsao-demanda', label: 'Previsão Demanda', icon: '🔮' },
-      { id: 'recomendacao', label: 'Recomendação', icon: '💡' },
-      { id: 'automacao-respostas', label: 'Respostas IA', icon: '🤖' },
+      { id: 'abandono-recovery', label: 'Recuperação Abandono', icon: '💌' },
+      { id: 'automacao-email', label: 'Automação de Email', icon: '🤖' },
     ],
   },
   {
-    nome: 'Relatórios & Exportação',
-    icon: '📄',
+    nome: 'Integrações',
+    icon: '🔗',
     abas: [
-      { id: 'relatorio', label: 'Relatórios', icon: '📊' },
-      { id: 'exportar', label: 'Exportar', icon: '📥' },
-      { id: 'crm', label: 'CRM', icon: '👥' },
-      { id: 'afiliados', label: 'Afiliados (Legado)', icon: '🤝' },
-      { id: 'notificacoes', label: 'Notificações', icon: '🔔' },
+      { id: 'automacao-bling', label: 'Bling ERP', icon: '📦' },
+      { id: 'integracao-tray', label: 'Tray', icon: '🛒' },
+      { id: 'crm-clientes', label: 'CRM', icon: '👥' },
     ],
   },
   {
-    nome: 'Vendas & Crescimento 🚀',
+    nome: 'Vendas & Crescimento',
     icon: '🚀',
     abas: [
-      { id: 'afiliadas-page', label: 'Afiliadas/Revendedoras', icon: '🤝', href: '/afiliadas' },
-      { id: 'tiktok-live-page', label: 'TikTok Live Commerce', icon: '🎥', href: '/tiktok-live' },
       { id: 'drops-planner', label: 'Drops & Coleções', icon: '🧥' },
       { id: 'ugc-collector', label: 'UGC de Clientes', icon: '📸' },
-      { id: 'abandono-recovery', label: 'Recuperação Abandono', icon: '💌' },
+      { id: 'afiliadas-page', label: 'Afiliadas/Revendedoras', icon: '🤝', href: '/afiliadas' },
+      { id: 'tiktok-live-page', label: 'TikTok Live Commerce', icon: '🎥', href: '/tiktok-live' },
       { id: 'brand-book-page', label: 'Brand Book', icon: '🎨', href: '/brand-book' },
     ],
   },
@@ -136,9 +128,11 @@ export default function SidebarNavegacao({ onSelectTab, activeTab }: SidebarNave
     ),
   })).filter(cat => cat.abas.length > 0 || searchTerm === '');
 
+  const totalAbas = categorias.reduce((sum, cat) => sum + cat.abas.length, 0);
+
   return (
     <>
-      {/* Botão Toggle para Mobile/Desktop */}
+      {/* Mobile Toggle */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="fixed top-4 left-4 z-50 lg:hidden bg-white border border-amber-200 p-2 rounded-lg hover:bg-amber-50 transition-colors"
@@ -147,7 +141,7 @@ export default function SidebarNavegacao({ onSelectTab, activeTab }: SidebarNave
         {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
 
-      {/* Overlay para Mobile */}
+      {/* Mobile Overlay */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-30 lg:hidden"
@@ -158,18 +152,15 @@ export default function SidebarNavegacao({ onSelectTab, activeTab }: SidebarNave
       {/* Sidebar */}
       <aside
         className={`fixed lg:relative top-0 left-0 h-screen bg-white border-r border-amber-200 z-40 transition-all duration-300 ease-in-out ${
-          isOpen ? 'w-64' : 'w-0 lg:w-20'
+          isOpen ? 'w-64' : 'w-0 lg:w-16'
         } overflow-hidden`}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="p-4 border-b border-amber-200">
             <div className="flex items-center justify-between mb-4">
-              <div className={`flex items-center gap-2 transition-opacity ${isOpen ? 'opacity-100' : 'opacity-0'}`}>
-                <span className="text-2xl">🏠</span>
-                <span className="font-bold" style={{ color: '#A63D4A' }}>
-                  Feminnita
-                </span>
+              <div className={`transition-opacity ${isOpen ? 'opacity-100' : 'opacity-0'}`}>
+                <span className="font-bold text-lg" style={{ color: '#8B2635' }}>Feminnita</span>
               </div>
               <button
                 onClick={() => setIsOpen(!isOpen)}
@@ -184,12 +175,11 @@ export default function SidebarNavegacao({ onSelectTab, activeTab }: SidebarNave
               </button>
             </div>
 
-            {/* Search */}
             {isOpen && (
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 w-4 h-4 text-amber-600" />
                 <Input
-                  placeholder="Buscar aba..."
+                  placeholder="Buscar..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-8 py-1 text-sm border-amber-200 focus:border-amber-400"
@@ -201,27 +191,26 @@ export default function SidebarNavegacao({ onSelectTab, activeTab }: SidebarNave
           {/* Categories */}
           <div className="flex-1 overflow-y-auto">
             {isOpen ? (
-              <div className="space-y-2 p-4">
+              <div className="space-y-1 p-3">
                 {filteredCategorias.map((categoria) => (
                   <div key={categoria.nome}>
                     <button
                       onClick={() => toggleCategory(categoria.nome)}
                       className="w-full flex items-center gap-2 p-2 rounded hover:bg-amber-50 transition-colors text-left"
                     >
-                      <span className="text-lg">{categoria.icon}</span>
-                      <span className="flex-1 font-medium text-sm" style={{ color: '#A63D4A' }}>
+                      <span className="text-base">{categoria.icon}</span>
+                      <span className="flex-1 font-semibold text-xs uppercase tracking-wide" style={{ color: '#A63D4A' }}>
                         {categoria.nome}
                       </span>
                       {expandedCategories.includes(categoria.nome) ? (
-                        <ChevronUp className="w-4 h-4" />
+                        <ChevronUp className="w-3 h-3 text-slate-400" />
                       ) : (
-                        <ChevronDown className="w-4 h-4" />
+                        <ChevronDown className="w-3 h-3 text-slate-400" />
                       )}
                     </button>
 
-                    {/* Abas */}
                     {expandedCategories.includes(categoria.nome) && (
-                      <div className="ml-4 space-y-1 mt-1">
+                      <div className="ml-4 space-y-0.5 mb-2">
                         {categoria.abas.map((aba) => (
                           <button
                             key={aba.id}
@@ -233,13 +222,14 @@ export default function SidebarNavegacao({ onSelectTab, activeTab }: SidebarNave
                                 setIsOpen(false);
                               }
                             }}
-                            className={`w-full flex items-center gap-2 p-2 rounded text-sm transition-colors text-left ${
+                            className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm transition-colors text-left ${
                               activeTab === aba.id
-                                ? 'bg-amber-100 text-slate-900'
-                                : 'hover:bg-amber-50 text-slate-700'
+                                ? 'font-medium'
+                                : 'hover:bg-amber-50 text-slate-600'
                             }`}
+                            style={activeTab === aba.id ? { backgroundColor: '#fdf0e8', color: '#8B2635' } : {}}
                           >
-                            <span className="text-base">{aba.icon}</span>
+                            <span className="text-sm">{aba.icon}</span>
                             <span className="truncate">{aba.label}</span>
                           </button>
                         ))}
@@ -249,20 +239,20 @@ export default function SidebarNavegacao({ onSelectTab, activeTab }: SidebarNave
                 ))}
               </div>
             ) : (
-              // Modo Retraído - Apenas Ícones
-              <div className="space-y-2 p-2">
+              // Collapsed — icons only
+              <div className="space-y-1 p-2">
                 {filteredCategorias.map((categoria) => (
-                  <div key={categoria.nome} className="space-y-1">
+                  <div key={categoria.nome} className="space-y-0.5">
                     <button
                       onClick={() => toggleCategory(categoria.nome)}
                       className="w-full flex justify-center p-2 rounded hover:bg-amber-50 transition-colors"
                       title={categoria.nome}
                     >
-                      <span className="text-xl">{categoria.icon}</span>
+                      <span className="text-lg">{categoria.icon}</span>
                     </button>
 
                     {expandedCategories.includes(categoria.nome) && (
-                      <div className="space-y-1">
+                      <div className="space-y-0.5">
                         {categoria.abas.map((aba) => (
                           <button
                             key={aba.id}
@@ -273,14 +263,12 @@ export default function SidebarNavegacao({ onSelectTab, activeTab }: SidebarNave
                                 onSelectTab(aba.id);
                               }
                             }}
-                            className={`w-full flex justify-center p-2 rounded text-sm transition-colors ${
-                              activeTab === aba.id
-                                ? 'bg-amber-100'
-                                : 'hover:bg-amber-50'
+                            className={`w-full flex justify-center p-1.5 rounded text-sm transition-colors ${
+                              activeTab === aba.id ? 'bg-amber-100' : 'hover:bg-amber-50'
                             }`}
                             title={aba.label}
                           >
-                            <span className="text-base">{aba.icon}</span>
+                            <span className="text-sm">{aba.icon}</span>
                           </button>
                         ))}
                       </div>
@@ -293,8 +281,8 @@ export default function SidebarNavegacao({ onSelectTab, activeTab }: SidebarNave
 
           {/* Footer */}
           {isOpen && (
-            <div className="p-4 border-t border-amber-200 text-xs text-slate-500">
-              <p>144 abas disponíveis</p>
+            <div className="p-3 border-t border-amber-200 text-xs text-slate-400">
+              {totalAbas} seções disponíveis
             </div>
           )}
         </div>

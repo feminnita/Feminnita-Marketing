@@ -1,224 +1,185 @@
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { trpc } from "@/lib/trpc";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown, DollarSign, Users, Target, Zap, BarChart3, AlertCircle } from 'lucide-react';
+import { TrendingUp, BarChart3, AlertCircle, Loader2 } from "lucide-react";
+
+const PLAT_META = ["meta", "instagram", "facebook", "instagram_ads", "meta_ads"];
+const PLAT_GOOGLE = ["google", "googleads", "google_ads", "google ads"];
+
+function normPlat(p: string | null | undefined): "meta" | "google" | "outro" {
+  const s = (p ?? "").toLowerCase().replace(/\s+/g, "_");
+  if (PLAT_META.some(k => s.includes(k))) return "meta";
+  if (PLAT_GOOGLE.some(k => s.includes(k))) return "google";
+  return "outro";
+}
 
 export const ComparativoMetaGoogleAdsSection = () => {
-  const campaigns = [
-    {
-      platform: 'Meta (Facebook + Instagram)',
-      impressoes: 2980000,
-      cliques: 111800,
-      conversoes: 1690,
-      cpc: 4.82,
-      cpa: 2980,
-      roi: 1.858,
-      gasto: 539000,
-      receita: 1002620,
-      ctaRate: 3.75,
-      trend: 'up'
-    },
-    {
-      platform: 'Google Ads (Search + Display)',
-      impressoes: 1680000,
-      cliques: 84200,
-      conversoes: 1240,
-      cpc: 6.40,
-      cpa: 4032,
-      roi: 1.245,
-      gasto: 538880,
-      receita: 671200,
-      ctaRate: 5.01,
-      trend: 'down'
-    }
+  const { data: campanhas = [], isLoading } = trpc.campaigns.listar.useQuery(undefined, { refetchInterval: 60_000 });
+  type Camp = (typeof campanhas)[number];
+
+  const metaCamps   = campanhas.filter((c: Camp) => normPlat(c.plataforma) === "meta");
+  const googleCamps = campanhas.filter((c: Camp) => normPlat(c.plataforma) === "google");
+
+  type PlatStats = { impressoes: number; cliques: number; conversoes: number; orcamento: number; roi: number; count: number };
+  const calcStats = (camps: Camp[]): PlatStats => ({
+    impressoes: camps.reduce((s: number, c: Camp) => s + (Number(c.performance.impressoes) || 0), 0),
+    cliques:    camps.reduce((s: number, c: Camp) => s + (Number(c.performance.cliques) || 0), 0),
+    conversoes: camps.reduce((s: number, c: Camp) => s + (Number(c.performance.conversoes) || 0), 0),
+    orcamento:  camps.reduce((s: number, c: Camp) => s + (Number(c.orcamento) || 0), 0),
+    roi: camps.length > 0 ? camps.reduce((s: number, c: Camp) => s + (Number(c.performance.roi) || 0), 0) / camps.length : 0,
+    count: camps.length,
+  });
+
+  const meta   = calcStats(metaCamps);
+  const google = calcStats(googleCamps);
+
+  const hasData = metaCamps.length > 0 || googleCamps.length > 0;
+
+  const ctr = (stats: PlatStats) =>
+    stats.impressoes > 0 ? ((stats.cliques / stats.impressoes) * 100).toFixed(2) + "%" : "—";
+
+  const platforms = [
+    { label: "Meta (Facebook + Instagram)", stats: meta, color: "#1877F2", bg: "#EFF6FF" },
+    { label: "Google Ads", stats: google, color: "#EA4335", bg: "#FEF2F2" },
   ];
 
-  const comparacao = {
-    impressoes: { meta: '+77%', valor: 1300000 },
-    cliques: { meta: '+33%', valor: 27600 },
-    conversoes: { meta: '+36%', valor: 450 },
-    roi: { meta: '+49%', valor: 0.613 },
-    receita: { meta: '+49%', valor: 331420 },
-    cpa: { meta: '-26%', valor: 1052 }
-  };
-
-  const recomendacoes = [
-    {
-      titulo: 'Aumentar Budget Meta',
-      descricao: 'Meta tem 49% melhor ROI. Recomenda-se aumentar budget em 30% (de R$ 539K para R$ 700K)',
-      impacto: '+R$ 215K/mês',
-      prioridade: 'Alta'
-    },
-    {
-      titulo: 'Otimizar Google Ads',
-      descricao: 'Melhorar qualidade dos anúncios Search para reduzir CPA de R$ 4.032 para R$ 3.000',
-      impacto: '+R$ 98K/mês',
-      prioridade: 'Alta'
-    },
-    {
-      titulo: 'Teste A/B de Segmentação',
-      descricao: 'Testar segmentação mais específica no Google Ads para aumentar taxa de conversão',
-      impacto: '+R$ 45K/mês',
-      prioridade: 'Média'
-    },
-    {
-      titulo: 'Redirecionar Budget',
-      descricao: 'Mover 20% do budget Google para Meta (melhor performance comprovada)',
-      impacto: '+R$ 128K/mês',
-      prioridade: 'Alta'
-    }
-  ];
+  if (isLoading) return (
+    <div className="flex justify-center py-16">
+      <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#8B2635' }} />
+    </div>
+  );
 
   return (
     <div className="space-y-6">
-      {/* Título e Descrição */}
       <div>
-        <h2 className="text-3xl font-bold text-slate-900 mb-2">Dashboard de Comparação: Meta vs Google Ads</h2>
-        <p className="text-slate-600">Análise comparativa de performance entre campanhas Meta (Facebook + Instagram) e Google Ads para otimização de budget e ROI</p>
+        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Meta vs Google Ads</h2>
+        <p className="text-slate-500 text-sm mt-1">Comparativo de performance baseado nas suas campanhas cadastradas.</p>
       </div>
 
-      {/* Cards de Performance */}
-      <div className="grid md:grid-cols-2 gap-6">
-        {campaigns.map((campaign, idx) => (
-          <Card key={idx} className="border-slate-200 hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">{campaign.platform}</CardTitle>
-                <Badge variant={campaign.roi > 1.5 ? "default" : "secondary"}>
-                  ROI: {campaign.roi.toFixed(2)}x
-                </Badge>
+      {!hasData ? (
+        <Card className="border-0 shadow-sm">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-4">
+              <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-slate-800">Nenhuma campanha Meta ou Google encontrada</p>
+                <p className="text-sm text-slate-500 mt-1">
+                  Crie campanhas na aba <strong>Marketing &gt; Campanhas</strong> e defina a plataforma como "meta", "instagram" ou "google" para ver o comparativo aqui.
+                </p>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <p className="text-sm text-slate-600">Impressões</p>
-                  <p className="text-2xl font-bold text-slate-900">{(campaign.impressoes / 1000000).toFixed(1)}M</p>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-sm text-slate-600">Cliques</p>
-                  <p className="text-2xl font-bold text-slate-900">{(campaign.cliques / 1000).toFixed(0)}K</p>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-sm text-slate-600">Conversões</p>
-                  <p className="text-2xl font-bold text-slate-900">{campaign.conversoes.toLocaleString()}</p>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-sm text-slate-600">CTR</p>
-                  <p className="text-2xl font-bold text-slate-900">{campaign.ctaRate.toFixed(2)}%</p>
-                </div>
-              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          {/* Platform cards */}
+          <div className="grid md:grid-cols-2 gap-4">
+            {platforms.map(({ label, stats, color, bg }) => (
+              <Card key={label} className="border-0 shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center justify-between">
+                    <span style={{ color }}>{label}</span>
+                    <Badge variant="secondary">{stats.count} camp.</Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {stats.count === 0 ? (
+                    <p className="text-sm text-slate-400 py-4 text-center">Nenhuma campanha cadastrada.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        {[
+                          { label: "Impressões", value: stats.impressoes > 0 ? stats.impressoes.toLocaleString('pt-BR') : "—" },
+                          { label: "Cliques", value: stats.cliques > 0 ? stats.cliques.toLocaleString('pt-BR') : "—" },
+                          { label: "Conversões", value: stats.conversoes.toLocaleString('pt-BR') },
+                          { label: "CTR", value: ctr(stats) },
+                        ].map(({ label: l, value }) => (
+                          <div key={l} className="rounded-xl p-3 text-center" style={{ backgroundColor: bg }}>
+                            <p className="text-xs text-slate-500">{l}</p>
+                            <p className="font-bold text-slate-800 mt-0.5">{value}</p>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="border-t pt-3 grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <p className="text-xs text-slate-500">Orçamento</p>
+                          <p className="font-semibold text-slate-800">R$ {stats.orcamento.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-500">ROI Médio</p>
+                          <p className="font-semibold" style={{ color }}>{stats.roi.toFixed(0)}%</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
 
-              <div className="border-t pt-4 space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-slate-600">CPC</span>
-                  <span className="font-semibold text-slate-900">R$ {campaign.cpc.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-slate-600">CPA</span>
-                  <span className="font-semibold text-slate-900">R$ {campaign.cpa.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-slate-600">Gasto Total</span>
-                  <span className="font-semibold text-slate-900">R$ {campaign.gasto.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center bg-green-50 p-3 rounded-lg">
-                  <span className="text-sm text-slate-600">Receita Gerada</span>
-                  <span className="font-bold text-green-600">R$ {campaign.receita.toLocaleString()}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Comparação Detalhada */}
-      <Card className="border-slate-200">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-blue-600" />
-            Comparação Detalhada
-          </CardTitle>
-          <CardDescription>Meta apresenta vantagem em 5 das 6 métricas principais</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {Object.entries(comparacao).map(([metrica, dados]) => (
-              <div key={metrica} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                <div className="flex-1">
-                  <p className="font-semibold text-slate-900 capitalize">{metrica.replace(/([A-Z])/g, ' $1')}</p>
-                  <p className="text-sm text-slate-600">Vantagem Meta</p>
-                </div>
-                <div className="text-right">
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-green-600" />
-                    <span className="text-lg font-bold text-green-600">{dados.meta}</span>
+          {/* Head-to-head comparison */}
+          {metaCamps.length > 0 && googleCamps.length > 0 && (
+            <Card className="border-0 shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4" style={{ color: '#8B2635' }} />
+                  Comparativo Direto
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {[
+                    { label: "Campanhas", meta: meta.count, google: google.count, format: (v: number) => String(v) },
+                    { label: "Conversões", meta: meta.conversoes, google: google.conversoes, format: (v: number) => v.toLocaleString('pt-BR') },
+                    { label: "Orçamento (R$)", meta: meta.orcamento, google: google.orcamento, format: (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) },
+                    { label: "ROI Médio (%)", meta: meta.roi, google: google.roi, format: (v: number) => v.toFixed(0) + "%" },
+                  ].map(({ label: l, meta: mv, google: gv, format }) => {
+                    const winner = mv >= gv ? "meta" : "google";
+                    return (
+                      <div key={l} className="grid grid-cols-3 items-center gap-2 p-2 rounded-lg bg-slate-50">
+                        <div className="text-right text-sm">
+                          <span className={`font-semibold ${winner === "meta" ? "text-blue-600" : "text-slate-500"}`}>{format(mv)}</span>
+                        </div>
+                        <p className="text-xs text-slate-500 text-center">{l}</p>
+                        <div className="text-sm">
+                          <span className={`font-semibold ${winner === "google" ? "text-red-600" : "text-slate-500"}`}>{format(gv)}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div className="flex items-center justify-between text-xs text-slate-400 pt-1">
+                    <span className="text-blue-600 font-medium">Meta</span>
+                    <span>vencedor em negrito</span>
+                    <span className="text-red-600 font-medium">Google</span>
                   </div>
-                  <p className="text-xs text-slate-600">+{dados.valor.toLocaleString()}</p>
                 </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              </CardContent>
+            </Card>
+          )}
 
-      {/* Recomendações */}
-      <Card className="border-slate-200">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="w-5 h-5 text-amber-600" />
-            Recomendações de Otimização
-          </CardTitle>
-          <CardDescription>Ações prioritárias para maximizar ROI e receita</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {recomendacoes.map((rec, idx) => (
-              <div key={idx} className="p-4 border border-slate-200 rounded-lg hover:shadow-md transition-shadow">
-                <div className="flex items-start justify-between mb-2">
-                  <h4 className="font-semibold text-slate-900">{rec.titulo}</h4>
-                  <Badge variant={rec.prioridade === 'Alta' ? 'destructive' : 'secondary'}>
-                    {rec.prioridade}
-                  </Badge>
+          {/* Recommendation */}
+          {metaCamps.length > 0 && googleCamps.length > 0 && (
+            <Card className="border-0 shadow-sm" style={{ backgroundColor: '#fdf0e8' }}>
+              <CardContent className="pt-5">
+                <div className="flex items-start gap-3">
+                  <TrendingUp className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#8B2635' }} />
+                  <div>
+                    <p className="font-semibold text-slate-800">
+                      {meta.roi >= google.roi
+                        ? "Meta está performando melhor — considere aumentar o orçamento nessa plataforma."
+                        : "Google Ads está com ROI superior — considere aumentar o orçamento no Google."}
+                    </p>
+                    <p className="text-sm text-slate-600 mt-1">
+                      Meta ROI: <strong>{meta.roi.toFixed(0)}%</strong> · Google ROI: <strong>{google.roi.toFixed(0)}%</strong>
+                      {" — "}diferença de <strong>{Math.abs(meta.roi - google.roi).toFixed(0)} pontos percentuais</strong>
+                    </p>
+                  </div>
                 </div>
-                <p className="text-sm text-slate-600 mb-3">{rec.descricao}</p>
-                <div className="flex items-center gap-2 text-green-600 font-semibold">
-                  <TrendingUp className="w-4 h-4" />
-                  Impacto estimado: {rec.impacto}
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Insights Finais */}
-      <Card className="border-blue-200 bg-blue-50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-blue-900">
-            <AlertCircle className="w-5 h-5" />
-            Insights Estratégicos
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-blue-900">
-          <div className="flex items-start gap-3">
-            <div className="w-2 h-2 rounded-full bg-blue-600 mt-2 flex-shrink-0" />
-            <p><strong>Meta é 49% mais eficiente:</strong> ROI de 1.858x vs 1.245x do Google Ads, com menor CPA (R$ 2.980 vs R$ 4.032)</p>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="w-2 h-2 rounded-full bg-blue-600 mt-2 flex-shrink-0" />
-            <p><strong>Oportunidade de crescimento:</strong> Aumentar budget Meta em 30% pode gerar +R$ 215K/mês mantendo ROI</p>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="w-2 h-2 rounded-full bg-blue-600 mt-2 flex-shrink-0" />
-            <p><strong>Sinergia de canais:</strong> Usar Google Ads para topo de funil (awareness) e Meta para conversão (performance)</p>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="w-2 h-2 rounded-full bg-blue-600 mt-2 flex-shrink-0" />
-            <p><strong>Potencial total:</strong> Implementando todas as recomendações, receita pode crescer de R$ 1.67M para R$ 2.49M/mês (+49%)</p>
-          </div>
-        </CardContent>
-      </Card>
+              </CardContent>
+            </Card>
+          )}
+        </>
+      )}
     </div>
   );
 };

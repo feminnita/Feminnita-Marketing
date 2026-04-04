@@ -22,7 +22,7 @@ export default function Analytics() {
 
   // Get influencerId from selected account
   const accounts = accountsQuery.data || [];
-  const selectedAccount = accounts.find((a) => a.id.toString() === selectedAccountId);
+  const selectedAccount = accounts.find((a: any) => a.id.toString() === selectedAccountId);
   const influencerId = selectedAccount?.influencerId ?? null;
 
   // Performance metrics from influencer_performance table
@@ -57,7 +57,7 @@ export default function Analytics() {
     impressoes: m.totalImpressions ?? 0,
   }));
 
-  const accountPerformanceData = accounts.map((acc) => ({
+  const accountPerformanceData = accounts.map((acc: any) => ({
     name: acc.username,
     followers: acc.followers || 0,
     posts: acc.postsCount || 0,
@@ -87,7 +87,7 @@ export default function Analytics() {
             <SelectValue placeholder="Selecione uma conta" />
           </SelectTrigger>
           <SelectContent>
-            {accounts.map((account) => (
+            {accounts.map((account: any) => (
               <SelectItem key={account.id} value={account.id.toString()}>
                 @{account.username}
               </SelectItem>

@@ -126,7 +126,7 @@ export const oauthCredentialsRouter = router({
         .from(oauthCredentials)
         .where(eq(oauthCredentials.userId, ctx.user.id));
 
-      return credentials.map((cred) => ({
+      return credentials.map((cred: any) => ({
         id: cred.id,
         platform: cred.platform,
         clientId: cred.clientId ? cred.clientId.substring(0, 10) + "..." : null,

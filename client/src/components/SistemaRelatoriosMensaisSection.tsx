@@ -43,12 +43,12 @@ export default function SistemaRelatoriosMensaisSection() {
 
   const calcularStats = (camp: any[]) => {
     const total = camp.length;
-    const impressoes = camp.reduce((s, c) => s + (c.impressoes ?? 0), 0);
-    const conversoes = camp.reduce((s, c) => s + (c.conversoes ?? 0), 0);
+    const impressoes = camp.reduce((s, c) => s + (Number(c.performance?.impressoes) || 0), 0);
+    const conversoes = camp.reduce((s, c) => s + (Number(c.performance?.conversoes) || 0), 0);
     const orcamento = camp.reduce((s, c) => s + parseFloat(c.orcamento ?? "0"), 0);
-    const rois = camp.filter(c => parseFloat(c.roi ?? "0") > 0);
-    const roiMedio = rois.length > 0 ? rois.reduce((s, c) => s + parseFloat(c.roi ?? "0"), 0) / rois.length : 0;
-    const cliques = camp.reduce((s, c) => s + (c.cliques ?? 0), 0);
+    const rois = camp.filter(c => (Number(c.performance?.roi) || 0) > 0);
+    const roiMedio = rois.length > 0 ? rois.reduce((s, c) => s + (Number(c.performance?.roi) || 0), 0) / rois.length : 0;
+    const cliques = camp.reduce((s, c) => s + (Number(c.performance?.cliques) || 0), 0);
     return { total, impressoes, conversoes, orcamento, roiMedio, cliques };
   };
 
@@ -179,8 +179,8 @@ export default function SistemaRelatoriosMensaisSection() {
                           <p className="text-xs text-slate-500">{c.plataforma} · {c.status}</p>
                         </div>
                         <div className="text-right text-xs">
-                          <p className="font-bold text-green-700">{c.conversoes ?? 0} conv.</p>
-                          <p className="text-slate-500">ROI {parseFloat(c.roi ?? "0").toFixed(0)}%</p>
+                          <p className="font-bold text-green-700">{Number(c.performance?.conversoes) || 0} conv.</p>
+                          <p className="text-slate-500">ROI {(Number(c.performance?.roi) || 0).toFixed(0)}%</p>
                         </div>
                       </div>
                     ))}

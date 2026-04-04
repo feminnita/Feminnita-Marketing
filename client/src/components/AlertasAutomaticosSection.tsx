@@ -21,7 +21,7 @@ export function AlertasAutomaticosSection() {
   // Derive contextual alerts from real campaign data
   const alertas: { id: string; titulo: string; descricao: string; severidade: 'crítica' | 'alta' | 'média'; canal: string; status: string }[] = [];
 
-  const semConversao = todas.filter(c => c.status === 'ativa' && (c.conversoes ?? 0) === 0);
+  const semConversao = todas.filter(c => c.status === 'ativa' && (Number(c.performance?.conversoes) || 0) === 0);
   if (semConversao.length > 0) {
     alertas.push({
       id: 'a1',
@@ -33,7 +33,7 @@ export function AlertasAutomaticosSection() {
     });
   }
 
-  const altaPerformance = todas.filter(c => parseFloat(c.roi ?? '0') > 200);
+  const altaPerformance = todas.filter(c => ( Number(c.performance?.roi) || 0) > 200);
   if (altaPerformance.length > 0) {
     alertas.push({
       id: 'a2',
@@ -57,7 +57,7 @@ export function AlertasAutomaticosSection() {
     });
   }
 
-  const totalConversoes = todas.reduce((s, c) => s + (c.conversoes ?? 0), 0);
+  const totalConversoes = todas.reduce((s, c) => s + (Number(c.performance?.conversoes) || 0), 0);
   if (totalConversoes > 0) {
     alertas.push({
       id: 'a4',
