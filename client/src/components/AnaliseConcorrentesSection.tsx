@@ -164,6 +164,21 @@ export default function AnaliseConcorrentesSection() {
         <p className="text-slate-600">Compare sua performance com concorrentes e identifique oportunidades</p>
       </div>
 
+      {/* Disclaimer */}
+      <Card className="border-l-4 border-l-amber-500 bg-amber-50">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-900">Dados de referência — não dados reais dos concorrentes</p>
+              <p className="text-sm text-slate-600 mt-1">
+                Os números abaixo (seguidores, engajamento, crescimento) são estimativas de mercado para o nicho de pijamas/moda no Brasil. Para análise real, consulte ferramentas como SimilarWeb, Social Blade ou acesse diretamente os perfis dos concorrentes.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Competitive Landscape */}
       <Card>
         <CardHeader>
