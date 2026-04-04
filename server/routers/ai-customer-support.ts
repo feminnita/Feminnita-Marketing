@@ -220,7 +220,7 @@ export const aiCustomerSupportRouter = router({
 
       return {
         success: true,
-        itemId: (result as any).insertId || 0,
+        itemId: (result as any)[0]?.insertId || 0,
       };
     }),
 
