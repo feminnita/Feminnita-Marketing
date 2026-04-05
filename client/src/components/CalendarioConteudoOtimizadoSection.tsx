@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, Eye, Heart, MessageCircle, Zap } from "lucide-react";
+import { Calendar, Clock, Eye, Heart, MessageCircle, Zap, AlertCircle } from "lucide-react";
 import { useState } from "react";
 import PersonaAvatar from "./PersonaAvatar";
 
@@ -274,6 +274,21 @@ export default function CalendarioConteudoOtimizadoSection() {
         <h2 className="text-2xl font-bold text-slate-900">Calendário de Conteúdo Otimizado</h2>
         <p className="text-slate-600">Posts agendados nos melhores horários para máximo alcance e engajamento</p>
       </div>
+
+      {/* Disclaimer */}
+      <Card className="border-l-4 border-l-amber-500 bg-amber-50">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-900">Calendário de exemplo — conecte suas contas para ver dados reais</p>
+              <p className="text-sm text-slate-600 mt-1">
+                As visualizações esperadas e taxas de engajamento são estimativas baseadas em benchmarks. Os posts agendados abaixo são ilustrativos; conecte sua conta para gerenciar posts reais.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Day Selector */}
       <Card>

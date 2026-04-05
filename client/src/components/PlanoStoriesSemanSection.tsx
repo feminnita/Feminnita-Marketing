@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageCircle, BarChart3, Zap, Target, TrendingUp, CheckCircle2 } from "lucide-react";
+import { MessageCircle, BarChart3, Zap, Target, TrendingUp, CheckCircle2, AlertCircle } from "lucide-react";
 
 export default function PlanoStoriesSemanSection() {
   const dias = [
@@ -95,6 +95,21 @@ export default function PlanoStoriesSemanSection() {
           Campanha completa com enquetes, votações, caixas de perguntas e elementos interativos para aumentar engajamento, coletar dados e gerar vendas.
         </p>
       </div>
+
+      {/* Disclaimer */}
+      <Card className="border-l-4 border-l-amber-500 bg-amber-50">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-900">Projeções de campanha — resultados variam conforme o seu perfil</p>
+              <p className="text-sm text-slate-600 mt-1">
+                Os engajamentos esperados (respostas, cliques, vendas) são estimativas para contas com 5K+ seguidores ativos. Adapte as expectativas ao tamanho e nicho do seu público.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Visão Geral da Campanha */}
       <Card className="border-l-4 border-l-blue-400 bg-gradient-to-r from-blue-50 to-indigo-50">

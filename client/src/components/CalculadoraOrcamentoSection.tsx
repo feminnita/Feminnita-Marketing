@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Calculator, TrendingUp, DollarSign } from "lucide-react";
+import { Calculator, TrendingUp, DollarSign, AlertCircle } from "lucide-react";
 import { useState } from "react";
 
 export default function CalculadoraOrcamentoSection() {
@@ -57,6 +57,21 @@ export default function CalculadoraOrcamentoSection() {
           Ajuste seu orçamento e veja as métricas esperadas em tempo real. Simule diferentes cenários e encontre o melhor para seu negócio.
         </p>
       </div>
+
+      {/* Disclaimer */}
+      <Card className="border-l-4 border-l-amber-500 bg-amber-50">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-900">Projeções estimadas — não garantia de resultados reais</p>
+              <p className="text-sm text-slate-600 mt-1">
+                Os valores calculados (visualizações, seguidores, ROI) são estimativas baseadas em benchmarks de mercado. Resultados reais variam conforme qualidade do conteúdo, nicho e sazonalidade.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Inputs Customizáveis */}
       <Card className="border-l-4 border-l-green-400 bg-gradient-to-r from-green-50 to-emerald-50">

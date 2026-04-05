@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, TrendingDown, Zap, Target } from 'lucide-react';
+import { AlertTriangle, TrendingDown, Zap, Target, AlertCircle } from 'lucide-react';
 
 interface ClienteRisco {
   id: string;
@@ -109,6 +109,21 @@ export function PrevisaoChurnIASection() {
           Gerar Alertas
         </Button>
       </div>
+
+      {/* Disclaimer */}
+      <Card className="border-l-4 border-l-amber-500 bg-amber-50">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-900">Dados de exemplo — conecte seu ERP para previsão real de churn</p>
+              <p className="text-sm text-slate-600 mt-1">
+                Os clientes, scores de risco e valores exibidos abaixo são dados fictícios para demonstração. Conecte o Bling ERP para análise de churn baseada nos seus clientes reais.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

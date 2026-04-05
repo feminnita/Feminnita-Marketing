@@ -115,6 +115,21 @@ export default function SistemaRecomendacaoConteudoSection() {
         <p className="text-slate-600">IA sugere qual persona/conteúdo postar baseado em trends e performance histórica</p>
       </div>
 
+      {/* Disclaimer */}
+      <Card className="border-l-4 border-l-amber-500 bg-amber-50">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-900">Recomendações de exemplo — conecte sua conta para sugestões reais</p>
+              <p className="text-sm text-slate-600 mt-1">
+                As visualizações esperadas, taxas de engajamento e scores de confiança abaixo são estimativas ilustrativas. Conecte suas contas de redes sociais para recomendações baseadas nos seus dados reais.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Recommendations */}
       <Card>
         <CardHeader>

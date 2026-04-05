@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Heart, MessageCircle, Share2, Eye, Zap, TrendingUp } from "lucide-react";
+import { Copy, Heart, MessageCircle, Share2, Eye, Zap, TrendingUp, AlertCircle } from "lucide-react";
 import PersonaAvatar from "./PersonaAvatar";
 import { toast } from "sonner";
 
@@ -95,6 +95,21 @@ export default function EstrategiaGrowthViralSection() {
         <h2 className="text-2xl font-bold text-slate-900">Estratégia de Crescimento Viral</h2>
         <p className="text-slate-600">Roteiros, hashtags e CTAs otimizados para cada persona ganhar milhares de seguidores</p>
       </div>
+
+      {/* Disclaimer */}
+      <Card className="border-l-4 border-l-amber-500 bg-amber-50">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-900">Estratégias de referência — crescimento real depende de consistência e execução</p>
+              <p className="text-sm text-slate-600 mt-1">
+                As projeções de crescimento (ex: "300-500 seguidores/dia") são benchmarks de contas que aplicam estas estratégias com consistência. Resultados variam conforme frequência, qualidade e engajamento da audiência.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Strategies */}
       <div className="space-y-6">

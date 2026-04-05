@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, ArrowRight, Lightbulb } from "lucide-react";
+import { CheckCircle, ArrowRight, Lightbulb, AlertCircle } from "lucide-react";
 import { useState } from "react";
 import PersonaAvatar from "./PersonaAvatar";
 
@@ -251,6 +251,21 @@ export default function AssistenteSelecaoPersonaSection() {
         <h2 className="text-2xl font-bold text-slate-900">Assistente de Seleção de Persona</h2>
         <p className="text-slate-600">Responda 5 perguntas rápidas para descobrir qual persona é ideal para sua campanha</p>
       </div>
+
+      {/* Disclaimer */}
+      <Card className="border-l-4 border-l-amber-500 bg-amber-50">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-900">Recomendação orientativa — métricas são estimativas de mercado</p>
+              <p className="text-sm text-slate-600 mt-1">
+                As faixas de investimento e ROI exibidas no resultado são referências baseadas em benchmarks do nicho. Resultados reais variam conforme execução e contexto.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Progress */}
       <Card>

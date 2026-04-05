@@ -101,6 +101,21 @@ export default function SistemaAutomacaoPostsSection() {
         <p className="text-slate-600">Agende posts nos horários otimizados e automatize com regras inteligentes</p>
       </div>
 
+      {/* Disclaimer */}
+      <Card className="border-l-4 border-l-amber-500 bg-amber-50">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-900">Posts de exemplo — conecte suas contas para automação real</p>
+              <p className="text-sm text-slate-600 mt-1">
+                Os posts agendados, visualizações esperadas e regras de automação abaixo são ilustrativos. Conecte suas contas do Instagram e TikTok para criar automações reais.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Today's Schedule */}
       <Card>
         <CardHeader>

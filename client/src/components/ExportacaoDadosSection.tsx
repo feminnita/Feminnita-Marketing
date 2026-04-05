@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Download, FileText, Sheet, PieChart, Calendar, Filter, CheckCircle } from "lucide-react";
+import { Download, FileText, Sheet, PieChart, Calendar, Filter, CheckCircle, AlertCircle } from "lucide-react";
 import { useState } from "react";
 
 export default function ExportacaoDadosSection() {
@@ -120,6 +120,21 @@ export default function ExportacaoDadosSection() {
         <h2 className="text-2xl font-bold text-slate-900">Exportação de Dados</h2>
         <p className="text-slate-600">Exporte relatórios e dados em múltiplos formatos</p>
       </div>
+
+      {/* Disclaimer */}
+      <Card className="border-l-4 border-l-amber-500 bg-amber-50">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-900">Histórico de exemplo — relatórios e exportações são ilustrativos</p>
+              <p className="text-sm text-slate-600 mt-1">
+                Os relatórios listados, datas e tamanhos de arquivo abaixo são exemplos. O histórico de exportações real será preenchido conforme você exportar dados da plataforma.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Criador de Exportação */}
       <Card>

@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Users, Target, Sparkles, TrendingUp } from "lucide-react";
+import { CheckCircle, Users, Target, Sparkles, TrendingUp, AlertCircle } from "lucide-react";
 import PersonaAvatar from "./PersonaAvatar";
 import { useState } from "react";
 
@@ -101,6 +101,21 @@ export default function ComparadorPersonasSection() {
         <h2 className="text-2xl font-bold text-slate-900">Comparador de Personas</h2>
         <p className="text-slate-600">Selecione as personas para comparar características, objetivos e estratégias</p>
       </div>
+
+      {/* Disclaimer */}
+      <Card className="border-l-4 border-l-amber-500 bg-amber-50">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-900">Dados de referência — perfis de persona ilustrativos</p>
+              <p className="text-sm text-slate-600 mt-1">
+                As faixas de investimento, ROI e métricas exibidas são estimativas de mercado para orientar a estratégia. Resultados reais dependem de execução, produto e sazonalidade.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Persona Selector */}
       <Card>
