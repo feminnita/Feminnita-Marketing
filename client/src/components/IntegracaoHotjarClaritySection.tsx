@@ -33,6 +33,21 @@ export default function IntegracaoHotjarClaritySection() {
         <p className="text-slate-600">Rastreie heatmaps, session recordings e otimize UX para aumentar conversão em 10-15%</p>
       </div>
 
+      {/* Disclaimer */}
+      <Card className="border-l-4 border-l-amber-500 bg-amber-50">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-900">Dados de exemplo — conecte Hotjar ou Clarity para dados reais</p>
+              <p className="text-sm text-slate-600 mt-1">
+                Os heatmaps, gravações de sessão e otimizações abaixo são ilustrativos. Para análise de comportamento real, instale o script do Hotjar ou Microsoft Clarity no seu site.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Status Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>

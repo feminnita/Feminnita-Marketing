@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Heart, Volume2, Palette, Users, CheckCircle2, TrendingUp } from "lucide-react";
+import { Heart, Volume2, Palette, Users, CheckCircle2, TrendingUp, AlertCircle } from "lucide-react";
 
 export default function RoteiroAnuncioFamiliarSection() {
   const timeline = [
@@ -104,6 +104,21 @@ export default function RoteiroAnuncioFamiliarSection() {
           "Pijama para Toda a Família por MENOS que Uma Blusa" - Roteiro completo de 30 segundos focado em economia familiar e conforto compartilhado.
         </p>
       </div>
+
+      {/* Disclaimer */}
+      <Card className="border-l-4 border-l-amber-500 bg-amber-50">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-900">Roteiro de referência — adapte preços e detalhes antes de gravar</p>
+              <p className="text-sm text-slate-600 mt-1">
+                Os valores (R$ 149,90, R$ 600, etc.) e métricas de resultado são exemplos estratégicos. Atualize com os preços reais do seu catálogo antes de usar.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Informações Gerais */}
       <Card className="border-l-4 border-l-pink-400 bg-gradient-to-r from-pink-50 to-rose-50">

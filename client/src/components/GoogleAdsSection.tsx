@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Zap, Target } from "lucide-react";
+import { Zap, Target, AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -48,6 +48,21 @@ export default function GoogleAdsSection() {
           Crie campanhas de ads diretamente na plataforma com budget automático e otimização de CPA baseada em dados históricos.
         </p>
       </div>
+
+      {/* Disclaimer */}
+      <Card className="border-l-4 border-l-amber-500 bg-amber-50">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-900">Campanhas de exemplo — integração Google Ads não configurada</p>
+              <p className="text-sm text-slate-600 mt-1">
+                As campanhas sugeridas abaixo são modelos de referência. Para criar campanhas reais no Google Ads, configure as credenciais OAuth do Google Ads nas integrações.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Conexão com Google Ads */}
       <Card className="border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50">

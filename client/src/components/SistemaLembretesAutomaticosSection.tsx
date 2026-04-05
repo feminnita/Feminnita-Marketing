@@ -103,6 +103,21 @@ export default function SistemaLembretesAutomaticosSection() {
         <p className="text-slate-600">Receba notificações antes de cada post ser publicado</p>
       </div>
 
+      {/* Disclaimer */}
+      <Card className="border-l-4 border-l-amber-500 bg-amber-50">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-900">Lembretes de exemplo — conecte seus posts para alertas reais</p>
+              <p className="text-sm text-slate-600 mt-1">
+                Os lembretes e histórico abaixo são ilustrativos com datas de exemplo. Os alertas reais serão baseados nos posts que você agendar na plataforma.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Status Geral */}
       <Card className="bg-blue-50 border-blue-200">
         <CardHeader>

@@ -119,6 +119,21 @@ export default function SistemaNotificacoesInteligentesSection() {
         <p className="text-slate-600">Receba alertas automáticos sobre trends, metas e oportunidades para suas personas</p>
       </div>
 
+      {/* Disclaimer */}
+      <Card className="border-l-4 border-l-amber-500 bg-amber-50">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-900">Notificações de exemplo — conecte suas contas para alertas reais</p>
+              <p className="text-sm text-slate-600 mt-1">
+                As notificações exibidas (trends, estatísticas de views) são exemplos ilustrativos. Alertas reais sobre tendências e performance serão gerados ao conectar suas contas de redes sociais.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Notifications Center */}
       <Card>
         <CardHeader>

@@ -104,6 +104,21 @@ export default function RoteiroanunciaTikTokSection() {
         </p>
       </div>
 
+      {/* Disclaimer */}
+      <Card className="border-l-4 border-l-amber-500 bg-amber-50">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-900">Roteiro de referência — valores são exemplos ilustrativos</p>
+              <p className="text-sm text-slate-600 mt-1">
+                Os ganhos (R$ 2.500/mês) e faturamento semanal são exemplos estratégicos para a narrativa do vídeo. Adapte com seus resultados reais antes de gravar.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Informações Gerais */}
       <Card className="border-l-4 border-l-rose-400 bg-gradient-to-r from-rose-50 to-pink-50">
         <CardHeader>

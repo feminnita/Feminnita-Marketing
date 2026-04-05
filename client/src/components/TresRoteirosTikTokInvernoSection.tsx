@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Volume2, Zap, Music, TrendingUp, CheckCircle2 } from "lucide-react";
+import { Volume2, Zap, Music, TrendingUp, CheckCircle2, AlertCircle } from "lucide-react";
 
 export default function TresRoteirosTikTokInvernoSection() {
   const roteiros = [
@@ -84,6 +84,21 @@ export default function TresRoteirosTikTokInvernoSection() {
           Três abordagens diferentes para testar qual narrativa funciona melhor com seu público. Poste todos em paralelo durante 1-2 semanas e dobre a frequência do que melhor funcionar.
         </p>
       </div>
+
+      {/* Disclaimer */}
+      <Card className="border-l-4 border-l-amber-500 bg-amber-50">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-900">Roteiros de referência — taxas de conversão são estimativas de mercado</p>
+              <p className="text-sm text-slate-600 mt-1">
+                As taxas de conclusão, cliques e conversões são benchmarks do nicho de moda/revenda no TikTok. Resultados reais variam conforme audiência e execução.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Visão Geral dos 3 Roteiros */}
       <div className="grid md:grid-cols-3 gap-4">

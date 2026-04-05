@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Edit, Upload, Download, Zap, ExternalLink } from "lucide-react";
+import { Edit, Upload, Download, Zap, ExternalLink, AlertCircle } from "lucide-react";
 
 const TEMPLATES = [
   {
@@ -68,6 +68,21 @@ export default function IntegracaoCapCutSection() {
 
   return (
     <div className="space-y-6">
+      {/* Disclaimer */}
+      <Card className="border-l-4 border-l-amber-500 bg-amber-50">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-900">Templates de exemplo — conecte o CapCut para edição real</p>
+              <p className="text-sm text-slate-600 mt-1">
+                Os templates abaixo são referências de configuração. Para editar vídeos reais via CapCut API, configure as credenciais de integração.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

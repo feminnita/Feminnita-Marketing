@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clock, Users, Volume2, Target, Zap } from "lucide-react";
+import { Clock, Users, Volume2, Target, Zap, AlertCircle } from "lucide-react";
 
 const novosRoteiros = [
   {
@@ -188,6 +188,21 @@ export default function NovoRoteiroStoriesSection() {
           Roteiros detalhados de 15-20 segundos, cada um focado em uma persona diferente. Estes vídeos são projetados para Stories com máxima autenticidade e engajamento direto.
         </p>
       </div>
+
+      {/* Disclaimer */}
+      <Card className="border-l-4 border-l-amber-500 bg-amber-50">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-900">Roteiros de referência — adapte ao seu produto e estilo</p>
+              <p className="text-sm text-slate-600 mt-1">
+                Os roteiros abaixo são exemplos estratégicos baseados nas personas da Feminnita. Personalize o texto, preços e detalhes antes de gravar.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Tabs defaultValue="carol" className="w-full">
         <TabsList className="grid w-full grid-cols-3 mb-6">

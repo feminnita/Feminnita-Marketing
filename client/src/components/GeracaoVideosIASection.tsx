@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Video, Copy, ExternalLink, Download, Zap } from "lucide-react";
+import { Video, Copy, ExternalLink, Download, Zap, AlertCircle } from "lucide-react";
 
 const PERSONAS = [
   {
@@ -118,6 +118,21 @@ export default function GeracaoVideosIASection() {
 
   return (
     <div className="space-y-6">
+      {/* Disclaimer */}
+      <Card className="border-l-4 border-l-amber-500 bg-amber-50">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-900">Roteiros de exemplo — geração real requer serviço de IA configurado</p>
+              <p className="text-sm text-slate-600 mt-1">
+                Os roteiros e personas abaixo são conteúdo de referência. Para gerar vídeos reais com IA (Synthesia, D-ID, HeyGen), configure as credenciais do serviço nas integrações.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="border-rose-200 bg-gradient-to-br from-rose-50 to-pink-50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

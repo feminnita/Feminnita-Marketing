@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageCircle, Calendar, Clock, Image, Type, Zap } from "lucide-react";
+import { MessageCircle, Calendar, Clock, Image, Type, Zap, AlertCircle } from "lucide-react";
 
 export default function Stories42Section() {
   const dias = [
@@ -428,6 +428,21 @@ export default function Stories42Section() {
           Textos exatos prontos para copiar e colar, com descrições visuais detalhadas para cada um dos 42 stories da campanha de uma semana.
         </p>
       </div>
+
+      {/* Disclaimer */}
+      <Card className="border-l-4 border-l-amber-500 bg-amber-50">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-900">Conteúdo de referência — personalize antes de publicar</p>
+              <p className="text-sm text-slate-600 mt-1">
+                Os textos, métricas esperadas e descrições visuais são exemplos estratégicos. Adapte os valores, hashtags e CTAs ao seu público e coleção atual.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Resumo Geral */}
       <Card className="border-l-4 border-l-blue-400 bg-gradient-to-r from-blue-50 to-indigo-50">
