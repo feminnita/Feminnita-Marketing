@@ -25,7 +25,7 @@ describe("Bling Connection Status", () => {
     try {
       console.log("🔍 Testando acesso à API do Bling...");
       
-      const response = await fetch("https://www.bling.com.br/api/v3/products", {
+      const response = await fetch("https://api.bling.com.br/Api/v3/products", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -104,7 +104,7 @@ describe("Bling Connection Status", () => {
     
     console.log(`✅ Credenciais OAuth: ${hasClientId && hasClientSecret ? "CONFIGURADAS" : "INCOMPLETAS"}`);
     console.log(`✅ Redirect URI: ${hasRedirectUri ? "CONFIGURADA" : "NÃO CONFIGURADA"}`);
-    console.log(`✅ API Base URL: https://www.bling.com.br/api/v3`);
+    console.log(`✅ API Base URL: https://api.bling.com.br/Api/v3`);
     console.log(`✅ OAuth URL: https://www.bling.com.br/oauth/authorize`);
     console.log("\n💡 Próximos passos:");
     console.log("1. Conectar sua conta Bling via OAuth");

@@ -32,7 +32,7 @@ describe("Bling API", () => {
       await fazerRequisicaoBling("/products", mockAccessToken);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        "https://www.bling.com.br/api/v3/products",
+        "https://api.bling.com.br/Api/v3/products",
         expect.objectContaining({
           headers: expect.objectContaining({
             Authorization: `Bearer ${mockAccessToken}`,

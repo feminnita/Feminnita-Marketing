@@ -16,7 +16,7 @@ async function syncBlingForUser(userId: number, accessToken: string): Promise<vo
   for (const endpoint of endpoints) {
     try {
       const res = await fetch(
-        `https://www.bling.com.br/Api/v3${endpoint.path}`,
+        `https://api.bling.com.br/Api/v3${endpoint.path}`,
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
       if (!res.ok) {

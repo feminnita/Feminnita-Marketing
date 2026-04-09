@@ -3,7 +3,7 @@
  * Documentação: https://developer.bling.com.br/bling-api
  */
 
-const BLING_API_URL = "https://www.bling.com.br/api/v3";
+const BLING_API_URL = "https://api.bling.com.br/Api/v3";
 
 export class BlingAPIError extends Error {
   constructor(

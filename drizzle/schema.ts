@@ -1147,3 +1147,31 @@ export const designHistory = mysqlTable("design_history", {
 });
 export type DesignHistory = typeof designHistory.$inferSelect;
 export type InsertDesignHistory = typeof designHistory.$inferInsert;
+
+// === GESTOR DE TRÁFEGO — AVALIAÇÕES META ADS ===
+export const adsEvaluations = mysqlTable("ads_evaluations", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  adAccountId: varchar("adAccountId", { length: 100 }),
+  status: mysqlEnum("status", ["pending", "running", "done", "error"]).notNull().default("pending"),
+  rawMetrics: text("rawMetrics"),        // JSON string — dados brutos da Meta API
+  analysis: text("analysis"),            // Texto de análise do LLM
+  recommendations: text("recommendations"), // JSON string — recomendações estruturadas
+  summary: varchar("summary", { length: 500 }),
+  errorMessage: varchar("errorMessage", { length: 500 }),
+  triggeredAt: timestamp("triggeredAt").defaultNow().notNull(),
+  completedAt: timestamp("completedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type AdsEvaluation = typeof adsEvaluations.$inferSelect;
+export type InsertAdsEvaluation = typeof adsEvaluations.$inferInsert;
+
+export const adsEvaluationMessages = mysqlTable("ads_evaluation_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  evaluationId: int("evaluationId").notNull(),
+  userId: int("userId").notNull(),
+  role: mysqlEnum("role", ["user", "assistant"]).notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type AdsEvaluationMessage = typeof adsEvaluationMessages.$inferSelect;

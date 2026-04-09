@@ -1,0 +1,483 @@
+import { useState, useEffect, useRef } from "react";
+import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
+import {
+  BarChart3,
+  Bot,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  Loader2,
+  MessageSquare,
+  PlayCircle,
+  RefreshCw,
+  Send,
+  TrendingUp,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
+
+// ─── Tipos ────────────────────────────────────────────────────────────────────
+
+interface Recommendation {
+  priority: "alta" | "media" | "baixa";
+  campanha: string;
+  titulo: string;
+  descricao: string;
+  acao: string;
+}
+
+interface Evaluation {
+  id: number;
+  status: "pending" | "running" | "done" | "error";
+  summary: string | null;
+  errorMessage: string | null;
+  triggeredAt: Date | string;
+  completedAt: Date | string | null;
+  analysis?: string | null;
+  recommendations?: Recommendation[];
+  rawMetrics?: any[] | null;
+}
+
+interface ChatMessage {
+  id: number;
+  role: "user" | "assistant";
+  content: string;
+  createdAt: Date | string;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const priorityColors: Record<string, string> = {
+  alta: "bg-red-100 text-red-800 border-red-200",
+  media: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  baixa: "bg-green-100 text-green-800 border-green-200",
+};
+
+const priorityLabel: Record<string, string> = {
+  alta: "Alta",
+  media: "Média",
+  baixa: "Baixa",
+};
+
+function fmtDate(d: Date | string | null): string {
+  if (!d) return "—";
+  return new Date(d).toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function StatusBadge({ status }: { status: Evaluation["status"] }) {
+  if (status === "done")
+    return (
+      <span className="flex items-center gap-1 text-green-700 text-sm font-medium">
+        <CheckCircle className="w-4 h-4" /> Concluída
+      </span>
+    );
+  if (status === "running" || status === "pending")
+    return (
+      <span className="flex items-center gap-1 text-blue-700 text-sm font-medium">
+        <Loader2 className="w-4 h-4 animate-spin" /> Analisando…
+      </span>
+    );
+  return (
+    <span className="flex items-center gap-1 text-red-700 text-sm font-medium">
+      <XCircle className="w-4 h-4" /> Erro
+    </span>
+  );
+}
+
+// ─── Componente principal ─────────────────────────────────────────────────────
+
+export default function AdsManagerPage() {
+  const [activeEvalId, setActiveEvalId] = useState<number | null>(null);
+  const [polling, setPolling] = useState(false);
+  const [expandedRecs, setExpandedRecs] = useState<Set<number>>(new Set());
+  const [chatInput, setChatInput] = useState("");
+  const [sendingMsg, setSendingMsg] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // ── Queries ──
+  const listQuery = trpc.adsManager.listEvaluations.useQuery(undefined, {
+    refetchInterval: polling ? 3000 : false,
+  });
+
+  const evalQuery = trpc.adsManager.getEvaluation.useQuery(
+    { id: activeEvalId! },
+    {
+      enabled: !!activeEvalId,
+      refetchInterval: polling ? 2000 : false,
+    }
+  );
+
+  const messagesQuery = trpc.adsManager.getMessages.useQuery(
+    { evaluationId: activeEvalId! },
+    { enabled: !!activeEvalId && evalQuery.data?.status === "done" }
+  );
+
+  // ── Mutations ──
+  const triggerMut = trpc.adsManager.triggerEvaluation.useMutation({
+    onSuccess: (data) => {
+      setActiveEvalId(data.evaluationId);
+      setPolling(true);
+      listQuery.refetch();
+      toast.success("Avaliação iniciada! Analisando sua conta…");
+    },
+    onError: (err) => toast.error(`Erro ao iniciar: ${err.message}`),
+  });
+
+  const sendMsgMut = trpc.adsManager.sendMessage.useMutation({
+    onSuccess: () => {
+      setChatInput("");
+      messagesQuery.refetch();
+    },
+    onError: (err) => toast.error(`Erro: ${err.message}`),
+    onSettled: () => setSendingMsg(false),
+  });
+
+  // ── Parar polling quando done/error ──
+  useEffect(() => {
+    if (evalQuery.data?.status === "done" || evalQuery.data?.status === "error") {
+      setPolling(false);
+      listQuery.refetch();
+    }
+  }, [evalQuery.data?.status]);
+
+  // ── Scroll do chat ──
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messagesQuery.data]);
+
+  const currentEval = evalQuery.data as Evaluation | undefined;
+  const messages = (messagesQuery.data || []) as ChatMessage[];
+
+  function toggleRec(i: number) {
+    setExpandedRecs((prev) => {
+      const next = new Set(prev);
+      next.has(i) ? next.delete(i) : next.add(i);
+      return next;
+    });
+  }
+
+  function handleSend() {
+    if (!chatInput.trim() || !activeEvalId) return;
+    setSendingMsg(true);
+    sendMsgMut.mutate({ evaluationId: activeEvalId, message: chatInput.trim() });
+  }
+
+  return (
+    <div className="max-w-5xl mx-auto p-6 space-y-6">
+      {/* ── Header ── */}
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <BarChart3 className="w-7 h-7 text-[#8B2635]" />
+            Gestor de Tráfego Meta Ads
+          </h1>
+          <p className="text-gray-500 text-sm mt-1">
+            Avalia sua conta e recomenda ações — sem mexer em nada sem sua aprovação.
+          </p>
+        </div>
+
+        <button
+          onClick={() => triggerMut.mutate()}
+          disabled={triggerMut.isPending || polling}
+          className="flex items-center gap-2 px-5 py-2.5 bg-[#8B2635] text-white rounded-lg font-medium hover:bg-[#7a1f2d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {polling ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <PlayCircle className="w-4 h-4" />
+          )}
+          {polling ? "Analisando…" : "Avaliar Conta Agora"}
+        </button>
+      </div>
+
+      {/* ── Aviso de configuração ── */}
+      {!process.env.META_ACCESS_TOKEN && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
+          <strong>Atenção:</strong> configure <code>META_ACCESS_TOKEN</code> e{" "}
+          <code>META_AD_ACCOUNT_ID</code> no arquivo <code>.env</code> do servidor para que o agente
+          acesse sua conta.
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* ── Histórico ── */}
+        <div className="lg:col-span-1 space-y-3">
+          <h2 className="font-semibold text-gray-700 flex items-center gap-2">
+            <Clock className="w-4 h-4" /> Avaliações Anteriores
+          </h2>
+
+          {listQuery.isLoading && (
+            <div className="text-sm text-gray-400 flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" /> Carregando…
+            </div>
+          )}
+
+          {listQuery.data?.length === 0 && (
+            <p className="text-sm text-gray-400">Nenhuma avaliação ainda.</p>
+          )}
+
+          {(listQuery.data || []).map((ev: any) => (
+            <button
+              key={ev.id}
+              onClick={() => {
+                setActiveEvalId(ev.id);
+                if (ev.status === "pending" || ev.status === "running") setPolling(true);
+              }}
+              className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                activeEvalId === ev.id
+                  ? "border-[#8B2635] bg-rose-50"
+                  : "border-gray-200 hover:border-gray-300 bg-white"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <StatusBadge status={ev.status as Evaluation["status"]} />
+                <span className="text-xs text-gray-400">{fmtDate(ev.triggeredAt)}</span>
+              </div>
+              {ev.summary && (
+                <p className="text-xs text-gray-600 line-clamp-2 mt-1">{ev.summary}</p>
+              )}
+              {ev.errorMessage && (
+                <p className="text-xs text-red-500 mt-1">{ev.errorMessage}</p>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* ── Painel principal ── */}
+        <div className="lg:col-span-2 space-y-4">
+          {/* Sem avaliação selecionada */}
+          {!activeEvalId && (
+            <div className="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-10 text-center text-gray-400">
+              <Bot className="w-10 h-10 mx-auto mb-3 opacity-40" />
+              <p className="text-sm">Clique em "Avaliar Conta Agora" para iniciar a análise.</p>
+            </div>
+          )}
+
+          {/* Carregando / analisando */}
+          {activeEvalId && (currentEval?.status === "pending" || currentEval?.status === "running") && (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-8 text-center">
+              <Loader2 className="w-10 h-10 mx-auto mb-3 text-blue-500 animate-spin" />
+              <p className="font-medium text-blue-800">Buscando dados da sua conta Meta Ads…</p>
+              <p className="text-sm text-blue-600 mt-1">
+                Isso leva cerca de 20–40 segundos.
+              </p>
+            </div>
+          )}
+
+          {/* Erro */}
+          {currentEval?.status === "error" && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-5">
+              <div className="flex items-center gap-2 text-red-700 font-medium mb-1">
+                <AlertTriangle className="w-5 h-5" /> Erro na avaliação
+              </div>
+              <p className="text-sm text-red-600">{currentEval.errorMessage}</p>
+            </div>
+          )}
+
+          {/* Resultado concluído */}
+          {currentEval?.status === "done" && (
+            <>
+              {/* Resumo */}
+              <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-[#8B2635]" /> Resumo
+                  </h3>
+                  <span className="text-xs text-gray-400">{fmtDate(currentEval.completedAt)}</span>
+                </div>
+                <p className="text-gray-700 text-sm font-medium">{currentEval.summary}</p>
+              </div>
+
+              {/* Análise completa */}
+              <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                <h3 className="font-semibold text-gray-800 mb-3">Análise Detalhada</h3>
+                <p className="text-gray-600 text-sm whitespace-pre-wrap leading-relaxed">
+                  {currentEval.analysis}
+                </p>
+              </div>
+
+              {/* Métricas das campanhas */}
+              {currentEval.rawMetrics && currentEval.rawMetrics.length > 0 && (
+                <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                  <h3 className="font-semibold text-gray-800 mb-3">Campanhas</h3>
+                  <div className="space-y-3">
+                    {currentEval.rawMetrics.map((c: any) => (
+                      <div key={c.id} className="border border-gray-100 rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-sm text-gray-800">{c.name}</span>
+                          <span
+                            className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                              c.status === "ACTIVE"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-gray-100 text-gray-500"
+                            }`}
+                          >
+                            {c.status}
+                          </span>
+                        </div>
+                        {c.insights ? (
+                          <div className="grid grid-cols-3 gap-2 text-xs text-gray-600">
+                            <div>
+                              <span className="text-gray-400 block">Gasto (7d)</span>
+                              R$ {c.insights.spend.toFixed(2)}
+                            </div>
+                            <div>
+                              <span className="text-gray-400 block">Cliques</span>
+                              {c.insights.clicks.toLocaleString("pt-BR")}
+                            </div>
+                            <div>
+                              <span className="text-gray-400 block">CTR</span>
+                              {c.insights.ctr.toFixed(2)}%
+                            </div>
+                            <div>
+                              <span className="text-gray-400 block">CPC</span>
+                              R$ {c.insights.cpc.toFixed(2)}
+                            </div>
+                            <div>
+                              <span className="text-gray-400 block">Impressões</span>
+                              {c.insights.impressions.toLocaleString("pt-BR")}
+                            </div>
+                            <div>
+                              <span className="text-gray-400 block">Compras</span>
+                              {c.insights.purchases}
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-400 italic">
+                            Sem dados de insights — campanha nova ou em revisão.
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Recomendações */}
+              {currentEval.recommendations && currentEval.recommendations.length > 0 && (
+                <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                  <h3 className="font-semibold text-gray-800 mb-3">Recomendações</h3>
+                  <div className="space-y-2">
+                    {currentEval.recommendations.map((rec, i) => (
+                      <div
+                        key={i}
+                        className={`border rounded-lg overflow-hidden ${priorityColors[rec.priority]}`}
+                      >
+                        <button
+                          className="w-full flex items-center justify-between p-3 text-left"
+                          onClick={() => toggleRec(i)}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`text-xs px-2 py-0.5 rounded-full border font-semibold ${priorityColors[rec.priority]}`}
+                            >
+                              {priorityLabel[rec.priority]}
+                            </span>
+                            <span className="text-sm font-medium">{rec.titulo}</span>
+                          </div>
+                          {expandedRecs.has(i) ? (
+                            <ChevronUp className="w-4 h-4 shrink-0" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4 shrink-0" />
+                          )}
+                        </button>
+                        {expandedRecs.has(i) && (
+                          <div className="px-3 pb-3 space-y-1 text-sm border-t border-current border-opacity-20">
+                            <p className="text-xs opacity-70 font-medium mt-2">{rec.campanha}</p>
+                            <p>{rec.descricao}</p>
+                            <div className="mt-2 bg-white bg-opacity-60 rounded p-2">
+                              <span className="font-semibold text-xs uppercase tracking-wide opacity-70">
+                                Ação sugerida:{" "}
+                              </span>
+                              {rec.acao}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Chat com o agente */}
+              <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                <div className="flex items-center gap-2 px-5 py-3 border-b border-gray-100 bg-gray-50">
+                  <MessageSquare className="w-4 h-4 text-[#8B2635]" />
+                  <span className="font-semibold text-gray-700 text-sm">
+                    Converse com o agente sobre esta avaliação
+                  </span>
+                </div>
+
+                {/* Mensagens */}
+                <div className="p-4 space-y-3 max-h-80 overflow-y-auto">
+                  {messages.length === 0 && (
+                    <p className="text-xs text-gray-400 text-center py-4">
+                      Faça uma pergunta sobre as campanhas ou peça mais detalhes sobre alguma recomendação.
+                    </p>
+                  )}
+                  {messages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                    >
+                      <div
+                        className={`max-w-[85%] rounded-xl px-4 py-2.5 text-sm leading-relaxed ${
+                          msg.role === "user"
+                            ? "bg-[#8B2635] text-white"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {msg.role === "assistant" && (
+                          <div className="flex items-center gap-1 mb-1 text-xs text-gray-500 font-medium">
+                            <Bot className="w-3 h-3" /> Agente
+                          </div>
+                        )}
+                        <p className="whitespace-pre-wrap">{msg.content}</p>
+                      </div>
+                    </div>
+                  ))}
+                  {sendingMsg && (
+                    <div className="flex justify-start">
+                      <div className="bg-gray-100 rounded-xl px-4 py-2.5 text-sm text-gray-500 flex items-center gap-2">
+                        <Loader2 className="w-3 h-3 animate-spin" /> Pensando…
+                      </div>
+                    </div>
+                  )}
+                  <div ref={chatEndRef} />
+                </div>
+
+                {/* Input */}
+                <div className="flex gap-2 p-3 border-t border-gray-100">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+                    placeholder="Ex: Por que o CTR está baixo? O que testar primeiro?"
+                    className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#8B2635]/30 focus:border-[#8B2635]"
+                    disabled={sendingMsg}
+                  />
+                  <button
+                    onClick={handleSend}
+                    disabled={!chatInput.trim() || sendingMsg}
+                    className="p-2 bg-[#8B2635] text-white rounded-lg hover:bg-[#7a1f2d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

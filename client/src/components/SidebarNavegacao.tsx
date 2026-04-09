@@ -58,6 +58,7 @@ const categorias: Categoria[] = [
     nome: 'Marketing & Campanhas',
     icon: '📢',
     abas: [
+      { id: 'gestor-trafego', label: 'Gestor de Tráfego IA', icon: '🤖', href: '/gestor-trafego' },
       { id: 'meta', label: 'Meta Ads', icon: '📱' },
       { id: 'googleads', label: 'Google Ads', icon: '🔍' },
       { id: 'email-marketing', label: 'Email Marketing', icon: '📧' },

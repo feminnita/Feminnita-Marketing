@@ -46,6 +46,7 @@ const MarketingTeamPage       = lazy(() => import("@/pages/MarketingTeamPage"));
 const AfiliadasPage           = lazy(() => import("@/pages/AfiliadasPage"));
 const BrandBookPage           = lazy(() => import("@/pages/BrandBookPage"));
 const TiktokLivePage          = lazy(() => import("@/pages/TiktokLivePage"));
+const AdsManagerPage          = lazy(() => import("@/pages/AdsManagerPage"));
 
 function PageLoader() {
   return (
@@ -151,6 +152,8 @@ export default function App() {
         return <BrandBookPage />;
       case "/tiktok-live":
         return <TiktokLivePage />;
+      case "/gestor-trafego":
+        return <AdsManagerPage />;
       default: {
         if (/^\/influenciadora\/\d+$/.test(location)) {
           return <InfluencerProfilePage />;
