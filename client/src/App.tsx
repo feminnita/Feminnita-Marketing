@@ -62,6 +62,11 @@ function PageLoader() {
 export default function App() {
   const [location] = useLocation();
 
+  // Rotas de autenticação (sem layout)
+  if (location === "/login" || location === "/signup") {
+    return <LoginSignup />;
+  }
+
   // Rotas públicas que não requerem autenticação
   const publicRoutes = ["/termos", "/privacidade", "/privacy", "/terms"];
   const isPublicRoute = publicRoutes.includes(location);
