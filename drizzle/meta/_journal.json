@@ -113,6 +113,20 @@
       "when": 1775216119948,
       "tag": "0015_pale_wild_child",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "5",
+      "when": 1775904623874,
+      "tag": "0016_dazzling_galactus",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "5",
+      "when": 1775913203936,
+      "tag": "0017_ambiguous_thunderbird",
+      "breakpoints": true
     }
   ]
 }

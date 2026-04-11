@@ -1175,3 +1175,29 @@ export const adsEvaluationMessages = mysqlTable("ads_evaluation_messages", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 export type AdsEvaluationMessage = typeof adsEvaluationMessages.$inferSelect;
+
+// ─── Blog Feminnita ──────────────────────────────────────────────────────────
+
+export const blogPosts = mysqlTable("blog_posts", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  content: text("content").notNull(),
+  excerpt: text("excerpt"),
+  category: varchar("category", { length: 100 }),
+  tags: text("tags"),              // JSON array
+  status: mysqlEnum("status", ["draft", "review", "published", "scheduled"]).default("draft").notNull(),
+  seoTitle: varchar("seoTitle", { length: 255 }),
+  seoDescription: text("seoDescription"),
+  coverImageUrl: text("coverImageUrl"),
+  publishedAt: timestamp("publishedAt"),
+  scheduledFor: timestamp("scheduledFor"),
+  generatedByAI: boolean("generatedByAI").default(false).notNull(),
+  aiPrompt: text("aiPrompt"),
+  wordpressPostId: varchar("wordpressPostId", { length: 64 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+
+export type BlogPost = typeof blogPosts.$inferSelect;
+export type InsertBlogPost = typeof blogPosts.$inferInsert;

@@ -79,6 +79,7 @@ import { tiktokLiveRouter } from "./routers/tiktok-live";
 import { cuponsRouter } from "./routers/cupons";
 import { contentTemplatesRouter } from "./routers/content-templates";
 import { adsManagerRouter } from "./routers/ads-manager";
+import { blogRouter } from "./routers/blog";
 import { getDb } from "./db";
 import { influencers, influencerPosts } from "../drizzle/schema";
 
@@ -198,6 +199,7 @@ export const appRouter = router({
   cupons: cuponsRouter,
   contentTemplates: contentTemplatesRouter,
   adsManager: adsManagerRouter,
+  blog: blogRouter,
   influencers: router({
     list: protectedProcedure.query(async ({ ctx }) => {
       try {
