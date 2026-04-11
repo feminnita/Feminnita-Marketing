@@ -5,6 +5,7 @@ import { users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _pool: any = null;
 let _db: any = null;
 
 // Lazily create the drizzle instance so local tooling can run without a DB.
@@ -13,17 +14,25 @@ export async function getDb() {
     try {
       // Parse DATABASE_URL manually to pass SSL options correctly for TiDB Cloud
       const url = new URL(process.env.DATABASE_URL);
-      const connection = await mysql.createConnection({
+      _pool = mysql.createPool({
         host: url.hostname,
         port: Number(url.port) || 4000,
         user: decodeURIComponent(url.username),
         password: decodeURIComponent(url.password),
         database: url.pathname.replace("/", "") || "feminnita",
-        ssl: { rejectUnauthorized: true },
+        ssl: { rejectUnauthorized: false },
+        waitForConnections: true,
+        connectionLimit: 5,
+        enableKeepAlive: true,
+        keepAliveInitialDelay: 10000,
       });
-      _db = drizzle(connection);
+      _db = drizzle(_pool);
+      // Test connection
+      await _pool.query("SELECT 1");
+      console.log("[Database] Connected to TiDB Cloud");
     } catch (error) {
-      console.warn("[Database] Failed to connect:", error);
+      console.error("[Database] Failed to connect:", error);
+      _pool = null;
       _db = null;
     }
   }
@@ -54,9 +63,14 @@ export async function createUser(data: {
 
 export async function getUserByEmail(email: string) {
   const db = await getDb();
-  if (!db) return undefined;
-  const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
-  return user ?? undefined;
+  if (!db) throw new Error("Database unavailable — check DATABASE_URL and network");
+  try {
+    const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    return user ?? undefined;
+  } catch (err: any) {
+    console.error("[getUserByEmail] Query error:", err?.message ?? err);
+    throw new Error(`Database error: ${err?.code ?? err?.message ?? "unknown"}`);
+  }
 }
 
 export async function getUserById(id: number) {
