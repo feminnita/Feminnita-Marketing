@@ -4,6 +4,7 @@ import { getDb } from "../db";
 import { blogPosts } from "../../drizzle/schema";
 import { eq, desc, like, or } from "drizzle-orm";
 import { generateBlogPost, generateBlogIdeas, improveBlogPost } from "../agents/blog-agent";
+import { publishArticleToBlog } from "../services/blog-publisher";
 import { TRPCError } from "@trpc/server";
 
 export const blogRouter = router({
@@ -156,5 +157,34 @@ export const blogRouter = router({
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
       await db.delete(blogPosts).where(eq(blogPosts.id, input.id));
       return { success: true };
+    }),
+
+  // Publicar no blog.feminnita.com.br via GitHub → Netlify
+  publishToLiveBlog: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const [post] = await db.select().from(blogPosts).where(eq(blogPosts.id, input.id)).limit(1);
+      if (!post) throw new TRPCError({ code: "NOT_FOUND", message: "Post não encontrado" });
+
+      const url = await publishArticleToBlog({
+        title: post.title,
+        slug: post.slug,
+        content: post.content,
+        excerpt: post.excerpt ?? "",
+        seoTitle: post.seoTitle ?? undefined,
+        seoDescription: post.seoDescription ?? undefined,
+        category: post.category ?? undefined,
+        coverImageUrl: post.coverImageUrl ?? undefined,
+        publishedAt: new Date(),
+      });
+
+      await db.update(blogPosts).set({
+        status: "published",
+        publishedAt: new Date(),
+      }).where(eq(blogPosts.id, input.id));
+
+      return { success: true, url };
     }),
 });

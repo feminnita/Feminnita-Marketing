@@ -108,6 +108,7 @@ export default function BlogFeminnitaPage() {
   const ideasMutation = trpc.blog.generateIdeas.useMutation();
   const saveMutation = trpc.blog.save.useMutation();
   const publishMutation = trpc.blog.publish.useMutation();
+  const publishLiveMutation = trpc.blog.publishToLiveBlog.useMutation();
   const deleteMutation = trpc.blog.delete.useMutation();
   const improveMutation = trpc.blog.improve.useMutation();
 
@@ -313,11 +314,21 @@ export default function BlogFeminnitaPage() {
               <Button size="sm" variant="ghost" onClick={() => openEditor(post)}>
                 <Edit3 className="w-4 h-4" />
               </Button>
-              {post.status !== "published" && (
-                <Button size="sm" variant="ghost" onClick={() => handlePublish(post.id)} className="text-green-600 hover:text-green-700">
-                  <Send className="w-4 h-4" />
-                </Button>
-              )}
+              <Button
+                size="sm" variant="ghost"
+                title="Publicar no blog.feminnita.com.br"
+                disabled={publishLiveMutation.isPending}
+                onClick={async () => {
+                  try {
+                    const r = await publishLiveMutation.mutateAsync({ id: post.id });
+                    toast.success("Publicado no blog! " + r.url);
+                    refetchPosts();
+                  } catch (e: any) { toast.error(e.message); }
+                }}
+                className="text-rose-600 hover:text-rose-700"
+              >
+                {publishLiveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              </Button>
               <Button size="sm" variant="ghost" onClick={() => handleDelete(post.id)} className="text-red-500 hover:text-red-600">
                 <Trash2 className="w-4 h-4" />
               </Button>
