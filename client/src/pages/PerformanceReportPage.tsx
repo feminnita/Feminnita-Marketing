@@ -31,7 +31,7 @@ export default function PerformanceReportPage() {
   });
 
   const effectiveSelected = selectedInfluencer ?? influencerKeys[0] ?? null;
-  const current = influencerStats.find((i) => i.key === effectiveSelected) ?? influencerStats[0];
+  const current = influencerStats.find((i) => i.key === effectiveSelected) ?? influencerStats[0] ?? null;
 
   // Month-over-month from global stats
   const globalTotal = stats?.totalGenerated ?? 0;
@@ -100,6 +100,14 @@ export default function PerformanceReportPage() {
           </Card>
         </div>
 
+        {/* Empty state */}
+        {influencerStats.length === 0 && (
+          <div className="flex items-center gap-2 p-6 bg-slate-50 rounded-xl text-slate-500 text-sm mb-8">
+            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            Nenhum post gerado ainda. Crie posts nas influenciadoras para ver o relatório aqui.
+          </div>
+        )}
+
         {/* Influencer selector */}
         <div className="mb-6 flex gap-2 flex-wrap">
           {influencerStats.map((inf) => (
@@ -117,7 +125,7 @@ export default function PerformanceReportPage() {
         </div>
 
         {/* Per-influencer detail */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        {current && <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-slate-600">Total Gerado</CardTitle>
@@ -160,9 +168,9 @@ export default function PerformanceReportPage() {
               <p className="text-xs text-slate-500 mt-1">aguardando aprovação</p>
             </CardContent>
           </Card>
-        </div>
+        </div>}
 
-        <Tabs defaultValue="overview" className="space-y-4">
+        {current && <Tabs defaultValue="overview" className="space-y-4">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
             <TabsTrigger value="all">Todas as Influenciadoras</TabsTrigger>
@@ -234,7 +242,7 @@ export default function PerformanceReportPage() {
               </CardContent>
             </Card>
           </TabsContent>
-        </Tabs>
+        </Tabs>}
       </div>
     </div>
   );
