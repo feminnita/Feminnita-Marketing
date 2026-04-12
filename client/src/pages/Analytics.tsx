@@ -4,14 +4,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Heart, Eye, MessageCircle, Share2, TrendingUp, Users } from "lucide-react";
+import { Heart, Eye, MessageCircle, Share2, TrendingUp, Users, Instagram, Link, AlertCircle } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { toast } from "sonner";
 
 
 export default function Analytics() {
   const { user } = useAuth();
   const [selectedAccountId, setSelectedAccountId] = useState<string>("");
   const [selectedPeriod, setSelectedPeriod] = useState<"week" | "month" | "year">("month");
+  const [showConnectModal, setShowConnectModal] = useState(false);
+  const [connectToken, setConnectToken] = useState("");
+  const [connectIgId, setConnectIgId] = useState("");
+  const [autoConnecting, setAutoConnecting] = useState(false);
 
   // Queries
   const accountsQuery = trpc.instagramAccounts.listAccounts.useQuery();
@@ -37,6 +42,45 @@ export default function Analytics() {
       accountInsightsQuery.refetch();
       performanceQuery.refetch();
     },
+  });
+
+  // Mutation para conectar automaticamente via token do servidor
+  const autoConnectMutation = trpc.instagramAccounts.autoConnectFeminnita.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      setAutoConnecting(false);
+      accountsQuery.refetch();
+    },
+    onError: (err) => {
+      setAutoConnecting(false);
+      // Auto-connect falhou: mostra modal manual como fallback
+      toast.error(`Auto-conexão falhou: ${err.message}. Informe o token manualmente.`);
+      setShowConnectModal(true);
+    },
+  });
+
+  // Mutation para conectar conta Instagram
+  const connectMutation = trpc.instagramAccounts.connectFeminnita.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      setShowConnectModal(false);
+      setConnectToken("");
+      setConnectIgId("");
+      accountsQuery.refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  // Mutation para conectar diretamente pelo ID (sem validação API)
+  const forceConnectMutation = trpc.instagramAccounts.forceConnectFeminnita.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      setShowConnectModal(false);
+      setConnectToken("");
+      setConnectIgId("");
+      accountsQuery.refetch();
+    },
+    onError: (err) => toast.error(err.message),
   });
 
   const insights = accountInsightsQuery.data;
@@ -65,20 +109,131 @@ export default function Analytics() {
 
   return (
     <div className="space-y-8">
+      {/* Modal conectar Instagram */}
+      {showConnectModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                <Instagram className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="font-bold text-slate-900">Conectar Instagram da Feminnita</h2>
+                <p className="text-sm text-slate-500">Precisa de um token com permissões Instagram</p>
+              </div>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-amber-800">
+                  <p className="font-medium mb-1">Como obter o token:</p>
+                  <ol className="list-decimal list-inside space-y-1 text-xs">
+                    <li>Acesse <strong>developers.facebook.com/tools/explorer</strong></li>
+                    <li>Selecione o app <strong>Feminnita Marketing</strong></li>
+                    <li>Clique em <strong>Gerar Token de Acesso</strong></li>
+                    <li>Marque: <code>instagram_basic</code>, <code>instagram_manage_insights</code>, <code>pages_show_list</code>, <code>pages_read_engagement</code></li>
+                    <li>Copie o token gerado e cole abaixo</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+
+            <textarea
+              value={connectToken}
+              onChange={(e) => setConnectToken(e.target.value)}
+              placeholder="Cole o token aqui..."
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono resize-none focus:outline-none focus:ring-2 focus:ring-pink-300 mb-3"
+              rows={3}
+            />
+
+            <div className="mb-4">
+              <label className="text-xs font-medium text-slate-600 block mb-1">
+                ID da Conta Instagram <span className="text-slate-400">(opcional — informe se o token não encontrar automaticamente)</span>
+              </label>
+              <input
+                type="text"
+                value={connectIgId}
+                onChange={(e) => setConnectIgId(e.target.value)}
+                placeholder="Ex: 17841459735732076"
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-pink-300"
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                onClick={() => {
+                  if (connectIgId.trim()) {
+                    forceConnectMutation.mutate({
+                      instagramId: connectIgId.trim(),
+                      username: "feminnita",
+                      ...(connectToken.trim() ? { accessToken: connectToken.trim() } : {}),
+                    });
+                  } else {
+                    connectMutation.mutate({ pageAccessToken: connectToken });
+                  }
+                }}
+                disabled={(!connectToken.trim() && !connectIgId.trim()) || connectMutation.isPending || forceConnectMutation.isPending}
+                className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+              >
+                {(connectMutation.isPending || forceConnectMutation.isPending) ? "Conectando..." : "Conectar"}
+              </Button>
+              <Button variant="outline" onClick={() => setShowConnectModal(false)}>
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Analytics de Posts</h1>
           <p className="text-slate-600 mt-2">Acompanhe o desempenho dos seus posts em tempo real</p>
         </div>
-        <Button
-          onClick={() => syncMetricsMutation.mutate({ accountId: parseInt(selectedAccountId) })}
-          disabled={!selectedAccountId || syncMetricsMutation.isPending}
-          variant="outline"
-        >
-          {syncMetricsMutation.isPending ? "Sincronizando..." : "Sincronizar Métricas"}
-        </Button>
+        <div className="flex gap-2">
+          {accounts.length === 0 ? (
+            <Button
+              onClick={() => { setAutoConnecting(true); autoConnectMutation.mutate(); }}
+              disabled={autoConnecting}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white gap-2"
+            >
+              <Link className="w-4 h-4" />
+              {autoConnecting ? "Conectando..." : "Conectar Instagram"}
+            </Button>
+          ) : (
+            <Button
+              onClick={() => syncMetricsMutation.mutate({ accountId: parseInt(selectedAccountId) })}
+              disabled={!selectedAccountId || syncMetricsMutation.isPending}
+              variant="outline"
+            >
+              {syncMetricsMutation.isPending ? "Sincronizando..." : "Sincronizar Métricas"}
+            </Button>
+          )}
+        </div>
       </div>
+
+      {/* Banner quando não há contas */}
+      {accounts.length === 0 && !accountsQuery.isLoading && (
+        <div className="border-2 border-dashed border-pink-200 rounded-2xl p-10 text-center bg-pink-50">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mx-auto mb-4">
+            <Instagram className="w-8 h-8 text-white" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-900 mb-2">Instagram não conectado</h3>
+          <p className="text-slate-500 text-sm mb-4 max-w-md mx-auto">
+            Conecte a conta Instagram da Feminnita para ver alcance, curtidas, comentários e engajamento dos posts.
+          </p>
+          <Button
+            onClick={() => { setAutoConnecting(true); autoConnectMutation.mutate(); }}
+            disabled={autoConnecting}
+            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white gap-2"
+          >
+            <Link className="w-4 h-4" />
+            {autoConnecting ? "Conectando..." : "Conectar Instagram Agora"}
+          </Button>
+        </div>
+      )}
 
       {/* Filtros */}
       <div className="flex gap-4">
