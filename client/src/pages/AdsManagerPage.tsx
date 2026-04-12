@@ -16,9 +16,30 @@ import {
   AlertTriangle,
   CheckCircle,
   XCircle,
+  Brain,
+  Zap,
 } from "lucide-react";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
+
+interface DailyAnalysisContent {
+  summary: string;
+  highlights: string[];
+  alerts: string[];
+  recommendations: string[];
+  roas: number;
+  spend: number;
+  revenue: number;
+}
+
+interface AgentMemoryEntry {
+  id: number;
+  agentName: string;
+  memoryType: string;
+  period: string;
+  content: string;
+  createdAt: Date | string;
+}
 
 interface Recommendation {
   priority: "alta" | "media" | "baixa";
@@ -98,6 +119,7 @@ export default function AdsManagerPage() {
   const [activeEvalId, setActiveEvalId] = useState<number | null>(null);
   const [polling, setPolling] = useState(false);
   const [expandedRecs, setExpandedRecs] = useState<Set<number>>(new Set());
+  const [expandedHistory, setExpandedHistory] = useState<Set<number>>(new Set());
   const [chatInput, setChatInput] = useState("");
   const [sendingMsg, setSendingMsg] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -120,7 +142,19 @@ export default function AdsManagerPage() {
     { enabled: !!activeEvalId && evalQuery.data?.status === "done" }
   );
 
+  const latestAnalysisQuery = trpc.agentMemory.getLatestAnalysis.useQuery();
+  const recentAnalysesQuery = trpc.agentMemory.getRecentAnalyses.useQuery({ limit: 7 });
+
   // ── Mutations ──
+  const triggerDailyMut = trpc.agentMemory.triggerDailyAnalysis.useMutation({
+    onSuccess: () => {
+      toast.success("Análise diária concluída!");
+      latestAnalysisQuery.refetch();
+      recentAnalysesQuery.refetch();
+    },
+    onError: (err) => toast.error(`Erro: ${err.message}`),
+  });
+
   const triggerMut = trpc.adsManager.triggerEvaluation.useMutation({
     onSuccess: (data) => {
       setActiveEvalId(data.evaluationId);
@@ -198,14 +232,7 @@ export default function AdsManagerPage() {
         </button>
       </div>
 
-      {/* ── Aviso de configuração ── */}
-      {!process.env.META_ACCESS_TOKEN && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
-          <strong>Atenção:</strong> configure <code>META_ACCESS_TOKEN</code> e{" "}
-          <code>META_AD_ACCOUNT_ID</code> no arquivo <code>.env</code> do servidor para que o agente
-          acesse sua conta.
-        </div>
-      )}
+      {/* aviso de configuração removido — credenciais Meta já configuradas no servidor */}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ── Histórico ── */}
@@ -477,6 +504,153 @@ export default function AdsManagerPage() {
             </>
           )}
         </div>
+      </div>
+
+      {/* ── Histórico de Análises Diárias (Memória da Fernanda) ── */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold text-gray-800 flex items-center gap-2 text-lg">
+            <Brain className="w-5 h-5 text-[#8B2635]" />
+            Histórico de Análises Diárias
+          </h2>
+          <button
+            onClick={() => triggerDailyMut.mutate()}
+            disabled={triggerDailyMut.isPending}
+            className="flex items-center gap-2 px-4 py-2 bg-[#8B2635] text-white rounded-lg text-sm font-medium hover:bg-[#7a1f2d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {triggerDailyMut.isPending ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Zap className="w-4 h-4" />
+            )}
+            {triggerDailyMut.isPending ? "Analisando…" : "Rodar Análise Agora"}
+          </button>
+        </div>
+
+        {/* Card da última análise */}
+        {latestAnalysisQuery.data && (() => {
+          const entry = latestAnalysisQuery.data as AgentMemoryEntry & { contentParsed: DailyAnalysisContent | null };
+          const data = entry.contentParsed;
+          return (
+            <div className="bg-white border border-[#8B2635]/20 rounded-xl p-5 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-semibold text-[#8B2635]">
+                  Última análise — {entry.period}
+                </span>
+                {data && (
+                  <div className="flex items-center gap-3 text-xs text-gray-500">
+                    {data.spend > 0 && <span>Spend: R${data.spend.toFixed(2)}</span>}
+                    {data.roas > 0 && (
+                      <span className={`font-semibold ${data.roas >= 4 ? "text-green-600" : "text-red-600"}`}>
+                        ROAS: {data.roas.toFixed(2)}x
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+              {data ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-gray-700 leading-relaxed">{data.summary}</p>
+                  {data.highlights.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-green-700 mb-1">Destaques</p>
+                      <ul className="space-y-1">
+                        {data.highlights.map((h, i) => (
+                          <li key={i} className="text-sm text-green-800 flex items-start gap-2">
+                            <CheckCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                            {h}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {data.alerts.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-orange-700 mb-1">Alertas</p>
+                      <ul className="space-y-1">
+                        {data.alerts.map((a, i) => (
+                          <li key={i} className="text-sm text-orange-800 flex items-start gap-2">
+                            <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                            {a}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 italic">{entry.content.slice(0, 300)}</p>
+              )}
+            </div>
+          );
+        })()}
+
+        {latestAnalysisQuery.isLoading && (
+          <div className="text-sm text-gray-400 flex items-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" /> Carregando análise…
+          </div>
+        )}
+
+        {!latestAnalysisQuery.isLoading && !latestAnalysisQuery.data && (
+          <div className="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-8 text-center text-gray-400">
+            <Brain className="w-8 h-8 mx-auto mb-2 opacity-40" />
+            <p className="text-sm">Nenhuma análise diária ainda. Clique em "Rodar Análise Agora" para começar.</p>
+          </div>
+        )}
+
+        {/* Accordion das últimas 7 análises */}
+        {(recentAnalysesQuery.data || []).length > 0 && (
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Últimas 7 análises</p>
+            {(recentAnalysesQuery.data as AgentMemoryEntry[] || []).map((entry, idx) => {
+              const isOpen = expandedHistory.has(idx);
+              let data: DailyAnalysisContent | null = null;
+              try { data = JSON.parse(entry.content); } catch { /* noop */ }
+              return (
+                <div key={entry.id} className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                  <button
+                    className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                    onClick={() => setExpandedHistory((prev) => {
+                      const next = new Set(prev);
+                      next.has(idx) ? next.delete(idx) : next.add(idx);
+                      return next;
+                    })}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-medium text-gray-700">{entry.period}</span>
+                      {data && data.roas > 0 && (
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${data.roas >= 4 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                          ROAS {data.roas.toFixed(2)}x
+                        </span>
+                      )}
+                      {data && data.spend > 0 && (
+                        <span className="text-xs text-gray-400">R${data.spend.toFixed(2)}</span>
+                      )}
+                    </div>
+                    {isOpen ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                  </button>
+                  {isOpen && data && (
+                    <div className="px-4 pb-4 border-t border-gray-100 space-y-2 pt-3">
+                      <p className="text-sm text-gray-700">{data.summary}</p>
+                      {data.recommendations.length > 0 && (
+                        <div>
+                          <p className="text-xs font-semibold text-gray-500 mb-1">Recomendações</p>
+                          <ul className="space-y-1">
+                            {data.recommendations.map((r, i) => (
+                              <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
+                                <span className="text-[#8B2635] mt-0.5">→</span> {r}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

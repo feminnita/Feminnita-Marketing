@@ -1200,4 +1200,61 @@ export const blogPosts = mysqlTable("blog_posts", {
 });
 
 export type BlogPost = typeof blogPosts.$inferSelect;
+
+// ─── Especialista em Tráfego — Conversas, Mensagens, Ações, Briefings ────────
+
+export const trafficConversations = mysqlTable("traffic_conversations", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+export type TrafficConversation = typeof trafficConversations.$inferSelect;
+export type InsertTrafficConversation = typeof trafficConversations.$inferInsert;
+
+export const trafficMessages = mysqlTable("traffic_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  conversationId: int("conversationId").notNull(),
+  role: mysqlEnum("role", ["user", "assistant"]).notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type TrafficMessage = typeof trafficMessages.$inferSelect;
+export type InsertTrafficMessage = typeof trafficMessages.$inferInsert;
+
+export const trafficActions = mysqlTable("traffic_actions", {
+  id: int("id").autoincrement().primaryKey(),
+  conversationId: int("conversationId").notNull(),
+  actionType: varchar("actionType", { length: 100 }).notNull(),
+  payload: text("payload"),   // JSON com os detalhes completos da ação
+  status: mysqlEnum("status", ["pending", "approved", "rejected", "executed"]).notNull().default("pending"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+export type TrafficAction = typeof trafficActions.$inferSelect;
+export type InsertTrafficAction = typeof trafficActions.$inferInsert;
+
+export const trafficDailyBriefings = mysqlTable("traffic_daily_briefings", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  date: timestamp("date").notNull(),           // meia-noite do dia
+  data: text("data").notNull(),                // JSON completo do briefing
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+export type TrafficDailyBriefing = typeof trafficDailyBriefings.$inferSelect;
+export type InsertTrafficDailyBriefing = typeof trafficDailyBriefings.$inferInsert;
 export type InsertBlogPost = typeof blogPosts.$inferInsert;
+
+// ─── Memória dos Agentes ──────────────────────────────────────────────────────
+
+export const agentMemory = mysqlTable("agent_memory", {
+  id: int("id").autoincrement().primaryKey(),
+  agentName: varchar("agentName", { length: 50 }).notNull(), // "fernanda", "market_research", etc
+  memoryType: mysqlEnum("memoryType", ["daily_analysis", "weekly_summary", "monthly_report", "business_goals", "learning"]).notNull(),
+  period: varchar("period", { length: 20 }).notNull(), // "2026-04-12", "2026-W15", "2026-04"
+  content: text("content").notNull(), // JSON stringified
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type AgentMemory = typeof agentMemory.$inferSelect;
