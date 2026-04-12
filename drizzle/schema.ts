@@ -1247,6 +1247,27 @@ export type TrafficDailyBriefing = typeof trafficDailyBriefings.$inferSelect;
 export type InsertTrafficDailyBriefing = typeof trafficDailyBriefings.$inferInsert;
 export type InsertBlogPost = typeof blogPosts.$inferInsert;
 
+// ─── Chat com Especialistas IA (Sofia, Beatriz, Clara, Mariana) ──────────────
+
+export const specialistConversations = mysqlTable("specialist_conversations", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  agentName: varchar("agentName", { length: 50 }).notNull(), // "sofia","beatriz","clara","mariana"
+  title: varchar("title", { length: 255 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+export type SpecialistConversation = typeof specialistConversations.$inferSelect;
+
+export const specialistMessages = mysqlTable("specialist_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  conversationId: int("conversationId").notNull(),
+  role: mysqlEnum("role", ["user", "assistant"]).notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type SpecialistMessage = typeof specialistMessages.$inferSelect;
+
 // ─── Ações Propostas pelos Agentes (fluxo de confirmação) ────────────────────
 
 export const agentActions = mysqlTable("agent_actions", {
