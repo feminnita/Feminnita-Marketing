@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -129,7 +130,52 @@ const AGENTS = [
     description: "Detecta novos lançamentos e dispara o fluxo de conteúdo.",
     lastAction: "Há menos de 5 minutos",
   },
+  {
+    name: "Fernanda — Especialista em Tráfego",
+    icon: <Bot className="w-5 h-5 text-purple-500" />,
+    frequency: "Disponível a qualquer momento",
+    description: "Analisa campanhas Meta Ads, otimiza ROAS/CAC e propõe ações concretas de tráfego pago.",
+    lastAction: "Sob demanda",
+    href: "/gestor-trafego",
+  },
 ];
+
+// ─── grade de agentes ─────────────────────────────────────────────
+function AgentesGrid() {
+  const [, setLocation] = useLocation();
+  return (
+    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {AGENTS.map((agent) => (
+        <Card
+          key={agent.name}
+          className={`hover:shadow-md transition-shadow ${(agent as any).href ? "cursor-pointer hover:border-purple-300" : ""}`}
+          onClick={() => (agent as any).href && setLocation((agent as any).href)}
+        >
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-gray-50 rounded-lg">{agent.icon}</div>
+              <CardTitle className="text-sm leading-tight">{agent.name}</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <p className="text-xs text-gray-600">{agent.description}</p>
+            <div className="flex items-center gap-1.5 text-xs text-gray-500">
+              <Clock className="w-3.5 h-3.5 shrink-0" />
+              <span>{agent.frequency}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
+              <CheckCircle className="w-3 h-3 shrink-0" />
+              <span>Última ação: {agent.lastAction}</span>
+            </div>
+            {(agent as any).href && (
+              <div className="text-xs text-purple-600 font-medium pt-1">→ Abrir agente</div>
+            )}
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
 
 // ─── componente de conteúdo gerado ───────────────────────────────
 function GeneratedContentView({
@@ -796,29 +842,7 @@ export default function MarketingTeamPage() {
 
         {/* ─── ABA AGENTES ─── */}
         <TabsContent value="agentes" className="mt-4">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {AGENTS.map((agent) => (
-              <Card key={agent.name} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 bg-gray-50 rounded-lg">{agent.icon}</div>
-                    <CardTitle className="text-sm">{agent.name}</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <p className="text-xs text-gray-600">{agent.description}</p>
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                    <Clock className="w-3.5 h-3.5 shrink-0" />
-                    <span>{agent.frequency}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
-                    <CheckCircle className="w-3 h-3 shrink-0" />
-                    <span>Última ação: {agent.lastAction}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <AgentesGrid />
         </TabsContent>
       </Tabs>
     </div>
