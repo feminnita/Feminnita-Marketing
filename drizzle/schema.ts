@@ -1247,6 +1247,25 @@ export type TrafficDailyBriefing = typeof trafficDailyBriefings.$inferSelect;
 export type InsertTrafficDailyBriefing = typeof trafficDailyBriefings.$inferInsert;
 export type InsertBlogPost = typeof blogPosts.$inferInsert;
 
+// ─── Ações Propostas pelos Agentes (fluxo de confirmação) ────────────────────
+
+export const agentActions = mysqlTable("agent_actions", {
+  id: int("id").autoincrement().primaryKey(),
+  agentName: varchar("agentName", { length: 50 }).notNull(), // "fernanda", "sofia", etc
+  date: varchar("date", { length: 10 }).notNull(),           // "2026-04-12"
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description").notNull(),
+  actionType: varchar("actionType", { length: 50 }).notNull(), // "post", "campaign", "reativacao", etc
+  priority: mysqlEnum("priority", ["alta", "media", "baixa"]).notNull().default("media"),
+  estimatedImpact: text("estimatedImpact"),
+  status: mysqlEnum("status", ["pending", "approved", "rejected", "executing", "done"]).notNull().default("pending"),
+  userNote: text("userNote"),                                // nota do usuário ao aprovar/rejeitar
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+export type AgentAction = typeof agentActions.$inferSelect;
+export type InsertAgentAction = typeof agentActions.$inferInsert;
+
 // ─── Memória dos Agentes ──────────────────────────────────────────────────────
 
 export const agentMemory = mysqlTable("agent_memory", {

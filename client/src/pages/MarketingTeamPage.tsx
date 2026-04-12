@@ -102,77 +102,147 @@ const TYPE_ICON: Record<string, React.ReactElement> = {
 };
 
 const AGENTS = [
+  // ── Equipe IA Especializada (com memória + busca na internet) ─────────────
+  {
+    name: "Fernanda — Gestora de Tráfego",
+    icon: <Bot className="w-5 h-5 text-purple-500" />,
+    frequency: "Análise diária Meta Ads + todas as plataformas",
+    description: "Otimiza campanhas Meta Ads, monitora ROAS/CPA e escala orçamento. Integra Shopee, ML, Amazon e TikTok Ads conforme credenciais são ativadas.",
+    badge: "Meta · ML · Shopee · Amazon · TikTok",
+    badgeColor: "bg-purple-100 text-purple-700",
+    href: "/gestor-trafego",
+  },
+  {
+    name: "Sofia — Crescimento Instagram",
+    icon: <TrendingUp className="w-5 h-5 text-pink-500" />,
+    frequency: "Análise diária + busca de tendências",
+    description: "Monitora métricas orgânicas, identifica tendências de conteúdo em tempo real e propõe ações para crescer seguidores e engajamento.",
+    badge: "Instagram · Reels · Stories",
+    badgeColor: "bg-pink-100 text-pink-700",
+    href: "/agente/sofia",
+  },
+  {
+    name: "Beatriz — Conteúdo e Tendências",
+    icon: <Lightbulb className="w-5 h-5 text-yellow-500" />,
+    frequency: "Varredura diária de tendências",
+    description: "Pesquisa tendências de moda e pijamas na internet, sugere pautas, hashtags e calendário editorial baseado em dados reais.",
+    badge: "Conteúdo · SEO · Calendário",
+    badgeColor: "bg-yellow-100 text-yellow-700",
+    href: "/agente/beatriz",
+  },
+  {
+    name: "Clara — Inteligência Competitiva",
+    icon: <Eye className="w-5 h-5 text-blue-500" />,
+    frequency: "Monitoramento diário de concorrentes",
+    description: "Rastreia concorrentes de pijamas atacado, analisa precificação de mercado e identifica gaps e oportunidades estratégicas.",
+    badge: "Concorrentes · Mercado · Preços",
+    badgeColor: "bg-blue-100 text-blue-700",
+    href: "/agente/clara",
+  },
+  {
+    name: "Mariana — Estratégia de Vendas",
+    icon: <Send className="w-5 h-5 text-green-500" />,
+    frequency: "Análise diária multicanal",
+    description: "Gerencia estratégia de vendas em todos os canais (Meta, ML, WhatsApp, Shopee, Amazon, TikTok). Foca no caminho para R$100K/mês.",
+    badge: "ML · Shopee · Amazon · TikTok · WhatsApp",
+    badgeColor: "bg-green-100 text-green-700",
+    href: "/agente/mariana",
+  },
+  // ── Agentes de automação de conteúdo (pipeline existente) ─────────────────
   {
     name: "MarketResearch",
-    icon: <TrendingUp className="w-5 h-5 text-blue-500" />,
+    icon: <TrendingUp className="w-5 h-5 text-blue-400" />,
     frequency: "Roda diariamente às 7h",
     description: "Analisa mercado, concorrentes e tendências de hashtags.",
-    lastAction: "Hoje às 07:00",
   },
   {
     name: "CreativeTeam",
-    icon: <Lightbulb className="w-5 h-5 text-yellow-500" />,
+    icon: <Lightbulb className="w-5 h-5 text-yellow-400" />,
     frequency: "Roda toda segunda-feira às 8h",
     description: "Gera briefs de conteúdo com base nas pesquisas.",
-    lastAction: "Segunda-feira às 08:00",
   },
   {
     name: "Copywriter",
-    icon: <FileText className="w-5 h-5 text-green-500" />,
+    icon: <FileText className="w-5 h-5 text-green-400" />,
     frequency: "Processa briefs a cada 30min",
     description: "Redige o conteúdo completo dos briefs aprovados.",
-    lastAction: "Há menos de 30 minutos",
-  },
-  {
-    name: "LaunchAgent",
-    icon: <Send className="w-5 h-5 text-pink-500" />,
-    frequency: "Monitora lançamentos a cada 5min",
-    description: "Detecta novos lançamentos e dispara o fluxo de conteúdo.",
-    lastAction: "Há menos de 5 minutos",
-  },
-  {
-    name: "Fernanda — Especialista em Tráfego",
-    icon: <Bot className="w-5 h-5 text-purple-500" />,
-    frequency: "Disponível a qualquer momento",
-    description: "Analisa campanhas Meta Ads, otimiza ROAS/CAC e propõe ações concretas de tráfego pago.",
-    lastAction: "Sob demanda",
-    href: "/gestor-trafego",
   },
 ];
 
 // ─── grade de agentes ─────────────────────────────────────────────
 function AgentesGrid() {
   const [, setLocation] = useLocation();
+  const specialists = AGENTS.filter((a) => (a as any).href);
+  const automation = AGENTS.filter((a) => !(a as any).href);
+
   return (
-    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {AGENTS.map((agent) => (
-        <Card
-          key={agent.name}
-          className={`hover:shadow-md transition-shadow ${(agent as any).href ? "cursor-pointer hover:border-purple-300" : ""}`}
-          onClick={() => (agent as any).href && setLocation((agent as any).href)}
-        >
-          <CardHeader className="pb-2">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-gray-50 rounded-lg">{agent.icon}</div>
-              <CardTitle className="text-sm leading-tight">{agent.name}</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <p className="text-xs text-gray-600">{agent.description}</p>
-            <div className="flex items-center gap-1.5 text-xs text-gray-500">
-              <Clock className="w-3.5 h-3.5 shrink-0" />
-              <span>{agent.frequency}</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
-              <CheckCircle className="w-3 h-3 shrink-0" />
-              <span>Última ação: {agent.lastAction}</span>
-            </div>
-            {(agent as any).href && (
-              <div className="text-xs text-purple-600 font-medium pt-1">→ Abrir agente</div>
-            )}
-          </CardContent>
-        </Card>
-      ))}
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+          <Bot className="w-4 h-4 text-purple-500" />
+          Equipe IA Especializada — Memória + Busca em Tempo Real
+        </h3>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {specialists.map((agent) => (
+            <Card
+              key={agent.name}
+              className="cursor-pointer hover:shadow-md hover:border-purple-300 transition-all"
+              onClick={() => setLocation((agent as any).href)}
+            >
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-gray-50 rounded-lg">{agent.icon}</div>
+                  <div>
+                    <CardTitle className="text-sm leading-tight">{agent.name}</CardTitle>
+                    {(agent as any).badge && (
+                      <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${(agent as any).badgeColor}`}>
+                        {(agent as any).badge}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <p className="text-xs text-gray-600">{agent.description}</p>
+                <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                  <Clock className="w-3.5 h-3.5 shrink-0" />
+                  <span>{agent.frequency}</span>
+                </div>
+                <div className="text-xs text-purple-600 font-medium pt-1 flex items-center gap-1">
+                  <Bot className="w-3 h-3" />
+                  → Abrir agente
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-sm font-semibold text-gray-500 mb-3 flex items-center gap-2">
+          <RefreshCw className="w-4 h-4" />
+          Pipeline de Automação de Conteúdo
+        </h3>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {automation.map((agent) => (
+            <Card key={agent.name} className="hover:shadow-sm transition-shadow opacity-80">
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-gray-50 rounded-lg">{agent.icon}</div>
+                  <CardTitle className="text-sm leading-tight">{agent.name}</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <p className="text-xs text-gray-600">{agent.description}</p>
+                <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                  <Clock className="w-3.5 h-3.5 shrink-0" />
+                  <span>{agent.frequency}</span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

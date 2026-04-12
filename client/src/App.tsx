@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { useLocation } from "wouter";
 import DashboardLayout from "@/components/DashboardLayout";
 import PublicLayout from "@/components/PublicLayout";
+import { Toaster } from "@/components/ui/sonner";
 
 // Páginas carregadas imediatamente (rota inicial + login)
 import Home from "@/pages/Home";
@@ -48,6 +49,9 @@ const BrandBookPage           = lazy(() => import("@/pages/BrandBookPage"));
 const TiktokLivePage          = lazy(() => import("@/pages/TiktokLivePage"));
 const AdsManagerPage          = lazy(() => import("@/pages/AdsManagerPage"));
 const BlogFeminnitaPage       = lazy(() => import("@/pages/BlogFeminnitaPage"));
+const TrafficManagerPage      = lazy(() => import("@/pages/TrafficManagerPage"));
+const AgentActionsPage        = lazy(() => import("@/pages/AgentActionsPage"));
+const AgentDetailPage         = lazy(() => import("@/pages/AgentDetailPage"));
 
 function PageLoader() {
   return (
@@ -65,7 +69,12 @@ export default function App() {
 
   // Rotas de autenticação (sem layout)
   if (location === "/login" || location === "/signup") {
-    return <LoginSignup />;
+    return (
+      <>
+        <LoginSignup />
+        <Toaster />
+      </>
+    );
   }
 
   // Rotas públicas que não requerem autenticação
@@ -162,12 +171,20 @@ export default function App() {
         return <AdsManagerPage />;
       case "/blog-feminnita":
         return <BlogFeminnitaPage />;
+      case "/traffic-manager":
+        return <TrafficManagerPage />;
+      case "/acoes-agentes":
+        return <AgentActionsPage />;
       default: {
         if (/^\/influenciadora\/\d+$/.test(location)) {
           return <InfluencerProfilePage />;
         }
         if (/^\/blog\/\d+$/.test(location)) {
           return <InfluencerBlogPage />;
+        }
+        if (/^\/agente\/(sofia|beatriz|clara|mariana)$/.test(location)) {
+          const agentName = location.split("/").pop()!;
+          return <AgentDetailPage agentName={agentName} />;
         }
         return <Home />;
       }
@@ -176,19 +193,25 @@ export default function App() {
 
   if (isPublicRoute) {
     return (
-      <PublicLayout>
-        <Suspense fallback={<PageLoader />}>
-          {getPageComponent()}
-        </Suspense>
-      </PublicLayout>
+      <>
+        <PublicLayout>
+          <Suspense fallback={<PageLoader />}>
+            {getPageComponent()}
+          </Suspense>
+        </PublicLayout>
+        <Toaster />
+      </>
     );
   }
 
   return (
-    <DashboardLayout>
-      <Suspense fallback={<PageLoader />}>
-        {getPageComponent()}
-      </Suspense>
-    </DashboardLayout>
+    <>
+      <DashboardLayout>
+        <Suspense fallback={<PageLoader />}>
+          {getPageComponent()}
+        </Suspense>
+      </DashboardLayout>
+      <Toaster />
+    </>
   );
 }

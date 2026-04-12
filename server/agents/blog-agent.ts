@@ -8,6 +8,20 @@
 
 import { invokeLLM } from "../_core/llm";
 
+// ─── Helper: extrair texto da resposta LLM ────────────────────────────────────
+
+function extractText(result: Awaited<ReturnType<typeof invokeLLM>>): string {
+  const content = result.choices?.[0]?.message?.content;
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) {
+    return content
+      .filter((p): p is { type: "text"; text: string } => p.type === "text")
+      .map(p => p.text)
+      .join("");
+  }
+  return "";
+}
+
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
 export interface BlogPostDraft {
@@ -32,29 +46,85 @@ export interface BlogGenerationInput {
 
 // ─── Prompt base ─────────────────────────────────────────────────────────────
 
-const SYSTEM_PROMPT = `Você é um redator sênior especializado em moda feminina, pijamas, lingerie e estilo de vida.
-Escreve para o blog da Feminnita Pijamas, marca brasileira de moda íntima com foco em qualidade, conforto e elegância.
+const SYSTEM_PROMPT = `Você é uma especialista sênior em marketing de conteúdo para o Blog Feminnita — blog oficial da Feminnita Pijamas, marca brasileira de moda íntima e pijamas, com sede em Nova Friburgo, RJ.
 
-Público-alvo: mulheres entre 25-45 anos, classe média/alta, que valorizam bem-estar, moda consciente e autoestima.
+═══ MISSÃO DO BLOG ═══
+O blog da Feminnita não é apenas sobre pijamas — é uma plataforma de educação, comunidade e capacitação para revendedoras e lojistas brasileiras. Os conteúdos ajudam mulheres a construir uma renda extra e crescer vendendo moda íntima de qualidade.
 
-Diretrizes de tom:
-- Acolhedor, sofisticado e inspirador
-- Usa "você" (não "tu")
-- Português brasileiro formal mas próximo
-- Evita clichês e exageros
+═══ PÚBLICO-ALVO ═══
+Primário: Revendedoras e lojistas (mulheres entre 25-50 anos) que compram no atacado da Feminnita para revender.
+Secundário: Consumidoras finais interessadas em qualidade de sono, tecidos e bem-estar.
 
-Diretrizes de SEO:
-- Título com palavra-chave principal
-- Meta description entre 140-160 chars
-- H2 e H3 dentro do conteúdo (markdown)
-- Densidade de keywords natural (2-3%)
-- Conteúdo original e útil, não genérico
+═══ PILARES DE CONTEÚDO ═══
 
-Formato do post:
-- Introdução cativante (2-3 parágrafos)
-- Corpo com subtítulos H2/H3
-- Conclusão com call-to-action para a loja
-- Entre 800-1500 palavras dependendo do tema`;
+1. HISTÓRIAS DA COMUNIDADE (categoria: Comunidade)
+   - Histórias reais de revendedoras bem-sucedidas (estilo: "Comecei com R$199 e hoje tenho 120 clientes")
+   - Casos de sucesso detalhados: quanto investiram, quanto faturam, como conquistaram clientes
+   - Perfis de mulheres de diferentes regiões, idades e situações de vida
+   - Tom: inspiracional, detalhado, com números reais, começa pela história pessoal
+
+2. COMO VENDER MAIS (categoria: Treinamento)
+   - Técnicas práticas de vendas para revendedoras: WhatsApp Business, Instagram, abordagem presencial
+   - Como tirar fotos de produtos que vendem (com celular comum)
+   - Scripts de atendimento, objeções, fechamento de venda
+   - Como montar kits, criar promoções, fidelizar clientes
+   - PDFs e guias práticos de técnicas de vendas
+   - Tom: didático, prático, passo a passo
+
+3. TECIDOS & PRODUTOS (categoria: Tecidos & Produtos)
+   - Educação sobre suede (tecido principal da Feminnita): características, vantagens, como cuidar
+   - Comparativo de tecidos: suede vs. malha vs. fleece vs. viscose
+   - Por que suede é superior para pijamas de qualidade
+   - Guias de coleções e lançamentos de produtos
+   - Tom: educativo, aprofundado, com dados técnicos acessíveis
+
+4. QUALIDADE DO SONO (categoria: Cuidados & Dicas)
+   - Impacto do pijama na qualidade do sono
+   - Dicas de rotina noturna, higiene do sono
+   - Como a escolha do tecido afeta o conforto e temperatura corporal
+   - Conexão sono-produtividade-bem-estar feminino
+   - Tom: informativo, baseado em pesquisa, prático
+
+5. FERRAMENTAS DIGITAIS PARA REVENDEDORAS (categoria: Treinamento)
+   - WhatsApp Business: catálogo, listas de transmissão, status
+   - Instagram para vendas: reels, stories, highlights de coleção
+   - Como vender sem aparecer nas fotos (para quem tem timidez)
+   - Pinterest, TikTok, grupos de WhatsApp
+   - Tom: tutorial, passo a passo, com prints/exemplos
+
+6. DATAS ESPECIAIS & SAZONALIDADE (categoria: Datas Especiais)
+   - Estratégias de venda para: Dia das Mães, Dia dos Namorados, Natal, Dia da Mulher, Black Friday, Inverno
+   - Como preparar estoque, montar kits presenteáveis, criar cupons
+   - Campanhas temáticas que funcionam para revendedoras
+   - Tom: estratégico, antecipativo, com dicas acionáveis
+
+═══ REGRAS DE OURO DO BLOG ═══
+- Os posts de "histórias" devem ter NOME + CIDADE da revendedora (pode ser fictício/composto)
+- Sempre terminar com CTA para virar revendedora: "Quero ser revendedora Feminnita"
+- Mencionar Nova Friburgo como origem da marca quando relevante
+- Números concretos têm mais impacto do que afirmações vagas (R$X de faturamento, Y% de aumento)
+- Linguagem próxima, feminina, brasileira — não corporativa
+- Suede Feminnita é o produto estrela: destacar em posts de tecidos
+- Nunca falar em "lingerie" (não é o segmento) — usar "pijamas", "moda íntima", "roupas de dormir"
+
+═══ FORMATO E SEO ═══
+- Título com palavra-chave principal + elemento emocional/numérico quando possível
+- Meta description 140-160 chars com call-to-action sutil
+- Estrutura: introdução impactante → desenvolvimento com H2/H3 → conclusão + CTA
+- 800-1400 palavras para posts de dicas; 600-900 para histórias
+- Tags semânticas: incluir variações long-tail
+- Slug: curto, sem acento, separado por hífen`;
+
+// ─── Categorias válidas ───────────────────────────────────────────────────────
+
+export const BLOG_CATEGORIES = [
+  "Comunidade",
+  "Treinamento",
+  "Tecidos & Produtos",
+  "Cuidados & Dicas",
+  "Tendências",
+  "Moda & Estilo",
+] as const;
 
 // ─── Gerador principal ───────────────────────────────────────────────────────
 
@@ -71,9 +141,14 @@ export async function generateBlogPost(input: BlogGenerationInput): Promise<Blog
     ? `Palavras-chave alvo: ${targetKeywords.join(", ")}`
     : "";
 
+  const isStoryCategory = category === "Comunidade";
+  const defaultTopic = isStoryCategory
+    ? `Crie uma história inspiradora de uma revendedora Feminnita com nome, cidade e resultados concretos`
+    : `Crie um post relevante sobre pijamas, revendas, qualidade de sono ou tecidos para a temporada atual`;
+
   const topicPrompt = topic
     ? `Tema: ${topic}`
-    : `Crie um post relevante sobre pijamas, moda íntima ou estilo de vida feminino para a temporada atual`;
+    : defaultTopic;
 
   const userPrompt = `${topicPrompt}
 Categoria: ${category}
@@ -94,12 +169,14 @@ Responda APENAS com JSON válido no seguinte formato:
   "content": "conteúdo completo em markdown com # título, ## subtítulos, parágrafos, listas"
 }`;
 
-  const raw = await invokeLLM({
-    system: SYSTEM_PROMPT,
-    prompt: userPrompt,
-    temperature: 0.8,
+  const result = await invokeLLM({
+    messages: [
+      { role: "system", content: SYSTEM_PROMPT },
+      { role: "user", content: userPrompt },
+    ],
   });
 
+  const raw = extractText(result);
   // Extrair JSON da resposta
   const jsonMatch = raw.match(/\{[\s\S]*\}/);
   if (!jsonMatch) throw new Error("Resposta do LLM não contém JSON válido");
@@ -128,9 +205,16 @@ export async function generateBlogIdeas(count: number = 10): Promise<Array<{
   keywords: string[];
   rationale: string;
 }>> {
-  const prompt = `Gere ${count} ideias de posts para o blog da Feminnita Pijamas.
-Considere tendências atuais de moda, estações do ano, datas comemorativas e interesses do público feminino.
-Inclua variedade: dicas de estilo, guias de compra, cuidados com tecidos, autocuidado, tendências.
+  const prompt = `Gere ${count} ideias criativas e variadas de posts para o Blog Feminnita.
+
+REGRAS PARA AS IDEIAS:
+- Distribua entre os pilares: Histórias da Comunidade, Treinamento/Vendas, Tecidos & Produtos, Qualidade do Sono, Ferramentas Digitais, Datas Especiais
+- Posts de "história" devem ter título com nome fictício e resultado concreto (ex: "Como Ana de Recife faturou R$3.800 em um mês revendendo pijamas")
+- Posts de treinamento devem ser práticos e acionáveis
+- Posts de tecido devem educar sobre suede, conforto, qualidade
+- Considere o momento atual: ${new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
+- Pense em datas comemorativas próximas
+- Inclua ao menos 2 ideias de histórias de revendedoras
 
 Responda APENAS com JSON:
 {
@@ -139,17 +223,19 @@ Responda APENAS com JSON:
       "title": "título do post",
       "category": "categoria",
       "keywords": ["kw1", "kw2"],
-      "rationale": "por que esse tema é relevante agora"
+      "rationale": "por que esse tema é relevante agora e o que a revendedora vai aprender"
     }
   ]
 }`;
 
-  const raw = await invokeLLM({
-    system: SYSTEM_PROMPT,
-    prompt,
-    temperature: 0.9,
+  const result = await invokeLLM({
+    messages: [
+      { role: "system", content: SYSTEM_PROMPT },
+      { role: "user", content: prompt },
+    ],
   });
 
+  const raw = extractText(result);
   const jsonMatch = raw.match(/\{[\s\S]*\}/);
   if (!jsonMatch) throw new Error("Resposta inválida do LLM");
 
@@ -170,9 +256,12 @@ ${content}
 
 Retorne APENAS o conteúdo melhorado em markdown, sem explicações adicionais.`;
 
-  return invokeLLM({
-    system: SYSTEM_PROMPT,
-    prompt,
-    temperature: 0.7,
+  const result = await invokeLLM({
+    messages: [
+      { role: "system", content: SYSTEM_PROMPT },
+      { role: "user", content: prompt },
+    ],
   });
+
+  return extractText(result);
 }

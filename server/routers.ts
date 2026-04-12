@@ -82,6 +82,8 @@ import { adsManagerRouter } from "./routers/ads-manager";
 import { blogRouter } from "./routers/blog";
 import { trafficManagerRouter } from "./routers/traffic-manager";
 import { agentMemoryRouter } from "./routers/agent-memory";
+import { agentActionsRouter } from "./routers/agent-actions";
+import { morningBriefingRouter } from "./routers/morning-briefing";
 import { getDb } from "./db";
 import { influencers, influencerPosts } from "../drizzle/schema";
 
@@ -204,6 +206,8 @@ export const appRouter = router({
   blog: blogRouter,
   trafficManager: trafficManagerRouter,
   agentMemory: agentMemoryRouter,
+  agentActions: agentActionsRouter,
+  morningBriefing: morningBriefingRouter,
   influencers: router({
     list: protectedProcedure.query(async ({ ctx }) => {
       try {

@@ -59,6 +59,7 @@ const categorias: Categoria[] = [
     icon: '📢',
     abas: [
       { id: 'gestor-trafego', label: 'Gestor de Tráfego IA', icon: '🤖', href: '/gestor-trafego' },
+      { id: 'traffic-manager', label: 'Especialista em Tráfego', icon: '📊', href: '/traffic-manager' },
       { id: 'blog-feminnita', label: 'Blog Feminnita', icon: '✍️', href: '/blog-feminnita' },
       { id: 'meta', label: 'Meta Ads', icon: '📱' },
       { id: 'googleads', label: 'Google Ads', icon: '🔍' },

@@ -216,7 +216,7 @@ export default function BlogFeminnitaPage() {
     }
   }
 
-  const filteredPosts = (posts || []).filter(p =>
+  const filteredPosts = (posts || []).filter((p: BlogPost) =>
     !searchTerm || p.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -252,7 +252,7 @@ export default function BlogFeminnitaPage() {
           <div key={s} className="bg-white rounded-xl border border-slate-200 p-4">
             <p className="text-xs text-slate-500 mb-1">{statusConfig[s].label}</p>
             <p className="text-2xl font-bold text-slate-900">
-              {(posts || []).filter(p => p.status === s).length}
+              {(posts || []).filter((p: BlogPost) => p.status === s).length}
             </p>
           </div>
         ))}
@@ -292,12 +292,12 @@ export default function BlogFeminnitaPage() {
             <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
             <p>Nenhum post ainda. Gere o primeiro com IA!</p>
           </div>
-        ) : filteredPosts.map(post => (
+        ) : filteredPosts.map((post: BlogPost) => (
           <div key={post.id} className="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-4 hover:border-rose-200 transition-colors">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusConfig[post.status].color}`}>
-                  {statusConfig[post.status].label}
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusConfig[post.status as PostStatus]?.color ?? ""}`}>
+                  {statusConfig[post.status as PostStatus]?.label ?? post.status}
                 </span>
                 {post.generatedByAI && (
                   <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 font-medium">
@@ -429,7 +429,22 @@ export default function BlogFeminnitaPage() {
           <Button variant="ghost" size="sm" onClick={() => setView("list")} className="text-slate-500">← Voltar</Button>
           <h2 className="text-xl font-bold text-slate-900">Ideias de Posts com IA</h2>
         </div>
-        <Button onClick={() => ideasMutation.mutate({ count: 8 })} disabled={ideasMutation.isPending} className="gap-2">
+        <Button
+          onClick={async () => {
+            const toastId = toast.loading("Gerando ideias...");
+            try {
+              const result = await ideasMutation.mutateAsync({ count: 8 });
+              toast.dismiss(toastId);
+              toast.success(`${result.ideas?.length ?? 0} ideias geradas!`);
+            } catch (e: any) {
+              toast.dismiss(toastId);
+              const msg = e?.data?.message ?? e?.message ?? "Erro ao gerar ideias";
+              toast.error(msg);
+            }
+          }}
+          disabled={ideasMutation.isPending}
+          className="gap-2"
+        >
           {ideasMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
           Gerar Ideias
         </Button>

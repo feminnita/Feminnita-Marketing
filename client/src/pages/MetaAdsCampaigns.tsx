@@ -226,7 +226,13 @@ export default function MetaAdsCampaigns() {
                               <TrendingUp className="w-4 h-4 text-slate-600" />
                               <span className="text-sm text-slate-600">Conversões</span>
                             </div>
-                            <span className="font-semibold">{metricsData?.actions?.toLocaleString()}</span>
+                            <span className="font-semibold">
+                              {Array.isArray(metricsData?.actions)
+                                ? (metricsData.actions.find((a: any) =>
+                                    a.action_type === "purchase" || a.action_type === "omni_purchase"
+                                  )?.value ?? "0")
+                                : "0"}
+                            </span>
                           </div>
 
                           <div className="flex items-center justify-between p-3 bg-green-50 rounded border border-green-200">

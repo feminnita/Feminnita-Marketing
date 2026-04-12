@@ -302,11 +302,36 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                 </SidebarMenuSubItem>
               </CollapsibleGroup>
 
-              {/* Equipe */}
-              <CollapsibleGroup icon={Briefcase} label="Equipe">
+              {/* Equipe IA */}
+              <CollapsibleGroup icon={Briefcase} label="Equipe IA">
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/acoes-agentes")}>
+                    <Bot className="h-3 w-3" /> Ações da Equipe IA
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
                   <SidebarMenuSubButton onClick={() => setLocation("/equipe-marketing")}>
                     <Briefcase className="h-3 w-3" /> Equipe de Marketing
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/agente/sofia")}>
+                    <TrendingUp className="h-3 w-3" /> Sofia — Instagram
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/agente/beatriz")}>
+                    <Brain className="h-3 w-3" /> Beatriz — Conteúdo
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/agente/clara")}>
+                    <BarChart2 className="h-3 w-3" /> Clara — Competição
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/agente/mariana")}>
+                    <Megaphone className="h-3 w-3" /> Mariana — Vendas
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>

@@ -128,7 +128,7 @@ export async function buildMemoryContext(agentName: string): Promise<string> {
 
   const lines: string[] = [];
 
-  lines.push("=== MEMÓRIA DA FERNANDA ===");
+  lines.push(`=== MEMÓRIA DO AGENTE: ${agentName.toUpperCase()} ===`);
   lines.push("");
 
   // Contexto do negócio (das metas salvas ou padrão)
@@ -212,7 +212,7 @@ export async function buildMemoryContext(agentName: string): Promise<string> {
 }
 
 function buildStaticBusinessContext(): string {
-  return `=== MEMÓRIA DA FERNANDA ===
+  return `=== MEMÓRIA DO AGENTE ===
 
 CONTEXTO DO NEGÓCIO:
 - Feminnita Pijamas Atacado | Ticket médio: R$400

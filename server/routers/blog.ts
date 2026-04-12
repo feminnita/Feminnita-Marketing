@@ -64,9 +64,20 @@ export const blogRouter = router({
   // Gerar ideias
   generateIdeas: protectedProcedure
     .input(z.object({ count: z.number().default(8) }))
-    .mutation(async () => {
-      const ideas = await generateBlogIdeas(8);
-      return { ideas };
+    .mutation(async ({ input }) => {
+      console.log("[Blog] generateIdeas chamado, count:", input.count);
+      try {
+        const ideas = await generateBlogIdeas(input.count);
+        console.log("[Blog] generateIdeas ok, ideias:", ideas?.length);
+        return { ideas };
+      } catch (err: any) {
+        console.error("[Blog] generateIdeas ERRO:", err.message, err.stack);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: err.message ?? "Erro ao gerar ideias",
+          cause: err,
+        });
+      }
     }),
 
   // Salvar post (criar ou atualizar)
