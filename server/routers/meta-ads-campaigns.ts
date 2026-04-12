@@ -15,7 +15,7 @@ export const metaAdsCampaignsRouter = router({
       }
 
       const response = await fetch(
-        `https://graph.facebook.com/v18.0/${adAccountId}/campaigns?fields=id,name,status,objective,created_time,updated_time,daily_budget,lifetime_budget,spend,impressions,clicks&access_token=${metaAccessToken}`
+        `https://graph.facebook.com/v19.0/${adAccountId}/campaigns?${new URLSearchParams({ fields: "id,name,status,objective,created_time,updated_time,daily_budget,lifetime_budget", limit: "30", access_token: metaAccessToken }).toString()}`
       );
 
       if (!response.ok) {
@@ -35,10 +35,10 @@ export const metaAdsCampaignsRouter = router({
           updatedTime: c.updated_time,
           dailyBudget: c.daily_budget ? parseFloat(c.daily_budget) / 100 : 0,
           lifetimeBudget: c.lifetime_budget ? parseFloat(c.lifetime_budget) / 100 : 0,
-          spend: c.spend ? parseFloat(c.spend) : 0,
-          impressions: parseInt(c.impressions || "0"),
-          clicks: parseInt(c.clicks || "0"),
-          ctr: c.impressions && c.clicks ? ((parseInt(c.clicks) / parseInt(c.impressions)) * 100).toFixed(2) : "0.00",
+          spend: 0,
+          impressions: 0,
+          clicks: 0,
+          ctr: "0.00",
         }));
 
       return { campaigns, total: campaigns.length };
@@ -71,7 +71,7 @@ export const metaAdsCampaignsRouter = router({
 
       // Usar endpoint correto: Meta Ads API (nao Instagram API)
       const campaignsResponse = await fetch(
-        `https://graph.facebook.com/v18.0/${adAccountId}/campaigns?fields=id,name,status,objective,created_time,updated_time,daily_budget,lifetime_budget,spend,impressions,clicks,actions&access_token=${metaAccessToken}`
+        `https://graph.facebook.com/v19.0/${adAccountId}/campaigns?${new URLSearchParams({ fields: "id,name,status,objective,created_time,updated_time,daily_budget,lifetime_budget", limit: "30", access_token: metaAccessToken }).toString()}`
       );
 
       console.log(`[Meta Ads Campaigns] Status da resposta: ${campaignsResponse.status}`);
@@ -91,26 +91,47 @@ export const metaAdsCampaignsRouter = router({
         return { campanhas: [], message: "Nenhuma campanha encontrada" };
       }
 
-      // Filtrar apenas campanhas ativas
+      // Buscar métricas via Insights (últimos 30 dias)
+      const insightsResponse = await fetch(
+        `https://graph.facebook.com/v19.0/${adAccountId}/insights?${new URLSearchParams({ level: "campaign", date_preset: "last_30d", fields: "campaign_id,spend,impressions,clicks,ctr,cpc,actions", limit: "30", access_token: metaAccessToken }).toString()}`
+      );
+      const insightsData = insightsResponse.ok ? await insightsResponse.json() : { data: [] };
+      const insightsMap: Record<string, any> = {};
+      for (const row of (insightsData.data || [])) {
+        insightsMap[row.campaign_id] = row;
+      }
+
+      // Filtrar apenas campanhas ativas e juntar com métricas
       const activeCampaigns = data.data
         .filter((campaign: any) => campaign.status === "ACTIVE")
-        .map((campaign: any) => ({
-          id: campaign.id,
-          name: campaign.name,
-          status: campaign.status,
-          objective: campaign.objective,
-          createdTime: campaign.created_time,
-          updatedTime: campaign.updated_time,
-          dailyBudget: campaign.daily_budget ? parseFloat(campaign.daily_budget) : 0,
-          lifetimeBudget: campaign.lifetime_budget ? parseFloat(campaign.lifetime_budget) : 0,
-          spend: campaign.spend ? parseFloat(campaign.spend) : 0,
-          impressions: campaign.impressions || 0,
-          clicks: campaign.clicks || 0,
-          actions: campaign.actions || [],
-          roi: 0,
-          ctr: 0,
-          conversionRate: 0,
-        }));
+        .map((campaign: any) => {
+          const ins = insightsMap[campaign.id] || {};
+          const spend = parseFloat(ins.spend || "0");
+          const impressions = parseInt(ins.impressions || "0");
+          const clicks = parseInt(ins.clicks || "0");
+          const purchaseAction = (ins.actions || []).find(
+            (a: any) => a.action_type === "purchase" || a.action_type === "omni_purchase"
+          );
+          const revenue = purchaseAction ? parseFloat(purchaseAction.value) : 0;
+          return {
+            id: campaign.id,
+            name: campaign.name,
+            status: campaign.status,
+            objective: campaign.objective,
+            createdTime: campaign.created_time,
+            updatedTime: campaign.updated_time,
+            dailyBudget: campaign.daily_budget ? parseFloat(campaign.daily_budget) / 100 : 0,
+            lifetimeBudget: campaign.lifetime_budget ? parseFloat(campaign.lifetime_budget) / 100 : 0,
+            spend,
+            impressions,
+            clicks,
+            ctr: parseFloat(ins.ctr || "0"),
+            cpc: parseFloat(ins.cpc || "0"),
+            actions: ins.actions || [],
+            roi: spend > 0 && revenue > 0 ? parseFloat((revenue / spend).toFixed(2)) : 0,
+            conversionRate: clicks > 0 && revenue > 0 ? parseFloat(((revenue / clicks) * 100).toFixed(2)) : 0,
+          };
+        });
 
       console.log(
         `[Meta Ads Campaigns] ${activeCampaigns.length} campanhas ativas importadas`

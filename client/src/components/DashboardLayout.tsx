@@ -28,7 +28,7 @@ import {
   LayoutDashboard, LogOut, PanelLeft, Users, Calendar,
   BookOpen, Newspaper, CheckCircle, Brain, MessageCircle,
   Bell, Image, Briefcase, TrendingUp, ChevronDown, ChevronRight,
-  Settings, Megaphone, BarChart2,
+  Settings, Megaphone, BarChart2, Bot,
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -270,6 +270,11 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
 
               {/* Marketing */}
               <CollapsibleGroup icon={Megaphone} label="Marketing">
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/gestor-trafego")}>
+                    <Bot className="h-3 w-3" /> Gestor de Tráfego IA
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
                   <SidebarMenuSubButton onClick={() => setLocation("/meta-ads-campaigns")}>
                     <Megaphone className="h-3 w-3" /> Campanhas Meta Ads
