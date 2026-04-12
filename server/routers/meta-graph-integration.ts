@@ -5,18 +5,21 @@ import { getDb } from "../db";
 import { instagramAccounts, igPostPublications, influencers } from "../../drizzle/schema";
 import { assertRateLimit } from "../_core/rateLimiter";
 
-const META_GRAPH_API_BASE = "https://graph.instagram.com/v18.0";
+const META_GRAPH_API_BASE = "https://graph.facebook.com/v19.0";
 
 /**
- * Helper para fazer requisições à Meta Graph API
+ * Helper para fazer requisições à Meta Graph API (Instagram Business)
  */
 async function makeMetaGraphRequest(
   endpoint: string,
   method: "GET" | "POST" = "GET",
   accessToken: string,
-  body?: Record<string, any>
+  body?: Record<string, any>,
+  extraParams?: Record<string, string>
 ) {
-  const url = `${META_GRAPH_API_BASE}${endpoint}?access_token=${encodeURIComponent(accessToken)}`;
+  const params = new URLSearchParams({ access_token: accessToken });
+  if (extraParams) Object.entries(extraParams).forEach(([k, v]) => params.set(k, v));
+  const url = `${META_GRAPH_API_BASE}${endpoint}?${params.toString()}`;
 
   const options: RequestInit = {
     method,
@@ -205,36 +208,57 @@ export const metaGraphIntegrationRouter = router({
           if (!owned) throw new Error("Acesso negado");
         }
 
-        // Obter insights da conta
-        const insights = await makeMetaGraphRequest(
-          `/${igAccount.instagramId}/insights?metric=impressions,reach,profile_views,follower_count`,
+        // 1. Buscar dados básicos do perfil (followers, posts)
+        const profile = await makeMetaGraphRequest(
+          `/${igAccount.instagramId}`,
           "GET",
-          igAccount.accessToken
+          igAccount.accessToken,
+          undefined,
+          { fields: "followers_count,media_count,name,username,profile_picture_url" }
         );
 
-        // Processar dados
-        const metricsMap: Record<string, number> = {};
-        if (insights.data) {
-          insights.data.forEach((metric: any) => {
-            metricsMap[metric.name] = metric.values?.[0]?.value || 0;
-          });
+        // 2. Buscar insights de alcance/impressões (últimos 7 dias)
+        let impressions = 0, reach = 0, profileViews = 0;
+        try {
+          const insights = await makeMetaGraphRequest(
+            `/${igAccount.instagramId}/insights`,
+            "GET",
+            igAccount.accessToken,
+            undefined,
+            { metric: "impressions,reach,profile_views", period: "day", since: String(Math.floor(Date.now()/1000) - 7*86400), until: String(Math.floor(Date.now()/1000)) }
+          );
+          if (insights.data) {
+            insights.data.forEach((metric: any) => {
+              const total = (metric.values || []).reduce((s: number, v: any) => s + (v.value || 0), 0);
+              if (metric.name === "impressions") impressions = total;
+              if (metric.name === "reach") reach = total;
+              if (metric.name === "profile_views") profileViews = total;
+            });
+          }
+        } catch (_) {
+          // insights pode falhar se permissão instagram_manage_insights não estiver aprovada
         }
+
+        const followers = profile.followers_count || 0;
 
         // Atualizar banco de dados
         await db
           .update(instagramAccounts)
           .set({
-            followers: metricsMap.follower_count || igAccount.followers,
+            followers,
+            postsCount: profile.media_count || igAccount.postsCount,
+            username: profile.username || igAccount.username,
+            profilePictureUrl: profile.profile_picture_url || igAccount.profilePictureUrl,
             lastMetricsSync: new Date(),
             updatedAt: new Date(),
           })
           .where(eq(instagramAccounts.id, input.accountId));
 
         return {
-          followers: metricsMap.follower_count || 0,
-          impressions: metricsMap.impressions || 0,
-          reach: metricsMap.reach || 0,
-          profileViews: metricsMap.profile_views || 0,
+          followers,
+          impressions,
+          reach,
+          profileViews,
         };
       } catch (error) {
         console.error("[Meta Graph Integration] Erro ao obter insights da conta:", error);
