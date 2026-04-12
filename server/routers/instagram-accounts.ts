@@ -4,6 +4,14 @@ import { eq, inArray, or, and } from "drizzle-orm";
 import { getDb, getOAuthToken } from "../db";
 import { instagramAccounts, igPostPublications, influencers } from "../../drizzle/schema";
 
+/** Constrói URL da Graph API com token corretamente codificado */
+function graphUrl(path: string, token: string, extraFields?: string): string {
+  const base = `https://graph.facebook.com/v19.0${path}`;
+  const params = new URLSearchParams({ access_token: token });
+  if (extraFields) params.set("fields", extraFields);
+  return `${base}?${params.toString()}`;
+}
+
 export const instagramAccountsRouter = router({
   /**
    * Adicionar nova conta Instagram (Feminnita ou Influencer)
@@ -326,7 +334,7 @@ export const instagramAccountsRouter = router({
 
         // 1. Buscar páginas acessíveis pelo token
         const pagesRes = await fetch(
-          `https://graph.facebook.com/v19.0/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${token}`
+          graphUrl("/me/accounts", token, "id,name,access_token,instagram_business_account")
         );
         const pagesData = await pagesRes.json();
 
@@ -350,7 +358,7 @@ export const instagramAccountsRouter = router({
         // 2. Tenta pelo Page ID configurado no servidor
         if (!igAccountId && process.env.META_PAGE_ID) {
           const pageRes = await fetch(
-            `https://graph.facebook.com/v19.0/${process.env.META_PAGE_ID}?fields=instagram_business_account&access_token=${token}`
+            graphUrl(`/${process.env.META_PAGE_ID}`, token, "instagram_business_account")
           );
           const pageData = await pageRes.json();
           if (pageData.error) {
@@ -371,7 +379,7 @@ export const instagramAccountsRouter = router({
 
       // Buscar dados da conta Instagram pelo ID
       const igRes = await fetch(
-        `https://graph.facebook.com/v19.0/${igAccountId}?fields=id,username,name,biography,followers_count,media_count,profile_picture_url&access_token=${pageToken}`
+        graphUrl(`/${igAccountId}`, pageToken, "id,username,name,biography,followers_count,media_count,profile_picture_url")
       );
       const igData = await igRes.json();
       if (igData.error) throw new Error(`Instagram API: ${igData.error.message}`);
@@ -443,7 +451,7 @@ export const instagramAccountsRouter = router({
 
       // 1. Tentar via páginas da conta (me/accounts)
       const pagesRes = await fetch(
-        `https://graph.facebook.com/v19.0/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${token}`
+        graphUrl("/me/accounts", token, "id,name,access_token,instagram_business_account")
       );
       const pagesData = await pagesRes.json();
       if (pagesData.error) {
@@ -467,7 +475,7 @@ export const instagramAccountsRouter = router({
       // 2. Tentar via META_PAGE_ID configurado
       if (!igAccountId && process.env.META_PAGE_ID) {
         const pageRes = await fetch(
-          `https://graph.facebook.com/v19.0/${process.env.META_PAGE_ID}?fields=instagram_business_account&access_token=${token}`
+          graphUrl(`/${process.env.META_PAGE_ID}`, token, "instagram_business_account")
         );
         const pageData = await pageRes.json();
         if (pageData.error) {
@@ -488,7 +496,7 @@ export const instagramAccountsRouter = router({
 
       // Buscar dados completos pelo ID
       const igRes = await fetch(
-        `https://graph.facebook.com/v19.0/${igAccountId}?fields=id,username,name,biography,followers_count,media_count,profile_picture_url&access_token=${pageToken}`
+        graphUrl(`/${igAccountId}`, pageToken, "id,username,name,biography,followers_count,media_count,profile_picture_url")
       );
       const igData = await igRes.json();
       if (igData.error) throw new Error(`Instagram API: ${igData.error.message}`);

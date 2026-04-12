@@ -16,7 +16,7 @@ async function makeMetaGraphRequest(
   accessToken: string,
   body?: Record<string, any>
 ) {
-  const url = `${META_GRAPH_API_BASE}${endpoint}?access_token=${accessToken}`;
+  const url = `${META_GRAPH_API_BASE}${endpoint}?access_token=${encodeURIComponent(accessToken)}`;
 
   const options: RequestInit = {
     method,
