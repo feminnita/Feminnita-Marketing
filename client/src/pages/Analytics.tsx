@@ -224,13 +224,22 @@ export default function Analytics() {
               {autoConnecting ? "Conectando..." : "Conectar Instagram"}
             </Button>
           ) : (
-            <Button
-              onClick={() => syncMetricsMutation.mutate({ accountId: parseInt(selectedAccountId) })}
-              disabled={!selectedAccountId || syncMetricsMutation.isPending}
-              variant="outline"
-            >
-              {syncMetricsMutation.isPending ? "Sincronizando..." : "Sincronizar Métricas"}
-            </Button>
+            <>
+              <Button
+                onClick={() => syncMetricsMutation.mutate({ accountId: parseInt(selectedAccountId) })}
+                disabled={!selectedAccountId || syncMetricsMutation.isPending}
+                variant="outline"
+              >
+                {syncMetricsMutation.isPending ? "Sincronizando..." : "Sincronizar Métricas"}
+              </Button>
+              <Button
+                onClick={() => { setConnectError(""); setShowConnectModal(true); }}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white gap-2"
+              >
+                <Link className="w-4 h-4" />
+                Reconectar Instagram
+              </Button>
+            </>
           )}
         </div>
       </div>
