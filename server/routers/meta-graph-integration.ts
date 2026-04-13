@@ -209,13 +209,44 @@ export const metaGraphIntegrationRouter = router({
         }
 
         // 1. Buscar dados básicos do perfil (followers, posts)
-        const profile = await makeMetaGraphRequest(
-          `/${igAccount.instagramId}`,
-          "GET",
-          igAccount.accessToken,
-          undefined,
-          { fields: "followers_count,media_count,name,username,profile_picture_url" }
-        );
+        // Tenta acesso direto pelo ID; se falhar com permissão, tenta via Página do Facebook
+        let profile: any = null;
+        let igIdToUse = igAccount.instagramId;
+
+        try {
+          profile = await makeMetaGraphRequest(
+            `/${igAccount.instagramId}`,
+            "GET",
+            igAccount.accessToken,
+            undefined,
+            { fields: "followers_count,media_count,name,username,profile_picture_url" }
+          );
+          if (profile.error) profile = null;
+        } catch (_) { profile = null; }
+
+        // Fallback: buscar via Página do Facebook (connected_instagram_account ou instagram_business_account)
+        if (!profile && process.env.META_PAGE_ID) {
+          try {
+            const pageRes = await makeMetaGraphRequest(
+              `/${process.env.META_PAGE_ID}`,
+              "GET",
+              igAccount.accessToken,
+              undefined,
+              { fields: "instagram_business_account{id,username,followers_count,media_count,profile_picture_url},connected_instagram_account{id,username,followers_count,media_count,profile_picture_url}" }
+            );
+            const igViaPage = pageRes.instagram_business_account || pageRes.connected_instagram_account;
+            if (igViaPage?.id) {
+              igIdToUse = igViaPage.id;
+              profile = igViaPage;
+              // Atualizar o instagramId no banco se descobrimos um ID diferente
+              if (igViaPage.id !== igAccount.instagramId) {
+                await db.update(instagramAccounts).set({ instagramId: igViaPage.id, updatedAt: new Date() }).where(eq(instagramAccounts.id, igAccount.id));
+              }
+            }
+          } catch (_) {}
+        }
+
+        if (!profile) throw new Error("Não foi possível acessar a conta Instagram. Verifique o token em Reconectar Instagram.");
 
         // 2. Buscar insights de alcance/impressões (últimos 7 dias)
         let impressions = 0, reach = 0, profileViews = 0;
@@ -548,6 +579,82 @@ export const metaGraphIntegrationRouter = router({
       } catch (error) {
         console.error("[Meta Graph Integration] Erro ao renovar token:", error);
         throw error;
+      }
+    }),
+
+  // ── Buscar posts reais do Instagram (sem precisar publicar pelo sistema) ──
+  getInstagramPosts: protectedProcedure
+    .input(z.object({ accountId: z.number(), limit: z.number().default(20) }))
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) return { posts: [], error: null };
+
+      const account = await db
+        .select()
+        .from(instagramAccounts)
+        .where(eq(instagramAccounts.id, input.accountId))
+        .limit(1);
+
+      if (!account || account.length === 0) throw new Error("Conta não encontrada");
+
+      const igAccount = account[0];
+
+      try {
+        // Tentar acesso direto; se falhar, tentar via Página do Facebook
+        let igIdToUse = igAccount.instagramId;
+
+        // Verificar se o ID direto funciona (teste rápido)
+        const testRes = await makeMetaGraphRequest(
+          `/${igAccount.instagramId}`,
+          "GET",
+          igAccount.accessToken,
+          undefined,
+          { fields: "id" }
+        );
+
+        if (testRes.error && process.env.META_PAGE_ID) {
+          // Fallback: descobrir ID via Página
+          const pageRes = await makeMetaGraphRequest(
+            `/${process.env.META_PAGE_ID}`,
+            "GET",
+            igAccount.accessToken,
+            undefined,
+            { fields: "instagram_business_account{id},connected_instagram_account{id}" }
+          );
+          const igViaPage = pageRes.instagram_business_account || pageRes.connected_instagram_account;
+          if (igViaPage?.id) igIdToUse = igViaPage.id;
+        }
+
+        // Buscar mídia da conta
+        const mediaRes = await makeMetaGraphRequest(
+          `/${igIdToUse}/media`,
+          "GET",
+          igAccount.accessToken,
+          undefined,
+          {
+            fields: "id,caption,media_type,media_url,thumbnail_url,timestamp,like_count,comments_count,permalink",
+            limit: String(input.limit),
+          }
+        );
+
+        if (mediaRes.error) {
+          return { posts: [], error: mediaRes.error.message };
+        }
+
+        const posts = (mediaRes.data || []).map((p: any) => ({
+          id: p.id,
+          caption: p.caption?.slice(0, 100) || "",
+          mediaType: p.media_type,
+          mediaUrl: p.media_url || p.thumbnail_url,
+          publishedAt: p.timestamp,
+          likes: p.like_count || 0,
+          comments: p.comments_count || 0,
+          permalink: p.permalink,
+        }));
+
+        return { posts, error: null };
+      } catch (err: any) {
+        return { posts: [], error: err.message };
       }
     }),
 });
