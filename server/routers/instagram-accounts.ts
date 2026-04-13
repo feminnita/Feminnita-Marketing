@@ -352,6 +352,18 @@ export const instagramAccountsRouter = router({
   /**
    * Conectar conta Instagram da Feminnita automaticamente via token Meta
    * O token precisa ter: instagram_basic, instagram_manage_insights, pages_show_list, pages_read_engagement
+   *
+   * Cadeia de descoberta (5 estratégias em ordem de prioridade):
+   *  1. instagramAccountId fornecido diretamente → bypass total
+   *  2. GET /me/accounts → procura instagram_business_account em cada Page
+   *  3. GET /{META_PAGE_ID}?fields=instagram_business_account → Page ID do .env
+   *  4. GET /me?fields=instagram_business_account → user-level (token de usuário do sistema)
+   *  5. GET /{username}?fields=id → lookup direto pelo username via oEmbed/iG username search
+   *
+   * Root cause mais comum: conta IG está conectada como "Conta Pessoal Conectada" (Cross-Post)
+   * em vez de "Conta Comercial Vinculada". O cross-post envia posts para o FB mas NÃO expõe
+   * instagram_business_account na Graph API. A solução é vincular via Meta Business Suite
+   * (Configurações → Contas Vinculadas → Instagram) com a conta em modo Profissional/Comercial.
    */
   connectFeminnita: protectedProcedure
     .input(z.object({
@@ -371,47 +383,116 @@ export const instagramAccountsRouter = router({
       if (!igAccountId) {
         const debug: string[] = [];
 
-        // 1. Buscar páginas acessíveis pelo token
+        // ── Estratégia 1: /me/accounts → instagram_business_account por Página ──
         const pagesRes = await fetch(
           graphUrl("/me/accounts", token, "id,name,access_token,instagram_business_account")
         );
         const pagesData = await pagesRes.json();
 
         if (pagesData.error) {
-          debug.push(`me/accounts: ${pagesData.error.message} (code ${pagesData.error.code})`);
+          debug.push(`[1] me/accounts erro: ${pagesData.error.message} (code ${pagesData.error.code})`);
         } else {
           const pages: any[] = pagesData.data || [];
-          debug.push(`me/accounts ok: ${pages.length} página(s)`);
+          debug.push(`[1] me/accounts ok: ${pages.length} página(s): ${pages.map((p: any) => `${p.name}(${p.id})`).join(", ")}`);
           for (const page of pages) {
             if (page.instagram_business_account?.id) {
               igAccountId = page.instagram_business_account.id;
               pageToken = page.access_token || token;
+              debug.push(`[1] instagram_business_account encontrado na página "${page.name}": ${igAccountId}`);
               break;
             }
           }
           if (!igAccountId && pages.length > 0) {
-            debug.push(`Páginas encontradas: ${pages.map((p: any) => p.name).join(", ")} — nenhuma com Instagram Business vinculado`);
+            debug.push(`[1] Nenhuma página tem instagram_business_account — conta IG pode estar como cross-post apenas`);
           }
         }
 
-        // 2. Tenta pelo Page ID configurado no servidor
+        // ── Estratégia 2: /{META_PAGE_ID}?fields=instagram_business_account ──
         if (!igAccountId && process.env.META_PAGE_ID) {
           const pageRes = await fetch(
-            graphUrl(`/${process.env.META_PAGE_ID}`, token, "instagram_business_account")
+            graphUrl(`/${process.env.META_PAGE_ID}`, token, "id,name,instagram_business_account,connected_instagram_account")
           );
           const pageData = await pageRes.json();
           if (pageData.error) {
-            debug.push(`PAGE_ID ${process.env.META_PAGE_ID}: ${pageData.error.message}`);
+            debug.push(`[2] PAGE_ID ${process.env.META_PAGE_ID} erro: ${pageData.error.message}`);
           } else if (pageData.instagram_business_account?.id) {
             igAccountId = pageData.instagram_business_account.id;
+            debug.push(`[2] instagram_business_account via PAGE_ID: ${igAccountId}`);
+          } else if (pageData.connected_instagram_account?.id) {
+            // connected_instagram_account retorna mesmo contas pessoais conectadas
+            igAccountId = pageData.connected_instagram_account.id;
+            debug.push(`[2] connected_instagram_account via PAGE_ID: ${igAccountId} (pode ser conta pessoal — verifique se é profissional)`);
           } else {
-            debug.push(`PAGE_ID ${process.env.META_PAGE_ID} não tem instagram_business_account`);
+            debug.push(`[2] PAGE_ID ${process.env.META_PAGE_ID} sem instagram_business_account nem connected_instagram_account`);
+          }
+        }
+
+        // ── Estratégia 3: GET /me?fields=instagram_business_account (user-level) ──
+        if (!igAccountId) {
+          const meRes = await fetch(graphUrl("/me", token, "instagram_business_account"));
+          const meData = await meRes.json();
+          if (meData.error) {
+            debug.push(`[3] /me user-level erro: ${meData.error.message}`);
+          } else if (meData.instagram_business_account?.id) {
+            igAccountId = meData.instagram_business_account.id;
+            debug.push(`[3] instagram_business_account via /me: ${igAccountId}`);
+          } else {
+            debug.push(`[3] /me não retornou instagram_business_account`);
+          }
+        }
+
+        // ── Estratégia 4: oEmbed — descobre o ID público via username ──
+        // Funciona mesmo sem vínculo formal com a Page. Retorna apenas id+thumbnail.
+        // Requer APP_ID+APP_SECRET como Basic Auth ou app access token.
+        if (!igAccountId && process.env.META_APP_ID && process.env.META_APP_SECRET) {
+          try {
+            const appToken = `${process.env.META_APP_ID}|${process.env.META_APP_SECRET}`;
+            const oembedRes = await fetch(
+              `https://graph.facebook.com/v19.0/instagram_oembed?url=${encodeURIComponent("https://www.instagram.com/feminnita/")}&access_token=${encodeURIComponent(appToken)}`
+            );
+            const oembedData = await oembedRes.json();
+            if (oembedData.error) {
+              debug.push(`[4] oEmbed erro: ${oembedData.error.message}`);
+            } else if (oembedData.author_name) {
+              // oEmbed NÃO retorna o IG Business Account ID — apenas confirma que a conta existe.
+              // Para obter o ID, precisa-se de uma das estratégias acima funcionando.
+              debug.push(`[4] oEmbed ok: conta @${oembedData.author_name} existe mas não fornece IG Account ID — use o bypass instagramAccountId`);
+            }
+          } catch (e: any) {
+            debug.push(`[4] oEmbed exceção: ${e.message}`);
+          }
+        }
+
+        // ── Estratégia 5: Lookup por username via /{ig-username} ──
+        // Só funciona se o app tiver instagram_manage_insights + a conta estiver no mesmo BM
+        if (!igAccountId) {
+          const usernameRes = await fetch(
+            graphUrl("/feminnita", token, "id,username,biography")
+          );
+          const usernameData = await usernameRes.json();
+          if (!usernameData.error && usernameData.id) {
+            igAccountId = usernameData.id;
+            debug.push(`[5] ID encontrado via username lookup: ${igAccountId}`);
+          } else {
+            debug.push(`[5] username lookup falhou: ${usernameData.error?.message || "sem resultado"}`);
           }
         }
 
         if (!igAccountId) {
           throw new Error(
-            `Nenhuma conta Instagram Business encontrada.\n\nDiagnóstico:\n${debug.join("\n")}\n\nVerifique: (1) o token tem permissões instagram_basic + pages_read_engagement, (2) a Página do Facebook tem conta Instagram Business vinculada nas configurações do Meta Business Suite.`
+            `Nenhuma conta Instagram Business encontrada após 5 estratégias.\n\n` +
+            `Diagnóstico:\n${debug.join("\n")}\n\n` +
+            `CAUSA RAIZ PROVÁVEL: A conta @feminnita está conectada à Página "Feminnita" como ` +
+            `"cross-post" (sincronização de posts) mas NÃO como conta Instagram Business vinculada. ` +
+            `Esse vínculo cross-post envia posts para o FB mas não expõe instagram_business_account na API.\n\n` +
+            `SOLUÇÃO:\n` +
+            `1. Acesse business.facebook.com → Configurações do Business → Contas → Contas do Instagram\n` +
+            `2. Clique em "Adicionar" e conecte @feminnita com login e senha do Instagram\n` +
+            `3. OU: vá em facebook.com → sua Página Feminnita → Configurações → Instagram → Conectar conta\n` +
+            `4. Certifique-se que @feminnita está em modo Profissional (Criador ou Empresa) no app do Instagram\n` +
+            `5. Após vincular, gere um novo token em developers.facebook.com/tools/explorer com as permissões: ` +
+            `instagram_basic, instagram_manage_insights, pages_show_list, pages_read_engagement, business_management\n\n` +
+            `BYPASS IMEDIATO: Se souber o IG Account ID (ex: 17841459735732076), passe-o diretamente no campo instagramAccountId.`
           );
         }
       }
@@ -475,11 +556,12 @@ export const instagramAccountsRouter = router({
 
   /**
    * Conectar conta Feminnita automaticamente usando o token Meta já salvo no banco
-   * (ou META_ACCESS_TOKEN do .env como fallback)
+   * (ou META_ACCESS_TOKEN do .env como fallback).
+   * Usa a mesma cadeia de 5 estratégias de descoberta que connectFeminnita.
    */
   autoConnectFeminnita: protectedProcedure
     .mutation(async ({ ctx }) => {
-      // 1. Prioridade: token Meta salvo no banco pelo usuário (OAuth da Feminnita)
+      // Prioridade: token Meta salvo no banco pelo usuário (OAuth da Feminnita)
       const savedToken = await getOAuthToken(ctx.user.id, "meta");
       const rawToken = savedToken?.accessToken || process.env.META_ACCESS_TOKEN;
       if (!rawToken) throw new Error("Nenhum token Meta encontrado. Conecte o Meta nas Integrações ou adicione META_ACCESS_TOKEN ao .env.");
@@ -491,48 +573,87 @@ export const instagramAccountsRouter = router({
       let pageToken: string = token;
       const debugLog: string[] = [];
 
-      // 1. Tentar via páginas da conta (me/accounts)
+      // ── Estratégia 1: /me/accounts → instagram_business_account por Página ──
       const pagesRes = await fetch(
         graphUrl("/me/accounts", token, "id,name,access_token,instagram_business_account")
       );
       const pagesData = await pagesRes.json();
       if (pagesData.error) {
-        debugLog.push(`me/accounts erro: ${pagesData.error.message} (code ${pagesData.error.code})`);
+        debugLog.push(`[1] me/accounts erro: ${pagesData.error.message} (code ${pagesData.error.code})`);
       } else {
         const pages: any[] = pagesData.data || [];
-        debugLog.push(`me/accounts ok: ${pages.length} página(s)`);
+        debugLog.push(`[1] me/accounts ok: ${pages.length} página(s): ${pages.map((p: any) => `${p.name}(${p.id})`).join(", ")}`);
         for (const page of pages) {
           if (page.instagram_business_account?.id) {
             igAccountId = page.instagram_business_account.id;
             pageToken = page.access_token || token;
-            debugLog.push(`Instagram encontrado via página "${page.name}": ${igAccountId}`);
+            debugLog.push(`[1] encontrado na página "${page.name}": ${igAccountId}`);
             break;
           }
         }
         if (!igAccountId && pages.length > 0) {
-          debugLog.push(`Páginas encontradas mas nenhuma tem instagram_business_account vinculado`);
+          debugLog.push(`[1] Nenhuma página tem instagram_business_account — conta pode estar como cross-post apenas`);
         }
       }
 
-      // 2. Tentar via META_PAGE_ID configurado
+      // ── Estratégia 2: /{META_PAGE_ID}?fields=instagram_business_account,connected_instagram_account ──
       if (!igAccountId && process.env.META_PAGE_ID) {
         const pageRes = await fetch(
-          graphUrl(`/${process.env.META_PAGE_ID}`, token, "instagram_business_account")
+          graphUrl(`/${process.env.META_PAGE_ID}`, token, "id,name,instagram_business_account,connected_instagram_account")
         );
         const pageData = await pageRes.json();
         if (pageData.error) {
-          debugLog.push(`PAGE_ID direto erro: ${pageData.error.message}`);
+          debugLog.push(`[2] PAGE_ID erro: ${pageData.error.message}`);
         } else if (pageData.instagram_business_account?.id) {
           igAccountId = pageData.instagram_business_account.id;
-          debugLog.push(`Instagram encontrado via META_PAGE_ID: ${igAccountId}`);
+          debugLog.push(`[2] instagram_business_account via PAGE_ID: ${igAccountId}`);
+        } else if (pageData.connected_instagram_account?.id) {
+          igAccountId = pageData.connected_instagram_account.id;
+          debugLog.push(`[2] connected_instagram_account via PAGE_ID: ${igAccountId}`);
         } else {
-          debugLog.push(`META_PAGE_ID ${process.env.META_PAGE_ID} não tem instagram_business_account`);
+          debugLog.push(`[2] PAGE_ID ${process.env.META_PAGE_ID} sem instagram_business_account nem connected_instagram_account`);
+        }
+      }
+
+      // ── Estratégia 3: GET /me?fields=instagram_business_account (user-level) ──
+      if (!igAccountId) {
+        const meRes = await fetch(graphUrl("/me", token, "instagram_business_account"));
+        const meData = await meRes.json();
+        if (!meData.error && meData.instagram_business_account?.id) {
+          igAccountId = meData.instagram_business_account.id;
+          debugLog.push(`[3] instagram_business_account via /me: ${igAccountId}`);
+        } else {
+          debugLog.push(`[3] /me: ${meData.error?.message || "sem instagram_business_account"}`);
+        }
+      }
+
+      // ── Estratégia 4: META_INSTAGRAM_ACCOUNT_ID do .env (configurado manualmente) ──
+      if (!igAccountId && process.env.META_INSTAGRAM_ACCOUNT_ID) {
+        igAccountId = process.env.META_INSTAGRAM_ACCOUNT_ID;
+        debugLog.push(`[4] usando META_INSTAGRAM_ACCOUNT_ID do .env: ${igAccountId}`);
+      }
+
+      // ── Estratégia 5: username lookup via /{ig-username} ──
+      if (!igAccountId) {
+        const usernameRes = await fetch(graphUrl("/feminnita", token, "id,username"));
+        const usernameData = await usernameRes.json();
+        if (!usernameData.error && usernameData.id) {
+          igAccountId = usernameData.id;
+          debugLog.push(`[5] ID via username lookup: ${igAccountId}`);
+        } else {
+          debugLog.push(`[5] username lookup: ${usernameData.error?.message || "sem resultado"}`);
         }
       }
 
       if (!igAccountId) {
         throw new Error(
-          `Nenhuma conta Instagram Business encontrada.\n\nDiagnóstico:\n${debugLog.join("\n")}\n\nSolução: Obtenha um token com permissões instagram_basic + pages_read_engagement em developers.facebook.com/tools/explorer e use o botão "Conectar" no modal.`
+          `Nenhuma conta Instagram Business encontrada após 5 estratégias.\n\n` +
+          `Diagnóstico:\n${debugLog.join("\n")}\n\n` +
+          `CAUSA RAIZ PROVÁVEL: A conta @feminnita está em modo "cross-post" (posts aparecem no FB) ` +
+          `mas não está formalmente vinculada como Instagram Business Account na Página do Facebook.\n\n` +
+          `SOLUÇÃO: Acesse business.facebook.com → Configurações → Contas Instagram → Adicionar → ` +
+          `conecte @feminnita. Depois adicione META_INSTAGRAM_ACCOUNT_ID=<id> ao .env ou gere novo token com ` +
+          `permissões: instagram_basic, instagram_manage_insights, pages_show_list, pages_read_engagement, business_management.`
         );
       }
 
