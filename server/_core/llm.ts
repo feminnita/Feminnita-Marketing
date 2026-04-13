@@ -1,4 +1,5 @@
 import { ENV } from "./env";
+import Anthropic from "@anthropic-ai/sdk";
 
 export type Role = "system" | "user" | "assistant" | "tool" | "function";
 
@@ -209,125 +210,98 @@ const normalizeToolChoice = (
   return toolChoice;
 };
 
-const resolveApiUrl = () => {
-  const base = ENV.forgeApiUrl?.trim();
-  if (base) {
-    if (base.endsWith("/chat/completions")) return base;
-    return `${base.replace(/\/$/, "")}/v1/chat/completions`;
-  }
-  return "https://forge.manus.im/v1/chat/completions";
-};
+// ─── Cliente Anthropic ────────────────────────────────────────────────────────
 
-const assertApiKey = () => {
-  if (!ENV.forgeApiKey) {
-    throw new Error("OPENAI_API_KEY is not configured");
-  }
-};
+const getAnthropicClient = () =>
+  new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || "" });
 
-const normalizeResponseFormat = ({
-  responseFormat,
-  response_format,
-  outputSchema,
-  output_schema,
-}: {
-  responseFormat?: ResponseFormat;
-  response_format?: ResponseFormat;
-  outputSchema?: OutputSchema;
-  output_schema?: OutputSchema;
-}):
-  | { type: "json_schema"; json_schema: JsonSchema }
-  | { type: "text" }
-  | { type: "json_object" }
-  | undefined => {
-  const explicitFormat = responseFormat || response_format;
-  if (explicitFormat) {
-    if (
-      explicitFormat.type === "json_schema" &&
-      !explicitFormat.json_schema?.schema
-    ) {
-      throw new Error(
-        "responseFormat json_schema requires a defined schema object"
-      );
-    }
-    return explicitFormat;
-  }
+const CLAUDE_MODEL = process.env.LLM_MODEL || "claude-sonnet-4-6";
 
-  const schema = outputSchema || output_schema;
-  if (!schema) return undefined;
-
-  if (!schema.name || !schema.schema) {
-    throw new Error("outputSchema requires both name and schema");
-  }
-
-  return {
-    type: "json_schema",
-    json_schema: {
-      name: schema.name,
-      schema: schema.schema,
-      ...(typeof schema.strict === "boolean" ? { strict: schema.strict } : {}),
-    },
-  };
-};
+// ─── invokeLLM via Anthropic Claude ──────────────────────────────────────────
 
 export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
-  assertApiKey();
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  if (!anthropicKey) {
+    throw new Error("ANTHROPIC_API_KEY não configurado");
+  }
 
   const {
     messages,
-    tools,
-    toolChoice,
-    tool_choice,
     outputSchema,
     output_schema,
-    responseFormat,
-    response_format,
+    maxTokens,
+    max_tokens,
   } = params;
 
-  const payload: Record<string, unknown> = {
-    model: process.env.LLM_MODEL || "gemini-2.0-flash",
-    messages: messages.map(normalizeMessage),
+  const schema = outputSchema || output_schema;
+
+  // Separar system message das demais (Anthropic recebe system como parâmetro separado)
+  let systemPrompt = "";
+  const userMessages: Array<{ role: "user" | "assistant"; content: string }> = [];
+
+  for (const msg of messages) {
+    const contentStr = Array.isArray(msg.content)
+      ? msg.content
+          .map((p) => (typeof p === "string" ? p : (p as any).text || ""))
+          .join("\n")
+      : typeof msg.content === "string"
+      ? msg.content
+      : (msg.content as any).text || "";
+
+    if (msg.role === "system") {
+      systemPrompt += (systemPrompt ? "\n\n" : "") + contentStr;
+    } else if (msg.role === "user" || msg.role === "assistant") {
+      userMessages.push({ role: msg.role, content: contentStr });
+    }
+  }
+
+  // Se outputSchema foi pedido, instruir Claude a responder em JSON
+  if (schema) {
+    const jsonInstruction = `\n\nIMPORTANTE: Responda APENAS com JSON válido, sem markdown, sem texto antes ou depois. O JSON deve seguir o schema "${schema.name}".`;
+    systemPrompt += jsonInstruction;
+  }
+
+  // Garantir pelo menos uma mensagem de usuário
+  if (userMessages.length === 0) {
+    userMessages.push({ role: "user", content: "Olá" });
+  }
+
+  const anthropic = getAnthropicClient();
+
+  const response = await anthropic.messages.create({
+    model: CLAUDE_MODEL,
+    max_tokens: maxTokens || max_tokens || 4096,
+    system: systemPrompt || undefined,
+    messages: userMessages,
+  });
+
+  // Extrair texto da resposta
+  const textContent = response.content
+    .filter((b) => b.type === "text")
+    .map((b) => (b as Anthropic.TextBlock).text)
+    .join("");
+
+  // Converter para formato InvokeResult (compatível com OpenAI)
+  return {
+    id: response.id,
+    created: Math.floor(Date.now() / 1000),
+    model: response.model,
+    choices: [
+      {
+        index: 0,
+        message: {
+          role: "assistant",
+          content: textContent,
+        },
+        finish_reason: response.stop_reason || "stop",
+      },
+    ],
+    usage: response.usage
+      ? {
+          prompt_tokens: response.usage.input_tokens,
+          completion_tokens: response.usage.output_tokens,
+          total_tokens: response.usage.input_tokens + response.usage.output_tokens,
+        }
+      : undefined,
   };
-
-  if (tools && tools.length > 0) {
-    payload.tools = tools;
-  }
-
-  const normalizedToolChoice = normalizeToolChoice(
-    toolChoice || tool_choice,
-    tools
-  );
-  if (normalizedToolChoice) {
-    payload.tool_choice = normalizedToolChoice;
-  }
-
-  payload.max_tokens = 8192
-
-  const normalizedResponseFormat = normalizeResponseFormat({
-    responseFormat,
-    response_format,
-    outputSchema,
-    output_schema,
-  });
-
-  if (normalizedResponseFormat) {
-    payload.response_format = normalizedResponseFormat;
-  }
-
-  const response = await fetch(resolveApiUrl(), {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${ENV.forgeApiKey}`,
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(
-      `LLM invoke failed: ${response.status} ${response.statusText} – ${errorText}`
-    );
-  }
-
-  return (await response.json()) as InvokeResult;
 }
