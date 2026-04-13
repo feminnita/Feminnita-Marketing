@@ -224,66 +224,55 @@ export const metaGraphIntegrationRouter = router({
           if (profile.error) profile = null;
         } catch (_) { profile = null; }
 
-        // Fallback: buscar Page Token via /me/accounts e usar para acessar IG via Página
+        // Fallback A: Page Token — /me aponta para a própria Página, buscar IG vinculado
         if (!profile) {
           try {
-            // Busca Page Access Token específico da página (diferente do User Token)
+            const meRes = await makeMetaGraphRequest(
+              "/me",
+              "GET",
+              igAccount.accessToken,
+              undefined,
+              { fields: "id,name,instagram_business_account{id,username,followers_count,media_count,profile_picture_url},connected_instagram_account{id,username,followers_count,media_count,profile_picture_url}" }
+            );
+            console.log("[Instagram] /me (Page Token):", JSON.stringify(meRes).slice(0, 400));
+            const igViaMe = meRes.instagram_business_account || meRes.connected_instagram_account;
+            if (igViaMe?.id) {
+              igIdToUse = igViaMe.id;
+              profile = igViaMe;
+              if (igViaMe.id !== igAccount.instagramId) {
+                await db.update(instagramAccounts).set({ instagramId: igViaMe.id, updatedAt: new Date() }).where(eq(instagramAccounts.id, igAccount.id));
+              }
+            }
+          } catch (eA: any) {
+            console.error("[Instagram] Fallback A falhou:", eA.message);
+          }
+        }
+
+        // Fallback B: User Token — /me/accounts para buscar Page Token e acessar IG
+        if (!profile) {
+          try {
             const accountsRes = await makeMetaGraphRequest(
               "/me/accounts",
               "GET",
               igAccount.accessToken,
               undefined,
-              { fields: "id,name,access_token,instagram_business_account,connected_instagram_account" }
+              { fields: "id,name,access_token,instagram_business_account{id,username,followers_count,media_count,profile_picture_url},connected_instagram_account{id,username,followers_count,media_count,profile_picture_url}" }
             );
-            console.log("[Instagram] /me/accounts resposta:", JSON.stringify(accountsRes).slice(0, 500));
-
-            const pages: any[] = accountsRes.data || [];
-            for (const page of pages) {
-              const pageToken = page.access_token || igAccount.accessToken;
+            console.log("[Instagram] /me/accounts (User Token):", JSON.stringify(accountsRes).slice(0, 400));
+            for (const page of (accountsRes.data || [])) {
               const igViaPage = page.instagram_business_account || page.connected_instagram_account;
-
               if (igViaPage?.id) {
-                // Encontrou IG via /me/accounts — busca dados completos com o page token
                 igIdToUse = igViaPage.id;
-                try {
-                  profile = await makeMetaGraphRequest(
-                    `/${igViaPage.id}`,
-                    "GET",
-                    pageToken,
-                    undefined,
-                    { fields: "followers_count,media_count,name,username,profile_picture_url" }
-                  );
-                  if (profile.error) profile = igViaPage;
-                } catch { profile = igViaPage; }
+                profile = igViaPage;
+                const pageToken = page.access_token || igAccount.accessToken;
                 if (igViaPage.id !== igAccount.instagramId) {
                   await db.update(instagramAccounts).set({ instagramId: igViaPage.id, accessToken: pageToken, updatedAt: new Date() }).where(eq(instagramAccounts.id, igAccount.id));
                 }
                 break;
               }
-
-              // Tenta query explícita na página com Page Token para connected_instagram_account
-              if (process.env.META_PAGE_ID && page.id === process.env.META_PAGE_ID) {
-                const pageDetailRes = await makeMetaGraphRequest(
-                  `/${page.id}`,
-                  "GET",
-                  pageToken,
-                  undefined,
-                  { fields: "instagram_business_account{id,username,followers_count,media_count,profile_picture_url},connected_instagram_account{id,username,followers_count,media_count,profile_picture_url}" }
-                );
-                console.log("[Instagram] page detail com pageToken:", JSON.stringify(pageDetailRes).slice(0, 300));
-                const igDetail = pageDetailRes.instagram_business_account || pageDetailRes.connected_instagram_account;
-                if (igDetail?.id) {
-                  igIdToUse = igDetail.id;
-                  profile = igDetail;
-                  if (igDetail.id !== igAccount.instagramId) {
-                    await db.update(instagramAccounts).set({ instagramId: igDetail.id, accessToken: pageToken, updatedAt: new Date() }).where(eq(instagramAccounts.id, igAccount.id));
-                  }
-                  break;
-                }
-              }
             }
-          } catch (fbErr: any) {
-            console.error("[Instagram] Fallback /me/accounts falhou:", fbErr.message);
+          } catch (eB: any) {
+            console.error("[Instagram] Fallback B falhou:", eB.message);
           }
         }
 
