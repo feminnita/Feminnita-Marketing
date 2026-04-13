@@ -163,7 +163,7 @@ export const trafficManagerRouter = router({
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Verificar se já existe briefing do dia
+    // Verificar se já existe briefing do dia em cache
     const [existing] = await db
       .select()
       .from(trafficDailyBriefings)
@@ -179,45 +179,75 @@ export const trafficManagerRouter = router({
       return {
         ...existing,
         data: JSON.parse(existing.data),
+        generating: false,
       };
     }
 
-    // Buscar dados reais da Meta Ads
-    const metaData = await fetchMetaAdsData();
+    // Nenhum briefing em cache — disparar geração em background e retornar placeholder
+    // Isso evita o 504 causado pelo bloqueio de Meta API + Claude na carga da página
+    const userId = ctx.user.id;
+    (async () => {
+      try {
+        const metaData = await fetchMetaAdsData();
+        const briefingData = await generateDailyBriefing(
+          metaData.campaigns.length > 0
+            ? {
+                adAccountId: process.env.META_AD_ACCOUNT_ID,
+                spendToday: metaData.spendToday,
+                spendMonth: metaData.spendMonth,
+                campaigns: metaData.campaigns.map((c) => ({
+                  name: c.name,
+                  spend: c.spend,
+                  roas: c.roas,
+                  cpm: c.cpm,
+                  ctr: c.ctr,
+                  status: c.status,
+                })),
+              }
+            : undefined
+        );
+        // Inserir apenas se ainda não existe (evitar corrida)
+        const dbInner = await getDb();
+        if (!dbInner) return;
+        const [check] = await dbInner
+          .select({ id: trafficDailyBriefings.id })
+          .from(trafficDailyBriefings)
+          .where(
+            and(
+              eq(trafficDailyBriefings.userId, userId),
+              eq(trafficDailyBriefings.date, today)
+            )
+          )
+          .limit(1);
+        if (!check) {
+          await dbInner.insert(trafficDailyBriefings).values({
+            userId,
+            date: today,
+            data: JSON.stringify(briefingData),
+          });
+        }
+      } catch (err: any) {
+        console.error("[getDailyBriefing] Erro em background:", err.message);
+      }
+    })();
 
-    // Gerar novo briefing com dados reais
-    const briefingData = await generateDailyBriefing(
-      metaData.campaigns.length > 0 ? {
-        adAccountId: process.env.META_AD_ACCOUNT_ID,
-        spendToday: metaData.spendToday,
-        spendMonth: metaData.spendMonth,
-        campaigns: metaData.campaigns.map(c => ({
-          name: c.name,
-          spend: c.spend,
-          roas: c.roas,
-          cpm: c.cpm,
-          ctr: c.ctr,
-          status: c.status,
-        })),
-      } : undefined
-    );
-
-    await db.insert(trafficDailyBriefings).values({
-      userId: ctx.user.id,
-      date: today,
-      data: JSON.stringify(briefingData),
-    });
-
-    const [saved] = await db
-      .select()
-      .from(trafficDailyBriefings)
-      .where(eq(trafficDailyBriefings.userId, ctx.user.id))
-      .orderBy(desc(trafficDailyBriefings.createdAt))
-      .limit(1);
-
+    // Retorna placeholder imediatamente — cliente faz polling via regenerateBriefing
     return {
-      ...saved,
-      data: briefingData,
+      id: null,
+      userId,
+      date: today,
+      data: {
+        date: today.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" }),
+        spendToday: "Carregando…",
+        spendMonth: "Carregando…",
+        topCampaigns: [],
+        alerts: [{ level: "info" as const, message: "Briefing sendo gerado, aguarde alguns segundos e atualize." }],
+        recommendations: [],
+        summary: "Gerando briefing com dados reais da Meta Ads…",
+      },
+      generating: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
   }),
 
@@ -230,37 +260,62 @@ export const trafficManagerRouter = router({
         message: "DB unavailable",
       });
 
-    const briefingData = await generateDailyBriefing();
-
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const userId = ctx.user.id;
 
-    // Upsert: deletar e reinserir
-    const existing = await db
-      .select({ id: trafficDailyBriefings.id })
-      .from(trafficDailyBriefings)
-      .where(
-        and(
-          eq(trafficDailyBriefings.userId, ctx.user.id),
-          eq(trafficDailyBriefings.date, today)
-        )
-      )
-      .limit(1);
+    // Disparar geração em background e retornar imediatamente
+    (async () => {
+      try {
+        const metaData = await fetchMetaAdsData();
+        const briefingData = await generateDailyBriefing(
+          metaData.campaigns.length > 0
+            ? {
+                adAccountId: process.env.META_AD_ACCOUNT_ID,
+                spendToday: metaData.spendToday,
+                spendMonth: metaData.spendMonth,
+                campaigns: metaData.campaigns.map((c) => ({
+                  name: c.name,
+                  spend: c.spend,
+                  roas: c.roas,
+                  cpm: c.cpm,
+                  ctr: c.ctr,
+                  status: c.status,
+                })),
+              }
+            : undefined
+        );
+        const dbInner = await getDb();
+        if (!dbInner) return;
+        const existing = await dbInner
+          .select({ id: trafficDailyBriefings.id })
+          .from(trafficDailyBriefings)
+          .where(
+            and(
+              eq(trafficDailyBriefings.userId, userId),
+              eq(trafficDailyBriefings.date, today)
+            )
+          )
+          .limit(1);
+        if (existing.length > 0) {
+          await dbInner
+            .update(trafficDailyBriefings)
+            .set({ data: JSON.stringify(briefingData), updatedAt: new Date() })
+            .where(eq(trafficDailyBriefings.id, existing[0].id));
+        } else {
+          await dbInner.insert(trafficDailyBriefings).values({
+            userId,
+            date: today,
+            data: JSON.stringify(briefingData),
+          });
+        }
+        console.log("[regenerateBriefing] Briefing gerado em background com sucesso");
+      } catch (err: any) {
+        console.error("[regenerateBriefing] Erro em background:", err.message);
+      }
+    })();
 
-    if (existing.length > 0) {
-      await db
-        .update(trafficDailyBriefings)
-        .set({ data: JSON.stringify(briefingData), updatedAt: new Date() })
-        .where(eq(trafficDailyBriefings.id, existing[0].id));
-    } else {
-      await db.insert(trafficDailyBriefings).values({
-        userId: ctx.user.id,
-        date: today,
-        data: JSON.stringify(briefingData),
-      });
-    }
-
-    return { success: true, data: briefingData };
+    return { success: true, generating: true };
   }),
 
   // ── Listar conversas ───────────────────────────────────────────────────────

@@ -233,14 +233,27 @@ function ChatBubble({ message }: { message: ChatMessage }) {
 // ─── Componente: Painel de Briefing ───────────────────────────────────────────
 
 function BriefingPanel() {
-  const { data, isLoading, refetch } = trpc.trafficManager.getDailyBriefing.useQuery();
+  const { data, isLoading, refetch } = trpc.trafficManager.getDailyBriefing.useQuery(
+    undefined,
+    { retry: false }
+  );
   const regenerate = trpc.trafficManager.regenerateBriefing.useMutation({
     onSuccess: () => {
-      toast.success("Briefing atualizado");
-      refetch();
+      toast.success("Briefing sendo gerado…");
+      // Polling: aguardar 15s e recarregar
+      setTimeout(() => refetch(), 15000);
     },
     onError: () => toast.error("Erro ao regenerar briefing"),
   });
+
+  const isGenerating = (data as any)?.generating === true;
+
+  // Se está gerando, fazer polling a cada 12s
+  useEffect(() => {
+    if (!isGenerating) return;
+    const timer = setTimeout(() => refetch(), 12000);
+    return () => clearTimeout(timer);
+  }, [isGenerating, refetch]);
 
   const [showAllAlerts, setShowAllAlerts] = useState(false);
 
@@ -267,16 +280,24 @@ function BriefingPanel() {
           <h3 className="font-semibold text-slate-900 text-sm">Resumo do Dia</h3>
           <p className="text-xs text-slate-500 mt-0.5 capitalize">{briefing.date}</p>
         </div>
-        <button
-          onClick={() => regenerate.mutate()}
-          disabled={regenerate.isPending}
-          className="p-1.5 hover:bg-rose-50 rounded-lg transition-colors"
-          title="Atualizar briefing"
-        >
-          <RefreshCw
-            className={`w-3.5 h-3.5 text-rose-500 ${regenerate.isPending ? "animate-spin" : ""}`}
-          />
-        </button>
+        <div className="flex items-center gap-1.5">
+          {isGenerating && (
+            <span className="flex items-center gap-1 text-xs text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              Gerando…
+            </span>
+          )}
+          <button
+            onClick={() => regenerate.mutate()}
+            disabled={regenerate.isPending || isGenerating}
+            className="p-1.5 hover:bg-rose-50 rounded-lg transition-colors"
+            title="Atualizar briefing"
+          >
+            <RefreshCw
+              className={`w-3.5 h-3.5 text-rose-500 ${regenerate.isPending ? "animate-spin" : ""}`}
+            />
+          </button>
+        </div>
       </div>
 
       {/* Gastos */}
