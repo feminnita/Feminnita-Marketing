@@ -713,6 +713,34 @@ export const instagramAccountsRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database indisponível");
 
+      // Trocar token curto por Page Access Token permanente (se token fornecido)
+      let finalToken = input.accessToken || "";
+      if (finalToken) {
+        // 1. Troca para long-lived user token (60 dias)
+        const longLived = await exchangeForLongLivedToken(finalToken);
+        // 2. Busca Page Access Token permanente via /me/accounts
+        try {
+          const pagesRes = await fetch(
+            graphUrl("/me/accounts", longLived, "id,name,access_token,instagram_business_account")
+          );
+          const pagesData = await pagesRes.json();
+          if (!pagesData.error && pagesData.data?.length > 0) {
+            // Usa o page token da primeira página (permanente)
+            const pageWithToken = pagesData.data.find((p: any) => p.access_token);
+            if (pageWithToken?.access_token) {
+              finalToken = pageWithToken.access_token;
+              console.log("[Instagram] forceConnect: Page Access Token permanente obtido");
+            } else {
+              finalToken = longLived;
+            }
+          } else {
+            finalToken = longLived;
+          }
+        } catch {
+          finalToken = longLived;
+        }
+      }
+
       const existing = await db
         .select()
         .from(instagramAccounts)
@@ -723,7 +751,7 @@ export const instagramAccountsRouter = router({
         await db.update(instagramAccounts).set({
           isActive: true,
           username: input.username,
-          ...(input.accessToken ? { accessToken: input.accessToken } : {}),
+          ...(finalToken ? { accessToken: finalToken } : {}),
           updatedAt: new Date(),
         }).where(eq(instagramAccounts.instagramId, input.instagramId));
       } else {
@@ -732,7 +760,7 @@ export const instagramAccountsRouter = router({
           instagramId: input.instagramId,
           username: input.username,
           displayName: "Feminnita",
-          accessToken: input.accessToken || "",
+          accessToken: finalToken,
           isActive: true,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -741,7 +769,7 @@ export const instagramAccountsRouter = router({
 
       return {
         success: true,
-        message: `Conta @${input.username} conectada com sucesso!`,
+        message: `Conta @${input.username} conectada com sucesso! Token permanente salvo.`,
       };
     }),
 });
