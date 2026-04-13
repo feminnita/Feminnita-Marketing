@@ -224,26 +224,67 @@ export const metaGraphIntegrationRouter = router({
           if (profile.error) profile = null;
         } catch (_) { profile = null; }
 
-        // Fallback: buscar via Página do Facebook (connected_instagram_account ou instagram_business_account)
-        if (!profile && process.env.META_PAGE_ID) {
+        // Fallback: buscar Page Token via /me/accounts e usar para acessar IG via Página
+        if (!profile) {
           try {
-            const pageRes = await makeMetaGraphRequest(
-              `/${process.env.META_PAGE_ID}`,
+            // Busca Page Access Token específico da página (diferente do User Token)
+            const accountsRes = await makeMetaGraphRequest(
+              "/me/accounts",
               "GET",
               igAccount.accessToken,
               undefined,
-              { fields: "instagram_business_account{id,username,followers_count,media_count,profile_picture_url},connected_instagram_account{id,username,followers_count,media_count,profile_picture_url}" }
+              { fields: "id,name,access_token,instagram_business_account,connected_instagram_account" }
             );
-            const igViaPage = pageRes.instagram_business_account || pageRes.connected_instagram_account;
-            if (igViaPage?.id) {
-              igIdToUse = igViaPage.id;
-              profile = igViaPage;
-              // Atualizar o instagramId no banco se descobrimos um ID diferente
-              if (igViaPage.id !== igAccount.instagramId) {
-                await db.update(instagramAccounts).set({ instagramId: igViaPage.id, updatedAt: new Date() }).where(eq(instagramAccounts.id, igAccount.id));
+            console.log("[Instagram] /me/accounts resposta:", JSON.stringify(accountsRes).slice(0, 500));
+
+            const pages: any[] = accountsRes.data || [];
+            for (const page of pages) {
+              const pageToken = page.access_token || igAccount.accessToken;
+              const igViaPage = page.instagram_business_account || page.connected_instagram_account;
+
+              if (igViaPage?.id) {
+                // Encontrou IG via /me/accounts — busca dados completos com o page token
+                igIdToUse = igViaPage.id;
+                try {
+                  profile = await makeMetaGraphRequest(
+                    `/${igViaPage.id}`,
+                    "GET",
+                    pageToken,
+                    undefined,
+                    { fields: "followers_count,media_count,name,username,profile_picture_url" }
+                  );
+                  if (profile.error) profile = igViaPage;
+                } catch { profile = igViaPage; }
+                if (igViaPage.id !== igAccount.instagramId) {
+                  await db.update(instagramAccounts).set({ instagramId: igViaPage.id, accessToken: pageToken, updatedAt: new Date() }).where(eq(instagramAccounts.id, igAccount.id));
+                }
+                break;
+              }
+
+              // Tenta query explícita na página com Page Token para connected_instagram_account
+              if (process.env.META_PAGE_ID && page.id === process.env.META_PAGE_ID) {
+                const pageDetailRes = await makeMetaGraphRequest(
+                  `/${page.id}`,
+                  "GET",
+                  pageToken,
+                  undefined,
+                  { fields: "instagram_business_account{id,username,followers_count,media_count,profile_picture_url},connected_instagram_account{id,username,followers_count,media_count,profile_picture_url}" }
+                );
+                console.log("[Instagram] page detail com pageToken:", JSON.stringify(pageDetailRes).slice(0, 300));
+                const igDetail = pageDetailRes.instagram_business_account || pageDetailRes.connected_instagram_account;
+                if (igDetail?.id) {
+                  igIdToUse = igDetail.id;
+                  profile = igDetail;
+                  if (igDetail.id !== igAccount.instagramId) {
+                    await db.update(instagramAccounts).set({ instagramId: igDetail.id, accessToken: pageToken, updatedAt: new Date() }).where(eq(instagramAccounts.id, igAccount.id));
+                  }
+                  break;
+                }
               }
             }
-          } catch (_) {}
+          } catch (fbErr: any) {
+            console.error("[Instagram] Fallback /me/accounts falhou:", fbErr.message);
+          }
         }
 
         if (!profile) throw new Error("Não foi possível acessar a conta Instagram. Verifique o token em Reconectar Instagram.");
