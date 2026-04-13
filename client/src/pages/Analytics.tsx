@@ -44,17 +44,19 @@ export default function Analytics() {
     },
   });
 
+  const [connectError, setConnectError] = useState<string>("");
+
   // Mutation para conectar automaticamente via token do servidor
   const autoConnectMutation = trpc.instagramAccounts.autoConnectFeminnita.useMutation({
     onSuccess: (data) => {
       toast.success(data.message);
       setAutoConnecting(false);
+      setConnectError("");
       accountsQuery.refetch();
     },
     onError: (err) => {
       setAutoConnecting(false);
-      // Auto-connect falhou: mostra modal manual como fallback
-      toast.error(`Auto-conexão falhou: ${err.message}. Informe o token manualmente.`);
+      setConnectError(err.message);
       setShowConnectModal(true);
     },
   });
@@ -123,11 +125,20 @@ export default function Analytics() {
               </div>
             </div>
 
+            {connectError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-xs text-red-800 whitespace-pre-wrap">{connectError}</div>
+                </div>
+              </div>
+            )}
+
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
               <div className="flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div className="text-sm text-amber-800">
-                  <p className="font-medium mb-1">Como obter o token:</p>
+                  <p className="font-medium mb-1">Como obter o token com permissões Instagram:</p>
                   <ol className="list-decimal list-inside space-y-1 text-xs">
                     <li>Acesse <strong>developers.facebook.com/tools/explorer</strong></li>
                     <li>Selecione o app <strong>Feminnita Marketing</strong></li>
