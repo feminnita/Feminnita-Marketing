@@ -12,6 +12,42 @@ function graphUrl(path: string, token: string, extraFields?: string): string {
   return `${base}?${params.toString()}`;
 }
 
+/**
+ * Troca token curto (1h) por Long-Lived User Token (60 dias).
+ * Se META_APP_ID/META_APP_SECRET não estiverem configurados, retorna o token original.
+ */
+async function exchangeForLongLivedToken(shortToken: string): Promise<string> {
+  const appId = process.env.META_APP_ID;
+  const appSecret = process.env.META_APP_SECRET;
+
+  if (!appId || !appSecret) {
+    console.warn("[Instagram] META_APP_ID/META_APP_SECRET não configurados — token não será renovado");
+    return shortToken;
+  }
+
+  try {
+    const url = new URL("https://graph.facebook.com/oauth/access_token");
+    url.searchParams.set("grant_type", "fb_exchange_token");
+    url.searchParams.set("client_id", appId);
+    url.searchParams.set("client_secret", appSecret);
+    url.searchParams.set("fb_exchange_token", shortToken);
+
+    const res = await fetch(url.toString());
+    const data = await res.json();
+
+    if (data.error) {
+      console.warn("[Instagram] Troca de token falhou:", data.error.message, "— usando token original");
+      return shortToken;
+    }
+
+    console.log("[Instagram] Token trocado por long-lived com sucesso. Expira em:", Math.round((data.expires_in ?? 0) / 86400), "dias");
+    return data.access_token ?? shortToken;
+  } catch (err: any) {
+    console.warn("[Instagram] Erro na troca de token:", err.message);
+    return shortToken;
+  }
+}
+
 export const instagramAccountsRouter = router({
   /**
    * Adicionar nova conta Instagram (Feminnita ou Influencer)
@@ -323,7 +359,10 @@ export const instagramAccountsRouter = router({
       instagramAccountId: z.string().optional(), // ID direto da conta IG (bypass da descoberta automática)
     }))
     .mutation(async ({ input }) => {
-      const token = input.pageAccessToken;
+      // Trocar token curto (1h) por long-lived user token (60 dias).
+      // O Page Access Token obtido via long-lived user token é PERMANENTE.
+      const longLivedToken = await exchangeForLongLivedToken(input.pageAccessToken);
+      const token = longLivedToken;
 
       // Se o ID foi fornecido diretamente, pula toda a descoberta
       let igAccountId: string | null = input.instagramAccountId || null;
@@ -442,8 +481,11 @@ export const instagramAccountsRouter = router({
     .mutation(async ({ ctx }) => {
       // 1. Prioridade: token Meta salvo no banco pelo usuário (OAuth da Feminnita)
       const savedToken = await getOAuthToken(ctx.user.id, "meta");
-      const token = savedToken?.accessToken || process.env.META_ACCESS_TOKEN;
-      if (!token) throw new Error("Nenhum token Meta encontrado. Conecte o Meta nas Integrações ou adicione META_ACCESS_TOKEN ao .env.");
+      const rawToken = savedToken?.accessToken || process.env.META_ACCESS_TOKEN;
+      if (!rawToken) throw new Error("Nenhum token Meta encontrado. Conecte o Meta nas Integrações ou adicione META_ACCESS_TOKEN ao .env.");
+
+      // Trocar por long-lived token para obter Page Access Tokens permanentes
+      const token = await exchangeForLongLivedToken(rawToken);
 
       let igAccountId: string | null = null;
       let pageToken: string = token;
