@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Heart, Eye, MessageCircle, Share2, TrendingUp, Users, Instagram, Link, AlertCircle } from "lucide-react";
+import { Heart, Eye, MessageCircle, TrendingUp, Users, Instagram, Link, AlertCircle, ExternalLink, Film, Image } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { toast } from "sonner";
 
@@ -36,11 +36,21 @@ export default function Analytics() {
     { enabled: !!influencerId }
   );
 
+  // Posts reais do Instagram via Graph API
+  const instagramPostsQuery = trpc.metaGraphIntegration.getInstagramPosts.useQuery(
+    { accountId: parseInt(selectedAccountId), limit: 24 },
+    { enabled: !!selectedAccountId }
+  );
+
   // Mutation para sincronizar métricas
   const syncMetricsMutation = trpc.metaGraphIntegration.syncAllPostMetrics.useMutation({
-    onSuccess: () => {
+    onSuccess: (data) => {
+      toast.success(`Métricas sincronizadas: ${(data as any)?.synced ?? 0} posts atualizados`);
       accountInsightsQuery.refetch();
       performanceQuery.refetch();
+    },
+    onError: (err) => {
+      toast.error(`Erro ao sincronizar: ${err.message}`);
     },
   });
 
@@ -429,6 +439,112 @@ export default function Analytics() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Posts do Instagram */}
+      {selectedAccountId && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Instagram className="w-5 h-5 text-pink-500" />
+              Posts do Instagram
+            </CardTitle>
+            <CardDescription>
+              {instagramPostsQuery.isLoading
+                ? "Carregando posts..."
+                : instagramPostsQuery.data?.error
+                ? `Erro: ${instagramPostsQuery.data.error}`
+                : `${instagramPostsQuery.data?.posts?.length ?? 0} posts mais recentes`}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {instagramPostsQuery.data?.error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-red-800">
+                  <p className="font-medium mb-1">Não foi possível carregar os posts</p>
+                  <p className="text-xs">{instagramPostsQuery.data.error}</p>
+                  <p className="text-xs mt-2">O token pode precisar de permissão <code>instagram_basic</code>. Reconecte a conta com um novo token.</p>
+                </div>
+              </div>
+            )}
+
+            {instagramPostsQuery.isLoading && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <div key={i} className="aspect-square bg-slate-100 rounded-xl animate-pulse" />
+                ))}
+              </div>
+            )}
+
+            {!instagramPostsQuery.isLoading && (instagramPostsQuery.data?.posts?.length ?? 0) > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                {(instagramPostsQuery.data?.posts ?? []).map((post: any) => (
+                  <a
+                    key={post.id}
+                    href={post.permalink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group relative aspect-square rounded-xl overflow-hidden bg-slate-100 block"
+                  >
+                    {post.mediaUrl ? (
+                      <img
+                        src={post.mediaUrl}
+                        alt={post.caption || "Post"}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        {post.mediaType === "VIDEO" ? (
+                          <Film className="w-8 h-8 text-slate-400" />
+                        ) : (
+                          <Image className="w-8 h-8 text-slate-400" />
+                        )}
+                      </div>
+                    )}
+
+                    {/* Overlay com métricas */}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <div className="text-white text-center">
+                        <div className="flex items-center justify-center gap-3 text-sm font-semibold">
+                          <span className="flex items-center gap-1">
+                            <Heart className="w-3.5 h-3.5" /> {post.likes.toLocaleString()}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <MessageCircle className="w-3.5 h-3.5" /> {post.comments.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="mt-1">
+                          <ExternalLink className="w-3 h-3 mx-auto opacity-70" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Badge tipo de mídia */}
+                    {post.mediaType === "VIDEO" && (
+                      <div className="absolute top-1.5 right-1.5 bg-black/60 rounded-md px-1 py-0.5">
+                        <Film className="w-3 h-3 text-white" />
+                      </div>
+                    )}
+                    {post.mediaType === "CAROUSEL_ALBUM" && (
+                      <div className="absolute top-1.5 right-1.5 bg-black/60 rounded-md px-1 py-0.5">
+                        <span className="text-white text-[10px] font-bold">+</span>
+                      </div>
+                    )}
+                  </a>
+                ))}
+              </div>
+            )}
+
+            {!instagramPostsQuery.isLoading && !instagramPostsQuery.data?.error && (instagramPostsQuery.data?.posts?.length ?? 0) === 0 && (
+              <div className="text-center py-10 text-slate-400">
+                <Instagram className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                <p className="text-sm">Nenhum post encontrado nesta conta</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
     </div>
   );
