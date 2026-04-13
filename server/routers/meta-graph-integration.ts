@@ -209,20 +209,38 @@ export const metaGraphIntegrationRouter = router({
         }
 
         // 1. Buscar dados básicos do perfil (followers, posts)
-        // Tenta acesso direto pelo ID; se falhar com permissão, tenta via Página do Facebook
+        const token = igAccount.accessToken;
+        const isIgLoginToken = token.startsWith("IGQ") || token.startsWith("IGD") || token.startsWith("IG");
         let profile: any = null;
         let igIdToUse = igAccount.instagramId;
 
-        try {
-          profile = await makeMetaGraphRequest(
-            `/${igAccount.instagramId}`,
-            "GET",
-            igAccount.accessToken,
-            undefined,
-            { fields: "followers_count,media_count,name,username,profile_picture_url" }
-          );
-          if (profile.error) profile = null;
-        } catch (_) { profile = null; }
+        // Instagram Login API (graph.instagram.com) — token IGQ/IGD
+        if (isIgLoginToken) {
+          try {
+            const igRes = await fetch(
+              `https://graph.instagram.com/v19.0/me?fields=id,username,name,biography,followers_count,media_count,profile_picture_url&access_token=${token}`
+            );
+            const igData = await igRes.json() as any;
+            if (!igData.error && igData.id) {
+              profile = igData;
+              igIdToUse = igData.id;
+            }
+          } catch (_) { profile = null; }
+        }
+
+        // Facebook Graph API — tentativa direta
+        if (!profile && !isIgLoginToken) {
+          try {
+            profile = await makeMetaGraphRequest(
+              `/${igAccount.instagramId}`,
+              "GET",
+              token,
+              undefined,
+              { fields: "followers_count,media_count,name,username,profile_picture_url" }
+            );
+            if (profile.error) profile = null;
+          } catch (_) { profile = null; }
+        }
 
         // Fallback A: Page Token — /me aponta para a própria Página, buscar IG vinculado
         if (!profile) {
@@ -276,7 +294,19 @@ export const metaGraphIntegrationRouter = router({
           }
         }
 
-        if (!profile) throw new Error("Não foi possível acessar a conta Instagram. Verifique o token em Reconectar Instagram.");
+        // Fallback final: usar dados do banco de dados (sem API)
+        if (!profile) {
+          console.warn("[Instagram] Todas as estratégias falharam — usando dados do banco como fallback");
+          return {
+            followers: igAccount.followers || 0,
+            reach: 0,
+            impressions: 0,
+            profileViews: 0,
+            username: igAccount.username,
+            profilePictureUrl: igAccount.profilePictureUrl,
+            apiError: "Token sem acesso à API do Instagram. O sistema exibe os últimos dados salvos.",
+          };
+        }
 
         // 2. Buscar insights de alcance/impressões (últimos 7 dias)
         let impressions = 0, reach = 0, profileViews = 0;
@@ -630,14 +660,41 @@ export const metaGraphIntegrationRouter = router({
       const igAccount = account[0];
 
       try {
-        // Tentar acesso direto; se falhar, tentar via Página do Facebook
+        const token = igAccount.accessToken;
+        // Token IGQ... = Instagram Login API (graph.instagram.com)
+        // Token EAA... = Facebook Graph API (graph.facebook.com)
+        const isIgLoginToken = token.startsWith("IGQ") || token.startsWith("IGD") || token.startsWith("IG");
+
+        if (isIgLoginToken) {
+          // ── Instagram Login API (graph.instagram.com) ──────────────────────
+          const mediaRes = await fetch(
+            `https://graph.instagram.com/v19.0/me/media?fields=id,caption,media_type,media_url,thumbnail_url,timestamp,like_count,comments_count,permalink&limit=${input.limit}&access_token=${token}`
+          );
+          const mediaData = await mediaRes.json() as any;
+          if (mediaData.error) {
+            return { posts: [], error: mediaData.error.message };
+          }
+          const posts = (mediaData.data || []).map((p: any) => ({
+            id: p.id,
+            caption: p.caption?.slice(0, 100) || "",
+            mediaType: p.media_type,
+            mediaUrl: p.media_url || p.thumbnail_url,
+            publishedAt: p.timestamp,
+            likes: p.like_count || 0,
+            comments: p.comments_count || 0,
+            permalink: p.permalink,
+          }));
+          return { posts, error: null };
+        }
+
+        // ── Facebook Graph API (graph.facebook.com) ────────────────────────
         let igIdToUse = igAccount.instagramId;
 
-        // Verificar se o ID direto funciona (teste rápido)
+        // Verificar se o ID direto funciona
         const testRes = await makeMetaGraphRequest(
           `/${igAccount.instagramId}`,
           "GET",
-          igAccount.accessToken,
+          token,
           undefined,
           { fields: "id" }
         );
@@ -647,7 +704,7 @@ export const metaGraphIntegrationRouter = router({
           const pageRes = await makeMetaGraphRequest(
             `/${process.env.META_PAGE_ID}`,
             "GET",
-            igAccount.accessToken,
+            token,
             undefined,
             { fields: "instagram_business_account{id},connected_instagram_account{id}" }
           );
@@ -655,11 +712,10 @@ export const metaGraphIntegrationRouter = router({
           if (igViaPage?.id) igIdToUse = igViaPage.id;
         }
 
-        // Buscar mídia da conta
         const mediaRes = await makeMetaGraphRequest(
           `/${igIdToUse}/media`,
           "GET",
-          igAccount.accessToken,
+          token,
           undefined,
           {
             fields: "id,caption,media_type,media_url,thumbnail_url,timestamp,like_count,comments_count,permalink",

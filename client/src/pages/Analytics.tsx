@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,21 @@ export default function Analytics() {
   const [connectToken, setConnectToken] = useState("");
   const [connectIgId, setConnectIgId] = useState("");
   const [autoConnecting, setAutoConnecting] = useState(false);
+
+  // Detectar retorno do OAuth do Instagram
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const igStatus = params.get("instagram");
+    if (igStatus === "connected") {
+      toast.success("Instagram conectado com sucesso!");
+      accountsQuery.refetch();
+      window.history.replaceState({}, "", "/analytics");
+    } else if (igStatus === "error") {
+      const msg = params.get("msg") || "Erro desconhecido";
+      toast.error(`Erro ao conectar Instagram: ${msg}`);
+      window.history.replaceState({}, "", "/analytics");
+    }
+  }, []);
 
   // Queries
   const accountsQuery = trpc.instagramAccounts.listAccounts.useQuery();
@@ -181,6 +196,21 @@ export default function Analytics() {
               />
             </div>
 
+            {/* Botão principal: Instagram Login OAuth */}
+            <a
+              href="/api/instagram/start"
+              className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-all mb-3"
+            >
+              <Instagram className="w-4 h-4" />
+              Entrar com Instagram (@feminnita)
+            </a>
+
+            <div className="relative flex items-center gap-2 my-3">
+              <div className="flex-1 border-t border-slate-200" />
+              <span className="text-xs text-slate-400">ou cole o token manualmente</span>
+              <div className="flex-1 border-t border-slate-200" />
+            </div>
+
             <div className="flex gap-2">
               <Button
                 onClick={() => {
@@ -195,9 +225,9 @@ export default function Analytics() {
                   }
                 }}
                 disabled={(!connectToken.trim() && !connectIgId.trim()) || connectMutation.isPending || forceConnectMutation.isPending}
-                className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+                className="flex-1 bg-slate-700 hover:bg-slate-800 text-white"
               >
-                {(connectMutation.isPending || forceConnectMutation.isPending) ? "Conectando..." : "Conectar"}
+                {(connectMutation.isPending || forceConnectMutation.isPending) ? "Conectando..." : "Conectar com token"}
               </Button>
               <Button variant="outline" onClick={() => setShowConnectModal(false)}>
                 Cancelar
@@ -291,6 +321,20 @@ export default function Analytics() {
           </SelectContent>
         </Select>
       </div>
+
+      {/* Aviso de erro de API */}
+      {insights && (insights as any).apiError && (
+        <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-amber-900">Exibindo dados salvos — Instagram API indisponível</p>
+            <p className="text-xs text-amber-700 mt-0.5">{(insights as any).apiError}</p>
+            <p className="text-xs text-amber-700 mt-1">
+              Para resolver: no Facebook, acesse <strong>Configurações da Página → Instagram → Conectar conta</strong> e vincule @feminnita à página diretamente. Depois clique em <strong>Reconectar Instagram</strong> com um novo token.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* KPIs */}
       {insights && (
