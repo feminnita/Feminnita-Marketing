@@ -52,6 +52,7 @@ const BlogFeminnitaPage       = lazy(() => import("@/pages/BlogFeminnitaPage"));
 const TrafficManagerPage      = lazy(() => import("@/pages/TrafficManagerPage"));
 const AgentActionsPage        = lazy(() => import("@/pages/AgentActionsPage"));
 const AgentDetailPage         = lazy(() => import("@/pages/AgentDetailPage"));
+const WhatsAppDisparosPage    = lazy(() => import("@/pages/WhatsAppDisparosPage"));
 
 function PageLoader() {
   return (
@@ -157,6 +158,8 @@ export default function App() {
         return <WhatsAppBaileysSimplePage />;
       case "/whatsapp-notifications":
         return <WhatsAppNotificationsPage />;
+      case "/whatsapp-disparos":
+        return <WhatsAppDisparosPage />;
       case "/banco-imagens":
         return <AssetLibraryPage />;
       case "/equipe-marketing":

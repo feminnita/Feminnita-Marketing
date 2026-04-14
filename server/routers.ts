@@ -85,6 +85,7 @@ import { agentMemoryRouter } from "./routers/agent-memory";
 import { agentActionsRouter } from "./routers/agent-actions";
 import { morningBriefingRouter } from "./routers/morning-briefing";
 import { specialistChatRouter } from "./routers/specialist-chat";
+import { whatsappBlastsRouter } from "./routers/whatsapp-blasts";
 import { getDb } from "./db";
 import { influencers, influencerPosts } from "../drizzle/schema";
 
@@ -210,6 +211,7 @@ export const appRouter = router({
   agentActions: agentActionsRouter,
   morningBriefing: morningBriefingRouter,
   specialistChat: specialistChatRouter,
+  whatsappBlasts: whatsappBlastsRouter,
   influencers: router({
     list: protectedProcedure.query(async ({ ctx }) => {
       try {

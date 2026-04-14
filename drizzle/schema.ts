@@ -1298,3 +1298,35 @@ export const agentMemory = mysqlTable("agent_memory", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 export type AgentMemory = typeof agentMemory.$inferSelect;
+
+// ─── Disparo em Massa WhatsApp ────────────────────────────────────────────────
+
+export const whatsappBlasts = mysqlTable("whatsapp_blasts", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  message: text("message").notNull(),
+  delaySeconds: int("delaySeconds").notNull().default(8),
+  status: mysqlEnum("status", ["draft", "running", "done", "cancelled", "error"]).notNull().default("draft"),
+  totalContacts: int("totalContacts").notNull().default(0),
+  sentCount: int("sentCount").notNull().default(0),
+  failedCount: int("failedCount").notNull().default(0),
+  startedAt: timestamp("startedAt"),
+  completedAt: timestamp("completedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+export type WhatsappBlast = typeof whatsappBlasts.$inferSelect;
+export type InsertWhatsappBlast = typeof whatsappBlasts.$inferInsert;
+
+export const whatsappBlastContacts = mysqlTable("whatsapp_blast_contacts", {
+  id: int("id").autoincrement().primaryKey(),
+  blastId: int("blastId").notNull(),
+  phoneNumber: varchar("phoneNumber", { length: 30 }).notNull(),
+  name: varchar("name", { length: 100 }),
+  status: mysqlEnum("status", ["pending", "sent", "failed"]).notNull().default("pending"),
+  sentAt: timestamp("sentAt"),
+  error: varchar("error", { length: 255 }),
+});
+export type WhatsappBlastContact = typeof whatsappBlastContacts.$inferSelect;
+export type InsertWhatsappBlastContact = typeof whatsappBlastContacts.$inferInsert;
