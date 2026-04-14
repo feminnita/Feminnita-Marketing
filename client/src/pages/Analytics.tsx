@@ -140,6 +140,13 @@ export default function Analytics() {
   const selectedAccount = accounts.find((a: any) => a.id.toString() === selectedAccountId);
   const influencerId = selectedAccount?.influencerId ?? null;
 
+  // Auto-selecionar a primeira conta quando carregar
+  useEffect(() => {
+    if (accounts.length > 0 && !selectedAccountId) {
+      setSelectedAccountId(accounts[0].id.toString());
+    }
+  }, [accounts, selectedAccountId]);
+
   // Performance metrics from influencer_performance table
   const performanceQuery = trpc.autonomousInfluencers.getPerformanceMetrics.useQuery(
     { influencerId: influencerId!, days: 30 },
