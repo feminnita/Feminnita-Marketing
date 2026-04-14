@@ -24,12 +24,136 @@ function getInstagramRedirectUri(req: any): string {
 
 export function registerOAuthRoutes(app: Express) {
   /**
+   * Diagnóstico de conexão Instagram — verifica env vars, token, e API
+   * URL: GET /api/instagram/diagnostic
+   */
+  app.get("/api/instagram/diagnostic", async (req, res) => {
+    const cookie = req.cookies?.[COOKIE_NAME];
+    if (!cookie) return res.status(401).json({ error: "Não autenticado" });
+
+    const report: Record<string, any> = {
+      env: {
+        META_APP_ID:     IG_APP_ID ? `${IG_APP_ID.slice(0, 6)}...` : "❌ NÃO CONFIGURADO",
+        META_APP_SECRET: IG_APP_SECRET ? "✅ configurado" : "❌ NÃO CONFIGURADO",
+        META_PAGE_ID:    process.env.META_PAGE_ID || "❌ NÃO CONFIGURADO",
+        META_ACCESS_TOKEN: process.env.META_ACCESS_TOKEN ? "✅ presente" : "❌ NÃO CONFIGURADO",
+        META_INSTAGRAM_ACCOUNT_ID: process.env.META_INSTAGRAM_ACCOUNT_ID || "não configurado",
+        INSTAGRAM_REDIRECT_URI: process.env.INSTAGRAM_REDIRECT_URI || `derivado: /api/instagram/callback`,
+        instagramLoginReady: !!(IG_APP_ID && IG_APP_SECRET),
+      },
+      api: {} as Record<string, any>,
+    };
+
+    const token = process.env.META_ACCESS_TOKEN;
+    if (token) {
+      // Teste 1: /me
+      try {
+        const r = await fetch(`https://graph.facebook.com/v19.0/me?fields=id,name&access_token=${encodeURIComponent(token)}`);
+        const d = await r.json() as any;
+        report.api.me = d.error ? `❌ ${d.error.message}` : `✅ User ID ${d.id} (${d.name})`;
+      } catch (e: any) { report.api.me = `❌ erro: ${e.message}`; }
+
+      // Teste 2: /me/accounts (Páginas)
+      try {
+        const r = await fetch(`https://graph.facebook.com/v19.0/me/accounts?fields=id,name,instagram_business_account,connected_instagram_account&access_token=${encodeURIComponent(token)}`);
+        const d = await r.json() as any;
+        if (d.error) {
+          report.api.pages = `❌ ${d.error.message}`;
+        } else {
+          const pages = d.data || [];
+          report.api.pages = pages.map((p: any) => ({
+            nome: p.name,
+            id: p.id,
+            instagram_business_account: p.instagram_business_account?.id || "❌ não vinculada",
+            connected_instagram_account: p.connected_instagram_account?.id || "não presente",
+          }));
+        }
+      } catch (e: any) { report.api.pages = `❌ erro: ${e.message}`; }
+
+      // Teste 3: /{META_PAGE_ID} direto
+      if (process.env.META_PAGE_ID) {
+        try {
+          const r = await fetch(`https://graph.facebook.com/v19.0/${process.env.META_PAGE_ID}?fields=id,name,instagram_business_account,connected_instagram_account&access_token=${encodeURIComponent(token)}`);
+          const d = await r.json() as any;
+          if (d.error) {
+            report.api.pageById = `❌ ${d.error.message}`;
+          } else {
+            report.api.pageById = {
+              nome: d.name,
+              instagram_business_account: d.instagram_business_account?.id || "❌ NÃO RETORNADO — conta não vinculada como Business",
+              connected_instagram_account: d.connected_instagram_account?.id || "não presente",
+            };
+          }
+        } catch (e: any) { report.api.pageById = `❌ erro: ${e.message}`; }
+      }
+
+      // Teste 4: page_backed_instagram_accounts (cross-post "shadow accounts")
+      if (process.env.META_PAGE_ID) {
+        try {
+          const r = await fetch(`https://graph.facebook.com/v19.0/${process.env.META_PAGE_ID}/page_backed_instagram_accounts?access_token=${encodeURIComponent(token)}`);
+          const d = await r.json() as any;
+          if (d.error) {
+            report.api.pageBacked = `❌ ${d.error.message}`;
+          } else {
+            const accounts = d.data || [];
+            report.api.pageBacked = accounts.length > 0
+              ? accounts.map((a: any) => ({ id: a.id, username: a.username || "N/A" }))
+              : "nenhuma conta cross-post encontrada";
+          }
+        } catch (e: any) { report.api.pageBacked = `❌ erro: ${e.message}`; }
+      }
+    } else {
+      report.api.note = "META_ACCESS_TOKEN não configurado — testes de API ignorados";
+    }
+
+    report.diagnostico = {
+      causa: [] as string[],
+      solucao: [] as string[],
+    };
+
+    if (!IG_APP_ID || !IG_APP_SECRET) {
+      report.diagnostico.causa.push("META_APP_ID e/ou META_APP_SECRET não configurados no .env");
+      report.diagnostico.solucao.push("Adicione ao .env: META_APP_ID=<seu_app_id> e META_APP_SECRET=<seu_app_secret> do app Meta (developers.facebook.com)");
+    }
+
+    const pagesResult = report.api.pages;
+    if (Array.isArray(pagesResult)) {
+      const naoVinculadas = pagesResult.filter((p: any) => p.instagram_business_account === "❌ não vinculada");
+      if (naoVinculadas.length > 0) {
+        report.diagnostico.causa.push(`Página(s) sem instagram_business_account: ${naoVinculadas.map((p: any) => p.nome).join(", ")}`);
+        report.diagnostico.solucao.push("No Facebook: Configurações da Página → Instagram → Conectar conta → faça login com @feminnita");
+        report.diagnostico.solucao.push("OU: business.facebook.com → Configurações → Contas → Contas do Instagram → Adicionar");
+        report.diagnostico.solucao.push("Certifique-se que @feminnita está em modo Profissional (Criador ou Empresa) no app do Instagram");
+      }
+    }
+
+    return res.json(report);
+  });
+
+  /**
    * Instagram Login — inicia o fluxo OAuth via instagram.com
    * URL: /api/instagram/start
    */
   app.get("/api/instagram/start", async (req, res) => {
     const cookie = req.cookies?.[COOKIE_NAME];
     if (!cookie) return res.redirect("/login");
+
+    // Validar que META_APP_ID está configurado antes de redirecionar
+    if (!IG_APP_ID) {
+      const msg = encodeURIComponent(
+        "META_APP_ID não configurado no servidor. " +
+        "Adicione META_APP_ID=<id_do_app> ao .env e reinicie o servidor. " +
+        "Encontre o ID em developers.facebook.com → seu app → Configurações Básicas → ID do Aplicativo."
+      );
+      return res.redirect(`/analytics?instagram=error&msg=${msg}`);
+    }
+    if (!IG_APP_SECRET) {
+      const msg = encodeURIComponent(
+        "META_APP_SECRET não configurado no servidor. " +
+        "Adicione META_APP_SECRET=<secret> ao .env e reinicie o servidor."
+      );
+      return res.redirect(`/analytics?instagram=error&msg=${msg}`);
+    }
 
     const redirectUri = getInstagramRedirectUri(req);
     const scopes = [
