@@ -50,7 +50,8 @@ export function registerMLOAuthRoutes(app: Express) {
       `https://auth.mercadolivre.com.br/authorization` +
       `?response_type=code` +
       `&client_id=${ML_CLIENT_ID}` +
-      `&redirect_uri=${encodeURIComponent(ML_REDIRECT_URL)}`;
+      `&redirect_uri=${encodeURIComponent(ML_REDIRECT_URL)}` +
+      `&state=mkt`;
 
     return res.redirect(authUrl);
   });
