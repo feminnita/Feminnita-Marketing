@@ -1176,6 +1176,33 @@ export const adsEvaluationMessages = mysqlTable("ads_evaluation_messages", {
 });
 export type AdsEvaluationMessage = typeof adsEvaluationMessages.$inferSelect;
 
+// === ML ADS — AVALIAÇÕES MERCADO LIVRE ===
+export const mlAdsEvaluations = mysqlTable("ml_ads_evaluations", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  status: mysqlEnum("status", ["pending", "running", "done", "error"]).notNull().default("pending"),
+  rawMetrics: text("rawMetrics"),
+  analysis: text("analysis"),
+  recommendations: text("recommendations"),
+  summary: varchar("summary", { length: 500 }),
+  errorMessage: varchar("errorMessage", { length: 500 }),
+  triggeredAt: timestamp("triggeredAt").defaultNow().notNull(),
+  completedAt: timestamp("completedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type MlAdsEvaluation = typeof mlAdsEvaluations.$inferSelect;
+export type InsertMlAdsEvaluation = typeof mlAdsEvaluations.$inferInsert;
+
+export const mlAdsEvaluationMessages = mysqlTable("ml_ads_evaluation_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  evaluationId: int("evaluationId").notNull(),
+  userId: int("userId").notNull(),
+  role: mysqlEnum("role", ["user", "assistant"]).notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type MlAdsEvaluationMessage = typeof mlAdsEvaluationMessages.$inferSelect;
+
 // ─── Blog Feminnita ──────────────────────────────────────────────────────────
 
 export const blogPosts = mysqlTable("blog_posts", {
@@ -1329,4 +1356,32 @@ export const whatsappBlastContacts = mysqlTable("whatsapp_blast_contacts", {
   error: varchar("error", { length: 255 }),
 });
 export type WhatsappBlastContact = typeof whatsappBlastContacts.$inferSelect;
+
+// === SHOPEE ADS — AVALIAÇÕES ===
+export const shopeeAdsEvaluations = mysqlTable("shopee_ads_evaluations", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  shopId: varchar("shopId", { length: 50 }),
+  status: mysqlEnum("status", ["pending", "running", "done", "error"]).notNull().default("pending"),
+  rawMetrics: text("rawMetrics"),
+  analysis: text("analysis"),
+  recommendations: text("recommendations"),
+  summary: varchar("summary", { length: 500 }),
+  errorMessage: varchar("errorMessage", { length: 500 }),
+  triggeredAt: timestamp("triggeredAt").defaultNow().notNull(),
+  completedAt: timestamp("completedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type ShopeeAdsEvaluation = typeof shopeeAdsEvaluations.$inferSelect;
+export type InsertShopeeAdsEvaluation = typeof shopeeAdsEvaluations.$inferInsert;
+
+export const shopeeAdsEvaluationMessages = mysqlTable("shopee_ads_evaluation_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  evaluationId: int("evaluationId").notNull(),
+  userId: int("userId").notNull(),
+  role: mysqlEnum("role", ["user", "assistant"]).notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type ShopeeAdsEvaluationMessage = typeof shopeeAdsEvaluationMessages.$inferSelect;
 export type InsertWhatsappBlastContact = typeof whatsappBlastContacts.$inferInsert;

@@ -48,11 +48,13 @@ const AfiliadasPage           = lazy(() => import("@/pages/AfiliadasPage"));
 const BrandBookPage           = lazy(() => import("@/pages/BrandBookPage"));
 const TiktokLivePage          = lazy(() => import("@/pages/TiktokLivePage"));
 const AdsManagerPage          = lazy(() => import("@/pages/AdsManagerPage"));
+const MlAdsManagerPage        = lazy(() => import("@/pages/MlAdsManagerPage"));
 const BlogFeminnitaPage       = lazy(() => import("@/pages/BlogFeminnitaPage"));
 const TrafficManagerPage      = lazy(() => import("@/pages/TrafficManagerPage"));
 const AgentActionsPage        = lazy(() => import("@/pages/AgentActionsPage"));
 const AgentDetailPage         = lazy(() => import("@/pages/AgentDetailPage"));
 const WhatsAppDisparosPage    = lazy(() => import("@/pages/WhatsAppDisparosPage"));
+const ShopeeAdsManagerPage    = lazy(() => import("@/pages/ShopeeAdsManagerPage"));
 
 function PageLoader() {
   return (
@@ -172,12 +174,16 @@ export default function App() {
         return <TiktokLivePage />;
       case "/gestor-trafego":
         return <AdsManagerPage />;
+      case "/ml-ads":
+        return <MlAdsManagerPage />;
       case "/blog-feminnita":
         return <BlogFeminnitaPage />;
       case "/traffic-manager":
         return <TrafficManagerPage />;
       case "/acoes-agentes":
         return <AgentActionsPage />;
+      case "/shopee-ads":
+        return <ShopeeAdsManagerPage />;
       default: {
         if (/^\/influenciadora\/\d+$/.test(location)) {
           return <InfluencerProfilePage />;

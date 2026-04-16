@@ -4,6 +4,8 @@ import { createServer } from "http";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes, registerDebugRoutes } from "./oauth";
+import { registerMLOAuthRoutes } from "../routers/ml-oauth";
+import { registerShopeeOAuthRoutes } from "../routers/shopee-oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -66,6 +68,10 @@ async function startServer() {
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
   registerDebugRoutes(app);
+  // ML OAuth routes: /api/ml/start and /api/ml/callback
+  registerMLOAuthRoutes(app);
+  // Shopee OAuth routes: /api/shopee/start, /api/shopee/callback, /api/shopee/status
+  registerShopeeOAuthRoutes(app);
   // Bling webhook for real-time inventory sync
   app.post("/api/bling/webhook", handleBlingWebhook);
   
