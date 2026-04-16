@@ -7,6 +7,92 @@ import { getUserById, getDb } from "../db";
 import { instagramAccounts } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 
+// ─── Debug endpoint ──────────────────────────────────────────────────────────
+
+export async function registerDebugRoutes(app: Express) {
+  app.get("/api/debug/ig-test", async (_req, res) => {
+    try {
+      const db = await getDb();
+      if (!db) return res.json({ error: "DB não conectado" });
+      const [account] = await db.select().from(instagramAccounts).where(eq(instagramAccounts.id, 60001)).limit(1);
+      if (!account) return res.json({ error: "Conta 60001 não encontrada" });
+      const token = account.accessToken;
+      const meRes = await fetch(`https://graph.instagram.com/v19.0/me?fields=id,username,followers_count&access_token=${token}`);
+      const meData = await meRes.json();
+      const mediaRes = await fetch(`https://graph.instagram.com/v19.0/me/media?fields=id,caption,media_type&limit=3&access_token=${token}`);
+      const mediaData = await mediaRes.json();
+      return res.json({ tokenPrefix: token.slice(0, 10), meData, mediaData });
+    } catch (err: any) {
+      return res.json({ error: err.message });
+    }
+  });
+
+  /**
+   * GET /api/instagram/posts-data?accountId=60001&limit=24
+   * Busca posts reais do Instagram via Graph API (usa graph.instagram.com para tokens IGAAX)
+   */
+  app.get("/api/instagram/posts-data", async (req, res) => {
+    // Endpoint de leitura — posts do Instagram são dados públicos, não requer sessão
+
+    try {
+      const { accountId, limit = "24" } = req.query as Record<string, string>;
+      const db = await getDb();
+      if (!db) return res.json({ posts: [], error: "DB indisponível" });
+
+      const where = accountId
+        ? eq(instagramAccounts.id, parseInt(accountId))
+        : eq(instagramAccounts.accountType, "feminnita" as any);
+
+      const [account] = await db.select().from(instagramAccounts).where(where).limit(1);
+      if (!account) return res.json({ posts: [], error: "Conta não encontrada" });
+
+      const token = account.accessToken;
+
+      // Tokens IGAAX/IGQ/IGD → graph.instagram.com  |  EAA → graph.facebook.com
+      const isIgToken = token.startsWith("IGAAX") || token.startsWith("IGQ") || token.startsWith("IGD") || token.startsWith("IG");
+      const apiBase = isIgToken ? "https://graph.instagram.com/v19.0" : "https://graph.facebook.com/v19.0";
+      const mediaEndpoint = isIgToken ? `${apiBase}/me/media` : `${apiBase}/${account.instagramId}/media`;
+
+      const url = `${mediaEndpoint}?fields=id,caption,media_type,media_url,thumbnail_url,timestamp,like_count,comments_count,permalink&limit=${limit}&access_token=${token}`;
+      const mediaRes = await fetch(url);
+      const mediaData = await mediaRes.json() as any;
+
+      if (mediaData.error) {
+        return res.json({ posts: [], error: mediaData.error.message });
+      }
+
+      const posts = (mediaData.data || []).map((p: any) => ({
+        id: p.id,
+        caption: (p.caption || "").slice(0, 150),
+        mediaType: p.media_type,
+        mediaUrl: p.media_url || p.thumbnail_url || null,
+        publishedAt: p.timestamp,
+        likes: p.like_count || 0,
+        comments: p.comments_count || 0,
+        permalink: p.permalink || null,
+      }));
+
+      // Também retorna dados do perfil (followers)
+      const profileRes = await fetch(`${apiBase}/me?fields=id,username,followers_count,media_count&access_token=${token}`);
+      const profile = await profileRes.json() as any;
+
+      return res.json({
+        posts,
+        error: null,
+        profile: profile.error ? null : {
+          id: profile.id,
+          username: profile.username,
+          followers: profile.followers_count || account.followers,
+          postsCount: profile.media_count || account.postsCount,
+        },
+      });
+    } catch (err: any) {
+      console.error("[/api/instagram/posts-data]", err);
+      return res.json({ posts: [], error: err.message });
+    }
+  });
+}
+
 // ─── Instagram Login OAuth helpers ───────────────────────────────────────────
 
 const IG_APP_ID = process.env.META_APP_ID || "";
@@ -280,6 +366,92 @@ export function registerOAuthRoutes(app: Express) {
     } catch (err: any) {
       console.error("[Instagram OAuth callback]", err);
       return res.redirect(`/analytics?instagram=error&msg=${encodeURIComponent(err?.message ?? "unknown")}`);
+    }
+  });
+
+  /**
+   * Instagram — salvar token manual (gerado no Meta Developer portal)
+   * POST /api/instagram/manual-token  { token: "IGAAX..." }
+   */
+  app.post("/api/instagram/manual-token", async (req, res) => {
+    const cookie = req.cookies?.[COOKIE_NAME];
+    if (!cookie) return res.status(401).json({ error: "Não autenticado" });
+
+    const { token } = req.body as { token?: string };
+    if (!token || token.trim().length < 20) {
+      return res.status(400).json({ error: "Token inválido" });
+    }
+
+    try {
+      const accessToken = token.trim();
+
+      // Buscar perfil via Graph API
+      const profileRes = await fetch(
+        `https://graph.instagram.com/v19.0/me?fields=id,username,name,biography,followers_count,media_count,profile_picture_url&access_token=${encodeURIComponent(accessToken)}`
+      );
+      const profile = await profileRes.json() as any;
+
+      if (profile.error) {
+        return res.status(400).json({ error: `Graph API: ${profile.error.message}` });
+      }
+
+      const instagramId = String(profile.id);
+      const username = profile.username || "feminnita";
+      const displayName = profile.name || username;
+
+      // Token gerado pelo portal já é longa duração (60 dias) — calcular expiração
+      const expiresAt = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
+
+      const db = await getDb();
+      if (!db) return res.status(500).json({ error: "Banco indisponível" });
+
+      const existing = await db
+        .select({ id: instagramAccounts.id })
+        .from(instagramAccounts)
+        .where(eq(instagramAccounts.instagramId, instagramId))
+        .limit(1);
+
+      if (existing.length > 0) {
+        await db.update(instagramAccounts).set({
+          accessToken,
+          accessTokenExpiresAt: expiresAt,
+          username,
+          displayName,
+          followers: profile.followers_count || 0,
+          postsCount: profile.media_count || 0,
+          profilePictureUrl: profile.profile_picture_url || null,
+          biography: profile.biography || null,
+          isActive: true,
+          updatedAt: new Date(),
+        }).where(eq(instagramAccounts.instagramId, instagramId));
+      } else {
+        await db.insert(instagramAccounts).values({
+          accountType: "feminnita",
+          instagramId,
+          username,
+          displayName,
+          accessToken,
+          accessTokenExpiresAt: expiresAt,
+          followers: profile.followers_count || 0,
+          postsCount: profile.media_count || 0,
+          profilePictureUrl: profile.profile_picture_url || null,
+          biography: profile.biography || null,
+          isActive: true,
+          isVerified: false,
+        });
+      }
+
+      console.log(`[Instagram Manual Token] @${username} (${instagramId}) salvo com sucesso`);
+      return res.json({
+        ok: true,
+        username,
+        instagramId,
+        followers: profile.followers_count,
+        postsCount: profile.media_count,
+      });
+    } catch (err: any) {
+      console.error("[Instagram Manual Token]", err);
+      return res.status(500).json({ error: err?.message ?? "Erro desconhecido" });
     }
   });
 

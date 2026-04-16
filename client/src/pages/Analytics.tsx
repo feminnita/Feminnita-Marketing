@@ -153,11 +153,22 @@ export default function Analytics() {
     { enabled: !!influencerId }
   );
 
-  // Posts reais do Instagram via Graph API
-  const instagramPostsQuery = trpc.metaGraphIntegration.getInstagramPosts.useQuery(
-    { accountId: parseInt(selectedAccountId), limit: 24 },
-    { enabled: !!selectedAccountId }
-  );
+  // Posts reais do Instagram via REST endpoint direto (bypass tRPC cache issue)
+  const [igPostsData, setIgPostsData] = useState<{ posts: any[]; error: string | null; profile?: any } | null>(null);
+  const [igPostsLoading, setIgPostsLoading] = useState(false);
+  useEffect(() => {
+    if (!selectedAccountId) return;
+    setIgPostsLoading(true);
+    fetch(`/api/instagram/posts-data?accountId=${selectedAccountId}&limit=24`, { credentials: "include" })
+      .then(r => r.json())
+      .then(d => { setIgPostsData(d); setIgPostsLoading(false); })
+      .catch(e => { setIgPostsData({ posts: [], error: e.message }); setIgPostsLoading(false); });
+  }, [selectedAccountId]);
+  // Compatibilidade com código existente que usa instagramPostsQuery
+  const instagramPostsQuery = {
+    isLoading: igPostsLoading,
+    data: igPostsData,
+  };
 
   // Mutation para sincronizar métricas
   const syncMetricsMutation = trpc.metaGraphIntegration.syncAllPostMetrics.useMutation({

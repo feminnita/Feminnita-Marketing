@@ -19,6 +19,10 @@ import {
   XCircle,
   Brain,
   Zap,
+  Activity,
+  DollarSign,
+  MousePointerClick,
+  Eye,
 } from "lucide-react";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -126,6 +130,10 @@ export default function AdsManagerPage() {
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // ── Queries ──
+  const campaignsQuery = trpc.adsManager.listCampaigns.useQuery(undefined, {
+    refetchInterval: 5 * 60 * 1000, // atualiza a cada 5min
+  });
+
   const listQuery = trpc.adsManager.listEvaluations.useQuery(undefined, {
     refetchInterval: polling ? 3000 : false,
   });
@@ -236,7 +244,109 @@ export default function AdsManagerPage() {
         </button>
       </div>
 
-      {/* aviso de configuração removido — credenciais Meta já configuradas no servidor */}
+      {/* ── Campanhas ao Vivo ── */}
+      <div className="bg-white border border-gray-200 rounded-xl p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-semibold text-gray-800 flex items-center gap-2">
+            <Activity className="w-4 h-4 text-[#8B2635]" /> Campanhas ao Vivo
+            <span className="text-xs font-normal text-gray-400">(últimos 7 dias)</span>
+          </h2>
+          <button
+            onClick={() => campaignsQuery.refetch()}
+            className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1"
+          >
+            <RefreshCw className={`w-3 h-3 ${campaignsQuery.isFetching ? "animate-spin" : ""}`} />
+            Atualizar
+          </button>
+        </div>
+
+        {campaignsQuery.isLoading && (
+          <div className="flex items-center gap-2 text-sm text-gray-400 py-4">
+            <Loader2 className="w-4 h-4 animate-spin" /> Buscando dados da Meta Ads API…
+          </div>
+        )}
+
+        {campaignsQuery.error && (
+          <div className="flex items-center gap-2 text-sm text-red-600 py-2">
+            <AlertTriangle className="w-4 h-4" /> {campaignsQuery.error.message}
+          </div>
+        )}
+
+        {campaignsQuery.data && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-xs text-gray-400 border-b border-gray-100">
+                  <th className="text-left pb-2 font-medium">Campanha</th>
+                  <th className="text-center pb-2 font-medium">Status</th>
+                  <th className="text-right pb-2 font-medium">
+                    <span className="flex items-center justify-end gap-1"><DollarSign className="w-3 h-3" />Gasto</span>
+                  </th>
+                  <th className="text-right pb-2 font-medium">
+                    <span className="flex items-center justify-end gap-1"><Eye className="w-3 h-3" />Impressões</span>
+                  </th>
+                  <th className="text-right pb-2 font-medium">
+                    <span className="flex items-center justify-end gap-1"><MousePointerClick className="w-3 h-3" />Cliques</span>
+                  </th>
+                  <th className="text-right pb-2 font-medium">CTR</th>
+                  <th className="text-right pb-2 font-medium">CPC</th>
+                  <th className="text-right pb-2 font-medium">Compras</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {campaignsQuery.data.campaigns.map((c: any) => (
+                  <tr key={c.id} className="hover:bg-gray-50">
+                    <td className="py-2.5 pr-4 max-w-[220px]">
+                      <p className="font-medium text-gray-800 truncate" title={c.name}>{c.name}</p>
+                      <p className="text-xs text-gray-400">{c.objective}</p>
+                    </td>
+                    <td className="py-2.5 text-center">
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
+                        c.status === "ACTIVE"
+                          ? "bg-green-100 text-green-700"
+                          : c.status === "PAUSED"
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-gray-100 text-gray-500"
+                      }`}>
+                        {c.status === "ACTIVE" ? "Ativa" : c.status === "PAUSED" ? "Pausada" : c.status}
+                      </span>
+                    </td>
+                    <td className="py-2.5 text-right text-gray-700">
+                      {c.insights ? `R$ ${c.insights.spend.toFixed(2)}` : "—"}
+                    </td>
+                    <td className="py-2.5 text-right text-gray-700">
+                      {c.insights ? c.insights.impressions.toLocaleString("pt-BR") : "—"}
+                    </td>
+                    <td className="py-2.5 text-right text-gray-700">
+                      {c.insights ? c.insights.clicks.toLocaleString("pt-BR") : "—"}
+                    </td>
+                    <td className={`py-2.5 text-right font-medium ${
+                      c.insights?.ctr >= 1.5 ? "text-green-600" : c.insights?.ctr > 0 ? "text-yellow-600" : "text-gray-400"
+                    }`}>
+                      {c.insights ? `${c.insights.ctr.toFixed(2)}%` : "—"}
+                    </td>
+                    <td className={`py-2.5 text-right font-medium ${
+                      c.insights?.cpc > 0 && c.insights.cpc <= 2 ? "text-green-600" : c.insights?.cpc > 0 ? "text-yellow-600" : "text-gray-400"
+                    }`}>
+                      {c.insights && c.insights.cpc > 0 ? `R$ ${c.insights.cpc.toFixed(2)}` : "—"}
+                    </td>
+                    <td className="py-2.5 text-right font-semibold text-[#8B2635]">
+                      {c.insights ? (c.insights.purchases > 0 ? c.insights.purchases : "0") : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="text-xs text-gray-400 mt-3">
+              Orçamento diário: {campaignsQuery.data.campaigns
+                .filter((c: any) => c.status === "ACTIVE" && c.dailyBudget > 0)
+                .map((c: any) => `${c.name.split("|")[1]?.trim() || c.name}: R$ ${c.dailyBudget.toFixed(0)}/dia`)
+                .join(" · ") || "—"
+              }
+            </p>
+          </div>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ── Histórico ── */}

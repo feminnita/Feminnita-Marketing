@@ -94,6 +94,13 @@ const pending = [
   "0024_templates",
   "0025_design_history",
   "0026_auth_own",
+  "0027_ads_evaluations",
+  "0028_blog_feminnita",
+  "0029_traffic_manager",
+  "0030_agent_memory",
+  "0031_agent_actions",
+  "0032_specialist_chat",
+  "0033_whatsapp_blasts",
 ];
 
 for (const name of pending) {
@@ -136,6 +143,7 @@ for (const name of pending) {
         msg.includes("Duplicate entry") ||
         msg.includes("ER_TABLE_EXISTS_ERROR") ||
         msg.includes("ER_DUP_KEYNAME") ||
+        msg.includes("Duplicate key name") ||
         msg.includes("ER_DUP_FIELDNAME")
       ) {
         console.log(`    [skip] ${msg.substring(0, 80)}`);

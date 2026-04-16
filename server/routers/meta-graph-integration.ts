@@ -6,9 +6,16 @@ import { instagramAccounts, igPostPublications, influencers } from "../../drizzl
 import { assertRateLimit } from "../_core/rateLimiter";
 
 const META_GRAPH_API_BASE = "https://graph.facebook.com/v19.0";
+const IG_GRAPH_API_BASE   = "https://graph.instagram.com/v19.0";
+
+/** Detecta se o token é do Instagram Graph API (graph.instagram.com) */
+function isInstagramToken(token: string) {
+  return token.startsWith("IGAAX") || token.startsWith("IGQ") || token.startsWith("IGD") || token.startsWith("IG");
+}
 
 /**
- * Helper para fazer requisições à Meta Graph API (Instagram Business)
+ * Helper para fazer requisições à Meta/Instagram Graph API.
+ * Detecta automaticamente o endpoint correto pelo tipo do token.
  */
 async function makeMetaGraphRequest(
   endpoint: string,
@@ -17,9 +24,13 @@ async function makeMetaGraphRequest(
   body?: Record<string, any>,
   extraParams?: Record<string, string>
 ) {
+  // Tokens IGAAX/IGQ/IGD → graph.instagram.com | Tokens EAA → graph.facebook.com
+  const base = isInstagramToken(accessToken) ? IG_GRAPH_API_BASE : META_GRAPH_API_BASE;
+  console.log(`[makeMetaGraphRequest] base=${base.includes("instagram") ? "instagram" : "facebook"} endpoint=${endpoint.slice(0,30)}`);
+
   const params = new URLSearchParams({ access_token: accessToken });
   if (extraParams) Object.entries(extraParams).forEach(([k, v]) => params.set(k, v));
-  const url = `${META_GRAPH_API_BASE}${endpoint}?${params.toString()}`;
+  const url = `${base}${endpoint}?${params.toString()}`;
 
   const options: RequestInit = {
     method,
@@ -311,15 +322,30 @@ export const metaGraphIntegrationRouter = router({
         // 2. Buscar insights de alcance/impressões (últimos 7 dias)
         let impressions = 0, reach = 0, profileViews = 0;
         try {
-          const insights = await makeMetaGraphRequest(
-            `/${igAccount.instagramId}/insights`,
-            "GET",
-            igAccount.accessToken,
-            undefined,
-            { metric: "impressions,reach,profile_views", period: "day", since: String(Math.floor(Date.now()/1000) - 7*86400), until: String(Math.floor(Date.now()/1000)) }
-          );
-          if (insights.data) {
-            insights.data.forEach((metric: any) => {
+          const token = igAccount.accessToken;
+          const isIgToken = token.startsWith("IGAAX") || token.startsWith("IGQ") || token.startsWith("IGD") || token.startsWith("IG");
+          const since = Math.floor(Date.now()/1000) - 7*86400;
+          const until = Math.floor(Date.now()/1000);
+
+          let insightsData: any = null;
+          if (isIgToken) {
+            // Instagram Graph API — usa graph.instagram.com
+            const igInsightsRes = await fetch(
+              `https://graph.instagram.com/v19.0/${igIdToUse}/insights?metric=impressions,reach,profile_views&period=day&since=${since}&until=${until}&access_token=${encodeURIComponent(token)}`
+            );
+            insightsData = await igInsightsRes.json();
+          } else {
+            insightsData = await makeMetaGraphRequest(
+              `/${igAccount.instagramId}/insights`,
+              "GET",
+              token,
+              undefined,
+              { metric: "impressions,reach,profile_views", period: "day", since: String(since), until: String(until) }
+            );
+          }
+
+          if (insightsData?.data) {
+            insightsData.data.forEach((metric: any) => {
               const total = (metric.values || []).reduce((s: number, v: any) => s + (v.value || 0), 0);
               if (metric.name === "impressions") impressions = total;
               if (metric.name === "reach") reach = total;
@@ -661,16 +687,19 @@ export const metaGraphIntegrationRouter = router({
 
       try {
         const token = igAccount.accessToken;
-        // Token IGQ... = Instagram Login API (graph.instagram.com)
+        // Token IGAAX/IGQ/IGD = Instagram Graph API (graph.instagram.com)
         // Token EAA... = Facebook Graph API (graph.facebook.com)
-        const isIgLoginToken = token.startsWith("IGQ") || token.startsWith("IGD") || token.startsWith("IG");
+        const isIgLoginToken = token.startsWith("IGAAX") || token.startsWith("IGQ") || token.startsWith("IGD") || token.startsWith("IG");
+
+        console.log(`[getInstagramPosts] token prefix: ${token.slice(0,8)}, isIgLoginToken: ${isIgLoginToken}`);
 
         if (isIgLoginToken) {
-          // ── Instagram Login API (graph.instagram.com) ──────────────────────
-          const mediaRes = await fetch(
-            `https://graph.instagram.com/v19.0/me/media?fields=id,caption,media_type,media_url,thumbnail_url,timestamp,like_count,comments_count,permalink&limit=${input.limit}&access_token=${token}`
-          );
+          // ── Instagram Graph API (graph.instagram.com) ──────────────────────
+          const igUrl = `https://graph.instagram.com/v19.0/me/media?fields=id,caption,media_type,media_url,thumbnail_url,timestamp,like_count,comments_count,permalink&limit=${input.limit}&access_token=${encodeURIComponent(token)}`;
+          console.log(`[getInstagramPosts] Fetching: graph.instagram.com/me/media`);
+          const mediaRes = await fetch(igUrl);
           const mediaData = await mediaRes.json() as any;
+          console.log(`[getInstagramPosts] Response: ${JSON.stringify(mediaData).slice(0, 200)}`);
           if (mediaData.error) {
             return { posts: [], error: mediaData.error.message };
           }

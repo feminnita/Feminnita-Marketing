@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getDb } from "../db";
 import { adsEvaluations, adsEvaluationMessages } from "../../drizzle/schema";
 import { eq, and, desc } from "drizzle-orm";
-import { runAdsEvaluation, chatWithAgent } from "../agents/ads-manager-agent";
+import { runAdsEvaluation, chatWithAgent, collectAdsData } from "../agents/ads-manager-agent";
 
 export const adsManagerRouter = router({
   /**
@@ -135,6 +135,15 @@ export const adsManagerRouter = router({
 
       return { reply };
     }),
+
+  /**
+   * Busca campanhas ao vivo diretamente da Meta Ads API (sem criar avaliação).
+   * Retorna dados brutos de campanhas + insights dos últimos 7 dias.
+   */
+  listCampaigns: protectedProcedure.query(async () => {
+    if (!process.env.META_ACCESS_TOKEN) throw new Error("META_ACCESS_TOKEN não configurado");
+    return collectAdsData();
+  }),
 
   /**
    * Lista mensagens de uma conversa.
