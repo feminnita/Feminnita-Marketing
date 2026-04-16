@@ -193,12 +193,14 @@ Ao final, retorne um JSON com este formato EXATO (após sua análise em texto):
 \`\`\``;
 
     const result = await invokeLLM({
-      system: SYSTEM_PROMPT,
-      messages: [{ role: "user", content: prompt }],
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: prompt },
+      ],
       maxTokens: 4000,
     });
 
-    const fullText = result.content || "";
+    const fullText = String(result.choices[0]?.message?.content || "");
 
     // Extrai JSON das recomendações
     let summary = "Análise concluída";
@@ -254,10 +256,12 @@ export async function chatWithShopeeAgent(
     : "";
 
   const result = await invokeLLM({
-    system: SYSTEM_PROMPT + metricsContext,
-    messages: history,
+    messages: [
+      { role: "system", content: SYSTEM_PROMPT + metricsContext },
+      ...history,
+    ],
     maxTokens: 2000,
   });
 
-  return result.content || "Desculpe, não consegui processar sua pergunta.";
+  return String(result.choices[0]?.message?.content || "Desculpe, não consegui processar sua pergunta.");
 }

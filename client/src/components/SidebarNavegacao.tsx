@@ -67,6 +67,7 @@ const categorias: Categoria[] = [
       { id: 'whatsapp', label: 'WhatsApp', icon: '💬' },
       { id: 'whatsapp-disparos', label: 'Disparo em Massa', icon: '📨', href: '/whatsapp-disparos' },
       { id: 'ml-ads', label: 'ML Ads — Especialista IA', icon: '🛒', href: '/ml-ads' },
+      { id: 'shopee-ads', label: 'Shopee Ads — Especialista IA', icon: '🛍️', href: '/shopee-ads' },
     ],
   },
   {
