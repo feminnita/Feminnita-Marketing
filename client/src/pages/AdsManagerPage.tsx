@@ -100,22 +100,47 @@ function fmtDate(d: Date | string | null): string {
   });
 }
 
-/** Extrai texto limpo de um campo analysis que pode vir como JSON bruto */
+/** Extrai texto limpo de um campo que pode vir como JSON bruto */
 function extractAnalysisText(raw: string | null | undefined): string {
   if (!raw) return "";
   const cleaned = raw.replace(/^```json\s*/i, "").replace(/```\s*$/, "").trim();
-  try {
-    const obj = JSON.parse(cleaned);
-    if (obj && typeof obj.analysis === "string") return obj.analysis;
-  } catch {}
-  // tenta extrair de qualquer JSON no meio do texto
-  const m = cleaned.match(/\{[\s\S]*\}/);
-  if (m) {
+
+  const tryExtract = (str: string): string | null => {
     try {
-      const obj = JSON.parse(m[0]);
-      if (obj && typeof obj.analysis === "string") return obj.analysis;
+      const obj = JSON.parse(str);
+      // Campos conhecidos com texto útil
+      for (const key of ["analysis", "summary", "descricao", "description", "content", "message", "text"]) {
+        if (obj && typeof obj[key] === "string" && obj[key].length > 20) return obj[key];
+      }
+      // Array de objetos — junta os textos
+      if (Array.isArray(obj)) {
+        const parts = obj
+          .map((item: any) => item?.descricao || item?.description || item?.content || item?.titulo || "")
+          .filter(Boolean);
+        if (parts.length > 0) return parts.join("\n\n");
+      }
     } catch {}
+    return null;
+  };
+
+  const direct = tryExtract(cleaned);
+  if (direct) return direct;
+
+  const m = cleaned.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+  if (m) {
+    const fromMatch = tryExtract(m[0]);
+    if (fromMatch) return fromMatch;
   }
+
+  // Se ainda parece JSON mas não extraiu nada útil, remove aspas e chaves
+  if (cleaned.startsWith("{") || cleaned.startsWith("[")) {
+    return cleaned
+      .replace(/[{}\[\]"]/g, "")
+      .replace(/,\s*\n/g, "\n")
+      .replace(/^\s*\w+:\s*/gm, "")
+      .trim();
+  }
+
   return cleaned;
 }
 

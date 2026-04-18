@@ -260,7 +260,7 @@ export async function chatWithAgent(
         role: "system",
         content:
           SYSTEM_PROMPT +
-          `\n\nDados da avaliação que você acabou de fazer:\n${rawMetrics}\n\nResponda as dúvidas do usuário sobre as campanhas de forma direta e prática.`,
+          `\n\nDados da avaliação que você acabou de fazer:\n${rawMetrics}\n\nIMPORTANTE: Responda SEMPRE em texto corrido, em português brasileiro, de forma direta e prática. NUNCA use JSON, markdown, blocos de código ou listas técnicas. Fale como uma gestora de tráfego experiente conversando com o dono da empresa.`,
       },
       ...conversationHistory.map((m) => ({ role: m.role, content: m.content })),
     ],
