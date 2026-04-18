@@ -16,7 +16,8 @@ export type MemoryType =
   | "weekly_summary"
   | "monthly_report"
   | "business_goals"
-  | "learning";
+  | "learning"
+  | "daily_content";
 
 // ─── Funções principais ───────────────────────────────────────────────────────
 
