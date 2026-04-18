@@ -228,12 +228,20 @@ export async function analyzeWithLLM(
   const content = result.choices[0]?.message?.content;
   if (typeof content !== "string") throw new Error("LLM retornou resposta inválida");
 
+  // Extrai JSON mesmo se vier dentro de ```json ... ```
+  const stripped = content.replace(/^```json\s*/i, "").replace(/```\s*$/, "").trim();
+
   try {
-    return JSON.parse(content);
+    return JSON.parse(stripped);
   } catch {
-    // fallback se o LLM não retornar JSON puro
+    // Tenta extrair objeto JSON de qualquer posição no texto
+    const jsonMatch = stripped.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try { return JSON.parse(jsonMatch[0]); } catch {}
+    }
+    // Fallback limpo — sem expor JSON cru
     return {
-      analysis: content,
+      analysis: stripped.replace(/^```[\w]*\n?/gm, "").replace(/```$/gm, "").trim(),
       summary: "Avaliação concluída — veja a análise completa abaixo.",
       recommendations: [],
     };

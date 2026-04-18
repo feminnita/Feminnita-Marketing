@@ -241,7 +241,7 @@ export default function TiktokShopPage() {
             <Clock className="w-4 h-4 text-gray-400" /> Histórico de Avaliações
           </h2>
           <div className="space-y-2">
-            {listQuery.data?.map((ev) => (
+            {listQuery.data?.map((ev: any) => (
               <button
                 key={ev.id}
                 onClick={() => setActiveEvalId(ev.id)}

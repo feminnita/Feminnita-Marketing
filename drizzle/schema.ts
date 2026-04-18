@@ -1319,7 +1319,7 @@ export type InsertAgentAction = typeof agentActions.$inferInsert;
 export const agentMemory = mysqlTable("agent_memory", {
   id: int("id").autoincrement().primaryKey(),
   agentName: varchar("agentName", { length: 50 }).notNull(), // "fernanda", "market_research", etc
-  memoryType: mysqlEnum("memoryType", ["daily_analysis", "weekly_summary", "monthly_report", "business_goals", "learning"]).notNull(),
+  memoryType: mysqlEnum("memoryType", ["daily_analysis", "weekly_summary", "monthly_report", "business_goals", "learning", "daily_content"]).notNull(),
   period: varchar("period", { length: 20 }).notNull(), // "2026-04-12", "2026-W15", "2026-04"
   content: text("content").notNull(), // JSON stringified
   createdAt: timestamp("createdAt").defaultNow().notNull(),

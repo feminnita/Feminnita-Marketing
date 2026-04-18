@@ -160,7 +160,9 @@ Analise os dados e gere o relatório diário em JSON conforme instruído.`;
     const content = result.choices[0]?.message?.content;
     if (typeof content !== "string") throw new Error("LLM retornou resposta inválida");
 
-    const parsed = JSON.parse(content) as DailyAnalysisResult;
+    const stripped = content.replace(/^```json\s*/i, "").replace(/```\s*$/, "").trim();
+    const jsonMatch = stripped.match(/\{[\s\S]*\}/);
+    const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : stripped) as DailyAnalysisResult;
     // Enriquecer com valores calculados se o LLM retornou 0
     if (parsed.spend === 0 && totalSpend > 0) parsed.spend = totalSpend;
     if (parsed.roas === 0 && roas > 0) parsed.roas = Math.round(roas * 100) / 100;
@@ -221,7 +223,9 @@ Retorne JSON: { "summary": "resumo em 3-5 frases", "totalSpend": number, "avgRoa
   const content = result.choices[0]?.message?.content;
   if (typeof content === "string") {
     try {
-      const parsed = JSON.parse(content);
+      const s = content.replace(/^```json\s*/i, "").replace(/```\s*$/, "").trim();
+      const m = s.match(/\{[\s\S]*\}/);
+      const parsed = JSON.parse(m ? m[0] : s);
       await saveMemory("fernanda", "weekly_summary", weekPeriod, parsed);
       console.log(`[FernandaDaily] Resumo semanal ${weekPeriod} salvo`);
     } catch {
@@ -262,7 +266,7 @@ async function proposeActions(analysis: DailyAnalysisResult, today: string): Pro
       .from(agentActions)
       .where(and(eq(agentActions.agentName, "fernanda"), eq(agentActions.date, today)));
 
-    const existingTitles = new Set(existing.map((r) => r.title));
+    const existingTitles = new Set(existing.map((r: { title: string | null }) => r.title));
 
     const toInsert = analysis.recommendations
       .filter((rec) => rec && rec.trim().length > 0)

@@ -98,6 +98,25 @@ function fmtDate(d: Date | string | null): string {
   });
 }
 
+/** Extrai texto limpo de um campo analysis que pode vir como JSON bruto */
+function extractAnalysisText(raw: string | null | undefined): string {
+  if (!raw) return "";
+  const cleaned = raw.replace(/^```json\s*/i, "").replace(/```\s*$/, "").trim();
+  try {
+    const obj = JSON.parse(cleaned);
+    if (obj && typeof obj.analysis === "string") return obj.analysis;
+  } catch {}
+  // tenta extrair de qualquer JSON no meio do texto
+  const m = cleaned.match(/\{[\s\S]*\}/);
+  if (m) {
+    try {
+      const obj = JSON.parse(m[0]);
+      if (obj && typeof obj.analysis === "string") return obj.analysis;
+    } catch {}
+  }
+  return cleaned;
+}
+
 function StatusBadge({ status }: { status: Evaluation["status"] }) {
   if (status === "done")
     return (
@@ -441,7 +460,7 @@ export default function AdsManagerPage() {
               <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
                 <h3 className="font-semibold text-gray-800 mb-3">Análise Detalhada</h3>
                 <p className="text-gray-600 text-sm whitespace-pre-wrap leading-relaxed">
-                  {currentEval.analysis}
+                  {extractAnalysisText(currentEval.analysis)}
                 </p>
               </div>
 
