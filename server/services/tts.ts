@@ -15,21 +15,18 @@ const MODEL_ID = "eleven_multilingual_v2";
 // copie o Voice ID e adicione ao .env: ELEVENLABS_VOICE_ID_CAROL=xxxx
 
 const VOICE_MAP: Record<string, string> = {
-  // Fernanda — gestora de tráfego, profissional e direta
-  fernanda: process.env.ELEVENLABS_VOICE_ID || "FGY2WhTYpPnrIDTdsKH5",
-  // Carol — 21 anos, estudante de medicina, jovem e animada
-  carol: process.env.ELEVENLABS_VOICE_ID_CAROL || "pFZP5JQG7iQjIQuC4Bku",
-  // Renata — mãe empreendedora, madura e calorosa
-  renata: process.env.ELEVENLABS_VOICE_ID_RENATA || "EXAVITQu4vr4xnSDxMaL",
-  // Vanessa — personal trainer, energética e motivacional
-  vanessa: process.env.ELEVENLABS_VOICE_ID_VANESSA || "cgSgspJ2msm6clMCkdW9",
-  // Luiza — empreendedora estratégica, confiante e profissional
-  luiza: process.env.ELEVENLABS_VOICE_ID_LUIZA || "jBpfuIE2acCO8z3wKNLl",
-  // Sofia, Beatriz, Clara, Mariana — equipe interna
-  sofia: process.env.ELEVENLABS_VOICE_ID_SOFIA || "XrExE9yKIg1WjnnlVkGX",
-  beatriz: process.env.ELEVENLABS_VOICE_ID_BEATRIZ || "pqHfZKP75CvOlQylNhV4",
-  clara: process.env.ELEVENLABS_VOICE_ID_CLARA || "FGY2WhTYpPnrIDTdsKH5",
-  mariana: process.env.ELEVENLABS_VOICE_ID_MARIANA || "EXAVITQu4vr4xnSDxMaL",
+  // Todas as vozes usam "Rachel" (21m00Tcm4TlvDq8ikWAM) por padrão — disponível em todos os planos ElevenLabs.
+  // Para personalizar cada agente, adicione no .env do VPS:
+  // ELEVENLABS_VOICE_ID_CAROL=<voice_id>  etc.
+  fernanda: process.env.ELEVENLABS_VOICE_ID || "21m00Tcm4TlvDq8ikWAM",
+  carol:    process.env.ELEVENLABS_VOICE_ID_CAROL    || "21m00Tcm4TlvDq8ikWAM",
+  renata:   process.env.ELEVENLABS_VOICE_ID_RENATA   || "21m00Tcm4TlvDq8ikWAM",
+  vanessa:  process.env.ELEVENLABS_VOICE_ID_VANESSA  || "21m00Tcm4TlvDq8ikWAM",
+  luiza:    process.env.ELEVENLABS_VOICE_ID_LUIZA    || "21m00Tcm4TlvDq8ikWAM",
+  sofia:    process.env.ELEVENLABS_VOICE_ID_SOFIA    || "21m00Tcm4TlvDq8ikWAM",
+  beatriz:  process.env.ELEVENLABS_VOICE_ID_BEATRIZ  || "21m00Tcm4TlvDq8ikWAM",
+  clara:    process.env.ELEVENLABS_VOICE_ID_CLARA    || "21m00Tcm4TlvDq8ikWAM",
+  mariana:  process.env.ELEVENLABS_VOICE_ID_MARIANA  || "21m00Tcm4TlvDq8ikWAM",
 };
 
 export function getVoiceId(agentName?: string): string {
