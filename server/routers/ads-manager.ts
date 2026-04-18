@@ -175,9 +175,9 @@ export const adsManagerRouter = router({
    * Retorna o áudio como base64 para o frontend tocar diretamente.
    */
   speak: protectedProcedure
-    .input(z.object({ text: z.string().max(2500) }))
+    .input(z.object({ text: z.string().max(2500), agentName: z.string().optional() }))
     .mutation(async ({ input }) => {
-      const audioBuffer = await textToSpeech(input.text);
+      const audioBuffer = await textToSpeech(input.text, input.agentName ?? "fernanda");
       return { audioBase64: audioBuffer.toString("base64") };
     }),
 });
