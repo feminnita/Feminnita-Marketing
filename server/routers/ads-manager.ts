@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getDb } from "../db";
 import { adsEvaluations, adsEvaluationMessages } from "../../drizzle/schema";
 import { eq, and, desc } from "drizzle-orm";
+import { textToSpeech } from "../services/tts";
 import { runAdsEvaluation, chatWithAgent, collectAdsData } from "../agents/ads-manager-agent";
 
 export const adsManagerRouter = router({
@@ -167,5 +168,16 @@ export const adsManagerRouter = router({
         .from(adsEvaluationMessages)
         .where(eq(adsEvaluationMessages.evaluationId, input.evaluationId))
         .orderBy(adsEvaluationMessages.createdAt);
+    }),
+
+  /**
+   * Converte texto em áudio MP3 via ElevenLabs (voz da Fernanda).
+   * Retorna o áudio como base64 para o frontend tocar diretamente.
+   */
+  speak: protectedProcedure
+    .input(z.object({ text: z.string().max(2500) }))
+    .mutation(async ({ input }) => {
+      const audioBuffer = await textToSpeech(input.text);
+      return { audioBase64: audioBuffer.toString("base64") };
     }),
 });

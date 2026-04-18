@@ -23,6 +23,8 @@ import {
   DollarSign,
   MousePointerClick,
   Eye,
+  Volume2,
+  StopCircle,
 } from "lucide-react";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -146,6 +148,8 @@ export default function AdsManagerPage() {
   const [expandedHistory, setExpandedHistory] = useState<Set<number>>(new Set());
   const [chatInput, setChatInput] = useState("");
   const [sendingMsg, setSendingMsg] = useState(false);
+  const [playingMsgId, setPlayingMsgId] = useState<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // ── Queries ──
@@ -201,6 +205,31 @@ export default function AdsManagerPage() {
     onError: (err) => toast.error(`Erro: ${err.message}`),
     onSettled: () => setSendingMsg(false),
   });
+
+  const speakMut = trpc.adsManager.speak.useMutation({
+    onSuccess: (data) => {
+      const audio = new Audio(`data:audio/mp3;base64,${data.audioBase64}`);
+      audioRef.current = audio;
+      audio.play();
+      audio.onended = () => setPlayingMsgId(null);
+    },
+    onError: (err) => {
+      toast.error(`Erro no áudio: ${err.message}`);
+      setPlayingMsgId(null);
+    },
+  });
+
+  function handleSpeak(msgId: number, text: string) {
+    if (playingMsgId === msgId) {
+      audioRef.current?.pause();
+      audioRef.current = null;
+      setPlayingMsgId(null);
+      return;
+    }
+    audioRef.current?.pause();
+    setPlayingMsgId(msgId);
+    speakMut.mutate({ text });
+  }
 
   // ── Parar polling quando done/error ──
   useEffect(() => {
@@ -596,8 +625,21 @@ export default function AdsManagerPage() {
                         }`}
                       >
                         {msg.role === "assistant" && (
-                          <div className="flex items-center gap-1 mb-1 text-xs text-gray-500 font-medium">
-                            <Bot className="w-3 h-3" /> Agente
+                          <div className="flex items-center justify-between gap-1 mb-1">
+                            <span className="flex items-center gap-1 text-xs text-gray-500 font-medium">
+                              <Bot className="w-3 h-3" /> Fernanda
+                            </span>
+                            <button
+                              onClick={() => handleSpeak(msg.id, msg.content)}
+                              className="flex items-center gap-1 text-xs text-[#8B2635] hover:text-[#6d1e2a] transition-colors"
+                              title={playingMsgId === msg.id ? "Parar" : "Ouvir"}
+                            >
+                              {playingMsgId === msg.id ? (
+                                <StopCircle className="w-4 h-4" />
+                              ) : (
+                                <Volume2 className="w-4 h-4" />
+                              )}
+                            </button>
                           </div>
                         )}
                         <p className="whitespace-pre-wrap">{msg.content}</p>
