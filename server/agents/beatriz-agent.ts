@@ -12,6 +12,10 @@
 import { invokeLLM } from "../_core/llm";
 import { buildMemoryContext, saveMemory } from "../services/agentMemory";
 import { multiSearch, searchWeb, formatSearchResults } from "../services/webSearch";
+import { getDb } from "../db";
+import { agentActions, blogPosts } from "../../drizzle/schema";
+import { generateBlogPost } from "./blog-agent";
+import { eq, and } from "drizzle-orm";
 
 const SYSTEM_PROMPT = `Você é a Beatriz Santos — especialista sênior em estratégia de conteúdo e tendências de moda para marcas brasileiras de atacado.
 
@@ -90,6 +94,119 @@ export interface BeatrizAnalysisResult {
   }>;
 }
 
+// ─── Propor ações no painel ───────────────────────────────────────────────────
+
+async function proposeActionsFromBeatriz(
+  analysis: BeatrizAnalysisResult,
+  today: string
+): Promise<void> {
+  if (!analysis.proposedActions?.length) return;
+  try {
+    const db = await getDb();
+    if (!db) return;
+
+    const existing = await db
+      .select({ title: agentActions.title })
+      .from(agentActions)
+      .where(and(eq(agentActions.agentName, "beatriz"), eq(agentActions.date, today)));
+
+    const existingTitles = new Set(existing.map((r: { title: string }) => r.title));
+
+    const toInsert = analysis.proposedActions
+      .filter((a) => a.title && !existingTitles.has(a.title))
+      .map((a) => ({
+        agentName: "beatriz" as const,
+        date: today,
+        title: a.title.slice(0, 150),
+        description: a.description,
+        actionType: a.type || "content",
+        priority: (["alta", "media", "baixa"].includes(a.priority) ? a.priority : "media") as "alta" | "media" | "baixa",
+        estimatedImpact: a.estimatedImpact,
+        status: "pending" as const,
+      }));
+
+    if (toInsert.length > 0) {
+      await db.insert(agentActions).values(toInsert);
+      console.log(`[Beatriz] ${toInsert.length} ações propostas no painel`);
+    }
+  } catch (err: any) {
+    console.error("[Beatriz] Erro ao propor ações:", err.message);
+  }
+}
+
+// ─── Gerar rascunhos de blog ──────────────────────────────────────────────────
+
+const BLOG_CATEGORIES = [
+  "Moda & Estilo", "Tendências", "Cuidados & Dicas",
+  "Tecidos & Produtos", "Comunidade", "Negócios",
+] as const;
+
+function mapCategory(raw: string): string {
+  const match = BLOG_CATEGORIES.find((c) =>
+    c.toLowerCase().includes(raw.toLowerCase()) || raw.toLowerCase().includes(c.toLowerCase())
+  );
+  return match ?? "Moda & Estilo";
+}
+
+async function generateBlogDrafts(
+  analysis: BeatrizAnalysisResult,
+  today: string
+): Promise<void> {
+  // Pega até 2 ideias de blog (evita custo LLM excessivo)
+  const blogIdeas = (analysis.contentIdeas ?? [])
+    .filter((i) => i.format === "post_estatico" || i.format === "carrossel" || !i.format)
+    .slice(0, 2);
+
+  if (blogIdeas.length === 0) return;
+
+  try {
+    const db = await getDb();
+    if (!db) return;
+
+    for (const idea of blogIdeas) {
+      try {
+        const draft = await generateBlogPost({
+          topic: idea.title,
+          category: mapCategory(idea.trendSource || "Moda & Estilo"),
+          targetKeywords: idea.hashtags?.map((h: string) => h.replace("#", "")) ?? [],
+          tone: "informativo",
+        });
+
+        // Slug único: append data para evitar colisão
+        const slug = `${draft.slug}-${today}`;
+
+        // Verifica se já existe
+        const existing = await db
+          .select({ id: blogPosts.id })
+          .from(blogPosts)
+          .where(eq(blogPosts.slug, slug));
+
+        if (existing.length > 0) continue;
+
+        await db.insert(blogPosts).values({
+          title: draft.title,
+          slug,
+          content: draft.content,
+          excerpt: draft.excerpt ?? "",
+          category: draft.category,
+          tags: JSON.stringify(draft.tags ?? []),
+          status: "draft",
+          seoTitle: draft.seoTitle,
+          seoDescription: draft.seoDescription,
+        });
+
+        console.log(`[Beatriz] Rascunho de blog criado: "${draft.title}"`);
+      } catch (err: any) {
+        console.error(`[Beatriz] Erro ao gerar rascunho "${idea.title}":`, err.message);
+      }
+    }
+  } catch (err: any) {
+    console.error("[Beatriz] Erro ao gerar drafts de blog:", err.message);
+  }
+}
+
+// ─── Análise principal ────────────────────────────────────────────────────────
+
 export async function runBeatrizAnalysis(): Promise<BeatrizAnalysisResult> {
   const today = new Date().toISOString().slice(0, 10);
   console.log(`[Beatriz] Iniciando análise de conteúdo e tendências — ${today}`);
@@ -129,6 +246,12 @@ Gere a análise diária de conteúdo e tendências para a Feminnita, com ideias 
 
     await saveMemory("beatriz", "daily_analysis", today, parsed);
     console.log(`[Beatriz] Análise ${today} salva — ${parsed.contentIdeas?.length || 0} ideias de conteúdo`);
+
+    // Conectar ao painel de ações e ao blog
+    await Promise.all([
+      proposeActionsFromBeatriz(parsed, today),
+      generateBlogDrafts(parsed, today),
+    ]);
 
     return parsed as BeatrizAnalysisResult;
   } catch (err: any) {

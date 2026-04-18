@@ -11,6 +11,8 @@
 
 import { invokeLLM } from "../_core/llm";
 import { buildMemoryContext, saveMemory } from "../services/agentMemory";
+import { getDb } from "../db";
+import { agentActions } from "../../drizzle/schema";
 
 const AD_ACCOUNT_ID = process.env.META_AD_ACCOUNT_ID || "act_231648936319132";
 const GRAPH_BASE = "https://graph.facebook.com/v19.0";
@@ -228,6 +230,68 @@ Retorne JSON: { "summary": "resumo em 3-5 frases", "totalSpend": number, "avgRoa
   }
 }
 
+// ─── Propor ações para o painel de aprovação ─────────────────────────────────
+
+function inferPriority(text: string): "alta" | "media" | "baixa" {
+  const low = text.toLowerCase();
+  if (/pausar|desativar|urgente|roas.*baix|cpa.*alto|desperd/.test(low)) return "alta";
+  if (/monitorar|observar|acompanhar/.test(low)) return "baixa";
+  return "media";
+}
+
+function inferActionType(text: string): string {
+  const low = text.toLowerCase();
+  if (/criativo|banner|imagem|vídeo|anúncio/.test(low)) return "criativo";
+  if (/orçamento|budget|verba|investimento/.test(low)) return "orcamento";
+  if (/público|audience|segmentação/.test(low)) return "segmentacao";
+  if (/pausar|desativar|ativar|reativar/.test(low)) return "campanha";
+  return "campaign";
+}
+
+async function proposeActions(analysis: DailyAnalysisResult, today: string): Promise<void> {
+  if (!analysis.recommendations || analysis.recommendations.length === 0) return;
+
+  try {
+    const db = await getDb();
+    if (!db) return;
+
+    // Evita duplicatas: busca ações desta data já criadas pela Fernanda
+    const { eq, and } = await import("drizzle-orm");
+    const existing = await db
+      .select({ title: agentActions.title })
+      .from(agentActions)
+      .where(and(eq(agentActions.agentName, "fernanda"), eq(agentActions.date, today)));
+
+    const existingTitles = new Set(existing.map((r) => r.title));
+
+    const toInsert = analysis.recommendations
+      .filter((rec) => rec && rec.trim().length > 0)
+      .map((rec) => {
+        const title = rec.length > 150 ? rec.slice(0, 147) + "…" : rec;
+        return {
+          agentName: "fernanda" as const,
+          date: today,
+          title,
+          description: rec,
+          actionType: inferActionType(rec),
+          priority: inferPriority(rec),
+          estimatedImpact: analysis.roas > 0
+            ? `ROAS atual: ${analysis.roas}x | Spend: R$${analysis.spend.toFixed(2)}`
+            : undefined,
+          status: "pending" as const,
+        };
+      })
+      .filter((row) => !existingTitles.has(row.title));
+
+    if (toInsert.length > 0) {
+      await db.insert(agentActions).values(toInsert);
+      console.log(`[FernandaDaily] ${toInsert.length} ações propostas para aprovação`);
+    }
+  } catch (err: any) {
+    console.error("[FernandaDaily] Erro ao propor ações:", err.message);
+  }
+}
+
 // ─── Execução principal ───────────────────────────────────────────────────────
 
 export async function runDailyAnalysis(): Promise<DailyAnalysisResult> {
@@ -249,7 +313,10 @@ export async function runDailyAnalysis(): Promise<DailyAnalysisResult> {
   await saveMemory("fernanda", "daily_analysis", today, analysis);
   console.log(`[FernandaDaily] Análise do dia ${today} salva — ROAS: ${analysis.roas}x | Spend: R$${analysis.spend}`);
 
-  // 5. Se domingo (0), gerar resumo semanal
+  // 5. Propor ações para o painel de aprovação
+  await proposeActions(analysis, today);
+
+  // 6. Se domingo (0), gerar resumo semanal
   const dayOfWeek = new Date().getDay();
   if (dayOfWeek === 0) {
     const weekNumber = getISOWeek(new Date());

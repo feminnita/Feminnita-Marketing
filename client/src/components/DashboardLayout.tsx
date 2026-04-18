@@ -209,7 +209,7 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                 <PanelLeft className="h-4 w-4 text-muted-foreground" />
               </button>
               {!isCollapsed && (
-                <span className="font-bold text-lg truncate" style={{ color: '#8B2635' }}>
+                <span className="font-bold text-lg truncate" style={{ color: '#E8C99A' }}>
                   Feminnita
                 </span>
               )}
@@ -408,8 +408,8 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                   </Avatar>
                   {!isCollapsed && (
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate leading-none">{user?.name || user?.email || "-"}</p>
-                      <p className="text-xs text-muted-foreground truncate mt-1">{user?.email || "-"}</p>
+                      <p className="text-sm font-medium truncate leading-none" style={{ color: '#E8C99A' }}>{user?.name || user?.email || "-"}</p>
+                      <p className="text-xs truncate mt-1" style={{ color: '#64748b' }}>{user?.email || "-"}</p>
                     </div>
                   )}
                 </button>

@@ -55,6 +55,8 @@ const AgentActionsPage        = lazy(() => import("@/pages/AgentActionsPage"));
 const AgentDetailPage         = lazy(() => import("@/pages/AgentDetailPage"));
 const WhatsAppDisparosPage    = lazy(() => import("@/pages/WhatsAppDisparosPage"));
 const ShopeeAdsManagerPage    = lazy(() => import("@/pages/ShopeeAdsManagerPage"));
+const TiktokShopPage          = lazy(() => import("@/pages/TiktokShopPage"));
+const AmazonPage              = lazy(() => import("@/pages/AmazonPage"));
 
 function PageLoader() {
   return (
@@ -184,6 +186,10 @@ export default function App() {
         return <AgentActionsPage />;
       case "/shopee-ads":
         return <ShopeeAdsManagerPage />;
+      case "/tiktok-shop":
+        return <TiktokShopPage />;
+      case "/amazon":
+        return <AmazonPage />;
       default: {
         if (/^\/influenciadora\/\d+$/.test(location)) {
           return <InfluencerProfilePage />;

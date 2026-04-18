@@ -12,6 +12,9 @@
 import { invokeLLM } from "../_core/llm";
 import { buildMemoryContext, saveMemory } from "../services/agentMemory";
 import { multiSearch } from "../services/webSearch";
+import { getDb } from "../db";
+import { agentActions } from "../../drizzle/schema";
+import { eq, and } from "drizzle-orm";
 
 const SYSTEM_PROMPT = `Você é a Clara Mendes — especialista sênior em inteligência competitiva para o setor de moda atacado no Brasil.
 
@@ -78,6 +81,37 @@ export interface ClaraAnalysisResult {
   }>;
 }
 
+async function proposeActions(analysis: ClaraAnalysisResult, today: string): Promise<void> {
+  if (!analysis.proposedActions?.length) return;
+  try {
+    const db = await getDb();
+    if (!db) return;
+    const existing = await db
+      .select({ title: agentActions.title })
+      .from(agentActions)
+      .where(and(eq(agentActions.agentName, "clara"), eq(agentActions.date, today)));
+    const existingTitles = new Set(existing.map((r: { title: string }) => r.title));
+    const toInsert = analysis.proposedActions
+      .filter((a) => a.title && !existingTitles.has(a.title))
+      .map((a) => ({
+        agentName: "clara" as const,
+        date: today,
+        title: a.title.slice(0, 150),
+        description: a.description,
+        actionType: a.type || "marketing",
+        priority: (["alta", "media", "baixa"].includes(a.priority) ? a.priority : "media") as "alta" | "media" | "baixa",
+        estimatedImpact: a.estimatedImpact,
+        status: "pending" as const,
+      }));
+    if (toInsert.length > 0) {
+      await db.insert(agentActions).values(toInsert);
+      console.log(`[Clara] ${toInsert.length} ações propostas no painel`);
+    }
+  } catch (err: any) {
+    console.error("[Clara] Erro ao propor ações:", err.message);
+  }
+}
+
 export async function runClaraAnalysis(): Promise<ClaraAnalysisResult> {
   const today = new Date().toISOString().slice(0, 10);
   console.log(`[Clara] Iniciando análise competitiva — ${today}`);
@@ -117,6 +151,7 @@ Faça a análise competitiva diária para a Feminnita. Identifique ameaças, opo
 
     await saveMemory("clara", "daily_analysis", today, parsed);
     console.log(`[Clara] Análise ${today} salva — ${parsed.competitors?.length || 0} concorrentes monitorados`);
+    await proposeActions(parsed as ClaraAnalysisResult, today);
 
     return parsed as ClaraAnalysisResult;
   } catch (err: any) {

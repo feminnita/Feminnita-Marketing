@@ -101,6 +101,10 @@ const pending = [
   "0031_agent_actions",
   "0032_specialist_chat",
   "0033_whatsapp_blasts",
+  "0034_ml_ads",
+  "0035_shopee_ads",
+  "0036_tiktok_shop",
+  "0037_amazon",
 ];
 
 for (const name of pending) {

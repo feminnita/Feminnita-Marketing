@@ -1385,3 +1385,58 @@ export const shopeeAdsEvaluationMessages = mysqlTable("shopee_ads_evaluation_mes
 });
 export type ShopeeAdsEvaluationMessage = typeof shopeeAdsEvaluationMessages.$inferSelect;
 export type InsertWhatsappBlastContact = typeof whatsappBlastContacts.$inferInsert;
+
+// === TIKTOK SHOP — AVALIAÇÕES ===
+export const tiktokShopEvaluations = mysqlTable("tiktok_shop_evaluations", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  shopId: varchar("shopId", { length: 50 }),
+  status: mysqlEnum("status", ["pending", "running", "done", "error"]).notNull().default("pending"),
+  rawMetrics: text("rawMetrics"),
+  analysis: text("analysis"),
+  recommendations: text("recommendations"),
+  summary: varchar("summary", { length: 500 }),
+  errorMessage: varchar("errorMessage", { length: 500 }),
+  triggeredAt: timestamp("triggeredAt").defaultNow().notNull(),
+  completedAt: timestamp("completedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type TiktokShopEvaluation = typeof tiktokShopEvaluations.$inferSelect;
+export type InsertTiktokShopEvaluation = typeof tiktokShopEvaluations.$inferInsert;
+
+export const tiktokShopEvaluationMessages = mysqlTable("tiktok_shop_evaluation_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  evaluationId: int("evaluationId").notNull(),
+  userId: int("userId").notNull(),
+  role: mysqlEnum("role", ["user", "assistant"]).notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type TiktokShopEvaluationMessage = typeof tiktokShopEvaluationMessages.$inferSelect;
+
+// === AMAZON — AVALIAÇÕES ===
+export const amazonEvaluations = mysqlTable("amazon_evaluations", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  sellerId: varchar("sellerId", { length: 50 }),
+  status: mysqlEnum("status", ["pending", "running", "done", "error"]).notNull().default("pending"),
+  rawMetrics: text("rawMetrics"),
+  analysis: text("analysis"),
+  recommendations: text("recommendations"),
+  summary: varchar("summary", { length: 500 }),
+  errorMessage: varchar("errorMessage", { length: 500 }),
+  triggeredAt: timestamp("triggeredAt").defaultNow().notNull(),
+  completedAt: timestamp("completedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type AmazonEvaluation = typeof amazonEvaluations.$inferSelect;
+
+export const amazonEvaluationMessages = mysqlTable("amazon_evaluation_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  evaluationId: int("evaluationId").notNull(),
+  userId: int("userId").notNull(),
+  role: mysqlEnum("role", ["user", "assistant"]).notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type AmazonEvaluationMessage = typeof amazonEvaluationMessages.$inferSelect;

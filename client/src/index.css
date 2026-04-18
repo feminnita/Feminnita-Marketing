@@ -72,12 +72,15 @@
   --border: oklch(0.92 0.004 286.32);
   --input: oklch(0.92 0.004 286.32);
   --ring: oklch(0.623 0.214 259.815);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.235 0.015 65);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.623 0.214 259.815);
+  /* Sidebar — tema escuro igual ao login */
+  --sidebar: #0f172a;
+  --sidebar-foreground: #cbd5e1;
+  --sidebar-primary: #8B2635;
+  --sidebar-primary-foreground: #E8C99A;
+  --sidebar-accent: #1e293b;
+  --sidebar-accent-foreground: #E8C99A;
+  --sidebar-border: rgba(255,255,255,0.08);
+  --sidebar-ring: #8B2635;
 }
 
 .dark {

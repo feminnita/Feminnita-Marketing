@@ -81,6 +81,8 @@ import { contentTemplatesRouter } from "./routers/content-templates";
 import { adsManagerRouter } from "./routers/ads-manager";
 import { mlAdsManagerRouter } from "./routers/ml-ads-manager";
 import { shopeeAdsManagerRouter } from "./routers/shopee-ads-manager";
+import { tiktokShopManagerRouter } from "./routers/tiktok-shop-manager";
+import { amazonManagerRouter } from "./routers/amazon-manager";
 import { blogRouter } from "./routers/blog";
 import { trafficManagerRouter } from "./routers/traffic-manager";
 import { agentMemoryRouter } from "./routers/agent-memory";
@@ -209,6 +211,8 @@ export const appRouter = router({
   adsManager: adsManagerRouter,
   mlAdsManager: mlAdsManagerRouter,
   shopeeAdsManager: shopeeAdsManagerRouter,
+  tiktokShopManager: tiktokShopManagerRouter,
+  amazonManager: amazonManagerRouter,
   blog: blogRouter,
   trafficManager: trafficManagerRouter,
   agentMemory: agentMemoryRouter,

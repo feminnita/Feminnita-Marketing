@@ -11,6 +11,9 @@
 import { invokeLLM } from "../_core/llm";
 import { buildMemoryContext, saveMemory } from "../services/agentMemory";
 import { searchWeb, formatSearchResults } from "../services/webSearch";
+import { getDb } from "../db";
+import { agentActions } from "../../drizzle/schema";
+import { eq, and } from "drizzle-orm";
 
 const INSTAGRAM_ACCOUNT_ID = "59536615191";
 const GRAPH_BASE = "https://graph.facebook.com/v19.0";
@@ -86,6 +89,37 @@ export interface SofiaAnalysisResult {
   }>;
 }
 
+async function proposeActions(analysis: SofiaAnalysisResult, today: string): Promise<void> {
+  if (!analysis.proposedActions?.length) return;
+  try {
+    const db = await getDb();
+    if (!db) return;
+    const existing = await db
+      .select({ title: agentActions.title })
+      .from(agentActions)
+      .where(and(eq(agentActions.agentName, "sofia"), eq(agentActions.date, today)));
+    const existingTitles = new Set(existing.map((r: { title: string }) => r.title));
+    const toInsert = analysis.proposedActions
+      .filter((a) => a.title && !existingTitles.has(a.title))
+      .map((a) => ({
+        agentName: "sofia" as const,
+        date: today,
+        title: a.title.slice(0, 150),
+        description: a.description,
+        actionType: a.type || "post",
+        priority: (["alta", "media", "baixa"].includes(a.priority) ? a.priority : "media") as "alta" | "media" | "baixa",
+        estimatedImpact: a.estimatedImpact,
+        status: "pending" as const,
+      }));
+    if (toInsert.length > 0) {
+      await db.insert(agentActions).values(toInsert);
+      console.log(`[Sofia] ${toInsert.length} ações propostas no painel`);
+    }
+  } catch (err: any) {
+    console.error("[Sofia] Erro ao propor ações:", err.message);
+  }
+}
+
 export async function runSofiaAnalysis(): Promise<SofiaAnalysisResult> {
   const today = new Date().toISOString().slice(0, 10);
   console.log(`[Sofia] Iniciando análise de Instagram — ${today}`);
@@ -132,6 +166,7 @@ Analise o estado atual do Instagram da Feminnita e gere o relatório diário com
 
     await saveMemory("sofia", "daily_analysis", today, parsed);
     console.log(`[Sofia] Análise ${today} salva — ${parsed.proposedActions?.length || 0} ações propostas`);
+    await proposeActions(parsed as SofiaAnalysisResult, today);
 
     return parsed as SofiaAnalysisResult;
   } catch (err: any) {

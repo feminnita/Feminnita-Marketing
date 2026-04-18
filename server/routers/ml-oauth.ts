@@ -49,6 +49,48 @@ function updateEnvFile(updates: Record<string, string>) {
 
 export function registerMLOAuthRoutes(app: Express) {
   /**
+   * GET /api/ml/debug-ads
+   * Diagnóstico: mostra o que a ML Ads API retorna com o token atual.
+   */
+  app.get("/api/ml/debug-ads", async (_req, res) => {
+    const token = process.env.ML_ACCESS_TOKEN_1 || "";
+    const userId = process.env.ML_USER_ID_1 || "";
+    if (!token) return res.status(500).json({ error: "ML_ACCESS_TOKEN_1 não configurado" });
+
+    const results: any[] = [];
+
+    // Testa GET em vários endpoints
+    const getUrls = [
+      `https://api.mercadolibre.com/users/${userId}/advertising/product_ads/campaigns?limit=50&offset=0`,
+      `https://api.mercadolibre.com/advertising/product_ads/items?user_id=${userId}`,
+    ];
+    for (const url of getUrls) {
+      try {
+        const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+        const body = await r.json();
+        results.push({ method: "GET", url, status: r.status, body });
+      } catch (e: any) {
+        results.push({ method: "GET", url, error: (e as any).message });
+      }
+    }
+
+    // Testa POST no endpoint que dá 405 no GET
+    try {
+      const r = await fetch("https://api.mercadolibre.com/advertising/product_ads/campaigns", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId }),
+      });
+      const body = await r.json();
+      results.push({ method: "POST", url: "/advertising/product_ads/campaigns", status: r.status, body });
+    } catch (e: any) {
+      results.push({ method: "POST", url: "/advertising/product_ads/campaigns", error: (e as any).message });
+    }
+    return res.json(results);
+  });
+
+
+  /**
    * GET /api/ml/start
    * Gera PKCE e redireciona para a página de autorização do ML.
    */
@@ -58,7 +100,7 @@ export function registerMLOAuthRoutes(app: Express) {
     }
 
     const { verifier, challenge } = generatePKCE();
-    const state = "mkt_" + crypto.randomBytes(8).toString("hex");
+    const state = "mkt"; // Flask verifica state == 'mkt' para relay
 
     // Guarda verifier para recuperar no callback
     pkceStore.set(state, verifier);

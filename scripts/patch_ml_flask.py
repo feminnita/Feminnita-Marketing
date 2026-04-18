@@ -11,8 +11,8 @@ insert = '''        # Marketing system: se state='mkt', redireciona para localho
         if state == 'mkt':
             from urllib.parse import urlencode
             if code:
-                return redirect('http://localhost:3001/api/ml/callback?' + urlencode({'code': code}))
-            return redirect('http://localhost:3001/api/ml/callback?' + urlencode({'error': error or 'unknown'}))
+                return redirect('http://localhost:3000/api/ml/callback?' + urlencode({'code': code}))
+            return redirect('http://localhost:3000/api/ml/callback?' + urlencode({'error': error or 'unknown'}))
 
 '''
 

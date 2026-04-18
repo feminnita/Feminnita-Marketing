@@ -6,6 +6,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes, registerDebugRoutes } from "./oauth";
 import { registerMLOAuthRoutes } from "../routers/ml-oauth";
 import { registerShopeeOAuthRoutes } from "../routers/shopee-oauth";
+import { registerTiktokShopOAuthRoutes } from "../routers/tiktok-shop-oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -72,6 +73,8 @@ async function startServer() {
   registerMLOAuthRoutes(app);
   // Shopee OAuth routes: /api/shopee/start, /api/shopee/callback, /api/shopee/status
   registerShopeeOAuthRoutes(app);
+  // TikTok Shop OAuth routes: /api/tiktok-shop/start, /api/tiktok-shop/callback, /api/tiktok-shop/status
+  registerTiktokShopOAuthRoutes(app);
   // Bling webhook for real-time inventory sync
   app.post("/api/bling/webhook", handleBlingWebhook);
   
