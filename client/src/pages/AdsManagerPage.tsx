@@ -630,7 +630,7 @@ export default function AdsManagerPage() {
                               <Bot className="w-3 h-3" /> Fernanda
                             </span>
                             <button
-                              onClick={() => handleSpeak(msg.id, msg.content)}
+                              onClick={() => handleSpeak(msg.id, extractAnalysisText(msg.content))}
                               className="flex items-center gap-1 text-xs text-[#8B2635] hover:text-[#6d1e2a] transition-colors"
                               title={playingMsgId === msg.id ? "Parar" : "Ouvir"}
                             >
@@ -642,7 +642,9 @@ export default function AdsManagerPage() {
                             </button>
                           </div>
                         )}
-                        <p className="whitespace-pre-wrap">{msg.content}</p>
+                        <p className="whitespace-pre-wrap">
+                          {msg.role === "assistant" ? extractAnalysisText(msg.content) : msg.content}
+                        </p>
                       </div>
                     </div>
                   ))}
