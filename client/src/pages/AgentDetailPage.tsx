@@ -37,6 +37,7 @@ const AGENT_CONFIG: Record<string, {
   label: string;
   role: string;
   emoji: string;
+  photo: string;
   color: string;
   bgColor: string;
   borderColor: string;
@@ -46,6 +47,7 @@ const AGENT_CONFIG: Record<string, {
     label: "Sofia Oliveira",
     role: "Especialista em Crescimento Instagram",
     emoji: "📱",
+    photo: "/agents/sofia.jpg",
     color: "rose",
     bgColor: "bg-rose-50",
     borderColor: "border-rose-200",
@@ -60,6 +62,7 @@ const AGENT_CONFIG: Record<string, {
     label: "Beatriz Santos",
     role: "Especialista em Conteúdo e Tendências",
     emoji: "✨",
+    photo: "/agents/beatriz.jpg",
     color: "yellow",
     bgColor: "bg-yellow-50",
     borderColor: "border-yellow-200",
@@ -74,6 +77,7 @@ const AGENT_CONFIG: Record<string, {
     label: "Clara Mendes",
     role: "Especialista em Inteligência Competitiva",
     emoji: "🔍",
+    photo: "/agents/clara.jpg",
     color: "blue",
     bgColor: "bg-blue-50",
     borderColor: "border-blue-200",
@@ -88,6 +92,7 @@ const AGENT_CONFIG: Record<string, {
     label: "Mariana Costa",
     role: "Especialista em Vendas Multicanal",
     emoji: "💰",
+    photo: "/agents/mariana.jpg",
     color: "green",
     bgColor: "bg-green-50",
     borderColor: "border-green-200",
@@ -120,21 +125,30 @@ interface ProposedAction {
 function ChatBubble({ message, agentName }: { message: ChatMessage; agentName: string }) {
   const isUser = message.role === "user";
   const config = AGENT_CONFIG[agentName];
-  return (
-    <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4`}>
-      {!isUser && (
-        <div className={`w-8 h-8 rounded-full ${config.bgColor} flex items-center justify-center flex-shrink-0 mr-2 mt-1 text-sm`}>
-          {config.emoji}
+
+  if (!isUser) {
+    return (
+      <div className="flex justify-center mb-6">
+        <div className="flex items-start gap-4 max-w-2xl w-full">
+          <img
+            src={config.photo}
+            alt={config.label}
+            className="w-28 h-40 rounded-2xl object-cover object-top flex-shrink-0 border border-slate-200 shadow-md"
+          />
+          <div className={`flex-1 bg-white border ${config.borderColor} rounded-2xl rounded-tl-sm px-5 py-4 text-sm leading-relaxed text-slate-800 shadow-sm`}>
+            <p className="whitespace-pre-wrap">{message.content}</p>
+          </div>
         </div>
-      )}
-      <div
-        className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-          isUser
-            ? "bg-pink-100 text-slate-800 rounded-tr-sm border border-pink-200"
-            : `bg-white border ${config.borderColor} text-slate-800 rounded-tl-sm shadow-sm`
-        }`}
-      >
-        <p className="whitespace-pre-wrap">{message.content}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex justify-center mb-4">
+      <div className="flex justify-end max-w-2xl w-full">
+        <div className="max-w-[78%] rounded-2xl rounded-tr-sm px-4 py-3 text-sm leading-relaxed bg-pink-100 text-slate-800 border border-pink-200">
+          <p className="whitespace-pre-wrap">{message.content}</p>
+        </div>
       </div>
     </div>
   );
@@ -399,9 +413,11 @@ Por onde quer começar?`,
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
-          <div className={`w-9 h-9 rounded-full ${config.bgColor} flex items-center justify-center text-lg`}>
-            {config.emoji}
-          </div>
+          <img
+            src={config.photo}
+            alt={config.label}
+            className="w-11 h-14 rounded-xl object-cover object-top border border-slate-200 flex-shrink-0 shadow-sm"
+          />
           <div>
             <h1 className="text-base font-bold text-slate-900">{config.label}</h1>
             <div className="flex items-center gap-1.5">
@@ -477,16 +493,16 @@ Por onde quer começar?`,
             ))}
 
             {chatMutation.isPending && (
-              <div className="flex justify-start mb-4">
-                <div className={`w-8 h-8 rounded-full ${config.bgColor} flex items-center justify-center flex-shrink-0 mr-2 mt-1 text-sm`}>
-                  {config.emoji}
-                </div>
-                <div className={`bg-white border ${config.borderColor} rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm`}>
+              <div className="flex justify-center mb-6">
+                <div className="flex items-start gap-4 max-w-2xl w-full">
+                  <img src={config.photo} alt={config.label} className="w-28 h-40 rounded-2xl object-cover object-top flex-shrink-0 border border-slate-200 shadow-md" />
+                  <div className={`flex-1 bg-white border ${config.borderColor} rounded-2xl rounded-tl-sm px-5 py-4 shadow-sm`}>
                   <div className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce [animation-delay:0ms]" />
                     <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce [animation-delay:150ms]" />
                     <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce [animation-delay:300ms]" />
                     <span className="text-xs text-slate-400 ml-1">buscando na web...</span>
+                  </div>
                   </div>
                 </div>
               </div>

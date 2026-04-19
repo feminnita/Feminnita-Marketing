@@ -652,7 +652,7 @@ export default function AdsManagerPage() {
                         {msg.role === "assistant" && (
                           <div className="flex items-center justify-between gap-1 mb-1">
                             <span className="flex items-center gap-1 text-xs text-gray-500 font-medium">
-                              <Bot className="w-3 h-3" /> Fernanda
+                              <img src="/agents/fernanda.jpg" alt="Fernanda" className="w-5 h-7 rounded object-cover object-top border border-slate-200" /> Fernanda
                             </span>
                             <button
                               onClick={() => handleSpeak(msg.id, extractAnalysisText(msg.content))}

@@ -320,28 +320,40 @@ export const metaGraphIntegrationRouter = router({
         }
 
         // 2. Buscar insights de alcance/impressões (últimos 7 dias)
+        // Nota: profile_views foi deprecado no API v18+. Usamos apenas impressions,reach.
         let impressions = 0, reach = 0, profileViews = 0;
+        let insightsError = "";
         try {
-          const token = igAccount.accessToken;
-          const isIgToken = token.startsWith("IGAAX") || token.startsWith("IGQ") || token.startsWith("IGD") || token.startsWith("IG");
+          const insightsToken = igAccount.accessToken;
+          const isIgToken = insightsToken.startsWith("IGAAX") || insightsToken.startsWith("IGQ") || insightsToken.startsWith("IGD") || insightsToken.startsWith("IG");
           const since = Math.floor(Date.now()/1000) - 7*86400;
           const until = Math.floor(Date.now()/1000);
 
+          // Tenta primeiro com impressions,reach (sem profile_views — deprecado no v18+)
+          const metricsToTry = ["impressions,reach", "reach"];
           let insightsData: any = null;
-          if (isIgToken) {
-            // Instagram Graph API — usa graph.instagram.com
-            const igInsightsRes = await fetch(
-              `https://graph.instagram.com/v19.0/${igIdToUse}/insights?metric=impressions,reach,profile_views&period=day&since=${since}&until=${until}&access_token=${encodeURIComponent(token)}`
-            );
-            insightsData = await igInsightsRes.json();
-          } else {
-            insightsData = await makeMetaGraphRequest(
-              `/${igAccount.instagramId}/insights`,
-              "GET",
-              token,
-              undefined,
-              { metric: "impressions,reach,profile_views", period: "day", since: String(since), until: String(until) }
-            );
+
+          for (const metrics of metricsToTry) {
+            try {
+              if (isIgToken) {
+                const igInsightsRes = await fetch(
+                  `https://graph.instagram.com/v20.0/${igIdToUse}/insights?metric=${metrics}&period=day&since=${since}&until=${until}&access_token=${encodeURIComponent(insightsToken)}`
+                );
+                insightsData = await igInsightsRes.json();
+              } else {
+                insightsData = await makeMetaGraphRequest(
+                  `/${igIdToUse}/insights`,
+                  "GET",
+                  insightsToken,
+                  undefined,
+                  { metric: metrics, period: "day", since: String(since), until: String(until) }
+                );
+              }
+              if (!insightsData?.error) break; // sucesso — sai do loop
+              console.warn(`[Instagram Insights] Falhou com métricas "${metrics}":`, insightsData.error?.message);
+            } catch (e: any) {
+              console.warn(`[Instagram Insights] Erro com métricas "${metrics}":`, e.message);
+            }
           }
 
           if (insightsData?.data) {
@@ -349,11 +361,14 @@ export const metaGraphIntegrationRouter = router({
               const total = (metric.values || []).reduce((s: number, v: any) => s + (v.value || 0), 0);
               if (metric.name === "impressions") impressions = total;
               if (metric.name === "reach") reach = total;
-              if (metric.name === "profile_views") profileViews = total;
             });
+          } else if (insightsData?.error) {
+            insightsError = insightsData.error.message || "Permissão instagram_manage_insights necessária";
+            console.warn("[Instagram Insights] Erro final:", insightsError);
           }
-        } catch (_) {
-          // insights pode falhar se permissão instagram_manage_insights não estiver aprovada
+        } catch (e: any) {
+          insightsError = e.message;
+          console.error("[Instagram Insights] Exceção:", e.message);
         }
 
         const followers = profile.followers_count || 0;
@@ -375,7 +390,8 @@ export const metaGraphIntegrationRouter = router({
           followers,
           impressions,
           reach,
-          profileViews,
+          profileViews: 0,
+          ...(insightsError ? { apiError: insightsError } : {}),
         };
       } catch (error) {
         console.error("[Meta Graph Integration] Erro ao obter insights da conta:", error);

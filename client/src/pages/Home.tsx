@@ -106,11 +106,11 @@ const QUICK_CARDS: QuickCard[] = [
 // ─── Equipe IA ────────────────────────────────────────────────────────────────
 
 const TEAM = [
-  { name: "Fernanda", role: "Meta Ads", path: "/gestor-trafego", emoji: "📊" },
-  { name: "Sofia", role: "Instagram", path: "/agente/sofia", emoji: "📸" },
-  { name: "Beatriz", role: "Conteúdo", path: "/agente/beatriz", emoji: "✍️" },
-  { name: "Clara", role: "Competição", path: "/agente/clara", emoji: "🔍" },
-  { name: "Mariana", role: "Vendas", path: "/agente/mariana", emoji: "🚀" },
+  { name: "Fernanda", role: "Meta Ads", path: "/gestor-trafego", photo: "/agents/fernanda.jpg" },
+  { name: "Sofia", role: "Instagram", path: "/agente/sofia", photo: "/agents/sofia.jpg" },
+  { name: "Beatriz", role: "Conteúdo", path: "/agente/beatriz", photo: "/agents/beatriz.jpg" },
+  { name: "Clara", role: "Competição", path: "/agente/clara", photo: "/agents/clara.jpg" },
+  { name: "Mariana", role: "Vendas", path: "/agente/mariana", photo: "/agents/mariana.jpg" },
 ];
 
 // ─── Página ───────────────────────────────────────────────────────────────────
@@ -175,7 +175,7 @@ export default function Home() {
               onClick={() => setLocation(agent.path)}
               className="flex items-center gap-2.5 px-4 py-2.5 bg-white border border-slate-200 rounded-xl hover:border-rose-200 hover:bg-rose-50 transition-colors text-sm font-medium text-slate-700"
             >
-              <span className="text-base">{agent.emoji}</span>
+              <img src={agent.photo} alt={agent.name} className="w-9 h-12 rounded-lg object-cover object-top border border-slate-200 flex-shrink-0 shadow-sm" />
               <div className="text-left">
                 <p className="font-semibold text-slate-800 leading-none">{agent.name}</p>
                 <p className="text-xs text-slate-400 mt-0.5">{agent.role}</p>

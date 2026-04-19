@@ -61,7 +61,7 @@ export async function registerDebugRoutes(app: Express) {
         return res.json({ posts: [], error: mediaData.error.message });
       }
 
-      const posts = (mediaData.data || []).map((p: any) => ({
+      const basePosts = (mediaData.data || []).map((p: any) => ({
         id: p.id,
         caption: (p.caption || "").slice(0, 150),
         mediaType: p.media_type,
@@ -70,7 +70,30 @@ export async function registerDebugRoutes(app: Express) {
         likes: p.like_count || 0,
         comments: p.comments_count || 0,
         permalink: p.permalink || null,
+        reach: 0,
+        impressions: 0,
       }));
+
+      // Buscar insights por post em paralelo (reach, impressions)
+      // Requer instagram_manage_insights — falha silenciosamente se sem permissão
+      const posts = await Promise.all(
+        basePosts.map(async (post) => {
+          try {
+            const insightsUrl = isIgToken
+              ? `https://graph.instagram.com/v20.0/${post.id}/insights?metric=reach,impressions&access_token=${token}`
+              : `https://graph.facebook.com/v20.0/${post.id}/insights?metric=reach,impressions&access_token=${token}`;
+            const insRes = await fetch(insightsUrl);
+            const insData = await insRes.json() as any;
+            if (insData?.data) {
+              for (const m of insData.data) {
+                if (m.name === "reach") post.reach = m.values?.[0]?.value || 0;
+                if (m.name === "impressions") post.impressions = m.values?.[0]?.value || 0;
+              }
+            }
+          } catch (_) {}
+          return post;
+        })
+      );
 
       // Também retorna dados do perfil (followers)
       const profileRes = await fetch(`${apiBase}/me?fields=id,username,followers_count,media_count&access_token=${token}`);

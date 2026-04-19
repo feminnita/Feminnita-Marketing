@@ -1,10 +1,11 @@
 import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
-import { adsEvaluations, adsEvaluationMessages } from "../../drizzle/schema";
+import { adsEvaluations, adsEvaluationMessages, agentActions } from "../../drizzle/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { textToSpeech } from "../services/tts";
 import { runAdsEvaluation, chatWithAgent, collectAdsData } from "../agents/ads-manager-agent";
+import { executeMetaAction } from "../agents/fernanda-executor";
 
 export const adsManagerRouter = router({
   /**
@@ -179,5 +180,91 @@ export const adsManagerRouter = router({
     .mutation(async ({ input }) => {
       const audioBuffer = await textToSpeech(input.text, input.agentName ?? "fernanda");
       return { audioBase64: audioBuffer.toString("base64") };
+    }),
+
+  /**
+   * Propõe uma ação Meta Ads para aprovação do usuário.
+   * Fernanda usa isso para registrar o que quer fazer antes de executar.
+   */
+  proposeAction: protectedProcedure
+    .input(z.object({
+      title: z.string(),
+      description: z.string(), // JSON com payload da ação
+      actionType: z.enum(["meta_pause_campaign", "meta_resume_campaign", "meta_update_budget", "meta_create_campaign", "meta_duplicate_campaign"]),
+      priority: z.enum(["alta", "media", "baixa"]).default("media"),
+      estimatedImpact: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Banco indisponível");
+      const today = new Date().toISOString().slice(0, 10);
+      await db.insert(agentActions).values({
+        agentName: "fernanda",
+        date: today,
+        title: input.title,
+        description: input.description,
+        actionType: input.actionType,
+        priority: input.priority,
+        estimatedImpact: input.estimatedImpact || "",
+        status: "pending",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      return { ok: true };
+    }),
+
+  /**
+   * Executa uma ação Meta Ads aprovada pelo usuário.
+   * Chama a Meta Marketing API com permissão ads_management.
+   */
+  executeAction: protectedProcedure
+    .input(z.object({ actionId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Banco indisponível");
+
+      const [action] = await db.select().from(agentActions)
+        .where(eq(agentActions.id, input.actionId)).limit(1);
+
+      if (!action) throw new Error("Ação não encontrada");
+      if (action.status !== "approved") throw new Error("Ação precisa estar aprovada antes de executar");
+
+      // Marca como executando
+      await db.update(agentActions).set({ status: "executing", updatedAt: new Date() })
+        .where(eq(agentActions.id, input.actionId));
+
+      try {
+        const payload = JSON.parse(action.description);
+        const resultMsg = await executeMetaAction(action.actionType, payload);
+
+        await db.update(agentActions)
+          .set({ status: "done", userNote: resultMsg, updatedAt: new Date() })
+          .where(eq(agentActions.id, input.actionId));
+
+        return { ok: true, message: resultMsg };
+      } catch (err: any) {
+        await db.update(agentActions)
+          .set({ status: "pending", userNote: `Erro: ${err.message}`, updatedAt: new Date() })
+          .where(eq(agentActions.id, input.actionId));
+        throw new Error(err.message);
+      }
+    }),
+
+  /**
+   * Lista ações pendentes/aprovadas da Fernanda (fila de execução Meta Ads).
+   */
+  listFernandaActions: protectedProcedure
+    .input(z.object({ status: z.string().optional() }))
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const rows = await db.select().from(agentActions)
+        .where(and(
+          eq(agentActions.agentName, "fernanda"),
+          input.status ? eq(agentActions.status, input.status as any) : undefined as any,
+        ))
+        .orderBy(desc(agentActions.createdAt))
+        .limit(20);
+      return rows.filter(Boolean);
     }),
 });
