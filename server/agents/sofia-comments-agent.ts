@@ -13,6 +13,7 @@ import { instagramCommentReplies } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 
 const META_TOKEN = process.env.META_ACCESS_TOKEN || "";
+const META_PAGE_TOKEN = process.env.META_PAGE_ACCESS_TOKEN || META_TOKEN;
 const GRAPH_BASE = "https://graph.facebook.com/v20.0";
 
 // ─── Classificação + geração de resposta ─────────────────────────────────────
@@ -91,9 +92,9 @@ export async function postCommentReply(commentId: string, replyText: string): Pr
 // ─── Postar resposta via Messenger ────────────────────────────────────────────
 
 export async function postMessengerReply(recipientId: string, replyText: string): Promise<void> {
-  if (!META_TOKEN) throw new Error("META_ACCESS_TOKEN não configurado");
+  if (!META_PAGE_TOKEN) throw new Error("META_PAGE_ACCESS_TOKEN não configurado");
 
-  const res = await fetch(`${GRAPH_BASE}/me/messages?access_token=${META_TOKEN}`, {
+  const res = await fetch(`${GRAPH_BASE}/me/messages?access_token=${META_PAGE_TOKEN}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
