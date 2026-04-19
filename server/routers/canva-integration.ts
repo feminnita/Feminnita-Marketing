@@ -361,19 +361,22 @@ export const canvaIntegrationRouter = {
       const canvaRes = await fetch(`${CANVA_API}/designs`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ title, design_type: { name: "social_media" } }),
+        body: JSON.stringify({ title }),
       });
 
       let designId: string | null = null;
       let editUrl: string | null = null;
 
-      if (canvaRes.ok) {
-        const data = await canvaRes.json() as any;
-        designId = data.design?.id ?? null;
-        editUrl = data.design?.urls?.edit_url ?? null;
-      } else {
-        const err = await canvaRes.text();
-        console.warn("[Canva] createDesign:", canvaRes.status, err);
+      const rawText = await canvaRes.text();
+      console.log("[Canva] createDesign status:", canvaRes.status, "body:", rawText);
+
+      try {
+        const data = JSON.parse(rawText) as any;
+        const d = data.design ?? data;
+        designId = d.id ?? null;
+        editUrl = d.urls?.edit_url ?? d.urls?.edit ?? d.edit_url ?? null;
+      } catch {
+        console.warn("[Canva] Failed to parse response");
       }
 
       return {
