@@ -640,21 +640,21 @@ export default function Analytics() {
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 bg-slate-50 rounded-lg text-center">
-                <p className="text-2xl font-bold">{(perfMetrics?.currentFollowers ?? 0).toLocaleString()}</p>
+                <p className="text-2xl font-bold">{(perfMetrics?.currentFollowers ?? insights?.followers ?? 0).toLocaleString()}</p>
                 <p className="text-xs text-muted-foreground mt-1">Seguidores Atuais</p>
               </div>
               <div className="p-4 bg-slate-50 rounded-lg text-center">
-                <p className={`text-2xl font-bold ${(perfMetrics?.followerGrowth ?? 0) >= 0 ? "text-green-600" : "text-red-600"}`}>
-                  {(perfMetrics?.followerGrowth ?? 0) >= 0 ? "+" : ""}{(perfMetrics?.followerGrowth ?? 0).toLocaleString()}
+                <p className="text-2xl font-bold text-blue-600">
+                  {(insights?.reach ?? perfMetrics?.totalReach ?? 0).toLocaleString()}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">Crescimento (30d)</p>
+                <p className="text-xs text-muted-foreground mt-1">Alcance (7 dias)</p>
               </div>
               <div className="p-4 bg-slate-50 rounded-lg text-center">
-                <p className="text-2xl font-bold">{perfMetrics?.avgEngagementRate ?? "0"}%</p>
-                <p className="text-xs text-muted-foreground mt-1">Taxa de Engajamento</p>
+                <p className="text-2xl font-bold text-green-600">{(insights?.impressions ?? 0).toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground mt-1">Impressões (7 dias)</p>
               </div>
               <div className="p-4 bg-slate-50 rounded-lg text-center">
-                <p className="text-2xl font-bold">{(perfMetrics?.totalEngagement ?? 0).toLocaleString()}</p>
+                <p className="text-2xl font-bold">{(perfMetrics?.totalEngagement ?? apiDailyData.reduce((s: number, d: any) => s + (d.impressions || 0), 0)).toLocaleString()}</p>
                 <p className="text-xs text-muted-foreground mt-1">Engajamento Total</p>
               </div>
             </div>
