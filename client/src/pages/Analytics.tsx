@@ -226,20 +226,33 @@ export default function Analytics() {
   const insights = accountInsightsQuery.data;
   const perfMetrics = performanceQuery.data?.metrics;
 
-  // Build chart data from real performance rows
+  // Dados dia a dia: prioriza performance histórica do DB, fallback para insights da API
   const rawData = (perfMetrics?.data ?? []).slice(0, 14).reverse();
+  const apiDailyData: any[] = (insights as any)?.insightsByDay ?? [];
 
-  const engagementData = rawData.map((m: any) => ({
-    date: String(m.date).slice(5), // MM-DD
-    engajamento: m.totalEngagement ?? 0,
-    taxa: parseFloat(m.engagementRate ?? "0"),
-  }));
+  const engagementData = rawData.length > 0
+    ? rawData.map((m: any) => ({
+        date: String(m.date).slice(5),
+        engajamento: m.totalEngagement ?? 0,
+        taxa: parseFloat(m.engagementRate ?? "0"),
+      }))
+    : apiDailyData.map((d: any) => ({
+        date: d.date,
+        engajamento: (d.impressions || 0) + (d.reach || 0),
+        taxa: 0,
+      }));
 
-  const reachData = rawData.map((m: any) => ({
-    date: String(m.date).slice(5),
-    alcance: m.totalReach ?? 0,
-    impressoes: m.totalImpressions ?? 0,
-  }));
+  const reachData = rawData.length > 0
+    ? rawData.map((m: any) => ({
+        date: String(m.date).slice(5),
+        alcance: m.totalReach ?? 0,
+        impressoes: m.totalImpressions ?? 0,
+      }))
+    : apiDailyData.map((d: any) => ({
+        date: d.date,
+        alcance: d.reach ?? 0,
+        impressoes: d.impressions ?? 0,
+      }));
 
   const accountPerformanceData = accounts.map((acc: any) => ({
     name: acc.username,
@@ -552,7 +565,7 @@ export default function Analytics() {
           <CardHeader>
             <CardTitle>Engajamento</CardTitle>
             <CardDescription>
-              {influencerId ? "Engajamento total por dia (últimos 30 dias)" : "Selecione uma conta para ver dados reais"}
+              {influencerId ? "Engajamento total por dia (últimos 30 dias)" : "Últimos 7 dias"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -575,7 +588,7 @@ export default function Analytics() {
           <CardHeader>
             <CardTitle>Alcance vs Impressões</CardTitle>
             <CardDescription>
-              {influencerId ? "Dados reais de alcance e impressões" : "Selecione uma conta para ver dados reais"}
+              {influencerId ? "Dados reais de alcance e impressões" : "Últimos 7 dias"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -621,7 +634,7 @@ export default function Analytics() {
             <CardDescription>
               {influencerId
                 ? `Atual: ${(perfMetrics?.currentFollowers ?? 0).toLocaleString()} · Crescimento: ${perfMetrics?.followerGrowth ?? 0}`
-                : "Selecione uma conta para ver dados reais"}
+                : "Últimos 7 dias"}
             </CardDescription>
           </CardHeader>
           <CardContent>

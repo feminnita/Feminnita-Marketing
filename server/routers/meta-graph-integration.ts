@@ -329,8 +329,8 @@ export const metaGraphIntegrationRouter = router({
           const since = Math.floor(Date.now()/1000) - 7*86400;
           const until = Math.floor(Date.now()/1000);
 
-          // Tenta primeiro com impressions,reach (sem profile_views — deprecado no v18+)
-          const metricsToTry = ["impressions,reach", "reach"];
+          // Tenta combinações de métricas — impressions requer instagram_manage_insights
+          const metricsToTry = ["impressions,reach", "impressions", "reach"];
           let insightsData: any = null;
 
           for (const metrics of metricsToTry) {
@@ -349,16 +349,26 @@ export const metaGraphIntegrationRouter = router({
                   { metric: metrics, period: "day", since: String(since), until: String(until) }
                 );
               }
-              if (!insightsData?.error) break; // sucesso — sai do loop
+              if (!insightsData?.error) break;
               console.warn(`[Instagram Insights] Falhou com métricas "${metrics}":`, insightsData.error?.message);
             } catch (e: any) {
               console.warn(`[Instagram Insights] Erro com métricas "${metrics}":`, e.message);
             }
           }
 
+          // Extrai totais E dados dia a dia para os gráficos
+          const dailyMap: Record<string, { impressions: number; reach: number }> = {};
           if (insightsData?.data) {
             insightsData.data.forEach((metric: any) => {
-              const total = (metric.values || []).reduce((s: number, v: any) => s + (v.value || 0), 0);
+              const total = (metric.values || []).reduce((s: number, v: any) => {
+                const day = String(v.end_time || "").slice(0, 10);
+                if (day) {
+                  if (!dailyMap[day]) dailyMap[day] = { impressions: 0, reach: 0 };
+                  if (metric.name === "impressions") dailyMap[day].impressions += v.value || 0;
+                  if (metric.name === "reach") dailyMap[day].reach += v.value || 0;
+                }
+                return s + (v.value || 0);
+              }, 0);
               if (metric.name === "impressions") impressions = total;
               if (metric.name === "reach") reach = total;
             });
@@ -366,6 +376,9 @@ export const metaGraphIntegrationRouter = router({
             insightsError = insightsData.error.message || "Permissão instagram_manage_insights necessária";
             console.warn("[Instagram Insights] Erro final:", insightsError);
           }
+          const insightsByDay = Object.entries(dailyMap)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([date, vals]) => ({ date: date.slice(5), ...vals }));
         } catch (e: any) {
           insightsError = e.message;
           console.error("[Instagram Insights] Exceção:", e.message);
@@ -391,6 +404,7 @@ export const metaGraphIntegrationRouter = router({
           impressions,
           reach,
           profileViews: 0,
+          insightsByDay: insightsByDay ?? [],
           ...(insightsError ? { apiError: insightsError } : {}),
         };
       } catch (error) {

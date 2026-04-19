@@ -168,17 +168,17 @@ export default function Home() {
         <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">
           Equipe IA
         </h2>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-5">
           {TEAM.map((agent) => (
             <button
               key={agent.name}
               onClick={() => setLocation(agent.path)}
-              className="flex items-center gap-2.5 px-4 py-2.5 bg-white border border-slate-200 rounded-xl hover:border-rose-200 hover:bg-rose-50 transition-colors text-sm font-medium text-slate-700"
+              className="flex flex-col items-center gap-4 px-6 py-5 bg-white border border-slate-200 rounded-2xl hover:border-rose-200 hover:bg-rose-50 transition-colors w-44"
             >
-              <img src={agent.photo} alt={agent.name} className="w-9 h-12 rounded-lg object-cover object-top border border-slate-200 flex-shrink-0 shadow-sm" />
-              <div className="text-left">
-                <p className="font-semibold text-slate-800 leading-none">{agent.name}</p>
-                <p className="text-xs text-slate-400 mt-0.5">{agent.role}</p>
+              <img src={agent.photo} alt={agent.name} className="w-24 h-32 rounded-xl object-cover object-top border border-slate-200 shadow-sm" />
+              <div className="text-center">
+                <p className="font-semibold text-slate-800 text-base leading-none">{agent.name}</p>
+                <p className="text-sm text-slate-400 mt-1">{agent.role}</p>
               </div>
             </button>
           ))}
