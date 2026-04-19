@@ -9,6 +9,7 @@ import { startCopywriterAgent } from "./copywriter-agent";
 import { startCreativeTeamAgent } from "./creative-team-agent";
 import { startLaunchAgent } from "./launch-agent";
 import { runAllInfluencerAgents } from "./influencer-agent";
+import { startFernandaDailyAgent } from "./fernanda-daily-agent";
 
 // ─── Agendador diário das influencers (roda às 8h todo dia) ──────────────────
 function startInfluencerDailyAgent(): () => void {
@@ -56,6 +57,7 @@ export function startAllAgents(): () => void {
     { name: "CreativeTeam", start: startCreativeTeamAgent },
     { name: "LaunchAgent", start: startLaunchAgent },
     { name: "InfluencerDailyAgent", start: startInfluencerDailyAgent },
+    { name: "FernandaDaily", start: startFernandaDailyAgent },
   ];
 
   for (const agent of agents) {

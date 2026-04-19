@@ -13,9 +13,12 @@ import { invokeLLM } from "../_core/llm";
 import { buildMemoryContext, saveMemory } from "../services/agentMemory";
 import { getDb } from "../db";
 import { agentActions } from "../../drizzle/schema";
+import { executeMetaAction } from "./fernanda-executor";
 
 const AD_ACCOUNT_ID = process.env.META_AD_ACCOUNT_ID || "act_231648936319132";
-const GRAPH_BASE = "https://graph.facebook.com/v19.0";
+const GRAPH_BASE = "https://graph.facebook.com/v20.0";
+const RUN_HOUR = 8;
+let lastRunDate: string | null = null;
 
 // ─── Tipos internos ───────────────────────────────────────────────────────────
 
@@ -331,6 +334,71 @@ export async function runDailyAnalysis(): Promise<DailyAnalysisResult> {
   }
 
   return analysis;
+}
+
+// ─── Execução automática de ações de baixo risco ─────────────────────────────
+
+async function autoExecuteCampaignActions(insights: MetaCampaignInsight[], today: string): Promise<void> {
+  const db = await getDb();
+
+  for (const ins of insights) {
+    const spend = parseFloat(ins.spend || "0");
+    const ctr = parseFloat(ins.ctr || "0");
+    const clicks = parseInt(ins.clicks || "0");
+
+    // Pausa automática: CTR < 0.8% com gasto > R$30 nos últimos 2 dias
+    if (ctr < 0.8 && spend > 30 && clicks < 5) {
+      try {
+        console.log(`[FernandaDaily] Auto-pausando campanha com baixo CTR: ${ins.campaign_name} (CTR: ${ctr.toFixed(2)}%, gasto: R$${spend.toFixed(2)})`);
+        await executeMetaAction("meta_pause_campaign", { campaignId: ins.campaign_id });
+
+        if (db) {
+          await db.insert(agentActions).values({
+            agentName: "fernanda",
+            date: today,
+            title: `[Auto-executado] Campanha pausada: ${ins.campaign_name}`,
+            description: `Campanha pausada automaticamente por baixo desempenho: CTR ${ctr.toFixed(2)}%, gasto R$${spend.toFixed(2)} nos últimos 2 dias.`,
+            actionType: "campanha",
+            priority: "alta",
+            estimatedImpact: `Economia de verba em campanha ineficiente`,
+            status: "done",
+          });
+        }
+      } catch (err: any) {
+        console.error(`[FernandaDaily] Erro ao pausar ${ins.campaign_name}:`, err.message);
+      }
+    }
+  }
+}
+
+// ─── Scheduler ────────────────────────────────────────────────────────────────
+
+export function startFernandaDailyAgent(): () => void {
+  console.log(`[FernandaDaily] Agente iniciado. Roda diariamente às ${String(RUN_HOUR).padStart(2, "0")}:00.`);
+
+  const interval = setInterval(async () => {
+    const now = new Date();
+    if (now.getHours() === RUN_HOUR && lastRunDate !== now.toDateString()) {
+      lastRunDate = now.toDateString();
+      try {
+        const insights = await fetchCampaignInsights();
+        const today = now.toISOString().slice(0, 10);
+
+        // Executa ações automáticas antes da análise LLM
+        await autoExecuteCampaignActions(insights, today);
+
+        // Análise completa + propostas para aprovação
+        await runDailyAnalysis();
+      } catch (err: any) {
+        console.error("[FernandaDaily] Erro no ciclo diário:", err.message);
+      }
+    }
+  }, 10 * 60 * 1000); // verifica a cada 10 minutos
+
+  return () => {
+    clearInterval(interval);
+    console.log("[FernandaDaily] Agente encerrado.");
+  };
 }
 
 // Utilitário: número da semana ISO
