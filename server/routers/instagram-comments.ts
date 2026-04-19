@@ -10,10 +10,32 @@ import { instagramCommentReplies } from "../../drizzle/schema";
 import { eq, desc, or } from "drizzle-orm";
 import { processInstagramComment, postCommentReply, processMessengerMessage } from "../agents/sofia-comments-agent";
 import type { Express } from "express";
+import crypto from "crypto";
 
 // ─── Webhook Meta (fora do tRPC) ──────────────────────────────────────────────
 
 const WEBHOOK_VERIFY_TOKEN = process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN || "feminnita_webhook_2026";
+
+function verifyMetaSignature(req: any): boolean {
+  const appSecret = process.env.META_APP_SECRET;
+  if (!appSecret) {
+    console.warn("[Webhook] META_APP_SECRET não configurado — validação de assinatura ignorada");
+    return true;
+  }
+  const signature = req.headers["x-hub-signature-256"] as string | undefined;
+  if (!signature) {
+    console.warn("[Webhook] Header x-hub-signature-256 ausente");
+    return false;
+  }
+  const rawBody: Buffer | undefined = req.rawBody;
+  if (!rawBody) return false;
+  const expected = "sha256=" + crypto.createHmac("sha256", appSecret).update(rawBody).digest("hex");
+  try {
+    return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+  } catch {
+    return false;
+  }
+}
 
 export function registerInstagramWebhook(app: Express) {
   // Helper de verificação — reutilizado para Instagram e Facebook
@@ -46,6 +68,10 @@ export function registerInstagramWebhook(app: Express) {
    * POST /api/instagram/webhook — recebe eventos de comentário
    */
   app.post("/api/instagram/webhook", async (req, res) => {
+    if (!verifyMetaSignature(req)) {
+      console.warn("[InstagramWebhook] Assinatura X-Hub-Signature-256 inválida — ignorado");
+      return res.status(403).send("Invalid signature");
+    }
     // Responde 200 imediatamente (Meta exige resposta rápida)
     res.status(200).send("EVENT_RECEIVED");
 
@@ -107,6 +133,10 @@ export function registerInstagramWebhook(app: Express) {
 
   // POST /api/facebook/webhook — eventos de comentários e Messenger da Página
   app.post("/api/facebook/webhook", async (req, res) => {
+    if (!verifyMetaSignature(req)) {
+      console.warn("[FacebookWebhook] Assinatura X-Hub-Signature-256 inválida — ignorado");
+      return res.status(403).send("Invalid signature");
+    }
     res.status(200).send("EVENT_RECEIVED");
     try {
       const body = req.body;
@@ -117,7 +147,13 @@ export function registerInstagramWebhook(app: Express) {
         // ── Messenger ────────────────────────────────────────────────────────
         for (const msg of entry.messaging || []) {
           if (!msg.message?.text) continue;
-          if (msg.sender?.id === pageId) continue; // ignora mensagens da própria página
+          if (msg.sender?.id === pageId) continue;
+          // Verifica janela de 24h (Meta exige resposta dentro deste prazo)
+          const msgAge = Date.now() - (msg.timestamp || 0);
+          if (msgAge > 23 * 60 * 60 * 1000) {
+            console.log(`[MessengerWebhook] Mensagem fora da janela de 24h — ignorada`);
+            continue;
+          }
           console.log(`[MessengerWebhook] Mensagem de ${msg.sender?.id}: "${msg.message.text.slice(0, 80)}"`);
           await processMessengerMessage({
             senderId: msg.sender.id,
@@ -127,17 +163,20 @@ export function registerInstagramWebhook(app: Express) {
           });
         }
 
-        // ── Comentários em posts/vídeos ──────────────────────────────────────
+        // ── Comentários em posts e vídeos ────────────────────────────────────
         for (const change of entry.changes || []) {
-          if (change.field !== "feed") continue;
+          // Aceita tanto "feed" (posts) quanto "videos" (comentários em vídeos)
+          if (change.field !== "feed" && change.field !== "videos") continue;
           const val = change.value;
           if (val?.item !== "comment" || val?.verb !== "add") continue;
           if (!val?.comment_id || !val?.message) continue;
           if (pageId && val.from?.id === pageId) continue;
-          console.log(`[FacebookWebhook] Comentário de ${val.from?.name}: "${val.message?.slice(0, 80)}"`);
+          if (!val.from?.id) continue;
+          const source = change.field === "videos" ? "VideoWebhook" : "FacebookWebhook";
+          console.log(`[${source}] Comentário de ${val.from?.name}: "${val.message?.slice(0, 80)}"`);
           await processInstagramComment({
             commentId: val.comment_id,
-            postId: val.post_id || "",
+            postId: val.post_id || val.video_id || "",
             authorName: val.from?.name || "",
             authorId: val.from?.id || "",
             commentText: val.message || "",
@@ -256,11 +295,11 @@ export const instagramCommentsRouter = router({
     if (!db) return { pending: 0, autoReplied: 0, ignored: 0 };
     const all = await db.select({
       status: instagramCommentReplies.status,
-    }).from(instagramCommentReplies);
+    }).from(instagramCommentReplies) as Array<{ status: string | null }>;
     return {
-      pending: all.filter(r => r.status === "queued_review").length,
-      autoReplied: all.filter(r => r.status === "auto_replied").length,
-      ignored: all.filter(r => r.status === "ignored").length,
+      pending: all.filter((r) => r.status === "queued_review").length,
+      autoReplied: all.filter((r) => r.status === "auto_replied").length,
+      ignored: all.filter((r) => r.status === "ignored").length,
     };
   }),
 });

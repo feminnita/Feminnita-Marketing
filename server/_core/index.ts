@@ -39,8 +39,11 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
-  // Configure body parser with larger size limit for file uploads
-  app.use(express.json({ limit: "50mb" }));
+  // Configure body parser — captura raw body para validação X-Hub-Signature-256
+  app.use(express.json({
+    limit: "50mb",
+    verify: (req: any, _res, buf) => { req.rawBody = buf; },
+  }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   
   // Inicializar WebSocket para notificações em tempo real
@@ -76,6 +79,21 @@ async function startServer() {
   registerShopeeOAuthRoutes(app);
   // TikTok Shop OAuth routes: /api/tiktok-shop/start, /api/tiktok-shop/callback, /api/tiktok-shop/status
   registerTiktokShopOAuthRoutes(app);
+
+  // Google Drive OAuth: /api/google/start e /api/google/callback
+  const { getGoogleOAuthUrl, exchangeCodeForTokens } = await import("../services/googleDrive");
+  const googleRedirect = (process.env.APP_URL || "http://localhost:3001") + "/api/google/callback";
+  app.get("/api/google/start", (_req, res) => {
+    const url = getGoogleOAuthUrl(googleRedirect);
+    res.redirect(url);
+  });
+  app.get("/api/google/callback", async (req, res) => {
+    const code = req.query.code as string;
+    if (!code) return res.status(400).send("Código ausente");
+    const tokens = await exchangeCodeForTokens(code, googleRedirect);
+    if (!tokens) return res.status(500).send("Falha ao obter tokens do Google");
+    res.send(`<h2>Google Drive conectado!</h2><p>Refresh token obtido. Adicione ao .env:</p><pre>GOOGLE_DRIVE_REFRESH_TOKEN=${tokens.refreshToken}</pre><p><a href="/">Voltar ao sistema</a></p>`);
+  });
   // Bling webhook for real-time inventory sync
   app.post("/api/bling/webhook", handleBlingWebhook);
   // Instagram comments webhook (GET = verificação, POST = eventos)

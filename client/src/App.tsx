@@ -57,6 +57,7 @@ const WhatsAppDisparosPage    = lazy(() => import("@/pages/WhatsAppDisparosPage"
 const ShopeeAdsManagerPage    = lazy(() => import("@/pages/ShopeeAdsManagerPage"));
 const TiktokShopPage          = lazy(() => import("@/pages/TiktokShopPage"));
 const AmazonPage              = lazy(() => import("@/pages/AmazonPage"));
+const CreativeAdsPage         = lazy(() => import("@/pages/CreativeAdsPage"));
 
 function PageLoader() {
   return (
@@ -184,6 +185,8 @@ export default function App() {
         return <TrafficManagerPage />;
       case "/acoes-agentes":
         return <AgentActionsPage />;
+      case "/criativos":
+        return <CreativeAdsPage />;
       case "/shopee-ads":
         return <ShopeeAdsManagerPage />;
       case "/tiktok-shop":

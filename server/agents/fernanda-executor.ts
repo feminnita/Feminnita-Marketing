@@ -8,7 +8,8 @@
  * Token somente-leitura retorna erro 200 com { error: { code: 200 } }.
  */
 
-const META_TOKEN = process.env.META_ACCESS_TOKEN || "";
+// Prefere System User Token (acesso total) — fallback para token de usuário
+const META_TOKEN = process.env.META_SYSTEM_USER_TOKEN || process.env.META_ACCESS_TOKEN || "";
 const AD_ACCOUNT_ID = process.env.META_AD_ACCOUNT_ID || "act_231648936319132";
 const GRAPH_BASE = "https://graph.facebook.com/v20.0";
 
@@ -71,12 +72,18 @@ export async function duplicateCampaign(campaignId: string, newName: string): Pr
 // ─── Upload de imagem ─────────────────────────────────────────────────────────
 
 export async function uploadAdImage(imageUrl: string): Promise<string> {
-  // Baixa a imagem e faz upload para a conta de anúncios
-  const imgRes = await fetch(imageUrl);
-  if (!imgRes.ok) throw new Error(`Não foi possível baixar a imagem: ${imgRes.status}`);
+  let base64: string;
 
-  const buffer = await imgRes.arrayBuffer();
-  const base64 = Buffer.from(buffer).toString("base64");
+  // Suporta data URL inline (base64 direto do Creative Agent)
+  if (imageUrl.startsWith("data:")) {
+    base64 = imageUrl.split(",")[1] || "";
+    if (!base64) throw new Error("Data URL inválida");
+  } else {
+    const imgRes = await fetch(imageUrl);
+    if (!imgRes.ok) throw new Error(`Não foi possível baixar a imagem: ${imgRes.status}`);
+    const buffer = await imgRes.arrayBuffer();
+    base64 = Buffer.from(buffer).toString("base64");
+  }
 
   const data = await metaPost(`${AD_ACCOUNT_ID}/adimages`, {
     bytes: base64,

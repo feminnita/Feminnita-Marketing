@@ -66,6 +66,7 @@ const categorias: Categoria[] = [
       { id: 'email-marketing', label: 'Email Marketing', icon: '📧' },
       { id: 'whatsapp', label: 'WhatsApp', icon: '💬' },
       { id: 'whatsapp-disparos', label: 'Disparo em Massa', icon: '📨', href: '/whatsapp-disparos' },
+      { id: 'criativos', label: 'Criativos — Pipeline IA', icon: '🎨', href: '/criativos' },
       { id: 'ml-ads', label: 'ML Ads — Especialista IA', icon: '🛒', href: '/ml-ads' },
       { id: 'shopee-ads', label: 'Shopee Ads — Especialista IA', icon: '🛍️', href: '/shopee-ads' },
       { id: 'tiktok-shop', label: 'TikTok Shop — Especialista IA', icon: '🎵', href: '/tiktok-shop' },

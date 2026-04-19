@@ -312,7 +312,8 @@ Retorne APENAS JSON:
     maxTokens: 300,
   });
 
-  const content = result.choices[0]?.message?.content || "";
+  const rawContent = result.choices[0]?.message?.content;
+  const content = typeof rawContent === "string" ? rawContent : "";
   const stripped = content.replace(/^```json\s*/i, "").replace(/```\s*$/, "").trim();
   try {
     const m = stripped.match(/\{[\s\S]*\}/);

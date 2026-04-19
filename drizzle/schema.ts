@@ -1459,3 +1459,34 @@ export const instagramCommentReplies = mysqlTable("instagram_comment_replies", {
   updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
 });
 export type InstagramCommentReply = typeof instagramCommentReplies.$inferSelect;
+
+// === AD CREATIVES — PIPELINE FERNANDA: BRIEF → GERAÇÃO → APROVAÇÃO → META ===
+
+export const adCreatives = mysqlTable("ad_creatives", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  briefTitle: varchar("briefTitle", { length: 200 }).notNull(),
+  briefDescription: text("briefDescription").notNull(),
+  campaignType: varchar("campaignType", { length: 100 }),
+  targetAudience: varchar("targetAudience", { length: 200 }),
+  product: varchar("product", { length: 200 }),
+  colorPalette: varchar("colorPalette", { length: 200 }),
+  textOverlay: varchar("textOverlay", { length: 300 }),
+  driveReferenceFolder: varchar("driveReferenceFolder", { length: 100 }),
+  driveReferenceFileId: varchar("driveReferenceFileId", { length: 100 }),
+  imageBase64: longtext("imageBase64"),
+  imageUrl: text("imageUrl"),
+  imageHash: varchar("imageHash", { length: 100 }),
+  generatedHeadline: varchar("generatedHeadline", { length: 200 }),
+  generatedBody: text("generatedBody"),
+  status: mysqlEnum("status", ["pending_generation","generated","pending_approval","approved","rejected","uploading","executed","failed"]).notNull().default("pending_generation"),
+  rejectionReason: text("rejectionReason"),
+  metaAdId: varchar("metaAdId", { length: 100 }),
+  campaignId: varchar("campaignId", { length: 100 }),
+  adSetId: varchar("adSetId", { length: 100 }),
+  errorMessage: varchar("errorMessage", { length: 500 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+export type AdCreative = typeof adCreatives.$inferSelect;
+export type InsertAdCreative = typeof adCreatives.$inferInsert;

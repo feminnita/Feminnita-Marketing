@@ -77,7 +77,7 @@ export async function registerDebugRoutes(app: Express) {
       // Buscar insights por post em paralelo (reach, impressions)
       // Requer instagram_manage_insights — falha silenciosamente se sem permissão
       const posts = await Promise.all(
-        basePosts.map(async (post) => {
+        basePosts.map(async (post: any) => {
           try {
             const insightsUrl = isIgToken
               ? `https://graph.instagram.com/v20.0/${post.id}/insights?metric=reach,impressions&access_token=${token}`
