@@ -17,9 +17,9 @@ const GRAPH_BASE = "https://graph.facebook.com/v20.0";
 
 // ─── Classificação + geração de resposta ─────────────────────────────────────
 
-const SYSTEM_PROMPT = `Você é a Sofia, especialista em Instagram da Feminnita Pijamas — marca de atacado de pijamas para revendedoras.
+const SYSTEM_PROMPT = `Você é a Sofia, especialista em atendimento digital da Feminnita Pijamas — marca de atacado de pijamas para revendedoras.
 
-Sua tarefa: analisar comentários do Instagram da Feminnita e gerar a resposta ideal.
+Sua tarefa: analisar mensagens e comentários recebidos no Instagram, Facebook e Messenger da Feminnita e gerar a resposta ideal.
 
 Sobre a Feminnita:
 - Vende pijamas no atacado para revendedoras (mínimo geralmente 1 kit)
@@ -34,7 +34,7 @@ Regras de resposta:
 - Use o nome da pessoa quando possível
 - Comece com "Oi [nome]!" quando souber o nome, ou "Oi!" quando não souber
 
-Classifique o comentário e responda em JSON:
+Classifique a mensagem e responda em JSON:
 {
   "category": "question" | "compliment" | "complaint" | "spam" | "other",
   "shouldAutoReply": true | false,
@@ -73,7 +73,7 @@ export async function classifyAndGenerateReply(
   }
 }
 
-// ─── Postar resposta via Meta API ─────────────────────────────────────────────
+// ─── Postar resposta a comentário via Meta API ────────────────────────────────
 
 export async function postCommentReply(commentId: string, replyText: string): Promise<void> {
   if (!META_TOKEN) throw new Error("META_ACCESS_TOKEN não configurado");
@@ -86,6 +86,64 @@ export async function postCommentReply(commentId: string, replyText: string): Pr
 
   const data = await res.json() as any;
   if (data.error) throw new Error(`Meta API: ${data.error.message}`);
+}
+
+// ─── Postar resposta via Messenger ────────────────────────────────────────────
+
+export async function postMessengerReply(recipientId: string, replyText: string): Promise<void> {
+  if (!META_TOKEN) throw new Error("META_ACCESS_TOKEN não configurado");
+
+  const res = await fetch(`${GRAPH_BASE}/me/messages?access_token=${META_TOKEN}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      recipient: { id: recipientId },
+      message: { text: replyText },
+      messaging_type: "RESPONSE",
+    }),
+  });
+
+  const data = await res.json() as any;
+  if (data.error) throw new Error(`Messenger API: ${data.error.message}`);
+}
+
+// ─── Processador de mensagens do Messenger ────────────────────────────────────
+
+export async function processMessengerMessage(event: {
+  senderId: string;
+  senderName: string;
+  messageText: string;
+  messageId: string;
+}): Promise<void> {
+  if (!event.messageText?.trim()) return;
+
+  console.log(`[SofiaMessenger] Mensagem de ${event.senderName}: "${event.messageText.slice(0, 80)}"`);
+
+  let classification: ClassificationResult;
+  try {
+    classification = await classifyAndGenerateReply(event.messageText, event.senderName);
+  } catch (err: any) {
+    console.error("[SofiaMessenger] Erro na classificação:", err.message);
+    return;
+  }
+
+  if (classification.category === "spam" || !classification.shouldAutoReply || !classification.reply) {
+    console.log(`[SofiaMessenger] Mensagem ignorada/fila: categoria=${classification.category}`);
+    return;
+  }
+
+  // Delay menor no Messenger (15-45s) — usuário espera resposta mais rápida
+  const delayMs = (15 + Math.floor(Math.random() * 30)) * 1000;
+  console.log(`[SofiaMessenger] Respondendo em ${Math.round(delayMs / 1000)}s`);
+
+  setTimeout(async () => {
+    try {
+      await postMessengerReply(event.senderId, classification.reply!);
+      console.log(`[SofiaMessenger] ✓ Respondido: "${classification.reply}"`);
+    } catch (err: any) {
+      console.error("[SofiaMessenger] Erro ao responder:", err.message);
+    }
+  }, delayMs);
 }
 
 // ─── Processador principal (chamado pelo webhook) ─────────────────────────────

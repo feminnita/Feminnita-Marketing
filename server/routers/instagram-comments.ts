@@ -8,7 +8,7 @@ import { z } from "zod";
 import { getDb } from "../db";
 import { instagramCommentReplies } from "../../drizzle/schema";
 import { eq, desc, or } from "drizzle-orm";
-import { processInstagramComment, postCommentReply } from "../agents/sofia-comments-agent";
+import { processInstagramComment, postCommentReply, processMessengerMessage } from "../agents/sofia-comments-agent";
 import type { Express } from "express";
 
 // ─── Webhook Meta (fora do tRPC) ──────────────────────────────────────────────
@@ -104,19 +104,34 @@ export function registerInstagramWebhook(app: Express) {
     }
   });
 
-  // POST /api/facebook/webhook — eventos de comentários da Página do Facebook
+  // POST /api/facebook/webhook — eventos de comentários e Messenger da Página
   app.post("/api/facebook/webhook", async (req, res) => {
     res.status(200).send("EVENT_RECEIVED");
     try {
       const body = req.body;
       if (body.object !== "page") return;
+      const pageId = process.env.META_PAGE_ID || "";
+
       for (const entry of body.entry || []) {
+        // ── Messenger ────────────────────────────────────────────────────────
+        for (const msg of entry.messaging || []) {
+          if (!msg.message?.text) continue;
+          if (msg.sender?.id === pageId) continue; // ignora mensagens da própria página
+          console.log(`[MessengerWebhook] Mensagem de ${msg.sender?.id}: "${msg.message.text.slice(0, 80)}"`);
+          await processMessengerMessage({
+            senderId: msg.sender.id,
+            senderName: msg.sender?.name || "",
+            messageText: msg.message.text,
+            messageId: msg.message.mid || "",
+          });
+        }
+
+        // ── Comentários em posts/vídeos ──────────────────────────────────────
         for (const change of entry.changes || []) {
           if (change.field !== "feed") continue;
           const val = change.value;
           if (val?.item !== "comment" || val?.verb !== "add") continue;
           if (!val?.comment_id || !val?.message) continue;
-          const pageId = process.env.META_PAGE_ID || "";
           if (pageId && val.from?.id === pageId) continue;
           console.log(`[FacebookWebhook] Comentário de ${val.from?.name}: "${val.message?.slice(0, 80)}"`);
           await processInstagramComment({
@@ -130,6 +145,31 @@ export function registerInstagramWebhook(app: Express) {
       }
     } catch (err: any) {
       console.error("[FacebookWebhook] Erro:", err.message);
+    }
+  });
+
+  /**
+   * POST /api/admin/facebook-subscribe — assina a Página do Facebook no app
+   * Requer pageAccessToken no body (obtido via Graph API Explorer)
+   */
+  app.post("/api/admin/facebook-subscribe", async (req, res) => {
+    const { pageAccessToken } = req.body || {};
+    if (!pageAccessToken) return res.status(400).json({ error: "pageAccessToken obrigatório" });
+
+    const pageId = process.env.META_PAGE_ID || "";
+    if (!pageId) return res.status(500).json({ error: "META_PAGE_ID não configurado" });
+
+    try {
+      const response = await fetch(
+        `https://graph.facebook.com/v20.0/${pageId}/subscribed_apps?subscribed_fields=feed,messages&access_token=${pageAccessToken}`,
+        { method: "POST" }
+      );
+      const data = await response.json() as any;
+      if (data.error) return res.status(400).json({ error: data.error.message });
+      console.log("[FacebookSubscribe] Página assinada com sucesso:", data);
+      return res.json({ ok: true, result: data });
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message });
     }
   });
 }
