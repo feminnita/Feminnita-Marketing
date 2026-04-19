@@ -21,6 +21,7 @@ const CollaboratorsManagement = lazy(() => import("@/pages/CollaboratorsManageme
 const ConfigureCredentials    = lazy(() => import("@/pages/ConfigureCredentials"));
 const IntegrationSetup        = lazy(() => import("@/pages/IntegrationSetup"));
 const CanvaOAuth              = lazy(() => import("@/pages/CanvaOAuth"));
+const BeatrizPage             = lazy(() => import("@/pages/BeatrizPage"));
 const MetaCapiSetup           = lazy(() => import("@/pages/MetaCapiSetup"));
 const TermosServico           = lazy(() => import("@/pages/TermosServico"));
 const Privacidade             = lazy(() => import("@/pages/Privacidade"));
@@ -137,6 +138,8 @@ export default function App() {
         return <CanvaOAuth />;
       case "/api/canva/callback":
         return <CanvaOAuth />;
+      case "/beatriz":
+        return <BeatrizPage />;
       case "/meta-capi-setup":
         return <MetaCapiSetup />;
       case "/social-media-scheduler":

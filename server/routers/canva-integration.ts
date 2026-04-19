@@ -3,6 +3,18 @@ import { z } from "zod";
 import { getDb } from "../db";
 import { oauthCredentials, designHistory } from "../../drizzle/schema";
 import { eq, and, desc } from "drizzle-orm";
+import { generateAdCopy } from "../agents/beatriz-agent";
+
+const CANVA_API = "https://api.canva.com/rest/v1";
+
+async function getCanvaToken(userId: number): Promise<string> {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const rows = await db.select().from(oauthCredentials)
+    .where(and(eq(oauthCredentials.platform, "canva"), eq(oauthCredentials.userId, userId)));
+  if (!rows.length || !rows[0].accessToken) throw new Error("Canva não conectado. Acesse /canva-oauth para autorizar.");
+  return rows[0].accessToken;
+}
 
 /**
  * Canva API Integration Router
@@ -41,7 +53,7 @@ export const canvaIntegrationRouter = {
           throw new Error("Credenciais do Canva não configuradas");
         }
 
-        const accessToken = credentials[0].clientSecret;
+        const accessToken = credentials[0].accessToken;
 
         // Chamar Canva API para criar o design
         try {
@@ -329,6 +341,93 @@ export const canvaIntegrationRouter = {
       }
     }),
 
+  /**
+   * Beatriz gera copy + cria design no Canva para Meta Ads
+   */
+  generateAdCreative: protectedProcedure
+    .input(z.object({
+      productName: z.string(),
+      campaignContext: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }: any) => {
+      const token = await getCanvaToken(ctx.user.id);
+
+      // 1. Beatriz gera copy
+      const context = `Produto: ${input.productName}. ${input.campaignContext || "Anúncio para Meta Ads, público revendedoras atacado pijamas."}`;
+      const copy = await generateAdCopy(context);
+
+      // 2. Cria design 1080x1080 no Canva
+      const title = `Criativo — ${input.productName} — ${new Date().toLocaleDateString("pt-BR")}`;
+      const canvaRes = await fetch(`${CANVA_API}/designs`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ title, design_type: { name: "social_media" } }),
+      });
+
+      let designId: string | null = null;
+      let editUrl: string | null = null;
+
+      if (canvaRes.ok) {
+        const data = await canvaRes.json() as any;
+        designId = data.design?.id ?? null;
+        editUrl = data.design?.urls?.edit_url ?? null;
+      } else {
+        const err = await canvaRes.text();
+        console.warn("[Canva] createDesign:", canvaRes.status, err);
+      }
+
+      return {
+        success: true,
+        copy,
+        designId,
+        editUrl,
+        title,
+      };
+    }),
+
+  /**
+   * Exporta design do Canva como PNG e retorna URL de download
+   */
+  exportCreative: protectedProcedure
+    .input(z.object({ designId: z.string() }))
+    .mutation(async ({ ctx, input }: any) => {
+      const token = await getCanvaToken(ctx.user.id);
+
+      const res = await fetch(`${CANVA_API}/exports`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ design_id: input.designId, format: { type: "png" } }),
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`Erro ao exportar: ${res.status} — ${err}`);
+      }
+
+      const data = await res.json() as any;
+      return { exportId: data.job?.id, status: data.job?.status, urls: data.job?.export_url };
+    }),
+
+  /**
+   * Verifica status do export e retorna URL de download quando pronto
+   */
+  getExportStatus: protectedProcedure
+    .input(z.object({ exportId: z.string() }))
+    .query(async ({ ctx, input }: any) => {
+      const token = await getCanvaToken(ctx.user.id);
+
+      const res = await fetch(`${CANVA_API}/exports/${input.exportId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error(`Erro ao checar export: ${res.status}`);
+      const data = await res.json() as any;
+      return {
+        status: data.job?.status,
+        downloadUrl: data.job?.urls?.[0] ?? null,
+      };
+    }),
+
   updateDesignStatus: protectedProcedure
     .input(z.object({
       id: z.number(),
@@ -376,7 +475,7 @@ export const canvaIntegrationRouter = {
           throw new Error("Credenciais do Canva não configuradas");
         }
 
-        const accessToken = credentials[0].clientSecret;
+        const accessToken = credentials[0].accessToken;
         const designs = [];
 
         for (const post of input.posts) {

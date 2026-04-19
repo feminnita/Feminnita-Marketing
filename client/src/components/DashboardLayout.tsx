@@ -329,8 +329,8 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
-                  <SidebarMenuSubButton onClick={() => setLocation("/agente/beatriz")}>
-                    <Brain className="h-3 w-3" /> Beatriz — Conteúdo
+                  <SidebarMenuSubButton onClick={() => setLocation("/beatriz")}>
+                    <Brain className="h-3 w-3" /> Beatriz — Criativos
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
