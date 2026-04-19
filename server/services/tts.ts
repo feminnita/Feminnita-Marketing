@@ -7,26 +7,29 @@
  */
 
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY || "";
-const MODEL_ID = "eleven_multilingual_v2";
+
+// eleven_flash_v2_5 — mais rápido, suporta PT-BR, disponível em todos os planos pagos
+// eleven_multilingual_v2 — melhor qualidade mas mais lento
+const MODEL_ID = process.env.ELEVENLABS_MODEL_ID || "eleven_flash_v2_5";
 
 // ─── Mapeamento de vozes por agente ──────────────────────────────────────────
-// Voice IDs padrão — todos usam multilingual v2, que fala português BR naturalmente.
-// Para personalizar: acesse elevenlabs.io/app/voice-library, escolha uma voz,
-// copie o Voice ID e adicione ao .env: ELEVENLABS_VOICE_ID_CAROL=xxxx
+// "Sarah" (EXAVITQu4vr4xnSDxMaL) — voz feminina estável disponível em todos os planos.
+// Rachel (21m00Tcm4TlvDq8ikWAM) foi descontinuada em alguns planos.
+// Para personalizar: copie o Voice ID do elevenlabs.io e adicione ao .env do VPS:
+// ELEVENLABS_VOICE_ID=<voice_id>
+
+const DEFAULT_VOICE = process.env.ELEVENLABS_VOICE_ID || "EXAVITQu4vr4xnSDxMaL";
 
 const VOICE_MAP: Record<string, string> = {
-  // Todas as vozes usam "Rachel" (21m00Tcm4TlvDq8ikWAM) por padrão — disponível em todos os planos ElevenLabs.
-  // Para personalizar cada agente, adicione no .env do VPS:
-  // ELEVENLABS_VOICE_ID_CAROL=<voice_id>  etc.
-  fernanda: process.env.ELEVENLABS_VOICE_ID || "21m00Tcm4TlvDq8ikWAM",
-  carol:    process.env.ELEVENLABS_VOICE_ID_CAROL    || "21m00Tcm4TlvDq8ikWAM",
-  renata:   process.env.ELEVENLABS_VOICE_ID_RENATA   || "21m00Tcm4TlvDq8ikWAM",
-  vanessa:  process.env.ELEVENLABS_VOICE_ID_VANESSA  || "21m00Tcm4TlvDq8ikWAM",
-  luiza:    process.env.ELEVENLABS_VOICE_ID_LUIZA    || "21m00Tcm4TlvDq8ikWAM",
-  sofia:    process.env.ELEVENLABS_VOICE_ID_SOFIA    || "21m00Tcm4TlvDq8ikWAM",
-  beatriz:  process.env.ELEVENLABS_VOICE_ID_BEATRIZ  || "21m00Tcm4TlvDq8ikWAM",
-  clara:    process.env.ELEVENLABS_VOICE_ID_CLARA    || "21m00Tcm4TlvDq8ikWAM",
-  mariana:  process.env.ELEVENLABS_VOICE_ID_MARIANA  || "21m00Tcm4TlvDq8ikWAM",
+  fernanda: DEFAULT_VOICE,
+  carol:    process.env.ELEVENLABS_VOICE_ID_CAROL    || DEFAULT_VOICE,
+  renata:   process.env.ELEVENLABS_VOICE_ID_RENATA   || DEFAULT_VOICE,
+  vanessa:  process.env.ELEVENLABS_VOICE_ID_VANESSA  || DEFAULT_VOICE,
+  luiza:    process.env.ELEVENLABS_VOICE_ID_LUIZA    || DEFAULT_VOICE,
+  sofia:    process.env.ELEVENLABS_VOICE_ID_SOFIA    || DEFAULT_VOICE,
+  beatriz:  process.env.ELEVENLABS_VOICE_ID_BEATRIZ  || DEFAULT_VOICE,
+  clara:    process.env.ELEVENLABS_VOICE_ID_CLARA    || DEFAULT_VOICE,
+  mariana:  process.env.ELEVENLABS_VOICE_ID_MARIANA  || DEFAULT_VOICE,
 };
 
 export function getVoiceId(agentName?: string): string {
@@ -62,6 +65,7 @@ export async function textToSpeech(text: string, agentName?: string): Promise<Bu
 
   if (!res.ok) {
     const err = await res.text();
+    console.error(`[TTS] ElevenLabs erro ${res.status} (voice: ${voiceId}, model: ${MODEL_ID}):`, err);
     throw new Error(`ElevenLabs erro ${res.status}: ${err}`);
   }
 
