@@ -1,4 +1,4 @@
-import { invokeLLM } from "../services/llm";
+import { invokeLLM } from "../_core/llm";
 import { getDb } from "../db";
 import { agentMemory } from "../../drizzle/schema";
 import { eq, and, desc } from "drizzle-orm";
