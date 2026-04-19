@@ -299,6 +299,14 @@ export default function AdsManagerPage() {
     }
   }, [evalQuery.data?.status]);
 
+  // ── Auto-selecionar avaliação mais recente concluída ──
+  useEffect(() => {
+    if (listQuery.data?.length > 0 && !activeEvalId) {
+      const done = (listQuery.data as any[]).find((e) => e.status === "done");
+      if (done) setActiveEvalId(done.id);
+    }
+  }, [listQuery.data]);
+
   // ── Scroll do chat ──
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -328,14 +336,22 @@ export default function AdsManagerPage() {
 
       {/* ── Header ── */}
       <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <BarChart3 className="w-7 h-7 text-[#8B2635]" />
-            Gestor de Tráfego Meta Ads
-          </h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Avalia sua conta e recomenda ações — sem mexer em nada sem sua aprovação.
-          </p>
+        <div className="flex items-center gap-4">
+          <img
+            src="/agents/fernanda.jpg"
+            alt="Fernanda"
+            className="w-16 h-20 rounded-xl object-cover object-top border-2 shadow-md flex-shrink-0"
+            style={{ borderColor: '#8B2635' }}
+          />
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              Fernanda
+              <span className="text-sm font-normal text-gray-400">— Meta Ads</span>
+            </h1>
+            <p className="text-gray-500 text-sm mt-1">
+              Avalia sua conta e recomenda ações — sem mexer em nada sem sua aprovação.
+            </p>
+          </div>
         </div>
 
         <button
