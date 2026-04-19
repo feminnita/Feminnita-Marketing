@@ -392,6 +392,11 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/knowledge-center")}>
+                    <Brain className="h-3 w-3" /> Central de Conhecimento
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
                   <SidebarMenuSubButton onClick={() => setLocation("/integration-guide")}>
                     <BookOpen className="h-3 w-3" /> Guia de Integrações
                   </SidebarMenuSubButton>
