@@ -71,6 +71,7 @@ import { metaAdsCampaignsRouter } from "./routers/meta-ads-campaigns";
 import { marketResearchRouter } from "./routers/market-research";
 import { assetLibraryRouter } from "./routers/asset-library";
 import { afiliadasRouter } from "./routers/afiliadas";
+import { instagramCommentsRouter } from "./routers/instagram-comments";
 import { abandonoRecoveryRouter } from "./routers/abandono-recovery";
 import { brandBookRouter } from "./routers/brand-book";
 import { dropsRouter } from "./routers/drops";
@@ -201,6 +202,7 @@ export const appRouter = router({
   marketResearch: marketResearchRouter,
   assetLibrary: assetLibraryRouter,
   afiliadas: afiliadasRouter,
+  instagramComments: instagramCommentsRouter,
   abandonoRecovery: abandonoRecoveryRouter,
   brandBook: brandBookRouter,
   drops: dropsRouter,

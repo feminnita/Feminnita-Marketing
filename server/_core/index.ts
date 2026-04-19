@@ -7,6 +7,7 @@ import { registerOAuthRoutes, registerDebugRoutes } from "./oauth";
 import { registerMLOAuthRoutes } from "../routers/ml-oauth";
 import { registerShopeeOAuthRoutes } from "../routers/shopee-oauth";
 import { registerTiktokShopOAuthRoutes } from "../routers/tiktok-shop-oauth";
+import { registerInstagramWebhook } from "../routers/instagram-comments";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -77,6 +78,8 @@ async function startServer() {
   registerTiktokShopOAuthRoutes(app);
   // Bling webhook for real-time inventory sync
   app.post("/api/bling/webhook", handleBlingWebhook);
+  // Instagram comments webhook (GET = verificação, POST = eventos)
+  registerInstagramWebhook(app);
   
   // Baileys debug routes
   setupBaileysDebugRoutes(app);

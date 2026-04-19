@@ -1440,3 +1440,22 @@ export const amazonEvaluationMessages = mysqlTable("amazon_evaluation_messages",
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 export type AmazonEvaluationMessage = typeof amazonEvaluationMessages.$inferSelect;
+
+// ─── Comentários Instagram + Respostas Automáticas ───────────────────────────
+
+export const instagramCommentReplies = mysqlTable("instagram_comment_replies", {
+  id: int("id").autoincrement().primaryKey(),
+  commentId: varchar("commentId", { length: 100 }).notNull().unique(),
+  postId: varchar("postId", { length: 100 }),
+  authorName: varchar("authorName", { length: 200 }),
+  authorId: varchar("authorId", { length: 100 }),
+  commentText: text("commentText").notNull(),
+  category: varchar("category", { length: 50 }), // question|compliment|complaint|spam|other
+  replyText: text("replyText"),
+  status: mysqlEnum("status", ["pending", "auto_replied", "queued_review", "ignored", "rejected"]).notNull().default("pending"),
+  errorMessage: varchar("errorMessage", { length: 500 }),
+  repliedAt: timestamp("repliedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+export type InstagramCommentReply = typeof instagramCommentReplies.$inferSelect;
