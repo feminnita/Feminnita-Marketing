@@ -16,6 +16,7 @@ export default function CanvaOAuth() {
   // Get authorization URL
   const getAuthUrlQuery = trpc.canvaOAuth.getAuthorizationUrl.useQuery();
   const handleCallbackMutation = trpc.canvaOAuth.handleCallback.useMutation();
+  const meQuery = trpc.auth.me.useQuery();
 
   // Check if we're returning from Canva OAuth callback
   useEffect(() => {
@@ -43,12 +44,10 @@ export default function CanvaOAuth() {
   const handleCallback = async (code: string, verifier: string) => {
     try {
       setIsAuthorizing(true);
-      const user = await trpc.auth.me.useQuery();
-      
       const result = await handleCallbackMutation.mutateAsync({
         code,
         codeVerifier: verifier,
-        userId: user.data?.id?.toString() || "",
+        userId: meQuery.data?.id?.toString() || "1",
       });
 
       toast.success(result.message);

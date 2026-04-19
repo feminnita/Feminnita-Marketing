@@ -24,7 +24,7 @@ export const canvaOAuthRouter = router({
     // For now, we'll return both and let the client store the verifier
     
     const clientId = "OC-AZwe5Lb9Mj6o";
-    const redirectUri = "https://feminnita-5s7usnyn.manus.space/api/canva/callback";
+    const redirectUri = process.env.CANVA_REDIRECT_URI || "https://marketing.feminnita.com.br/api/canva/callback";
     
     const authUrl = new URL("https://www.canva.com/api/oauth/authorize");
     authUrl.searchParams.append("client_id", clientId);
