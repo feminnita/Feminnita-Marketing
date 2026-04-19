@@ -319,6 +319,11 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/gestor-trafego")}>
+                    <Bot className="h-3 w-3" /> Fernanda — Meta Ads
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
                   <SidebarMenuSubButton onClick={() => setLocation("/agente/sofia")}>
                     <TrendingUp className="h-3 w-3" /> Sofia — Instagram
                   </SidebarMenuSubButton>
@@ -330,7 +335,7 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
                   <SidebarMenuSubButton onClick={() => setLocation("/agente/clara")}>
-                    <BarChart2 className="h-3 w-3" /> Clara — Competição
+                    <BarChart2 className="h-3 w-3" /> Clara — Análise de Mercado
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
