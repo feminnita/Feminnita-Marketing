@@ -25,6 +25,9 @@ import {
   Eye,
   Volume2,
   StopCircle,
+  ThumbsUp,
+  ThumbsDown,
+  Sparkles,
 } from "lucide-react";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -180,6 +183,25 @@ export default function AdsManagerPage() {
   // ── Queries ──
   const campaignsQuery = trpc.adsManager.listCampaigns.useQuery(undefined, {
     refetchInterval: 5 * 60 * 1000, // atualiza a cada 5min
+  });
+
+  const pendingActionsQuery = trpc.agentActions.listPending.useQuery(undefined, {
+    refetchInterval: 30 * 1000,
+  });
+
+  const approveMut = trpc.agentActions.approve.useMutation({
+    onSuccess: () => { toast.success("Ação aprovada!"); pendingActionsQuery.refetch(); },
+    onError: (err) => toast.error(`Erro: ${err.message}`),
+  });
+
+  const rejectMut = trpc.agentActions.reject.useMutation({
+    onSuccess: () => { toast("Ação rejeitada."); pendingActionsQuery.refetch(); },
+    onError: (err) => toast.error(`Erro: ${err.message}`),
+  });
+
+  const approveAllMut = trpc.agentActions.approveMany.useMutation({
+    onSuccess: (data) => { toast.success(`${data.count} ações aprovadas!`); pendingActionsQuery.refetch(); },
+    onError: (err) => toast.error(`Erro: ${err.message}`),
   });
 
   const listQuery = trpc.adsManager.listEvaluations.useQuery(undefined, {
@@ -420,6 +442,80 @@ export default function AdsManagerPage() {
           </div>
         )}
       </div>
+
+      {/* ── Painel de Aprovação da Fernanda ── */}
+      {((pendingActionsQuery.data?.length ?? 0) > 0) && (
+        <div className="bg-white border border-amber-200 rounded-xl p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold text-gray-800 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              Ações Propostas pela Fernanda
+              <span className="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-0.5 rounded-full">
+                {pendingActionsQuery.data!.length} pendente{pendingActionsQuery.data!.length !== 1 ? "s" : ""}
+              </span>
+            </h2>
+            <button
+              onClick={() => approveAllMut.mutate({ ids: pendingActionsQuery.data!.map((a: any) => a.id) })}
+              disabled={approveAllMut.isPending}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+            >
+              {approveAllMut.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <ThumbsUp className="w-3 h-3" />}
+              Aprovar todas
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {pendingActionsQuery.data!.map((action: any) => (
+              <div key={action.id} className="border border-gray-100 rounded-lg p-4 bg-gray-50">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-semibold border ${
+                        action.priority === "alta"
+                          ? "bg-red-100 text-red-800 border-red-200"
+                          : action.priority === "media"
+                          ? "bg-yellow-100 text-yellow-800 border-yellow-200"
+                          : "bg-green-100 text-green-800 border-green-200"
+                      }`}>
+                        {action.priority === "alta" ? "Alta" : action.priority === "media" ? "Média" : "Baixa"}
+                      </span>
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">
+                        {action.actionType}
+                      </span>
+                      <span className="text-xs text-gray-400">{action.date}</span>
+                    </div>
+                    <p className="text-sm font-medium text-gray-800 mb-1">{action.title}</p>
+                    {action.description && action.description !== action.title && (
+                      <p className="text-xs text-gray-500 leading-relaxed">{action.description}</p>
+                    )}
+                    {action.estimatedImpact && (
+                      <p className="text-xs text-[#8B2635] mt-1 font-medium">{action.estimatedImpact}</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <button
+                      onClick={() => approveMut.mutate({ id: action.id })}
+                      disabled={approveMut.isPending}
+                      title="Aprovar"
+                      className="p-2 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 disabled:opacity-50 transition-colors"
+                    >
+                      <ThumbsUp className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => rejectMut.mutate({ id: action.id })}
+                      disabled={rejectMut.isPending}
+                      title="Rejeitar"
+                      className="p-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50 transition-colors"
+                    >
+                      <ThumbsDown className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ── Histórico ── */}

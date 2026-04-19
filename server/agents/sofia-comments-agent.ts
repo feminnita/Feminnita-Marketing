@@ -84,7 +84,10 @@ export async function postCommentReply(commentId: string, replyText: string): Pr
 
   if (!token) throw new Error("Token Meta não configurado");
 
-  const res = await fetch(`${GRAPH_BASE}/${commentId}/replies`, {
+  // Facebook usa /comments, Instagram usa /replies
+  const endpoint = isFacebook ? "comments" : "replies";
+
+  const res = await fetch(`${GRAPH_BASE}/${commentId}/${endpoint}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ message: replyText, access_token: token }),
