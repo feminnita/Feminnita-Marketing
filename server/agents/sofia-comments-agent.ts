@@ -77,12 +77,17 @@ export async function classifyAndGenerateReply(
 // ─── Postar resposta a comentário via Meta API ────────────────────────────────
 
 export async function postCommentReply(commentId: string, replyText: string): Promise<void> {
-  if (!META_TOKEN) throw new Error("META_ACCESS_TOKEN não configurado");
+  // Facebook comment IDs contêm underscore (ex: 853058534471901_935354972729215)
+  // Instagram comment IDs são numéricos puros
+  const isFacebook = commentId.includes("_");
+  const token = isFacebook ? META_PAGE_TOKEN : META_TOKEN;
+
+  if (!token) throw new Error("Token Meta não configurado");
 
   const res = await fetch(`${GRAPH_BASE}/${commentId}/replies`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: replyText, access_token: META_TOKEN }),
+    body: JSON.stringify({ message: replyText, access_token: token }),
   });
 
   const data = await res.json() as any;
