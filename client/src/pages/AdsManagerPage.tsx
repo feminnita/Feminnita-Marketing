@@ -9,7 +9,6 @@ import {
   ChevronUp,
   Clock,
   Loader2,
-  MessageSquare,
   PlayCircle,
   RefreshCw,
   Send,
@@ -335,23 +334,11 @@ export default function AdsManagerPage() {
       <MorningBriefing />
 
       {/* ── Header ── */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-4">
-          <img
-            src="/agents/fernanda.jpg"
-            alt="Fernanda"
-            className="w-16 h-20 rounded-xl object-cover object-top border-2 shadow-md flex-shrink-0"
-            style={{ borderColor: '#8B2635' }}
-          />
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-              Fernanda
-              <span className="text-sm font-normal text-gray-400">— Meta Ads</span>
-            </h1>
-            <p className="text-gray-500 text-sm mt-1">
-              Avalia sua conta e recomenda ações — sem mexer em nada sem sua aprovação.
-            </p>
-          </div>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <h1 className="text-lg font-bold text-gray-700 flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-[#8B2635]" /> Meta Ads
+          </h1>
         </div>
 
         <button
@@ -366,6 +353,80 @@ export default function AdsManagerPage() {
           )}
           {polling ? "Analisando…" : "Avaliar Conta Agora"}
         </button>
+      </div>
+
+      {/* ── Fernanda + Chat ── */}
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+        <div className="flex items-center gap-4 px-5 py-4 border-b border-gray-100" style={{ background: 'linear-gradient(to right, #fff5f6, #fff)' }}>
+          <img src="/agents/fernanda.jpg" alt="Fernanda" className="w-14 h-20 rounded-xl object-cover object-top border-2 shadow-md flex-shrink-0" style={{ borderColor: '#8B2635' }} />
+          <div className="flex-1">
+            <p className="font-bold text-gray-900 text-lg">Fernanda</p>
+            <p className="text-xs text-gray-400 mt-0.5">Especialista Meta Ads · Feminnita</p>
+          </div>
+          <button
+            onClick={() => triggerMut.mutate()}
+            disabled={triggerMut.isPending || polling}
+            className="flex items-center gap-2 px-4 py-2 bg-[#8B2635] text-white rounded-lg font-medium hover:bg-[#7a1f2d] disabled:opacity-50 transition-colors text-sm"
+          >
+            {polling ? <Loader2 className="w-4 h-4 animate-spin" /> : <PlayCircle className="w-4 h-4" />}
+            {polling ? "Analisando…" : "Avaliar Conta"}
+          </button>
+        </div>
+
+        {/* Mensagens */}
+        <div className="p-4 space-y-3 overflow-y-auto" style={{ height: '420px' }}>
+          {messages.length === 0 && !activeEvalId && (
+            <div className="flex flex-col items-center justify-center h-full text-center text-gray-400">
+              <Bot className="w-10 h-10 mb-3 opacity-30" />
+              <p className="text-sm">Clique em <strong>"Avaliar Conta"</strong> para ativar o chat com a Fernanda.</p>
+            </div>
+          )}
+          {messages.length === 0 && activeEvalId && (
+            <p className="text-xs text-gray-400 text-center pt-8">Faça uma pergunta sobre suas campanhas.</p>
+          )}
+          {messages.map((msg) => (
+            <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.role === "user" ? "bg-[#8B2635] text-white" : "bg-gray-100 text-gray-800"}`}>
+                {msg.role === "assistant" && (
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <span className="flex items-center gap-1.5 text-xs text-gray-500 font-semibold">
+                      <img src="/agents/fernanda.jpg" alt="" className="w-5 h-6 rounded object-cover object-top" />
+                      Fernanda
+                    </span>
+                    <button onClick={() => handleSpeak(msg.id, extractAnalysisText(msg.content))} className="text-[#8B2635] hover:text-[#6d1e2a] transition-colors" title={playingMsgId === msg.id ? "Parar" : "Ouvir"}>
+                      {playingMsgId === msg.id ? <StopCircle className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                    </button>
+                  </div>
+                )}
+                <p className="whitespace-pre-wrap">{msg.role === "assistant" ? extractAnalysisText(msg.content) : msg.content}</p>
+              </div>
+            </div>
+          ))}
+          {sendingMsg && (
+            <div className="flex justify-start">
+              <div className="bg-gray-100 rounded-2xl px-4 py-3 text-sm text-gray-500 flex items-center gap-2">
+                <Loader2 className="w-3 h-3 animate-spin" /> Pensando…
+              </div>
+            </div>
+          )}
+          <div ref={chatEndRef} />
+        </div>
+
+        {/* Input */}
+        <div className="flex gap-2 p-4 border-t border-gray-100 bg-gray-50">
+          <input
+            type="text"
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+            placeholder={activeEvalId ? "Pergunte sobre campanhas, criativos, públicos…" : "Inicie uma avaliação para conversar"}
+            className="flex-1 text-sm border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#8B2635]/30 focus:border-[#8B2635] bg-white"
+            disabled={sendingMsg || !activeEvalId}
+          />
+          <button onClick={handleSend} disabled={!chatInput.trim() || sendingMsg || !activeEvalId} className="px-4 py-2.5 bg-[#8B2635] text-white rounded-xl hover:bg-[#7a1f2d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            <Send className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* ── Campanhas ao Vivo ── */}
@@ -586,11 +647,14 @@ export default function AdsManagerPage() {
             </div>
           )}
 
-          {listQuery.data?.length === 0 && (
-            <p className="text-sm text-gray-400">Nenhuma avaliação ainda.</p>
-          )}
-
-          {(listQuery.data || []).map((ev: any) => (
+          {(() => {
+            const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+            const filtered = (listQuery.data || []).filter((ev: any) =>
+              ev.status !== "error" && new Date(ev.triggeredAt) >= sevenDaysAgo
+            );
+            if (!listQuery.isLoading && filtered.length === 0)
+              return <p className="text-sm text-gray-400">Nenhuma avaliação nos últimos 7 dias.</p>;
+            return filtered.map((ev: any) => (
             <button
               key={ev.id}
               onClick={() => {
@@ -614,7 +678,8 @@ export default function AdsManagerPage() {
                 <p className="text-xs text-red-500 mt-1">{ev.errorMessage}</p>
               )}
             </button>
-          ))}
+            ));
+          })()}
         </div>
 
         {/* ── Painel principal ── */}
@@ -773,88 +838,6 @@ export default function AdsManagerPage() {
                 </div>
               )}
 
-              {/* Chat com o agente */}
-              <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                <div className="flex items-center gap-2 px-5 py-3 border-b border-gray-100 bg-gray-50">
-                  <MessageSquare className="w-4 h-4 text-[#8B2635]" />
-                  <span className="font-semibold text-gray-700 text-sm">
-                    Converse com o agente sobre esta avaliação
-                  </span>
-                </div>
-
-                {/* Mensagens */}
-                <div className="p-4 space-y-3 max-h-80 overflow-y-auto">
-                  {messages.length === 0 && (
-                    <p className="text-xs text-gray-400 text-center py-4">
-                      Faça uma pergunta sobre as campanhas ou peça mais detalhes sobre alguma recomendação.
-                    </p>
-                  )}
-                  {messages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-                    >
-                      <div
-                        className={`max-w-[85%] rounded-xl px-4 py-2.5 text-sm leading-relaxed ${
-                          msg.role === "user"
-                            ? "bg-[#8B2635] text-white"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {msg.role === "assistant" && (
-                          <div className="flex items-center justify-between gap-1 mb-1">
-                            <span className="flex items-center gap-1 text-xs text-gray-500 font-medium">
-                              <img src="/agents/fernanda.jpg" alt="Fernanda" className="w-5 h-7 rounded object-cover object-top border border-slate-200" /> Fernanda
-                            </span>
-                            <button
-                              onClick={() => handleSpeak(msg.id, extractAnalysisText(msg.content))}
-                              className="flex items-center gap-1 text-xs text-[#8B2635] hover:text-[#6d1e2a] transition-colors"
-                              title={playingMsgId === msg.id ? "Parar" : "Ouvir"}
-                            >
-                              {playingMsgId === msg.id ? (
-                                <StopCircle className="w-4 h-4" />
-                              ) : (
-                                <Volume2 className="w-4 h-4" />
-                              )}
-                            </button>
-                          </div>
-                        )}
-                        <p className="whitespace-pre-wrap">
-                          {msg.role === "assistant" ? extractAnalysisText(msg.content) : msg.content}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                  {sendingMsg && (
-                    <div className="flex justify-start">
-                      <div className="bg-gray-100 rounded-xl px-4 py-2.5 text-sm text-gray-500 flex items-center gap-2">
-                        <Loader2 className="w-3 h-3 animate-spin" /> Pensando…
-                      </div>
-                    </div>
-                  )}
-                  <div ref={chatEndRef} />
-                </div>
-
-                {/* Input */}
-                <div className="flex gap-2 p-3 border-t border-gray-100">
-                  <input
-                    type="text"
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-                    placeholder="Ex: Por que o CTR está baixo? O que testar primeiro?"
-                    className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#8B2635]/30 focus:border-[#8B2635]"
-                    disabled={sendingMsg}
-                  />
-                  <button
-                    onClick={handleSend}
-                    disabled={!chatInput.trim() || sendingMsg}
-                    className="p-2 bg-[#8B2635] text-white rounded-lg hover:bg-[#7a1f2d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <Send className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
             </>
           )}
         </div>
