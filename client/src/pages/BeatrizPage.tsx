@@ -7,7 +7,7 @@ export default function BeatrizPage() {
   const [productName, setProductName] = useState("");
   const [campaignContext, setCampaignContext] = useState("");
   const [result, setResult] = useState<{
-    copy: { headline: string; body: string };
+    copy: { headline: string; headlineVariants?: string[]; body: string; imageDescription: string };
     designId: string | null;
     editUrl: string | null;
     title: string;
@@ -100,14 +100,26 @@ export default function BeatrizPage() {
               <Sparkles className="w-4 h-4 text-[#8B2635]" /> Copy gerado pela Beatriz
             </h2>
             <div className="space-y-3">
-              <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-xs text-gray-400 font-medium mb-1">Título (headline)</p>
-                <p className="text-sm font-semibold text-gray-800">{result.copy.headline}</p>
+              <div className="bg-[#fff5f6] border border-rose-100 rounded-lg p-3">
+                <p className="text-xs text-[#8B2635] font-semibold mb-1">✦ Headline Principal (A)</p>
+                <p className="text-sm font-bold text-gray-900">{result.copy.headline}</p>
               </div>
+              {result.copy.headlineVariants?.map((v, i) => (
+                <div key={i} className="bg-gray-50 rounded-lg p-3">
+                  <p className="text-xs text-gray-400 font-medium mb-1">Variante {String.fromCharCode(66 + i)} — A/B Test</p>
+                  <p className="text-sm font-semibold text-gray-700">{v}</p>
+                </div>
+              ))}
               <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-xs text-gray-400 font-medium mb-1">Texto do anúncio</p>
+                <p className="text-xs text-gray-400 font-medium mb-1">Texto do anúncio (body)</p>
                 <p className="text-sm text-gray-700">{result.copy.body}</p>
               </div>
+              {result.copy.imageDescription && (
+                <div className="bg-blue-50 rounded-lg p-3">
+                  <p className="text-xs text-blue-600 font-medium mb-1">Descrição do criativo visual</p>
+                  <p className="text-sm text-blue-800 italic">{result.copy.imageDescription}</p>
+                </div>
+              )}
             </div>
           </div>
 
