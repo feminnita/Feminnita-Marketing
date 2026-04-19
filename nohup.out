@@ -1,0 +1,43 @@
+nohup: ignoring input
+[WebSocket] Servidor WebSocket inicializado
+[WebSocket] Inicializado com sucesso
+[Baileys] Sistema de Baileys pronto para receber conexões
+[Baileys] Startup concluído com sucesso
+[Baileys] Inicializado com sucesso no startup
+[Agents] Iniciando todos os agentes de automação...
+[SyncAgent] Agente iniciado (Bling=60min, Meta=30min)
+[SyncAgent] Iniciando sync Bling...
+[SyncAgent] Iniciando sync Meta Ads...
+[Agents] SyncAgent iniciado
+[TokenRefresh] Agente iniciado (intervalo=2h, limiar=24h)
+[TokenRefresh] Verificando tokens próximos do vencimento...
+[Agents] TokenRefresh iniciado
+[ContentAgent] Agente iniciado. Verificando a cada 10 minutos.
+[Agents] ContentAgent iniciado
+[AlertAgent] Agente iniciado. Verificando a cada 15 minutos.
+[Agents] AlertAgent iniciado
+[PerformanceAgent] Agente iniciado (roda diariamente às 00:00, verifica a cada 5min)
+[Agents] PerformanceAgent iniciado
+[PublicationWorker] Worker iniciado. Verificando a cada 2 minutos.
+[Agents] PublicationWorker iniciado
+[MarketResearch] Agente iniciado. Roda diariamente às 07:00, verificando a cada 10 minutos.
+[Agents] MarketResearch iniciado
+[Copywriter] Agente iniciado. Processando briefs a cada 30 minutos.
+[Agents] Copywriter iniciado
+[CreativeTeam] Agente iniciado. Roda toda segunda-feira às 08:00.
+[Agents] CreativeTeam iniciado
+[LaunchAgent] Iniciado. Intervalo: 5 minutos.
+[Agents] LaunchAgent iniciado
+[InfluencerAgent] Próximo ciclo agendado para 20/04/2026, 08:00:00
+[Agents] InfluencerDailyAgent iniciado
+[Agents] Agentes de automação iniciados com sucesso
+[LaunchAgent] Verificando coleções ativas sem briefs gerados...
+Server running on http://localhost:3000/
+[Database] Connected to TiDB Cloud
+[TokenRefresh] 0 token(s) para renovar
+[TokenRefresh] Verificação concluída.
+[SyncAgent] Meta — 0 usuário(s) para sincronizar
+[SyncAgent] Sync Meta Ads concluído.
+[SyncAgent] Bling — 0 usuário(s) para sincronizar
+[SyncAgent] Sync Bling concluído.
+[LaunchAgent] Nenhuma coleção pendente encontrada.

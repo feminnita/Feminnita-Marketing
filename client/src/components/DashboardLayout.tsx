@@ -209,7 +209,11 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                 <PanelLeft className="h-4 w-4 text-muted-foreground" />
               </button>
               {!isCollapsed && (
-                <span className="font-bold text-lg truncate" style={{ color: '#E8C99A' }}>
+                <span
+                  className="font-bold text-lg truncate cursor-pointer hover:opacity-80 transition-opacity"
+                  style={{ color: '#E8C99A' }}
+                  onClick={() => setLocation("/")}
+                >
                   Feminnita
                 </span>
               )}

@@ -323,6 +323,7 @@ export const metaGraphIntegrationRouter = router({
         // Nota: profile_views foi deprecado no API v18+. Usamos apenas impressions,reach.
         let impressions = 0, reach = 0, profileViews = 0;
         let insightsError = "";
+        let insightsByDay: { date: string; impressions: number; reach: number }[] = [];
         try {
           const insightsToken = igAccount.accessToken;
           const isIgToken = insightsToken.startsWith("IGAAX") || insightsToken.startsWith("IGQ") || insightsToken.startsWith("IGD") || insightsToken.startsWith("IG");
@@ -376,7 +377,7 @@ export const metaGraphIntegrationRouter = router({
             insightsError = insightsData.error.message || "Permissão instagram_manage_insights necessária";
             console.warn("[Instagram Insights] Erro final:", insightsError);
           }
-          const insightsByDay = Object.entries(dailyMap)
+          insightsByDay = Object.entries(dailyMap)
             .sort(([a], [b]) => a.localeCompare(b))
             .map(([date, vals]) => ({ date: date.slice(5), ...vals }));
         } catch (e: any) {
