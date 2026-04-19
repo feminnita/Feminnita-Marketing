@@ -61,6 +61,7 @@ export function registerInstagramWebhook(app: Express) {
             if (!val?.id || !val?.text) continue;
             const igAccountId = process.env.META_IG_ACCOUNT_ID || "";
             if (igAccountId && val.from?.id === igAccountId) continue;
+            if (!val.from?.id) continue; // ignora comentários sem autor (respostas da própria conta)
             console.log(`[InstagramWebhook] Comentário de ${val.from?.name}: "${val.text?.slice(0, 80)}"`);
             await processInstagramComment({
               commentId: val.id,
