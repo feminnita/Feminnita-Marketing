@@ -268,3 +268,60 @@ Gere a análise diária de conteúdo e tendências para a Feminnita, com ideias 
     return fallback;
   }
 }
+
+// ─── Geração de copy para anúncio (chamada pela Fernanda) ─────────────────────
+
+export interface AdCopyResult {
+  headline: string;       // título do anúncio (até 40 chars)
+  body: string;           // texto principal (até 125 chars)
+  imageDescription: string; // descrição da imagem ideal para o anúncio
+}
+
+export async function generateAdCopy(context: string): Promise<AdCopyResult> {
+  const result = await invokeLLM({
+    messages: [
+      {
+        role: "system",
+        content: `Você é a Beatriz Santos — especialista em copywriting para anúncios pagos de moda atacado no Meta Ads.
+
+CONTEXTO FEMINNITA:
+- Pijamas de atacado para revendedoras | Ticket médio R$400
+- Tom: feminino, acolhedor, aspiracional mas acessível
+- Público: mulheres que querem renda extra revendendo pijamas
+- Sempre foca no benefício da revendedora: lucro, facilidade, parceria
+
+REGRAS DO COPY:
+- Headline: máximo 40 caracteres — impacto imediato, sem ponto final
+- Body: máximo 125 caracteres — benefício claro + CTA suave
+- NUNCA mencione preço específico
+- Use linguagem coloquial brasileira (você, a gente)
+- imageDescription: descreva em 1 frase a imagem ideal para este anúncio
+
+Retorne APENAS JSON:
+{
+  "headline": "texto do título",
+  "body": "texto principal do anúncio",
+  "imageDescription": "descrição da imagem ideal"
+}`,
+      },
+      {
+        role: "user",
+        content: `Gere o copy para este anúncio:\n\n${context}`,
+      },
+    ],
+    maxTokens: 300,
+  });
+
+  const content = result.choices[0]?.message?.content || "";
+  const stripped = content.replace(/^```json\s*/i, "").replace(/```\s*$/, "").trim();
+  try {
+    const m = stripped.match(/\{[\s\S]*\}/);
+    return JSON.parse(m ? m[0] : stripped) as AdCopyResult;
+  } catch {
+    return {
+      headline: "Revenda Pijamas Feminnita",
+      body: "Peças exclusivas com lucro garantido. Conheça nossa coleção!",
+      imageDescription: "Mulher sorrindo segurando pijama floral feminino",
+    };
+  }
+}

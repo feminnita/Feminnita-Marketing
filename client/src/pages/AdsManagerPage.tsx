@@ -204,6 +204,19 @@ export default function AdsManagerPage() {
     onError: (err) => toast.error(`Erro: ${err.message}`),
   });
 
+  const executeActionMut = trpc.adsManager.executeAction.useMutation({
+    onSuccess: () => { toast.success("Ação executada na Meta Ads!"); pendingActionsQuery.refetch(); },
+    onError: (err) => toast.error(`Erro ao executar: ${err.message}`),
+  });
+
+  function parseCopy(description: string) {
+    try {
+      const parsed = JSON.parse(description);
+      if (parsed?.copy) return parsed.copy as { headline: string; body: string; imageDescription: string };
+    } catch {}
+    return null;
+  }
+
   const listQuery = trpc.adsManager.listEvaluations.useQuery(undefined, {
     refetchInterval: polling ? 3000 : false,
   });
@@ -491,16 +504,43 @@ export default function AdsManagerPage() {
                     {action.estimatedImpact && (
                       <p className="text-xs text-[#8B2635] mt-1 font-medium">{action.estimatedImpact}</p>
                     )}
+                    {/* Copy da Beatriz — só aparece em ações de criação de anúncio */}
+                    {(() => {
+                      const copy = parseCopy(action.description);
+                      if (!copy) return null;
+                      return (
+                        <div className="mt-2 bg-blue-50 border border-blue-100 rounded-lg p-3 space-y-1">
+                          <p className="text-xs font-semibold text-blue-700 flex items-center gap-1">
+                            <Sparkles className="w-3 h-3" /> Copy gerado pela Beatriz
+                          </p>
+                          <p className="text-xs"><span className="font-medium text-gray-600">Título:</span> {copy.headline}</p>
+                          <p className="text-xs"><span className="font-medium text-gray-600">Texto:</span> {copy.body}</p>
+                          <p className="text-xs text-gray-400 italic"><span className="font-medium not-italic text-gray-500">Imagem:</span> {copy.imageDescription}</p>
+                        </div>
+                      );
+                    })()}
                   </div>
-                  <div className="flex gap-2 shrink-0">
-                    <button
-                      onClick={() => approveMut.mutate({ id: action.id })}
-                      disabled={approveMut.isPending}
-                      title="Aprovar"
-                      className="p-2 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 disabled:opacity-50 transition-colors"
-                    >
-                      <ThumbsUp className="w-4 h-4" />
-                    </button>
+                  <div className="flex flex-col gap-2 shrink-0">
+                    {action.actionType === "meta_create_full_ad" ? (
+                      <button
+                        onClick={() => executeActionMut.mutate({ actionId: action.id })}
+                        disabled={executeActionMut.isPending}
+                        title="Aprovar e executar na Meta Ads"
+                        className="flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg bg-[#8B2635] text-white hover:bg-[#7a1f2d] disabled:opacity-50 transition-colors"
+                      >
+                        {executeActionMut.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
+                        Executar
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => approveMut.mutate({ id: action.id })}
+                        disabled={approveMut.isPending}
+                        title="Aprovar"
+                        className="p-2 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 disabled:opacity-50 transition-colors"
+                      >
+                        <ThumbsUp className="w-4 h-4" />
+                      </button>
+                    )}
                     <button
                       onClick={() => rejectMut.mutate({ id: action.id })}
                       disabled={rejectMut.isPending}

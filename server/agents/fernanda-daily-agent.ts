@@ -14,6 +14,7 @@ import { buildMemoryContext, saveMemory } from "../services/agentMemory";
 import { getDb } from "../db";
 import { agentActions } from "../../drizzle/schema";
 import { executeMetaAction } from "./fernanda-executor";
+import { generateAdCopy } from "./beatriz-agent";
 
 const AD_ACCOUNT_ID = process.env.META_AD_ACCOUNT_ID || "act_231648936319132";
 const GRAPH_BASE = "https://graph.facebook.com/v20.0";
@@ -248,7 +249,8 @@ function inferPriority(text: string): "alta" | "media" | "baixa" {
 
 function inferActionType(text: string): string {
   const low = text.toLowerCase();
-  if (/criativo|banner|imagem|vídeo|anúncio/.test(low)) return "criativo";
+  if (/novo anúncio|criar anúncio|novo criativo|criar criativo/.test(low)) return "meta_create_full_ad";
+  if (/criativo|banner|imagem|vídeo/.test(low)) return "criativo";
   if (/orçamento|budget|verba|investimento/.test(low)) return "orcamento";
   if (/público|audience|segmentação/.test(low)) return "segmentacao";
   if (/pausar|desativar|ativar|reativar/.test(low)) return "campanha";
@@ -262,7 +264,6 @@ async function proposeActions(analysis: DailyAnalysisResult, today: string): Pro
     const db = await getDb();
     if (!db) return;
 
-    // Evita duplicatas: busca ações desta data já criadas pela Fernanda
     const { eq, and } = await import("drizzle-orm");
     const existing = await db
       .select({ title: agentActions.title })
@@ -271,28 +272,56 @@ async function proposeActions(analysis: DailyAnalysisResult, today: string): Pro
 
     const existingTitles = new Set(existing.map((r: { title: string | null }) => r.title));
 
-    const toInsert = analysis.recommendations
-      .filter((rec) => rec && rec.trim().length > 0)
-      .map((rec) => {
-        const title = rec.length > 150 ? rec.slice(0, 147) + "…" : rec;
-        return {
-          agentName: "fernanda" as const,
-          date: today,
-          title,
-          description: rec,
-          actionType: inferActionType(rec),
-          priority: inferPriority(rec),
-          estimatedImpact: analysis.roas > 0
-            ? `ROAS atual: ${analysis.roas}x | Spend: R$${analysis.spend.toFixed(2)}`
-            : undefined,
-          status: "pending" as const,
-        };
-      })
-      .filter((row) => !existingTitles.has(row.title));
+    const toInsert: typeof agentActions.$inferInsert[] = [];
+
+    for (const rec of analysis.recommendations) {
+      if (!rec || !rec.trim()) continue;
+      const title = rec.length > 150 ? rec.slice(0, 147) + "…" : rec;
+      if (existingTitles.has(title)) continue;
+
+      const actionType = inferActionType(rec);
+      let description = rec;
+
+      // Se é para criar novo anúncio, chama a Beatriz para gerar o copy
+      if (actionType === "meta_create_full_ad") {
+        try {
+          console.log(`[FernandaDaily] Chamando Beatriz para gerar copy: "${rec.slice(0, 60)}"`);
+          const copy = await generateAdCopy(
+            `Contexto da campanha Feminnita Pijamas:\n${rec}\n\nROAS atual: ${analysis.roas}x | Gasto: R$${analysis.spend.toFixed(2)}`
+          );
+          description = JSON.stringify({
+            recommendation: rec,
+            copy: {
+              headline: copy.headline,
+              body: copy.body,
+              imageDescription: copy.imageDescription,
+            },
+            generatedBy: "beatriz",
+            linkUrl: "https://www.feminnita.com.br",
+          });
+          console.log(`[FernandaDaily] Beatriz gerou copy: "${copy.headline}"`);
+        } catch (err: any) {
+          console.error("[FernandaDaily] Beatriz falhou no copy, usando texto simples:", err.message);
+        }
+      }
+
+      toInsert.push({
+        agentName: "fernanda",
+        date: today,
+        title,
+        description,
+        actionType,
+        priority: inferPriority(rec),
+        estimatedImpact: analysis.roas > 0
+          ? `ROAS atual: ${analysis.roas}x | Spend: R$${analysis.spend.toFixed(2)}`
+          : undefined,
+        status: "pending",
+      });
+    }
 
     if (toInsert.length > 0) {
       await db.insert(agentActions).values(toInsert);
-      console.log(`[FernandaDaily] ${toInsert.length} ações propostas para aprovação`);
+      console.log(`[FernandaDaily] ${toInsert.length} ações propostas (${toInsert.filter(a => a.actionType === "meta_create_full_ad").length} com copy da Beatriz)`);
     }
   } catch (err: any) {
     console.error("[FernandaDaily] Erro ao propor ações:", err.message);
