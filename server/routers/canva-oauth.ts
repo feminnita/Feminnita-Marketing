@@ -55,24 +55,26 @@ export const canvaOAuthRouter = router({
         const redirectUri = process.env.CANVA_REDIRECT_URI || "https://feminnita-5s7usnyn.manus.space/api/canva/callback";
 
         // Exchange authorization code for access token
+        const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+        const bodyParams = new URLSearchParams({
+          grant_type: "authorization_code",
+          code: input.code,
+          code_verifier: input.codeVerifier,
+          redirect_uri: redirectUri,
+        });
+
         const tokenResponse = await fetch("https://api.canva.com/rest/v1/oauth/token", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Authorization": `Basic ${basicAuth}`,
           },
-          body: JSON.stringify({
-            grant_type: "authorization_code",
-            code: input.code,
-            client_id: clientId,
-            client_secret: clientSecret,
-            code_verifier: input.codeVerifier,
-            redirect_uri: redirectUri,
-          }),
+          body: bodyParams.toString(),
         });
 
         if (!tokenResponse.ok) {
-          const error = await tokenResponse.json();
-          throw new Error(`Erro ao obter token: ${error.error_description || error.error}`);
+          const errText = await tokenResponse.text();
+          throw new Error(`Erro ao obter token (${tokenResponse.status}): ${errText}`);
         }
 
         const tokenData = await tokenResponse.json();
@@ -137,17 +139,17 @@ export const canvaOAuthRouter = router({
       const clientId = process.env.CANVA_CLIENT_ID || "";
       const clientSecret = process.env.CANVA_CLIENT_SECRET || "";
 
+      const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
       const tokenResponse = await fetch("https://api.canva.com/rest/v1/oauth/token", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/x-www-form-urlencoded",
+          "Authorization": `Basic ${basicAuth}`,
         },
-        body: JSON.stringify({
+        body: new URLSearchParams({
           grant_type: "refresh_token",
-          refresh_token: credential[0].refreshToken,
-          client_id: clientId,
-          client_secret: clientSecret,
-        }),
+          refresh_token: credential[0].refreshToken!,
+        }).toString(),
       });
 
       if (!tokenResponse.ok) {
