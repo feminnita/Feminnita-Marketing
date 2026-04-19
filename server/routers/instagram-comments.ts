@@ -16,6 +16,18 @@ import type { Express } from "express";
 const WEBHOOK_VERIFY_TOKEN = process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN || "feminnita_webhook_2026";
 
 export function registerInstagramWebhook(app: Express) {
+  // Helper de verificação — reutilizado para Instagram e Facebook
+  const verifyWebhook = (req: any, res: any) => {
+    const mode = req.query["hub.mode"];
+    const token = req.query["hub.verify_token"];
+    const challenge = req.query["hub.challenge"];
+    if (mode === "subscribe" && token === WEBHOOK_VERIFY_TOKEN) {
+      console.log("[Webhook] Verificado com sucesso");
+      return res.status(200).send(challenge);
+    }
+    return res.status(403).send("Forbidden");
+  };
+
   /**
    * GET /api/instagram/webhook — verificação do webhook pela Meta
    */
@@ -24,12 +36,11 @@ export function registerInstagramWebhook(app: Express) {
     const token = req.query["hub.verify_token"];
     const challenge = req.query["hub.challenge"];
 
-    if (mode === "subscribe" && token === WEBHOOK_VERIFY_TOKEN) {
-      console.log("[InstagramWebhook] Verificado com sucesso");
-      return res.status(200).send(challenge);
-    }
-    return res.status(403).send("Forbidden");
+    return verifyWebhook(req, res);
   });
+
+  // GET /api/facebook/webhook — verificação Facebook Page webhook
+  app.get("/api/facebook/webhook", verifyWebhook);
 
   /**
    * POST /api/instagram/webhook — recebe eventos de comentário
@@ -40,32 +51,85 @@ export function registerInstagramWebhook(app: Express) {
 
     try {
       const body = req.body;
-      if (body.object !== "instagram") return;
 
+      // ── Instagram comments ───────────────────────────────────────────────
+      if (body.object === "instagram") {
+        for (const entry of body.entry || []) {
+          for (const change of entry.changes || []) {
+            if (change.field !== "comments") continue;
+            const val = change.value;
+            if (!val?.id || !val?.text) continue;
+            const igAccountId = process.env.META_IG_ACCOUNT_ID || "";
+            if (igAccountId && val.from?.id === igAccountId) continue;
+            console.log(`[InstagramWebhook] Comentário de ${val.from?.name}: "${val.text?.slice(0, 80)}"`);
+            await processInstagramComment({
+              commentId: val.id,
+              postId: val.media?.id || "",
+              authorName: val.from?.name || "",
+              authorId: val.from?.id || "",
+              commentText: val.text || "",
+            });
+          }
+        }
+        return;
+      }
+
+      // ── Facebook Page comments ───────────────────────────────────────────
+      if (body.object === "page") {
+        for (const entry of body.entry || []) {
+          for (const change of entry.changes || []) {
+            if (change.field !== "feed") continue;
+            const val = change.value;
+            // Só comentários novos em posts (ignora likes, shares, etc.)
+            if (val?.item !== "comment" || val?.verb !== "add") continue;
+            if (!val?.comment_id || !val?.message) continue;
+            // Ignora comentários da própria página
+            const pageId = process.env.META_PAGE_ID || "";
+            if (pageId && val.from?.id === pageId) continue;
+            console.log(`[FacebookWebhook] Comentário de ${val.from?.name}: "${val.message?.slice(0, 80)}"`);
+            await processInstagramComment({
+              commentId: val.comment_id,
+              postId: val.post_id || "",
+              authorName: val.from?.name || "",
+              authorId: val.from?.id || "",
+              commentText: val.message || "",
+            });
+          }
+        }
+        return;
+      }
+
+    } catch (err: any) {
+      console.error("[InstagramWebhook] Erro:", err.message);
+    }
+  });
+
+  // POST /api/facebook/webhook — eventos de comentários da Página do Facebook
+  app.post("/api/facebook/webhook", async (req, res) => {
+    res.status(200).send("EVENT_RECEIVED");
+    try {
+      const body = req.body;
+      if (body.object !== "page") return;
       for (const entry of body.entry || []) {
         for (const change of entry.changes || []) {
-          if (change.field !== "comments") continue;
-
+          if (change.field !== "feed") continue;
           const val = change.value;
-          if (!val?.id || !val?.text) continue;
-
-          // Ignora comentários da própria conta (evitar loop)
-          const igAccountId = process.env.META_IG_ACCOUNT_ID || "";
-          if (igAccountId && val.from?.id === igAccountId) continue;
-
-          console.log(`[InstagramWebhook] Comentário de ${val.from?.name}: "${val.text?.slice(0, 80)}"`);
-
+          if (val?.item !== "comment" || val?.verb !== "add") continue;
+          if (!val?.comment_id || !val?.message) continue;
+          const pageId = process.env.META_PAGE_ID || "";
+          if (pageId && val.from?.id === pageId) continue;
+          console.log(`[FacebookWebhook] Comentário de ${val.from?.name}: "${val.message?.slice(0, 80)}"`);
           await processInstagramComment({
-            commentId: val.id,
-            postId: val.media?.id || "",
+            commentId: val.comment_id,
+            postId: val.post_id || "",
             authorName: val.from?.name || "",
             authorId: val.from?.id || "",
-            commentText: val.text || "",
+            commentText: val.message || "",
           });
         }
       }
     } catch (err: any) {
-      console.error("[InstagramWebhook] Erro:", err.message);
+      console.error("[FacebookWebhook] Erro:", err.message);
     }
   });
 }
