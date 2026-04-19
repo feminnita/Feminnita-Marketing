@@ -11,6 +11,7 @@
 
 import { invokeLLM } from "../_core/llm";
 import { buildMemoryContext, saveMemory } from "../services/agentMemory";
+import { getLatestKnowledge } from "./knowledge-updater";
 import { fetchAllPlatformMetrics, formatPlatformSummary } from "../services/marketplaceAds";
 import { searchWeb, formatSearchResults } from "../services/webSearch";
 import { getDb } from "../db";
@@ -149,6 +150,12 @@ ${searchContext.slice(0, 1500)}
 
 MEMÓRIA ACUMULADA:
 ${memoryContext.slice(0, 800)}
+
+INTELIGÊNCIA DE MERCADO ATUAL:
+${await Promise.all([getLatestKnowledge("knowledge_marketplaces"), getLatestKnowledge("knowledge_whatsapp")]).then(([m, w]) => [
+  m ? `Marketplaces: ${m.trends?.join(" | ")}` : "",
+  w ? `WhatsApp vendas: ${w.tips?.join(" | ")}` : "",
+].filter(Boolean).join("\n"))}
 
 Analise a performance de vendas multicanal da Feminnita. FOQUE no caminho mais rápido para R$100K/mês. Seja muito específico nas ações propostas.`;
 

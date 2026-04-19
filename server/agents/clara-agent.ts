@@ -11,6 +11,7 @@
 
 import { invokeLLM } from "../_core/llm";
 import { buildMemoryContext, saveMemory } from "../services/agentMemory";
+import { getLatestKnowledge } from "./knowledge-updater";
 import { multiSearch } from "../services/webSearch";
 import { getDb } from "../db";
 import { agentActions } from "../../drizzle/schema";
@@ -139,6 +140,12 @@ ${competitorData.slice(0, 3000)}
 
 MEMÓRIA ACUMULADA:
 ${memoryContext.slice(0, 800)}
+
+INTELIGÊNCIA DE MERCADO ATUAL:
+${await Promise.all([getLatestKnowledge("knowledge_fashion"), getLatestKnowledge("knowledge_marketplaces")]).then(([f, m]) => [
+  f ? `Moda: ${f.trends?.join(" | ")}` : "",
+  m ? `Marketplaces: ${m.trends?.join(" | ")}` : "",
+].filter(Boolean).join("\n"))}
 
 Faça a análise competitiva diária para a Feminnita. Identifique ameaças, oportunidades e ações estratégicas concretas.`;
 

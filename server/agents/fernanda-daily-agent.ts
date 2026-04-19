@@ -13,6 +13,7 @@ import { invokeLLM } from "../_core/llm";
 import { buildMemoryContext, saveMemory } from "../services/agentMemory";
 import { getDb } from "../db";
 import { agentActions } from "../../drizzle/schema";
+import { getLatestKnowledge } from "./knowledge-updater";
 import { executeMetaAction } from "./fernanda-executor";
 import { generateAdCopy } from "./beatriz-agent";
 
@@ -146,10 +147,19 @@ async function analyzeWithLLM(
       ? JSON.stringify(insightsRaw, null, 2)
       : "Nenhum dado retornado pela API Meta Ads — token pode estar expirado ou sem campanhas ativas.";
 
+  const marketKnowledge = await getLatestKnowledge("knowledge_meta_ads");
+  const knowledgeSection = marketKnowledge
+    ? `\nINTELIGÊNCIA DE MERCADO ATUAL (atualizado ${marketKnowledge.updatedAt?.split("T")[0] ?? "recentemente"}):
+Tendências: ${marketKnowledge.trends?.join(" | ")}
+Benchmarks: ${JSON.stringify(marketKnowledge.benchmarks)}
+Alertas do mercado: ${marketKnowledge.warnings?.join(" | ")}
+Dicas avançadas: ${marketKnowledge.tips?.join(" | ")}\n`
+    : "";
+
   const userPrompt = `Data: ${today}
 Dados das campanhas Meta Ads (últimos 2 dias):
 ${dataStr}
-
+${knowledgeSection}
 Contexto histórico:
 ${memoryContext}
 

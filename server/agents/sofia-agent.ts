@@ -10,6 +10,7 @@
 
 import { invokeLLM } from "../_core/llm";
 import { buildMemoryContext, saveMemory } from "../services/agentMemory";
+import { getLatestKnowledge } from "./knowledge-updater";
 import { searchWeb, formatSearchResults } from "../services/webSearch";
 import { getDb } from "../db";
 import { agentActions } from "../../drizzle/schema";
@@ -150,6 +151,11 @@ ${searchContext.slice(0, 2000)}
 
 MEMÓRIA ACUMULADA:
 ${memoryContext.slice(0, 1000)}
+
+${await (async () => {
+  const k = await getLatestKnowledge("knowledge_instagram");
+  return k ? `INTELIGÊNCIA INSTAGRAM ATUAL (${k.updatedAt?.split("T")[0]}):\nTendências: ${k.trends?.join(" | ")}\nDicas: ${k.tips?.join(" | ")}\nAlertas: ${k.warnings?.join(" | ")}` : "";
+})()}
 
 Analise o estado atual do Instagram da Feminnita e gere o relatório diário com ações propostas.`;
 

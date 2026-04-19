@@ -89,6 +89,7 @@ import { trafficManagerRouter } from "./routers/traffic-manager";
 import { agentMemoryRouter } from "./routers/agent-memory";
 import { agentActionsRouter } from "./routers/agent-actions";
 import { morningBriefingRouter } from "./routers/morning-briefing";
+import { marketKnowledgeRouter } from "./routers/market-knowledge";
 import { specialistChatRouter } from "./routers/specialist-chat";
 import { whatsappBlastsRouter } from "./routers/whatsapp-blasts";
 import { creativeAdsRouter } from "./routers/creative-ads";
@@ -221,6 +222,7 @@ export const appRouter = router({
   agentMemory: agentMemoryRouter,
   agentActions: agentActionsRouter,
   morningBriefing: morningBriefingRouter,
+  marketKnowledge: marketKnowledgeRouter,
   specialistChat: specialistChatRouter,
   whatsappBlasts: whatsappBlastsRouter,
   creativeAds: creativeAdsRouter,
