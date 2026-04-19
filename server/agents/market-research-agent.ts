@@ -118,8 +118,13 @@ async function runMarketResearchLLM(today: string): Promise<MarketResearchResult
       return null;
     }
 
-    const parsed: MarketResearchResult =
-      typeof raw === "string" ? JSON.parse(raw) : (raw as unknown as MarketResearchResult);
+    const stripped = typeof raw === "string"
+      ? raw.replace(/^```json\s*/i, "").replace(/```\s*$/, "").trim()
+      : "";
+    const jsonMatch = stripped.match(/\{[\s\S]*\}/);
+    const parsed: MarketResearchResult = jsonMatch
+      ? JSON.parse(jsonMatch[0])
+      : (raw as unknown as MarketResearchResult);
 
     return parsed;
   } catch (err) {
