@@ -65,22 +65,30 @@ export function registerTiktokShopOAuthRoutes(app: Express): void {
       const toSign = APP_SECRET + "/api/v2/token/get" + sorted;
       const sign = crypto.createHmac("sha256", APP_SECRET).update(toSign).digest("hex").toUpperCase();
 
-      // Try multiple token endpoints to find the correct one
-      const endpoints = [
-        `${AUTH_BASE}/api/v2/token/get`,
-        `${AUTH_BASE}/oauth/token`,
-        `${AUTH_BASE}/api/v1/token/get`,
+      // Try multiple token endpoints with different content types
+      const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+      const attempts = [
+        { url: `${AUTH_BASE}/api/v2/token/get`, ct: "application/json" },
+        { url: `${AUTH_BASE}/api/v2/token/get`, ct: "application/x-www-form-urlencoded" },
+        { url: `${AUTH_BASE}/oauth/token`, ct: "application/json", ua: UA },
+        { url: `${AUTH_BASE}/oauth/token`, ct: "application/x-www-form-urlencoded", ua: UA },
       ];
       let r: Response | null = null;
       let rawText = "";
-      for (const ep of endpoints) {
-        const resp = await fetch(ep, {
+      for (const attempt of attempts) {
+        const body = attempt.ct === "application/json"
+          ? JSON.stringify({ ...params, sign })
+          : new URLSearchParams({ ...params, sign }).toString();
+        const resp = await fetch(attempt.url, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...params, sign }),
+          headers: {
+            "Content-Type": attempt.ct,
+            "User-Agent": attempt.ua || "TikTokShopApp/1.0",
+          },
+          body,
         });
         const txt = await resp.text();
-        console.log(`[TikTokShopOAuth] ${ep} → ${resp.status}: ${txt.slice(0, 80)}`);
+        console.log(`[TikTokShopOAuth] ${attempt.url} (${attempt.ct}) → ${resp.status}: ${txt.slice(0, 120)}`);
         if (txt && !txt.includes("404 page not found") && !txt.startsWith("<!")) {
           r = resp;
           rawText = txt;
