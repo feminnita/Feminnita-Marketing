@@ -54,16 +54,19 @@ export function registerTiktokShopOAuthRoutes(app: Express): void {
       const ts = Math.floor(Date.now() / 1000);
       const params: Record<string, string> = {
         app_key: APP_KEY,
-        app_secret: APP_SECRET,
-        timestamp: String(ts),
         auth_code: code,
         grant_type: "authorized_code",
+        timestamp: String(ts),
       };
-      const sign = tiktokShopSign("/api/v2/token/get", params);
-      const qs = new URLSearchParams({ ...params, sign }).toString();
+      // sign: UPPERCASE, app_secret excluded from body but used in HMAC
+      const sorted = Object.entries(params).sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>k+v).join("");
+      const toSign = APP_SECRET + "/api/v2/token/get" + sorted;
+      const sign = require("crypto").createHmac("sha256", APP_SECRET).update(toSign).digest("hex").toUpperCase();
 
-      const r = await fetch(`${AUTH_BASE}/api/v2/token/get?${qs}`, {
-        method: "GET",
+      const r = await fetch(`${AUTH_BASE}/api/v2/token/get`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...params, sign }),
       });
 
       const rawText = await r.text();
