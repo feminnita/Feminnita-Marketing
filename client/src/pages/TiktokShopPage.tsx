@@ -186,11 +186,11 @@ export default function TiktokShopPage() {
           </p>
           {authQuery.data?.connected ? (
             <p className="text-xs text-green-600 mt-0.5 flex items-center gap-1">
-              <CheckCircle className="w-3 h-3" /> TikTok Shop conectado
+              <CheckCircle className="w-3 h-3" /> TikTok Shop conectado — Shop ID: {authQuery.data.shopId || "—"}
             </p>
           ) : (
             <p className="text-xs text-amber-600 mt-0.5 flex items-center gap-1">
-              <AlertTriangle className="w-3 h-3" /> App em análise pelo TikTok — funcionando em modo planejamento
+              <AlertTriangle className="w-3 h-3" /> Não conectado — clique em "Conectar TikTok Shop" para autorizar
             </p>
           )}
         </div>
@@ -210,16 +210,15 @@ export default function TiktokShopPage() {
         </button>
       </div>
 
-      {/* ── Banner: app em revisão ── */}
+      {/* ── Banner: não conectado ── */}
       {!authQuery.data?.connected && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
-          <div className="text-sm text-amber-800">
-            <p className="font-semibold">App TikTok Shop em processo de aprovação</p>
-            <p className="mt-1 text-amber-700">
-              O aplicativo "Feminnita marketing" está aguardando aprovação da revisão de segurança pelo TikTok.
-              Enquanto isso, o agente funciona em <strong>modo planejamento</strong> — fornece estratégias,
-              melhores práticas e checklist de preparação para quando a integração for aprovada.
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
+          <ShoppingBag className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
+          <div className="text-sm text-blue-800">
+            <p className="font-semibold">Conecte sua conta TikTok Shop</p>
+            <p className="mt-1 text-blue-700">
+              Autorize o acesso para que a Valentina possa analisar produtos, pedidos e performance real da loja.
+              Enquanto não conectado, funciona em <strong>modo planejamento</strong> com estratégias e benchmarks de mercado.
             </p>
             <div className="mt-3 flex gap-2">
               <a
@@ -227,7 +226,7 @@ export default function TiktokShopPage() {
                 className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg text-white"
                 style={{ background: TT_PINK }}
               >
-                <Link className="w-3 h-3" /> Conectar quando aprovado
+                <Link className="w-3 h-3" /> Conectar TikTok Shop
               </a>
             </div>
           </div>

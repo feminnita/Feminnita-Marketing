@@ -189,7 +189,7 @@ export async function updateMarketKnowledge(domain?: string): Promise<{ updated:
         maxTokens: 1200,
       });
 
-      const raw = result.choices[0]?.message?.content ?? "";
+      const raw = String(result.choices[0]?.message?.content ?? "");
       const cleaned = raw.replace(/^```json\s*/i, "").replace(/```\s*$/, "").trim();
       const m = cleaned.match(/\{[\s\S]*\}/);
       const parsed = JSON.parse(m ? m[0] : cleaned);

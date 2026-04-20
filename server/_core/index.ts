@@ -12,6 +12,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { handleBlingWebhook } from "./bling-webhook";
+import { handleTrayWebhook } from "./tray-webhook";
 import { initializeBaileysOnStartup } from "./baileys-startup";
 import { setupBaileysDebugRoutes } from "./baileys-debug";
 import { initializeWebSocket } from "./websocket-notifications";
@@ -97,6 +98,8 @@ async function startServer() {
   });
   // Bling webhook for real-time inventory sync
   app.post("/api/bling/webhook", handleBlingWebhook);
+  // Tray webhook for FNT website order events → Meta CAPI
+  app.post("/api/tray/webhook", handleTrayWebhook);
   // Instagram comments webhook (GET = verificação, POST = eventos)
   registerInstagramWebhook(app);
   

@@ -12,6 +12,7 @@ import { tiktokShopEvaluations, tiktokShopEvaluationMessages } from "../../drizz
 import { eq } from "drizzle-orm";
 import { invokeLLM } from "../_core/llm";
 import { tiktokShopGet } from "../services/tiktokShopApi";
+import { getLatestKnowledge } from "./knowledge-updater";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -125,23 +126,53 @@ export async function collectTiktokShopData(): Promise<TiktokShopPerformanceData
 
 // ─── Sistema de prompt ────────────────────────────────────────────────────────
 
-const SYSTEM_PROMPT = `Você é um especialista em performance de vendas no TikTok Shop para empresas de atacado de moda brasileiras.
+async function buildSystemPrompt(): Promise<string> {
+  const [marketplaceKnowledge, fashionKnowledge] = await Promise.all([
+    getLatestKnowledge("knowledge_marketplaces"),
+    getLatestKnowledge("knowledge_fashion"),
+  ]);
 
-Contexto específico desta conta (Feminnita Pijamas):
-- Produto: pijamas de atacado para revendedoras
-- Público-alvo: revendedoras em todo o Brasil
-- Ticket médio: R$400 por pedido
-- Objetivo: aumentar pedidos de atacado via TikTok Shop
+  const knowledgeBlock = [
+    marketplaceKnowledge
+      ? `## Inteligência atual — Marketplaces\n${marketplaceKnowledge.summary}\nTendências: ${marketplaceKnowledge.trends.join(" | ")}\nAlertas: ${marketplaceKnowledge.warnings.join(" | ")}`
+      : "",
+    fashionKnowledge
+      ? `## Inteligência atual — Moda/Produto\n${fashionKnowledge.summary}\nTendências: ${fashionKnowledge.trends.join(" | ")}`
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 
-Ao analisar:
-1. Produtos com estoque mas sem vendas — identificar causas
-2. Produtos campeões para escalar
-3. Oportunidades de conteúdo (vídeos curtos, lives) para impulsionar vendas
-4. Preços e posicionamento vs. concorrência no TikTok Shop
-5. Gaps de estoque nos produtos mais vendidos
-6. Estratégias de afiliados TikTok para atacadistas
+  return `Você é Valentina Cruz, especialista sênior em TikTok Shop e social commerce com 11 anos de experiência em e-commerce de moda na América Latina.
 
-Responda em português do Brasil. Seja direto com números.`;
+**Formação e credenciais:**
+- MBA em Digital Commerce pela FGV-SP
+- Certificada em TikTok Shop Academy e TikTok for Business (Partner certificada)
+- Ex-head de marketplace da Renner Digital e consultora sênior da Infracommerce
+- Construiu do zero operações de TikTok Shop para 3 marcas brasileiras que chegaram a 5.000 pedidos/mês
+
+**Especialidades:**
+- TikTok Shop Open API: integração técnica, gestão de SKUs, fulfillment, disputes
+- Programa de afiliados TikTok: recrutamento, comissionamento, gestão de criadores
+- TikTok LIVE Commerce: produção, escalada de vendas ao vivo, re-streaming
+- SEO interno TikTok Shop: títulos, atributos, categorias, review velocity
+- Algoritmo TikTok Shop: como o "shop tab" ranqueia, fatores de confiança do vendedor
+
+**Metodologia:**
+- Framework RSVP: Reach → Shop → Verify → Purchase (funil específico TikTok)
+- Análise por cohort de afiliados (top 20% geram 80% das vendas)
+- Estratégia "Anchor + Long tail": 1 produto âncora viral + 10-15 SKUs complementares
+
+**Benchmarks que usa:**
+- Taxa de conversão shop tab: 3-6% saudável para moda atacado
+- GMV/afiliado ativo: R$2.000-8.000/mês para nicho pijamas
+- CTR vídeo→shop: 5%+ é excelente, <2% precisa retrabalho de criativo
+- LIVEs de moda: pico de vendas nos primeiros 20min e nos últimos 10min
+
+${knowledgeBlock ? `---\n${knowledgeBlock}\n---` : ""}
+
+Responda em português do Brasil. Seja direto com números concretos. Priorize ações com maior ROI imediato.`;
+}
 
 // ─── Avaliação com LLM ────────────────────────────────────────────────────────
 
@@ -163,9 +194,11 @@ export async function runTiktokShopEvaluation(evaluationId: number): Promise<voi
       ? JSON.stringify(data.products.slice(0, 20), null, 2)
       : "API ainda não autorizada — aguardando aprovação do app TikTok Shop";
 
+    const systemPrompt = await buildSystemPrompt();
+
     const result = await invokeLLM({
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: systemPrompt },
         {
           role: "user",
           content: `Avalie a performance da conta Feminnita no TikTok Shop com os dados abaixo.
@@ -259,11 +292,12 @@ export async function chatWithTiktokShopAgent(
   history: Array<{ role: "user" | "assistant"; content: string }>,
   rawMetrics: string
 ): Promise<string> {
+  const systemPrompt = await buildSystemPrompt();
   const metricsContext = rawMetrics ? `\n\nDados da loja analisada:\n${rawMetrics}` : "";
 
   const result = await invokeLLM({
     messages: [
-      { role: "system", content: SYSTEM_PROMPT + metricsContext },
+      { role: "system", content: systemPrompt + metricsContext },
       ...history,
     ],
     maxTokens: 2000,

@@ -4,6 +4,56 @@ import { getDb } from "../db";
 import { blingProdutos, blingEstoque } from "../../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 
+async function fireMetaCAPIPurchase(opts: {
+  orderId: string;
+  value: number;
+  currency?: string;
+  email?: string;
+  phone?: string;
+}) {
+  try {
+    const pixelId = process.env.META_PIXEL_ID;
+    const accessToken = process.env.META_SYSTEM_USER_TOKEN || process.env.META_ACCESS_TOKEN;
+    if (!pixelId || !accessToken) return;
+
+    const hashEmail = opts.email
+      ? crypto.createHash("sha256").update(opts.email.toLowerCase().trim()).digest("hex")
+      : undefined;
+    const hashPhone = opts.phone
+      ? crypto.createHash("sha256").update(opts.phone.replace(/\D/g, "")).digest("hex")
+      : undefined;
+
+    const userData: any = {};
+    if (hashEmail) userData.em = [hashEmail];
+    if (hashPhone) userData.ph = [hashPhone];
+    userData.country = ["br"];
+
+    const payload = {
+      data: [{
+        event_name: "Purchase",
+        event_time: Math.floor(Date.now() / 1000),
+        event_id: `bling_${opts.orderId}_${Date.now()}`,
+        action_source: "other",
+        user_data: userData,
+        custom_data: {
+          value: opts.value,
+          currency: opts.currency ?? "BRL",
+          order_id: opts.orderId,
+        },
+      }],
+    };
+
+    const res = await fetch(
+      `https://graph.facebook.com/v20.0/${pixelId}/events?access_token=${accessToken}`,
+      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }
+    );
+    const data = await res.json();
+    console.log("[MetaCAPI] Purchase enviado para pedido", opts.orderId, "→", JSON.stringify(data));
+  } catch (err: any) {
+    console.error("[MetaCAPI] Erro ao enviar Purchase:", err.message);
+  }
+}
+
 /**
  * Processa webhooks do Bling para sincronização de estoque
  * Documentação: https://developer.bling.com.br/bling-api
@@ -29,6 +79,10 @@ export async function handleBlingWebhook(req: Request, res: Response) {
       await handleEstoqueUpdated(data);
     } else if (event === "estoque.exclusao") {
       await handleEstoqueDeleted(data);
+    } else if (event === "pedido.criacao") {
+      await handlePedidoCriado(data);
+    } else if (event === "pedido.atualizacao") {
+      await handlePedidoAtualizado(data);
     } else {
       console.log("[Bling Webhook] Evento não tratado:", event);
     }
@@ -183,6 +237,58 @@ async function handleEstoqueDeleted(data: any) {
     console.log(`[Bling Webhook] Estoque deletado — produto ${produtoId} zerado`);
   } catch (error) {
     console.error("[Bling Webhook] Erro ao processar exclusão de estoque:", error);
+  }
+}
+
+/**
+ * Processa criação de pedido — dispara Purchase no Meta CAPI
+ * Payload Bling: { id, numero, total, contato: { email, celular }, situacao }
+ */
+async function handlePedidoCriado(data: any) {
+  try {
+    const orderId = String(data?.id ?? data?.numero ?? "");
+    const total = parseFloat(data?.total ?? data?.totalProdutos ?? 0);
+    const email = data?.contato?.email ?? data?.cliente?.email ?? undefined;
+    const phone =
+      data?.contato?.celular ?? data?.contato?.telefone ?? data?.cliente?.celular ?? undefined;
+
+    if (!orderId || total <= 0) {
+      console.warn("[Bling Webhook] pedido.criacao sem id/total válido, ignorando CAPI");
+      return;
+    }
+
+    await fireMetaCAPIPurchase({ orderId, value: total, currency: "BRL", email, phone });
+    console.log(`[Bling Webhook] Pedido ${orderId} criado — CAPI Purchase disparado (R$ ${total})`);
+  } catch (error) {
+    console.error("[Bling Webhook] Erro ao processar pedido.criacao:", error);
+  }
+}
+
+/**
+ * Processa atualização de pedido — re-dispara Purchase apenas se situação = "Atendido" (9)
+ * Evita duplicatas para qualquer outra mudança de status
+ */
+async function handlePedidoAtualizado(data: any) {
+  try {
+    // situacao.id 9 = Atendido (pedido faturado/entregue), único momento que consideramos conversão confirmada
+    const situacaoId = data?.situacao?.id ?? data?.idSituacao;
+    if (situacaoId !== 9 && situacaoId !== "9") {
+      console.log(`[Bling Webhook] pedido.atualizacao situação ${situacaoId} — ignorando CAPI`);
+      return;
+    }
+
+    const orderId = String(data?.id ?? data?.numero ?? "");
+    const total = parseFloat(data?.total ?? data?.totalProdutos ?? 0);
+    const email = data?.contato?.email ?? data?.cliente?.email ?? undefined;
+    const phone =
+      data?.contato?.celular ?? data?.contato?.telefone ?? data?.cliente?.celular ?? undefined;
+
+    if (!orderId || total <= 0) return;
+
+    await fireMetaCAPIPurchase({ orderId, value: total, currency: "BRL", email, phone });
+    console.log(`[Bling Webhook] Pedido ${orderId} Atendido — CAPI Purchase disparado (R$ ${total})`);
+  } catch (error) {
+    console.error("[Bling Webhook] Erro ao processar pedido.atualizacao:", error);
   }
 }
 
