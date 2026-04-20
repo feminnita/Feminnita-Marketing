@@ -9,7 +9,7 @@
 import type { Express } from "express";
 import fs from "fs";
 import path from "path";
-import { tiktokShopAuthUrl } from "../services/tiktokShopApi";
+import { tiktokShopAuthUrl, fetchAndStoreShopCipher } from "../services/tiktokShopApi";
 
 const APP_KEY = process.env.TIKTOK_SHOP_APP_KEY || process.env.TIKTOK_ADS_APP_ID || "";
 const APP_SECRET = process.env.TIKTOK_SHOP_APP_SECRET || process.env.TIKTOK_ADS_SECRET || "";
@@ -89,6 +89,13 @@ export function registerTiktokShopOAuthRoutes(app: Express): void {
       });
 
       console.log(`[TikTokShopOAuth] Conta conectada! Open ID: ${open_id}`);
+
+      // Busca shop_cipher imediatamente após conectar
+      const cipher = await fetchAndStoreShopCipher();
+      if (cipher) {
+        updateEnvFile({ TIKTOK_SHOP_CIPHER: cipher });
+      }
+
       return res.redirect("/tiktok-shop?connected=1");
     } catch (err: any) {
       console.error("[TikTokShopOAuth] Erro no callback:", err);

@@ -122,13 +122,39 @@ async function refreshAccessToken(): Promise<boolean> {
   }
 }
 
+// ─── GET autorizado com shop_cipher ───────────────────────────────────────────
+
+export async function fetchAndStoreShopCipher(): Promise<string | null> {
+  try {
+    const url = tiktokShopUrl("/api/seller/202309/shops", {});
+    const res = await fetch(url);
+    const body = await res.json();
+    const shops: any[] = body?.data?.shops || body?.data?.list || [];
+    if (!shops.length) {
+      console.warn("[TikTokShopAPI] Nenhuma loja encontrada:", JSON.stringify(body).slice(0, 200));
+      return null;
+    }
+    const cipher = shops[0].cipher || shops[0].shop_cipher || "";
+    const shopId = shops[0].id || shops[0].shop_id || "";
+    if (cipher) process.env.TIKTOK_SHOP_CIPHER = cipher;
+    if (shopId) process.env.TIKTOK_SHOP_ID = shopId;
+    console.log(`[TikTokShopAPI] Shop cipher: ${cipher}, shop_id: ${shopId}`);
+    return cipher;
+  } catch (e) {
+    console.error("[TikTokShopAPI] Erro ao buscar lojas:", e);
+    return null;
+  }
+}
+
 // ─── GET com auto-retry ────────────────────────────────────────────────────────
 
 export async function tiktokShopGet(
   apiPath: string,
   extraParams: Record<string, string> = {}
 ): Promise<any> {
-  const url = tiktokShopUrl(apiPath, extraParams);
+  const shopCipher = process.env.TIKTOK_SHOP_CIPHER || "";
+  const params = shopCipher ? { shop_cipher: shopCipher, ...extraParams } : extraParams;
+  const url = tiktokShopUrl(apiPath, params);
   const res = await fetch(url);
   const body = await res.json();
 
