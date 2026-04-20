@@ -1390,7 +1390,7 @@ export type InsertWhatsappBlastContact = typeof whatsappBlastContacts.$inferInse
 export const tiktokShopEvaluations = mysqlTable("tiktok_shop_evaluations", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
-  shopId: varchar("shopId", { length: 50 }),
+  shopId: varchar("shopId", { length: 255 }),
   status: mysqlEnum("status", ["pending", "running", "done", "error"]).notNull().default("pending"),
   rawMetrics: text("rawMetrics"),
   analysis: text("analysis"),
