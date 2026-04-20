@@ -126,7 +126,7 @@ async function refreshAccessToken(): Promise<boolean> {
 
 export async function fetchAndStoreShopCipher(): Promise<string | null> {
   try {
-    const url = tiktokShopUrl("/api/seller/202309/shops", {});
+    const url = tiktokShopUrl("/api/authorization/202309/shops", {});
     const res = await fetch(url);
     const body = await res.json();
     const shops: any[] = body?.data?.shops || body?.data?.list || [];
