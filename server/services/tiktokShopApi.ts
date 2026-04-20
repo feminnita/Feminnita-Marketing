@@ -29,7 +29,7 @@ export function tiktokShopSign(
     .map(([k, v]) => `${k}${v}`)
     .join("");
 
-  const toSign = `${APP_SECRET}${apiPath}${sorted}${body}`;
+  const toSign = `${APP_SECRET}${apiPath}${sorted}${body}${APP_SECRET}`;
   return crypto.createHmac("sha256", APP_SECRET).update(toSign).digest("hex");
 }
 
