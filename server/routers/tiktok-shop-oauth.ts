@@ -65,30 +65,31 @@ export function registerTiktokShopOAuthRoutes(app: Express): void {
       const toSign = APP_SECRET + "/api/v2/token/get" + sorted;
       const sign = crypto.createHmac("sha256", APP_SECRET).update(toSign).digest("hex").toUpperCase();
 
-      // Try multiple token endpoints with different content types
-      const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+      // TikTok Shop token exchange — params go as query string (not body)
+      const qs = new URLSearchParams({ ...params, sign }).toString();
       const attempts = [
-        { url: `${AUTH_BASE}/api/v2/token/get`, ct: "application/json" },
-        { url: `${AUTH_BASE}/api/v2/token/get`, ct: "application/x-www-form-urlencoded" },
-        { url: `${AUTH_BASE}/oauth/token`, ct: "application/json", ua: UA },
-        { url: `${AUTH_BASE}/oauth/token`, ct: "application/x-www-form-urlencoded", ua: UA },
+        // Query string only (GET-like POST)
+        { url: `${AUTH_BASE}/api/v2/token/get?${qs}`, body: "" },
+        // Query string + JSON body
+        { url: `${AUTH_BASE}/api/v2/token/get?${qs}`, body: JSON.stringify({ ...params, sign }) },
+        // Form-encoded body only
+        { url: `${AUTH_BASE}/api/v2/token/get`, body: qs },
       ];
       let r: Response | null = null;
       let rawText = "";
       for (const attempt of attempts) {
-        const body = attempt.ct === "application/json"
-          ? JSON.stringify({ ...params, sign })
-          : new URLSearchParams({ ...params, sign }).toString();
+        const headers: Record<string, string> = {
+          "Content-Type": attempt.body.startsWith("{") ? "application/json" : "application/x-www-form-urlencoded",
+          "User-Agent": "TikTokShopApp/1.0",
+        };
+        if (!attempt.body) delete headers["Content-Type"];
         const resp = await fetch(attempt.url, {
           method: "POST",
-          headers: {
-            "Content-Type": attempt.ct,
-            "User-Agent": attempt.ua || "TikTokShopApp/1.0",
-          },
-          body,
+          headers,
+          ...(attempt.body ? { body: attempt.body } : {}),
         });
         const txt = await resp.text();
-        console.log(`[TikTokShopOAuth] ${attempt.url} (${attempt.ct}) → ${resp.status}: ${txt.slice(0, 120)}`);
+        console.log(`[TikTokShopOAuth] ${attempt.url.slice(0, 60)} → ${resp.status}: ${txt.slice(0, 120)}`);
         if (txt && !txt.includes("404 page not found") && !txt.startsWith("<!")) {
           r = resp;
           rawText = txt;
