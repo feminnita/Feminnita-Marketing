@@ -182,7 +182,7 @@ export async function tiktokShopGet(
 
 export function tiktokShopAuthUrl(state = "tiktok_shop"): string {
   const redirectUrl = process.env.TIKTOK_SHOP_REDIRECT_URL ||
-    "http://localhost:3000/api/tiktok-shop/callback";
+    "https://feminnita.com.br/tiktok-callback";
 
   const params = new URLSearchParams({
     app_key: APP_KEY,
