@@ -13,7 +13,7 @@ import { tiktokShopAuthUrl, tiktokShopSign } from "../services/tiktokShopApi";
 
 const APP_KEY = process.env.TIKTOK_SHOP_APP_KEY || process.env.TIKTOK_ADS_APP_ID || "";
 const APP_SECRET = process.env.TIKTOK_SHOP_APP_SECRET || process.env.TIKTOK_ADS_SECRET || "";
-const AUTH_BASE = "https://auth.tiktok-shops.com";
+const AUTH_BASE = "https://open-api.tiktokshop.com";
 
 function updateEnvFile(updates: Record<string, string>): void {
   const envPath = path.resolve(process.cwd(), ".env");
