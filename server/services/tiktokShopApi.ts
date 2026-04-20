@@ -129,9 +129,11 @@ export async function fetchAndStoreShopCipher(): Promise<string | null> {
   ];
   const accessToken = process.env.TIKTOK_SHOP_ACCESS_TOKEN || "";
   const headers = { "x-tts-access-token": accessToken };
+  console.log(`[TikTokShopAPI] access_token[0..20]: ${accessToken.slice(0, 20)}`);
   for (const apiPath of paths) {
     try {
       const url = tiktokShopUrl(apiPath, {});
+      console.log(`[TikTokShopAPI] Chamando: ${url.replace(/sign=[^&]+/, "sign=***")}`);
       const res = await fetch(url, { headers });
       const body = await res.json();
       console.log(`[TikTokShopAPI] ${apiPath} → ${JSON.stringify(body).slice(0, 150)}`);
