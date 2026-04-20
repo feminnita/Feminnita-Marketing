@@ -59,8 +59,9 @@ export function registerTiktokShopOAuthRoutes(app: Express): void {
         grant_type: "authorized_code",
       };
       const sign = tiktokShopSign("/api/v2/token/get", params);
+      const qs = new URLSearchParams({ ...params, sign }).toString();
 
-      const r = await fetch(`${AUTH_BASE}/api/v2/token/get`, {
+      const r = await fetch(`${AUTH_BASE}/api/v2/token/get?${qs}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...params, sign }),
