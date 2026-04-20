@@ -125,25 +125,32 @@ async function refreshAccessToken(): Promise<boolean> {
 // ─── GET autorizado com shop_cipher ───────────────────────────────────────────
 
 export async function fetchAndStoreShopCipher(): Promise<string | null> {
-  try {
-    const url = tiktokShopUrl("/api/authorization/202309/shops", {});
-    const res = await fetch(url);
-    const body = await res.json();
-    const shops: any[] = body?.data?.shops || body?.data?.list || [];
-    if (!shops.length) {
-      console.warn("[TikTokShopAPI] Nenhuma loja encontrada:", JSON.stringify(body).slice(0, 200));
-      return null;
+  const paths = [
+    "/api/authorization/202309/shops",
+    "/api/seller/202309/shops",
+    "/api/shop/202309/shops",
+    "/api/authorization/202312/shops",
+  ];
+  for (const apiPath of paths) {
+    try {
+      const url = tiktokShopUrl(apiPath, {});
+      const res = await fetch(url);
+      const body = await res.json();
+      console.log(`[TikTokShopAPI] ${apiPath} → ${JSON.stringify(body).slice(0, 150)}`);
+      const shops: any[] = body?.data?.shops || body?.data?.list || [];
+      if (!shops.length) continue;
+      const cipher = shops[0].cipher || shops[0].shop_cipher || "";
+      const shopId = shops[0].id || shops[0].shop_id || "";
+      if (cipher) process.env.TIKTOK_SHOP_CIPHER = cipher;
+      if (shopId) process.env.TIKTOK_SHOP_ID = shopId;
+      console.log(`[TikTokShopAPI] Shop cipher: ${cipher}, shop_id: ${shopId}`);
+      return cipher;
+    } catch (e: any) {
+      console.warn(`[TikTokShopAPI] ${apiPath} falhou:`, e.message);
     }
-    const cipher = shops[0].cipher || shops[0].shop_cipher || "";
-    const shopId = shops[0].id || shops[0].shop_id || "";
-    if (cipher) process.env.TIKTOK_SHOP_CIPHER = cipher;
-    if (shopId) process.env.TIKTOK_SHOP_ID = shopId;
-    console.log(`[TikTokShopAPI] Shop cipher: ${cipher}, shop_id: ${shopId}`);
-    return cipher;
-  } catch (e) {
-    console.error("[TikTokShopAPI] Erro ao buscar lojas:", e);
-    return null;
   }
+  console.warn("[TikTokShopAPI] Nenhum path retornou lojas — prosseguindo sem shop_cipher");
+  return null;
 }
 
 // ─── GET com auto-retry ────────────────────────────────────────────────────────
