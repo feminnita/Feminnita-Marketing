@@ -15,6 +15,7 @@ import { tiktokShopAuthUrl } from "../services/tiktokShopApi";
 const APP_KEY = process.env.TIKTOK_SHOP_APP_KEY || process.env.TIKTOK_ADS_APP_ID || "";
 const APP_SECRET = process.env.TIKTOK_SHOP_APP_SECRET || process.env.TIKTOK_ADS_SECRET || "";
 const AUTH_BASE = "https://auth.tiktok-shops.com";
+const TOKEN_URL = "https://auth.tiktok-shops.com/api/v2/token/get";
 
 function updateEnvFile(updates: Record<string, string>): void {
   const envPath = path.resolve(process.cwd(), ".env");
@@ -64,13 +65,32 @@ export function registerTiktokShopOAuthRoutes(app: Express): void {
       const toSign = APP_SECRET + "/api/v2/token/get" + sorted;
       const sign = crypto.createHmac("sha256", APP_SECRET).update(toSign).digest("hex").toUpperCase();
 
-      const r = await fetch(`${AUTH_BASE}/api/v2/token/get`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...params, sign }),
-      });
+      // Try multiple token endpoints to find the correct one
+      const endpoints = [
+        `${AUTH_BASE}/api/v2/token/get`,
+        `${AUTH_BASE}/oauth/token`,
+        `${AUTH_BASE}/api/v1/token/get`,
+      ];
+      let r: Response | null = null;
+      let rawText = "";
+      for (const ep of endpoints) {
+        const resp = await fetch(ep, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...params, sign }),
+        });
+        const txt = await resp.text();
+        console.log(`[TikTokShopOAuth] ${ep} → ${resp.status}: ${txt.slice(0, 80)}`);
+        if (txt && !txt.includes("404 page not found") && !txt.startsWith("<!")) {
+          r = resp;
+          rawText = txt;
+          break;
+        }
+      }
 
-      const rawText = await r.text();
+      if (!rawText) {
+        return res.redirect(`/tiktok-shop?error=${encodeURIComponent("todos_endpoints_falharam")}`);
+      }
       console.log("[TikTokShopOAuth] Resposta raw TikTok:", rawText);
       let data: any;
       try { data = JSON.parse(rawText); } catch {
