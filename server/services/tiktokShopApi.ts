@@ -51,11 +51,7 @@ export function tiktokShopUrl(
 
   const sign = tiktokShopSign(apiPath, params, body);
 
-  const urlParams = new URLSearchParams({
-    ...params,
-    sign,
-    ...(accessToken ? { access_token: accessToken } : {}),
-  });
+  const urlParams = new URLSearchParams({ ...params, sign });
 
   return `${API_BASE}${apiPath}?${urlParams.toString()}`;
 }
@@ -131,10 +127,12 @@ export async function fetchAndStoreShopCipher(): Promise<string | null> {
     "/api/shop/202309/shops",
     "/api/authorization/202312/shops",
   ];
+  const accessToken = process.env.TIKTOK_SHOP_ACCESS_TOKEN || "";
+  const headers = { "x-tts-access-token": accessToken };
   for (const apiPath of paths) {
     try {
       const url = tiktokShopUrl(apiPath, {});
-      const res = await fetch(url);
+      const res = await fetch(url, { headers });
       const body = await res.json();
       console.log(`[TikTokShopAPI] ${apiPath} → ${JSON.stringify(body).slice(0, 150)}`);
       const shops: any[] = body?.data?.shops || body?.data?.list || [];
@@ -159,18 +157,21 @@ export async function tiktokShopGet(
   apiPath: string,
   extraParams: Record<string, string> = {}
 ): Promise<any> {
+  const accessToken = process.env.TIKTOK_SHOP_ACCESS_TOKEN || "";
   const shopCipher = process.env.TIKTOK_SHOP_CIPHER || "";
   const params = shopCipher ? { shop_cipher: shopCipher, ...extraParams } : extraParams;
+  const headers = { "x-tts-access-token": accessToken };
   const url = tiktokShopUrl(apiPath, params);
-  const res = await fetch(url);
+  const res = await fetch(url, { headers });
   const body = await res.json();
 
   if (body?.code === 4000000 || body?.code === 4001000) {
     console.warn("[TikTokShopAPI] Token inválido, renovando...");
     const ok = await refreshAccessToken();
     if (ok) {
+      const newAccessToken = process.env.TIKTOK_SHOP_ACCESS_TOKEN || "";
       const url2 = tiktokShopUrl(apiPath, extraParams);
-      const res2 = await fetch(url2);
+      const res2 = await fetch(url2, { headers: { "x-tts-access-token": newAccessToken } });
       return res2.json();
     }
   }
