@@ -66,7 +66,12 @@ export function registerTiktokShopOAuthRoutes(app: Express): void {
         body: JSON.stringify({ ...params, sign }),
       });
 
-      const data = await r.json();
+      const rawText = await r.text();
+      console.log("[TikTokShopOAuth] Resposta raw TikTok:", rawText);
+      let data: any;
+      try { data = JSON.parse(rawText); } catch {
+        return res.redirect(`/tiktok-shop?error=${encodeURIComponent("resposta_invalida: " + rawText.slice(0, 200))}`);
+      }
 
       if (data.code !== 0 || !data.data?.access_token) {
         console.error("[TikTokShopOAuth] Erro na troca de token:", data);
