@@ -80,6 +80,10 @@ async function fetchOrders(): Promise<TiktokShopOrder[]> {
     });
 
     console.log("[TikTokShopAgent] Resposta pedidos:", JSON.stringify(data).slice(0, 300));
+    if (data?.code === 105005) {
+      console.warn("[TikTokShopAgent] Sem escopo para pedidos — adicionar seller.order no Partner Center");
+      return [];
+    }
     const orders: any[] = data?.data?.orders || [];
     return orders.map((o: any) => ({
       id: o.id,
