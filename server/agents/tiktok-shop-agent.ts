@@ -54,6 +54,7 @@ async function fetchProducts(): Promise<TiktokShopProduct[]> {
       status: "4", // ACTIVATE
     });
 
+    console.log("[TikTokShopAgent] Resposta produtos:", JSON.stringify(data).slice(0, 300));
     const products: any[] = data?.data?.products || [];
     return products.map((p: any) => ({
       id: p.id,
@@ -82,6 +83,7 @@ async function fetchOrders(): Promise<TiktokShopOrder[]> {
       status: "COMPLETED",
     });
 
+    console.log("[TikTokShopAgent] Resposta pedidos:", JSON.stringify(data).slice(0, 300));
     const orders: any[] = data?.data?.orders || [];
     return orders.map((o: any) => ({
       id: o.id,
