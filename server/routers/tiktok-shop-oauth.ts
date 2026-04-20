@@ -54,6 +54,7 @@ export function registerTiktokShopOAuthRoutes(app: Express): void {
       const ts = Math.floor(Date.now() / 1000);
       const params: Record<string, string> = {
         app_key: APP_KEY,
+        app_secret: APP_SECRET,
         timestamp: String(ts),
         auth_code: code,
         grant_type: "authorized_code",
