@@ -162,6 +162,7 @@ export async function tiktokShopGet(
   const params = shopCipher ? { shop_cipher: shopCipher, ...extraParams } : extraParams;
   const headers = { "x-tts-access-token": accessToken };
   const url = tiktokShopUrl(apiPath, params);
+  console.log(`[TikTokShopAPI] GET ${url.replace(/sign=[^&]+/, "sign=***")}`);
   const res = await fetch(url, { headers });
   const body = await res.json();
 
