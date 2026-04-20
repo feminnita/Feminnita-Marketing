@@ -2,7 +2,20 @@
  * TikTok Shop Open API Client
  * Docs: https://partner.tiktokshop.com/docv2/page/6502759c6a0bb702c0f4317b
  *
- * Signing: HMAC-SHA256(app_secret, app_secret + path + sorted_params + body)
+ * Signing algorithm (per official docs and EcomPHP reference implementation):
+ *   1. Collect all query params EXCEPT sign, access_token, x-tts-access-token
+ *   2. Sort alphabetically and concat as {key}{value}
+ *   3. Prepend the URL path (WITHOUT /api/ prefix — path starts at /authorization/... etc.)
+ *   4. For POST requests: append raw JSON body string
+ *   5. Wrap with APP_SECRET on both sides: APP_SECRET + content + APP_SECRET
+ *   6. HMAC-SHA256 with APP_SECRET as key, hex output
+ *
+ * URL path convention:
+ *   API_BASE = https://open-api.tiktokglobalshop.com  (no trailing slash)
+ *   Endpoint = /authorization/202309/shops            (no /api/ prefix)
+ *   Full URL  = API_BASE + /authorization/202309/shops
+ *
+ * Reference: https://github.com/EcomPHP/tiktokshop-php/blob/master/src/Client.php
  */
 
 import crypto from "crypto";
@@ -10,6 +23,7 @@ import fs from "fs";
 import path from "path";
 
 const AUTH_BASE = "https://auth.tiktok-shops.com";
+// NOTE: No trailing slash — paths must start with /
 const API_BASE = "https://open-api.tiktokglobalshop.com";
 
 const APP_KEY = process.env.TIKTOK_SHOP_APP_KEY || process.env.TIKTOK_ADS_APP_ID || "";
@@ -17,31 +31,51 @@ const APP_SECRET = process.env.TIKTOK_SHOP_APP_SECRET || process.env.TIKTOK_ADS_
 
 // ─── Assinatura ───────────────────────────────────────────────────────────────
 
+/**
+ * @param apiPath  The URL path WITHOUT /api/ prefix, e.g. "/authorization/202309/shops"
+ * @param params   Query string params (app_key, timestamp, shop_cipher, etc.)
+ * @param body     Raw JSON body string for POST requests (empty string for GET)
+ */
 export function tiktokShopSign(
   apiPath: string,
   params: Record<string, string>,
   body = ""
 ): string {
-  // Sort params alphabetically (exclude sign and access_token)
-  const sorted = Object.entries(params)
-    .filter(([k]) => k !== "sign" && k !== "access_token")
+  // Step 1: exclude sign, access_token, x-tts-access-token
+  const filtered = Object.entries(params).filter(
+    ([k]) => k !== "sign" && k !== "access_token" && k !== "x-tts-access-token"
+  );
+
+  // Step 2: sort alphabetically and concat as {key}{value}
+  const sorted = filtered
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([k, v]) => `${k}${v}`)
     .join("");
 
-  const toSign = `${APP_SECRET}${apiPath}${sorted}`;
+  // Step 3+4: path + sorted params + body (for POST)
+  const inner = `${apiPath}${sorted}${body}`;
+
+  // Step 5: wrap with APP_SECRET on BOTH sides
+  const toSign = `${APP_SECRET}${inner}${APP_SECRET}`;
+
+  // Step 6: HMAC-SHA256
   return crypto.createHmac("sha256", APP_SECRET).update(toSign).digest("hex");
 }
 
 // ─── URL Builder ──────────────────────────────────────────────────────────────
 
+/**
+ * Builds a signed TikTok Shop API URL.
+ * @param apiPath   Path WITHOUT /api/ prefix, e.g. "/authorization/202309/shops"
+ * @param extraParams  Additional query params (shop_cipher, page_size, etc.)
+ * @param body      Raw JSON body string for POST (used in sign only, not in URL)
+ */
 export function tiktokShopUrl(
   apiPath: string,
   extraParams: Record<string, string> = {},
   body = ""
 ): string {
   const ts = Math.floor(Date.now() / 1000);
-  const accessToken = process.env.TIKTOK_SHOP_ACCESS_TOKEN || "";
 
   const params: Record<string, string> = {
     app_key: APP_KEY,
@@ -121,11 +155,11 @@ async function refreshAccessToken(): Promise<boolean> {
 // ─── GET autorizado com shop_cipher ───────────────────────────────────────────
 
 export async function fetchAndStoreShopCipher(): Promise<string | null> {
+  // Paths WITHOUT /api/ prefix — that's the correct TikTok Shop path format.
+  // The /api/ prefix is what causes error 36009009 "Invalid path".
   const paths = [
-    "/api/authorization/202309/shops",
-    "/api/seller/202309/shops",
-    "/api/shop/202309/shops",
-    "/api/authorization/202312/shops",
+    "/authorization/202309/shops",
+    "/authorization/202312/shops",
   ];
   const accessToken = process.env.TIKTOK_SHOP_ACCESS_TOKEN || "";
   const headers = { "x-tts-access-token": accessToken };
@@ -192,14 +226,16 @@ export async function tiktokShopPost(
   const accessToken = process.env.TIKTOK_SHOP_ACCESS_TOKEN || "";
   const shopCipher = process.env.TIKTOK_SHOP_CIPHER || "";
   const params = shopCipher ? { shop_cipher: shopCipher, ...extraParams } : extraParams;
-  const url = tiktokShopUrl(apiPath, params);
+  const bodyStr = JSON.stringify(body);
+  // POST: pass raw body string so it's included in the HMAC signature
+  const url = tiktokShopUrl(apiPath, params, bodyStr);
   const res = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "x-tts-access-token": accessToken,
     },
-    body: JSON.stringify(body),
+    body: bodyStr,
   });
   return res.json();
 }

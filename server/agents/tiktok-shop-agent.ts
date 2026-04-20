@@ -49,7 +49,7 @@ export interface TiktokShopPerformanceData {
 
 async function fetchProducts(): Promise<TiktokShopProduct[]> {
   try {
-    const data = await tiktokShopPost("/api/products/202309/products/search", {}, { page_size: 50, status: "ACTIVATE" });
+    const data = await tiktokShopPost("/product/202309/products/search", {}, { page_size: 50, status: "ACTIVATE" });
 
     console.log("[TikTokShopAgent] Resposta produtos:", JSON.stringify(data).slice(0, 300));
     const products: any[] = data?.data?.products || [];
@@ -73,7 +73,7 @@ async function fetchOrders(): Promise<TiktokShopOrder[]> {
     const now = Math.floor(Date.now() / 1000);
     const from = now - 30 * 24 * 60 * 60;
 
-    const data = await tiktokShopPost("/api/orders/202309/orders/search", {}, {
+    const data = await tiktokShopPost("/order/202309/orders/search", {}, {
       page_size: 50,
       create_time_from: from,
       create_time_to: now,
