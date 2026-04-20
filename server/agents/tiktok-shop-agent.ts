@@ -11,7 +11,7 @@ import { getDb } from "../db";
 import { tiktokShopEvaluations, tiktokShopEvaluationMessages } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { invokeLLM } from "../_core/llm";
-import { tiktokShopGet } from "../services/tiktokShopApi";
+import { tiktokShopGet, tiktokShopPost } from "../services/tiktokShopApi";
 import { getLatestKnowledge } from "./knowledge-updater";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -49,10 +49,7 @@ export interface TiktokShopPerformanceData {
 
 async function fetchProducts(): Promise<TiktokShopProduct[]> {
   try {
-    const data = await tiktokShopGet("/api/products/202309/products", {
-      page_size: "50",
-      status: "4", // ACTIVATE
-    });
+    const data = await tiktokShopPost("/api/products/202309/products/search", {}, { page_size: 50, status: "ACTIVATE" });
 
     console.log("[TikTokShopAgent] Resposta produtos:", JSON.stringify(data).slice(0, 300));
     const products: any[] = data?.data?.products || [];
@@ -76,11 +73,11 @@ async function fetchOrders(): Promise<TiktokShopOrder[]> {
     const now = Math.floor(Date.now() / 1000);
     const from = now - 30 * 24 * 60 * 60;
 
-    const data = await tiktokShopGet("/api/orders/202309/orders", {
-      page_size: "50",
-      create_time_from: String(from),
-      create_time_to: String(now),
-      status: "COMPLETED",
+    const data = await tiktokShopPost("/api/orders/202309/orders/search", {}, {
+      page_size: 50,
+      create_time_from: from,
+      create_time_to: now,
+      order_status: "COMPLETED",
     });
 
     console.log("[TikTokShopAgent] Resposta pedidos:", JSON.stringify(data).slice(0, 300));

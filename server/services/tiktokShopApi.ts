@@ -179,6 +179,28 @@ export async function tiktokShopGet(
   return body;
 }
 
+// ─── POST com auto-retry ───────────────────────────────────────────────────────
+
+export async function tiktokShopPost(
+  apiPath: string,
+  extraParams: Record<string, string> = {},
+  body: Record<string, any> = {}
+): Promise<any> {
+  const accessToken = process.env.TIKTOK_SHOP_ACCESS_TOKEN || "";
+  const shopCipher = process.env.TIKTOK_SHOP_CIPHER || "";
+  const params = shopCipher ? { shop_cipher: shopCipher, ...extraParams } : extraParams;
+  const url = tiktokShopUrl(apiPath, params);
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-tts-access-token": accessToken,
+    },
+    body: JSON.stringify(body),
+  });
+  return res.json();
+}
+
 // ─── OAuth URL ────────────────────────────────────────────────────────────────
 
 export function tiktokShopAuthUrl(state = "tiktok_shop"): string {
