@@ -80,15 +80,20 @@ export function registerTiktokShopOAuthRoutes(app: Express): void {
         return res.redirect(`/tiktok-shop?error=${encodeURIComponent(data.message || "token_error")}`);
       }
 
-      const { access_token, refresh_token, open_id } = data.data;
+      console.log("[TikTokShopOAuth] data completo:", JSON.stringify(data.data));
+
+      const { access_token, refresh_token, open_id, seller_name, expire_in, refresh_token_expire_in } = data.data;
+      const shopCipherFromToken = data.data.shop_cipher || data.data.cipher || "";
+      const shopIdFromToken = data.data.shop_id || open_id || "";
 
       updateEnvFile({
         TIKTOK_SHOP_ACCESS_TOKEN: access_token || "",
         TIKTOK_SHOP_REFRESH_TOKEN: refresh_token || "",
-        TIKTOK_SHOP_ID: open_id || "",
+        TIKTOK_SHOP_ID: shopIdFromToken,
+        ...(shopCipherFromToken ? { TIKTOK_SHOP_CIPHER: shopCipherFromToken } : {}),
       });
 
-      console.log(`[TikTokShopOAuth] Conta conectada! Open ID: ${open_id}`);
+      console.log(`[TikTokShopOAuth] Conectado! open_id=${open_id} shop_cipher=${shopCipherFromToken || "não veio no token"}`);
 
       // Busca shop_cipher imediatamente após conectar
       const cipher = await fetchAndStoreShopCipher();
