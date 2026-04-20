@@ -7,9 +7,10 @@
  */
 
 import type { Express } from "express";
+import crypto from "crypto";
 import fs from "fs";
 import path from "path";
-import { tiktokShopAuthUrl, tiktokShopSign } from "../services/tiktokShopApi";
+import { tiktokShopAuthUrl } from "../services/tiktokShopApi";
 
 const APP_KEY = process.env.TIKTOK_SHOP_APP_KEY || process.env.TIKTOK_ADS_APP_ID || "";
 const APP_SECRET = process.env.TIKTOK_SHOP_APP_SECRET || process.env.TIKTOK_ADS_SECRET || "";
@@ -61,7 +62,7 @@ export function registerTiktokShopOAuthRoutes(app: Express): void {
       // sign: UPPERCASE, app_secret excluded from body but used in HMAC
       const sorted = Object.entries(params).sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>k+v).join("");
       const toSign = APP_SECRET + "/api/v2/token/get" + sorted;
-      const sign = require("crypto").createHmac("sha256", APP_SECRET).update(toSign).digest("hex").toUpperCase();
+      const sign = crypto.createHmac("sha256", APP_SECRET).update(toSign).digest("hex").toUpperCase();
 
       const r = await fetch(`${AUTH_BASE}/api/v2/token/get`, {
         method: "POST",
