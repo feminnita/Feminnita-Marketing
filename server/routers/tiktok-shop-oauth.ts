@@ -7,7 +7,6 @@
  */
 
 import type { Express } from "express";
-import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 import { tiktokShopAuthUrl } from "../services/tiktokShopApi";
@@ -53,54 +52,24 @@ export function registerTiktokShopOAuthRoutes(app: Express): void {
     }
 
     try {
-      const ts = Math.floor(Date.now() / 1000);
-      const params: Record<string, string> = {
+      // EcomPHP reference: GET with app_secret in query, no sign/timestamp needed
+      const qs = new URLSearchParams({
         app_key: APP_KEY,
+        app_secret: APP_SECRET,
         auth_code: code,
         grant_type: "authorized_code",
-        timestamp: String(ts),
-      };
-      // sign: UPPERCASE, app_secret excluded from body but used in HMAC
-      const sorted = Object.entries(params).sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>k+v).join("");
-      const toSign = APP_SECRET + "/api/v2/token/get" + sorted;
-      const sign = crypto.createHmac("sha256", APP_SECRET).update(toSign).digest("hex").toUpperCase();
+      }).toString();
 
-      // TikTok Shop token exchange — params go as query string (not body)
-      const qs = new URLSearchParams({ ...params, sign }).toString();
-      const attempts = [
-        // Query string only (GET-like POST)
-        { url: `${AUTH_BASE}/api/v2/token/get?${qs}`, body: "" },
-        // Query string + JSON body
-        { url: `${AUTH_BASE}/api/v2/token/get?${qs}`, body: JSON.stringify({ ...params, sign }) },
-        // Form-encoded body only
-        { url: `${AUTH_BASE}/api/v2/token/get`, body: qs },
-      ];
-      let r: Response | null = null;
-      let rawText = "";
-      for (const attempt of attempts) {
-        const headers: Record<string, string> = {
-          "Content-Type": attempt.body.startsWith("{") ? "application/json" : "application/x-www-form-urlencoded",
-          "User-Agent": "TikTokShopApp/1.0",
-        };
-        if (!attempt.body) delete headers["Content-Type"];
-        const resp = await fetch(attempt.url, {
-          method: "POST",
-          headers,
-          ...(attempt.body ? { body: attempt.body } : {}),
-        });
-        const txt = await resp.text();
-        console.log(`[TikTokShopOAuth] ${attempt.url.slice(0, 60)} → ${resp.status}: ${txt.slice(0, 120)}`);
-        if (txt && !txt.includes("404 page not found") && !txt.startsWith("<!")) {
-          r = resp;
-          rawText = txt;
-          break;
-        }
-      }
+      const url = `${AUTH_BASE}/api/v2/token/get?${qs}`;
+      console.log(`[TikTokShopOAuth] GET ${url.replace(APP_SECRET, "***")}`);
+
+      const resp = await fetch(url, { method: "GET" });
+      const rawText = await resp.text();
+      console.log(`[TikTokShopOAuth] → ${resp.status}: ${rawText.slice(0, 200)}`);
 
       if (!rawText) {
-        return res.redirect(`/tiktok-shop?error=${encodeURIComponent("todos_endpoints_falharam")}`);
+        return res.redirect(`/tiktok-shop?error=${encodeURIComponent("resposta_vazia")}`);
       }
-      console.log("[TikTokShopOAuth] Resposta raw TikTok:", rawText);
       let data: any;
       try { data = JSON.parse(rawText); } catch {
         return res.redirect(`/tiktok-shop?error=${encodeURIComponent("resposta_invalida: " + rawText.slice(0, 200))}`);
