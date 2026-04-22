@@ -67,9 +67,17 @@ const categorias: Categoria[] = [
       { id: 'whatsapp', label: 'WhatsApp', icon: '💬' },
       { id: 'whatsapp-disparos', label: 'Disparo em Massa', icon: '📨', href: '/whatsapp-disparos' },
       { id: 'criativos', label: 'Criativos — Pipeline IA', icon: '🎨', href: '/criativos' },
-      { id: 'ml-ads', label: 'ML Ads — Especialista IA', icon: '🛒', href: '/ml-ads' },
-      { id: 'shopee-ads', label: 'Shopee Ads — Especialista IA', icon: '🛍️', href: '/shopee-ads' },
-      { id: 'tiktok-shop', label: 'TikTok Shop — Especialista IA', icon: '🎵', href: '/tiktok-shop' },
+    ],
+  },
+  {
+    nome: 'Marketplaces',
+    icon: '🏪',
+    abas: [
+      { id: 'tiktok-shop', label: 'TikTok — Lia (Shop)', icon: '🎵', href: '/tiktok-shop' },
+      { id: 'tiktok-team', label: 'TikTok — Time (Luna, Maya, Zara, Nina, Marcela)', icon: '👥', href: '/tiktok-team' },
+      { id: 'tiktok-live-page2', label: 'TikTok — LIVE Commerce', icon: '🔴', href: '/tiktok-live' },
+      { id: 'ml-ads', label: 'Mercado Livre — Ads IA', icon: '🛒', href: '/ml-ads' },
+      { id: 'shopee-ads', label: 'Shopee — Ads IA', icon: '🛍️', href: '/shopee-ads' },
       { id: 'amazon', label: 'Amazon — Especialista IA', icon: '📦', href: '/amazon' },
     ],
   },
@@ -109,7 +117,6 @@ const categorias: Categoria[] = [
       { id: 'drops-planner', label: 'Drops & Coleções', icon: '🧥' },
       { id: 'ugc-collector', label: 'UGC de Clientes', icon: '📸' },
       { id: 'afiliadas-page', label: 'Afiliadas/Revendedoras', icon: '🤝', href: '/afiliadas' },
-      { id: 'tiktok-live-page', label: 'TikTok Live Commerce', icon: '🎥', href: '/tiktok-live' },
       { id: 'brand-book-page', label: 'Brand Book', icon: '🎨', href: '/brand-book' },
     ],
   },
@@ -231,15 +238,15 @@ export default function SidebarNavegacao({ onSelectTab, activeTab }: SidebarNave
                                 setIsOpen(false);
                               }
                             }}
-                            className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm transition-colors text-left ${
+                            className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm transition-colors text-left min-w-0 ${
                               activeTab === aba.id
                                 ? 'font-medium'
                                 : 'hover:bg-amber-50 text-slate-600'
                             }`}
                             style={activeTab === aba.id ? { backgroundColor: '#fdf0e8', color: '#8B2635' } : {}}
                           >
-                            <span className="text-sm">{aba.icon}</span>
-                            <span className="truncate">{aba.label}</span>
+                            <span className="text-sm shrink-0">{aba.icon}</span>
+                            <span className="truncate min-w-0">{aba.label}</span>
                           </button>
                         ))}
                       </div>
