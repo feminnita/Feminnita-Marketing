@@ -238,15 +238,18 @@ export default function SidebarNavegacao({ onSelectTab, activeTab }: SidebarNave
                                 setIsOpen(false);
                               }
                             }}
-                            className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm transition-colors text-left min-w-0 ${
+                            className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm transition-colors text-left ${
                               activeTab === aba.id
                                 ? 'font-medium'
                                 : 'hover:bg-amber-50 text-slate-600'
                             }`}
-                            style={activeTab === aba.id ? { backgroundColor: '#fdf0e8', color: '#8B2635' } : {}}
+                            style={{
+                              minWidth: 0,
+                              ...(activeTab === aba.id ? { backgroundColor: '#fdf0e8', color: '#8B2635' } : {}),
+                            }}
                           >
-                            <span className="text-sm shrink-0">{aba.icon}</span>
-                            <span className="truncate min-w-0">{aba.label}</span>
+                            <span className="text-sm" style={{ flexShrink: 0 }}>{aba.icon}</span>
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{aba.label}</span>
                           </button>
                         ))}
                       </div>
