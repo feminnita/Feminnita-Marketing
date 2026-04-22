@@ -74,11 +74,25 @@ const categorias: Categoria[] = [
     icon: '🏪',
     abas: [
       { id: 'tiktok-shop', label: 'TikTok — Lia (Shop)', icon: '🎵', href: '/tiktok-shop' },
-      { id: 'tiktok-team', label: 'TikTok — Time (Luna, Maya, Zara, Nina, Marcela)', icon: '👥', href: '/tiktok-team' },
+      { id: 'tiktok-team', label: 'Time TikTok (Agentes)', icon: '👥', href: '/tiktok-team' },
       { id: 'tiktok-live-page2', label: 'TikTok — LIVE Commerce', icon: '🔴', href: '/tiktok-live' },
       { id: 'ml-ads', label: 'Mercado Livre — Ads IA', icon: '🛒', href: '/ml-ads' },
       { id: 'shopee-ads', label: 'Shopee — Ads IA', icon: '🛍️', href: '/shopee-ads' },
       { id: 'amazon', label: 'Amazon — Especialista IA', icon: '📦', href: '/amazon' },
+    ],
+  },
+  {
+    nome: 'Equipe IA',
+    icon: '🤖',
+    abas: [
+      { id: 'equipe-marketing', label: 'Equipe de Agentes', icon: '👥', href: '/equipe-marketing' },
+      { id: 'fernanda', label: 'Fernanda — Tráfego', icon: '🟣', href: '/gestor-trafego' },
+      { id: 'sofia', label: 'Sofia — Instagram', icon: '🩷', href: '/agente/sofia' },
+      { id: 'beatriz', label: 'Beatriz — Criativos', icon: '🟡', href: '/beatriz' },
+      { id: 'clara', label: 'Clara — Inteligência', icon: '🔵', href: '/agente/clara' },
+      { id: 'mariana', label: 'Mariana — Vendas', icon: '🟢', href: '/agente/mariana' },
+      { id: 'especialistas', label: 'Especialistas', icon: '🎓', href: '/especialistas' },
+      { id: 'acoes-agentes', label: 'Ações dos Agentes', icon: '⚡', href: '/acoes-agentes' },
     ],
   },
   {
