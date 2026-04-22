@@ -59,14 +59,14 @@ const categorias: Categoria[] = [
     icon: '📢',
     abas: [
       { id: 'gestor-trafego', label: 'Gestor de Tráfego IA', icon: '🤖', href: '/gestor-trafego' },
-      { id: 'traffic-manager', label: 'Especialista em Tráfego', icon: '📊', href: '/traffic-manager' },
+      { id: 'traffic-manager', label: 'Tráfego IA', icon: '📊', href: '/traffic-manager' },
       { id: 'blog-feminnita', label: 'Blog Feminnita', icon: '✍️', href: '/blog-feminnita' },
       { id: 'meta', label: 'Meta Ads', icon: '📱' },
       { id: 'googleads', label: 'Google Ads', icon: '🔍' },
       { id: 'email-marketing', label: 'Email Marketing', icon: '📧' },
       { id: 'whatsapp', label: 'WhatsApp', icon: '💬' },
       { id: 'whatsapp-disparos', label: 'Disparo em Massa', icon: '📨', href: '/whatsapp-disparos' },
-      { id: 'criativos', label: 'Criativos — Pipeline IA', icon: '🎨', href: '/criativos' },
+      { id: 'criativos', label: 'Pipeline Criativos', icon: '🎨', href: '/criativos' },
     ],
   },
   {
@@ -75,10 +75,10 @@ const categorias: Categoria[] = [
     abas: [
       { id: 'tiktok-shop', label: 'TikTok — Lia (Shop)', icon: '🎵', href: '/tiktok-shop' },
       { id: 'tiktok-team', label: 'Time TikTok (Agentes)', icon: '👥', href: '/tiktok-team' },
-      { id: 'tiktok-live-page2', label: 'TikTok — LIVE Commerce', icon: '🔴', href: '/tiktok-live' },
-      { id: 'ml-ads', label: 'Mercado Livre — Ads IA', icon: '🛒', href: '/ml-ads' },
-      { id: 'shopee-ads', label: 'Shopee — Ads IA', icon: '🛍️', href: '/shopee-ads' },
-      { id: 'amazon', label: 'Amazon — Especialista IA', icon: '📦', href: '/amazon' },
+      { id: 'tiktok-live-page2', label: 'TikTok LIVE Commerce', icon: '🔴', href: '/tiktok-live' },
+      { id: 'ml-ads', label: 'ML — Ads IA', icon: '🛒', href: '/ml-ads' },
+      { id: 'shopee-ads', label: 'Shopee Ads IA', icon: '🛍️', href: '/shopee-ads' },
+      { id: 'amazon', label: 'Amazon IA', icon: '📦', href: '/amazon' },
     ],
   },
   {
