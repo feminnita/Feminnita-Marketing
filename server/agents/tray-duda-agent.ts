@@ -1,72 +1,70 @@
 /**
  * Duda — Especialista em SEO e Otimização do Site Tray (Feminnita)
  * Referências: Neil Patel (NP Digital), Brian Dean (Backlinko), Fábio Ricotta (Agência Mestre)
- * Usa tool_use para acessar páginas reais do site Tray da Feminnita
+ * Faz fetch das páginas do site no servidor antes de chamar invokeLLM — sem depender de ANTHROPIC_API_KEY
  */
 
-import Anthropic from "@anthropic-ai/sdk";
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || "" });
+import { invokeLLM } from "../_core/llm";
 
 const TRAY_STORE_URL = process.env.TRAY_STORE_URL || "https://feminnita.com.br";
 
-const TOOLS: Anthropic.Tool[] = [
-  {
-    name: "fetch_url",
-    description:
-      "Acessa uma URL pública do site Tray da Feminnita e retorna o conteúdo textual, title, H1 e meta description. Use para analisar como as páginas estão atualmente antes de recomendar melhorias. NUNCA peça ao usuário para copiar e colar conteúdo — você mesmo acessa.",
-    input_schema: {
-      type: "object" as const,
-      properties: {
-        url: {
-          type: "string",
-          description: `URL completa a ser acessada. Exemplos: ${TRAY_STORE_URL}, ${TRAY_STORE_URL}/pijamas-femininos`,
-        },
-      },
-      required: ["url"],
-    },
-  },
-];
+async function fetchPage(url: string): Promise<string> {
+  try {
+    const res = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; FeminnitaSEO/1.0)" },
+      signal: AbortSignal.timeout(12000),
+    });
+    if (!res.ok) return `[HTTP ${res.status} em ${url}]`;
+    const html = await res.text();
 
-async function executeTool(name: string, input: Record<string, string>): Promise<string> {
-  if (name === "fetch_url") {
-    try {
-      const url = input.url;
-      const res = await fetch(url, {
-        headers: { "User-Agent": "Mozilla/5.0 (compatible; FeminnitaSEO/1.0)" },
-        signal: AbortSignal.timeout(12000),
-      });
-      if (!res.ok) return JSON.stringify({ error: `HTTP ${res.status} em ${url}` });
-      const html = await res.text();
+    const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    const descMatch = html.match(/name=["']description["'][^>]*content=["']([^"']+)["']/i)
+      || html.match(/content=["']([^"']+)["'][^>]*name=["']description["']/i);
+    const h1Match = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+    const h2Matches = [...html.matchAll(/<h2[^>]*>([\s\S]*?)<\/h2>/gi)].slice(0, 5);
+    const text = html
+      .replace(/<script[\s\S]*?<\/script>/gi, "")
+      .replace(/<style[\s\S]*?<\/style>/gi, "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&nbsp;/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 3000);
 
-      const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-      const descMatch = html.match(/name=["']description["'][^>]*content=["']([^"']+)["']/i)
-        || html.match(/content=["']([^"']+)["'][^>]*name=["']description["']/i);
-      const h1Match = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
-      const h2Matches = [...html.matchAll(/<h2[^>]*>([\s\S]*?)<\/h2>/gi)].slice(0, 5);
-
-      const text = html
-        .replace(/<script[\s\S]*?<\/script>/gi, "")
-        .replace(/<style[\s\S]*?<\/style>/gi, "")
-        .replace(/<[^>]+>/g, " ")
-        .replace(/&nbsp;/g, " ")
-        .replace(/\s+/g, " ")
-        .trim()
-        .slice(0, 3500);
-
-      return JSON.stringify({
-        url,
-        title: titleMatch?.[1]?.replace(/<[^>]+>/g, "").trim() || "(sem title)",
-        metaDescription: descMatch?.[1]?.trim() || "(sem meta description)",
-        h1: h1Match?.[1]?.replace(/<[^>]+>/g, "").trim() || "(sem H1)",
-        h2s: h2Matches.map((m) => m[1].replace(/<[^>]+>/g, "").trim()),
-        textContent: text,
-      });
-    } catch (err: any) {
-      return JSON.stringify({ error: `Falha ao acessar URL: ${err.message}` });
-    }
+    return `URL: ${url}
+TITLE: ${titleMatch?.[1]?.replace(/<[^>]+>/g, "").trim() || "(sem title)"}
+META DESCRIPTION: ${descMatch?.[1]?.trim() || "(sem meta description)"}
+H1: ${h1Match?.[1]?.replace(/<[^>]+>/g, "").trim() || "(sem H1)"}
+H2s: ${h2Matches.map((m) => m[1].replace(/<[^>]+>/g, "").trim()).join(" | ") || "(nenhum)"}
+CONTEÚDO: ${text}`;
+  } catch (err: any) {
+    return `[Erro ao acessar ${url}: ${err.message}]`;
   }
-  return JSON.stringify({ error: `Ferramenta desconhecida: ${name}` });
+}
+
+// Extrai URLs do texto ou detecta pedido de análise do site
+function extractUrlsToFetch(userMessage: string): string[] {
+  const urls: string[] = [];
+
+  // URLs explícitas na mensagem
+  const urlRegex = /https?:\/\/[^\s"'<>]+/g;
+  const explicit = userMessage.match(urlRegex) || [];
+  urls.push(...explicit.filter(u => u.includes("feminnita") || u.includes(TRAY_STORE_URL)));
+
+  // Slugs relativos: "/pijamas-femininos" etc.
+  const slugRegex = /(?:acesse|analise|veja|verifique|abra|checa)\s+(?:a\s+)?(?:página\s+)?['""]?(\/[\w-]+)['""]?/gi;
+  let m;
+  while ((m = slugRegex.exec(userMessage)) !== null) {
+    urls.push(`${TRAY_STORE_URL}${m[1]}`);
+  }
+
+  // Pedido genérico de análise do site → busca home
+  const wantsSite = /\b(site|loja|home|página inicial|feminnita\.com|analise completa|seo de tudo|analise o site)\b/i.test(userMessage);
+  if (wantsSite && urls.length === 0) {
+    urls.push(TRAY_STORE_URL);
+  }
+
+  return [...new Set(urls)].slice(0, 4); // máx 4 páginas por mensagem
 }
 
 const SYSTEM_PROMPT = `Você é a Duda — especialista sênior em SEO para e-commerce de moda no Brasil. Especialização em otimização de lojas Tray, descrições de produto que ranqueiam e convertem, estrutura de páginas para buscadores e agentes de IA. Trabalhou com marcas de moda brasileiras aumentando tráfego orgânico em 300% em 12 meses.
@@ -176,52 +174,28 @@ export async function chatWithDuda(
 ): Promise<string> {
   const nameCtx = userName ? `\nNOME DO USUÁRIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
 
-  const apiMessages: Anthropic.MessageParam[] = messages.map((m) => ({
-    role: m.role,
-    content: m.content,
-  }));
+  // Detecta URLs a buscar na última mensagem do usuário
+  const lastUserMsg = [...messages].reverse().find(m => m.role === "user")?.content ?? "";
+  const urlsToFetch = extractUrlsToFetch(lastUserMsg);
 
-  let finalText = "";
-  const deadline = Date.now() + 30000;
-
-  for (let iter = 0; iter < 3; iter++) {
-    if (Date.now() > deadline) break;
-
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 2000,
-      system: SYSTEM_PROMPT + nameCtx,
-      tools: TOOLS,
-      messages: apiMessages,
-    });
-
-    if (response.stop_reason === "end_turn") {
-      const textBlock = response.content.find((b) => b.type === "text");
-      finalText = textBlock && "text" in textBlock ? textBlock.text : "";
-      break;
-    }
-
-    if (response.stop_reason === "tool_use") {
-      const toolUseBlocks = response.content.filter((b) => b.type === "tool_use");
-      if (toolUseBlocks.length === 0) break;
-
-      apiMessages.push({ role: "assistant", content: response.content });
-
-      const toolResults: Anthropic.ToolResultBlockParam[] = await Promise.all(
-        toolUseBlocks.map(async (block) => {
-          if (block.type !== "tool_use") return { type: "tool_result" as const, tool_use_id: "", content: "" };
-          const result = await executeTool(block.name, block.input as Record<string, string>);
-          return { type: "tool_result" as const, tool_use_id: block.id, content: result };
-        })
-      );
-
-      apiMessages.push({ role: "user", content: toolResults });
-    } else {
-      const textBlock = response.content.find((b) => b.type === "text");
-      finalText = textBlock && "text" in textBlock ? textBlock.text : "";
-      break;
-    }
+  // Busca as páginas em paralelo antes de chamar o LLM
+  let fetchedContext = "";
+  if (urlsToFetch.length > 0) {
+    console.log(`[Duda] Buscando ${urlsToFetch.length} páginas:`, urlsToFetch);
+    const pages = await Promise.all(urlsToFetch.map(fetchPage));
+    fetchedContext = "\n\n═══ CONTEÚDO ATUAL DO SITE (buscado agora) ═══\n" + pages.join("\n\n---\n\n");
   }
 
-  return finalText || "Não consegui processar a solicitação.";
+  const systemWithFetch = SYSTEM_PROMPT + nameCtx + fetchedContext;
+
+  const result = await invokeLLM({
+    messages: [
+      { role: "system", content: systemWithFetch },
+      ...messages,
+    ],
+    maxTokens: 2500,
+  });
+
+  const content = result.choices[0]?.message?.content;
+  return typeof content === "string" ? content : "Não consegui processar a solicitação.";
 }
