@@ -139,8 +139,9 @@ PRODUTO/ÂNGULO ENVIADO:
 ${productDescription}
 Título: ${campaignAngle}
 
-Escreva um BRIEF CRIATIVO em até 130 palavras para a Beatriz.
-Inclua: (1) público e dor específica, (2) ângulo/hook e por quê, (3) quais elementos da estrutura de referência usar neste produto, (4) o que evitar.
+Escreva um BRIEF CRIATIVO em até 150 palavras para a Beatriz.
+Comece obrigatoriamente com: "CAMPANHA: [Prospecção | Remarketing | Lançamento | Oferta]" — escolha a mais adequada para este produto/contexto.
+Depois inclua: (1) público e dor específica, (2) ângulo/hook e por quê, (3) quais elementos da estrutura de referência usar neste produto, (4) o que evitar.
 Direto para a Beatriz, como briefing de agência.`;
 
   try {

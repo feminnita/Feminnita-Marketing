@@ -11,13 +11,6 @@ interface Message {
   content: string;
 }
 
-const CAMPAIGN_OPTIONS = [
-  { value: "prospeccao",  label: "Prospecção — Revendedoras novas (público frio)" },
-  { value: "remarketing", label: "Remarketing — Quem já viu a Feminnita" },
-  { value: "lancamento",  label: "Lançamento de Coleção" },
-  { value: "oferta",      label: "Oferta / Promoção com desconto" },
-] as const;
-
 export default function BeatrizPage() {
   const [, setLocation] = useLocation();
   const [tab, setTab] = useState<"chat" | "criativo">("chat");
@@ -35,7 +28,6 @@ export default function BeatrizPage() {
   // ── Criar Criativo ──
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [campaignType, setCampaignType] = useState<"prospeccao" | "remarketing" | "lancamento" | "oferta">("prospeccao");
   const [notes, setNotes] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -48,9 +40,7 @@ export default function BeatrizPage() {
   });
 
   const createMut = trpc.creativeAds.requestFromImage.useMutation({
-    onSuccess: () => {
-      setSubmitted(true);
-    },
+    onSuccess: () => setSubmitted(true),
     onError: (e) => toast.error("Erro ao criar: " + e.message),
   });
 
@@ -97,7 +87,7 @@ export default function BeatrizPage() {
 
   function handleCreate() {
     if (!imageBase64) { toast.error("Selecione uma foto do produto."); return; }
-    createMut.mutate({ imageBase64, campaignType, notes: notes.trim() || undefined });
+    createMut.mutate({ imageBase64, notes: notes.trim() || undefined });
   }
 
   return (
@@ -209,8 +199,7 @@ export default function BeatrizPage() {
               <div className="flex items-start gap-3 text-sm text-gray-600 bg-rose-50 border border-rose-100 rounded-xl p-4">
                 <span className="text-[#8B2635] mt-0.5">ℹ</span>
                 <span>
-                  Envie a foto do produto e diga qual campanha é.
-                  A <strong>Fernanda</strong> analisa a imagem e escreve o brief estratégico.
+                  Envie a foto. A <strong>Fernanda</strong> analisa a imagem, decide a campanha certa e escreve o brief estratégico.
                   A <strong>Beatriz</strong> gera 3 versões de copy com hooks diferentes.
                   Tudo vai direto para <strong>Aprovação</strong>.
                 </span>
@@ -246,33 +235,6 @@ export default function BeatrizPage() {
                   </div>
                 )}
                 <input ref={fileRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
-              </div>
-
-              {/* Campanha */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Campanha *</label>
-                <div className="space-y-2">
-                  {CAMPAIGN_OPTIONS.map((opt) => (
-                    <label
-                      key={opt.value}
-                      className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
-                        campaignType === opt.value
-                          ? "border-[#8B2635] bg-rose-50"
-                          : "border-gray-200 hover:border-gray-300"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="campaign"
-                        value={opt.value}
-                        checked={campaignType === opt.value}
-                        onChange={() => { setCampaignType(opt.value); setSubmitted(false); }}
-                        className="accent-[#8B2635]"
-                      />
-                      <span className="text-sm text-gray-700">{opt.label}</span>
-                    </label>
-                  ))}
-                </div>
               </div>
 
               {/* Notas opcionais */}
