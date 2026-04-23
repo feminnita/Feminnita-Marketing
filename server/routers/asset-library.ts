@@ -73,7 +73,127 @@ export const assetLibraryRouter = router({
         })
         .$returningId();
 
+      // Fernanda briefing Beatriz internamente — só para imagens de produto (3 variantes)
+      if (input.category === "produto") {
+        (async () => {
+          try {
+            const res = await fetch(input.url.startsWith("http") ? input.url : `http://localhost:${process.env.PORT || 3000}${input.url}`);
+            const buf = await res.arrayBuffer();
+            const imageBase64 = Buffer.from(buf).toString("base64");
+            const { requestCreativeVariants } = await import("../agents/creative-agent");
+            await requestCreativeVariants(ctx.user.id, {
+              title: `Criativo — ${input.name}`,
+              description: [
+                "MARCA: Feminnita Pijamas | TECIDO: Suede premium (NUNCA algodão)",
+                "PÚBLICO: Revendedoras autônomas que querem renda extra de casa",
+                "ÂNGULO DA CAMPANHA: " + input.name,
+                aiAnalysis ? "ANÁLISE DA IMAGEM: " + aiAnalysis : "",
+                input.description ? "DESCRIÇÃO ADICIONAL: " + input.description : "",
+              ].filter(Boolean).join(" | "),
+              imageBase64Input: imageBase64,
+              campaignType: "prospeccao",
+              targetAudience: "revendedoras autônomas — mulheres que querem renda extra de casa, sem estoque",
+              product: "Pijama Suede Feminnita",
+            });
+            console.log(`[AssetLibrary] Fernanda→Beatriz: 3 variantes iniciadas para "${input.name}"`);
+          } catch (err: any) {
+            console.error(`[AssetLibrary] Fernanda→Beatriz falhou para "${input.name}":`, err.message);
+          }
+        })();
+      }
+
       return { id: inserted.id, aiAnalysis };
+    }),
+
+  uploadAssetFile: protectedProcedure
+    .input(z.object({
+      fileName: z.string().min(1).max(255),
+      fileData: z.string(), // base64
+      contentType: z.string(),
+      name: z.string().min(1).max(255),
+      description: z.string().optional(),
+      category: z.enum(["produto", "lifestyle", "modelo", "colecao", "background", "logo", "outro"]),
+      platform: z.enum(["instagram", "tiktok", "todos"]).default("todos"),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("DB indisponível");
+
+      const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+      if (!allowed.includes(input.contentType)) throw new Error("Tipo não permitido. Use JPEG, PNG, WebP ou GIF.");
+
+      const buffer = Buffer.from(input.fileData, "base64");
+      if (buffer.length > 15 * 1024 * 1024) throw new Error("Arquivo muito grande. Máximo 15MB.");
+
+      const fs = await import("fs/promises");
+      const path = await import("path");
+      const crypto = await import("crypto");
+      const ext = input.contentType.split("/")[1]?.replace("jpeg", "jpg") || "jpg";
+      const filename = `${Date.now()}-${crypto.randomBytes(6).toString("hex")}.${ext}`;
+      const uploadsDir = path.resolve(process.cwd(), "uploads");
+      await fs.mkdir(uploadsDir, { recursive: true });
+      await fs.writeFile(path.join(uploadsDir, filename), buffer);
+      const url = `/uploads/${filename}`;
+
+      let aiAnalysis: string | undefined;
+      try {
+        const { invokeLLM } = await import("../_core/llm");
+        const llmResult = await invokeLLM({
+          messages: [{ role: "user", content: [
+            { type: "text", text: "Descreva este produto para uso em marketing de moda feminina. Inclua: tipo, cores, estilo, pontos de venda. Máx 3 frases." },
+            { type: "image_url", image_url: { url } },
+          ]}],
+        });
+        const c = llmResult.choices[0]?.message?.content;
+        aiAnalysis = typeof c === "string" ? c : "";
+      } catch { /* análise opcional */ }
+
+      const [inserted] = await db.insert(assetLibrary).values({
+        userId: ctx.user.id,
+        name: input.name,
+        description: input.description,
+        category: input.category,
+        url,
+        mimeType: input.contentType,
+        fileSize: buffer.length,
+        tags: [],
+        platform: input.platform,
+        aiAnalysis,
+        isActive: true,
+      }).$returningId();
+
+      // Fernanda briefing Beatriz internamente — só para imagens de produto (3 variantes)
+      if (input.category === "produto") {
+        const assetBase64 = input.fileData;
+        const assetName = input.name;
+        const assetAnalysis = aiAnalysis;
+        const assetDesc = input.description;
+        const assetUserId = ctx.user.id;
+        (async () => {
+          try {
+            const { requestCreativeVariants } = await import("../agents/creative-agent");
+            await requestCreativeVariants(assetUserId, {
+              title: `Criativo — ${assetName}`,
+              description: [
+                "MARCA: Feminnita Pijamas | TECIDO: Suede premium (NUNCA algodão)",
+                "PÚBLICO: Revendedoras autônomas que querem renda extra de casa",
+                "ÂNGULO DA CAMPANHA: " + assetName,
+                assetAnalysis ? "ANÁLISE DA IMAGEM: " + assetAnalysis : "",
+                assetDesc ? "DESCRIÇÃO ADICIONAL: " + assetDesc : "",
+              ].filter(Boolean).join(" | "),
+              imageBase64Input: assetBase64,
+              campaignType: "prospeccao",
+              targetAudience: "revendedoras autônomas — mulheres que querem renda extra de casa, sem estoque",
+              product: "Pijama Suede Feminnita",
+            });
+            console.log(`[AssetLibrary] Fernanda→Beatriz: 3 variantes iniciadas para "${assetName}"`);
+          } catch (err: any) {
+            console.error(`[AssetLibrary] Fernanda→Beatriz falhou para "${assetName}":`, err.message);
+          }
+        })();
+      }
+
+      return { id: inserted.id, url, aiAnalysis };
     }),
 
   listAssets: protectedProcedure

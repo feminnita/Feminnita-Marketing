@@ -39,6 +39,72 @@ const STATUS_LABEL: Record<string, { label: string; color: string }> = {
   failed:             { label: "Falhou", color: "text-red-700 bg-red-100" },
 };
 
+// ─── Card Image — prévia real do anúncio: foto + painel de copy ───────────────
+
+function CardImage({ id, title }: { id: number; title: string }) {
+  const detail = trpc.creativeAds.get.useQuery({ id });
+
+  if (detail.isLoading) return (
+    <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-[#8B2635]/10 to-rose-50">
+      <Loader2 className="w-6 h-6 animate-spin text-[#8B2635]/40" />
+    </div>
+  );
+
+  const headline = detail.data?.generatedHeadline;
+  const body     = detail.data?.generatedBody;
+
+  if (!detail.data?.imageBase64 && !headline) return (
+    <div className="flex flex-col items-center justify-center w-full h-full bg-gradient-to-br from-[#8B2635]/10 to-rose-50 text-gray-400">
+      <Image className="w-10 h-10 opacity-30 mb-1" />
+      <span className="text-xs">Gerando...</span>
+    </div>
+  );
+
+  return (
+    <div className="flex w-full h-full">
+      {/* Foto do produto — lateral esquerda */}
+      <div className="w-[55%] h-full relative overflow-hidden bg-rose-50">
+        {detail.data?.imageBase64 ? (
+          <img
+            src={`data:image/png;base64,${detail.data.imageBase64}`}
+            alt={title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <Image className="w-8 h-8 text-[#8B2635]/20" />
+          </div>
+        )}
+      </div>
+
+      {/* Painel de copy — lateral direita */}
+      <div className="w-[45%] h-full flex flex-col bg-gradient-to-b from-[#8B2635] to-[#5a1520] p-3">
+        {/* Topo: marca + headline + body */}
+        <div className="flex-1 space-y-2 overflow-hidden">
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-px bg-white/50" />
+            <span className="text-[9px] text-white/60 uppercase tracking-widest font-medium">Feminnita</span>
+          </div>
+          {headline && (
+            <p className="text-white font-bold text-xs leading-snug">{headline}</p>
+          )}
+          {body && (
+            <p className="text-white/75 text-[10px] leading-relaxed">{body}</p>
+          )}
+        </div>
+
+        {/* Rodapé: CTA */}
+        <div className="mt-2 pt-2 border-t border-white/20 space-y-1">
+          <div className="bg-white rounded-md px-2 py-1 text-center">
+            <span className="text-[#8B2635] text-[10px] font-bold">Seja Revendedora →</span>
+          </div>
+          <p className="text-white/40 text-[9px] text-center">feminnita.com.br</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Componente Principal ─────────────────────────────────────────────────────
 
 export default function CreativeAdsPage() {
@@ -63,8 +129,9 @@ export default function CreativeAdsPage() {
   });
 
   // Queries
-  const listAll    = trpc.creativeAds.list.useQuery({});
-  const listPending = trpc.creativeAds.list.useQuery({ status: "pending_approval" });
+  const listAll       = trpc.creativeAds.list.useQuery({});
+  const listPending   = trpc.creativeAds.list.useQuery({ status: "pending_approval" });
+  const listGenerating = trpc.creativeAds.list.useQuery({ status: "pending_generation" }, { refetchInterval: 5000 });
   const status     = trpc.creativeAds.status.useQuery();
   const metaPerms  = trpc.creativeAds.checkMetaPermissions.useQuery();
   const driveFiles = trpc.creativeAds.listDriveFiles.useQuery();
@@ -99,8 +166,12 @@ export default function CreativeAdsPage() {
     onError: (e) => toast.error(e.message),
   });
 
-  const creatives: Creative[] = (tab === "pending" ? listPending.data : listAll.data) ?? [];
-  const pendingCount = listPending.data?.length ?? 0;
+  const generatingItems: Creative[] = listGenerating.data ?? [];
+  const pendingItems: Creative[]    = listPending.data ?? [];
+  const creatives: Creative[]       = tab === "pending"
+    ? [...generatingItems, ...pendingItems]
+    : (listAll.data ?? []);
+  const pendingCount = pendingItems.length + generatingItems.length;
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
@@ -120,12 +191,20 @@ export default function CreativeAdsPage() {
         )}
       </div>
 
+      {/* Fluxo automático — informativo */}
+      <div className="bg-purple-50 border border-purple-200 rounded-xl px-4 py-3 text-sm text-purple-800 flex items-start gap-2">
+        <Sparkles className="w-4 h-4 mt-0.5 shrink-0 text-purple-600" />
+        <span>
+          <strong>Fluxo automático:</strong> Ao subir uma foto de produto na Biblioteca de Imagens (categoria "produto"), a Beatriz já cria o banner e o copy automaticamente. Quando terminar, aparece aqui em <strong>Aguardando Aprovação</strong>.
+        </span>
+      </div>
+
       {/* Tabs */}
       <div className="flex gap-2 border-b border-gray-200">
         {[
-          { key: "pending", label: `Pendentes${pendingCount > 0 ? ` (${pendingCount})` : ""}` },
-          { key: "all",     label: "Todos" },
-          { key: "new",     label: "Solicitar Criativo" },
+          { key: "pending", label: `Aprovar${pendingCount > 0 ? ` (${pendingCount})` : ""}` },
+          { key: "all",     label: "Histórico" },
+          { key: "new",     label: "Brief Manual" },
           { key: "config",  label: "Configurações" },
         ].map(t => (
           <button
@@ -154,48 +233,30 @@ export default function CreativeAdsPage() {
           {!listAll.isLoading && creatives.length === 0 && (
             <div className="text-center py-16 text-gray-400">
               <Image className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p className="font-medium">Nenhum criativo {tab === "pending" ? "pendente" : "encontrado"}</p>
-              <p className="text-sm">Use a aba "Solicitar Criativo" para gerar um novo banner</p>
+              <p className="font-medium">{tab === "pending" ? "Nenhum criativo aguardando aprovação" : "Nenhum criativo encontrado"}</p>
+              <p className="text-sm mt-1">
+                {tab === "pending"
+                  ? "Suba fotos de produto na Biblioteca de Imagens — a Beatriz cria automaticamente."
+                  : "Os criativos gerados aparecem aqui com todo o histórico."}
+              </p>
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {creatives.map(c => {
               const st = STATUS_LABEL[c.status] ?? { label: c.status, color: "text-gray-600 bg-gray-50" };
               return (
                 <div key={c.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                  {/* Preview imagem ou placeholder */}
-                  <div
-                    className="h-40 bg-gradient-to-br from-[#8B2635]/10 to-rose-50 flex items-center justify-center cursor-pointer relative"
-                    onClick={() => setSelectedId(selectedId === c.id ? null : c.id)}
-                  >
-                    {selectedId === c.id && selected.data?.imageBase64 ? (
-                      <img
-                        src={`data:image/png;base64,${selected.data.imageBase64}`}
-                        alt={c.briefTitle}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="text-center text-gray-400">
-                        <Image className="w-10 h-10 mx-auto mb-2 opacity-40" />
-                        <span className="text-xs">
-                          {selected.isLoading && selectedId === c.id ? "Carregando..." : "Clique para ver"}
-                        </span>
-                      </div>
-                    )}
+                  {/* Imagem — carrega automaticamente, aspecto 1:1 */}
+                  <div className="relative w-full aspect-square overflow-hidden">
+                    <CardImage id={c.id} title={c.briefTitle} />
                     <span className={`absolute top-2 right-2 text-xs px-2 py-1 rounded-full font-medium ${st.color}`}>
                       {st.label}
                     </span>
                   </div>
 
                   <div className="p-4 space-y-2">
-                    <h3 className="font-semibold text-gray-900 text-sm line-clamp-1">{c.briefTitle}</h3>
-                    {c.generatedHeadline && (
-                      <p className="text-xs text-gray-600 font-medium">"{c.generatedHeadline}"</p>
-                    )}
-                    {c.generatedBody && (
-                      <p className="text-xs text-gray-500 line-clamp-2">{c.generatedBody}</p>
-                    )}
+                    <h3 className="font-bold text-gray-900 text-sm leading-tight">{c.briefTitle}</h3>
                     {c.product && (
                       <p className="text-xs text-[#8B2635]">📦 {c.product}</p>
                     )}
@@ -268,10 +329,13 @@ export default function CreativeAdsPage() {
       {/* ── TAB: SOLICITAR CRIATIVO ────────────────────────────────────────── */}
       {tab === "new" && (
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 max-w-2xl">
-          <div className="flex items-center gap-2 mb-6">
+          <div className="flex items-center gap-2 mb-2">
             <Sparkles className="w-5 h-5 text-[#8B2635]" />
-            <h2 className="text-lg font-semibold text-gray-900">Solicitar Novo Criativo</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Brief Manual</h2>
           </div>
+          <p className="text-sm text-gray-500 mb-6">
+            Use quando <strong>não tem foto de produto</strong>. Escreva um brief em texto e a Beatriz tenta gerar um banner do zero. Para melhores resultados, suba a foto na Biblioteca de Imagens.
+          </p>
 
           <div className="space-y-4">
             <div>

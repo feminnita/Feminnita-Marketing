@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -57,12 +58,13 @@ export default function AssetLibraryPage() {
   const [activationMessage, setActivationMessage] = useState<string | null>(null);
 
   // Form states — nova imagem
-  const [imgUrl, setImgUrl] = useState("");
+  const [imgFile, setImgFile] = useState<File | null>(null);
+  const [imgPreview, setImgPreview] = useState<string>("");
   const [imgName, setImgName] = useState("");
   const [imgDescription, setImgDescription] = useState("");
-  const [imgCategory, setImgCategory] = useState("");
-  const [imgPlatform, setImgPlatform] = useState("");
-  const [imgTags, setImgTags] = useState("");
+  const [imgCategory, setImgCategory] = useState("produto");
+  const [imgPlatform, setImgPlatform] = useState("todos");
+  const [imgDragging, setImgDragging] = useState(false);
 
   // Form states — nova coleção
   const [colName, setColName] = useState("");
@@ -77,11 +79,17 @@ export default function AssetLibraryPage() {
     trpc.assetLibrary.listCollections.useQuery();
 
   const uploadAsset = trpc.assetLibrary.uploadAsset.useMutation({
+    onSuccess: () => { refetchAssets(); setNewImageOpen(false); resetImageForm(); },
+  });
+
+  const uploadAssetFile = trpc.assetLibrary.uploadAssetFile.useMutation({
     onSuccess: () => {
+      toast.success("Imagem enviada com sucesso!");
       refetchAssets();
       setNewImageOpen(false);
       resetImageForm();
     },
+    onError: (e) => toast.error("Erro ao enviar: " + e.message),
   });
 
   const deleteAsset = trpc.assetLibrary.deleteAsset.useMutation({
@@ -111,12 +119,45 @@ export default function AssetLibraryPage() {
   });
 
   function resetImageForm() {
-    setImgUrl("");
+    setImgFile(null);
+    setImgPreview("");
     setImgName("");
     setImgDescription("");
-    setImgCategory("");
-    setImgPlatform("");
-    setImgTags("");
+    setImgCategory("produto");
+    setImgPlatform("todos");
+  }
+
+  function handleFileSelect(file: File) {
+    if (!file.type.startsWith("image/")) return;
+    setImgFile(file);
+    if (!imgName) setImgName(file.name.replace(/\.[^.]+$/, ""));
+    const reader = new FileReader();
+    reader.onload = (e) => setImgPreview(e.target?.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  async function handleUploadFile() {
+    if (!imgFile || !imgName || !imgCategory) {
+      toast.error("Selecione uma imagem, nome e categoria.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onerror = () => toast.error("Erro ao ler o arquivo.");
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      if (!dataUrl) { toast.error("Arquivo inválido."); return; }
+      const base64 = dataUrl.split(",")[1];
+      uploadAssetFile.mutate({
+        fileName: imgFile.name,
+        fileData: base64,
+        contentType: imgFile.type || "image/jpeg",
+        name: imgName,
+        description: imgDescription,
+        category: imgCategory as any,
+        platform: imgPlatform as any,
+      });
+    };
+    reader.readAsDataURL(imgFile);
   }
 
   function resetCollectionForm() {
@@ -125,20 +166,6 @@ export default function AssetLibraryPage() {
     setColType("");
     setColSeason("");
     setColAssetIds([]);
-  }
-
-  function handleUploadAsset() {
-    uploadAsset.mutate({
-      url: imgUrl,
-      name: imgName,
-      description: imgDescription,
-      category: imgCategory as "produto" | "lifestyle" | "modelo" | "colecao" | "background" | "logo" | "outro",
-      platform: imgPlatform as "instagram" | "tiktok" | "todos",
-      tags: imgTags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean),
-    });
   }
 
   function handleCreateCollection() {
@@ -189,14 +216,32 @@ export default function AssetLibraryPage() {
                 <DialogTitle>Adicionar Nova Imagem</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-2">
-                <div>
-                  <Label>URL da Imagem</Label>
-                  <Input
-                    placeholder="https://..."
-                    value={imgUrl}
-                    onChange={(e) => setImgUrl(e.target.value)}
+                {/* Área de upload */}
+                <div
+                  className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors ${imgDragging ? "border-pink-400 bg-pink-50" : "border-gray-200 hover:border-pink-300"}`}
+                  onClick={() => document.getElementById("asset-file-input")?.click()}
+                  onDragOver={(e) => { e.preventDefault(); setImgDragging(true); }}
+                  onDragLeave={() => setImgDragging(false)}
+                  onDrop={(e) => { e.preventDefault(); setImgDragging(false); const f = e.dataTransfer.files[0]; if (f) handleFileSelect(f); }}
+                >
+                  <input
+                    id="asset-file-input"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="hidden"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileSelect(f); }}
                   />
+                  {imgPreview ? (
+                    <img src={imgPreview} alt="preview" className="max-h-40 mx-auto rounded-lg object-contain" />
+                  ) : (
+                    <div className="py-4">
+                      <Upload className="w-8 h-8 mx-auto text-gray-300 mb-2" />
+                      <p className="text-sm text-gray-500">Clique ou arraste a imagem aqui</p>
+                      <p className="text-xs text-gray-400 mt-1">JPEG, PNG, WebP — máx. 15MB</p>
+                    </div>
+                  )}
                 </div>
+
                 <div>
                   <Label>Nome</Label>
                   <Input
@@ -208,19 +253,17 @@ export default function AssetLibraryPage() {
                 <div>
                   <Label>Descrição</Label>
                   <Textarea
-                    placeholder="Descreva a imagem..."
+                    placeholder="Descreva a imagem (opcional)..."
                     value={imgDescription}
                     onChange={(e) => setImgDescription(e.target.value)}
-                    rows={3}
+                    rows={2}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label>Categoria</Label>
                     <Select value={imgCategory} onValueChange={setImgCategory}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione" />
-                      </SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="produto">Produto</SelectItem>
                         <SelectItem value="lifestyle">Lifestyle</SelectItem>
@@ -235,9 +278,7 @@ export default function AssetLibraryPage() {
                   <div>
                     <Label>Plataforma</Label>
                     <Select value={imgPlatform} onValueChange={setImgPlatform}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione" />
-                      </SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="instagram">Instagram</SelectItem>
                         <SelectItem value="tiktok">TikTok</SelectItem>
@@ -246,21 +287,13 @@ export default function AssetLibraryPage() {
                     </Select>
                   </div>
                 </div>
-                <div>
-                  <Label>Tags (separadas por vírgula)</Label>
-                  <Input
-                    placeholder="pijama, verão, floral, conforto"
-                    value={imgTags}
-                    onChange={(e) => setImgTags(e.target.value)}
-                  />
-                </div>
                 <Button
-                  className="w-full"
-                  onClick={handleUploadAsset}
-                  disabled={uploadAsset.isPending || !imgUrl || !imgName}
+                  className="w-full bg-pink-600 hover:bg-pink-700"
+                  onClick={handleUploadFile}
+                  disabled={uploadAssetFile.isPending || !imgFile || !imgName || !imgCategory}
                 >
-                  <Plus className="w-4 h-4 mr-2" />
-                  {uploadAsset.isPending ? "Adicionando..." : "Adicionar Imagem"}
+                  <Upload className="w-4 h-4 mr-2" />
+                  {uploadAssetFile.isPending ? "Enviando..." : "Enviar Imagem"}
                 </Button>
               </div>
             </DialogContent>

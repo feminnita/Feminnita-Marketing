@@ -26,14 +26,15 @@ const ARTES_ADS_FOLDER = process.env.GOOGLE_DRIVE_ARTES_FOLDER || "17-n_9HAqa69y
 export interface CreativeBrief {
   title: string;
   description: string;
-  campaignType?: string;    // "remarketing" | "prospeccao" | "revenda_sul_sudeste"
-  targetAudience?: string;  // "revendedoras Sul/Sudeste" | "visitantes site"
-  product?: string;         // nome do produto/coleção
-  colorPalette?: string;    // "rose, branco, dourado"
-  textOverlay?: string;     // "Kit Família a partir de R$89"
-  referenceFileId?: string; // ID de arquivo específico no Drive
-  campaignId?: string;      // campanha Meta onde publicar
-  adSetId?: string;         // conjunto de anúncios
+  campaignType?: string;
+  targetAudience?: string;
+  product?: string;
+  colorPalette?: string;
+  textOverlay?: string;
+  referenceFileId?: string;
+  campaignId?: string;
+  adSetId?: string;
+  imageBase64Input?: string; // imagem enviada pelo usuário — pula geração Imagen
 }
 
 export interface CreativeResult {
@@ -80,39 +81,79 @@ async function generateImageWithImagen(prompt: string): Promise<string | null> {
 // ─── Prompt Imagen especializado em banners Feminnita ─────────────────────────
 
 function buildImagenPrompt(brief: CreativeBrief, referenceDescription?: string): string {
-  const colors = brief.colorPalette || "rose escuro #8B2635, branco, tons quentes femininos";
-  const product = brief.product || "pijama feminino de qualidade";
-  const text = brief.textOverlay || "";
-  const audience = brief.targetAudience || "mulheres revendedoras de moda";
+  const product = brief.product || "pijama feminino";
+  const campaignType = brief.campaignType || "conversão";
+  const audience = brief.targetAudience || "revendedoras de moda";
+  const productDesc = referenceDescription || brief.description || "";
 
-  return `Professional fashion advertising banner for Brazilian women's clothing brand Feminnita.
-Product: ${product}. Target: ${audience}.
-Style: elegant, warm, feminine, high-end boutique look.
-Colors: ${colors}.
-${text ? `Text overlay in Portuguese: "${text}". Clean sans-serif font, white or gold color.` : "No text overlay."}
-Background: soft gradient or lifestyle setting (bedroom, cozy home environment).
-${referenceDescription ? `Reference style: ${referenceDescription}` : ""}
-Format: square social media ad (1:1). Sharp, professional photography style. High contrast, vibrant but tasteful.
-Campaign type: ${brief.campaignType || "brand awareness"}.
-Do NOT include logos. Do NOT include watermarks. High quality, suitable for Meta Ads.`.trim();
+  return `Full professional Meta Ads creative banner for Feminnita, a premium Brazilian women's pajama brand.
+
+VISUAL DIRECTION:
+- A beautiful Brazilian woman (30-45 years old) wearing the pajama product in a cozy, aspirational bedroom setting
+- Warm lifestyle lighting: golden hour or soft studio light
+- Brand palette: deep rose/wine (#8B2635), ivory white, warm gold accents
+- Editorial fashion photography quality — sharp, high contrast, magazine-level
+- Composition: product prominently featured, full scene visible, clean negative space on one side for ad text
+- Background: elegant bedroom, white linen, soft bokeh or warm walls
+
+PRODUCT: ${product}
+${productDesc ? `PRODUCT DETAILS: ${productDesc}` : ""}
+CAMPAIGN: ${campaignType} — targeting ${audience} (wholesale resellers in Brazil)
+
+TECHNICAL:
+- Format: 1:1 square, 1080x1080px quality
+- NO logos, NO watermarks, NO text overlays on image
+- Style: luxury boutique, warm and feminine, NOT sterile or cold
+- Suitable for Facebook and Instagram feed ads
+- Ultra-realistic photography style, NOT illustration or cartoon`.trim();
 }
 
 // ─── Geração de copy (headline + body) ───────────────────────────────────────
 
-async function generateAdCopy(brief: CreativeBrief): Promise<{ headline: string; body: string }> {
-  const prompt = `Você é a Beatriz Santos, copywriter especialista em Meta Ads para atacado de moda brasileira (Feminnita Pijamas).
+const HOOK_VARIANTS: Record<string, string> = {
+  demografico: `ESTRATÉGIA DE HOOK: DEMOGRÁFICO (melhor performance 2025 — Dara Denny)
+Chame o público por IDENTIDADE específica. Ex: "Para mães que querem renda de casa", "Revendedoras autônomas: atenção".
+O Meta usa isso como sinal de targeting automático. Foco: quem é a pessoa, não o que o produto faz.`,
+
+  transformacao: `ESTRATÉGIA DE HOOK: VELOCIDADE + TRANSFORMAÇÃO (Dara Denny)
+Mostre o antes/depois com tempo específico. Ex: "Em 30 dias revendendo de casa...", "Como ela saiu de R$0 para R$1.800/mês".
+Velocidade = atenção. Transformação = confiança. Use número de tempo específico.`,
+
+  golias: `ESTRATÉGIA DE HOOK: DAVID E GOLIAS / CONTRAINTUITIVO (Dara Denny — formato #1 de 2026)
+Chame um inimigo ou quebre uma crença do mercado. Ex: "A maioria das marcas de pijama não quer que você saiba disso", "Achei que era golpe quando vi a margem de 50%".
+Crie choque, quebre expectativa, provoque curiosidade irresistível.`,
+};
+
+async function generateAdCopy(
+  brief: CreativeBrief,
+  hookVariant: keyof typeof HOOK_VARIANTS = "demografico"
+): Promise<{ headline: string; body: string }> {
+  const hookInstruction = HOOK_VARIANTS[hookVariant] || HOOK_VARIANTS.demografico;
+
+  const prompt = `Você é a Beatriz Santos, copywriter sênior especialista em Meta Ads para atacado de moda brasileira (Feminnita Pijamas).
 
 BRIEF DO CRIATIVO:
-- Produto: ${brief.product || "pijamas femininos"}
-- Campanha: ${brief.campaignType || "conversão"}
-- Público: ${brief.targetAudience || "revendedoras de moda"}
-- Texto no banner: ${brief.textOverlay || "sem texto definido"}
-- Descrição: ${brief.description}
+- Produto: ${brief.product || "Pijama Suede Feminnita"}
+- Campanha: ${brief.campaignType || "prospeccao"}
+- Público: ${brief.targetAudience || "revendedoras autônomas"}
+- Descrição do produto: ${brief.description}
 
-Gere copy para anúncio Meta Ads (Facebook/Instagram). Retorne APENAS JSON:
+CONTEXTO FEMINNITA:
+- Tecido: SUEDE premium (NUNCA mencione algodão ou outro tecido)
+- Público: mulheres que querem renda extra de casa, sem estoque inicial
+- Margem da revendedora: 40–60% por peça
+- Dores reais: "não quero depender de salário", "quero trabalhar de casa com os filhos"
+
+${hookInstruction}
+
+REGRAS ABSOLUTAS:
+- Headline: máx 35 caracteres. Específico, com número real ou gancho emocional. PROIBIDO: genérico, vago, começar com "Pijama" ou mencionar algodão.
+- Body: máx 125 caracteres. Foca na transformação da revendedora. CTA claro.
+
+Retorne APENAS JSON válido:
 {
-  "headline": "título do anúncio (máx 40 caracteres, impactante, urgência ou benefício claro)",
-  "body": "texto do anúncio (máx 120 caracteres, foca no benefício da revendedora, inclui CTA)"
+  "headline": "...",
+  "body": "..."
 }`;
 
   try {
@@ -134,6 +175,102 @@ Gere copy para anúncio Meta Ads (Facebook/Instagram). Retorne APENAS JSON:
       headline: "Revenda Feminnita — Lucro Garantido",
       body: "Pijamas exclusivos para revendedoras. Peça seu catálogo agora!",
     };
+  }
+}
+
+// ─── Geração em 3 variantes por upload de produto ────────────────────────────
+
+export async function requestCreativeVariants(userId: number, brief: CreativeBrief): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  const { eq } = await import("drizzle-orm");
+  const variants = ["demografico", "transformacao", "golias"] as const;
+  const variantLabel: Record<string, string> = {
+    demografico: "Público-Alvo",
+    transformacao: "Transformação",
+    golias: "Impacto",
+  };
+
+  let analyzedBrief = { ...brief };
+  let imageToUse: string | undefined = brief.imageBase64Input;
+
+  // 1. Análise visual — uma única vez para todos os variantes
+  if (brief.imageBase64Input) {
+    try {
+      const visionResult = await invokeLLM({
+        messages: [{
+          role: "user",
+          content: [
+            {
+              type: "image_url",
+              image_url: { url: `data:image/jpeg;base64,${brief.imageBase64Input}`, detail: "high" },
+            },
+            {
+              type: "text",
+              text: `Você é a Beatriz, especialista em criativos para Meta Ads de moda feminina da Feminnita Pijamas.
+
+REGRAS CRÍTICAS DE ANÁLISE:
+1. Analise APENAS a roupa/pijama que a(s) pessoa(s) está(ão) USANDO. Ignore completamente o cenário, almofadas, decoração, sacolas ou qualquer outro objeto do fundo.
+2. O tecido da Feminnita é SUEDE (não algodão, não seda, não malha). Nunca mencione algodão.
+3. O nome do arquivo NÃO é o nome do produto — identifique o produto real pela imagem.
+4. Se houver decoração natalina/festiva no FUNDO, ignore — isso não define o pijama.
+
+Analise esta foto e retorne APENAS JSON válido:
+{
+  "produto": "tipo exato do pijama (ex: Conjunto Curto Suede Feminnita, Pijama Longo Suede Feminnita)",
+  "cores": "cores do PIJAMA (não do cenário)",
+  "estilo": "estilo do pijama: romântico / casual / sofisticado / confortável",
+  "diferenciais": "detalhes visíveis do pijama: estampa, acabamento, corte, modelagem",
+  "imagemPrompt": "prompt em inglês para Gemini Imagen gerar banner 1:1: mulher brasileira usando este pijama suede, lifestyle bedroom, warm editorial lighting, fashion photography, no text"
+}`,
+            },
+          ],
+        }],
+      });
+      const raw = visionResult.choices[0]?.message?.content;
+      if (typeof raw === "string") {
+        const m = raw.match(/\{[\s\S]*\}/);
+        if (m) {
+          const p = JSON.parse(m[0]);
+          const desc = `${p.produto} | Cores: ${p.cores} | ${p.estilo} | ${p.diferenciais}`;
+          analyzedBrief = { ...brief, description: desc, _imagemPromptOverride: p.imagemPrompt } as any;
+          console.log(`[CreativeAgent:Variants] Produto analisado: ${desc.slice(0, 80)}`);
+        }
+      }
+    } catch (err: any) {
+      console.warn("[CreativeAgent:Variants] Falha na análise de visão:", err.message);
+    }
+
+    // 2. Gerar banner uma única vez — compartilhado pelos 3 variantes
+    const imagenPrompt = (analyzedBrief as any)._imagemPromptOverride || buildImagenPrompt(analyzedBrief);
+    const generatedImage = await generateImageWithImagen(imagenPrompt);
+    imageToUse = generatedImage || brief.imageBase64Input;
+  }
+
+  // 3. Gerar 3 copies em paralelo com hooks diferentes
+  const copies = await Promise.all(variants.map(v => generateAdCopy(analyzedBrief, v)));
+
+  // 4. Inserir 3 registros
+  for (let i = 0; i < variants.length; i++) {
+    const copy = copies[i];
+    const label = variantLabel[variants[i]];
+    const insertResult = await db.insert(adCreatives).values({
+      userId,
+      briefTitle: `${brief.title} · ${label}`,
+      briefDescription: analyzedBrief.description,
+      campaignType: brief.campaignType,
+      targetAudience: brief.targetAudience,
+      product: brief.product,
+      colorPalette: brief.colorPalette,
+      imageBase64: imageToUse,
+      generatedHeadline: copy.headline,
+      generatedBody: copy.body,
+      status: "pending_approval",
+      updatedAt: new Date(),
+    });
+    const id = (insertResult[0] as any).insertId;
+    console.log(`[CreativeAgent:Variants] ${variants[i]} #${id} → pending_approval | "${copy.headline}"`);
   }
 }
 
@@ -163,6 +300,93 @@ export async function requestCreative(userId: number, brief: CreativeBrief): Pro
   });
 
   const creativeId = (insertResult[0] as any).insertId as number;
+
+  // Foto de produto enviada pelo usuário — Beatriz analisa, gera copy + banner
+  if (brief.imageBase64Input) {
+    const { eq } = await import("drizzle-orm");
+
+    // 1. Claude analisa a foto do produto para extrair descrição detalhada
+    let productDescription = brief.description;
+    try {
+      const visionResult = await invokeLLM({
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "image_url",
+                image_url: { url: `data:image/jpeg;base64,${brief.imageBase64Input}`, detail: "high" },
+              },
+              {
+                type: "text",
+                text: `Você é a Beatriz, especialista em criativos para Meta Ads de moda feminina da Feminnita Pijamas.
+
+REGRAS CRÍTICAS DE ANÁLISE:
+1. Analise APENAS a roupa/pijama que a(s) pessoa(s) está(ão) USANDO. Ignore completamente o cenário, almofadas, decoração, sacolas ou qualquer outro objeto do fundo.
+2. O tecido da Feminnita é SUEDE (não algodão, não seda, não malha). Nunca mencione algodão.
+3. O nome do arquivo NÃO é o nome do produto — identifique o produto real pela imagem.
+4. Se houver decoração natalina/festiva no FUNDO, ignore — isso não define o pijama.
+
+Analise esta foto e retorne APENAS JSON válido:
+{
+  "produto": "tipo exato do pijama (ex: Conjunto Curto Suede Feminnita, Pijama Longo Suede Feminnita)",
+  "cores": "cores do PIJAMA (não do cenário)",
+  "estilo": "estilo do pijama: romântico / casual / sofisticado / confortável",
+  "diferenciais": "detalhes visíveis do pijama: estampa, acabamento, corte, modelagem",
+  "imagemPrompt": "prompt em inglês para Gemini Imagen gerar banner 1:1: mulher brasileira usando este pijama suede, lifestyle bedroom, warm editorial lighting, fashion photography, no text"
+}`,
+              },
+            ],
+          },
+        ],
+      });
+      const raw = visionResult.choices[0]?.message?.content;
+      if (typeof raw === "string") {
+        const m = raw.match(/\{[\s\S]*\}/);
+        if (m) {
+          const parsed = JSON.parse(m[0]);
+          productDescription = `${parsed.produto} | Cores: ${parsed.cores} | ${parsed.estilo} | ${parsed.diferenciais}`;
+          brief = { ...brief, description: productDescription, _imagemPromptOverride: parsed.imagemPrompt } as any;
+          console.log(`[CreativeAgent] Produto analisado: ${productDescription.slice(0, 80)}`);
+        }
+      }
+    } catch (err: any) {
+      console.warn("[CreativeAgent] Falha na análise de visão:", err.message);
+    }
+
+    // 2. Gerar copy baseado na análise do produto
+    const copy = await generateAdCopy(brief);
+
+    // 3. Tentar gerar banner com Imagen usando o prompt especializado
+    const imagenPrompt = (brief as any)._imagemPromptOverride || buildImagenPrompt(brief);
+    const generatedImage = await generateImageWithImagen(imagenPrompt);
+
+    // 4. Salvar — se Imagen gerou banner usa ele; senão usa a foto original como referência
+    const finalImage = generatedImage || brief.imageBase64Input;
+    const finalStatus = "pending_approval";
+
+    await db.update(adCreatives)
+      .set({
+        imageBase64: finalImage,
+        generatedHeadline: copy.headline,
+        generatedBody: copy.body,
+        status: finalStatus,
+        updatedAt: new Date(),
+      })
+      .where(eq(adCreatives.id, creativeId));
+
+    console.log(`[CreativeAgent] Criativo #${creativeId} (foto produto → ${generatedImage ? "banner Imagen" : "foto original"}) → pending_approval`);
+    return {
+      id: creativeId,
+      status: finalStatus,
+      imageBase64: finalImage,
+      headline: copy.headline,
+      body: copy.body,
+      message: generatedImage
+        ? "Banner gerado pela Beatriz! Aguardando sua aprovação."
+        : "Copy gerado. Imagem original como referência (configure GEMINI_API_KEY para gerar banner automático).",
+    };
+  }
 
   // 2. Buscar imagem de referência no Drive (se disponível)
   let referenceDescription: string | undefined;
@@ -242,4 +466,109 @@ export async function listDriveReferenceFiles(): Promise<Array<{ id: string; nam
   }
 
   return result;
+}
+
+// ─── Chat com Beatriz ─────────────────────────────────────────────────────────
+
+const BEATRIZ_CHAT_PROMPT = `Você é a Beatriz Santos — copywriter sênior e estrategista criativa especializada em Meta Ads para moda feminina e atacado no Brasil. 10 anos de experiência em copy de alta conversão, design de criativos para Facebook/Instagram. Responsável pelos criativos da Feminnita Pijamas.
+
+━━━ MENTALIDADE BASE (Joanna Wiebe + Alex Hormozi + Gary Halbert) ━━━
+
+VERDADE #1 — O COPY É A VOZ DA CLIENTE, NÃO SEU (Joanna Wiebe):
+"Você não inventa copy — você o minera." A dor da revendedora não é "quero mais renda" — é "não aguento mais depender do salário do meu marido" ou "fico presa em casa com os filhos e não consigo trabalhar".
+OS 5 NÍVEIS DE CONSCIÊNCIA: (1) Inconsciente do problema → (2) Consciente do problema → (3) Consciente da solução → (4) Consciente do produto → (5) Pronta para comprar. Cold audience nunca começa com o produto — começa com a dor ou o desejo.
+
+VERDADE #2 — EMPILHE O VALOR ATÉ O PREÇO PARECER RIDÍCULO (Alex Hormozi):
+Equação: Resultado × Probabilidade ÷ Tempo × Esforço. Para Feminnita: "R$2.000/mês de casa, sem estoque, sem CNPJ, em 48h". Não venda o pijama — venda a transformação da revendedora.
+
+VERDADE #3 — ESPECIFICIDADE VENDE, GENERALIDADE MATA (Gary Halbert):
+"R$2.147 em 23 dias" > "ganhe muito dinheiro". "127 revendedoras em SP" > "muitas revendedoras". Substitua todo adjetivo genérico por um número ou detalhe concreto.
+
+━━━ METODOLOGIA DARA DENNY — O QUE ESTÁ CONVERTENDO EM 2025–2026 (20.000+ ads testados) ━━━
+
+FORMATO #1 — DAVID E GOLIAS (o que mais converte em 2026):
+Estrutura: (1) Hook que chama um inimigo/scam da indústria com alto valor de choque, (2) Contraste com a Feminnita, (3) Prova dos diferenciais e por que é melhor.
+Aplicação Feminnita: "A maioria das marcas de pijama te vende tecido barato com margem de 5%. A Feminnita faz diferente." O CHOICE do Golias (quem é o inimigo) tem o maior impacto na performance — teste variações.
+
+FORMATO #2 — YAPPER / RANT (UGC 2026):
+Criadora falando direto para a câmera, sem script rígido, sem B-roll, sem texto overlay. Parece conteúdo orgânico. Supera UGC tradicional porque não parece anúncio. Script deve ser FLEXÍVEL — a criadora adapta para suas próprias palavras. Perfeito para revendedoras reais falando da experiência delas.
+
+FORMATO #3 — TIKTOK LOVE LETTER (baixo esforço, alto teste):
+Texto longo sobre vídeo curto. Chama o público diretamente: "Meninas que querem ganhar dinheiro de casa", "Revendedoras que estão começando". Fácil de testar muitas mensagens rapidamente antes de investir em creator content.
+
+FORMATO #4 — "NÃO SOMOS BARATOS" (objection handling):
+"Não somos baratos e não queremos ser." Listar TODOS os motivos pelos quais o preço é justificado. Funciona especialmente bem em períodos de promoção e com imagem estática.
+
+FORMATO #5 — LISTICLE (salva quando não tem criatividade):
+"3 razões pelas quais revendedoras da Feminnita lucram mais". Testar o MESMO SCRIPT com perfis de criadoras DIFERENTES — revendedora jovem vs. mãe de família vs. lojista estabelecida.
+
+━━━ HOOKS QUE ESTÃO FAZENDO DINHEIRO AGORA (Dara Denny — 5.000 ads testados em 2025) ━━━
+
+HOOK DEMOGRÁFICO (melhor performance de 2025):
+Chame o público por identidade específica — Meta usa isso como sinal de targeting, entrega para as pessoas certas automaticamente. Mais top-of-funnel = mais escalável.
+Exemplos Feminnita: "Para revendedoras autônomas que trabalham de casa", "Mães que querem renda sem sair de casa", "Mulheres que vendem moda e querem se destacar".
+
+HOOK DE INVESTIMENTO:
+"Testei X fornecedores de pijama antes de encontrar um que realmente pagasse minhas contas." Mine os comentários e avaliações de revendedoras para encontrar as tentativas frustradas ANTES de chegar na Feminnita. Cria confiança imediata: quem já tentou reconhece a jornada.
+
+HOOK DO SCAM:
+A palavra "golpe" ou "scam" é um dos melhores gatilhos viscerais existentes. "Achei que era golpe quando vi a margem de 50%." Ativa loss aversion + curiosidade irresistível.
+
+POV + HATE:
+10-15% de todos os top performers de 2025 tinham "POV" no texto. Combinar com "odeio": "POV: você odeia depender de chefe e finalmente encontrou a solução."
+
+HOOK CONTROVERSO / INIMIGO COMUM:
+Identifique um inimigo ou crença estabelecida para desafiar. "Big Pharma" parou o scroll do Dara em 1 segundo. Para Feminnita: "A indústria têxtil não quer que revendedoras saibam disso." Gera compartilhamento, debate, e o algoritmo ama.
+
+HOOK "POR QUE NINGUÉM ME CONTOU":
+"Por que ninguém me falou que dá pra ganhar R$2K/mês revendendo pijama de casa?" Cria dissonância cognitiva, posiciona a marca como insider knowledge.
+
+HOOK "SE VOCÊ":
+"Se você é mãe e quer trabalhar de casa..." Faz o usuário se auto-selecionar, shortcut de targeting no Meta.
+
+HOOK DE VELOCIDADE + TRANSFORMAÇÃO:
+Antes + depois + tempo específico. "Em 30 dias fazendo isso de casa..." Velocidade = atenção. Transformação = confiança.
+
+HOOK MÚLTIPLO (stacked hooks):
+Empilhe 2-3 hooks nos primeiros segundos: demográfico + controverso, ou demográfico + anti-tradição. Previne drop-off, apela a múltiplos gatilhos psicológicos ao mesmo tempo.
+
+ESTRUTURA DO HOOK VERDADEIRO (4 elementos em 3 segundos):
+1. TEXT OVERLAY HOOK — o que está escrito na tela
+2. SOUND HOOK — música, tom de voz, som de abertura
+3. VISUAL HOOK — o que aparece primeiro na imagem/vídeo
+4. VIBE — combinação de iluminação, fonte, cor, atmosfera geral
+ATENÇÃO: mudar o VISUAL HOOK tem impacto MAIOR que mudar o verbal/texto. Os melhores hooks MOSTRAM, não contam.
+
+━━━ FEMINNITA — CONTEXTO QUE VOCÊ CONHECE DE COR ━━━
+- Produto: pijamas suede premium atacado, Nova Friburgo RJ
+- Ticket médio: R$400/pedido | Margem da revendedora: 40–60%
+- 3 públicos: (1) Revendedora Lojista — MEI/loja, quer fornecedor confiável; (2) Revendedora Autônoma — renda de casa, filhos pequenos; (3) Compra em Grupo — atingir mínimo sem CNPJ
+- Meta urgente: R$100K/mês
+- Diferencial: tecido exclusivo, suede premium, fotografia profissional, marca estabelecida
+- Benchmarks: CTR saudável 1,2–2,5% | Frequência ideal 2,5–4x | CPM R$15–35
+
+━━━ O QUE VOCÊ FAZ ━━━
+Você cria e avalia:
+- Copy completa: headline + body + CTA com hook correto para o nível de consciência do público
+- Brief visual completo: formato, visual hook, vibe, quem filma, o que aparece nos primeiros 3 segundos
+- Scripts de yapper/UGC: o que a revendedora diz, como adaptar para voz própria
+- Análise de anúncio existente: qual dos 4 elementos do hook está fraco
+- Variantes A/B: 3-4 hooks diferentes para o mesmo produto, cada um atacando um ângulo diferente
+
+Responda em português do Brasil. Seja direta: entregue o copy pronto, o brief visual pronto, o script pronto. Não explique o que vai fazer — faça.`;
+
+export async function chatWithBeatriz(
+  messages: Array<{ role: "user" | "assistant"; content: string }>,
+  userName?: string
+): Promise<string> {
+  const nameCtx = userName ? `\nNOME DO USUÁRIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
+  const result = await invokeLLM({
+    messages: [
+      { role: "system", content: BEATRIZ_CHAT_PROMPT + nameCtx },
+      ...messages,
+    ],
+    maxTokens: 2000,
+  });
+  const content = result.choices[0]?.message?.content;
+  return typeof content === "string" ? content : "Não consegui processar.";
 }

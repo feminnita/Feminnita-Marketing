@@ -101,10 +101,10 @@ async function fetchProducts(): Promise<AmazonProduct[]> {
 
 // ─── Coleta completa ──────────────────────────────────────────────────────────
 
-export async function collectAmazonData(): Promise<AmazonPerformanceData> {
+export async function collectAmazonData(account = "feminnita"): Promise<AmazonPerformanceData> {
   const connected = isConnected();
   const awsCreds = hasAwsCredentials();
-  const sellerId = process.env.AMAZON_SELLER_ID || "";
+  const sellerId = (account === "fnt" ? process.env.AMAZON_SELLER_ID_2 : process.env.AMAZON_SELLER_ID) || "";
 
   let orders: AmazonOrder[] = [];
   let products: AmazonProduct[] = [];
@@ -156,7 +156,7 @@ Responda em português do Brasil. Seja direto com números.`;
 
 // ─── Avaliação com LLM ────────────────────────────────────────────────────────
 
-export async function runAmazonEvaluation(evaluationId: number): Promise<void> {
+export async function runAmazonEvaluation(evaluationId: number, account = "feminnita"): Promise<void> {
   const db = await getDb();
   if (!db) throw new Error("Banco indisponível");
 
@@ -166,7 +166,7 @@ export async function runAmazonEvaluation(evaluationId: number): Promise<void> {
       .set({ status: "running" })
       .where(eq(amazonEvaluations.id, evaluationId));
 
-    const data = await collectAmazonData();
+    const data = await collectAmazonData(account);
     const rawMetrics = JSON.stringify(data);
 
     const needsSetup = !data.hasAwsCreds;

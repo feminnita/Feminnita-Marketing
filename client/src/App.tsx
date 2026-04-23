@@ -45,6 +45,8 @@ const WhatsAppAISetupPage     = lazy(() => import("@/pages/WhatsAppAISetupPage")
 const WhatsAppBaileysSimplePage  = lazy(() => import("./pages/WhatsAppBaileysSimplePage"));
 const WhatsAppNotificationsPage  = lazy(() => import("./pages/WhatsAppNotificationsPage"));
 const AssetLibraryPage        = lazy(() => import("@/pages/AssetLibraryPage"));
+const TrayDudaPage            = lazy(() => import("@/pages/TrayDudaPage"));
+const TrayAnyPage             = lazy(() => import("@/pages/TrayAnyPage"));
 const MarketingTeamPage       = lazy(() => import("@/pages/MarketingTeamPage"));
 const AfiliadasPage           = lazy(() => import("@/pages/AfiliadasPage"));
 const BrandBookPage           = lazy(() => import("@/pages/BrandBookPage"));
@@ -58,8 +60,10 @@ const AgentDetailPage         = lazy(() => import("@/pages/AgentDetailPage"));
 const WhatsAppDisparosPage    = lazy(() => import("@/pages/WhatsAppDisparosPage"));
 const ShopeeAdsManagerPage    = lazy(() => import("@/pages/ShopeeAdsManagerPage"));
 const TiktokShopPage          = lazy(() => import("@/pages/TiktokShopPage"));
+const TiktokTeamPage          = lazy(() => import("@/pages/TiktokTeamPage"));
 const AmazonPage              = lazy(() => import("@/pages/AmazonPage"));
 const CreativeAdsPage         = lazy(() => import("@/pages/CreativeAdsPage"));
+const SpecialistsPage         = lazy(() => import("@/pages/SpecialistsPage"));
 
 function PageLoader() {
   return (
@@ -173,6 +177,10 @@ export default function App() {
         return <WhatsAppDisparosPage />;
       case "/banco-imagens":
         return <AssetLibraryPage />;
+      case "/duda-seo":
+        return <TrayDudaPage />;
+      case "/any-afiliadas":
+        return <TrayAnyPage />;
       case "/equipe-marketing":
         return <MarketingTeamPage />;
       case "/afiliadas":
@@ -197,8 +205,12 @@ export default function App() {
         return <ShopeeAdsManagerPage />;
       case "/tiktok-shop":
         return <TiktokShopPage />;
+      case "/tiktok-team":
+        return <TiktokTeamPage />;
       case "/amazon":
         return <AmazonPage />;
+      case "/especialistas":
+        return <SpecialistsPage />;
       default: {
         if (/^\/influenciadora\/\d+$/.test(location)) {
           return <InfluencerProfilePage />;

@@ -9,22 +9,25 @@ import { router, protectedProcedure } from "../_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { getDb } from "../db";
 import { agentActions, AgentAction } from "../../drizzle/schema";
-import { eq, and, desc, inArray } from "drizzle-orm";
+import { eq, and, desc, inArray, gte } from "drizzle-orm";
 
 export const agentActionsRouter = router({
   // ── Listar ações pendentes ─────────────────────────────────────────────────
   listPending: protectedProcedure
-    .input(z.object({ limit: z.number().default(50) }).optional())
+    .input(z.object({ limit: z.number().default(20) }).optional())
     .query(async ({ input }) => {
       const db = await getDb();
       if (!db) return [];
 
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+
       return db
         .select()
         .from(agentActions)
-        .where(eq(agentActions.status, "pending"))
+        .where(and(eq(agentActions.status, "pending"), gte(agentActions.createdAt, startOfToday)))
         .orderBy(desc(agentActions.createdAt))
-        .limit(input?.limit ?? 50);
+        .limit(input?.limit ?? 20);
     }),
 
   // ── Listar por status ──────────────────────────────────────────────────────

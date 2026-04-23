@@ -277,6 +277,46 @@ PERÍODO DE FORMATURA (Shackelford):
 Toda campanha nova passa por uma fase de aprendizado de 7 a 14 dias. Neste período, o algoritmo está testando. Não julgue por ROAS no D+3. Julgue pela TENDÊNCIA: o CPM está caindo? O CTR está subindo? Os primeiros sinais (cliques, visualizações) aparecem? Se sim, deixe rodar.
 
 ═══════════════════════════════════════════════════════
+METODOLOGIA BARRY HOTT — LANDING PAGES E RELEVÂNCIA META
+═══════════════════════════════════════════════════════
+Barry Hott estudou bilhões de dólares em anúncios desde 2008. Seu maior ensinamento: landing page não é só taxa de conversão — ela define QUEM o Meta vai buscar a seguir.
+
+COMO O META APRENDE:
+O Meta aprende qual combinação de anúncio + landing page + usuário converte. Quando você muda a landing page, você muda quem o Meta vai alcançar. Relevância é tudo — o algoritmo não entrega para qualquer pessoa, ele entrega para as pessoas certas para aquela combinação específica.
+
+MUDANÇAS NA LANDING PAGE MUDAM O PÚBLICO:
+- Trocar o título de "para mães ocupadas" para "para atletas" → muda completamente quem o Meta busca
+- Trocar a imagem principal → muda quem se identifica com a página
+- Trocar o botão de "Saiba mais" para "Comprar agora" → atrai quem já está pronto para comprar, mas afasta quem ainda precisa ser convencido
+- Essas mudanças são subconscientes — o usuário não percebe, mas o algoritmo percebe nos dados
+
+O PROBLEMA COM TESTE A/B EXTERNO:
+Ferramentas de A/B test externas (fora do Meta) são problemáticas para mudanças grandes porque:
+- O Meta não sabe que você está testando duas páginas
+- Ele continua otimizando baseado no histórico do anúncio
+- O tráfego dividido dilui os sinais de relevância
+- Uma página boa pode parecer ruim porque nunca encontrou a audiência certa
+- Duas semanas de teste muitas vezes não são suficientes para o sistema entender
+
+A MANEIRA CERTA DE TESTAR LANDING PAGES (Barry Hott):
+1. Pegue seus melhores anúncios (os que mais gastam e convertem)
+2. DUPLIQUE-os em novos conjuntos de anúncios idênticos
+3. Aponte cada versão duplicada para a nova landing page
+4. Mantenha tudo igual: mesmo criativo, mesmo público, mesmo bid
+5. Deixe o Meta otimizar cada combinação de forma independente
+6. Compare o desempenho com a campanha original ao longo do tempo
+7. IMPORTANTE: às vezes manter as DUAS páginas rodando é melhor que escolher uma — cada página pode ser mais relevante para públicos diferentes
+
+QUANDO USAR A/B TEST EXTERNO:
+Apenas para mudanças pequenas que não afetam quem vai se identificar com a página — uma cor de botão, um detalhe de texto. Para mudanças grandes (novo visual, nova proposta, nova oferta), sempre use anúncios dedicados.
+
+HOMEPAGE TAMBÉM AFETA ADS:
+Mudar a imagem principal da homepage afeta o desempenho dos anúncios — mesmo que os anúncios não direcionem para a homepage. Usuários chegam lá de outras formas e o algoritmo aprende com isso.
+
+PRINCÍPIO CENTRAL DO BARRY HOTT:
+"Não somos cientistas. O objetivo é escalar e ganhar dinheiro. Às vezes escalar é mais valioso do que entender exatamente por que algo funciona. Minimize variáveis — não mude várias coisas ao mesmo tempo."
+
+═══════════════════════════════════════════════════════
 CONTEXTO DA CONTA — FEMINNITA PIJAMAS
 ═══════════════════════════════════════════════════════
 - Produto: pijamas de atacado para revendedoras
@@ -415,26 +455,275 @@ export async function analyzeWithLLM(
   }
 }
 
+// ─── Ferramentas disponíveis no chat ─────────────────────────────────────────
+
+import {
+  fetchMetaCampaignsList,
+  fetchMetaAdsets,
+  fetchMetaInsights,
+  fetchMetaAdsData,
+  fetchMetaAds,
+  pauseCampaign,
+  resumeCampaign,
+  pauseAdset,
+  resumeAdset,
+  updateCampaignBudget,
+  updateAdsetBudget,
+} from "../services/meta-ads-service";
+
+const CHAT_TOOLS: Anthropic.Tool[] = [
+  {
+    name: "get_account_summary",
+    description: "Retorna resumo geral da conta: gasto hoje, gasto no mês e campanhas com métricas.",
+    input_schema: { type: "object" as const, properties: {}, required: [] },
+  },
+  {
+    name: "get_meta_campaigns",
+    description: "Lista campanhas com status, objetivo e métricas. Use para visão geral ou status de campanhas.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        date_preset: { type: "string", enum: ["today", "yesterday", "last_7d", "last_14d", "last_30d", "this_month"] },
+      },
+      required: [],
+    },
+  },
+  {
+    name: "get_meta_adsets",
+    description: "Lista conjuntos de anúncios com budget, status e métricas.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        campaign_id: { type: "string", description: "ID da campanha (opcional)" },
+      },
+      required: [],
+    },
+  },
+  {
+    name: "get_meta_ads",
+    description: "Busca anúncios individuais com criativo (body, title, URL destino, CTA) e métricas. Use para ver criativos ou landing pages.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        campaign_id: { type: "string", description: "ID da campanha (opcional)" },
+        adset_id: { type: "string", description: "ID do adset (opcional)" },
+      },
+      required: [],
+    },
+  },
+  {
+    name: "fetch_landing_page",
+    description: "Acessa uma URL e extrai o texto da página (oferta, preço, copy, CTA). Use após ter a URL de destino de um anúncio.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        url: { type: "string", description: "URL completa da landing page" },
+      },
+      required: ["url"],
+    },
+  },
+  {
+    name: "pause_campaign",
+    description: "Pausa uma campanha ativa. Use quando o usuário aprovar explicitamente ou pedir para pausar.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        campaign_id: { type: "string", description: "ID da campanha a pausar" },
+        campaign_name: { type: "string", description: "Nome da campanha (para confirmação)" },
+      },
+      required: ["campaign_id"],
+    },
+  },
+  {
+    name: "resume_campaign",
+    description: "Reativa uma campanha pausada.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        campaign_id: { type: "string", description: "ID da campanha a reativar" },
+      },
+      required: ["campaign_id"],
+    },
+  },
+  {
+    name: "pause_adset",
+    description: "Pausa um conjunto de anúncios.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        adset_id: { type: "string", description: "ID do adset a pausar" },
+      },
+      required: ["adset_id"],
+    },
+  },
+  {
+    name: "resume_adset",
+    description: "Reativa um conjunto de anúncios pausado.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        adset_id: { type: "string", description: "ID do adset a reativar" },
+      },
+      required: ["adset_id"],
+    },
+  },
+  {
+    name: "update_campaign_budget",
+    description: "Atualiza o budget diário de uma campanha (CBO). Valor em reais — ex: 50 para R$50/dia.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        campaign_id: { type: "string", description: "ID da campanha" },
+        daily_budget_brl: { type: "number", description: "Novo budget diário em reais" },
+      },
+      required: ["campaign_id", "daily_budget_brl"],
+    },
+  },
+  {
+    name: "update_adset_budget",
+    description: "Atualiza o budget diário de um conjunto de anúncios. Valor em reais.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        adset_id: { type: "string", description: "ID do adset" },
+        daily_budget_brl: { type: "number", description: "Novo budget diário em reais" },
+      },
+      required: ["adset_id", "daily_budget_brl"],
+    },
+  },
+];
+
+async function executeChatTool(name: string, input: Record<string, any>): Promise<string> {
+  try {
+    if (name === "get_account_summary") {
+      const data = await fetchMetaAdsData();
+      if (data.error) return JSON.stringify({ error: data.error });
+      return JSON.stringify({
+        spendToday: `R$${data.spendToday.toFixed(2)}`,
+        spendMonth: `R$${data.spendMonth.toFixed(2)}`,
+        campaigns: data.campaigns.map((c) => ({
+          id: c.id, name: c.name, status: c.status,
+          spend: `R$${c.spend.toFixed(2)}`, roas: c.roas?.toFixed(2) ?? "N/D",
+          cpm: `R$${c.cpm.toFixed(2)}`, ctr: `${c.ctr.toFixed(2)}%`,
+        })),
+      });
+    }
+    if (name === "get_meta_campaigns") {
+      const [campaigns, insights] = await Promise.all([
+        fetchMetaCampaignsList(),
+        fetchMetaInsights("campaign", input.date_preset || "last_7d"),
+      ]);
+      const insMap: Record<string, any> = {};
+      for (const row of insights) insMap[row.campaign_id || row.campaign_name] = row;
+      return JSON.stringify(campaigns.map((c) => {
+        const ins = insMap[c.id] || {};
+        const spend = parseFloat(ins.spend || "0");
+        const purchaseAction = (ins.actions || []).find((a: any) => a.action_type === "purchase" || a.action_type === "omni_purchase");
+        const revenue = purchaseAction ? parseFloat(purchaseAction.value) : 0;
+        return {
+          id: c.id, name: c.name, status: c.status, objective: c.objective,
+          spend: `R$${spend.toFixed(2)}`,
+          roas: spend > 0 && revenue > 0 ? (revenue / spend).toFixed(2) + "x" : "N/D",
+          cpm: ins.cpm ? `R$${parseFloat(ins.cpm).toFixed(2)}` : "N/D",
+          ctr: ins.ctr ? `${parseFloat(ins.ctr).toFixed(2)}%` : "N/D",
+        };
+      }));
+    }
+    if (name === "get_meta_adsets") {
+      const adsets = await fetchMetaAdsets(input.campaign_id);
+      return JSON.stringify(adsets.map((a) => ({
+        id: a.id, name: a.name, campaign: a.campaignName, status: a.status,
+        dailyBudget: a.dailyBudget ? `R$${a.dailyBudget.toFixed(2)}` : undefined,
+        spend: `R$${a.spend.toFixed(2)}`, roas: a.roas ? a.roas.toFixed(2) + "x" : "N/D",
+        ctr: `${a.ctr.toFixed(2)}%`,
+      })));
+    }
+    if (name === "get_meta_ads") {
+      const ads = await fetchMetaAds(input.adset_id, input.campaign_id);
+      return JSON.stringify(ads.map((ad) => ({
+        id: ad.id, name: ad.name, status: ad.status,
+        copy_titulo: ad.title || "N/D", copy_texto: ad.body || "N/D",
+        cta: ad.callToActionType || "N/D", url_destino: ad.linkUrl || "N/D",
+        spend: `R$${ad.spend.toFixed(2)}`, ctr: `${ad.ctr.toFixed(2)}%`,
+        roas: ad.roas ? ad.roas.toFixed(2) + "x" : "N/D",
+      })));
+    }
+    if (name === "fetch_landing_page") {
+      const url = input.url as string;
+      if (!url?.startsWith("http")) return JSON.stringify({ error: "URL inválida" });
+      const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" }, signal: AbortSignal.timeout(10000) });
+      const html = await res.text();
+      const text = html
+        .replace(/<script[\s\S]*?<\/script>/gi, "").replace(/<style[\s\S]*?<\/style>/gi, "")
+        .replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/\s{2,}/g, " ").trim().slice(0, 4000);
+      return JSON.stringify({ url, content: text });
+    }
+    if (name === "pause_campaign") {
+      await pauseCampaign(input.campaign_id);
+      return JSON.stringify({ success: true, message: `Campanha ${input.campaign_name || input.campaign_id} pausada.` });
+    }
+    if (name === "resume_campaign") {
+      await resumeCampaign(input.campaign_id);
+      return JSON.stringify({ success: true, message: `Campanha ${input.campaign_id} reativada.` });
+    }
+    if (name === "pause_adset") {
+      await pauseAdset(input.adset_id);
+      return JSON.stringify({ success: true, message: `Adset ${input.adset_id} pausado.` });
+    }
+    if (name === "resume_adset") {
+      await resumeAdset(input.adset_id);
+      return JSON.stringify({ success: true, message: `Adset ${input.adset_id} reativado.` });
+    }
+    if (name === "update_campaign_budget") {
+      const cents = Math.round(input.daily_budget_brl * 100);
+      await updateCampaignBudget(input.campaign_id, cents);
+      return JSON.stringify({ success: true, message: `Budget da campanha ${input.campaign_id} atualizado para R$${input.daily_budget_brl}/dia.` });
+    }
+    if (name === "update_adset_budget") {
+      const cents = Math.round(input.daily_budget_brl * 100);
+      await updateAdsetBudget(input.adset_id, cents);
+      return JSON.stringify({ success: true, message: `Budget do adset ${input.adset_id} atualizado para R$${input.daily_budget_brl}/dia.` });
+    }
+    return JSON.stringify({ error: `Ferramenta desconhecida: ${name}` });
+  } catch (err: any) {
+    return JSON.stringify({ error: err.message });
+  }
+}
+
 // ─── Chat follow-up ───────────────────────────────────────────────────────────
 
 export async function chatWithAgent(
   conversationHistory: Array<{ role: "user" | "assistant"; content: string }>,
   rawMetrics: string,
   imageBase64?: string,
-  imageMimeType?: string
+  imageMimeType?: string,
+  userName?: string
 ): Promise<string> {
-  const systemContent = SYSTEM_PROMPT +
-    `\n\nDados da avaliação que você acabou de fazer:\n${rawMetrics}\n\nIMPORTANTE: Responda SEMPRE em texto corrido, em português brasileiro, de forma direta e prática. NUNCA use JSON, markdown, blocos de código ou listas técnicas. Fale como uma gestora de tráfego experiente conversando com o dono da empresa.`;
+  const systemContent = SYSTEM_PROMPT + `
+
+${userName ? `NOME DO USUÁRIO: Chame-o(a) de "${userName}" durante a conversa.` : ""}
+
+CONTEXTO DESTA CONVERSA: Você acabou de analisar a conta. Dados da avaliação:
+${rawMetrics}
+
+FERRAMENTAS DISPONÍVEIS: Você tem acesso direto à Meta Ads API. Use as ferramentas para buscar dados atualizados, executar ações (pausar, reativar, alterar budget) sem pedir permissão ao usuário para ações que você já diagnosticou como necessárias. Quando o usuário pedir uma ação, execute-a diretamente usando a ferramenta correta.
+
+REGRAS CRÍTICAS:
+1. Português brasileiro claro e acessível. Sem gírias, sem tecnicismos desnecessários, sem siglas sem explicação.
+2. NUNCA retorne JSON, blocos de código, markdown formatado, ou qualquer estrutura técnica na resposta de chat. NUNCA. Isso inclui briefs, recomendações, análises — tudo em texto corrido, em português.
+3. NUNCA use termos técnicos de marketing sem explicar em linguagem simples: não use "smoke test", "fase 1", "TOFU/MOFU/BOFU", "CPM", "CTR" etc. sem explicar o que significa em palavras simples logo após. Escreva para quem entende de pijamas e atacado, não para quem trabalha em agência de marketing.
+4. Se precisar apresentar um brief de banner, escreva assim: "Proponho um anúncio com imagem estática de 1080 por 1080 pixels mostrando a pijama sobre fundo claro, com o texto em destaque: 'Qualidade que faz sua cliente voltar'. Botão de chamada: 'Ver catálogo'." — NUNCA em JSON, NUNCA com títulos técnicos como "brief", "fase", "smoke test".
+5. NUNCA liste limitações técnicas. Se não tem dado, busque pela ferramenta disponível.
+6. NUNCA peça ao usuário para abrir o Ads Manager, tirar print ou acessar qualquer ferramenta externa.
+7. Quando propor pausar ou alterar budget, execute a ação diretamente via ferramenta — não instrua o usuário a fazer manualmente.
+8. Resposta completa em uma única mensagem. Sem "posso continuar?" ou "quer mais detalhes?".`;
 
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || "" });
-  const model = process.env.CLAUDE_MODEL || "claude-haiku-4-5-20251001";
 
-  // Monta o histórico sem a última mensagem
   const anthropicMessages: Anthropic.MessageParam[] = conversationHistory
     .slice(0, -1)
     .map((m) => ({ role: m.role, content: m.content }));
 
-  // Última mensagem — com ou sem imagem
   if (conversationHistory.length > 0) {
     const last = conversationHistory[conversationHistory.length - 1];
     if (last.role === "user" && imageBase64) {
@@ -442,7 +731,7 @@ export async function chatWithAgent(
       anthropicMessages.push({
         role: "user",
         content: [
-          { type: "text", text: last.content || "Analise esta imagem para a campanha." },
+          { type: "text", text: last.content || "Analise esta imagem." },
           { type: "image", source: { type: "base64", media_type: mime, data: imageBase64 } },
         ],
       });
@@ -451,15 +740,56 @@ export async function chatWithAgent(
     }
   }
 
-  const response = await anthropic.messages.create({
-    model,
-    max_tokens: 1500,
-    system: systemContent,
-    messages: anthropicMessages,
-  });
+  // Tool use loop — máx 2 buscas, depois força resposta de texto
+  let toolIterations = 0;
+  let finalText = "";
 
-  const text = response.content.filter((b) => b.type === "text").map((b) => (b as Anthropic.TextBlock).text).join("");
-  return text || "Não consegui processar a resposta. Tente novamente.";
+  while (toolIterations < 2) {
+    toolIterations++;
+    const response = await anthropic.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 2048,
+      system: systemContent,
+      tools: CHAT_TOOLS,
+      messages: anthropicMessages,
+    });
+
+    const hasToolUse = response.content.some((b) => b.type === "tool_use");
+    const textBlocks = response.content.filter((b) => b.type === "text").map((b) => (b as Anthropic.TextBlock).text).join("");
+
+    if (!hasToolUse) {
+      finalText = textBlocks;
+      break;
+    }
+
+    // Executar ferramentas
+    const toolResults: Anthropic.ToolResultBlockParam[] = [];
+    for (const block of response.content) {
+      if (block.type === "tool_use") {
+        console.log(`[AdsManagerAgent] Tool: ${block.name}`);
+        const result = await executeChatTool(block.name, block.input as Record<string, any>);
+        toolResults.push({ type: "tool_result", tool_use_id: block.id, content: result });
+      }
+    }
+
+    anthropicMessages.push({ role: "assistant", content: response.content });
+    anthropicMessages.push({ role: "user", content: toolResults });
+  }
+
+  // Se ainda sem texto, forçar resposta final sem ferramentas
+  if (!finalText) {
+    const finalResponse = await anthropic.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 2048,
+      system: systemContent,
+      tool_choice: { type: "none" },
+      tools: CHAT_TOOLS,
+      messages: anthropicMessages,
+    });
+    finalText = finalResponse.content.filter((b) => b.type === "text").map((b) => (b as Anthropic.TextBlock).text).join("");
+  }
+
+  return finalText || "Não obtive dados suficientes para responder. Tente reformular a pergunta.";
 }
 
 // ─── Execução principal (chamada pelo router) ─────────────────────────────────

@@ -39,10 +39,27 @@ export function getVoiceId(agentName?: string): string {
 
 // ─── Conversão de texto em áudio ─────────────────────────────────────────────
 
+function prepareForSpeech(text: string): string {
+  return text
+    .replace(/R\$\s?([\d.,]+)/g, (_, n) => `${n} reais`)
+    .replace(/([\d.,]+)\s?%/g, (_, n) => `${n.replace(".", ",")} por cento`)
+    .replace(/(\d+)x/g, (_, n) => `${n} vezes`)
+    .replace(/ROAS/g, "rôas")
+    .replace(/CPC/g, "C P C")
+    .replace(/CPM/g, "C P M")
+    .replace(/CTR/g, "C T R")
+    .replace(/CPA/g, "C P A")
+    .replace(/GMV/g, "G M V")
+    .replace(/\*\*/g, "")
+    .replace(/\*/g, "")
+    .replace(/#{1,3}\s/g, "");
+}
+
 export async function textToSpeech(text: string, agentName?: string): Promise<Buffer> {
   if (!ELEVENLABS_API_KEY) throw new Error("ELEVENLABS_API_KEY não configurado");
 
   const voiceId = getVoiceId(agentName);
+  text = prepareForSpeech(text);
 
   const res = await fetch(
     `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
@@ -53,11 +70,13 @@ export async function textToSpeech(text: string, agentName?: string): Promise<Bu
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        text: text.slice(0, 2500),
+        text: text.slice(0, 4000),
         model_id: MODEL_ID,
         voice_settings: {
-          stability: 0.5,
+          stability: 0.3,
           similarity_boost: 0.75,
+          style: 0.4,
+          use_speaker_boost: true,
         },
       }),
     }

@@ -74,7 +74,10 @@ function StatusBadge({ status }: { status: Evaluation["status"] }) {
   return <span className="flex items-center gap-1 text-red-700 text-sm font-medium"><XCircle className="w-4 h-4" /> Erro</span>;
 }
 
+type AccountType = "feminnita" | "fnt";
+
 export default function AmazonPage() {
+  const [account, setAccount] = useState<AccountType>("feminnita");
   const [activeEvalId, setActiveEvalId] = useState<number | null>(null);
   const [polling, setPolling] = useState(false);
   const [expandedRecs, setExpandedRecs] = useState<Set<number>>(new Set());
@@ -82,9 +85,14 @@ export default function AmazonPage() {
   const [sendingMsg, setSendingMsg] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  function handleAccountChange(acc: AccountType) {
+    setAccount(acc);
+    setActiveEvalId(null);
+  }
+
   const authQuery = trpc.amazonManager.getAuthStatus.useQuery();
 
-  const listQuery = trpc.amazonManager.listEvaluations.useQuery(undefined, {
+  const listQuery = trpc.amazonManager.listEvaluations.useQuery({ account }, {
     refetchInterval: polling ? 3000 : false,
   });
 
@@ -107,6 +115,10 @@ export default function AmazonPage() {
     },
     onError: (err) => toast.error(`Erro: ${err.message}`),
   });
+
+  function handleTrigger() {
+    triggerMut.mutate({ account });
+  }
 
   const sendMsgMut = trpc.amazonManager.sendMessage.useMutation({
     onSuccess: () => { setChatInput(""); messagesQuery.refetch(); },
@@ -168,15 +180,33 @@ export default function AmazonPage() {
           )}
         </div>
 
-        <button
-          onClick={() => triggerMut.mutate()}
-          disabled={triggerMut.isPending || polling}
-          className="flex items-center gap-2 px-5 py-2.5 text-white rounded-lg font-medium disabled:opacity-50 transition-colors"
-          style={{ background: AMAZON_ORANGE }}
-        >
-          {polling ? <Loader2 className="w-4 h-4 animate-spin" /> : <PlayCircle className="w-4 h-4" />}
-          {polling ? "Analisando…" : "Avaliar Amazon"}
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="flex rounded-lg overflow-hidden border border-gray-200 text-sm font-medium">
+            <button
+              onClick={() => handleAccountChange("feminnita")}
+              className={`px-3 py-1.5 transition-colors ${account === "feminnita" ? "text-white" : "bg-white text-gray-500 hover:bg-gray-50"}`}
+              style={account === "feminnita" ? { background: AMAZON_ORANGE } : {}}
+            >
+              Feminnita
+            </button>
+            <button
+              onClick={() => handleAccountChange("fnt")}
+              className={`px-3 py-1.5 transition-colors ${account === "fnt" ? "text-white" : "bg-white text-gray-500 hover:bg-gray-50"}`}
+              style={account === "fnt" ? { background: AMAZON_ORANGE } : {}}
+            >
+              FNT
+            </button>
+          </div>
+          <button
+            onClick={handleTrigger}
+            disabled={triggerMut.isPending || polling}
+            className="flex items-center gap-2 px-5 py-2.5 text-white rounded-lg font-medium disabled:opacity-50 transition-colors"
+            style={{ background: AMAZON_ORANGE }}
+          >
+            {polling ? <Loader2 className="w-4 h-4 animate-spin" /> : <PlayCircle className="w-4 h-4" />}
+            {polling ? "Analisando…" : "Avaliar Amazon"}
+          </button>
+        </div>
       </div>
 
       {/* Banner AWS IAM */}
@@ -359,7 +389,7 @@ export default function AmazonPage() {
             <p className="text-sm text-gray-500 mt-1">Clique em "Avaliar Amazon" para o especialista analisar sua estratégia de vendas.</p>
           </div>
           <button
-            onClick={() => triggerMut.mutate()}
+            onClick={handleTrigger}
             disabled={triggerMut.isPending}
             className="inline-flex items-center gap-2 px-5 py-2.5 text-white rounded-lg font-medium disabled:opacity-50"
             style={{ background: AMAZON_ORANGE }}

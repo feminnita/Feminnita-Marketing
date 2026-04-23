@@ -3,11 +3,11 @@ import { z } from "zod";
 import { getDb } from "../db";
 import { tiktokTeamEvaluations, tiktokTeamMessages, tiktokVideos } from "../../drizzle/schema";
 import { eq, and, desc } from "drizzle-orm";
-import { runLunaEvaluation, chatWithLuna } from "../agents/tiktok-luna-agent";
-import { runMayaEvaluation, chatWithMaya } from "../agents/tiktok-maya-agent";
-import { runZaraEvaluation, chatWithZara } from "../agents/tiktok-zara-agent";
-import { runNinaEvaluation, chatWithNina } from "../agents/tiktok-nina-agent";
-import { runMarcelaEvaluation, chatWithMarcela } from "../agents/tiktok-marcela-agent";
+import { runLunaEvaluation, chatWithLuna, updateLunaKnowledge } from "../agents/tiktok-luna-agent";
+import { runMayaEvaluation, chatWithMaya, updateMayaKnowledge } from "../agents/tiktok-maya-agent";
+import { runZaraEvaluation, chatWithZara, updateZaraKnowledge } from "../agents/tiktok-zara-agent";
+import { runNinaEvaluation, chatWithNina, updateNinaKnowledge } from "../agents/tiktok-nina-agent";
+import { runMarcelaEvaluation, chatWithMarcela, updateMarcelaKnowledge } from "../agents/tiktok-marcela-agent";
 
 const AGENT_TYPE = z.enum(["luna", "maya", "zara", "nina", "marcela"]);
 const ACCOUNT_TYPE = z.enum(["feminnita", "fnt"]);
@@ -24,13 +24,23 @@ async function runEvaluation(agentType: AgentType, evaluationId: number, account
   }
 }
 
-async function chatWithAgent(agentType: AgentType, history: Array<{ role: "user" | "assistant"; content: string }>): Promise<string> {
+async function chatWithAgent(agentType: AgentType, history: Array<{ role: "user" | "assistant"; content: string }>, userName?: string): Promise<string> {
   switch (agentType) {
-    case "luna": return chatWithLuna(history);
-    case "maya": return chatWithMaya(history);
-    case "zara": return chatWithZara(history);
-    case "nina": return chatWithNina(history);
-    case "marcela": return chatWithMarcela(history);
+    case "luna": return chatWithLuna(history, userName);
+    case "maya": return chatWithMaya(history, userName);
+    case "zara": return chatWithZara(history, userName);
+    case "nina": return chatWithNina(history, userName);
+    case "marcela": return chatWithMarcela(history, userName);
+  }
+}
+
+async function updateAgentKnowledge(agentType: AgentType): Promise<string> {
+  switch (agentType) {
+    case "luna": return updateLunaKnowledge();
+    case "maya": return updateMayaKnowledge();
+    case "zara": return updateZaraKnowledge();
+    case "nina": return updateNinaKnowledge();
+    case "marcela": return updateMarcelaKnowledge();
   }
 }
 
@@ -134,7 +144,7 @@ export const tiktokTeamRouter = router({
         .orderBy(tiktokTeamMessages.createdAt);
 
       const history = allMessages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
-      const reply = await chatWithAgent(evRows[0].agentType as AgentType, history);
+      const reply = await chatWithAgent(evRows[0].agentType as AgentType, history, ctx.user?.name ?? undefined);
 
       await db.insert(tiktokTeamMessages).values({
         evaluationId: input.evaluationId,
@@ -245,6 +255,7 @@ export const tiktokTeamRouter = router({
       hookText: z.string().max(80).default(""),
       ctaText: z.string().max(80).default(""),
       durationPerImage: z.number().int().min(2).max(8).default(4),
+      dubbing: z.boolean().default(false),
     }))
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
@@ -269,6 +280,7 @@ export const tiktokTeamRouter = router({
             hookText: input.hookText,
             ctaText: input.ctaText,
             durationPerImage: input.durationPerImage,
+            dubbing: input.dubbing,
           });
 
           await db.update(tiktokVideos).set({
@@ -288,5 +300,12 @@ export const tiktokTeamRouter = router({
       })().catch(console.error);
 
       return { videoId, status: "processing" };
+    }),
+
+  updateKnowledge: protectedProcedure
+    .input(z.object({ agentType: AGENT_TYPE }))
+    .mutation(async ({ input }) => {
+      const summary = await updateAgentKnowledge(input.agentType);
+      return { ok: true, summary };
     }),
 });

@@ -7,34 +7,38 @@ import {
   runShopeeAdsEvaluation,
   chatWithShopeeAgent,
   collectShopeeAdsData,
+  updateShopeeKnowledge,
 } from "../agents/shopee-ads-agent";
 
 export const shopeeAdsManagerRouter = router({
   /**
    * Dispara nova avaliação Shopee Ads.
    */
-  triggerEvaluation: protectedProcedure.mutation(async ({ ctx }) => {
-    const db = await getDb();
-    if (!db) throw new Error("Banco indisponível");
+  triggerEvaluation: protectedProcedure
+    .input(z.object({ account: z.enum(["feminnita", "fnt"]).default("feminnita") }).optional())
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Banco indisponível");
+      const account = input?.account ?? "feminnita";
+      const shopId = (account === "fnt" ? process.env.SHOPEE_SHOP_ID_2 : process.env.SHOPEE_SHOP_ID) || null;
 
-    const shopId = process.env.SHOPEE_SHOP_ID || null;
+      const result = await db.insert(shopeeAdsEvaluations).values({
+        userId: ctx.user.id,
+        account,
+        shopId: shopId ?? undefined,
+        status: "pending",
+        triggeredAt: new Date(),
+        createdAt: new Date(),
+      });
 
-    const result = await db.insert(shopeeAdsEvaluations).values({
-      userId: ctx.user.id,
-      shopId: shopId ?? undefined,
-      status: "pending",
-      triggeredAt: new Date(),
-      createdAt: new Date(),
-    });
+      const evaluationId = Array.isArray(result) ? result[0].insertId : (result as any).insertId;
 
-    const evaluationId = Array.isArray(result) ? result[0].insertId : (result as any).insertId;
+      runShopeeAdsEvaluation(evaluationId, account).catch((err) =>
+        console.error("[ShopeeAdsManager] Erro em runShopeeAdsEvaluation:", err)
+      );
 
-    runShopeeAdsEvaluation(evaluationId).catch((err) =>
-      console.error("[ShopeeAdsManager] Erro em runShopeeAdsEvaluation:", err)
-    );
-
-    return { evaluationId, status: "pending" };
-  }),
+      return { evaluationId, status: "pending" };
+    }),
 
   /**
    * Busca estado de uma avaliação (polling).
@@ -63,24 +67,27 @@ export const shopeeAdsManagerRouter = router({
   /**
    * Lista todas as avaliações do usuário.
    */
-  listEvaluations: protectedProcedure.query(async ({ ctx }) => {
-    const db = await getDb();
-    if (!db) return [];
+  listEvaluations: protectedProcedure
+    .input(z.object({ account: z.enum(["feminnita", "fnt"]).default("feminnita") }).optional())
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const account = input?.account ?? "feminnita";
 
-    return db
-      .select({
-        id: shopeeAdsEvaluations.id,
-        status: shopeeAdsEvaluations.status,
-        summary: shopeeAdsEvaluations.summary,
-        errorMessage: shopeeAdsEvaluations.errorMessage,
-        triggeredAt: shopeeAdsEvaluations.triggeredAt,
-        completedAt: shopeeAdsEvaluations.completedAt,
-      })
-      .from(shopeeAdsEvaluations)
-      .where(eq(shopeeAdsEvaluations.userId, ctx.user.id))
-      .orderBy(desc(shopeeAdsEvaluations.triggeredAt))
-      .limit(20);
-  }),
+      return db
+        .select({
+          id: shopeeAdsEvaluations.id,
+          status: shopeeAdsEvaluations.status,
+          summary: shopeeAdsEvaluations.summary,
+          errorMessage: shopeeAdsEvaluations.errorMessage,
+          triggeredAt: shopeeAdsEvaluations.triggeredAt,
+          completedAt: shopeeAdsEvaluations.completedAt,
+        })
+        .from(shopeeAdsEvaluations)
+        .where(and(eq(shopeeAdsEvaluations.userId, ctx.user.id), eq(shopeeAdsEvaluations.account, account)))
+        .orderBy(desc(shopeeAdsEvaluations.triggeredAt))
+        .limit(20);
+    }),
 
   /**
    * Anúncios ao vivo da Shopee API.
@@ -173,5 +180,10 @@ export const shopeeAdsManagerRouter = router({
     const accessToken = process.env.SHOPEE_ACCESS_TOKEN;
     const connected = !!(shopId && accessToken);
     return { connected, shopId: shopId || undefined };
+  }),
+
+  updateKnowledge: protectedProcedure.mutation(async () => {
+    const summary = await updateShopeeKnowledge();
+    return { ok: true, summary };
   }),
 });

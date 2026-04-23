@@ -17,11 +17,15 @@ import { invokeLLM } from "../_core/llm";
 
 const ML_BASE = "https://api.mercadolibre.com";
 
-function getMLToken(): string {
-  return process.env.ML_ACCESS_TOKEN_1 || "";
+function getMLToken(account = "feminnita"): string {
+  return account === "fnt"
+    ? (process.env.ML_ACCESS_TOKEN_2 || "")
+    : (process.env.ML_ACCESS_TOKEN_1 || "");
 }
-function getUserId(): string {
-  return process.env.ML_USER_ID_1 || "";
+function getUserId(account = "feminnita"): string {
+  return account === "fnt"
+    ? (process.env.ML_USER_ID_2 || "")
+    : (process.env.ML_USER_ID_1 || "");
 }
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -70,9 +74,9 @@ export type MLCampaign = MLItem;
 
 // ─── Fetch: Listagens ativas ─────────────────────────────────────────────────
 
-async function fetchActiveItems(): Promise<MLItem[]> {
-  const token = getMLToken();
-  const userId = getUserId();
+async function fetchActiveItems(account = "feminnita"): Promise<MLItem[]> {
+  const token = getMLToken(account);
+  const userId = getUserId(account);
   if (!token || !userId) return [];
 
   // Busca IDs dos itens ativos
@@ -121,9 +125,9 @@ async function fetchActiveItems(): Promise<MLItem[]> {
 
 // ─── Fetch: Pedidos recentes (30 dias) ───────────────────────────────────────
 
-async function fetchRecentOrders(): Promise<MLOrder[]> {
-  const token = getMLToken();
-  const userId = getUserId();
+async function fetchRecentOrders(account = "feminnita"): Promise<MLOrder[]> {
+  const token = getMLToken(account);
+  const userId = getUserId(account);
   if (!token || !userId) return [];
 
   const dateFrom = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
@@ -144,11 +148,11 @@ async function fetchRecentOrders(): Promise<MLOrder[]> {
 
 // ─── Coleta completa ──────────────────────────────────────────────────────────
 
-export async function collectMLAdsData(): Promise<MLPerformanceData> {
-  const userId = getUserId();
+export async function collectMLAdsData(account = "feminnita"): Promise<MLPerformanceData> {
+  const userId = getUserId(account);
   const [items, recentOrders] = await Promise.all([
-    fetchActiveItems(),
-    fetchRecentOrders(),
+    fetchActiveItems(account),
+    fetchRecentOrders(account),
   ]);
 
   // Calcular métricas
@@ -338,7 +342,7 @@ export async function chatWithMLAgent(
 
 // ─── Execução principal ───────────────────────────────────────────────────────
 
-export async function runMLAdsEvaluation(evaluationId: number): Promise<void> {
+export async function runMLAdsEvaluation(evaluationId: number, account = "feminnita"): Promise<void> {
   const db = await getDb();
   if (!db) throw new Error("Banco indisponível");
 
@@ -348,19 +352,19 @@ export async function runMLAdsEvaluation(evaluationId: number): Promise<void> {
       .set({ status: "running" })
       .where(eq(mlAdsEvaluations.id, evaluationId));
 
-    if (!getMLToken()) {
+    if (!getMLToken(account)) {
       await db
         .update(mlAdsEvaluations)
         .set({
           status: "error",
-          errorMessage: "ML_ACCESS_TOKEN_1 não configurado no servidor",
+          errorMessage: `Token ML não configurado para conta ${account}`,
           completedAt: new Date(),
         })
         .where(eq(mlAdsEvaluations.id, evaluationId));
       return;
     }
 
-    const mlData = await collectMLAdsData();
+    const mlData = await collectMLAdsData(account);
     const llmResult = await analyzeWithLLM(mlData);
 
     await db

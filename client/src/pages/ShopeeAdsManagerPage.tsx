@@ -101,7 +101,10 @@ function StatusBadge({ status }: { status: Evaluation["status"] }) {
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 
+type AccountType = "feminnita" | "fnt";
+
 export default function ShopeeAdsManagerPage() {
+  const [account, setAccount] = useState<AccountType>("feminnita");
   const [activeEvalId, setActiveEvalId] = useState<number | null>(null);
   const [polling, setPolling] = useState(false);
   const [expandedRecs, setExpandedRecs] = useState<Set<number>>(new Set());
@@ -109,6 +112,11 @@ export default function ShopeeAdsManagerPage() {
   const [chatInput, setChatInput] = useState("");
   const [sendingMsg, setSendingMsg] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  function handleAccountChange(acc: AccountType) {
+    setAccount(acc);
+    setActiveEvalId(null);
+  }
 
   // ── Queries ──
   const authQuery = trpc.shopeeAdsManager.getAuthStatus.useQuery();
@@ -118,7 +126,7 @@ export default function ShopeeAdsManagerPage() {
     refetchInterval: 5 * 60 * 1000,
   });
 
-  const listQuery = trpc.shopeeAdsManager.listEvaluations.useQuery(undefined, {
+  const listQuery = trpc.shopeeAdsManager.listEvaluations.useQuery({ account }, {
     enabled: authQuery.data?.connected === true,
     refetchInterval: polling ? 3000 : false,
   });
@@ -145,6 +153,15 @@ export default function ShopeeAdsManagerPage() {
       toast.success("Avaliação iniciada! Analisando suas campanhas Shopee…");
     },
     onError: (err) => toast.error(`Erro ao iniciar: ${err.message}`),
+  });
+
+  function handleTrigger() {
+    triggerMut.mutate({ account });
+  }
+
+  const updateKnowledgeMut = trpc.shopeeAdsManager.updateKnowledge.useMutation({
+    onSuccess: () => toast.success("Conhecimento da agente Shopee atualizado!"),
+    onError: (err) => toast.error(`Erro: ${err.message}`),
   });
 
   const sendMsgMut = trpc.shopeeAdsManager.sendMessage.useMutation({
@@ -237,19 +254,47 @@ export default function ShopeeAdsManagerPage() {
           )}
         </div>
 
-        <button
-          onClick={() => triggerMut.mutate()}
-          disabled={triggerMut.isPending || polling}
-          className="flex items-center gap-2 px-5 py-2.5 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          style={{ background: SHOPEE_ORANGE }}
-        >
-          {polling ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <PlayCircle className="w-4 h-4" />
-          )}
-          {polling ? "Analisando…" : "Avaliar Campanhas Agora"}
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="flex rounded-lg overflow-hidden border border-gray-200 text-sm font-medium">
+            <button
+              onClick={() => handleAccountChange("feminnita")}
+              className={`px-3 py-1.5 transition-colors ${account === "feminnita" ? "text-white" : "bg-white text-gray-500 hover:bg-gray-50"}`}
+              style={account === "feminnita" ? { background: SHOPEE_ORANGE } : {}}
+            >
+              Feminnita
+            </button>
+            <button
+              onClick={() => handleAccountChange("fnt")}
+              className={`px-3 py-1.5 transition-colors ${account === "fnt" ? "text-white" : "bg-white text-gray-500 hover:bg-gray-50"}`}
+              style={account === "fnt" ? { background: SHOPEE_ORANGE } : {}}
+            >
+              FNT
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleTrigger}
+              disabled={triggerMut.isPending || polling}
+              className="flex items-center gap-2 px-5 py-2.5 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              style={{ background: SHOPEE_ORANGE }}
+            >
+              {polling ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <PlayCircle className="w-4 h-4" />
+              )}
+              {polling ? "Analisando…" : "Avaliar Campanhas Agora"}
+            </button>
+            <button
+              onClick={() => updateKnowledgeMut.mutate()}
+              disabled={updateKnowledgeMut.isPending}
+              className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium disabled:opacity-50 transition-colors text-sm"
+            >
+              {updateKnowledgeMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              Atualizar Conhecimento
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* ── Anúncios ao Vivo ── */}

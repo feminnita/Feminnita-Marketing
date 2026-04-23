@@ -237,20 +237,48 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
 
   // Separar system message das demais (Anthropic recebe system como parâmetro separado)
   let systemPrompt = "";
-  const userMessages: Array<{ role: "user" | "assistant"; content: string }> = [];
+  const userMessages: Array<{ role: "user" | "assistant"; content: string | Anthropic.ContentBlockParam[] }> = [];
 
   for (const msg of messages) {
-    const contentStr = Array.isArray(msg.content)
-      ? msg.content
-          .map((p) => (typeof p === "string" ? p : (p as any).text || ""))
-          .join("\n")
-      : typeof msg.content === "string"
-      ? msg.content
-      : (msg.content as any).text || "";
-
     if (msg.role === "system") {
+      const contentStr = Array.isArray(msg.content)
+        ? msg.content.map((p) => (typeof p === "string" ? p : (p as any).text || "")).join("\n")
+        : typeof msg.content === "string" ? msg.content : (msg.content as any).text || "";
       systemPrompt += (systemPrompt ? "\n\n" : "") + contentStr;
-    } else if (msg.role === "user" || msg.role === "assistant") {
+      continue;
+    }
+
+    if (msg.role !== "user" && msg.role !== "assistant") continue;
+
+    // Verifica se há imagem no conteúdo
+    const parts = Array.isArray(msg.content) ? msg.content : [msg.content];
+    const hasImage = parts.some((p) => typeof p !== "string" && (p as any).type === "image_url");
+
+    if (hasImage) {
+      // Monta content array no formato nativo Anthropic
+      const anthropicParts: Anthropic.ContentBlockParam[] = parts.map((p) => {
+        if (typeof p === "string") return { type: "text" as const, text: p };
+        if ((p as any).type === "text") return { type: "text" as const, text: (p as any).text };
+        if ((p as any).type === "image_url") {
+          const url: string = (p as any).image_url?.url || "";
+          // data:image/jpeg;base64,XXXXX
+          const match = url.match(/^data:([^;]+);base64,(.+)$/);
+          if (match) {
+            return {
+              type: "image" as const,
+              source: {
+                type: "base64" as const,
+                media_type: match[1] as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
+                data: match[2],
+              },
+            };
+          }
+        }
+        return { type: "text" as const, text: "" };
+      });
+      userMessages.push({ role: msg.role, content: anthropicParts });
+    } else {
+      const contentStr = parts.map((p) => (typeof p === "string" ? p : (p as any).text || "")).join("\n");
       userMessages.push({ role: msg.role, content: contentStr });
     }
   }

@@ -14,6 +14,9 @@ import { shopeeAdsEvaluations, shopeeAdsEvaluationMessages } from "../../drizzle
 import { eq } from "drizzle-orm";
 import { invokeLLM } from "../_core/llm";
 import { shopeeGet } from "../services/shopeeApi";
+import { buildMemoryContext, saveMemory } from "../services/agentMemory";
+
+const AGENT_NAME = "shopee";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -203,9 +206,9 @@ async function fetchOrders(): Promise<ShopeePerformanceData["orders"]> {
 
 // ─── Coleta completa ──────────────────────────────────────────────────────────
 
-export async function collectShopeeAdsData(): Promise<ShopeePerformanceData> {
-  const shopId = process.env.SHOPEE_SHOP_ID || "";
-  if (!shopId) throw new Error("SHOPEE_SHOP_ID não configurado.");
+export async function collectShopeeAdsData(account = "feminnita"): Promise<ShopeePerformanceData> {
+  const shopId = (account === "fnt" ? process.env.SHOPEE_SHOP_ID_2 : process.env.SHOPEE_SHOP_ID) || "";
+  if (!shopId) throw new Error(`SHOPEE_SHOP_ID${account === "fnt" ? "_2" : ""} não configurado.`);
 
 
   const [campaigns, performance, balance, orders] = await Promise.all([
@@ -241,31 +244,47 @@ export async function collectShopeeAdsData(): Promise<ShopeePerformanceData> {
 
 // ─── Sistema de prompt ────────────────────────────────────────────────────────
 
-const SYSTEM_PROMPT = `Você é um especialista em performance de vendas na Shopee para empresas de atacado de moda brasileiras.
+async function buildShopeePrompt(): Promise<string> {
+  const memoryContext = await buildMemoryContext(AGENT_NAME);
+  return buildStaticShopeePrompt() + (memoryContext ? `\n\n---\n${memoryContext}\n---` : "");
+}
 
-Contexto específico desta conta (Feminnita Pijamas):
+function buildStaticShopeePrompt(): string {
+  return `Você é um especialista em Shopee Ads e performance de vendas na Shopee para marcas de moda no Brasil. Você domina: campanhas CPC, boost de produto, Flash Sale, análise de ROAS, otimização de fichas e estratégia de preço no marketplace.
+
+Contexto específico (Feminnita Pijamas):
 - Produto: pijamas de atacado para revendedoras
 - Público-alvo: revendedoras em todo o Brasil
 - Ticket médio: R$400 por pedido
-- Objetivo: aumentar pedidos de atacado via Shopee
+- Objetivo: aumentar GMV e pedidos via Shopee
 
-Benchmarks de referência:
-- ROAS: meta > 3x
-- Taxa de conversão: meta > 1%
-- Produtos com estoque > 0 e sem vendas em 30 dias = problema
+Benchmarks Shopee Ads Brasil (moda):
+- ROAS meta: > 3x (excelente: 5x+)
+- CTR saudável: 0,5–2%
+- CPC médio moda: R$0,30–1,50
+- Taxa de conversão: meta > 1,5%
+- Score da loja: manter > 4,5
 
-Ao analisar:
-1. Produtos com estoque mas sem vendas — identificar causas
-2. Produtos campeões para escalar
-3. Oportunidades de sazonalidade (inverno = alta para pijamas)
-4. Preços e posicionamento vs. concorrência
-5. Gaps de estoque nos produtos mais vendidos
+Ao analisar sempre verificar:
+1. Campanhas com ROAS abaixo de 2x → pausar ou ajustar lance
+2. Produtos sem vendas em 30 dias com estoque → problema de ficha/preço
+3. Produtos campeões → aumentar budget de ads
+4. Saldo disponível → alertar se < R$50
+5. Oportunidades de Flash Sale e campanhas do marketplace
+6. Fichas de produto com baixa CTR → título ou foto precisa melhorar
 
-Responda em português do Brasil. Seja direto com números.`;
+═══════════════════════════════════════════════════════
+REFERÊNCIAS E METODOLOGIA (2024–2025)
+═══════════════════════════════════════════════════════
+- **Dave Nguyen** — especialista em Shopee Ads no mercado Asia-Pacífico. Metodologia: entender o algoritmo de filtragem por conteúdo da Shopee (relevância de título + imagem + preço competitivo como base para ads performarem). Keyword bidding estratégico: broad match para descoberta, exact match para conversão.
+- **Split Dragon** — referência em otimização de marketplace Southeast Asia. Framework: produto precisa ter reviews, fotos e preço competitivo ANTES de ligar ads — ads amplificam o que já funciona orgânico, não consertam produto ruim.
+- **Shopee Brands Summit 2025** — ferramentas IA da Shopee para targeting por comportamento de compra, integração com Shopee Live Ads e boosting automatizado de Flash Sale com orçamento dinâmico.`;
+}
+
 
 // ─── Avaliação com LLM ────────────────────────────────────────────────────────
 
-export async function runShopeeAdsEvaluation(evaluationId: number): Promise<void> {
+export async function runShopeeAdsEvaluation(evaluationId: number, account = "feminnita"): Promise<void> {
   const db = await getDb();
   if (!db) throw new Error("Banco indisponível");
 
@@ -275,12 +294,13 @@ export async function runShopeeAdsEvaluation(evaluationId: number): Promise<void
       .set({ status: "running" })
       .where(eq(shopeeAdsEvaluations.id, evaluationId));
 
-    const data = await collectShopeeAdsData();
+    const data = await collectShopeeAdsData(account);
     const rawMetrics = JSON.stringify(data);
 
+    const systemPrompt = await buildShopeePrompt();
     const result = await invokeLLM({
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: systemPrompt },
         {
           role: "user",
           content: `Avalie a performance da conta Feminnita na Shopee com os dados abaixo.
@@ -356,6 +376,8 @@ Forneça análise completa e ao final retorne JSON:
       })
       .where(eq(shopeeAdsEvaluations.id, evaluationId));
 
+    const period = new Date().toISOString().slice(0, 10);
+    await saveMemory(AGENT_NAME, "daily_analysis", period, { summary, highlights: recommendations.slice(0, 3).map((r: any) => r.titulo), alerts: [] });
     console.log(`[ShopeeAgent] Avaliação ${evaluationId} concluída`);
   } catch (err: any) {
     console.error(`[ShopeeAgent] Erro:`, err);
@@ -377,11 +399,12 @@ export async function chatWithShopeeAgent(
   history: Array<{ role: "user" | "assistant"; content: string }>,
   rawMetrics: string
 ): Promise<string> {
+  const systemPrompt = await buildShopeePrompt();
   const metricsContext = rawMetrics ? `\n\nDados da loja analisada:\n${rawMetrics}` : "";
 
   const result = await invokeLLM({
     messages: [
-      { role: "system", content: SYSTEM_PROMPT + metricsContext },
+      { role: "system", content: systemPrompt + metricsContext },
       ...history,
     ],
     maxTokens: 2000,
@@ -390,4 +413,19 @@ export async function chatWithShopeeAgent(
   return String(
     result.choices[0]?.message?.content || "Não consegui processar sua pergunta."
   );
+}
+
+export async function updateShopeeKnowledge(): Promise<string> {
+  const systemPrompt = await buildShopeePrompt();
+  const result = await invokeLLM({
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: "Gere um resumo semanal sobre Shopee Ads para a Feminnita. O que está funcionando em campanhas Shopee para moda, benchmarks atuais de ROAS e CPC, tendências do marketplace e recomendações de ação para esta semana." },
+    ],
+    maxTokens: 1500,
+  });
+  const summary = String(result.choices[0]?.message?.content || "");
+  const period = new Date().toISOString().slice(0, 10);
+  await saveMemory(AGENT_NAME, "weekly_summary", period, { summary });
+  return summary;
 }

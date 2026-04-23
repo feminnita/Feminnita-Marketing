@@ -8,6 +8,7 @@ import * as path from "path";
 import * as os from "os";
 import * as crypto from "crypto";
 import { storagePut } from "../storage";
+import { textToSpeech } from "../services/tts";
 
 // Use bundled ffmpeg-static binary if available
 try {
@@ -23,10 +24,11 @@ export interface VideoGenerationParams {
   hookText?: string;         // Overlay text at the start (first 3s)
   ctaText?: string;          // Overlay text at the end (last 3s)
   durationPerImage?: number; // Seconds per image, default 4
+  dubbing?: boolean;         // Se true, gera áudio com ElevenLabs lendo hook + CTA
 }
 
 export async function generateVideoFromImages(params: VideoGenerationParams): Promise<string> {
-  const { imageUrls, hookText = "", ctaText = "", durationPerImage = 4 } = params;
+  const { imageUrls, hookText = "", ctaText = "", durationPerImage = 4, dubbing = false } = params;
 
   const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "feminnita-vid-"));
 
@@ -47,18 +49,32 @@ export async function generateVideoFromImages(params: VideoGenerationParams): Pr
     const outputPath = path.join(tmpDir, "output.mp4");
     const totalDuration = imagePaths.length * durationPerImage;
 
+    // Gerar áudio de dublagem se solicitado
+    let audioPath: string | undefined;
+    if (dubbing && (hookText || ctaText)) {
+      try {
+        const dubbingText = [hookText, ctaText].filter(Boolean).join(". ");
+        const audioBuffer = await textToSpeech(dubbingText);
+        audioPath = path.join(tmpDir, "dubbing.mp3");
+        await fs.writeFile(audioPath, audioBuffer);
+      } catch (err: any) {
+        console.warn("[VideoGenerator] Dublagem falhou, gerando sem áudio:", err.message);
+        audioPath = undefined;
+      }
+    }
+
     // Try rendering with text overlays; fall back to plain slideshow if drawtext fails
     let rendered = false;
     if (hookText || ctaText) {
       try {
-        await renderWithText({ imagePaths, hookText, ctaText, durationPerImage, totalDuration, outputPath });
+        await renderWithText({ imagePaths, hookText, ctaText, durationPerImage, totalDuration, outputPath, audioPath });
         rendered = true;
       } catch {
         // text filter failed (font not found), fall through
       }
     }
     if (!rendered) {
-      await renderSlideshow({ imagePaths, durationPerImage, outputPath });
+      await renderSlideshow({ imagePaths, durationPerImage, outputPath, audioPath });
     }
 
     // Upload to storage and return public URL
@@ -94,10 +110,16 @@ function buildScaleFilters(n: number): string[] {
   return filters;
 }
 
-function runCommand(cmd: ffmpegLib.FfmpegCommand, outputPath: string): Promise<void> {
+function runCommand(cmd: ffmpegLib.FfmpegCommand, outputPath: string, hasAudio: boolean, totalDuration: number): Promise<void> {
   return new Promise((resolve, reject) => {
+    const outOpts = ["-c:v", "libx264", "-preset", "fast", "-crf", "23", "-pix_fmt", "yuv420p", "-r", "30", `-t ${totalDuration}`];
+    if (hasAudio) {
+      outOpts.push("-c:a", "aac", "-b:a", "128k", "-shortest");
+    } else {
+      outOpts.push("-an");
+    }
     cmd
-      .outputOptions(["-c:v", "libx264", "-preset", "fast", "-crf", "23", "-pix_fmt", "yuv420p", "-r", "30", "-an"])
+      .outputOptions(outOpts)
       .output(outputPath)
       .on("end", () => resolve())
       .on("error", (err) => reject(err))
@@ -112,14 +134,16 @@ async function renderWithText(opts: {
   durationPerImage: number;
   totalDuration: number;
   outputPath: string;
+  audioPath?: string;
 }): Promise<void> {
-  const { imagePaths, hookText, ctaText, durationPerImage, totalDuration, outputPath } = opts;
+  const { imagePaths, hookText, ctaText, durationPerImage, totalDuration, outputPath, audioPath } = opts;
   const n = imagePaths.length;
 
   let cmd = ffmpegLib();
   for (const p of imagePaths) {
     cmd = cmd.input(p).inputOptions([`-loop 1`, `-t ${durationPerImage}`]);
   }
+  if (audioPath) cmd = cmd.input(audioPath);
 
   const filters = buildScaleFilters(n);
 
@@ -146,24 +170,27 @@ async function renderWithText(opts: {
     filters.push(`[base]copy[out]`);
   }
 
-  await runCommand(cmd.complexFilter(filters, "out"), outputPath);
+  await runCommand(cmd.complexFilter(filters, "out"), outputPath, !!audioPath, totalDuration);
 }
 
 async function renderSlideshow(opts: {
   imagePaths: string[];
   durationPerImage: number;
   outputPath: string;
+  audioPath?: string;
 }): Promise<void> {
-  const { imagePaths, durationPerImage, outputPath } = opts;
+  const { imagePaths, durationPerImage, outputPath, audioPath } = opts;
   const n = imagePaths.length;
+  const totalDuration = n * durationPerImage;
 
   let cmd = ffmpegLib();
   for (const p of imagePaths) {
     cmd = cmd.input(p).inputOptions([`-loop 1`, `-t ${durationPerImage}`]);
   }
+  if (audioPath) cmd = cmd.input(audioPath);
 
   const filters = buildScaleFilters(n);
   filters.push(`[base]copy[out]`);
 
-  await runCommand(cmd.complexFilter(filters, "out"), outputPath);
+  await runCommand(cmd.complexFilter(filters, "out"), outputPath, !!audioPath, totalDuration);
 }

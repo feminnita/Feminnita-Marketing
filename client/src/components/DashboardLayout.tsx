@@ -4,8 +4,18 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { trpc } from "@/lib/trpc";
 import {
   Sidebar,
   SidebarContent,
@@ -28,7 +38,7 @@ import {
   LayoutDashboard, LogOut, PanelLeft, Users, Calendar,
   BookOpen, Newspaper, CheckCircle, Brain, MessageCircle,
   Bell, Image, Briefcase, TrendingUp, ChevronDown, ChevronRight,
-  Settings, Megaphone, BarChart2, Bot,
+  Settings, Megaphone, BarChart2, Bot, ShoppingBag, Music, Video, ClipboardCheck, Globe, Pencil,
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -108,11 +118,11 @@ function CollapsibleGroup({ icon: Icon, label, children, defaultOpen = false }: 
     <SidebarMenuItem>
       <SidebarMenuButton onClick={() => setOpen(!open)} className="h-9 font-medium">
         <Icon className="h-4 w-4 shrink-0" />
-        <span className="flex-1">{label}</span>
-        {open ? <ChevronDown className="h-3 w-3 ml-auto" /> : <ChevronRight className="h-3 w-3 ml-auto" />}
+        <span className="flex-1 truncate">{label}</span>
+        {open ? <ChevronDown className="h-3 w-3 shrink-0 ml-auto" /> : <ChevronRight className="h-3 w-3 shrink-0 ml-auto" />}
       </SidebarMenuButton>
       {open && (
-        <SidebarMenuSub>
+        <SidebarMenuSub style={{ overflow: 'hidden' }}>
           {children}
         </SidebarMenuSub>
       )}
@@ -162,11 +172,16 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
   children: React.ReactNode;
   setSidebarWidth: (w: number) => void;
 }) {
-  const { user, logout } = useAuth();
+  const { user, logout, refresh } = useAuth();
   const [location, setLocation] = useLocation();
   const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
+  const [editNameOpen, setEditNameOpen] = useState(false);
+  const [nameInput, setNameInput] = useState("");
+  const updateProfile = trpc.auth.updateProfile.useMutation({
+    onSuccess: () => { refresh(); setEditNameOpen(false); },
+  });
   const sidebarRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
@@ -324,6 +339,26 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/criativos")}>
+                    <ClipboardCheck className="h-3 w-3" /> Criativos — Aprovações
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/banco-imagens")}>
+                    <Image className="h-3 w-3" /> Biblioteca de Imagens
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/duda-seo")}>
+                    <Globe className="h-3 w-3" /> Duda — SEO Site
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/any-afiliadas")}>
+                    <Settings className="h-3 w-3" /> Any — Afiliadas Tray
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
                   <SidebarMenuSubButton onClick={() => setLocation("/agente/sofia")}>
                     <TrendingUp className="h-3 w-3" /> Sofia — Instagram
                   </SidebarMenuSubButton>
@@ -335,7 +370,7 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
                   <SidebarMenuSubButton onClick={() => setLocation("/agente/clara")}>
-                    <BarChart2 className="h-3 w-3" /> Clara — Análise de Mercado
+                    <BarChart2 className="h-3 w-3" /> Clara — Mercado
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
@@ -346,6 +381,50 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                 <SidebarMenuSubItem>
                   <SidebarMenuSubButton onClick={() => setLocation("/colaboradores")}>
                     <Users className="h-3 w-3" /> Colaboradores
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+              </CollapsibleGroup>
+
+              {/* Marketplaces */}
+              <CollapsibleGroup icon={ShoppingBag} label="Marketplaces">
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/tiktok-shop")}>
+                    <Music className="h-3 w-3" /> TikTok — Lia (Shop)
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/tiktok-team")}>
+                    <Music className="h-3 w-3" /> Time TikTok (Equipe)
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/tiktok-team?tab=videos")}>
+                    <Video className="h-3 w-3" /> TikTok — Vídeos
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/tiktok-team?tab=studio")}>
+                    <Video className="h-3 w-3" /> TikTok — Studio ✨
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/tiktok-live")}>
+                    <Video className="h-3 w-3" /> TikTok LIVE
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/ml-ads")}>
+                    <ShoppingBag className="h-3 w-3" /> ML — Ads IA
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/shopee-ads")}>
+                    <ShoppingBag className="h-3 w-3" /> Shopee — Ads IA
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/amazon")}>
+                    <ShoppingBag className="h-3 w-3" /> Amazon IA
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
               </CollapsibleGroup>
@@ -376,21 +455,6 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
 
               {/* Configurações */}
               <CollapsibleGroup icon={Settings} label="Configurações">
-                <SidebarMenuSubItem>
-                  <SidebarMenuSubButton onClick={() => setLocation("/configurar-credenciais")}>
-                    <Settings className="h-3 w-3" /> Credenciais
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-                <SidebarMenuSubItem>
-                  <SidebarMenuSubButton onClick={() => setLocation("/configurar-integracao")}>
-                    <Settings className="h-3 w-3" /> Testar Integrações
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-                <SidebarMenuSubItem>
-                  <SidebarMenuSubButton onClick={() => setLocation("/meta-capi-setup")}>
-                    <Settings className="h-3 w-3" /> Meta CAPI
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
                   <SidebarMenuSubButton onClick={() => setLocation("/knowledge-center")}>
                     <Brain className="h-3 w-3" /> Central de Conhecimento
@@ -429,6 +493,11 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => { setNameInput(user?.name || ""); setEditNameOpen(true); }} className="cursor-pointer">
+                  <Pencil className="mr-2 h-4 w-4" />
+                  <span>Editar nome</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout} className="cursor-pointer text-destructive focus:text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Sair</span>
@@ -437,6 +506,30 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
             </DropdownMenu>
           </SidebarFooter>
         </Sidebar>
+
+        <Dialog open={editNameOpen} onOpenChange={setEditNameOpen}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Como você quer ser chamada?</DialogTitle>
+            </DialogHeader>
+            <Input
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              placeholder="Ex: Cris, Isa, Carol..."
+              onKeyDown={(e) => { if (e.key === "Enter" && nameInput.trim()) updateProfile.mutate({ name: nameInput.trim() }); }}
+              autoFocus
+            />
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditNameOpen(false)}>Cancelar</Button>
+              <Button
+                onClick={() => { if (nameInput.trim()) updateProfile.mutate({ name: nameInput.trim() }); }}
+                disabled={!nameInput.trim() || updateProfile.isPending}
+              >
+                Salvar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <div
           className={`absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary/20 transition-colors ${isCollapsed ? "hidden" : ""}`}

@@ -1157,6 +1157,7 @@ export const adsEvaluations = mysqlTable("ads_evaluations", {
   rawMetrics: text("rawMetrics"),        // JSON string — dados brutos da Meta API
   analysis: text("analysis"),            // Texto de análise do LLM
   recommendations: text("recommendations"), // JSON string — recomendações estruturadas
+  creativeBriefs: text("creativeBriefs"),   // JSON string — briefs de criativo para arte
   summary: varchar("summary", { length: 500 }),
   errorMessage: varchar("errorMessage", { length: 500 }),
   triggeredAt: timestamp("triggeredAt").defaultNow().notNull(),
@@ -1180,6 +1181,7 @@ export type AdsEvaluationMessage = typeof adsEvaluationMessages.$inferSelect;
 export const mlAdsEvaluations = mysqlTable("ml_ads_evaluations", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
+  account: mysqlEnum("account", ["feminnita", "fnt"]).notNull().default("feminnita"),
   status: mysqlEnum("status", ["pending", "running", "done", "error"]).notNull().default("pending"),
   rawMetrics: text("rawMetrics"),
   analysis: text("analysis"),
@@ -1361,6 +1363,7 @@ export type WhatsappBlastContact = typeof whatsappBlastContacts.$inferSelect;
 export const shopeeAdsEvaluations = mysqlTable("shopee_ads_evaluations", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
+  account: mysqlEnum("account", ["feminnita", "fnt"]).notNull().default("feminnita"),
   shopId: varchar("shopId", { length: 50 }),
   status: mysqlEnum("status", ["pending", "running", "done", "error"]).notNull().default("pending"),
   rawMetrics: text("rawMetrics"),
@@ -1418,6 +1421,7 @@ export type TiktokShopEvaluationMessage = typeof tiktokShopEvaluationMessages.$i
 export const amazonEvaluations = mysqlTable("amazon_evaluations", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
+  account: mysqlEnum("account", ["feminnita", "fnt"]).notNull().default("feminnita"),
   sellerId: varchar("sellerId", { length: 50 }),
   status: mysqlEnum("status", ["pending", "running", "done", "error"]).notNull().default("pending"),
   rawMetrics: text("rawMetrics"),
@@ -1489,4 +1493,91 @@ export const adCreatives = mysqlTable("ad_creatives", {
   updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
 });
 export type AdCreative = typeof adCreatives.$inferSelect;
+
+// === TIKTOK TEAM — AGENTES ESPECIALIZADOS ===
+export const tiktokTeamEvaluations = mysqlTable("tiktok_team_evaluations", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  account: mysqlEnum("account", ["feminnita", "fnt"]).notNull().default("feminnita"),
+  agentType: mysqlEnum("agentType", ["luna", "maya", "zara", "nina", "marcela"]).notNull(),
+  status: mysqlEnum("status", ["pending", "running", "done", "error"]).notNull().default("pending"),
+  analysis: text("analysis"),
+  recommendations: text("recommendations"),
+  creativeBriefs: text("creativeBriefs"),
+  summary: varchar("summary", { length: 500 }),
+  errorMessage: varchar("errorMessage", { length: 500 }),
+  triggeredAt: timestamp("triggeredAt").defaultNow().notNull(),
+  completedAt: timestamp("completedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type TiktokTeamEvaluation = typeof tiktokTeamEvaluations.$inferSelect;
+export type InsertTiktokTeamEvaluation = typeof tiktokTeamEvaluations.$inferInsert;
+
+export const tiktokTeamMessages = mysqlTable("tiktok_team_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  evaluationId: int("evaluationId").notNull(),
+  userId: int("userId").notNull(),
+  role: mysqlEnum("role", ["user", "assistant"]).notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type TiktokTeamMessage = typeof tiktokTeamMessages.$inferSelect;
+
+// === TIKTOK VÍDEOS — BIBLIOTECA ===
+export const tiktokVideos = mysqlTable("tiktok_videos", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  title: varchar("title", { length: 300 }).notNull(),
+  description: text("description"),
+  source: mysqlEnum("source", ["uploaded", "generated"]).notNull().default("uploaded"),
+  filePath: varchar("filePath", { length: 500 }),
+  thumbnailPath: varchar("thumbnailPath", { length: 500 }),
+  fileSize: int("fileSize"),
+  durationSeconds: int("durationSeconds"),
+  status: mysqlEnum("status", ["draft", "ready", "scheduled", "published", "error"]).notNull().default("draft"),
+  tags: varchar("tags", { length: 500 }),
+  scheduledAt: timestamp("scheduledAt"),
+  publishedAt: timestamp("publishedAt"),
+  tiktokPostId: varchar("tiktokPostId", { length: 200 }),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+export type TiktokVideo = typeof tiktokVideos.$inferSelect;
+export type InsertTiktokVideo = typeof tiktokVideos.$inferInsert;
 export type InsertAdCreative = typeof adCreatives.$inferInsert;
+
+// ─── Especialistas por plataforma ─────────────────────────────────────────────
+
+export const specialistPlatformEvaluations = mysqlTable("specialist_platform_evaluations", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  specialistType: mysqlEnum("specialistType", [
+    "shopee_eds",
+    "shopee_promo",
+    "ml_eds",
+    "shopee_live",
+    "instagram_live",
+    "tiktok_live",
+  ]).notNull(),
+  account: mysqlEnum("account", ["feminnita", "fnt"]).notNull().default("feminnita"),
+  status: mysqlEnum("status", ["pending", "running", "done", "error"]).notNull().default("pending"),
+  rawMetrics: text("rawMetrics"),
+  analysis: text("analysis"),
+  recommendations: text("recommendations"),
+  summary: text("summary"),
+  errorMessage: varchar("errorMessage", { length: 500 }),
+  creativeBriefs: text("creativeBriefs"),
+  triggeredAt: timestamp("triggeredAt"),
+  completedAt: timestamp("completedAt"),
+  createdAt: timestamp("createdAt").defaultNow(),
+});
+
+export const specialistPlatformMessages = mysqlTable("specialist_platform_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  evaluationId: int("evaluationId").notNull(),
+  userId: int("userId").notNull(),
+  role: mysqlEnum("role", ["user", "assistant"]).notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("createdAt").defaultNow(),
+});

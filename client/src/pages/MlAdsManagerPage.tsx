@@ -104,17 +104,20 @@ export default function MlAdsManagerPage() {
   const [chatInput, setChatInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [showCampaigns, setShowCampaigns] = useState(false);
+  const [account, setAccount] = useState<"feminnita" | "fnt">("feminnita");
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // ─── Queries ────────────────────────────────────────────────────────────────
 
-  const authStatus = trpc.mlAdsManager.getAuthStatus.useQuery(undefined, {
-    refetchInterval: false,
-  });
+  const authStatus = trpc.mlAdsManager.getAuthStatus.useQuery(
+    { account } as any,
+    { refetchInterval: false }
+  );
 
-  const evaluations = trpc.mlAdsManager.listEvaluations.useQuery(undefined, {
-    refetchInterval: 8000,
-  });
+  const evaluations = trpc.mlAdsManager.listEvaluations.useQuery(
+    { account } as any,
+    { refetchInterval: 8000 }
+  );
 
   const selectedEv = trpc.mlAdsManager.getEvaluation.useQuery(
     { id: selectedEvaluationId! },
@@ -147,6 +150,12 @@ export default function MlAdsManagerPage() {
     },
     onError: (err) => toast.error(`Erro ao iniciar avaliação: ${err.message}`),
   });
+
+  // Reset selected evaluation when switching accounts
+  const handleAccountChange = (acc: "feminnita" | "fnt") => {
+    setAccount(acc);
+    setSelectedEvaluationId(null);
+  };
 
   const sendMessage = trpc.mlAdsManager.sendMessage.useMutation({
     onSuccess: () => {
@@ -228,6 +237,23 @@ export default function MlAdsManagerPage() {
               </p>
             </div>
           </div>
+
+          {/* Seletor de conta */}
+          <div className="flex items-center gap-1 bg-yellow-300 rounded-xl p-1">
+            <button
+              onClick={() => handleAccountChange("feminnita")}
+              className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${account === "feminnita" ? "bg-white text-gray-900 shadow-sm" : "text-yellow-900 hover:bg-yellow-200"}`}
+            >
+              🛒 Feminnita
+            </button>
+            <button
+              onClick={() => handleAccountChange("fnt")}
+              className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${account === "fnt" ? "bg-white text-gray-900 shadow-sm" : "text-yellow-900 hover:bg-yellow-200"}`}
+            >
+              🛒 FNT
+            </button>
+          </div>
+
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowCampaigns((v) => !v)}
@@ -237,7 +263,7 @@ export default function MlAdsManagerPage() {
               {showCampaigns ? "Ocultar" : "Ver"} Campanhas
             </button>
             <button
-              onClick={() => triggerEvaluation.mutate()}
+              onClick={() => triggerEvaluation.mutate({ account } as any)}
               disabled={triggerEvaluation.isPending}
               className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-60"
             >

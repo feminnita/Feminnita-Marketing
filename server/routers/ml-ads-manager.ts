@@ -13,39 +13,42 @@ export const mlAdsManagerRouter = router({
   /**
    * Retorna se a conta ML está conectada (token presente).
    */
-  getAuthStatus: protectedProcedure.query(() => {
-    const token = process.env.ML_ACCESS_TOKEN_1;
-    const userId = process.env.ML_USER_ID_1;
-    return {
-      connected: Boolean(token),
-      userId: userId || undefined,
-    };
-  }),
+  getAuthStatus: protectedProcedure
+    .input(z.object({ account: z.enum(["feminnita", "fnt"]).default("feminnita") }).optional())
+    .query(({ input }) => {
+      const acc = input?.account ?? "feminnita";
+      const token = acc === "fnt" ? process.env.ML_ACCESS_TOKEN_2 : process.env.ML_ACCESS_TOKEN_1;
+      const userId = acc === "fnt" ? process.env.ML_USER_ID_2 : process.env.ML_USER_ID_1;
+      return { connected: Boolean(token), userId: userId || undefined };
+    }),
 
   /**
    * Dispara uma nova avaliação da conta ML Ads.
    */
-  triggerEvaluation: protectedProcedure.mutation(async ({ ctx }) => {
-    const db = await getDb();
-    if (!db) throw new Error("Banco indisponível");
+  triggerEvaluation: protectedProcedure
+    .input(z.object({ account: z.enum(["feminnita", "fnt"]).default("feminnita") }).optional())
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Banco indisponível");
+      const account = input?.account ?? "feminnita";
 
-    const result = await db.insert(mlAdsEvaluations).values({
-      userId: ctx.user.id,
-      status: "pending",
-      triggeredAt: new Date(),
-      createdAt: new Date(),
-    });
+      const result = await db.insert(mlAdsEvaluations).values({
+        userId: ctx.user.id,
+        account,
+        status: "pending",
+        triggeredAt: new Date(),
+        createdAt: new Date(),
+      });
 
-    const evaluationId =
-      Array.isArray(result) ? result[0].insertId : (result as any).insertId;
+      const evaluationId =
+        Array.isArray(result) ? result[0].insertId : (result as any).insertId;
 
-    // Roda em background — não bloqueia a resposta
-    runMLAdsEvaluation(evaluationId).catch((err) =>
-      console.error("[MLAdsManager] Erro em runMLAdsEvaluation:", err)
-    );
+      runMLAdsEvaluation(evaluationId, account).catch((err) =>
+        console.error("[MLAdsManager] Erro em runMLAdsEvaluation:", err)
+      );
 
-    return { evaluationId, status: "pending" };
-  }),
+      return { evaluationId, status: "pending" };
+    }),
 
   /**
    * Busca o estado atual de uma avaliação específica (polling).
@@ -81,24 +84,28 @@ export const mlAdsManagerRouter = router({
   /**
    * Lista todas as avaliações do usuário (histórico).
    */
-  listEvaluations: protectedProcedure.query(async ({ ctx }) => {
-    const db = await getDb();
-    if (!db) return [];
+  listEvaluations: protectedProcedure
+    .input(z.object({ account: z.enum(["feminnita", "fnt"]).default("feminnita") }).optional())
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const account = input?.account ?? "feminnita";
 
-    return db
-      .select({
-        id: mlAdsEvaluations.id,
-        status: mlAdsEvaluations.status,
-        summary: mlAdsEvaluations.summary,
-        errorMessage: mlAdsEvaluations.errorMessage,
-        triggeredAt: mlAdsEvaluations.triggeredAt,
-        completedAt: mlAdsEvaluations.completedAt,
-      })
-      .from(mlAdsEvaluations)
-      .where(eq(mlAdsEvaluations.userId, ctx.user.id))
-      .orderBy(desc(mlAdsEvaluations.triggeredAt))
-      .limit(20);
-  }),
+      return db
+        .select({
+          id: mlAdsEvaluations.id,
+          account: mlAdsEvaluations.account,
+          status: mlAdsEvaluations.status,
+          summary: mlAdsEvaluations.summary,
+          errorMessage: mlAdsEvaluations.errorMessage,
+          triggeredAt: mlAdsEvaluations.triggeredAt,
+          completedAt: mlAdsEvaluations.completedAt,
+        })
+        .from(mlAdsEvaluations)
+        .where(and(eq(mlAdsEvaluations.userId, ctx.user.id), eq(mlAdsEvaluations.account, account)))
+        .orderBy(desc(mlAdsEvaluations.triggeredAt))
+        .limit(10);
+    }),
 
   /**
    * Busca campanhas ao vivo da ML Ads API.

@@ -145,10 +145,54 @@ export const tiktokShopManagerRouter = router({
         .orderBy(tiktokShopEvaluationMessages.createdAt);
     }),
 
+  refreshShopCipher: protectedProcedure.mutation(async () => {
+    const { fetchAndStoreShopCipher } = await import("../services/tiktokShopApi");
+    const cipher = await fetchAndStoreShopCipher();
+    if (!cipher) throw new Error("Não foi possível renovar o shop_cipher. Verifique o token de acesso.");
+    return { ok: true, cipher: cipher.slice(0, 8) + "..." };
+  }),
+
   getAuthStatus: protectedProcedure.query(() => {
     const shopId = process.env.TIKTOK_SHOP_ID;
     const accessToken = process.env.TIKTOK_SHOP_ACCESS_TOKEN;
     const connected = !!(accessToken);
     return { connected, shopId: shopId || undefined };
+  }),
+
+  checkProductPermissions: protectedProcedure.mutation(async () => {
+    const { tiktokShopPost } = await import("../services/tiktokShopApi");
+
+    const results: Record<string, string> = {};
+
+    // Test 1: product.read — POST /product/202309/products/search é o método correto
+    try {
+      const res = await tiktokShopPost("/product/202309/products/search", { page_size: 1 }) as any;
+      if (res?.code === 0 || res?.data) {
+        results.product_read = "✅ OK — product.read concedido";
+      } else if (res?.code === 105000 || res?.code === 40100) {
+        results.product_read = "❌ Sem permissão product.read";
+      } else {
+        results.product_read = `⚠️ Código ${res?.code}: ${res?.message || "ver logs"}`;
+      }
+    } catch (e: any) {
+      results.product_read = `❌ Erro: ${e.message}`;
+    }
+
+    // Test 2: product.write — POST para criar produto com dados mínimos (vai falhar por dados inválidos, mas não por permissão)
+    try {
+      const res = await tiktokShopPost("/product/202309/products", { title: "PERMISSION_TEST" }) as any;
+      if (res?.code === 105000 || res?.code === 40100) {
+        results.product_write = "❌ Sem permissão product.write — precisa renovar token com escopo PRODUCT_WRITE";
+      } else if (res?.code === 0) {
+        results.product_write = "✅ OK — product.write concedido";
+      } else {
+        // Qualquer outro erro (validação, dados incompletos) = permissão existe, dados que faltam
+        results.product_write = `✅ OK — product.write concedido (erro de validação esperado: ${res?.code})`;
+      }
+    } catch (e: any) {
+      results.product_write = `⚠️ Erro ao testar: ${e.message}`;
+    }
+
+    return results;
   }),
 });

@@ -12,6 +12,9 @@ import {
   PlayCircle,
   RefreshCw,
   Send,
+  Paperclip,
+  X,
+  Image,
   TrendingUp,
   AlertTriangle,
   CheckCircle,
@@ -27,6 +30,9 @@ import {
   ThumbsUp,
   ThumbsDown,
   Sparkles,
+  Upload,
+  PlusCircle,
+  Trash2,
 } from "lucide-react";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -58,6 +64,16 @@ interface Recommendation {
   acao: string;
 }
 
+interface CreativeBrief {
+  publico: string;
+  formato: string;
+  visual: string;
+  headline: string;
+  copy: string;
+  cta: string;
+  observacoes?: string;
+}
+
 interface Evaluation {
   id: number;
   status: "pending" | "running" | "done" | "error";
@@ -68,6 +84,7 @@ interface Evaluation {
   analysis?: string | null;
   recommendations?: Recommendation[];
   rawMetrics?: any[] | null;
+  creativeBriefs?: CreativeBrief[];
 }
 
 interface ChatMessage {
@@ -175,9 +192,34 @@ export default function AdsManagerPage() {
   const [expandedHistory, setExpandedHistory] = useState<Set<number>>(new Set());
   const [chatInput, setChatInput] = useState("");
   const [sendingMsg, setSendingMsg] = useState(false);
+  const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [imageMimeType, setImageMimeType] = useState<string>("image/jpeg");
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [playingMsgId, setPlayingMsgId] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast.error("Imagem muito grande. Máximo 5MB."); return; }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      const base64 = dataUrl.split(",")[1];
+      setImageBase64(base64);
+      setImageMimeType(file.type || "image/jpeg");
+      setImagePreview(dataUrl);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  }
+
+  function clearImage() {
+    setImageBase64(null);
+    setImagePreview(null);
+  }
 
   // ── Queries ──
   const campaignsQuery = trpc.adsManager.listCampaigns.useQuery(undefined, {
@@ -306,9 +348,12 @@ export default function AdsManagerPage() {
     }
   }, [listQuery.data]);
 
-  // ── Scroll do chat ──
+  // ── Scroll do chat — rola só o container, não a página ──
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   }, [messagesQuery.data]);
 
   const currentEval = evalQuery.data as Evaluation | undefined;
@@ -323,13 +368,19 @@ export default function AdsManagerPage() {
   }
 
   function handleSend() {
-    if (!chatInput.trim() || !activeEvalId) return;
+    if ((!chatInput.trim() && !imageBase64) || !activeEvalId) return;
     setSendingMsg(true);
-    sendMsgMut.mutate({ evaluationId: activeEvalId, message: chatInput.trim() });
+    sendMsgMut.mutate({
+      evaluationId: activeEvalId,
+      message: chatInput.trim(),
+      imageBase64: imageBase64 || undefined,
+      imageMimeType: imageMimeType || undefined,
+    });
+    clearImage();
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6">
+    <div className="max-w-full px-6 py-6 space-y-6">
       {/* ── Briefing Matinal ── */}
       <MorningBriefing />
 
@@ -374,7 +425,7 @@ export default function AdsManagerPage() {
         </div>
 
         {/* Mensagens */}
-        <div className="p-4 space-y-3 overflow-y-auto" style={{ height: '420px' }}>
+        <div ref={chatContainerRef} className="p-4 space-y-3 overflow-y-auto" style={{ height: '420px' }}>
           {messages.length === 0 && !activeEvalId && (
             <div className="flex flex-col items-center justify-center h-full text-center text-gray-400">
               <Bot className="w-10 h-10 mb-3 opacity-30" />
@@ -386,7 +437,7 @@ export default function AdsManagerPage() {
           )}
           {messages.map((msg) => (
             <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.role === "user" ? "bg-[#8B2635] text-white" : "bg-gray-100 text-gray-800"}`}>
+              <div className={`${msg.role === "user" ? "max-w-[60%]" : "max-w-[92%]"} rounded-2xl px-4 py-3 text-base leading-relaxed ${msg.role === "user" ? "bg-[#8B2635] text-white" : "bg-gray-100 text-gray-800"}`}>
                 {msg.role === "assistant" && (
                   <div className="flex items-center justify-between gap-2 mb-1.5">
                     <span className="flex items-center gap-1.5 text-xs text-gray-500 font-semibold">
@@ -413,19 +464,44 @@ export default function AdsManagerPage() {
         </div>
 
         {/* Input */}
-        <div className="flex gap-2 p-4 border-t border-gray-100 bg-gray-50">
-          <input
-            type="text"
-            value={chatInput}
-            onChange={(e) => setChatInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-            placeholder={activeEvalId ? "Pergunte sobre campanhas, criativos, públicos…" : "Inicie uma avaliação para conversar"}
-            className="flex-1 text-sm border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#8B2635]/30 focus:border-[#8B2635] bg-white"
-            disabled={sendingMsg || !activeEvalId}
-          />
-          <button onClick={handleSend} disabled={!chatInput.trim() || sendingMsg || !activeEvalId} className="px-4 py-2.5 bg-[#8B2635] text-white rounded-xl hover:bg-[#7a1f2d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-            <Send className="w-4 h-4" />
-          </button>
+        <div className="border-t border-gray-100 bg-gray-50">
+          {/* Preview da imagem */}
+          {imagePreview && (
+            <div className="flex items-center gap-2 px-4 pt-3">
+              <div className="relative inline-block">
+                <img src={imagePreview} alt="preview" className="h-16 w-16 object-cover rounded-lg border border-gray-200" />
+                <button onClick={clearImage} className="absolute -top-1.5 -right-1.5 bg-gray-700 text-white rounded-full p-0.5">
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+              <span className="text-xs text-gray-500">Imagem pronta para enviar</span>
+            </div>
+          )}
+          <div className="flex gap-2 p-4">
+            {/* Botão de imagem */}
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={sendingMsg || !activeEvalId}
+              title="Anexar imagem"
+              className="flex items-center gap-1.5 px-3 py-2.5 border border-gray-200 rounded-xl text-gray-500 hover:text-[#8B2635] hover:border-[#8B2635] disabled:opacity-40 transition-colors bg-white text-sm font-medium"
+            >
+              {imageBase64 ? <Image className="w-4 h-4 text-[#8B2635]" /> : <Paperclip className="w-4 h-4" />}
+              <span>Anexar</span>
+            </button>
+            <input
+              type="text"
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+              placeholder={activeEvalId ? "Pergunte ou anexe uma imagem para análise…" : "Inicie uma avaliação para conversar"}
+              className="flex-1 text-base border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#8B2635]/30 focus:border-[#8B2635] bg-white"
+              disabled={sendingMsg || !activeEvalId}
+            />
+            <button onClick={handleSend} disabled={(!chatInput.trim() && !imageBase64) || sendingMsg || !activeEvalId} className="px-4 py-2.5 bg-[#8B2635] text-white rounded-xl hover:bg-[#7a1f2d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              <Send className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -533,8 +609,8 @@ export default function AdsManagerPage() {
         )}
       </div>
 
-      {/* ── Painel de Aprovação da Fernanda ── */}
-      {((pendingActionsQuery.data?.length ?? 0) > 0) && (
+      {/* Painel de aprovação removido — ações gerenciadas direto no chat */}
+      {false && ((pendingActionsQuery.data?.length ?? 0) > 0) && (
         <div className="bg-white border border-amber-200 rounded-xl p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-gray-800 flex items-center gap-2">
@@ -634,7 +710,7 @@ export default function AdsManagerPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* ── Histórico ── */}
         <div className="lg:col-span-1 space-y-3">
           <h2 className="font-semibold text-gray-700 flex items-center gap-2">
@@ -648,12 +724,13 @@ export default function AdsManagerPage() {
           )}
 
           {(() => {
-            const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+            const startOfToday = new Date();
+            startOfToday.setHours(0, 0, 0, 0);
             const filtered = (listQuery.data || []).filter((ev: any) =>
-              ev.status !== "error" && new Date(ev.triggeredAt) >= sevenDaysAgo
+              ev.status !== "error" && new Date(ev.triggeredAt) >= startOfToday
             );
             if (!listQuery.isLoading && filtered.length === 0)
-              return <p className="text-sm text-gray-400">Nenhuma avaliação nos últimos 7 dias.</p>;
+              return <p className="text-sm text-gray-400">Nenhuma avaliação hoje ainda.</p>;
             return filtered.map((ev: any) => (
             <button
               key={ev.id}
@@ -683,7 +760,7 @@ export default function AdsManagerPage() {
         </div>
 
         {/* ── Painel principal ── */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="lg:col-span-3 space-y-4">
           {/* Sem avaliação selecionada */}
           {!activeEvalId && (
             <div className="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-10 text-center text-gray-400">
@@ -832,6 +909,34 @@ export default function AdsManagerPage() {
                             </div>
                           </div>
                         )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Briefs de Criativo */}
+              {currentEval.creativeBriefs && currentEval.creativeBriefs.length > 0 && (
+                <div className="bg-white border border-purple-200 rounded-xl p-5 shadow-sm">
+                  <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                    <span>🎨</span> Briefs de Criativo para a Equipe de Arte
+                  </h3>
+                  <div className="space-y-4">
+                    {currentEval.creativeBriefs.map((brief, i) => (
+                      <div key={i} className="border border-purple-100 rounded-lg p-4 bg-purple-50">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-xs font-bold uppercase tracking-wide bg-purple-200 text-purple-800 px-2 py-0.5 rounded-full">{brief.publico}</span>
+                          <span className="text-xs font-semibold text-gray-500">{brief.formato}</span>
+                        </div>
+                        <div className="grid grid-cols-1 gap-2 text-sm">
+                          <div><span className="font-semibold text-gray-700">Visual: </span><span className="text-gray-600">{brief.visual}</span></div>
+                          <div><span className="font-semibold text-gray-700">Headline: </span><span className="text-gray-800 font-medium">"{brief.headline}"</span></div>
+                          <div><span className="font-semibold text-gray-700">Copy: </span><span className="text-gray-600">{brief.copy}</span></div>
+                          <div><span className="font-semibold text-gray-700">CTA: </span><span className="text-purple-700 font-medium">{brief.cta}</span></div>
+                          {brief.observacoes && (
+                            <div><span className="font-semibold text-gray-700">Obs: </span><span className="text-gray-500 italic">{brief.observacoes}</span></div>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -989,6 +1094,333 @@ export default function AdsManagerPage() {
           </div>
         )}
       </div>
+
+      {/* ── Criativos — Upload + Aprovação ── */}
+      <CreativosSection />
+    </div>
+  );
+}
+
+// ─── Seção de Criativos ───────────────────────────────────────────────────────
+
+interface UploadedImage {
+  file: File;
+  base64: string;
+  preview: string;
+  title: string;
+  textOverlay: string;
+}
+
+interface CreativeApprovalFields {
+  campaignId: string;
+  adSetId: string;
+}
+
+function CreativosSection() {
+  const [images, setImages] = useState<UploadedImage[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [approvalFields, setApprovalFields] = useState<Record<number, CreativeApprovalFields>>({});
+  const [showLibrary, setShowLibrary] = useState(false);
+  const [selectedAssetIds, setSelectedAssetIds] = useState<number[]>([]);
+  const [textOverlay, setTextOverlay] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const libraryQuery = trpc.adsManager.listLibraryAssets.useQuery(
+    { category: "produto" },
+    { enabled: showLibrary }
+  );
+
+  const fromLibraryMut = trpc.adsManager.requestCreativeFromLibrary.useMutation({
+    onSuccess: (data) => {
+      toast.success(`${data.count} criativo(s) enviados para Beatriz!`);
+      setSelectedAssetIds([]);
+      setShowLibrary(false);
+      pendingQuery.refetch();
+    },
+    onError: (e) => toast.error("Erro: " + e.message),
+  });
+
+  const pendingQuery = trpc.adsManager.listPendingCreatives.useQuery(undefined, {
+    refetchInterval: 10000,
+  });
+
+  const requestMut = trpc.adsManager.requestCreative.useMutation({
+    onSuccess: () => { pendingQuery.refetch(); },
+    onError: (e) => { toast.error("Erro: " + e.message); },
+  });
+
+  const approveMut = trpc.adsManager.approveCreative.useMutation({
+    onSuccess: (data) => {
+      if (data.executed) {
+        toast.success(`Anúncio criado na Meta Ads! ID: ${data.adId}`);
+      } else {
+        toast.success("Criativo aprovado — informe Campanha e Conjunto para subir.");
+      }
+      pendingQuery.refetch();
+    },
+    onError: (e) => { toast.error("Erro: " + e.message); },
+  });
+
+  const rejectMut = trpc.adsManager.rejectCreative.useMutation({
+    onSuccess: () => { toast("Criativo rejeitado."); pendingQuery.refetch(); },
+    onError: (e) => { toast.error("Erro: " + e.message); },
+  });
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []);
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const dataUrl = ev.target?.result as string;
+        const base64 = dataUrl.split(",")[1];
+        setImages(prev => [...prev, {
+          file,
+          base64,
+          preview: dataUrl,
+          title: file.name.replace(/\.[^.]+$/, ""),
+          textOverlay: "",
+        }]);
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = "";
+  }
+
+  async function handleSubmit() {
+    if (images.length === 0) return;
+    setSubmitting(true);
+    try {
+      for (const img of images) {
+        await requestMut.mutateAsync({
+          title: img.title || img.file.name,
+          imageBase64: img.base64,
+          textOverlay: img.textOverlay || undefined,
+          campaignType: "prospeccao",
+          targetAudience: "revendedoras",
+          product: "pijamas femininos Feminnita",
+        });
+      }
+      toast.success(`${images.length} criativo(s) enviado(s) para a Beatriz!`);
+      setImages([]);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Upload */}
+      <div className="bg-white border border-purple-200 rounded-xl p-5 shadow-sm">
+        <h2 className="font-semibold text-gray-800 flex items-center gap-2 text-lg mb-4">
+          <Sparkles className="w-5 h-5 text-purple-600" />
+          Beatriz — Criar Anúncio
+        </h2>
+        <p className="text-xs text-gray-500 mb-4">
+          Selecione fotos do produto na Biblioteca ou faça upload. Beatriz analisa, cria o banner completo e o copy. Você aprova e a Fernanda sobe na Meta.
+        </p>
+
+        {/* Opção 1: da Biblioteca de Ativos */}
+        <div className="border border-purple-200 rounded-xl p-4 mb-3">
+          <button
+            onClick={() => setShowLibrary(!showLibrary)}
+            className="flex items-center gap-2 text-sm font-medium text-purple-700 hover:text-purple-900"
+          >
+            <Image className="w-4 h-4" />
+            {showLibrary ? "Fechar Biblioteca" : "Selecionar da Biblioteca de Ativos"}
+          </button>
+
+          {showLibrary && (
+            <div className="mt-3 space-y-3">
+              {libraryQuery.isLoading && <p className="text-xs text-gray-400">Carregando...</p>}
+              {!libraryQuery.isLoading && (libraryQuery.data?.length ?? 0) === 0 && (
+                <p className="text-xs text-gray-400">Nenhum ativo de produto encontrado na biblioteca.</p>
+              )}
+              <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
+                {libraryQuery.data?.map((asset: any) => (
+                  <div
+                    key={asset.id}
+                    onClick={() => setSelectedAssetIds(prev =>
+                      prev.includes(asset.id) ? prev.filter(i => i !== asset.id) : [...prev, asset.id]
+                    )}
+                    className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
+                      selectedAssetIds.includes(asset.id)
+                        ? "border-purple-500 ring-2 ring-purple-300"
+                        : "border-transparent hover:border-purple-300"
+                    }`}
+                  >
+                    <img src={asset.url} alt={asset.name} className="w-full h-20 object-cover" />
+                    {selectedAssetIds.includes(asset.id) && (
+                      <div className="absolute inset-0 bg-purple-600 bg-opacity-20 flex items-center justify-center">
+                        <CheckCircle className="w-6 h-6 text-purple-700" />
+                      </div>
+                    )}
+                    <p className="text-xs text-gray-600 p-1 truncate">{asset.name}</p>
+                  </div>
+                ))}
+              </div>
+
+              {selectedAssetIds.length > 0 && (
+                <div className="space-y-2">
+                  <input
+                    className="w-full text-sm border border-purple-200 rounded px-2 py-1.5"
+                    placeholder="Texto no banner (opcional — ex: Kit Família a partir de R$89)"
+                    value={textOverlay}
+                    onChange={e => setTextOverlay(e.target.value)}
+                  />
+                  <button
+                    onClick={() => fromLibraryMut.mutate({
+                      assetIds: selectedAssetIds,
+                      campaignType: "prospeccao",
+                      targetAudience: "revendedoras",
+                      textOverlay: textOverlay || undefined,
+                    })}
+                    disabled={fromLibraryMut.isPending}
+                    className="w-full flex items-center justify-center gap-2 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 disabled:opacity-50 transition-colors"
+                  >
+                    {fromLibraryMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                    {fromLibraryMut.isPending
+                      ? "Beatriz criando arte e copy…"
+                      : `Beatriz criar arte para ${selectedAssetIds.length} foto(s)`}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Opção 2: upload direto */}
+        <div
+          className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center cursor-pointer hover:border-purple-300 hover:bg-purple-50 transition-colors"
+          onClick={() => fileRef.current?.click()}
+        >
+          <Upload className="w-6 h-6 text-gray-300 mx-auto mb-1" />
+          <p className="text-sm text-gray-400">Ou faça upload direto de fotos</p>
+          <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
+        </div>
+
+        {images.length > 0 && (
+          <div className="mt-4 space-y-3">
+            {images.map((img, i) => (
+              <div key={i} className="flex items-start gap-3 bg-purple-50 rounded-lg p-3">
+                <img src={img.preview} alt="" className="w-16 h-16 object-cover rounded-lg shrink-0" />
+                <div className="flex-1 min-w-0 space-y-2">
+                  <input
+                    className="w-full text-sm border border-purple-200 rounded px-2 py-1"
+                    placeholder="Título do criativo"
+                    value={img.title}
+                    onChange={e => setImages(prev => prev.map((x, j) => j === i ? { ...x, title: e.target.value } : x))}
+                  />
+                  <input
+                    className="w-full text-sm border border-purple-200 rounded px-2 py-1"
+                    placeholder="Texto no banner (opcional)"
+                    value={img.textOverlay}
+                    onChange={e => setImages(prev => prev.map((x, j) => j === i ? { ...x, textOverlay: e.target.value } : x))}
+                  />
+                </div>
+                <button onClick={() => setImages(prev => prev.filter((_, j) => j !== i))} className="text-gray-400 hover:text-red-500 shrink-0 mt-1">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+
+            <button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="w-full flex items-center justify-center gap-2 py-2.5 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <PlusCircle className="w-4 h-4" />}
+              {submitting ? "Beatriz analisando e criando banner…" : `Enviar ${images.length} foto(s) para Beatriz criar o criativo`}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Fila de aprovação */}
+      {(pendingQuery.data?.length ?? 0) > 0 && (
+        <div className="bg-white border border-amber-200 rounded-xl p-5 shadow-sm">
+          <h2 className="font-semibold text-gray-800 flex items-center gap-2 text-lg mb-4">
+            <CheckCircle className="w-5 h-5 text-amber-500" />
+            Criativos Aguardando Aprovação
+            <span className="ml-auto text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">
+              {pendingQuery.data!.length}
+            </span>
+          </h2>
+
+          <div className="space-y-4">
+            {pendingQuery.data!.map((c: any) => (
+              <div key={c.id} className="border border-amber-100 rounded-xl p-4 bg-amber-50 space-y-3">
+                <div className="flex items-start gap-3">
+                  {c.imageBase64 && (
+                    <img
+                      src={`data:image/jpeg;base64,${c.imageBase64}`}
+                      alt={c.briefTitle}
+                      className="w-24 h-24 object-cover rounded-lg shrink-0"
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 text-sm">{c.briefTitle}</p>
+                    {c.generatedHeadline && (
+                      <p className="text-sm text-gray-700 mt-1">
+                        <span className="font-medium text-purple-700">Headline: </span>{c.generatedHeadline}
+                      </p>
+                    )}
+                    {c.generatedBody && (
+                      <p className="text-sm text-gray-600 mt-1">
+                        <span className="font-medium">Copy: </span>{c.generatedBody}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Campos de campanha/conjunto para execução imediata */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">ID da Campanha Meta</label>
+                    <input
+                      className="w-full text-xs border border-gray-200 rounded px-2 py-1.5"
+                      placeholder="ex: 120210123456"
+                      value={approvalFields[c.id]?.campaignId ?? ""}
+                      onChange={e => setApprovalFields(prev => ({ ...prev, [c.id]: { ...prev[c.id], campaignId: e.target.value, adSetId: prev[c.id]?.adSetId ?? "" } }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">ID do Conjunto de Anúncios</label>
+                    <input
+                      className="w-full text-xs border border-gray-200 rounded px-2 py-1.5"
+                      placeholder="ex: 120210789012"
+                      value={approvalFields[c.id]?.adSetId ?? ""}
+                      onChange={e => setApprovalFields(prev => ({ ...prev, [c.id]: { ...prev[c.id], adSetId: e.target.value, campaignId: prev[c.id]?.campaignId ?? "" } }))}
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-gray-400">Com os IDs preenchidos a Fernanda sobe o anúncio agora (PAUSADO). Sem eles, apenas aprova para o próximo ciclo.</p>
+
+                <div className="flex gap-2 justify-end">
+                  <button
+                    onClick={() => rejectMut.mutate({ id: c.id })}
+                    disabled={rejectMut.isPending}
+                    className="flex items-center gap-1.5 px-3 py-1.5 border border-red-200 text-red-600 rounded-lg text-xs font-medium hover:bg-red-50 transition-colors disabled:opacity-50"
+                  >
+                    <ThumbsDown className="w-3.5 h-3.5" /> Rejeitar
+                  </button>
+                  <button
+                    onClick={() => approveMut.mutate({
+                      id: c.id,
+                      campaignId: approvalFields[c.id]?.campaignId || undefined,
+                      adSetId: approvalFields[c.id]?.adSetId || undefined,
+                    })}
+                    disabled={approveMut.isPending}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
+                  >
+                    {approveMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ThumbsUp className="w-3.5 h-3.5" />}
+                    {approvalFields[c.id]?.campaignId && approvalFields[c.id]?.adSetId ? "Aprovar e Subir Agora" : "Aprovar"}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

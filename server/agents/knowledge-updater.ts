@@ -142,6 +142,40 @@ Retorne JSON:
 }`,
   },
   {
+    key: "tiktok_commerce",
+    agentName: "knowledge_tiktok",
+    prompt: `Você é especialista em TikTok Commerce no Brasil — TikTok Shop, TikTok Ads, LIVE commerce, afiliados e conteúdo orgânico para marcas de moda/sleepwear.
+
+Gere um briefing semanal atualizado com as últimas mudanças e oportunidades no ecossistema TikTok para uma estrategista de marca de moda atacado.
+
+Inclua:
+1. Mudanças recentes no algoritmo do FYP — o que está sendo priorizado agora
+2. TikTok Shop Brasil — mudanças em políticas, taxas, features novas (VSA, Campaign Manager, etc.)
+3. TikTok Ads — novos formatos, benchmarks atuais de CPM/CPC/ROAS para moda BR
+4. LIVE Commerce — tendências, horários de pico, formatos que estão convertendo
+5. Programa de afiliados — mudanças, oportunidades, nichos de criadores em alta
+6. Promoções e campanhas — recursos do TikTok Shop que estão gerando mais GMV
+7. Tendências de conteúdo — formatos virais de moda, trends de som/efeito que impulsionam vendas
+
+Retorne JSON:
+{
+  "domain": "tiktok_commerce",
+  "summary": "panorama atual do ecossistema TikTok Commerce para moda/pijamas Brasil",
+  "trends": ["tendência 1 com ação concreta para nicho pijamas", "tendência 2 com formato específico", "tendência 3"],
+  "benchmarks": {
+    "cpm_medio_moda": "R$ X–Y",
+    "roas_saudavel": "Xx–Xx",
+    "ctr_video_shop": "X%+ excelente",
+    "gmv_afiliado_ativo": "R$ X–Y/mês",
+    "viewers_live_escalavel": "X+ ao vivo",
+    "taxa_conversao_shop_tab": "X–X%"
+  },
+  "warnings": ["risco ou mudança que pode prejudicar operações agora", "segundo alerta importante"],
+  "tips": ["ação de alto impacto para implementar esta semana", "segunda dica de conversão", "terceira dica"],
+  "updatedAt": "${new Date().toISOString()}"
+}`,
+  },
+  {
     key: "whatsapp_sales",
     agentName: "knowledge_whatsapp",
     prompt: `Você é especialista em vendas via WhatsApp Business para atacado de moda no Brasil, com foco em reativação de clientes e conversão de revendedoras.

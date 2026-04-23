@@ -198,6 +198,86 @@ export async function fetchMetaInsights(
   return data.data || [];
 }
 
+export async function fetchMetaAds(adsetId?: string, campaignId?: string): Promise<Array<{
+  id: string;
+  name: string;
+  status: string;
+  adsetId: string;
+  adsetName: string;
+  campaignName: string;
+  thumbnailUrl?: string;
+  imageUrl?: string;
+  body?: string;
+  title?: string;
+  callToActionType?: string;
+  linkUrl?: string;
+  spend: number;
+  impressions: number;
+  clicks: number;
+  ctr: number;
+  roas?: number;
+}>> {
+  const path = adsetId ? `/${adsetId}/ads` : campaignId ? `/${campaignId}/ads` : `/${META_ACCOUNT}/ads`;
+  const fields = "id,name,status,adset_id,adset{name,campaign{name}},creative{id,thumbnail_url,image_url,body,title,call_to_action_type,link_url,object_story_spec}";
+
+  let ads: any[] = [];
+  try {
+    const data = await metaGet(path, { fields, limit: "30" });
+    ads = data.data || [];
+  } catch (err: any) {
+    console.warn("[MetaAds] Erro ao buscar ads:", err.message);
+    return [];
+  }
+
+  // Buscar insights dos ads
+  const insPath = adsetId ? `/${adsetId}/insights` : campaignId ? `/${campaignId}/insights` : `/${META_ACCOUNT}/insights`;
+  let insMap: Record<string, any> = {};
+  try {
+    const insData = await metaGet(insPath, {
+      level: "ad",
+      date_preset: "last_30d",
+      fields: "ad_id,spend,impressions,clicks,ctr,actions",
+      limit: "30",
+    });
+    for (const row of (insData.data || [])) insMap[row.ad_id] = row;
+  } catch {}
+
+  return ads.map((ad: any) => {
+    const creative = ad.creative || {};
+    const ins = insMap[ad.id] || {};
+    const spend = parseFloat(ins.spend || "0");
+    const purchaseAction = (ins.actions || []).find(
+      (a: any) => a.action_type === "purchase" || a.action_type === "omni_purchase"
+    );
+    const revenue = purchaseAction ? parseFloat(purchaseAction.value) * 400 : 0;
+
+    const linkUrl = creative.link_url
+      || creative.object_story_spec?.link_data?.link
+      || creative.object_story_spec?.video_data?.call_to_action?.value?.link
+      || undefined;
+
+    return {
+      id: ad.id,
+      name: ad.name,
+      status: ad.status,
+      adsetId: ad.adset_id,
+      adsetName: ad.adset?.name || "",
+      campaignName: ad.adset?.campaign?.name || "",
+      thumbnailUrl: creative.thumbnail_url || undefined,
+      imageUrl: creative.image_url || undefined,
+      body: creative.body || undefined,
+      title: creative.title || undefined,
+      callToActionType: creative.call_to_action_type || undefined,
+      linkUrl,
+      spend,
+      impressions: parseInt(ins.impressions || "0"),
+      clicks: parseInt(ins.clicks || "0"),
+      ctr: parseFloat(ins.ctr || "0"),
+      roas: spend > 0 && revenue > 0 ? revenue / spend : undefined,
+    };
+  });
+}
+
 // ─── Escrita / Execução de ações ──────────────────────────────────────────────
 
 export async function pauseCampaign(campaignId: string): Promise<{ success: boolean }> {

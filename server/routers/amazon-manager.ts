@@ -11,26 +11,31 @@ import {
 import { isConnected, hasAwsCredentials } from "../services/amazonSpApi";
 
 export const amazonManagerRouter = router({
-  triggerEvaluation: protectedProcedure.mutation(async ({ ctx }) => {
-    const db = await getDb();
-    if (!db) throw new Error("Banco indisponível");
+  triggerEvaluation: protectedProcedure
+    .input(z.object({ account: z.enum(["feminnita", "fnt"]).default("feminnita") }).optional())
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Banco indisponível");
+      const account = input?.account ?? "feminnita";
+      const sellerId = (account === "fnt" ? process.env.AMAZON_SELLER_ID_2 : process.env.AMAZON_SELLER_ID) ?? undefined;
 
-    const result = await db.insert(amazonEvaluations).values({
-      userId: ctx.user.id,
-      sellerId: process.env.AMAZON_SELLER_ID ?? undefined,
-      status: "pending",
-      triggeredAt: new Date(),
-      createdAt: new Date(),
-    });
+      const result = await db.insert(amazonEvaluations).values({
+        userId: ctx.user.id,
+        account,
+        sellerId,
+        status: "pending",
+        triggeredAt: new Date(),
+        createdAt: new Date(),
+      });
 
-    const evaluationId = Array.isArray(result) ? result[0].insertId : (result as any).insertId;
+      const evaluationId = Array.isArray(result) ? result[0].insertId : (result as any).insertId;
 
-    runAmazonEvaluation(evaluationId).catch((err) =>
-      console.error("[AmazonManager] Erro:", err)
-    );
+      runAmazonEvaluation(evaluationId, account).catch((err) =>
+        console.error("[AmazonManager] Erro:", err)
+      );
 
-    return { evaluationId, status: "pending" };
-  }),
+      return { evaluationId, status: "pending" };
+    }),
 
   getEvaluation: protectedProcedure
     .input(z.object({ id: z.number() }))
@@ -52,24 +57,27 @@ export const amazonManagerRouter = router({
       };
     }),
 
-  listEvaluations: protectedProcedure.query(async ({ ctx }) => {
-    const db = await getDb();
-    if (!db) return [];
+  listEvaluations: protectedProcedure
+    .input(z.object({ account: z.enum(["feminnita", "fnt"]).default("feminnita") }).optional())
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const account = input?.account ?? "feminnita";
 
-    return db
-      .select({
-        id: amazonEvaluations.id,
-        status: amazonEvaluations.status,
-        summary: amazonEvaluations.summary,
-        errorMessage: amazonEvaluations.errorMessage,
-        triggeredAt: amazonEvaluations.triggeredAt,
-        completedAt: amazonEvaluations.completedAt,
-      })
-      .from(amazonEvaluations)
-      .where(eq(amazonEvaluations.userId, ctx.user.id))
-      .orderBy(desc(amazonEvaluations.triggeredAt))
-      .limit(20);
-  }),
+      return db
+        .select({
+          id: amazonEvaluations.id,
+          status: amazonEvaluations.status,
+          summary: amazonEvaluations.summary,
+          errorMessage: amazonEvaluations.errorMessage,
+          triggeredAt: amazonEvaluations.triggeredAt,
+          completedAt: amazonEvaluations.completedAt,
+        })
+        .from(amazonEvaluations)
+        .where(and(eq(amazonEvaluations.userId, ctx.user.id), eq(amazonEvaluations.account, account)))
+        .orderBy(desc(amazonEvaluations.triggeredAt))
+        .limit(20);
+    }),
 
   getData: protectedProcedure.query(async () => {
     return collectAmazonData();

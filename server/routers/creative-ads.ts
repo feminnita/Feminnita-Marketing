@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getDb } from "../db";
 import { adCreatives } from "../../drizzle/schema";
 import { eq, and, desc } from "drizzle-orm";
-import { requestCreative, listDriveReferenceFiles } from "../agents/creative-agent";
+import { requestCreative, requestCreativeVariants, listDriveReferenceFiles, chatWithBeatriz } from "../agents/creative-agent";
 import { executeMetaAction } from "../agents/fernanda-executor";
 import { isDriveConfigured } from "../services/googleDrive";
 
@@ -235,4 +235,17 @@ export const creativeAdsRouter = router({
       return { ok: false, permissions: [], missing: [], error: err.message };
     }
   }),
+
+  // Chat direto com a Beatriz
+  chat: protectedProcedure
+    .input(z.object({
+      messages: z.array(z.object({
+        role: z.enum(["user", "assistant"]),
+        content: z.string(),
+      })).min(1).max(50),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const reply = await chatWithBeatriz(input.messages, ctx.user?.name ?? undefined);
+      return { reply };
+    }),
 });

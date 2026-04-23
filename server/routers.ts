@@ -83,6 +83,7 @@ import { adsManagerRouter } from "./routers/ads-manager";
 import { mlAdsManagerRouter } from "./routers/ml-ads-manager";
 import { shopeeAdsManagerRouter } from "./routers/shopee-ads-manager";
 import { tiktokShopManagerRouter } from "./routers/tiktok-shop-manager";
+import { tiktokTeamRouter } from "./routers/tiktok-team";
 import { amazonManagerRouter } from "./routers/amazon-manager";
 import { blogRouter } from "./routers/blog";
 import { trafficManagerRouter } from "./routers/traffic-manager";
@@ -93,6 +94,9 @@ import { marketKnowledgeRouter } from "./routers/market-knowledge";
 import { specialistChatRouter } from "./routers/specialist-chat";
 import { whatsappBlastsRouter } from "./routers/whatsapp-blasts";
 import { creativeAdsRouter } from "./routers/creative-ads";
+import { specialistsRouter } from "./routers/specialists";
+import { trayDudaRouter } from "./routers/tray-duda";
+import { trayAnyRouter } from "./routers/tray-any";
 import { getDb } from "./db";
 import { influencers, influencerPosts } from "../drizzle/schema";
 
@@ -140,6 +144,17 @@ export const appRouter = router({
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
+
+    updateProfile: protectedProcedure
+      .input(z.object({ name: z.string().min(1).max(100) }))
+      .mutation(async ({ ctx, input }) => {
+        const dbConn = await getDb();
+        if (!dbConn) throw new Error("DB indisponível");
+        const { users } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        await dbConn.update(users).set({ name: input.name }).where(eq(users.id, ctx.user!.id));
+        return { success: true };
+      }),
   }),
 
   // Bling integrations
@@ -216,6 +231,7 @@ export const appRouter = router({
   mlAdsManager: mlAdsManagerRouter,
   shopeeAdsManager: shopeeAdsManagerRouter,
   tiktokShopManager: tiktokShopManagerRouter,
+  tiktokTeam: tiktokTeamRouter,
   amazonManager: amazonManagerRouter,
   blog: blogRouter,
   trafficManager: trafficManagerRouter,
@@ -226,6 +242,9 @@ export const appRouter = router({
   specialistChat: specialistChatRouter,
   whatsappBlasts: whatsappBlastsRouter,
   creativeAds: creativeAdsRouter,
+  specialists: specialistsRouter,
+  trayDuda: trayDudaRouter,
+  trayAny: trayAnyRouter,
   influencers: router({
     list: protectedProcedure.query(async ({ ctx }) => {
       try {

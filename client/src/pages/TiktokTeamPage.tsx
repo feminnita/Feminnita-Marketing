@@ -105,6 +105,11 @@ function AgentPanel({ agent, account }: { agent: Agent; account: string }) {
     onError: (err) => toast.error(`Erro: ${err.message}`),
   });
 
+  const updateKnowledgeMut = trpc.tiktokTeam.updateKnowledge.useMutation({
+    onSuccess: () => toast.success(`Conhecimento de ${agent.name} atualizado!`),
+    onError: (err) => toast.error(`Erro: ${err.message}`),
+  });
+
   const sendMsgMut = trpc.tiktokTeam.sendMessage.useMutation({
     onSuccess: () => { setChatInput(""); messagesQuery.refetch(); },
     onError: (err) => toast.error(`Erro: ${err.message}`),
@@ -157,15 +162,25 @@ function AgentPanel({ agent, account }: { agent: Agent; account: string }) {
           </div>
           <p className="text-sm text-gray-500 mt-0.5">{agent.description}</p>
         </div>
-        <button
-          onClick={() => triggerMut.mutate({ agentType: agent.id, account: account as any })}
-          disabled={triggerMut.isPending || polling}
-          className="flex items-center gap-2 px-4 py-2 text-white rounded-lg text-sm font-medium disabled:opacity-50"
-          style={{ background: agent.color }}
-        >
-          {polling ? <Loader2 className="w-4 h-4 animate-spin" /> : <PlayCircle className="w-4 h-4" />}
-          {polling ? "Analisando…" : "Nova análise"}
-        </button>
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={() => triggerMut.mutate({ agentType: agent.id, account: account as any })}
+            disabled={triggerMut.isPending || polling}
+            className="flex items-center gap-2 px-4 py-2 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+            style={{ background: agent.color }}
+          >
+            {polling ? <Loader2 className="w-4 h-4 animate-spin" /> : <PlayCircle className="w-4 h-4" />}
+            {polling ? "Analisando…" : "Nova análise"}
+          </button>
+          <button
+            onClick={() => updateKnowledgeMut.mutate({ agentType: agent.id })}
+            disabled={updateKnowledgeMut.isPending}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
+          >
+            {updateKnowledgeMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bot className="w-4 h-4" />}
+            Atualizar Conhecimento
+          </button>
+        </div>
       </div>
 
       {/* Resultado */}
@@ -487,6 +502,7 @@ function VideoStudio() {
   const [ctaText, setCtaText] = useState("");
   const [durationPerImage, setDurationPerImage] = useState(4);
   const [title, setTitle] = useState("");
+  const [dubbing, setDubbing] = useState(true);
   const [generatingId, setGeneratingId] = useState<number | null>(null);
   const utils = trpc.useUtils();
 
@@ -542,6 +558,7 @@ function VideoStudio() {
       hookText: hookText.trim(),
       ctaText: ctaText.trim(),
       durationPerImage,
+      dubbing,
     });
   }
 
@@ -650,6 +667,20 @@ function VideoStudio() {
           </div>
         </div>
 
+        {/* Dublagem */}
+        <div className="flex items-center gap-3 bg-purple-50 border border-purple-200 rounded-xl px-4 py-3">
+          <input
+            type="checkbox"
+            id="dubbing"
+            checked={dubbing}
+            onChange={(e) => setDubbing(e.target.checked)}
+            className="w-4 h-4 accent-purple-600 cursor-pointer"
+          />
+          <label htmlFor="dubbing" className="text-sm font-medium text-purple-900 cursor-pointer select-none">
+            🎙️ Dublagem com IA (ElevenLabs) — voz lê o hook e o CTA automaticamente
+          </label>
+        </div>
+
         {/* Generate button */}
         <button
           onClick={handleGenerate}
@@ -730,8 +761,18 @@ const TT_PINK = "#FE2C55";
 type AccountType = "feminnita" | "fnt";
 
 export default function TiktokTeamPage() {
-  const [activeTab, setActiveTab] = useState<AgentType | "videos" | "studio">("luna");
+  const getTabFromUrl = () => {
+    const params = new URLSearchParams(window.location.search);
+    const t = params.get("tab");
+    if (t === "videos" || t === "studio") return t as "videos" | "studio";
+    return "luna" as AgentType;
+  };
+  const [activeTab, setActiveTab] = useState<AgentType | "videos" | "studio">(getTabFromUrl);
   const [account, setAccount] = useState<AccountType>("feminnita");
+
+  useEffect(() => {
+    setActiveTab(getTabFromUrl());
+  }, [window.location.search]);
 
   const tabs = [
     ...AGENTS.map((a) => ({ id: a.id as AgentType | "videos" | "studio", label: a.name, emoji: a.emoji, color: a.color })),
@@ -740,7 +781,7 @@ export default function TiktokTeamPage() {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6">
+    <div className="max-w-full px-6 py-6 space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
@@ -791,7 +832,7 @@ export default function TiktokTeamPage() {
       </div>
 
       {/* Tab nav */}
-      <div className="flex gap-1 border-b border-gray-200">
+      <div className="flex gap-1 border-b border-gray-200 overflow-x-auto scrollbar-none">
         {tabs.map((tab) => (
           <button
             key={tab.id}

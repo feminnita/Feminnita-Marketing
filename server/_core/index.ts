@@ -116,6 +116,13 @@ async function startServer() {
       },
     })
   );
+  // Serve uploaded assets (product images, etc.)
+  const { default: fs } = await import("fs");
+  const { default: pathMod } = await import("path");
+  const uploadsPath = pathMod.resolve(process.cwd(), "uploads");
+  if (!fs.existsSync(uploadsPath)) fs.mkdirSync(uploadsPath, { recursive: true });
+  app.use("/uploads", express.static(uploadsPath));
+
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);

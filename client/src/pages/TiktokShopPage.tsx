@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   Package,
 } from "lucide-react";
+import liaPhoto from "@/assets/lia.jpg";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -49,9 +50,7 @@ interface ChatMessage {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const TT_BLACK = "#010101";
 const TT_PINK = "#FE2C55";
-const TT_CYAN = "#25F4EE";
 
 const priorityColors: Record<string, string> = {
   alta: "bg-red-100 text-red-800 border-red-200",
@@ -96,6 +95,11 @@ function StatusBadge({ status }: { status: Evaluation["status"] }) {
   );
 }
 
+function cleanAnalysis(text: string): string {
+  // Strip JSON code blocks if analysis accidentally contains them
+  return text.replace(/```json[\s\S]*?```/g, "").replace(/```[\s\S]*?```/g, "").trim();
+}
+
 // ─── Componente principal ─────────────────────────────────────────────────────
 
 export default function TiktokShopPage() {
@@ -107,6 +111,15 @@ export default function TiktokShopPage() {
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const authQuery = trpc.tiktokShopManager.getAuthStatus.useQuery();
+  const [permResults, setPermResults] = useState<Record<string, string> | null>(null);
+  const checkPermMut = trpc.tiktokShopManager.checkProductPermissions.useMutation({
+    onSuccess: (data) => { setPermResults(data); },
+    onError: (e) => toast.error("Erro ao verificar: " + e.message),
+  });
+  const refreshCipherMut = trpc.tiktokShopManager.refreshShopCipher.useMutation({
+    onSuccess: () => { toast.success("Shop cipher renovado! Tente verificar permissões novamente."); },
+    onError: (e) => toast.error("Erro ao renovar: " + e.message),
+  });
 
   const listQuery = trpc.tiktokShopManager.listEvaluations.useQuery(undefined, {
     refetchInterval: polling ? 3000 : false,
@@ -130,7 +143,7 @@ export default function TiktokShopPage() {
       setActiveEvalId(data.evaluationId);
       setPolling(true);
       listQuery.refetch();
-      toast.success("Avaliação iniciada! O especialista TikTok Shop está analisando…");
+      toast.success("Avaliação iniciada! Lia está analisando sua conta TikTok Shop…");
     },
     onError: (err) => toast.error(`Erro ao iniciar: ${err.message}`),
   });
@@ -155,8 +168,16 @@ export default function TiktokShopPage() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messagesQuery.data]);
 
+  // Auto-select most recent evaluation on load
+  useEffect(() => {
+    if (!activeEvalId && listQuery.data && listQuery.data.length > 0) {
+      setActiveEvalId(listQuery.data[0].id);
+    }
+  }, [listQuery.data]);
+
   const currentEval = evalQuery.data as Evaluation | undefined;
   const messages = (messagesQuery.data || []) as ChatMessage[];
+  const recentEvals = (listQuery.data || []).slice(0, 5) as any[];
 
   function toggleRec(i: number) {
     setExpandedRecs((prev) => {
@@ -174,31 +195,63 @@ export default function TiktokShopPage() {
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6">
-      {/* ── Header ── */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <span className="text-2xl">🎵</span>
-            Especialista TikTok Shop
-          </h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Analisa produtos, pedidos e estratégias de venda no TikTok Shop com IA especializada em atacado de moda.
+
+      {/* ── Persona Card — Lia ── */}
+      <div className="bg-white border border-gray-200 rounded-xl p-5 flex items-center gap-5">
+        <img
+          src={liaPhoto}
+          alt="Lia"
+          className="w-24 h-32 rounded-xl object-cover object-top border-2 border-pink-200 shrink-0"
+        />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-0.5">
+            <h2 className="text-lg font-bold text-gray-900">Lia</h2>
+            <span className="text-xs font-medium px-2 py-0.5 rounded-full text-white" style={{ background: TT_PINK }}>
+              Especialista TikTok Shop
+            </span>
+          </div>
+          <p className="text-sm text-gray-500 leading-snug">
+            Especialista sênior em TikTok Shop e social commerce · 11 anos em e-commerce de moda na América Latina · MBA FGV-SP · Partner certificada TikTok Shop Academy
           </p>
           {authQuery.data?.connected ? (
-            <p className="text-xs text-green-600 mt-0.5 flex items-center gap-1">
+            <p className="text-xs text-green-600 mt-1.5 flex items-center gap-1">
               <CheckCircle className="w-3 h-3" /> TikTok Shop conectado — Shop ID: {authQuery.data.shopId || "—"}
             </p>
           ) : (
-            <p className="text-xs text-amber-600 mt-0.5 flex items-center gap-1">
-              <AlertTriangle className="w-3 h-3" /> Não conectado — clique em "Conectar TikTok Shop" para autorizar
+            <p className="text-xs text-amber-600 mt-1.5 flex items-center gap-1">
+              <AlertTriangle className="w-3 h-3" /> Não conectado — autorize para análise com dados reais
             </p>
           )}
         </div>
-
+        <div className="flex flex-col gap-2 shrink-0">
+          <button
+            onClick={() => checkPermMut.mutate()}
+            disabled={checkPermMut.isPending}
+            className="flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          >
+            {checkPermMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Package className="w-3.5 h-3.5" />}
+            Verificar permissões
+          </button>
+          <button
+            onClick={() => refreshCipherMut.mutate()}
+            disabled={refreshCipherMut.isPending}
+            className="flex items-center gap-2 px-4 py-2 border border-amber-300 rounded-lg text-sm font-medium text-amber-700 hover:bg-amber-50 disabled:opacity-50"
+          >
+            {refreshCipherMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Link className="w-3.5 h-3.5" />}
+            Renovar shop cipher
+          </button>
+          {permResults && (
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs space-y-1 max-w-xs">
+              {Object.entries(permResults).map(([k, v]) => (
+                <p key={k}><span className="font-medium text-slate-500">{k}:</span> {v}</p>
+              ))}
+            </div>
+          )}
+        </div>
         <button
           onClick={() => triggerMut.mutate()}
           disabled={triggerMut.isPending || polling}
-          className="flex items-center gap-2 px-5 py-2.5 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center gap-2 px-5 py-2.5 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors shrink-0"
           style={{ background: TT_PINK }}
         >
           {polling ? (
@@ -217,10 +270,10 @@ export default function TiktokShopPage() {
           <div className="text-sm text-blue-800">
             <p className="font-semibold">Conecte sua conta TikTok Shop</p>
             <p className="mt-1 text-blue-700">
-              Autorize o acesso para que a Valentina possa analisar produtos, pedidos e performance real da loja.
+              Autorize o acesso para que a Lia possa analisar produtos, pedidos e performance real da loja.
               Enquanto não conectado, funciona em <strong>modo planejamento</strong> com estratégias e benchmarks de mercado.
             </p>
-            <div className="mt-3 flex gap-2">
+            <div className="mt-3">
               <a
                 href="/api/tiktok-shop/start"
                 className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg text-white"
@@ -229,36 +282,6 @@ export default function TiktokShopPage() {
                 <Link className="w-3 h-3" /> Conectar TikTok Shop
               </a>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Histórico de avaliações ── */}
-      {(listQuery.data?.length ?? 0) > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <h2 className="font-semibold text-gray-800 flex items-center gap-2 mb-3">
-            <Clock className="w-4 h-4 text-gray-400" /> Histórico de Avaliações
-          </h2>
-          <div className="space-y-2">
-            {listQuery.data?.map((ev: any) => (
-              <button
-                key={ev.id}
-                onClick={() => setActiveEvalId(ev.id)}
-                className={`w-full text-left flex items-center justify-between px-4 py-3 rounded-lg border transition-colors ${
-                  activeEvalId === ev.id
-                    ? "border-pink-300 bg-pink-50"
-                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                }`}
-              >
-                <div>
-                  <p className="text-sm font-medium text-gray-800">
-                    {ev.summary || `Avaliação #${ev.id}`}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-0.5">{fmtDate(ev.triggeredAt)}</p>
-                </div>
-                <StatusBadge status={ev.status} />
-              </button>
-            ))}
           </div>
         </div>
       )}
@@ -283,7 +306,7 @@ export default function TiktokShopPage() {
                 Análise Detalhada
               </h2>
               <div className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-                {currentEval.analysis}
+                {cleanAnalysis(currentEval.analysis)}
               </div>
             </div>
           )}
@@ -333,7 +356,7 @@ export default function TiktokShopPage() {
           <div className="bg-white border border-gray-200 rounded-xl p-5">
             <h2 className="font-semibold text-gray-800 flex items-center gap-2 mb-4">
               <MessageSquare className="w-5 h-5" style={{ color: TT_PINK }} />
-              Chat com Especialista TikTok Shop
+              Chat com Lia
             </h2>
 
             <div className="min-h-[120px] max-h-[400px] overflow-y-auto space-y-3 mb-4 pr-1">
@@ -392,7 +415,7 @@ export default function TiktokShopPage() {
       {currentEval && (currentEval.status === "running" || currentEval.status === "pending") && (
         <div className="bg-white border border-gray-200 rounded-xl p-10 text-center space-y-3">
           <Loader2 className="w-10 h-10 animate-spin mx-auto" style={{ color: TT_PINK }} />
-          <p className="font-medium text-gray-700">Especialista analisando sua conta TikTok Shop…</p>
+          <p className="font-medium text-gray-700">Lia está analisando sua conta TikTok Shop…</p>
           <p className="text-sm text-gray-400">Isso pode levar até 30 segundos</p>
         </div>
       )}
@@ -408,8 +431,38 @@ export default function TiktokShopPage() {
         </div>
       )}
 
+      {/* ── Histórico de avaliações ── */}
+      {recentEvals.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded-xl p-5">
+          <h2 className="font-semibold text-gray-800 flex items-center gap-2 mb-3">
+            <Clock className="w-4 h-4 text-gray-400" /> Histórico de Avaliações
+          </h2>
+          <div className="space-y-2">
+            {recentEvals.map((ev: any) => (
+              <button
+                key={ev.id}
+                onClick={() => setActiveEvalId(ev.id)}
+                className={`w-full text-left flex items-center justify-between px-4 py-3 rounded-lg border transition-colors ${
+                  activeEvalId === ev.id
+                    ? "border-pink-300 bg-pink-50"
+                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                }`}
+              >
+                <div>
+                  <p className="text-sm font-medium text-gray-800">
+                    {ev.summary || `Avaliação #${ev.id}`}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">{fmtDate(ev.triggeredAt)}</p>
+                </div>
+                <StatusBadge status={ev.status} />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ── Estado vazio ── */}
-      {!activeEvalId && (listQuery.data?.length ?? 0) === 0 && (
+      {!activeEvalId && recentEvals.length === 0 && (
         <div className="bg-white border border-gray-200 rounded-xl p-10 text-center space-y-4">
           <div
             className="w-16 h-16 rounded-full flex items-center justify-center mx-auto text-3xl"
@@ -420,7 +473,7 @@ export default function TiktokShopPage() {
           <div>
             <p className="font-semibold text-gray-800">Nenhuma avaliação ainda</p>
             <p className="text-sm text-gray-500 mt-1">
-              Clique em "Avaliar TikTok Shop" para o especialista analisar sua conta e gerar recomendações.
+              Clique em "Avaliar TikTok Shop" para a Lia analisar sua conta e gerar recomendações.
             </p>
           </div>
           <button

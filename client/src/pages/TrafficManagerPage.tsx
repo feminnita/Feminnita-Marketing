@@ -3,7 +3,6 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import {
   AlertTriangle,
-  CheckCircle,
   ChevronDown,
   ChevronUp,
   Clock,
@@ -14,7 +13,6 @@ import {
   Send,
   TrendingDown,
   TrendingUp,
-  XCircle,
   Zap,
 } from "lucide-react";
 
@@ -26,59 +24,7 @@ interface ChatMessage {
   id?: number;
 }
 
-interface PendingAction {
-  id: number;
-  actionType: string;
-  payload: string | null;
-  status: "pending" | "approved" | "rejected" | "executed";
-  createdAt: Date | string;
-}
-
-interface ParsedPayload {
-  action?: string;
-  target_name?: string;
-  reason?: string;
-  urgency?: "alta" | "media" | "baixa";
-  expected_impact?: string;
-  custom_description?: string;
-}
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function parsePayload(raw: string | null): ParsedPayload {
-  if (!raw) return {};
-  try {
-    return JSON.parse(raw) as ParsedPayload;
-  } catch {
-    return {};
-  }
-}
-
-const urgencyColors: Record<string, string> = {
-  alta: "bg-red-100 text-red-800 border-red-200",
-  media: "bg-amber-100 text-amber-800 border-amber-200",
-  baixa: "bg-green-100 text-green-800 border-green-200",
-};
-
-const urgencyLabel: Record<string, string> = {
-  alta: "Urgência Alta",
-  media: "Urgência Média",
-  baixa: "Urgência Baixa",
-};
-
-const actionTypeLabel: Record<string, string> = {
-  pause_campaign: "Pausar Campanha",
-  pause_adset: "Pausar Conjunto de Anúncios",
-  increase_budget: "Aumentar Budget",
-  decrease_budget: "Reduzir Budget",
-  duplicate_adset: "Duplicar Conjunto",
-  change_audience: "Alterar Público",
-  change_creative: "Trocar Criativo",
-  enable_advantage_plus: "Ativar Advantage+",
-  schedule_campaign: "Agendar Campanha",
-  review_creative: "Revisar Criativo",
-  custom: "Ação Personalizada",
-};
 
 function CampaignStatusDot({ status }: { status: string }) {
   const map: Record<string, string> = {
@@ -114,98 +60,6 @@ function PriorityIcon({ priority }: { priority: string }) {
   return <TrendingDown className="w-3.5 h-3.5 text-slate-500" />;
 }
 
-// ─── Componente: Card de Ação Proposta ────────────────────────────────────────
-
-function ActionCard({
-  action,
-  onApprove,
-  onReject,
-  loading,
-}: {
-  action: PendingAction;
-  onApprove: (id: number) => void;
-  onReject: (id: number) => void;
-  loading: boolean;
-}) {
-  const payload = parsePayload(action.payload);
-  const urgency = payload.urgency ?? "media";
-  const label = actionTypeLabel[action.actionType] ?? action.actionType;
-
-  return (
-    <div className="border border-slate-200 rounded-xl p-4 bg-white shadow-sm">
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-semibold text-slate-800">{label}</span>
-          <span
-            className={`text-xs px-2 py-0.5 rounded-full border font-medium ${urgencyColors[urgency]}`}
-          >
-            {urgencyLabel[urgency]}
-          </span>
-        </div>
-        <Zap className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />
-      </div>
-
-      {payload.target_name && (
-        <p className="text-xs font-mono bg-slate-100 rounded px-2 py-1 mb-2 text-slate-700 truncate">
-          {payload.target_name}
-        </p>
-      )}
-
-      <p className="text-sm text-slate-700 mb-1">
-        <span className="font-medium">Motivo:</span>{" "}
-        {payload.reason ?? payload.custom_description ?? "—"}
-      </p>
-
-      {payload.expected_impact && (
-        <p className="text-xs text-slate-500 mb-3">
-          <span className="font-medium">Impacto esperado:</span>{" "}
-          {payload.expected_impact}
-        </p>
-      )}
-
-      {action.status === "pending" ? (
-        <div className="flex gap-2 mt-3">
-          <button
-            onClick={() => onApprove(action.id)}
-            disabled={loading}
-            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium transition-colors disabled:opacity-50"
-          >
-            {loading ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <CheckCircle className="w-3.5 h-3.5" />
-            )}
-            Aprovar
-          </button>
-          <button
-            onClick={() => onReject(action.id)}
-            disabled={loading}
-            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-100 text-slate-700 text-sm font-medium transition-colors disabled:opacity-50"
-          >
-            <XCircle className="w-3.5 h-3.5" />
-            Rejeitar
-          </button>
-        </div>
-      ) : (
-        <div
-          className={`flex items-center gap-1.5 mt-3 text-sm font-medium ${
-            action.status === "approved"
-              ? "text-emerald-700"
-              : "text-slate-500"
-          }`}
-        >
-          {action.status === "approved" ? (
-            <CheckCircle className="w-4 h-4" />
-          ) : (
-            <XCircle className="w-4 h-4" />
-          )}
-          {action.status === "approved" ? "Aprovada" : "Rejeitada"}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── Componente: Mensagem do Chat ─────────────────────────────────────────────
 
 function ChatBubble({ message }: { message: ChatMessage }) {
@@ -218,7 +72,7 @@ function ChatBubble({ message }: { message: ChatMessage }) {
         </div>
       )}
       <div
-        className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+        className={`${isUser ? "max-w-[70%]" : "max-w-[92%]"} rounded-2xl px-4 py-3 text-base leading-relaxed ${
           isUser
             ? "bg-pink-100 text-slate-800 rounded-tr-sm border border-pink-200"
             : "bg-white border border-slate-200 text-slate-800 rounded-tl-sm shadow-sm"
@@ -419,8 +273,6 @@ export default function TrafficManagerPage() {
   const [conversationId, setConversationId] = useState<number | undefined>(
     undefined
   );
-  const [pendingActions, setPendingActions] = useState<PendingAction[]>([]);
-  const [approvingId, setApprovingId] = useState<number | null>(null);
   const [showHistory, setShowHistory] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -433,34 +285,10 @@ export default function TrafficManagerPage() {
         ...prev,
         { role: "assistant", content: data.message },
       ]);
-      if (data.proposedActions?.length) {
-        setPendingActions((prev) => [
-          ...(data.proposedActions as PendingAction[]),
-          ...prev,
-        ]);
-      }
     },
     onError: (err) => {
       toast.error("Erro ao enviar mensagem: " + err.message);
       setMessages((prev) => prev.slice(0, -1)); // remover placeholder
-    },
-  });
-
-  const approveAction = trpc.trafficManager.approveAction.useMutation({
-    onSuccess: (data, vars) => {
-      setPendingActions((prev) =>
-        prev.map((a) =>
-          a.id === vars.actionId ? { ...a, status: data.status as PendingAction["status"] } : a
-        )
-      );
-      toast.success(
-        vars.approved ? "Ação aprovada" : "Ação rejeitada"
-      );
-      setApprovingId(null);
-    },
-    onError: (err) => {
-      toast.error("Erro: " + err.message);
-      setApprovingId(null);
     },
   });
 
@@ -510,12 +338,8 @@ export default function TrafficManagerPage() {
         content: "Nova conversa iniciada. Como posso ajudar?",
       },
     ]);
-    setPendingActions([]);
     setShowHistory(false);
   };
-
-  const pendingOnly = pendingActions.filter((a) => a.status === "pending");
-  const resolvedActions = pendingActions.filter((a) => a.status !== "pending");
 
   return (
     <div className="flex flex-col h-screen bg-slate-50">
@@ -558,7 +382,7 @@ export default function TrafficManagerPage() {
       {/* ── Conteúdo principal ───────────────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden">
         {/* ── Painel esquerdo: Briefing + Fila de Aprovações ──────────────── */}
-        <aside className="w-[30%] min-w-[280px] max-w-[360px] flex flex-col border-r border-slate-200 bg-white overflow-y-auto flex-shrink-0">
+        <aside className="w-[300px] flex flex-col border-r border-slate-200 bg-white overflow-y-auto flex-shrink-0">
           {/* Histórico de conversas */}
           {showHistory && conversations && (
             <div className="border-b border-slate-200 p-4">
@@ -596,66 +420,6 @@ export default function TrafficManagerPage() {
             <BriefingPanel />
           </div>
 
-          {/* Fila de Aprovações */}
-          <div className="p-4 flex-1">
-            <div className="flex items-center gap-2 mb-3">
-              <CheckCircle className="w-4 h-4 text-rose-500" />
-              <h2 className="text-sm font-bold text-slate-900">
-                Fila de Aprovações
-              </h2>
-              {pendingOnly.length > 0 && (
-                <span className="ml-auto text-xs bg-rose-600 text-white rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                  {pendingOnly.length}
-                </span>
-              )}
-            </div>
-
-            {pendingOnly.length === 0 && resolvedActions.length === 0 ? (
-              <div className="text-center py-8 text-slate-400">
-                <CheckCircle className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                <p className="text-sm">
-                  Nenhuma ação aguardando aprovação.
-                </p>
-                <p className="text-xs mt-1 text-slate-300">
-                  As ações propostas pelo agente aparecerão aqui.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {pendingOnly.map((action) => (
-                  <ActionCard
-                    key={action.id}
-                    action={action}
-                    loading={approvingId === action.id}
-                    onApprove={(id) => {
-                      setApprovingId(id);
-                      approveAction.mutate({ actionId: id, approved: true });
-                    }}
-                    onReject={(id) => {
-                      setApprovingId(id);
-                      approveAction.mutate({ actionId: id, approved: false });
-                    }}
-                  />
-                ))}
-                {resolvedActions.length > 0 && (
-                  <>
-                    <p className="text-xs text-slate-400 font-medium uppercase tracking-wide mt-4">
-                      Resolvidas
-                    </p>
-                    {resolvedActions.map((action) => (
-                      <ActionCard
-                        key={action.id}
-                        action={action}
-                        loading={false}
-                        onApprove={() => {}}
-                        onReject={() => {}}
-                      />
-                    ))}
-                  </>
-                )}
-              </div>
-            )}
-          </div>
         </aside>
 
         {/* ── Painel direito: Chat ─────────────────────────────────────────── */}
