@@ -195,7 +195,7 @@ export default function CreativeAdsPage() {
       <div className="bg-purple-50 border border-purple-200 rounded-xl px-4 py-3 text-sm text-purple-800 flex items-start gap-2">
         <Sparkles className="w-4 h-4 mt-0.5 shrink-0 text-purple-600" />
         <span>
-          <strong>Fluxo automático:</strong> Ao subir uma foto de produto na Biblioteca de Imagens (categoria "produto"), a Beatriz já cria o banner e o copy automaticamente. Quando terminar, aparece aqui em <strong>Aguardando Aprovação</strong>.
+          <strong>Fluxo:</strong> Vá em <strong>Beatriz → Criar Criativo</strong>, envie a foto do produto e escolha a campanha. A Fernanda escreve o brief estratégico e a Beatriz gera 3 versões com hooks diferentes. Aparecem aqui em <strong>Aguardando Aprovação</strong>.
         </span>
       </div>
 
@@ -236,7 +236,7 @@ export default function CreativeAdsPage() {
               <p className="font-medium">{tab === "pending" ? "Nenhum criativo aguardando aprovação" : "Nenhum criativo encontrado"}</p>
               <p className="text-sm mt-1">
                 {tab === "pending"
-                  ? "Suba fotos de produto na Biblioteca de Imagens — a Beatriz cria automaticamente."
+                  ? "Vá em Beatriz → Criar Criativo para enviar a foto e iniciar a geração."
                   : "Os criativos gerados aparecem aqui com todo o histórico."}
               </p>
             </div>
@@ -334,7 +334,7 @@ export default function CreativeAdsPage() {
             <h2 className="text-lg font-semibold text-gray-900">Brief Manual</h2>
           </div>
           <p className="text-sm text-gray-500 mb-6">
-            Use quando <strong>não tem foto de produto</strong>. Escreva um brief em texto e a Beatriz tenta gerar um banner do zero. Para melhores resultados, suba a foto na Biblioteca de Imagens.
+            Use quando quiser solicitar um criativo descritivo sem foto. Para melhores resultados use <strong>Beatriz → Criar Criativo</strong> (envio direto com foto).
           </p>
 
           <div className="space-y-4">

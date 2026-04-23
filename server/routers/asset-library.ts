@@ -73,35 +73,6 @@ export const assetLibraryRouter = router({
         })
         .$returningId();
 
-      // Fernanda briefing Beatriz internamente — só para imagens de produto (3 variantes)
-      if (input.category === "produto") {
-        (async () => {
-          try {
-            const res = await fetch(input.url.startsWith("http") ? input.url : `http://localhost:${process.env.PORT || 3000}${input.url}`);
-            const buf = await res.arrayBuffer();
-            const imageBase64 = Buffer.from(buf).toString("base64");
-            const { requestCreativeVariants } = await import("../agents/creative-agent");
-            await requestCreativeVariants(ctx.user.id, {
-              title: `Criativo — ${input.name}`,
-              description: [
-                "MARCA: Feminnita Pijamas | TECIDO: Suede premium (NUNCA algodão)",
-                "PÚBLICO: Revendedoras autônomas que querem renda extra de casa",
-                "ÂNGULO DA CAMPANHA: " + input.name,
-                aiAnalysis ? "ANÁLISE DA IMAGEM: " + aiAnalysis : "",
-                input.description ? "DESCRIÇÃO ADICIONAL: " + input.description : "",
-              ].filter(Boolean).join(" | "),
-              imageBase64Input: imageBase64,
-              campaignType: "prospeccao",
-              targetAudience: "revendedoras autônomas — mulheres que querem renda extra de casa, sem estoque",
-              product: "Pijama Suede Feminnita",
-            });
-            console.log(`[AssetLibrary] Fernanda→Beatriz: 3 variantes iniciadas para "${input.name}"`);
-          } catch (err: any) {
-            console.error(`[AssetLibrary] Fernanda→Beatriz falhou para "${input.name}":`, err.message);
-          }
-        })();
-      }
-
       return { id: inserted.id, aiAnalysis };
     }),
 
@@ -161,37 +132,6 @@ export const assetLibraryRouter = router({
         aiAnalysis,
         isActive: true,
       }).$returningId();
-
-      // Fernanda briefing Beatriz internamente — só para imagens de produto (3 variantes)
-      if (input.category === "produto") {
-        const assetBase64 = input.fileData;
-        const assetName = input.name;
-        const assetAnalysis = aiAnalysis;
-        const assetDesc = input.description;
-        const assetUserId = ctx.user.id;
-        (async () => {
-          try {
-            const { requestCreativeVariants } = await import("../agents/creative-agent");
-            await requestCreativeVariants(assetUserId, {
-              title: `Criativo — ${assetName}`,
-              description: [
-                "MARCA: Feminnita Pijamas | TECIDO: Suede premium (NUNCA algodão)",
-                "PÚBLICO: Revendedoras autônomas que querem renda extra de casa",
-                "ÂNGULO DA CAMPANHA: " + assetName,
-                assetAnalysis ? "ANÁLISE DA IMAGEM: " + assetAnalysis : "",
-                assetDesc ? "DESCRIÇÃO ADICIONAL: " + assetDesc : "",
-              ].filter(Boolean).join(" | "),
-              imageBase64Input: assetBase64,
-              campaignType: "prospeccao",
-              targetAudience: "revendedoras autônomas — mulheres que querem renda extra de casa, sem estoque",
-              product: "Pijama Suede Feminnita",
-            });
-            console.log(`[AssetLibrary] Fernanda→Beatriz: 3 variantes iniciadas para "${assetName}"`);
-          } catch (err: any) {
-            console.error(`[AssetLibrary] Fernanda→Beatriz falhou para "${assetName}":`, err.message);
-          }
-        })();
-      }
 
       return { id: inserted.id, url, aiAnalysis };
     }),

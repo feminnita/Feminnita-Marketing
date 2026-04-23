@@ -27,6 +27,37 @@ export const creativeAdsRouter = router({
       return result;
     }),
 
+  // Usuário envia foto + campanha → Fernanda briefia → Beatriz gera 3 variantes
+  requestFromImage: protectedProcedure
+    .input(z.object({
+      imageBase64: z.string().min(1),
+      campaignType: z.enum(["prospeccao", "remarketing", "lancamento", "oferta"]),
+      notes: z.string().max(500).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const campaignLabel: Record<string, string> = {
+        prospeccao: "Prospecção",
+        remarketing: "Remarketing",
+        lancamento: "Lançamento",
+        oferta: "Oferta",
+      };
+      const label = campaignLabel[input.campaignType] ?? input.campaignType;
+      const date = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+      const title = `Criativo ${label} — ${date}`;
+
+      // fire-and-forget: não bloqueia o retorno ao cliente
+      requestCreativeVariants(ctx.user.id, {
+        title,
+        description: input.notes ?? "",
+        campaignType: input.campaignType,
+        targetAudience: "revendedoras autônomas — mulheres que querem renda extra de casa, sem estoque",
+        product: "Pijama Suede Feminnita",
+        imageBase64Input: input.imageBase64,
+      }).catch((err: any) => console.error("[requestFromImage] falhou:", err.message));
+
+      return { success: true };
+    }),
+
   // Listar todos os criativos do usuário
   list: protectedProcedure
     .input(z.object({

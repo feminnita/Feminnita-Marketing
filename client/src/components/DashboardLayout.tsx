@@ -343,11 +343,7 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                     <ClipboardCheck className="h-3 w-3" /> Criativos — Aprovações
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
-                <SidebarMenuSubItem>
-                  <SidebarMenuSubButton onClick={() => setLocation("/banco-imagens")}>
-                    <Image className="h-3 w-3" /> Biblioteca de Imagens
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
+
                 <SidebarMenuSubItem>
                   <SidebarMenuSubButton onClick={() => setLocation("/duda-seo")}>
                     <Globe className="h-3 w-3" /> Duda — SEO Site

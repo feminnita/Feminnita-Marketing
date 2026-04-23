@@ -108,6 +108,44 @@ TECHNICAL:
 - Ultra-realistic photography style, NOT illustration or cartoon`.trim();
 }
 
+// ─── Fernanda escreve o brief criativo para a Beatriz ────────────────────────
+
+async function fernandaWritesBrief(productDescription: string, campaignAngle: string): Promise<string> {
+  const prompt = `Você é a Fernanda Leal, gestora de tráfego Meta Ads para Feminnita Pijamas.
+
+CAMPANHAS ATIVAS AGORA:
+- Campanha de prospecção: público frio, targeting mulheres 28–45 Sul/Sudeste, interesse em renda extra
+- Campanha de remarketing: visitantes do site + engajamento Instagram últimos 30 dias
+- Objetivo: cadastro como revendedora ou primeira compra no atacado (ticket ~R$400)
+- O que está performando: hooks que chamam a revendedora pela identidade ("mãe", "autônoma", "de casa"), transformação com número de tempo específico
+- O que está saturado: copy genérico de produto, elogios ao tecido sem benefício financeiro claro
+
+PRODUTO/ÂNGULO ENVIADO:
+${productDescription}
+Título da campanha: ${campaignAngle}
+
+Escreva um BRIEF CRIATIVO em até 120 palavras para a Beatriz (nossa copywriter).
+Inclua:
+1. PÚBLICO: quem exato atacar neste criativo e qual dor específica ativar
+2. ÂNGULO: qual dos 3 hooks usar (demográfico / transformação / David&Golias) e por quê este produto pede esse ângulo
+3. MENSAGEM CENTRAL: 1 frase que resume o que o anúncio deve comunicar
+4. O QUE EVITAR: copy que não vai funcionar neste produto/público
+
+Escreva direto para a Beatriz, como num briefing de agência. Sem título, sem bullets extras.`;
+
+  try {
+    const result = await invokeLLM({
+      messages: [{ role: "user", content: prompt }],
+      maxTokens: 350,
+    });
+    const content = result.choices[0]?.message?.content;
+    return typeof content === "string" ? content.trim() : "";
+  } catch (err: any) {
+    console.warn("[CreativeAgent] Fernanda→Beatriz brief falhou:", err.message);
+    return "";
+  }
+}
+
 // ─── Geração de copy (headline + body) ───────────────────────────────────────
 
 const HOOK_VARIANTS: Record<string, string> = {
@@ -126,29 +164,33 @@ Crie choque, quebre expectativa, provoque curiosidade irresistível.`,
 
 async function generateAdCopy(
   brief: CreativeBrief,
-  hookVariant: keyof typeof HOOK_VARIANTS = "demografico"
+  hookVariant: keyof typeof HOOK_VARIANTS = "demografico",
+  fernandaBrief?: string
 ): Promise<{ headline: string; body: string }> {
   const hookInstruction = HOOK_VARIANTS[hookVariant] || HOOK_VARIANTS.demografico;
 
-  const prompt = `Você é a Beatriz Santos, copywriter sênior especialista em Meta Ads para atacado de moda brasileira (Feminnita Pijamas).
+  const fernandaSection = fernandaBrief
+    ? `\nBRIEFING DA FERNANDA (gestora de tráfego — siga à risca):\n${fernandaBrief}\n`
+    : "";
 
-BRIEF DO CRIATIVO:
+  const prompt = `Você é a Beatriz Santos, copywriter sênior especialista em Meta Ads para atacado de moda brasileira (Feminnita Pijamas).
+${fernandaSection}
+PRODUTO ANALISADO:
 - Produto: ${brief.product || "Pijama Suede Feminnita"}
 - Campanha: ${brief.campaignType || "prospeccao"}
 - Público: ${brief.targetAudience || "revendedoras autônomas"}
-- Descrição do produto: ${brief.description}
+- Descrição: ${brief.description}
 
-CONTEXTO FEMINNITA:
-- Tecido: SUEDE premium (NUNCA mencione algodão ou outro tecido)
-- Público: mulheres que querem renda extra de casa, sem estoque inicial
-- Margem da revendedora: 40–60% por peça
-- Dores reais: "não quero depender de salário", "quero trabalhar de casa com os filhos"
+RESTRIÇÕES FEMINNITA (inegociáveis):
+- Tecido: SUEDE premium — NUNCA mencione algodão ou qualquer outro tecido
+- Não venda o pijama — venda a transformação financeira da revendedora
+- Margem real: 40–60% por peça
 
 ${hookInstruction}
 
-REGRAS ABSOLUTAS:
-- Headline: máx 35 caracteres. Específico, com número real ou gancho emocional. PROIBIDO: genérico, vago, começar com "Pijama" ou mencionar algodão.
-- Body: máx 125 caracteres. Foca na transformação da revendedora. CTA claro.
+FORMATO DE SAÍDA:
+- Headline: máx 35 caracteres. Número ou gancho emocional específico. PROIBIDO começar com "Pijama".
+- Body: máx 125 caracteres. Transformação + CTA claro.
 
 Retorne APENAS JSON válido:
 {
@@ -248,10 +290,19 @@ Analise esta foto e retorne APENAS JSON válido:
     imageToUse = generatedImage || brief.imageBase64Input;
   }
 
-  // 3. Gerar 3 copies em paralelo com hooks diferentes
-  const copies = await Promise.all(variants.map(v => generateAdCopy(analyzedBrief, v)));
+  // 3. Fernanda escreve o brief estratégico antes de Beatriz gerar copy
+  const fernandaBrief = await fernandaWritesBrief(
+    analyzedBrief.description || brief.description,
+    brief.title
+  );
+  if (fernandaBrief) {
+    console.log(`[CreativeAgent:Variants] Fernanda→Beatriz brief (${fernandaBrief.length} chars)`);
+  }
 
-  // 4. Inserir 3 registros
+  // 4. Gerar 3 copies em paralelo com hooks diferentes, todas baseadas no brief da Fernanda
+  const copies = await Promise.all(variants.map(v => generateAdCopy(analyzedBrief, v, fernandaBrief)));
+
+  // 5. Inserir 3 registros
   for (let i = 0; i < variants.length; i++) {
     const copy = copies[i];
     const label = variantLabel[variants[i]];

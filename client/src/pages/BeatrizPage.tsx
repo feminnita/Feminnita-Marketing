@@ -1,39 +1,44 @@
 import { useState, useRef, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { ExternalLink, Loader2, Sparkles, Download, RefreshCw, Wand2, Send, MessageCircle } from "lucide-react";
+import { Loader2, Send, MessageCircle, ImagePlus, CheckCircle2, ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useNavigate } from "react-router-dom";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
 }
 
-export default function BeatrizPage() {
-  const [tab, setTab] = useState<"chat" | "gerar">("chat");
+const CAMPAIGN_OPTIONS = [
+  { value: "prospeccao",  label: "Prospecção — Revendedoras novas (público frio)" },
+  { value: "remarketing", label: "Remarketing — Quem já viu a Feminnita" },
+  { value: "lancamento",  label: "Lançamento de Coleção" },
+  { value: "oferta",      label: "Oferta / Promoção com desconto" },
+] as const;
 
-  // ── Chat state ──
+export default function BeatrizPage() {
+  const navigate = useNavigate();
+  const [tab, setTab] = useState<"chat" | "criativo">("chat");
+
+  // ── Chat ──
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Olá! Sou a Beatriz — copywriter e estrategista criativa da Feminnita. Posso criar copy para Meta Ads, briefings de criativo, scripts de UGC, análise de anúncios e variantes A/B. O que você precisa hoje?",
+      content: "Olá! Sou a Beatriz — copywriter e estrategista criativa da Feminnita. Posso criar copy para Meta Ads, analisar anúncios, escrever scripts de UGC e variantes A/B. O que você precisa?",
     },
   ]);
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // ── Gerar criativo state ──
-  const [productName, setProductName] = useState("");
-  const [campaignContext, setCampaignContext] = useState("");
-  const [result, setResult] = useState<{
-    copy: { headline: string; headlineVariants?: string[]; body: string; imageDescription: string };
-    designId: string | null;
-    editUrl: string | null;
-    title: string;
-  } | null>(null);
-  const [exportId, setExportId] = useState<string | null>(null);
-  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  // ── Criar Criativo ──
+  const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [campaignType, setCampaignType] = useState<"prospeccao" | "remarketing" | "lancamento" | "oferta">("prospeccao");
+  const [notes, setNotes] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const chatMut = trpc.creativeAds.chat.useMutation({
     onSuccess: (data) => {
@@ -42,38 +47,12 @@ export default function BeatrizPage() {
     onError: (e) => toast.error("Erro: " + e.message),
   });
 
-  const generateMut = trpc.canva.generateAdCreative.useMutation({
-    onSuccess: (data) => {
-      setResult(data);
-      setExportId(null);
-      setDownloadUrl(null);
-      toast.success("Criativo gerado! Abra no Canva para editar.");
+  const createMut = trpc.creativeAds.requestFromImage.useMutation({
+    onSuccess: () => {
+      setSubmitted(true);
     },
-    onError: (err) => toast.error(err.message),
+    onError: (e) => toast.error("Erro ao criar: " + e.message),
   });
-
-  const exportMut = trpc.canva.exportCreative.useMutation({
-    onSuccess: (data) => {
-      setExportId(data.exportId ?? null);
-      if (data.urls) setDownloadUrl(data.urls);
-      toast.success("Exportação iniciada!");
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  trpc.canva.getExportStatus.useQuery(
-    { exportId: exportId! },
-    {
-      enabled: !!exportId && !downloadUrl,
-      refetchInterval: 3000,
-      onSuccess: (data: any) => {
-        if (data.downloadUrl) {
-          setDownloadUrl(data.downloadUrl);
-          toast.success("PNG pronto para download!");
-        }
-      },
-    } as any
-  );
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -95,15 +74,40 @@ export default function BeatrizPage() {
     }
   }
 
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { toast.error("Envie uma imagem (JPG, PNG, WebP)."); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error("Imagem muito grande. Máximo 10MB."); return; }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      setImagePreview(dataUrl);
+      setImageBase64(dataUrl.split(",")[1]);
+      setSubmitted(false);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) handleFileChange({ target: { files: [file] } } as any);
+  }
+
+  function handleCreate() {
+    if (!imageBase64) { toast.error("Selecione uma foto do produto."); return; }
+    createMut.mutate({ imageBase64, campaignType, notes: notes.trim() || undefined });
+  }
+
   return (
     <div className="flex h-[calc(100vh-4rem)]">
-      {/* Sidebar — foto grande vertical */}
+      {/* Sidebar */}
       <div className="hidden md:flex w-44 flex-shrink-0 flex-col items-center py-6 px-3 border-r bg-gray-50">
         <img
           src="/agents/beatriz.jpg"
           alt="Beatriz"
           className="w-36 h-52 rounded-2xl object-cover object-top shadow-md"
-          style={{ borderColor: "#8B2635" }}
         />
         <h2 className="mt-3 font-semibold text-gray-900 text-sm text-center">Beatriz</h2>
         <p className="text-xs text-gray-500 text-center mt-0.5 leading-tight">Copy & Criativos<br/>Meta Ads</p>
@@ -112,7 +116,7 @@ export default function BeatrizPage() {
           <span className="text-xs text-gray-400">Savannah Sanchez</span>
         </div>
         <div className="mt-auto text-xs text-center text-gray-400 leading-tight">
-          Copy que<br/>converte
+          Briefada pela<br/>Fernanda
         </div>
       </div>
 
@@ -131,14 +135,14 @@ export default function BeatrizPage() {
             <MessageCircle className="w-4 h-4" /> Conversar com Beatriz
           </button>
           <button
-            onClick={() => setTab("gerar")}
+            onClick={() => setTab("criativo")}
             className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors ${
-              tab === "gerar"
+              tab === "criativo"
                 ? "border-[#8B2635] text-[#8B2635]"
                 : "border-transparent text-gray-500 hover:text-gray-700"
             }`}
           >
-            <Wand2 className="w-4 h-4" /> Gerar Criativo no Canva
+            <ImagePlus className="w-4 h-4" /> Criar Criativo
           </button>
         </div>
 
@@ -196,111 +200,133 @@ export default function BeatrizPage() {
           </div>
         )}
 
-        {/* ── TAB GERAR ── */}
-        {tab === "gerar" && (
-          <div className="flex-1 overflow-y-auto p-4">
-            <div className="max-w-xl space-y-6">
-              <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Produto / Coleção</label>
-                  <input
-                    type="text"
-                    value={productName}
-                    onChange={(e) => setProductName(e.target.value)}
-                    placeholder="Ex: Pijama Adulto Manga Longa Xadrez"
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#8B2635]/30 focus:border-[#8B2635]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Contexto da campanha <span className="text-gray-400 font-normal">(opcional)</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={campaignContext}
-                    onChange={(e) => setCampaignContext(e.target.value)}
-                    placeholder="Ex: Promoção inverno, desconto 20% para revendedoras"
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#8B2635]/30 focus:border-[#8B2635]"
-                  />
-                </div>
-                <button
-                  onClick={() => generateMut.mutate({ productName, campaignContext })}
-                  disabled={!productName.trim() || generateMut.isPending}
-                  className="w-full flex items-center justify-center gap-2 py-3 bg-[#8B2635] text-white rounded-xl font-medium hover:bg-[#7a1f2d] disabled:opacity-50 transition-colors"
-                >
-                  {generateMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
-                  {generateMut.isPending ? "Beatriz criando…" : "Gerar com Beatriz"}
-                </button>
+        {/* ── TAB CRIAR CRIATIVO ── */}
+        {tab === "criativo" && (
+          <div className="flex-1 overflow-y-auto p-6">
+            <div className="max-w-lg space-y-5">
+
+              {/* Explicação do fluxo */}
+              <div className="flex items-start gap-3 text-sm text-gray-600 bg-rose-50 border border-rose-100 rounded-xl p-4">
+                <span className="text-[#8B2635] mt-0.5">ℹ</span>
+                <span>
+                  Envie a foto do produto e diga qual campanha é.
+                  A <strong>Fernanda</strong> analisa a imagem e escreve o brief estratégico.
+                  A <strong>Beatriz</strong> gera 3 versões de copy com hooks diferentes.
+                  Tudo vai direto para <strong>Aprovação</strong>.
+                </span>
               </div>
 
-              {result && (
-                <div className="space-y-4">
-                  <div className="bg-white border border-gray-200 rounded-xl p-5">
-                    <h2 className="font-semibold text-gray-800 flex items-center gap-2 mb-3">
-                      <Sparkles className="w-4 h-4 text-[#8B2635]" /> Copy gerado pela Beatriz
-                    </h2>
-                    <div className="space-y-3">
-                      <div className="bg-[#fff5f6] border border-rose-100 rounded-lg p-3">
-                        <p className="text-xs text-[#8B2635] font-semibold mb-1">✦ Headline Principal (A)</p>
-                        <p className="text-sm font-bold text-gray-900">{result.copy.headline}</p>
-                      </div>
-                      {result.copy.headlineVariants?.map((v, i) => (
-                        <div key={i} className="bg-gray-50 rounded-lg p-3">
-                          <p className="text-xs text-gray-400 font-medium mb-1">Variante {String.fromCharCode(66 + i)} — A/B Test</p>
-                          <p className="text-sm font-semibold text-gray-700">{v}</p>
-                        </div>
-                      ))}
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <p className="text-xs text-gray-400 font-medium mb-1">Texto do anúncio (body)</p>
-                        <p className="text-sm text-gray-700">{result.copy.body}</p>
-                      </div>
-                      {result.copy.imageDescription && (
-                        <div className="bg-blue-50 rounded-lg p-3">
-                          <p className="text-xs text-blue-600 font-medium mb-1">Briefing visual</p>
-                          <p className="text-sm text-blue-800 italic">{result.copy.imageDescription}</p>
-                        </div>
-                      )}
+              {/* Upload da foto */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Foto do produto *</label>
+                {!imagePreview ? (
+                  <div
+                    onClick={() => fileRef.current?.click()}
+                    onDrop={handleDrop}
+                    onDragOver={(e) => e.preventDefault()}
+                    className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-[#8B2635] hover:bg-rose-50/30 transition-colors"
+                  >
+                    <ImagePlus className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                    <p className="text-sm text-gray-500">Clique ou arraste a foto aqui</p>
+                    <p className="text-xs text-gray-400 mt-1">JPG, PNG, WebP — máx 10MB</p>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <img
+                      src={imagePreview}
+                      alt="Produto"
+                      className="w-full max-h-72 object-contain rounded-xl border border-gray-200 bg-gray-50"
+                    />
+                    <button
+                      onClick={() => { setImagePreview(null); setImageBase64(null); setSubmitted(false); }}
+                      className="absolute top-2 right-2 bg-white rounded-full p-1 shadow border border-gray-200 hover:bg-red-50"
+                    >
+                      <X className="w-4 h-4 text-gray-500" />
+                    </button>
+                  </div>
+                )}
+                <input ref={fileRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+              </div>
+
+              {/* Campanha */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Campanha *</label>
+                <div className="space-y-2">
+                  {CAMPAIGN_OPTIONS.map((opt) => (
+                    <label
+                      key={opt.value}
+                      className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
+                        campaignType === opt.value
+                          ? "border-[#8B2635] bg-rose-50"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="campaign"
+                        value={opt.value}
+                        checked={campaignType === opt.value}
+                        onChange={() => { setCampaignType(opt.value); setSubmitted(false); }}
+                        className="accent-[#8B2635]"
+                      />
+                      <span className="text-sm text-gray-700">{opt.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Notas opcionais */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Observações <span className="text-gray-400 font-normal">(opcional)</span>
+                </label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => { setNotes(e.target.value); setSubmitted(false); }}
+                  placeholder="Ex: focar na cor rosa, destacar o kit presente, ângulo mãe e filha..."
+                  rows={3}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#8B2635]/30"
+                />
+              </div>
+
+              {/* Submit / Sucesso */}
+              {!submitted ? (
+                <button
+                  onClick={handleCreate}
+                  disabled={!imageBase64 || createMut.isPending}
+                  className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#8B2635] text-white rounded-xl font-semibold hover:bg-[#7a1f2d] disabled:opacity-50 transition-colors"
+                >
+                  {createMut.isPending ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Fernanda está briefando a Beatriz…</>
+                  ) : (
+                    <><ImagePlus className="w-4 h-4" /> Fernanda + Beatriz criam os criativos</>
+                  )}
+                </button>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3 bg-green-50 border border-green-200 rounded-xl p-4">
+                    <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold text-green-800">3 criativos em geração!</p>
+                      <p className="text-xs text-green-700 mt-0.5">
+                        Fernanda escreveu o brief estratégico e a Beatriz está gerando 3 versões
+                        com hooks diferentes (Público-Alvo, Transformação, Impacto).
+                        Aparecerão em <strong>Criativos → Aprovação</strong> em instantes.
+                      </p>
                     </div>
                   </div>
-
-                  <div className="bg-white border border-gray-200 rounded-xl p-5">
-                    <h2 className="font-semibold text-gray-800 mb-3">Design no Canva</h2>
-                    {result.editUrl ? (
-                      <div className="space-y-3">
-                        <a
-                          href={result.editUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-2 w-full py-3 border-2 border-[#8B2635] text-[#8B2635] rounded-xl font-medium hover:bg-rose-50 transition-colors"
-                        >
-                          <ExternalLink className="w-4 h-4" /> Abrir no Canva para editar
-                        </a>
-                        <button
-                          onClick={() => result.designId && exportMut.mutate({ designId: result.designId })}
-                          disabled={!result.designId || exportMut.isPending}
-                          className="w-full flex items-center justify-center gap-2 py-2.5 bg-gray-800 text-white rounded-xl text-sm font-medium hover:bg-gray-900 disabled:opacity-50 transition-colors"
-                        >
-                          {exportMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                          Exportar como PNG
-                        </button>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-3">
-                        Design criado, mas o link de edição não foi retornado pela API do Canva.
-                      </p>
-                    )}
-                    {downloadUrl && (
-                      <a href={downloadUrl} target="_blank" rel="noopener noreferrer"
-                        className="mt-3 flex items-center justify-center gap-2 w-full py-3 bg-green-600 text-white rounded-xl font-medium hover:bg-green-700 transition-colors">
-                        <Download className="w-4 h-4" /> Baixar PNG
-                      </a>
-                    )}
-                    {exportId && !downloadUrl && (
-                      <div className="mt-3 flex items-center gap-2 text-sm text-blue-600">
-                        <RefreshCw className="w-4 h-4 animate-spin" /> Processando exportação…
-                      </div>
-                    )}
-                  </div>
+                  <button
+                    onClick={() => navigate("/criativos")}
+                    className="w-full flex items-center justify-center gap-2 py-3 border-2 border-[#8B2635] text-[#8B2635] rounded-xl font-medium hover:bg-rose-50 transition-colors"
+                  >
+                    Ver em Criativos <ArrowRight className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => { setImagePreview(null); setImageBase64(null); setNotes(""); setSubmitted(false); }}
+                    className="w-full py-2 text-sm text-gray-500 hover:text-gray-700"
+                  >
+                    Enviar outra foto
+                  </button>
                 </div>
               )}
             </div>
