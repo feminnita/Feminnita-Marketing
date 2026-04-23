@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Loader2, Send, MessageCircle, ImagePlus, CheckCircle2, ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useNavigate } from "react-router-dom";
+import { useLocation } from "wouter";
 
 interface Message {
   role: "user" | "assistant";
@@ -19,7 +19,7 @@ const CAMPAIGN_OPTIONS = [
 ] as const;
 
 export default function BeatrizPage() {
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const [tab, setTab] = useState<"chat" | "criativo">("chat");
 
   // ── Chat ──
@@ -316,7 +316,7 @@ export default function BeatrizPage() {
                     </div>
                   </div>
                   <button
-                    onClick={() => navigate("/criativos")}
+                    onClick={() => setLocation("/criativos")}
                     className="w-full flex items-center justify-center gap-2 py-3 border-2 border-[#8B2635] text-[#8B2635] rounded-xl font-medium hover:bg-rose-50 transition-colors"
                   >
                     Ver em Criativos <ArrowRight className="w-4 h-4" />
