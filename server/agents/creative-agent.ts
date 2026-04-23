@@ -113,25 +113,35 @@ TECHNICAL:
 async function fernandaWritesBrief(productDescription: string, campaignAngle: string): Promise<string> {
   const prompt = `Você é a Fernanda Leal, gestora de tráfego Meta Ads para Feminnita Pijamas.
 
-CAMPANHAS ATIVAS AGORA:
-- Campanha de prospecção: público frio, targeting mulheres 28–45 Sul/Sudeste, interesse em renda extra
-- Campanha de remarketing: visitantes do site + engajamento Instagram últimos 30 dias
-- Objetivo: cadastro como revendedora ou primeira compra no atacado (ticket ~R$400)
-- O que está performando: hooks que chamam a revendedora pela identidade ("mãe", "autônoma", "de casa"), transformação com número de tempo específico
-- O que está saturado: copy genérico de produto, elogios ao tecido sem benefício financeiro claro
+ESTRUTURA DO ANÚNCIO QUE JÁ PROVOU CONVERTER (referência obrigatória):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PIJAMAS DE FABRICAÇÃO PRÓPRIA
+COMECE A VENDER A PARTIR DE R$199
+REVENDA E LUCRE
+[CTA] QUERO REVENDER — CLIQUE AQUI
+5% NO PIX · 3X SEM JUROS · ENVIO IMEDIATO
+Enviamos para todo o Brasil
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Esse é o padrão que funciona. A Beatriz deve sempre incluir:
+1. Preço de entrada ("a partir de R$X")
+2. Verbo de lucro ("revenda", "lucre", "ganhe R$X")
+3. Facilidade de pagamento (PIX/parcelas)
+4. Alcance nacional (todo o Brasil / envio imediato)
+
+CAMPANHAS ATIVAS:
+- Prospecção: público frio 28–45 anos Sul/Sudeste, interesse em renda extra, mães
+- Remarketing: visitantes do site + engajamento Instagram últimos 30 dias
+- Ticket médio: R$400 por pedido atacado | Margem da revendedora: 40–60%
+- O que está performando: preço de entrada explícito, "fabricação própria" como diferencial, hooks de identidade ("mãe", "autônoma")
+- O que não funciona: copy genérico sobre o tecido sem preço, elogios vagos sem número
 
 PRODUTO/ÂNGULO ENVIADO:
 ${productDescription}
-Título da campanha: ${campaignAngle}
+Título: ${campaignAngle}
 
-Escreva um BRIEF CRIATIVO em até 120 palavras para a Beatriz (nossa copywriter).
-Inclua:
-1. PÚBLICO: quem exato atacar neste criativo e qual dor específica ativar
-2. ÂNGULO: qual dos 3 hooks usar (demográfico / transformação / David&Golias) e por quê este produto pede esse ângulo
-3. MENSAGEM CENTRAL: 1 frase que resume o que o anúncio deve comunicar
-4. O QUE EVITAR: copy que não vai funcionar neste produto/público
-
-Escreva direto para a Beatriz, como num briefing de agência. Sem título, sem bullets extras.`;
+Escreva um BRIEF CRIATIVO em até 130 palavras para a Beatriz.
+Inclua: (1) público e dor específica, (2) ângulo/hook e por quê, (3) quais elementos da estrutura de referência usar neste produto, (4) o que evitar.
+Direto para a Beatriz, como briefing de agência.`;
 
   try {
     const result = await invokeLLM({
@@ -181,16 +191,23 @@ PRODUTO ANALISADO:
 - Público: ${brief.targetAudience || "revendedoras autônomas"}
 - Descrição: ${brief.description}
 
-RESTRIÇÕES FEMINNITA (inegociáveis):
-- Tecido: SUEDE premium — NUNCA mencione algodão ou qualquer outro tecido
-- Não venda o pijama — venda a transformação financeira da revendedora
-- Margem real: 40–60% por peça
+ESTRUTURA QUE CONVERTE (sempre inclua esses elementos):
+- Preço de entrada: "a partir de R$199" ou "kit a partir de R$X"
+- Verbo de lucro: revenda / lucre / ganhe / fature
+- Facilidade: PIX com desconto · parcelas sem juros
+- Alcance: "enviamos para todo o Brasil" / "envio imediato"
+- CTA de ação: "Quero Revender", "Seja Revendedora", "Clique e Comece"
+
+RESTRIÇÕES INEGOCIÁVEIS:
+- Tecido: SUEDE premium — NUNCA mencione algodão
+- Fabricação própria é um diferencial — use "fabricação própria" ou "direto da fábrica"
+- Não venda o pijama — venda a renda da revendedora
 
 ${hookInstruction}
 
 FORMATO DE SAÍDA:
-- Headline: máx 35 caracteres. Número ou gancho emocional específico. PROIBIDO começar com "Pijama".
-- Body: máx 125 caracteres. Transformação + CTA claro.
+- Headline: máx 40 caracteres. Preço concreto OU transformação específica. PROIBIDO ser genérico.
+- Body: máx 130 caracteres. Deve incluir: lucro/preço + facilidade de pagamento OU envio + CTA.
 
 Retorne APENAS JSON válido:
 {
@@ -591,12 +608,23 @@ ESTRUTURA DO HOOK VERDADEIRO (4 elementos em 3 segundos):
 ATENÇÃO: mudar o VISUAL HOOK tem impacto MAIOR que mudar o verbal/texto. Os melhores hooks MOSTRAM, não contam.
 
 ━━━ FEMINNITA — CONTEXTO QUE VOCÊ CONHECE DE COR ━━━
-- Produto: pijamas suede premium atacado, Nova Friburgo RJ
-- Ticket médio: R$400/pedido | Margem da revendedora: 40–60%
+- Produto: pijamas suede premium atacado, fabricação própria, Nova Friburgo RJ
+- Ticket médio: R$400/pedido | Kit entrada: a partir de R$199 | Margem da revendedora: 40–60%
 - 3 públicos: (1) Revendedora Lojista — MEI/loja, quer fornecedor confiável; (2) Revendedora Autônoma — renda de casa, filhos pequenos; (3) Compra em Grupo — atingir mínimo sem CNPJ
 - Meta urgente: R$100K/mês
-- Diferencial: tecido exclusivo, suede premium, fotografia profissional, marca estabelecida
+- Diferencial: fabricação própria (não é revendedor de terceiros), suede premium, envio imediato para todo o Brasil
+- Pagamento: 5% no PIX | 3x sem juros | Envio imediato pelos Correios e transportadoras
 - Benchmarks: CTR saudável 1,2–2,5% | Frequência ideal 2,5–4x | CPM R$15–35
+
+ESTRUTURA DO ANÚNCIO QUE CONVERTE (referência da Fernanda):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PIJAMAS DE FABRICAÇÃO PRÓPRIA
+COMECE A VENDER A PARTIR DE R$199
+REVENDA E LUCRE
+CTA: QUERO REVENDER — CLIQUE AQUI
+5% NO PIX · 3X SEM JUROS · ENVIO IMEDIATO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Todo criativo deve ter: preço de entrada + verbo de lucro + facilidade + CTA direto.
 
 ━━━ O QUE VOCÊ FAZ ━━━
 Você cria e avalia:
