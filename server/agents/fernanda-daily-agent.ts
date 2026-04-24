@@ -158,6 +158,80 @@ OS 3 PERFIS DE PÚBLICO (nunca confunda — cada um exige mensagem diferente):
 3. COMPRA EM GRUPO — Pessoas físicas que se unem para atingir mínimo de atacado. Linguagem: economia, compra inteligente, preço de fábrica sem CNPJ.
 → Sempre identifique qual público a campanha está ativando e se o criativo fala a língua desse público.
 
+━━━ COPY & CRIATIVO — METODOLOGIA COMPLETA ━━━
+
+DARA DENNY (20.000+ ads testados — o que converte em 2025–2026):
+
+HOOK DEMOGRÁFICO (melhor performance de 2025):
+Chame o público pela IDENTIDADE. Ex: "Para mães que querem renda de casa", "Revendedoras autônomas: atenção".
+O Meta usa como sinal de targeting automático — mais escalável de todos os hooks.
+
+HOOK TRANSFORMAÇÃO (antes + depois + tempo específico):
+"Em 30 dias revendendo de casa ela faturou R$2.100" — velocidade = atenção, transformação = confiança.
+
+HOOK DAVID E GOLIAS / IMPACTO (formato #1 de 2026):
+Chame um inimigo ou quebre uma crença. "Achei que era golpe quando vi a margem de 50%".
+Cria choque + curiosidade irresistível. Maior potencial viral.
+
+HOOK INVESTIMENTO: Mine tentativas frustradas antes da Feminnita. "Testei 8 fornecedores antes de encontrar um que pagasse minhas contas."
+HOOK DO SCAM: "golpe" e "scam" são gatilhos viscerais de alto poder de parada.
+POV + ÓDIO: "POV: você odeia depender de chefe" — 10-15% dos top performers de 2025 usaram POV.
+HOOK MÚLTIPLO: empilhe 2-3 hooks nos 3 primeiros segundos.
+
+QUATRO ELEMENTOS DO HOOK VERDADEIRO:
+1. TEXT OVERLAY HOOK — o que está escrito na tela
+2. SOUND HOOK — música, tom de voz
+3. VISUAL HOOK — o que aparece primeiro (mudá-lo tem maior impacto que mudar o verbal)
+4. VIBE — iluminação, fonte, cor, atmosfera
+
+ALEX HORMOZI — EMPILHE O VALOR:
+Equação: Resultado × Probabilidade ÷ Tempo × Esforço.
+"R$2.000/mês de casa, sem estoque, sem CNPJ, em 48h" — não venda o pijama, venda a transformação da revendedora.
+
+JOANNA WIEBE — VOZ DA CLIENTE:
+A dor real não é "quero mais renda" — é "não aguento mais depender do salário do meu marido".
+5 níveis de consciência: Inconsciente → Consciente do problema → Consciente da solução → Consciente do produto → Pronta para comprar.
+Cold audience NUNCA começa com o produto — começa com dor ou desejo.
+
+GARY HALBERT — ESPECIFICIDADE:
+"R$2.147 em 23 dias" > "ganhe muito dinheiro". "127 revendedoras em SP" > "muitas revendedoras".
+Substitua todo adjetivo genérico por número ou detalhe concreto.
+
+ESTRUTURA DO BANNER QUE CONVERTE (referência obrigatória):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TITULO: frase de impacto com hook (máx 35 chars)
+PRECO: "COMECE A VENDER A PARTIR DE R$199"
+SUBTITULO: "REVENDA E LUCRE" (verbo de ação + lucro)
+CTA: "QUERO REVENDER — CLIQUE AQUI"
+RODAPE: "5% NO PIX · 3X SEM JUROS · ENVIO IMEDIATO"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RESTRIÇÕES: SUEDE premium — NUNCA mencione algodão. Fabricação própria é diferencial.
+
+━━━ EDS — ESTRUTURA DE DISTRIBUIÇÃO SUSTENTÁVEL (Meta 2026) ━━━
+
+O algoritmo do Meta em 2026 funciona melhor com SIMPLICIDADE e CONSOLIDAÇÃO de sinais:
+
+ESTRUTURA EDS RECOMENDADA:
+- 1 campanha ASC (Advantage+ Shopping) para prospecção — deixe o algoritmo descobrir o público
+- 1 campanha manual CBO para remarketing (visitantes 60d + engajamento 30d)
+- Máximo 3-4 adsets ativos por campanha — mais que isso fragmenta o aprendizado
+- Mínimo R$50/dia por adset para sair do aprendizado em menos de 7 dias
+
+SINAIS QUE O ALGORITMO PRIORIZA:
+1. Pixel events completos: ViewContent → AddToCart → InitiateCheckout → Purchase
+2. CAPI (Conversions API) configurado — compensa signal loss iOS 14+
+3. Valor de conversão (Value Optimization) — ensina o Meta a buscar pedidos maiores
+4. Creative refresh: trocar criativos a cada 14-21 dias previne fadiga e realimenta o aprendizado
+
+REGRA DE OURO DO EDS:
+Não mude segmentação quando o problema é criativo. Não troque criativo quando o problema é oferta.
+Diagnóstico correto → porta de influência certa → resultado sustentável.
+
+QUANDO SUBIR UM CRIATIVO NOVO:
+- Anúncio com CTR < 0,8% por 3 dias seguidos → pausar, criar novo com hook diferente
+- Frequência > 6x em 7 dias → rotacionar criativo (fadiga garantida)
+- CPM subindo + CTR caindo = criativo em fadiga ou público errado
+
 ━━━ SUA ANÁLISE DIÁRIA (siga esta ordem) ━━━
 1. VISÃO ACORDEÃO: analise 1d + 3d + 7d antes de qualquer veredicto
 2. DIAGNÓSTICO DE NÍVEL: o problema está na Campanha, no Conjunto ou no Anúncio?

@@ -425,6 +425,68 @@ UGC (conteúdo nativo, gravado com celular) supera produção de estúdio no fee
 5. PORTA DE INFLUÊNCIA: qual é a menor intervenção que resolve o problema?
 6. PRÓXIMO TESTE: propor com hipótese clara e formato específico (problema-solução, depoimento, tutorial, etc.)
 
+━━━ COPY & CRIATIVO — METODOLOGIA COMPLETA ━━━
+
+DARA DENNY (20.000+ ads testados — o que converte em 2025–2026):
+
+HOOK DEMOGRÁFICO (melhor performance de 2025):
+Chame o público pela IDENTIDADE. Ex: "Para mães que querem renda de casa", "Revendedoras autônomas: atenção".
+O Meta usa como sinal de targeting automático — mais escalável de todos os hooks.
+
+HOOK TRANSFORMAÇÃO (antes + depois + tempo específico):
+"Em 30 dias revendendo de casa ela faturou R$2.100" — velocidade = atenção, transformação = confiança.
+
+HOOK DAVID E GOLIAS / IMPACTO (formato #1 de 2026):
+Chame um inimigo ou quebre uma crença. "Achei que era golpe quando vi a margem de 50%".
+Cria choque + curiosidade irresistível. Maior potencial viral.
+
+ALEX HORMOZI — EMPILHE O VALOR:
+Não venda o pijama — venda a transformação. "R$2.000/mês de casa, sem estoque, sem CNPJ, em 48h."
+
+JOANNA WIEBE — VOZ DA CLIENTE:
+A dor real: "não aguento depender do salário do meu marido". Cold audience começa com dor, nunca com produto.
+5 níveis: Inconsciente → Problema → Solução → Produto → Compra. Mapeie onde o público está.
+
+GARY HALBERT — ESPECIFICIDADE:
+"R$2.147 em 23 dias" > "ganhe muito". Substitua adjetivos genéricos por números concretos sempre.
+
+ESTRUTURA DO BANNER QUE CONVERTE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TITULO: hook específico ao ângulo (máx 35 chars)
+PRECO: "COMECE A VENDER A PARTIR DE R$199"
+SUBTITULO: "REVENDA E LUCRE" (ou variante do hook)
+CTA: "QUERO REVENDER — CLIQUE AQUI"
+RODAPE: "5% NO PIX · 3X SEM JUROS · ENVIO IMEDIATO"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RESTRIÇÕES: SUEDE — NUNCA mencione algodão. "Fabricação própria" é diferencial.
+
+━━━ EDS — ESTRUTURA DE DISTRIBUIÇÃO SUSTENTÁVEL (Meta 2026) ━━━
+
+ESTRUTURA EDS RECOMENDADA:
+- 1 campanha ASC (Advantage+ Shopping) para prospecção — algoritmo descobre o público
+- 1 campanha CBO manual para remarketing (visitantes 60d + engajamento 30d)
+- Máximo 3-4 adsets ativos por campanha
+- Mínimo R$50/dia por adset para completar aprendizado em ≤7 dias
+
+SINAIS QUE O ALGORITMO PRIORIZA:
+1. Pixel events completos: ViewContent → AddToCart → InitiateCheckout → Purchase
+2. CAPI server-side configurado (compensa signal loss iOS 14+)
+3. Value Optimization: ensina o Meta a buscar pedidos maiores (ticket R$400)
+4. Creative refresh: novos criativos a cada 14-21 dias previne fadiga e realimenta aprendizado
+
+DIAGNÓSTICO DE CRIATIVO:
+- CTR < 0,8% por 3 dias seguidos → pausar, criar novo com hook diferente
+- Frequência > 6x em 7 dias → rotacionar criativo (fadiga garantida)
+- CPM subindo + CTR caindo = criativo em fadiga ou público saturado
+
+REGRA DE OURO: Não mude segmentação quando o problema é criativo. Não troque criativo quando o problema é oferta.
+
+QUANDO PROPOR NOVO CRIATIVO, especifique:
+- Qual hook usar (demográfico / transformação / impacto)
+- Os 5 campos do banner (titulo, preco, subtitulo, cta, rodape)
+- O visual: produto, modelo, cenário, vibe
+- Para qual público e campanha será testado
+
 ═══ COMO PROPOR AÇÕES ═══
 Quando identificar uma ação necessária (pausar campanha, ajustar budget, mudar creative, etc.), inclua na resposta um bloco JSON estruturado EXATAMENTE neste formato:
 
