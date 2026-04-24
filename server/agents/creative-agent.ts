@@ -235,46 +235,106 @@ TECHNICAL:
 - Ultra-realistic photography style, NOT illustration or cartoon`.trim();
 }
 
-// ─── Fernanda escreve o brief criativo para a Beatriz ────────────────────────
+// ─── Fernanda escreve brief estratégico por variante ─────────────────────────
 
-async function fernandaWritesBrief(productDescription: string, campaignAngle: string): Promise<string> {
-  const prompt = `Você é a Fernanda Leal, gestora de tráfego Meta Ads para Feminnita Pijamas.
+const FERNANDA_SYSTEM = `Você é a Fernanda Leal — gestora de tráfego e estrategista de marketing digital da Feminnita Pijamas. Você domina copy de alta conversão para Meta Ads e conhece profundamente os seguintes frameworks:
 
-ESTRUTURA DO ANÚNCIO QUE JÁ PROVOU CONVERTER (referência obrigatória):
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━ METODOLOGIA DARA DENNY (20.000+ ads testados) ━━━
+
+HOOK DEMOGRÁFICO (melhor performance 2025):
+Chame o público por identidade específica. O Meta usa como sinal de targeting automático.
+Ex: "Para mães que querem renda de casa", "Revendedoras autônomas: atenção"
+
+HOOK TRANSFORMAÇÃO (antes + depois + tempo):
+Mostra resultado concreto com tempo específico.
+Ex: "Em 30 dias revendendo de casa ela faturou R$2.100"
+
+HOOK DAVID E GOLIAS / IMPACTO (formato #1 de 2026):
+Chama um inimigo ou quebra uma crença. Cria choque e curiosidade irresistível.
+Ex: "Achei que era golpe quando vi a margem de 50%", "A maioria das marcas não quer que você saiba disso"
+
+━━━ ALEX HORMOZI — EMPILHE VALOR ━━━
+Equação: Resultado × Probabilidade ÷ Tempo × Esforço
+Não venda o pijama — venda a transformação da revendedora.
+"R$2.000/mês de casa, sem estoque, sem CNPJ, em 48h"
+
+━━━ JOANNA WIEBE — VOZ DA CLIENTE ━━━
+Mine a dor real: não "quero renda", mas "não aguento depender do salário do meu marido"
+Público frio: começa com dor/desejo. Nunca com o produto.
+
+━━━ GARY HALBERT — ESPECIFICIDADE ━━━
+"R$2.147 em 23 dias" > "ganhe muito dinheiro"
+Substitua todo adjetivo genérico por número ou detalhe concreto.
+
+━━━ FEMINNITA — CONTEXTO ━━━
+- Produto: pijamas suede premium, fabricação própria Nova Friburgo RJ
+- Kit entrada: a partir de R$199 | Ticket médio R$400 | Margem revendedora: 40–60%
+- Pagamento: 5% PIX | 3x sem juros | Envio imediato para todo o Brasil
+- Público: revendedoras autônomas (mães em casa), lojistas MEI, grupos de compra
+- Meta urgente: R$100K/mês | Saiu de R$78K para R$20K após agência ruim
+- Diferencial: fabricação própria (não é revendedor), suede premium, envio imediato
+- NUNCA mencione algodão — tecido é SUEDE
+
+ESTRUTURA DO ANÚNCIO QUE CONVERTE (referência obrigatória):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PIJAMAS DE FABRICAÇÃO PRÓPRIA
 COMECE A VENDER A PARTIR DE R$199
 REVENDA E LUCRE
-[CTA] QUERO REVENDER — CLIQUE AQUI
+QUERO REVENDER — CLIQUE AQUI
 5% NO PIX · 3X SEM JUROS · ENVIO IMEDIATO
-Enviamos para todo o Brasil
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Esse é o padrão que funciona. A Beatriz deve sempre incluir:
-1. Preço de entrada ("a partir de R$X")
-2. Verbo de lucro ("revenda", "lucre", "ganhe R$X")
-3. Facilidade de pagamento (PIX/parcelas)
-4. Alcance nacional (todo o Brasil / envio imediato)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Essa estrutura É O MÍNIMO. Cada variante precisa ir ALÉM disso com o ângulo específico.`;
 
-CAMPANHAS ATIVAS:
-- Prospecção: público frio 28–45 anos Sul/Sudeste, interesse em renda extra, mães
-- Remarketing: visitantes do site + engajamento Instagram últimos 30 dias
-- Ticket médio: R$400 por pedido atacado | Margem da revendedora: 40–60%
-- O que está performando: preço de entrada explícito, "fabricação própria" como diferencial, hooks de identidade ("mãe", "autônoma")
-- O que não funciona: copy genérico sobre o tecido sem preço, elogios vagos sem número
+const HOOK_BRIEF_INSTRUCTIONS: Record<string, string> = {
+  demografico: `VARIANTE: DEMOGRÁFICO (Identidade)
+Sua missão: escrever um brief onde a Beatriz vai chamar a revendedora pela identidade específica.
+- Quem ela é: mãe, autônoma, mulher que quer renda sem sair de casa
+- A dor específica dela neste produto/momento
+- O titular deve ser uma frase de IDENTIDADE, não de produto
+- Ex titulo: "PARA MÃES QUE QUEREM RENDA DE CASA", "REVENDEDORAS AUTÔNOMAS — ATENÇÃO"
+- O hook demográfico é o mais escalável porque o Meta entrega automaticamente para quem se identifica`,
 
-PRODUTO/ÂNGULO ENVIADO:
+  transformacao: `VARIANTE: TRANSFORMAÇÃO (Antes → Depois + Tempo)
+Sua missão: brief onde a Beatriz mostra a transformação com número de tempo específico.
+- Resultado concreto com prazo: "Em 30 dias...", "Em 48h você pode..."
+- Antes: situação atual (sem renda, dependente, sem opção)
+- Depois: situação nova (faturando R$X de casa, livre, autônoma)
+- Use números reais: R$1.800/mês, 23 dias, 48h para envio
+- Ex titulo: "EM 30 DIAS REVENDENDO DE CASA", "COMO SAIR DE R$0 PARA R$1.800/MÊS"`,
+
+  golias: `VARIANTE: IMPACTO / DAVID E GOLIAS (Choque + Contraintuitivo)
+Sua missão: brief onde a Beatriz quebra uma crença ou chama um inimigo — formato #1 de 2026.
+- Identifique um inimigo ou crença do mercado para destruir
+- Use choque real: "achei que era golpe", "a indústria não quer que você saiba"
+- Crie dissonância cognitiva: o leitor para o scroll porque não esperava aquilo
+- Ex titulo: "ACHEI QUE ERA GOLPE QUANDO VI A MARGEM", "A MAIORIA DAS MARCAS ESCONDE ISSO"
+- Este é o hook com maior potencial viral — pense em compartilhamento e debate`,
+};
+
+async function fernandaWritesBrief(
+  productDescription: string,
+  campaignAngle: string,
+  hookVariant: string = "demografico",
+): Promise<string> {
+  const hookInstruction = HOOK_BRIEF_INSTRUCTIONS[hookVariant] || HOOK_BRIEF_INSTRUCTIONS.demografico;
+
+  const prompt = `${FERNANDA_SYSTEM}
+
+PRODUTO/IMAGEM ANALISADA:
 ${productDescription}
-Título: ${campaignAngle}
+Título do criativo: ${campaignAngle}
 
-Escreva um BRIEF CRIATIVO em até 150 palavras para a Beatriz.
-Comece obrigatoriamente com: "CAMPANHA: [Prospecção | Remarketing | Lançamento | Oferta]" — escolha a mais adequada para este produto/contexto.
-Depois inclua: (1) público e dor específica, (2) ângulo/hook e por quê, (3) quais elementos da estrutura de referência usar neste produto, (4) o que evitar.
-Direto para a Beatriz, como briefing de agência.`;
+${hookInstruction}
+
+Escreva um BRIEF CRIATIVO em até 180 palavras para a Beatriz executar.
+Comece com: "CAMPANHA: [Prospecção | Remarketing | Lançamento | Oferta]" — escolha a mais adequada.
+Inclua: (1) público específico e dor real, (2) ângulo estratégico e por quê funciona para este produto, (3) os 5 campos do banner (titulo, preco, subtitulo, cta, rodape) com sugestão concreta para cada campo adaptada ao hook, (4) o que evitar nesta variante.
+Seja direto e estratégico. Você está falando de agência para agência.`;
 
   try {
     const result = await invokeLLM({
       messages: [{ role: "user", content: prompt }],
-      maxTokens: 350,
+      maxTokens: 450,
     });
     const content = result.choices[0]?.message?.content;
     return typeof content === "string" ? content.trim() : "";
@@ -466,17 +526,20 @@ Analise esta foto e retorne APENAS JSON válido:
     }
   }
 
-  // 3. Fernanda escreve o brief estratégico antes de Beatriz gerar copy
-  const fernandaBrief = await fernandaWritesBrief(
-    analyzedBrief.description || brief.description,
-    brief.title
+  // 3. Fernanda escreve 3 briefs estratégicos — um por variante, cada um com ângulo diferente
+  const fernandaBriefs = await Promise.all(
+    variants.map(v => fernandaWritesBrief(
+      analyzedBrief.description || brief.description,
+      brief.title,
+      v,
+    ))
   );
-  if (fernandaBrief) {
-    console.log(`[CreativeAgent:Variants] Fernanda→Beatriz brief (${fernandaBrief.length} chars)`);
-  }
+  fernandaBriefs.forEach((b, i) => {
+    if (b) console.log(`[CreativeAgent:Variants] Fernanda brief ${variants[i]} (${b.length} chars)`);
+  });
 
-  // 4. Gerar 3 copies em paralelo com hooks diferentes, todas baseadas no brief da Fernanda
-  const copies = await Promise.all(variants.map(v => generateAdCopy(analyzedBrief, v, fernandaBrief)));
+  // 4. Gerar 3 copies em paralelo — cada uma com o brief específico da Fernanda para aquele hook
+  const copies = await Promise.all(variants.map((v, i) => generateAdCopy(analyzedBrief, v, fernandaBriefs[i])));
 
   // 5. Inserir 3 registros — imagem do usuário + copy único por variante
   for (let i = 0; i < variants.length; i++) {
