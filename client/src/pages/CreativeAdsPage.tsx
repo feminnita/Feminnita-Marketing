@@ -3,7 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import {
   AlertTriangle, CheckCircle, XCircle, Loader2, Sparkles,
-  Image, Send, Play, ThumbsUp, ThumbsDown, Copy,
+  Image, Send, Play, ThumbsUp, ThumbsDown, Copy, Trash2,
   FolderOpen, Shield, Palette, Target, Type, Megaphone,
 } from "lucide-react";
 
@@ -203,6 +203,11 @@ export default function CreativeAdsPage() {
     onError: (e) => toast.error(e.message),
   });
 
+  const deleteMut = trpc.creativeAds.delete.useMutation({
+    onSuccess: () => { toast("Criativo excluído."); listAll.refetch(); listPending.refetch(); },
+    onError: (e) => toast.error(e.message),
+  });
+
   const executeMut = trpc.creativeAds.execute.useMutation({
     onSuccess: (r) => { toast.success(r.message); listAll.refetch(); setExecParams(null); },
     onError: (e) => toast.error(e.message),
@@ -295,6 +300,13 @@ export default function CreativeAdsPage() {
                     <span className={`absolute top-2 right-2 text-xs px-2 py-1 rounded-full font-medium ${st.color}`}>
                       {st.label}
                     </span>
+                    <button
+                      onClick={() => { if (confirm("Excluir este criativo?")) deleteMut.mutate({ id: c.id }); }}
+                      className="absolute top-2 left-2 bg-white/90 hover:bg-red-50 text-gray-400 hover:text-red-600 rounded-full p-1.5 shadow transition-colors"
+                      title="Excluir"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
 
                   <div className="p-4 space-y-3">

@@ -126,6 +126,17 @@ export const creativeAdsRouter = router({
       return { success: true, message: "Criativo aprovado! Clique em Executar para criar o anúncio no Meta." };
     }),
 
+  // Usuário deleta o criativo
+  delete: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database não disponível");
+      await db.delete(adCreatives)
+        .where(and(eq(adCreatives.id, input.id), eq(adCreatives.userId, ctx.user.id)));
+      return { success: true };
+    }),
+
   // Usuário rejeita o criativo
   reject: protectedProcedure
     .input(z.object({
