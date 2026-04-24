@@ -4,6 +4,10 @@ import { getDb } from "../db";
 import { oauthCredentials, designHistory } from "../../drizzle/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { generateAdCopy } from "../agents/beatriz-agent";
+import fs from "fs";
+import path from "path";
+
+const CANVA_TEMPLATE_PATH = path.join(__dirname, "../data/canva-template.b64");
 
 const CANVA_API = "https://api.canva.com/rest/v1";
 

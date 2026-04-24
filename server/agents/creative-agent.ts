@@ -12,7 +12,7 @@
 
 import { invokeLLM } from "../_core/llm";
 import { getDb } from "../db";
-import { adCreatives } from "../../drizzle/schema";
+import { adCreatives, oauthCredentials } from "../../drizzle/schema";
 import { listFolderFiles, downloadFileAsBase64, isDriveConfigured } from "../services/googleDrive";
 
 const GEMINI_API_KEY = process.env.LLM_API_KEY || process.env.GEMINI_API_KEY || "";
@@ -44,6 +44,133 @@ export interface CreativeResult {
   headline?: string;
   body?: string;
   message: string;
+}
+
+// ─── Canva Autofill Integration ───────────────────────────────────────────────
+
+const CANVA_API = "https://api.canva.com/rest/v1";
+
+async function getCanvaToken(userId: number): Promise<string | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const { eq, and } = await import("drizzle-orm");
+  const rows = await db.select().from(oauthCredentials)
+    .where(and(eq(oauthCredentials.platform, "canva"), eq(oauthCredentials.userId, userId)));
+  return rows[0]?.accessToken ?? null;
+}
+
+async function uploadImageToCanva(token: string, imageBase64: string): Promise<string | null> {
+  try {
+    const buffer = Buffer.from(imageBase64, "base64");
+    const nameB64 = Buffer.from("produto-feminnita").toString("base64");
+    const res = await fetch(`${CANVA_API}/assets`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Asset-Upload-Metadata": JSON.stringify({ name_base64: nameB64 }),
+        "Content-Type": "application/octet-stream",
+      },
+      body: buffer,
+    });
+    if (!res.ok) {
+      console.warn("[Canva:Upload] status:", res.status, await res.text());
+      return null;
+    }
+    const data = await res.json() as any;
+    const assetId = data.asset?.id ?? null;
+    if (assetId) console.log("[Canva:Upload] asset_id:", assetId);
+    return assetId;
+  } catch (err: any) {
+    console.warn("[Canva:Upload] Erro:", err.message);
+    return null;
+  }
+}
+
+async function fillCanvaTemplate(
+  userId: number,
+  brandTemplateId: string,
+  fields: { headline: string; body: string; productImageBase64?: string },
+): Promise<string | null> {
+  const token = await getCanvaToken(userId);
+  if (!token) {
+    console.warn("[Canva:Autofill] Token Canva não encontrado para userId:", userId);
+    return null;
+  }
+
+  // Upload product image as Canva asset (if provided)
+  const data: Record<string, any> = {
+    headline: { type: "text", text: fields.headline },
+    body: { type: "text", text: fields.body },
+  };
+  if (fields.productImageBase64) {
+    const assetId = await uploadImageToCanva(token, fields.productImageBase64);
+    if (assetId) data.produto = { type: "image", asset_id: assetId };
+  }
+
+  // 1. Trigger autofill
+  const autofillRes = await fetch(`${CANVA_API}/autofills`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      brand_template_id: brandTemplateId,
+      title: `Criativo Feminnita — ${new Date().toLocaleDateString("pt-BR")}`,
+      data,
+    }),
+  });
+  if (!autofillRes.ok) {
+    console.warn("[Canva:Autofill] Erro na chamada:", autofillRes.status, await autofillRes.text());
+    return null;
+  }
+  const autofillData = await autofillRes.json() as any;
+  const autofillJobId = autofillData.job?.id;
+  if (!autofillJobId) { console.warn("[Canva:Autofill] Sem job ID"); return null; }
+
+  // 2. Poll autofill job
+  let designId: string | null = null;
+  for (let i = 0; i < 20; i++) {
+    await new Promise(r => setTimeout(r, 3000));
+    const poll = await fetch(`${CANVA_API}/autofills/${autofillJobId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!poll.ok) continue;
+    const p = await poll.json() as any;
+    if (p.job?.status === "success") { designId = p.job?.result?.design?.id; break; }
+    if (p.job?.status === "failed") { console.warn("[Canva:Autofill] Job falhou"); break; }
+  }
+  if (!designId) return null;
+  console.log("[Canva:Autofill] Design gerado:", designId);
+
+  // 3. Export as PNG
+  const exportRes = await fetch(`${CANVA_API}/exports`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ design_id: designId, format: { type: "png" } }),
+  });
+  if (!exportRes.ok) return null;
+  const exportData = await exportRes.json() as any;
+  const exportJobId = exportData.job?.id;
+  if (!exportJobId) return null;
+
+  // 4. Poll export job
+  let downloadUrl: string | null = null;
+  for (let i = 0; i < 20; i++) {
+    await new Promise(r => setTimeout(r, 3000));
+    const poll = await fetch(`${CANVA_API}/exports/${exportJobId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!poll.ok) continue;
+    const p = await poll.json() as any;
+    if (p.job?.status === "success") { downloadUrl = p.job?.urls?.[0]; break; }
+    if (p.job?.status === "failed") { console.warn("[Canva:Export] Job falhou"); break; }
+  }
+  if (!downloadUrl) return null;
+
+  // 5. Download PNG → base64
+  const imgRes = await fetch(downloadUrl);
+  if (!imgRes.ok) return null;
+  const buffer = await imgRes.arrayBuffer();
+  console.log("[Canva:Autofill] PNG baixado, tamanho:", buffer.byteLength);
+  return Buffer.from(buffer).toString("base64");
 }
 
 // ─── Geração de imagem via Gemini Imagen ──────────────────────────────────────
@@ -253,9 +380,10 @@ export async function requestCreativeVariants(userId: number, brief: CreativeBri
   };
 
   let analyzedBrief = { ...brief };
-  let imageToUse: string | undefined = brief.imageBase64Input;
+  // Usa sempre a imagem enviada pelo usuário — sem geração por IA
+  const imageToUse: string | undefined = brief.imageBase64Input;
 
-  // 1. Análise visual — uma única vez para todos os variantes
+  // 1. Análise visual — lê o produto da foto para briefar a Beatriz
   if (brief.imageBase64Input) {
     try {
       const visionResult = await invokeLLM({
@@ -281,8 +409,7 @@ Analise esta foto e retorne APENAS JSON válido:
   "produto": "tipo exato do pijama (ex: Conjunto Curto Suede Feminnita, Pijama Longo Suede Feminnita)",
   "cores": "cores do PIJAMA (não do cenário)",
   "estilo": "estilo do pijama: romântico / casual / sofisticado / confortável",
-  "diferenciais": "detalhes visíveis do pijama: estampa, acabamento, corte, modelagem",
-  "imagemPrompt": "prompt em inglês para Gemini Imagen gerar banner 1:1: mulher brasileira usando este pijama suede, lifestyle bedroom, warm editorial lighting, fashion photography, no text"
+  "diferenciais": "detalhes visíveis do pijama: estampa, acabamento, corte, modelagem"
 }`,
             },
           ],
@@ -294,18 +421,13 @@ Analise esta foto e retorne APENAS JSON válido:
         if (m) {
           const p = JSON.parse(m[0]);
           const desc = `${p.produto} | Cores: ${p.cores} | ${p.estilo} | ${p.diferenciais}`;
-          analyzedBrief = { ...brief, description: desc, _imagemPromptOverride: p.imagemPrompt } as any;
+          analyzedBrief = { ...brief, description: desc };
           console.log(`[CreativeAgent:Variants] Produto analisado: ${desc.slice(0, 80)}`);
         }
       }
     } catch (err: any) {
       console.warn("[CreativeAgent:Variants] Falha na análise de visão:", err.message);
     }
-
-    // 2. Gerar banner uma única vez — compartilhado pelos 3 variantes
-    const imagenPrompt = (analyzedBrief as any)._imagemPromptOverride || buildImagenPrompt(analyzedBrief);
-    const generatedImage = await generateImageWithImagen(imagenPrompt);
-    imageToUse = generatedImage || brief.imageBase64Input;
   }
 
   // 3. Fernanda escreve o brief estratégico antes de Beatriz gerar copy
@@ -320,7 +442,7 @@ Analise esta foto e retorne APENAS JSON válido:
   // 4. Gerar 3 copies em paralelo com hooks diferentes, todas baseadas no brief da Fernanda
   const copies = await Promise.all(variants.map(v => generateAdCopy(analyzedBrief, v, fernandaBrief)));
 
-  // 5. Inserir 3 registros
+  // 5. Inserir 3 registros — imagem do usuário + copy único por variante
   for (let i = 0; i < variants.length; i++) {
     const copy = copies[i];
     const label = variantLabel[variants[i]];
