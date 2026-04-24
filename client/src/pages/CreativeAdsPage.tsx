@@ -3,11 +3,19 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import {
   AlertTriangle, CheckCircle, XCircle, Loader2, Sparkles,
-  Image, Send, RefreshCw, Eye, Play, ThumbsUp, ThumbsDown,
+  Image, Send, Play, ThumbsUp, ThumbsDown, Copy,
   FolderOpen, Shield, Palette, Target, Type, Megaphone,
 } from "lucide-react";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
+
+interface CanvaCopy {
+  titulo: string;
+  preco: string;
+  subtitulo: string;
+  cta: string;
+  rodape: string;
+}
 
 interface Creative {
   id: number;
@@ -17,6 +25,7 @@ interface Creative {
   textOverlay: string | null;
   generatedHeadline: string | null;
   generatedBody: string | null;
+  canvaCopy: CanvaCopy | null;
   status: string;
   imageUrl: string | null;
   imageHash: string | null;
@@ -26,6 +35,28 @@ interface Creative {
   rejectionReason: string | null;
   errorMessage: string | null;
   createdAt: string | Date;
+}
+
+function CopyField({ label, value }: { label: string; value: string }) {
+  function copy() {
+    navigator.clipboard.writeText(value);
+    toast.success(`Copiado: ${label}`);
+  }
+  return (
+    <div className="flex items-start gap-2 group">
+      <div className="flex-1 min-w-0">
+        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">{label}</p>
+        <p className="text-xs text-gray-800 leading-snug break-words">{value}</p>
+      </div>
+      <button
+        onClick={copy}
+        className="shrink-0 p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors mt-0.5"
+        title="Copiar"
+      >
+        <Copy className="w-3 h-3" />
+      </button>
+    </div>
+  );
 }
 
 const STATUS_LABEL: Record<string, { label: string; color: string }> = {
@@ -50,10 +81,9 @@ function CardImage({ id, title }: { id: number; title: string }) {
     </div>
   );
 
-  const headline = detail.data?.generatedHeadline;
-  const body     = detail.data?.generatedBody;
+  const cc = detail.data?.canvaCopy as CanvaCopy | null | undefined;
 
-  if (!detail.data?.imageBase64 && !headline) return (
+  if (!detail.data?.imageBase64 && !cc) return (
     <div className="flex flex-col items-center justify-center w-full h-full bg-gradient-to-br from-[#8B2635]/10 to-rose-50 text-gray-400">
       <Image className="w-10 h-10 opacity-30 mb-1" />
       <span className="text-xs">Gerando...</span>
@@ -77,29 +107,41 @@ function CardImage({ id, title }: { id: number; title: string }) {
         )}
       </div>
 
-      {/* Painel de copy — lateral direita */}
-      <div className="w-[45%] h-full flex flex-col bg-gradient-to-b from-[#8B2635] to-[#5a1520] p-3">
-        {/* Topo: marca + headline + body */}
-        <div className="flex-1 space-y-2 overflow-hidden">
-          <div className="flex items-center gap-1">
-            <div className="w-4 h-px bg-white/50" />
-            <span className="text-[9px] text-white/60 uppercase tracking-widest font-medium">Feminnita</span>
-          </div>
-          {headline && (
-            <p className="text-white font-bold text-xs leading-snug">{headline}</p>
-          )}
-          {body && (
-            <p className="text-white/75 text-[10px] leading-relaxed">{body}</p>
-          )}
+      {/* Painel de copy — lateral direita — simula o banner Canva */}
+      <div className="w-[45%] h-full flex flex-col bg-gradient-to-b from-[#8B2635] to-[#5a1520] p-3 overflow-hidden">
+        <div className="flex items-center gap-1 mb-2">
+          <div className="w-4 h-px bg-white/50" />
+          <span className="text-[9px] text-white/60 uppercase tracking-widest font-medium">Feminnita</span>
         </div>
-
-        {/* Rodapé: CTA */}
-        <div className="mt-2 pt-2 border-t border-white/20 space-y-1">
-          <div className="bg-white rounded-md px-2 py-1 text-center">
-            <span className="text-[#8B2635] text-[10px] font-bold">Seja Revendedora →</span>
+        {cc ? (
+          <div className="flex-1 flex flex-col gap-1.5 overflow-hidden">
+            <p className="text-white font-black text-[11px] leading-tight uppercase">{cc.titulo}</p>
+            <div className="bg-white/20 rounded px-1.5 py-0.5">
+              <p className="text-white text-[10px] font-semibold leading-snug">{cc.preco}</p>
+            </div>
+            <p className="text-white/90 text-[11px] font-bold tracking-wide">{cc.subtitulo}</p>
+            <div className="mt-auto pt-1.5 border-t border-white/20 space-y-1">
+              <div className="bg-white rounded-md px-2 py-1 text-center">
+                <span className="text-[#8B2635] text-[9px] font-bold leading-tight block">{cc.cta}</span>
+              </div>
+              <p className="text-white/50 text-[8px] text-center leading-tight">{cc.rodape}</p>
+            </div>
           </div>
-          <p className="text-white/40 text-[9px] text-center">feminnita.com.br</p>
-        </div>
+        ) : (
+          <div className="flex-1 flex flex-col gap-1.5">
+            {detail.data?.generatedHeadline && (
+              <p className="text-white font-bold text-xs leading-snug">{detail.data.generatedHeadline}</p>
+            )}
+            {detail.data?.generatedBody && (
+              <p className="text-white/75 text-[10px] leading-relaxed">{detail.data.generatedBody}</p>
+            )}
+            <div className="mt-auto pt-2 border-t border-white/20">
+              <div className="bg-white rounded-md px-2 py-1 text-center">
+                <span className="text-[#8B2635] text-[10px] font-bold">Seja Revendedora →</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -255,11 +297,24 @@ export default function CreativeAdsPage() {
                     </span>
                   </div>
 
-                  <div className="p-4 space-y-2">
+                  <div className="p-4 space-y-3">
                     <h3 className="font-bold text-gray-900 text-sm leading-tight">{c.briefTitle}</h3>
                     {c.product && (
                       <p className="text-xs text-[#8B2635]">📦 {c.product}</p>
                     )}
+
+                    {/* Textos para o Canva */}
+                    {c.canvaCopy && (
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 space-y-2">
+                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1">Textos para o Canva</p>
+                        <CopyField label="Título" value={(c.canvaCopy as CanvaCopy).titulo} />
+                        <CopyField label="Preço" value={(c.canvaCopy as CanvaCopy).preco} />
+                        <CopyField label="Subtítulo" value={(c.canvaCopy as CanvaCopy).subtitulo} />
+                        <CopyField label="Botão CTA" value={(c.canvaCopy as CanvaCopy).cta} />
+                        <CopyField label="Rodapé" value={(c.canvaCopy as CanvaCopy).rodape} />
+                      </div>
+                    )}
+
                     {c.errorMessage && (
                       <p className="text-xs text-red-500">⚠ {c.errorMessage}</p>
                     )}

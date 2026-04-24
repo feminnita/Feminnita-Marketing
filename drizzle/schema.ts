@@ -1483,6 +1483,13 @@ export const adCreatives = mysqlTable("ad_creatives", {
   imageHash: varchar("imageHash", { length: 100 }),
   generatedHeadline: varchar("generatedHeadline", { length: 200 }),
   generatedBody: text("generatedBody"),
+  canvaCopy: json("canva_copy").$type<{
+    titulo: string;
+    preco: string;
+    subtitulo: string;
+    cta: string;
+    rodape: string;
+  }>(),
   status: mysqlEnum("status", ["pending_generation","generated","pending_approval","approved","rejected","uploading","executed","failed"]).notNull().default("pending_generation"),
   rejectionReason: text("rejectionReason"),
   metaAdId: varchar("metaAdId", { length: 100 }),

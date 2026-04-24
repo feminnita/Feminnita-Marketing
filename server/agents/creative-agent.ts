@@ -300,11 +300,23 @@ Chame um inimigo ou quebre uma crença do mercado. Ex: "A maioria das marcas de 
 Crie choque, quebre expectativa, provoque curiosidade irresistível.`,
 };
 
+interface AdCopyResult {
+  headline: string;
+  body: string;
+  canvaCopy: {
+    titulo: string;
+    preco: string;
+    subtitulo: string;
+    cta: string;
+    rodape: string;
+  };
+}
+
 async function generateAdCopy(
   brief: CreativeBrief,
   hookVariant: keyof typeof HOOK_VARIANTS = "demografico",
   fernandaBrief?: string
-): Promise<{ headline: string; body: string }> {
+): Promise<AdCopyResult> {
   const hookInstruction = HOOK_VARIANTS[hookVariant] || HOOK_VARIANTS.demografico;
 
   const fernandaSection = fernandaBrief
@@ -319,13 +331,6 @@ PRODUTO ANALISADO:
 - Público: ${brief.targetAudience || "revendedoras autônomas"}
 - Descrição: ${brief.description}
 
-ESTRUTURA QUE CONVERTE (sempre inclua esses elementos):
-- Preço de entrada: "a partir de R$199" ou "kit a partir de R$X"
-- Verbo de lucro: revenda / lucre / ganhe / fature
-- Facilidade: PIX com desconto · parcelas sem juros
-- Alcance: "enviamos para todo o Brasil" / "envio imediato"
-- CTA de ação: "Quero Revender", "Seja Revendedora", "Clique e Comece"
-
 RESTRIÇÕES INEGOCIÁVEIS:
 - Tecido: SUEDE premium — NUNCA mencione algodão
 - Fabricação própria é um diferencial — use "fabricação própria" ou "direto da fábrica"
@@ -333,20 +338,47 @@ RESTRIÇÕES INEGOCIÁVEIS:
 
 ${hookInstruction}
 
-FORMATO DE SAÍDA:
-- Headline: máx 40 caracteres. Preço concreto OU transformação específica. PROIBIDO ser genérico.
-- Body: máx 130 caracteres. Deve incluir: lucro/preço + facilidade de pagamento OU envio + CTA.
+Você vai gerar o texto completo para um banner de Meta Ad da Feminnita.
+O banner tem 5 campos de texto. Cada variante deve ser DIFERENTE das outras — adapte o ângulo do hook em todos os campos.
+
+CAMPOS DO BANNER:
+- titulo: frase de impacto principal (máx 35 chars) — muda conforme o hook, ex: identidade / transformação / choque
+- preco: linha de preço/oferta (máx 45 chars) — pode variar o enquadramento: "a partir de R$199", "kit completo por R$199", "R$199 pra começar hoje"
+- subtitulo: verbo de ação + lucro (máx 25 chars) — ex: "REVENDA E LUCRE", "GANHE EM CASA", "FATURE REVENDENDO"
+- cta: chamada para ação do botão (máx 30 chars) — ex: "QUERO REVENDER — CLIQUE AQUI", "SEJA REVENDEDORA AGORA", "PEÇO MEU KIT"
+- rodape: info logística FIXA — sempre: "5% NO PIX · 3X SEM JUROS · ENVIO IMEDIATO"
+
+TAMBÉM gere:
+- headline: texto principal do anúncio no Meta (máx 40 chars)
+- body: descrição do anúncio no Meta (máx 130 chars) com preço + lucro + CTA
 
 Retorne APENAS JSON válido:
 {
+  "titulo": "...",
+  "preco": "...",
+  "subtitulo": "...",
+  "cta": "...",
+  "rodape": "5% NO PIX · 3X SEM JUROS · ENVIO IMEDIATO",
   "headline": "...",
   "body": "..."
 }`;
 
+  const defaults: AdCopyResult = {
+    headline: "Revenda Feminnita — Lucro Garantido",
+    body: "Pijamas suede exclusivos para revendedoras. A partir de R$199. Envio imediato!",
+    canvaCopy: {
+      titulo: "PIJAMAS DE FABRICAÇÃO PRÓPRIA",
+      preco: "COMECE A VENDER A PARTIR DE R$199",
+      subtitulo: "REVENDA E LUCRE",
+      cta: "QUERO REVENDER — CLIQUE AQUI",
+      rodape: "5% NO PIX · 3X SEM JUROS · ENVIO IMEDIATO",
+    },
+  };
+
   try {
     const result = await invokeLLM({
       messages: [{ role: "user", content: prompt }],
-      maxTokens: 200,
+      maxTokens: 350,
     });
     const rawContent = result.choices[0]?.message?.content;
     const content = typeof rawContent === "string" ? rawContent : "";
@@ -354,14 +386,18 @@ Retorne APENAS JSON válido:
     const m = stripped.match(/\{[\s\S]*\}/);
     const parsed = JSON.parse(m ? m[0] : stripped);
     return {
-      headline: parsed.headline || "Revenda Feminnita — Lucro Garantido",
-      body: parsed.body || "Pijamas exclusivos para revendedoras. Peça seu catálogo agora!",
+      headline: parsed.headline || defaults.headline,
+      body: parsed.body || defaults.body,
+      canvaCopy: {
+        titulo: parsed.titulo || defaults.canvaCopy.titulo,
+        preco: parsed.preco || defaults.canvaCopy.preco,
+        subtitulo: parsed.subtitulo || defaults.canvaCopy.subtitulo,
+        cta: parsed.cta || defaults.canvaCopy.cta,
+        rodape: "5% NO PIX · 3X SEM JUROS · ENVIO IMEDIATO",
+      },
     };
   } catch {
-    return {
-      headline: "Revenda Feminnita — Lucro Garantido",
-      body: "Pijamas exclusivos para revendedoras. Peça seu catálogo agora!",
-    };
+    return defaults;
   }
 }
 
@@ -457,11 +493,12 @@ Analise esta foto e retorne APENAS JSON válido:
       imageBase64: imageToUse,
       generatedHeadline: copy.headline,
       generatedBody: copy.body,
+      canvaCopy: copy.canvaCopy,
       status: "pending_approval",
       updatedAt: new Date(),
     });
     const id = (insertResult[0] as any).insertId;
-    console.log(`[CreativeAgent:Variants] ${variants[i]} #${id} → pending_approval | "${copy.headline}"`);
+    console.log(`[CreativeAgent:Variants] ${variants[i]} #${id} → pending_approval | "${copy.canvaCopy.titulo}"`);
   }
 }
 

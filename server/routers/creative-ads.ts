@@ -71,6 +71,7 @@ export const creativeAdsRouter = router({
         textOverlay: adCreatives.textOverlay,
         generatedHeadline: adCreatives.generatedHeadline,
         generatedBody: adCreatives.generatedBody,
+        canvaCopy: adCreatives.canvaCopy,
         status: adCreatives.status,
         imageUrl: adCreatives.imageUrl,
         imageHash: adCreatives.imageHash,
