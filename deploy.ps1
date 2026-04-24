@@ -4,6 +4,12 @@
 $VPS = "root@72.61.55.194"
 $REMOTE_DIR = "/opt/marketing"
 
+Write-Host "==> Aplicando migrações no banco..." -ForegroundColor Cyan
+npm run db:push
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "AVISO: db:push falhou, continuando deploy..." -ForegroundColor Yellow
+}
+
 Write-Host "==> Buildando localmente..." -ForegroundColor Cyan
 npm run build
 if ($LASTEXITCODE -ne 0) {
