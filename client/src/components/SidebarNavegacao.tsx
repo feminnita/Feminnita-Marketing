@@ -85,6 +85,7 @@ const categorias: Categoria[] = [
     nome: 'Equipe IA',
     icon: '🤖',
     abas: [
+      { id: 'briefing', label: 'Briefing Matinal', icon: '☀️', href: '/briefing' },
       { id: 'equipe-marketing', label: 'Equipe de Agentes', icon: '👥', href: '/equipe-marketing' },
       { id: 'fernanda', label: 'Fernanda — Tráfego', icon: '🟣', href: '/gestor-trafego' },
       { id: 'sofia', label: 'Sofia — Instagram', icon: '🩷', href: '/agente/sofia' },

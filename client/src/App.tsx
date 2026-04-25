@@ -65,6 +65,7 @@ const AmazonPage              = lazy(() => import("@/pages/AmazonPage"));
 const CreativeAdsPage         = lazy(() => import("@/pages/CreativeAdsPage"));
 const SpecialistsPage         = lazy(() => import("@/pages/SpecialistsPage"));
 const PublicInfluencerBlog    = lazy(() => import("@/pages/PublicInfluencerBlog"));
+const MorningBriefingPage     = lazy(() => import("@/pages/MorningBriefingPage"));
 
 function PageLoader() {
   return (
@@ -216,6 +217,8 @@ export default function App() {
         return <AmazonPage />;
       case "/especialistas":
         return <SpecialistsPage />;
+      case "/briefing":
+        return <MorningBriefingPage />;
       default: {
         if (/^\/influenciadora\/\d+$/.test(location)) {
           return <InfluencerProfilePage />;

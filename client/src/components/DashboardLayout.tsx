@@ -38,7 +38,7 @@ import {
   LayoutDashboard, LogOut, PanelLeft, Users, Calendar,
   BookOpen, Newspaper, CheckCircle, Brain, MessageCircle,
   Bell, Image, Briefcase, TrendingUp, ChevronDown, ChevronRight,
-  Settings, Megaphone, BarChart2, Bot, ShoppingBag, Music, Video, ClipboardCheck, Globe, Pencil,
+  Settings, Megaphone, BarChart2, Bot, ShoppingBag, Music, Video, ClipboardCheck, Globe, Pencil, Zap,
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -326,6 +326,11 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                 <SidebarMenuSubItem>
                   <SidebarMenuSubButton onClick={() => setLocation("/acoes-agentes")}>
                     <Bot className="h-3 w-3" /> Ações da Equipe IA
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/briefing")}>
+                    <Zap className="h-3 w-3" /> Briefing Matinal
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
