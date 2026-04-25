@@ -143,7 +143,7 @@ export const tiktokTeamRouter = router({
         .where(eq(tiktokTeamMessages.evaluationId, input.evaluationId))
         .orderBy(tiktokTeamMessages.createdAt);
 
-      const history = allMessages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
+      const history = allMessages.map((m: any) => ({ role: m.role as "user" | "assistant", content: m.content }));
       const reply = await chatWithAgent(evRows[0].agentType as AgentType, history, ctx.user?.name ?? undefined);
 
       await db.insert(tiktokTeamMessages).values({

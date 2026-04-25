@@ -16,6 +16,7 @@ import {
   trafficMessages,
   trafficActions,
   trafficDailyBriefings,
+  adCreatives,
 } from "../../drizzle/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
@@ -25,6 +26,7 @@ import {
 } from "../agents/traffic-manager-agent";
 import {
   fetchMetaAdsData,
+  fetchMetaAdsets,
   pauseCampaign,
   resumeCampaign,
   pauseAdset,
@@ -32,6 +34,11 @@ import {
   updateCampaignBudget,
   updateAdsetBudget,
 } from "../services/meta-ads-service";
+import { executeMetaAction } from "../agents/fernanda-executor";
+
+function parseCreativeBlock(json: string): Record<string, string> {
+  try { return JSON.parse(json.trim()); } catch { return {}; }
+}
 
 // ─── Router ───────────────────────────────────────────────────────────────────
 
@@ -42,6 +49,7 @@ export const trafficManagerRouter = router({
       z.object({
         message: z.string().min(1).max(50000),
         conversationId: z.number().optional(),
+        imageBase64: z.string().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -110,14 +118,53 @@ export const trafficManagerRouter = router({
       // Chamar o agente
       const agentResponse = await chatWithAgent(
         input.message,
-        conversationHistory
+        conversationHistory,
+        { imageBase64: input.imageBase64, userId: ctx.user.id }
       );
+
+      // Parse creative block and save to DB if image was sent
+      let creativeId: number | undefined;
+      let cleanMessage = agentResponse.message;
+      const creativePattern = /<<<CREATIVE_START>>>([\s\S]*?)<<<CREATIVE_END>>>/;
+      const creativeMatch = agentResponse.message.match(creativePattern);
+
+      if (creativeMatch && input.imageBase64) {
+        const fields = parseCreativeBlock(creativeMatch[1]);
+        if (fields.headline || fields.body) {
+          try {
+            const rawBase64 = input.imageBase64.replace(/^data:image\/\w+;base64,/, "");
+            await db.insert(adCreatives).values({
+              userId: ctx.user.id,
+              briefTitle: fields.titulo ? `Anúncio — ${fields.titulo}` : "Criativo via Fernanda",
+              briefDescription: fields.angle || "prospeccao",
+              campaignType: fields.angle || "prospeccao",
+              product: "Pijama Suede Feminnita",
+              targetAudience: "",
+              generatedHeadline: fields.headline || "",
+              generatedBody: fields.body || "",
+              canvaCopy: { titulo: fields.titulo || "", preco: fields.preco || "", subtitulo: fields.subtitulo || "", cta: fields.cta || "", rodape: fields.rodape || "" } as any,
+              imageBase64: rawBase64 || null,
+              status: "pending_approval",
+            });
+            const [created] = await db.select({ id: adCreatives.id })
+              .from(adCreatives)
+              .where(eq(adCreatives.userId, ctx.user.id))
+              .orderBy(desc(adCreatives.createdAt))
+              .limit(1);
+            creativeId = created?.id;
+          } catch (err: any) {
+            console.error("[chat] Erro ao salvar criativo:", err.message);
+          }
+        }
+        // Remove the structured block from the message shown to user
+        cleanMessage = agentResponse.message.replace(creativePattern, "").trim();
+      }
 
       // Salvar resposta do agente
       await db.insert(trafficMessages).values({
         conversationId: convId!,
         role: "assistant",
-        content: agentResponse.message,
+        content: cleanMessage,
       });
 
       // Atualizar timestamp da conversa
@@ -146,9 +193,71 @@ export const trafficManagerRouter = router({
 
       return {
         conversationId: convId,
-        message: agentResponse.message,
+        message: cleanMessage,
         proposedActions: savedActions,
+        creativeId,
       };
+    }),
+
+  // ── Listar adsets para seleção de publicação ──────────────────────────────
+  listAdsets: protectedProcedure.query(async () => {
+    const adsets = await fetchMetaAdsets();
+    return adsets.map((a: any) => ({
+      id: a.id,
+      name: a.name,
+      campaignName: a.campaignName,
+      status: a.status,
+    }));
+  }),
+
+  // ── Publicar criativo salvo no Meta ───────────────────────────────────────
+  publishCreative: protectedProcedure
+    .input(z.object({
+      creativeId: z.number(),
+      campaignId: z.string(),
+      adSetId: z.string(),
+      linkUrl: z.string().optional(),
+      callToAction: z.string().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+
+      const [creative] = await db.select().from(adCreatives)
+        .where(and(eq(adCreatives.id, input.creativeId), eq(adCreatives.userId, ctx.user.id)))
+        .limit(1);
+      if (!creative) throw new TRPCError({ code: "NOT_FOUND", message: "Criativo não encontrado" });
+      if (!creative.imageBase64) throw new TRPCError({ code: "BAD_REQUEST", message: "Imagem não encontrada no criativo" });
+
+      await db.update(adCreatives).set({
+        status: "uploading",
+        campaignId: input.campaignId,
+        adSetId: input.adSetId,
+        updatedAt: new Date(),
+      }).where(eq(adCreatives.id, input.creativeId));
+
+      try {
+        const resultMsg = await executeMetaAction("meta_create_full_ad", {
+          campaignId: input.campaignId,
+          adSetId: input.adSetId,
+          adName: creative.briefTitle,
+          imageUrl: `data:image/png;base64,${creative.imageBase64}`,
+          title: creative.generatedHeadline || creative.briefTitle,
+          body: creative.generatedBody || creative.briefTitle,
+          linkUrl: input.linkUrl || "https://www.feminnita.com.br",
+          callToAction: input.callToAction || "SHOP_NOW",
+        });
+
+        const metaAdId = resultMsg.match(/ID:\s*(\d+)/)?.[1];
+        await db.update(adCreatives).set({ status: "executed", metaAdId, updatedAt: new Date() })
+          .where(eq(adCreatives.id, input.creativeId));
+
+        return { success: true, message: resultMsg, metaAdId };
+      } catch (err: any) {
+        await db.update(adCreatives).set({ status: "failed", errorMessage: err.message, updatedAt: new Date() })
+          .where(eq(adCreatives.id, input.creativeId));
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: err.message });
+      }
     }),
 
   // ── Briefing do dia ────────────────────────────────────────────────────────

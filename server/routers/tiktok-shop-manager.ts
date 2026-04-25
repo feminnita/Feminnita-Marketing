@@ -166,7 +166,7 @@ export const tiktokShopManagerRouter = router({
 
     // Test 1: product.read — POST /product/202309/products/search é o método correto
     try {
-      const res = await tiktokShopPost("/product/202309/products/search", { page_size: 1 }) as any;
+      const res = await tiktokShopPost("/product/202309/products/search", { page_size: "1" }) as any;
       if (res?.code === 0 || res?.data) {
         results.product_read = "✅ OK — product.read concedido";
       } else if (res?.code === 105000 || res?.code === 40100) {

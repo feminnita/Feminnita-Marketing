@@ -360,11 +360,6 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
-                  <SidebarMenuSubButton onClick={() => setLocation("/beatriz")}>
-                    <Brain className="h-3 w-3" /> Beatriz — Criativos
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-                <SidebarMenuSubItem>
                   <SidebarMenuSubButton onClick={() => setLocation("/agente/clara")}>
                     <BarChart2 className="h-3 w-3" /> Clara — Mercado
                   </SidebarMenuSubButton>

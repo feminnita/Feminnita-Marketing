@@ -9,10 +9,12 @@ import {
   Info,
   Loader2,
   MessageSquare,
+  Paperclip,
   RefreshCw,
   Send,
   TrendingDown,
   TrendingUp,
+  X,
   Zap,
 } from "lucide-react";
 
@@ -22,6 +24,7 @@ interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   id?: number;
+  imagePreview?: string;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -78,6 +81,13 @@ function ChatBubble({ message }: { message: ChatMessage }) {
             : "bg-white border border-slate-200 text-slate-800 rounded-tl-sm shadow-sm"
         }`}
       >
+        {message.imagePreview && (
+          <img
+            src={message.imagePreview}
+            alt="Arte enviada"
+            className="rounded-lg mb-2 max-w-full max-h-64 object-contain"
+          />
+        )}
         <p className="whitespace-pre-wrap">{message.content}</p>
       </div>
     </div>
@@ -270,26 +280,46 @@ function BriefingPanel() {
 export default function TrafficManagerPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
-  const [conversationId, setConversationId] = useState<number | undefined>(
-    undefined
-  );
+  const [conversationId, setConversationId] = useState<number | undefined>(undefined);
   const [showHistory, setShowHistory] = useState(false);
+  const [pendingImage, setPendingImage] = useState<string | null>(null);
+  const [pendingCreativeId, setPendingCreativeId] = useState<number | null>(null);
+  const [publishAdsetId, setPublishAdsetId] = useState("");
+  const [publishCampaignId, setPublishCampaignId] = useState("");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const chatMutation = trpc.trafficManager.chat.useMutation({
     onSuccess: (data) => {
       setConversationId(data.conversationId);
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: data.message },
-      ]);
+      setMessages((prev) => [...prev, { role: "assistant", content: data.message }]);
+      if (data.creativeId) {
+        setPendingCreativeId(data.creativeId);
+        toast.success("Arte salva! Selecione a campanha e publique.");
+      }
     },
     onError: (err) => {
       toast.error("Erro ao enviar mensagem: " + err.message);
-      setMessages((prev) => prev.slice(0, -1)); // remover placeholder
+      setMessages((prev) => prev.slice(0, -1));
     },
+  });
+
+  const { data: adsets } = trpc.trafficManager.listAdsets.useQuery(undefined, {
+    enabled: !!pendingCreativeId,
+    retry: false,
+  });
+
+  const publishMut = trpc.trafficManager.publishCreative.useMutation({
+    onSuccess: (data) => {
+      toast.success("Anúncio publicado no Meta! " + (data.metaAdId ? `ID: ${data.metaAdId}` : ""));
+      setPendingCreativeId(null);
+      setPublishAdsetId("");
+      setPublishCampaignId("");
+      setMessages((prev) => [...prev, { role: "assistant", content: `✅ Anúncio publicado com sucesso no Meta Ads!${data.metaAdId ? ` ID: ${data.metaAdId}` : ""} Quer criar o próximo?` }]);
+    },
+    onError: (err) => toast.error("Erro ao publicar: " + err.message),
   });
 
   const { data: conversations } = trpc.trafficManager.listConversations.useQuery(
@@ -307,19 +337,30 @@ export default function TrafficManagerPage() {
       {
         role: "assistant",
         content:
-          "Olá! Sou a Fernanda — especialista sênior em tráfego pago da Feminnita.\n\nEstou aqui para analisar suas campanhas, identificar oportunidades de melhoria e propor ações concretas.\n\nPode me perguntar sobre:\n• Performance das campanhas Meta Ads\n• Otimização de ROAS e CAC\n• Estratégia para datas sazonais\n• Análise de CPM/CTR/frequência\n• Configuração de ASC e Advantage+\n\nComo posso ajudar hoje?",
+          "Olá! Sou a Fernanda — gestora de tráfego pago e responsável pela criação de anúncios da Feminnita.\n\nPosso ajudar em dois fluxos:\n\n📊 GESTÃO DE CAMPANHAS\n• Análise de performance (ROAS, CPM, CTR, frequência)\n• Otimização de orçamento e pausas cirúrgicas\n• Estratégia EDS — ASC + CBO\n\n🎨 CRIAÇÃO DE ANÚNCIOS (um por vez)\n• Combinamos o ângulo do anúncio (renda extra, mãe, lojista…)\n• Eu passo os textos para você colocar na arte Canva\n• Você envia a arte pronta pelo botão 📎\n• Eu analiso, preparo a copy e publico no Meta\n\nPor onde quer começar?",
       },
     ]);
   }, []);
 
   const sendMessage = () => {
     const text = input.trim();
-    if (!text || chatMutation.isPending) return;
+    if ((!text && !pendingImage) || chatMutation.isPending) return;
 
-    setMessages((prev) => [...prev, { role: "user", content: text }]);
+    const displayText = text || "Arte enviada para análise.";
+    const imageToSend = pendingImage;
+
+    setMessages((prev) => [
+      ...prev,
+      { role: "user", content: displayText, imagePreview: imageToSend ?? undefined },
+    ]);
     setInput("");
+    setPendingImage(null);
 
-    chatMutation.mutate({ message: text, conversationId });
+    chatMutation.mutate({
+      message: text || "Analise esta arte e gere a copy do anúncio.",
+      conversationId,
+      imageBase64: imageToSend ?? undefined,
+    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -332,6 +373,10 @@ export default function TrafficManagerPage() {
 
   const startNewConversation = () => {
     setConversationId(undefined);
+    setPendingImage(null);
+    setPendingCreativeId(null);
+    setPublishAdsetId("");
+    setPublishCampaignId("");
     setMessages([
       {
         role: "assistant",
@@ -454,9 +499,9 @@ export default function TrafficManagerPage() {
               <p className="text-xs text-slate-400 mb-2">Sugestões:</p>
               <div className="flex flex-wrap gap-2">
                 {[
+                  "Quero criar um anúncio novo — por onde começar?",
                   "Analisar performance das campanhas desta semana",
                   "Qual o CPM ideal para pijamas no Meta Ads?",
-                  "Como configurar uma campanha ASC eficiente?",
                   "Minha frequência está em 3.8 — o que fazer?",
                 ].map((s) => (
                   <button
@@ -474,15 +519,118 @@ export default function TrafficManagerPage() {
             </div>
           )}
 
+          {/* Publish card */}
+          {pendingCreativeId && (
+            <div className="mx-6 mb-3 bg-rose-50 border border-rose-200 rounded-2xl p-4">
+              <p className="text-sm font-semibold text-rose-800 mb-3">
+                🎨 Arte salva (ID: {pendingCreativeId}) — Selecione onde publicar
+              </p>
+              {adsets && adsets.length > 0 ? (
+                <select
+                  className="w-full text-sm border border-rose-200 rounded-lg px-3 py-2 mb-3 bg-white focus:outline-none focus:border-rose-400"
+                  value={publishAdsetId}
+                  onChange={(e) => {
+                    const selected = adsets.find((a: any) => a.id === e.target.value);
+                    setPublishAdsetId(e.target.value);
+                    if (selected) setPublishCampaignId((selected as any).campaignId || "");
+                  }}
+                >
+                  <option value="">Selecione um conjunto de anúncios…</option>
+                  {adsets.map((a: any) => (
+                    <option key={a.id} value={a.id}>
+                      {a.campaignName} → {a.name} ({a.status})
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div className="flex gap-2 mb-3">
+                  <input
+                    className="flex-1 text-sm border border-rose-200 rounded-lg px-3 py-2 bg-white focus:outline-none"
+                    placeholder="Campaign ID"
+                    value={publishCampaignId}
+                    onChange={(e) => setPublishCampaignId(e.target.value)}
+                  />
+                  <input
+                    className="flex-1 text-sm border border-rose-200 rounded-lg px-3 py-2 bg-white focus:outline-none"
+                    placeholder="AdSet ID"
+                    value={publishAdsetId}
+                    onChange={(e) => setPublishAdsetId(e.target.value)}
+                  />
+                </div>
+              )}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    if (!publishAdsetId) { toast.error("Selecione um conjunto de anúncios"); return; }
+                    publishMut.mutate({
+                      creativeId: pendingCreativeId,
+                      campaignId: publishCampaignId,
+                      adSetId: publishAdsetId,
+                    });
+                  }}
+                  disabled={publishMut.isPending || !publishAdsetId}
+                  className="flex-1 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold transition-colors disabled:opacity-40"
+                >
+                  {publishMut.isPending ? "Publicando…" : "📤 Publicar no Meta"}
+                </button>
+                <button
+                  onClick={() => { setPendingCreativeId(null); setPublishAdsetId(""); setPublishCampaignId(""); }}
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-sm hover:bg-slate-50"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Input */}
           <div className="px-6 py-4 bg-white border-t border-slate-200 flex-shrink-0">
+            {/* Image preview */}
+            {pendingImage && (
+              <div className="relative inline-block mb-2">
+                <img
+                  src={pendingImage}
+                  alt="Arte"
+                  className="h-20 w-20 object-cover rounded-lg border border-slate-200"
+                />
+                <button
+                  onClick={() => setPendingImage(null)}
+                  className="absolute -top-1 -right-1 w-5 h-5 bg-slate-700 text-white rounded-full flex items-center justify-center hover:bg-slate-900"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => setPendingImage(ev.target?.result as string);
+                reader.readAsDataURL(file);
+                e.target.value = "";
+              }}
+            />
+
             <div className="flex items-end gap-3 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 focus-within:border-rose-400 focus-within:ring-1 focus-within:ring-rose-200 transition-all">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                title="Enviar arte"
+                className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-500 transition-colors flex-shrink-0"
+              >
+                <Paperclip className="w-4 h-4" />
+              </button>
               <textarea
                 ref={textareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Pergunte sobre campanhas, ROAS, CPM, estratégias… (Enter para enviar)"
+                placeholder={pendingImage ? "Adicione uma nota (opcional) e pressione Enter…" : "Pergunte sobre campanhas, ROAS, CPM, estratégias… (Enter para enviar)"}
                 rows={1}
                 className="flex-1 bg-transparent text-sm text-slate-800 placeholder-slate-400 resize-none focus:outline-none max-h-32 overflow-y-auto"
                 style={{
@@ -497,7 +645,7 @@ export default function TrafficManagerPage() {
               />
               <button
                 onClick={sendMessage}
-                disabled={!input.trim() || chatMutation.isPending}
+                disabled={(!input.trim() && !pendingImage) || chatMutation.isPending}
                 className="p-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
               >
                 {chatMutation.isPending ? (
@@ -508,7 +656,7 @@ export default function TrafficManagerPage() {
               </button>
             </div>
             <p className="text-xs text-slate-400 mt-1.5 text-center">
-              Shift+Enter para nova linha · Enter para enviar
+              📎 para enviar arte · Shift+Enter para nova linha · Enter para enviar
             </p>
           </div>
         </main>

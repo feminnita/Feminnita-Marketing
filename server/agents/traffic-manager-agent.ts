@@ -350,8 +350,8 @@ Você tem acesso direto à conta Meta Ads. SEMPRE use as ferramentas para buscar
 - get_meta_campaigns: lista campanhas com status e métricas
 - get_meta_adsets: adsets de uma campanha ou da conta
 - get_meta_insights: métricas detalhadas por nível (campanha/adset/anúncio)
-- get_meta_ads: anúncios individuais com criativo completo — thumbnail, imagem, copy (title/body), URL de destino da landing page, CTA. Use quando precisar ver o criativo ou a landing page de qualquer anúncio.
-- fetch_landing_page: acessa a URL de destino de um anúncio e extrai o conteúdo textual — oferta, preço, headline, copy. Use após get_meta_ads quando precisar saber o que a página contém.
+- get_meta_ads: anúncios individuais com criativo completo — thumbnail, imagem, copy (title/body), URL de destino da landing page, CTA.
+- fetch_landing_page: acessa a URL de destino de um anúncio e extrai o conteúdo textual.
 
 ═══ SEU PERFIL E EXPERTISE ═══
 - Domina Meta Ads profundamente: campanhas ASC (Advantage Shopping Campaigns), Advantage+ Audience, Broad targeting, pixel events, CAPI server-side, Value Optimization
@@ -524,6 +524,34 @@ Tudo o mais deve ser prosa clara e direta.
 - Prefira get_account_summary como primeira ferramenta (já traz visão geral). Só chame ferramentas adicionais se a pergunta exigir detalhe específico
 - Entregue a análise completa em UMA única resposta — nunca diga "posso continuar" ou "quer que eu aprofunde"
 
+═══ CRIAÇÃO DE ANÚNCIOS — FLUXO UM A UM ═══
+Você gerencia o ciclo criativo: do briefing ao anúncio. Sempre UM anúncio por vez.
+
+ETAPA 1 — BRIEFING: Combine o ângulo do anúncio e forneça os 5 campos para a arte Canva:
+  • TÍTULO: hook específico ao ângulo (máx 35 chars)
+  • PREÇO: "COMECE A VENDER A PARTIR DE R$199" (ou similar)
+  • SUBTÍTULO: complemento do hook
+  • CTA: "QUERO REVENDER — CLIQUE AQUI" (ou similar)
+  • RODAPÉ: "5% NO PIX · 3X SEM JUROS · ENVIO IMEDIATO"
+
+ETAPA 2 — RECEBIMENTO DA ARTE: Quando o usuário enviar uma imagem:
+  a) Analise visualmente se os textos estão legíveis e alinhados com o ângulo combinado
+  b) Escreva a copy do anúncio Meta (headline + body) e inclua OBRIGATORIAMENTE o bloco abaixo na sua resposta:
+
+<<<CREATIVE_START>>>
+{"headline":"[copy do título do anúncio Meta]","body":"[copy do texto do anúncio Meta]","titulo":"[texto TÍTULO lido no banner]","preco":"[texto PREÇO lido no banner]","subtitulo":"[texto SUBTÍTULO lido no banner]","cta":"[texto CTA lido no banner]","rodape":"[texto RODAPÉ lido no banner]","angle":"[renda_extra|mae|lojista|grupo]"}
+<<<CREATIVE_END>>>
+
+  c) Após o bloco, apresente a copy de forma legível para o usuário revisar e aguarde confirmação.
+  d) O sistema salva automaticamente — você não precisa chamar nenhuma ferramenta para isso.
+
+ETAPA 3 — PUBLICAÇÃO: Após o usuário confirmar, informe que pode clicar em "Publicar no Meta" no card que apareceu na tela. O sistema cuidará do upload e criação do anúncio automaticamente.
+
+REGRAS:
+- O bloco <<<CREATIVE_START>>>...<<<CREATIVE_END>>> é OBRIGATÓRIO sempre que receber uma imagem
+- O JSON dentro do bloco deve ser válido e em uma única linha
+- Nunca diga que "não tem capacidade" de criar anúncios — você analisa a arte e o sistema cuida do resto
+
 ═══ SOBRE A FEMINNITA ═══
 - Produto: pijamas em suede premium, conjuntos calça+blusa, infantil, adulto
 - Diferenciais: qualidade do tecido, modelo exclusivo, fotografia profissional
@@ -535,19 +563,34 @@ Tudo o mais deve ser prosa clara e direta.
 
 export async function chatWithAgent(
   userMessage: string,
-  conversationHistory: Array<{ role: "user" | "assistant"; content: string }>
+  conversationHistory: Array<{ role: "user" | "assistant"; content: string }>,
+  options?: { imageBase64?: string; userId?: number }
 ): Promise<AgentChatResponse> {
+
+  // Build user message content — include image if provided
+  const currentUserContent: Anthropic.ContentBlockParam[] = [];
+  if (options?.imageBase64) {
+    const rawB64 = options.imageBase64.replace(/^data:image\/\w+;base64,/, "");
+    const mtMatch = options.imageBase64.match(/^data:(image\/\w+);base64,/);
+    const mediaType = (mtMatch?.[1] ?? "image/jpeg") as "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+    currentUserContent.push({
+      type: "image",
+      source: { type: "base64", media_type: mediaType, data: rawB64 },
+    });
+  }
+  currentUserContent.push({ type: "text", text: userMessage || "Analise esta arte e gere a copy do anúncio." });
+
   const messages: Anthropic.MessageParam[] = [
     ...conversationHistory.map((m) => ({
       role: m.role,
       content: m.content,
     })),
-    { role: "user", content: userMessage },
+    { role: "user", content: currentUserContent },
   ];
 
   let finalText = "";
   const proposedActions: ProposedAction[] = [];
-  const deadline = Date.now() + 25000; // 25s para evitar timeout do cliente
+  const deadline = Date.now() + 25000;
 
   // Carregar contexto de memória histórica da Fernanda
   let memoryContext = "";
@@ -561,7 +604,7 @@ export async function chatWithAgent(
     ? `${SYSTEM_PROMPT}\n\n${memoryContext}`
     : SYSTEM_PROMPT;
 
-  // Loop de tool use — máx 4 iterações (ex: get_meta_ads + fetch_landing_page)
+  // Loop de tool use — máx 4 iterações
   let toolIterations = 0;
   while (toolIterations < 4) {
     toolIterations++;

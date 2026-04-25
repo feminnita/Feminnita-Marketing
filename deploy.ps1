@@ -17,10 +17,24 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-Write-Host "==> Enviando frontend (dist/public) para o VPS..." -ForegroundColor Cyan
-scp -r dist/public "$VPS`:$REMOTE_DIR/dist/"
+Write-Host "==> Compactando frontend..." -ForegroundColor Cyan
+tar -czf dist/public.tar.gz -C dist public
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "ERRO: scp dist/public falhou." -ForegroundColor Red
+    Write-Host "ERRO: tar falhou." -ForegroundColor Red
+    exit 1
+}
+
+Write-Host "==> Enviando frontend (tar) para o VPS..." -ForegroundColor Cyan
+scp dist/public.tar.gz "$VPS`:$REMOTE_DIR/dist/"
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "ERRO: scp public.tar.gz falhou." -ForegroundColor Red
+    exit 1
+}
+
+Write-Host "==> Extraindo frontend no VPS..." -ForegroundColor Cyan
+ssh $VPS "cd $REMOTE_DIR/dist && rm -rf public && tar -xzf public.tar.gz && rm public.tar.gz"
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "ERRO: extração no VPS falhou." -ForegroundColor Red
     exit 1
 }
 

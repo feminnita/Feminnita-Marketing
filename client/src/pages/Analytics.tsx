@@ -645,7 +645,7 @@ export default function Analytics() {
               </div>
               <div className="p-4 bg-slate-50 rounded-lg text-center">
                 <p className="text-2xl font-bold text-blue-600">
-                  {(insights?.reach ?? perfMetrics?.totalReach ?? 0).toLocaleString()}
+                  {(insights?.reach ?? (perfMetrics as any)?.totalReach ?? 0).toLocaleString()}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">Alcance (7 dias)</p>
               </div>

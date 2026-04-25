@@ -9,7 +9,7 @@
 import type { Express } from "express";
 import fs from "fs";
 import path from "path";
-import { tiktokShopAuthUrl, fetchAndStoreShopCipher } from "../services/tiktokShopApi";
+import { tiktokShopAuthUrl, fetchAndStoreShopCipher, tiktokShopSign } from "../services/tiktokShopApi";
 
 const APP_KEY = process.env.TIKTOK_SHOP_APP_KEY || process.env.TIKTOK_ADS_APP_ID || "";
 const APP_SECRET = process.env.TIKTOK_SHOP_APP_SECRET || process.env.TIKTOK_ADS_SECRET || "";
