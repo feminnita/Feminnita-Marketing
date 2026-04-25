@@ -64,6 +64,7 @@ const TiktokTeamPage          = lazy(() => import("@/pages/TiktokTeamPage"));
 const AmazonPage              = lazy(() => import("@/pages/AmazonPage"));
 const CreativeAdsPage         = lazy(() => import("@/pages/CreativeAdsPage"));
 const SpecialistsPage         = lazy(() => import("@/pages/SpecialistsPage"));
+const PublicInfluencerBlog    = lazy(() => import("@/pages/PublicInfluencerBlog"));
 
 function PageLoader() {
   return (
@@ -90,8 +91,10 @@ export default function App() {
   }
 
   // Rotas públicas que não requerem autenticação
-  const publicRoutes = ["/termos", "/privacidade", "/privacy", "/terms"];
-  const isPublicRoute = publicRoutes.includes(location);
+  const publicRoutes = ["/termos", "/privacidade", "/privacy", "/terms", "/blog-publico"];
+  const isPublicRoute =
+    publicRoutes.includes(location) ||
+    /^\/blog-publico(\/\d+)?$/.test(location);
 
   const getPageComponent = () => {
     switch (location) {
@@ -104,6 +107,8 @@ export default function App() {
         return <PrivacyPolicy />;
       case "/terms":
         return <TermsOfService />;
+      case "/blog-publico":
+        return <InfluencerBlogsLinksPage />;
       // Rotas autenticadas
       case "/":
         return <Home />;
@@ -217,6 +222,9 @@ export default function App() {
         }
         if (/^\/blog\/\d+$/.test(location)) {
           return <InfluencerBlogPage />;
+        }
+        if (/^\/blog-publico\/\d+$/.test(location)) {
+          return <PublicInfluencerBlog />;
         }
         if (/^\/agente\/(sofia|beatriz|clara|mariana)$/.test(location)) {
           const agentName = location.split("/").pop()!;

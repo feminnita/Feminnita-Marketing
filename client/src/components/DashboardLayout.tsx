@@ -257,8 +257,8 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
-                  <SidebarMenuSubButton onClick={() => setLocation("/blogs-influenciadoras")}>
-                    <Newspaper className="h-3 w-3" /> Blogs Externos
+                  <SidebarMenuSubButton onClick={() => setLocation("/blog-publico")}>
+                    <Newspaper className="h-3 w-3" /> Blogs Públicos
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
               </CollapsibleGroup>
