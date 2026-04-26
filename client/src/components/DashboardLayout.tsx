@@ -294,7 +294,7 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
               {!isCollapsed && (
                 <span
                   className="font-bold text-lg truncate cursor-pointer hover:opacity-80 transition-opacity"
-                  style={{ color: '#E8C99A' }}
+                  style={{ color: '#FAF6EE' }}
                   onClick={() => setLocation("/")}
                 >
                   Feminnita
@@ -501,13 +501,28 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/ml-gabi")}>
+                    <ShoppingBag className="h-3 w-3" /> ML — Gabi EDS
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
                   <SidebarMenuSubButton onClick={() => setLocation("/shopee-ads")}>
                     <ShoppingBag className="h-3 w-3" /> Shopee — Ads IA
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/shopee-luiza")}>
+                    <ShoppingBag className="h-3 w-3" /> Shopee — Luiza Ads
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
                   <SidebarMenuSubButton onClick={() => setLocation("/amazon")}>
                     <ShoppingBag className="h-3 w-3" /> Amazon IA
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/amazon-alice")}>
+                    <ShoppingBag className="h-3 w-3" /> Amazon — Alice Ads
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
               </CollapsibleGroup>
@@ -569,7 +584,7 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                   </Avatar>
                   {!isCollapsed && (
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate leading-none" style={{ color: '#E8C99A' }}>{user?.name || user?.email || "-"}</p>
+                      <p className="text-sm font-medium truncate leading-none" style={{ color: '#FAF6EE' }}>{user?.name || user?.email || "-"}</p>
                       <p className="text-xs truncate mt-1" style={{ color: '#64748b' }}>{user?.email || "-"}</p>
                     </div>
                   )}
