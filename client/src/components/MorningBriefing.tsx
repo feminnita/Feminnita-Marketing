@@ -22,7 +22,6 @@ import {
   TrendingUp,
   Send,
   Eye,
-  Lightbulb,
   Target,
   Bell,
   Globe,
@@ -31,7 +30,6 @@ import {
 const AGENT_ICONS: Record<string, React.ReactNode> = {
   fernanda: <Zap className="w-4 h-4 text-purple-500" />,
   sofia:    <TrendingUp className="w-4 h-4 text-pink-500" />,
-  beatriz:  <Lightbulb className="w-4 h-4 text-yellow-500" />,
   clara:    <Eye className="w-4 h-4 text-blue-500" />,
   mariana:  <Send className="w-4 h-4 text-green-500" />,
 };
@@ -39,7 +37,6 @@ const AGENT_ICONS: Record<string, React.ReactNode> = {
 const AGENT_COLORS: Record<string, string> = {
   fernanda: "border-l-purple-400",
   sofia:    "border-l-pink-400",
-  beatriz:  "border-l-yellow-400",
   clara:    "border-l-blue-400",
   mariana:  "border-l-green-400",
 };

@@ -66,7 +66,6 @@ const categorias: Categoria[] = [
       { id: 'email-marketing', label: 'Email Marketing', icon: '📧' },
       { id: 'whatsapp', label: 'WhatsApp', icon: '💬' },
       { id: 'whatsapp-disparos', label: 'Disparo em Massa', icon: '📨', href: '/whatsapp-disparos' },
-      { id: 'criativos', label: 'Pipeline Criativos', icon: '🎨', href: '/criativos' },
     ],
   },
   {
@@ -89,8 +88,7 @@ const categorias: Categoria[] = [
       { id: 'equipe-marketing', label: 'Equipe de Agentes', icon: '👥', href: '/equipe-marketing' },
       { id: 'fernanda', label: 'Fernanda — Tráfego', icon: '🟣', href: '/gestor-trafego' },
       { id: 'sofia', label: 'Sofia — Instagram', icon: '🩷', href: '/agente/sofia' },
-      { id: 'beatriz', label: 'Beatriz — Criativos', icon: '🟡', href: '/beatriz' },
-      { id: 'clara', label: 'Clara — Inteligência', icon: '🔵', href: '/agente/clara' },
+{ id: 'clara', label: 'Clara — Inteligência', icon: '🔵', href: '/agente/clara' },
       { id: 'mariana', label: 'Mariana — Vendas', icon: '🟢', href: '/agente/mariana' },
       { id: 'especialistas', label: 'Especialistas', icon: '🎓', href: '/especialistas' },
       { id: 'acoes-agentes', label: 'Ações dos Agentes', icon: '⚡', href: '/acoes-agentes' },

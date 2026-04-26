@@ -1,7 +1,7 @@
 /**
  * Agent Detail Page — Chat completo com cada agente especialista
  *
- * Rota: /agente/:name (sofia, beatriz, clara, mariana)
+ * Rota: /agente/:name (sofia, clara, mariana)
  *
  * Interface idêntica ao TrafficManagerPage da Fernanda:
  * - Painel esquerdo: análise mais recente + ações pendentes
@@ -18,17 +18,12 @@ import {
   CheckCircle2,
   Clock,
   Globe,
-  Lightbulb,
   Loader2,
   MessageSquare,
-  RefreshCw,
   Send,
-  TrendingUp,
-  Eye,
   XCircle,
-  Zap,
-  Bot,
   Target,
+  Volume2,
 } from "lucide-react";
 
 // ─── Config por agente ────────────────────────────────────────────────────────
@@ -38,19 +33,27 @@ const AGENT_CONFIG: Record<string, {
   role: string;
   emoji: string;
   photo: string;
-  color: string;
+  description: string;
   bgColor: string;
   borderColor: string;
+  focusClass: string;
+  btnHex: string;
+  bannerFrom: string;
+  bannerTo: string;
   suggestions: string[];
 }> = {
   sofia: {
     label: "Sofia Oliveira",
-    role: "Especialista em Crescimento Instagram",
+    role: "Crescimento Instagram",
+    description: "Especialista em Reels, crescimento orgânico e estratégia de conteúdo para revendedoras",
     emoji: "📱",
     photo: "/agents/sofia.jpg",
-    color: "rose",
     bgColor: "bg-rose-50",
     borderColor: "border-rose-200",
+    focusClass: "focus-within:border-rose-400 focus-within:ring-rose-100",
+    btnHex: "#8B2635",
+    bannerFrom: "#881337",
+    bannerTo: "#9d174d",
     suggestions: [
       "Quais Reels devo criar essa semana?",
       "Como crescer seguidores revendedoras?",
@@ -58,29 +61,18 @@ const AGENT_CONFIG: Record<string, {
       "Qual horário postar para meu público?",
     ],
   },
-  beatriz: {
-    label: "Beatriz Santos",
-    role: "Especialista em Conteúdo e Tendências",
-    emoji: "✨",
-    photo: "/agents/beatriz.jpg",
-    color: "yellow",
-    bgColor: "bg-yellow-50",
-    borderColor: "border-yellow-200",
-    suggestions: [
-      "Crie um calendário editorial para maio",
-      "O que está viralizando em pijamas agora?",
-      "Escreva uma legenda para lançamento de coleção",
-      "Datas comemorativas para usar em posts",
-    ],
-  },
   clara: {
     label: "Clara Mendes",
-    role: "Especialista em Inteligência Competitiva",
+    role: "Inteligência Competitiva",
+    description: "Analisa concorrentes, precificação e gaps de mercado para posicionar a Feminnita",
     emoji: "🔍",
     photo: "/agents/clara.jpg",
-    color: "blue",
-    bgColor: "bg-blue-50",
-    borderColor: "border-blue-200",
+    bgColor: "bg-rose-50",
+    borderColor: "border-rose-200",
+    focusClass: "focus-within:border-rose-400 focus-within:ring-rose-100",
+    btnHex: "#8B2635",
+    bannerFrom: "#881337",
+    bannerTo: "#9d174d",
     suggestions: [
       "Quem são meus maiores concorrentes?",
       "Como está a precificação do mercado?",
@@ -90,12 +82,16 @@ const AGENT_CONFIG: Record<string, {
   },
   mariana: {
     label: "Mariana Costa",
-    role: "Especialista em Vendas Multicanal",
+    role: "Vendas Multicanal",
+    description: "Especialista em ML, Shopee, WhatsApp e TikTok Shop — meta: levar a Feminnita a R$100K/mês",
     emoji: "💰",
     photo: "/agents/mariana.jpg",
-    color: "green",
-    bgColor: "bg-green-50",
-    borderColor: "border-green-200",
+    bgColor: "bg-rose-50",
+    borderColor: "border-rose-200",
+    focusClass: "focus-within:border-rose-400 focus-within:ring-rose-100",
+    btnHex: "#8B2635",
+    bannerFrom: "#881337",
+    bannerTo: "#9d174d",
     suggestions: [
       "Como reativar clientes inativos no WhatsApp?",
       "Como configurar vendas no Mercado Livre?",
@@ -122,21 +118,40 @@ interface ProposedAction {
 
 // ─── Componentes ──────────────────────────────────────────────────────────────
 
-function ChatBubble({ message, agentName }: { message: ChatMessage; agentName: string }) {
+function ChatBubble({ message, agentName, onSpeak, isSpeaking }: {
+  message: ChatMessage;
+  agentName: string;
+  onSpeak?: (text: string) => void;
+  isSpeaking?: boolean;
+}) {
   const isUser = message.role === "user";
   const config = AGENT_CONFIG[agentName];
 
   if (!isUser) {
     return (
-      <div className="flex justify-center mb-6">
-        <div className="flex items-start gap-4 max-w-2xl w-full">
-          <img
-            src={config.photo}
-            alt={config.label}
-            className="w-28 h-40 rounded-2xl object-cover object-top flex-shrink-0 border border-slate-200 shadow-md"
-          />
-          <div className={`flex-1 bg-white border ${config.borderColor} rounded-2xl rounded-tl-sm px-5 py-4 text-sm leading-relaxed text-slate-800 shadow-sm`}>
-            <p className="whitespace-pre-wrap">{message.content}</p>
+      <div className="mb-6">
+        <div className="flex items-start gap-2 w-full">
+          <div className="flex-1 flex items-start gap-2">
+            <div className={`flex-1 bg-white border ${config.borderColor} rounded-2xl rounded-tl-sm px-5 py-4 text-base leading-relaxed text-slate-800 shadow-sm`}>
+              <p className="whitespace-pre-wrap">{message.content}</p>
+            </div>
+            {onSpeak && (
+              <button
+                onClick={() => onSpeak(message.content)}
+                title="Ouvir resposta"
+                className={`flex-shrink-0 mt-1 p-2.5 rounded-xl border shadow-sm transition-colors ${
+                  isSpeaking
+                    ? "text-white border-transparent"
+                    : "bg-white border-slate-200 hover:border-slate-300"
+                }`}
+                style={isSpeaking ? { backgroundColor: config.btnHex } : undefined}
+              >
+                {isSpeaking
+                  ? <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  : <Volume2 className="w-4 h-4" style={{ color: config.btnHex }} />
+                }
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -144,11 +159,12 @@ function ChatBubble({ message, agentName }: { message: ChatMessage; agentName: s
   }
 
   return (
-    <div className="flex justify-center mb-4">
-      <div className="flex justify-end max-w-2xl w-full">
-        <div className="max-w-[78%] rounded-2xl rounded-tr-sm px-4 py-3 text-sm leading-relaxed bg-pink-100 text-slate-800 border border-pink-200">
-          <p className="whitespace-pre-wrap">{message.content}</p>
-        </div>
+    <div className="flex justify-end mb-4">
+      <div
+        className="max-w-[65%] rounded-2xl rounded-tr-sm px-4 py-3 text-base leading-relaxed text-slate-800 border border-[#E8E0CC]"
+        style={{ backgroundColor: "#FAF8F0" }}
+      >
+        <p className="whitespace-pre-wrap">{message.content}</p>
       </div>
     </div>
   );
@@ -295,11 +311,35 @@ export default function AgentDetailPage({ agentName }: { agentName: string }) {
   const [input, setInput] = useState("");
   const [conversationId, setConversationId] = useState<number | undefined>(undefined);
   const [showHistory, setShowHistory] = useState(false);
+  const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const config = AGENT_CONFIG[agentName];
+
+  const speakMutation = trpc.specialistChat.speak.useMutation({
+    onSuccess: (data) => {
+      const audio = new Audio(`data:audio/mpeg;base64,${data.audioBase64}`);
+      audioRef.current = audio;
+      audio.onended = () => setSpeakingIndex(null);
+      audio.onerror = () => { setSpeakingIndex(null); toast.error("Erro ao reproduzir áudio"); };
+      audio.play().catch(() => { setSpeakingIndex(null); });
+    },
+    onError: () => { setSpeakingIndex(null); toast.error("Erro ao gerar áudio"); },
+  });
+
+  const handleSpeak = (text: string, index: number) => {
+    if (speakingIndex === index) {
+      audioRef.current?.pause();
+      setSpeakingIndex(null);
+      return;
+    }
+    audioRef.current?.pause();
+    setSpeakingIndex(index);
+    speakMutation.mutate({ text, agentName });
+  };
 
   const chatMutation = trpc.specialistChat.chat.useMutation({
     onSuccess: (data) => {
@@ -339,15 +379,6 @@ Posso te ajudar com:
 • Como transformar seguidores em clientes B2B
 
 O que você quer trabalhar hoje?`,
-      beatriz: `Olá! Sou a Beatriz — especialista em conteúdo e tendências para a Feminnita. ✨
-
-Posso te ajudar com:
-• Calendário editorial do próximo mês (datas, temas, formatos)
-• Ideias de conteúdo baseadas no que está viralizando agora
-• Copys e legendas que convertem para revendedoras
-• Estratégia de lançamento de coleções
-
-O que precisamos criar?`,
       clara: `Olá! Sou a Clara — especialista em inteligência competitiva para a Feminnita. 🔍
 
 Posso te ajudar com:
@@ -403,7 +434,7 @@ Por onde quer começar?`,
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50">
+    <div className="-m-4 flex flex-col flex-1 min-h-0 bg-slate-50">
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 bg-white border-b border-slate-200 flex-shrink-0">
         <div className="flex items-center gap-3">
@@ -442,8 +473,8 @@ Por onde quer começar?`,
           </button>
           <button
             onClick={startNewConversation}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-${config.color}-600 hover:bg-${config.color}-700 text-white text-sm font-medium transition-colors`}
-            style={{ backgroundColor: config.color === "yellow" ? "#ca8a04" : config.color === "blue" ? "#2563eb" : config.color === "green" ? "#16a34a" : "#e11d48" }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-sm font-medium transition-colors"
+            style={{ backgroundColor: config.btnHex }}
           >
             <MessageSquare className="w-3.5 h-3.5" />
             Nova Conversa
@@ -453,11 +484,40 @@ Por onde quer começar?`,
 
       {/* Conteúdo */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Painel esquerdo */}
-        <SidePanel agentName={agentName} />
-
         {/* Chat */}
         <main className="flex-1 flex flex-col overflow-hidden">
+
+          {/* ── Retrato da agente ──────────────────────────────────────────── */}
+          <div
+            className="flex items-stretch gap-0 flex-shrink-0"
+            style={{ background: `linear-gradient(to right, ${config.bannerFrom}, ${config.bannerTo})` }}
+          >
+            <div className="flex-shrink-0">
+              <img
+                src={config.photo}
+                alt={config.label}
+                className="h-44 w-32 object-cover object-top"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+              />
+            </div>
+            <div className="flex flex-col justify-center px-6 py-4 flex-1">
+              <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: "rgba(255,255,255,0.5)" }}>
+                {config.role}
+              </p>
+              <h2 className="text-2xl font-bold text-white leading-tight">{config.label.split(" ")[0]}</h2>
+              <p className="text-sm mt-1.5 leading-relaxed max-w-lg" style={{ color: "rgba(255,255,255,0.75)" }}>
+                {config.description}
+              </p>
+              <div className="flex items-center gap-1.5 mt-3">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
+                <span className="text-xs text-emerald-300 font-medium">Online agora</span>
+                <span className="ml-2 flex items-center gap-1 text-xs text-green-300">
+                  <Globe className="w-3 h-3" /> Web search ativo
+                </span>
+              </div>
+            </div>
+          </div>
+
           {/* Histórico de conversas */}
           {showHistory && conversations && (
             <div className="border-b border-slate-200 bg-white p-4 max-h-48 overflow-y-auto">
@@ -489,13 +549,18 @@ Por onde quer começar?`,
           {/* Mensagens */}
           <div className="flex-1 overflow-y-auto px-6 py-4">
             {messages.map((msg, i) => (
-              <ChatBubble key={i} message={msg} agentName={agentName} />
+              <ChatBubble
+                key={i}
+                message={msg}
+                agentName={agentName}
+                onSpeak={msg.role === "assistant" ? (text) => handleSpeak(text, i) : undefined}
+                isSpeaking={speakingIndex === i}
+              />
             ))}
 
             {chatMutation.isPending && (
-              <div className="flex justify-center mb-6">
-                <div className="flex items-start gap-4 max-w-2xl w-full">
-                  <img src={config.photo} alt={config.label} className="w-28 h-40 rounded-2xl object-cover object-top flex-shrink-0 border border-slate-200 shadow-md" />
+              <div className="mb-6">
+                <div className="flex items-start gap-2 w-full">
                   <div className={`flex-1 bg-white border ${config.borderColor} rounded-2xl rounded-tl-sm px-5 py-4 shadow-sm`}>
                   <div className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce [animation-delay:0ms]" />
@@ -534,7 +599,7 @@ Por onde quer começar?`,
 
           {/* Input */}
           <div className="px-6 py-4 bg-white border-t border-slate-200 flex-shrink-0">
-            <div className={`flex items-end gap-3 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 focus-within:${config.borderColor} focus-within:ring-1 transition-all`}>
+            <div className={`flex items-end gap-3 border border-[#E8E0CC] rounded-2xl px-4 py-3 focus-within:ring-1 transition-all ${config.focusClass}`} style={{ backgroundColor: "#FAF8F0" }}>
               <textarea
                 ref={textareaRef}
                 value={input}
@@ -542,7 +607,7 @@ Por onde quer começar?`,
                 onKeyDown={handleKeyDown}
                 placeholder={`Pergunte à ${config.label.split(" ")[0]}… (Enter para enviar)`}
                 rows={1}
-                className="flex-1 bg-transparent text-sm text-slate-800 placeholder-slate-400 resize-none focus:outline-none max-h-32 overflow-y-auto"
+                className="flex-1 bg-transparent text-base text-slate-800 placeholder-slate-400 resize-none focus:outline-none max-h-32 overflow-y-auto"
                 style={{ height: "auto", minHeight: "24px" }}
                 onInput={(e) => {
                   const el = e.currentTarget;
@@ -554,7 +619,7 @@ Por onde quer começar?`,
                 onClick={sendMessage}
                 disabled={!input.trim() || chatMutation.isPending}
                 className="p-2 rounded-xl text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
-                style={{ backgroundColor: config.color === "yellow" ? "#ca8a04" : config.color === "blue" ? "#2563eb" : config.color === "green" ? "#16a34a" : "#e11d48" }}
+                style={{ backgroundColor: config.btnHex }}
               >
                 {chatMutation.isPending ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

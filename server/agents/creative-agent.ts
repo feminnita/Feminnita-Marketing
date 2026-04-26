@@ -674,7 +674,7 @@ Analise esta foto e retorne APENAS JSON válido:
       headline: copy.headline,
       body: copy.body,
       message: generatedImage
-        ? "Banner gerado pela Beatriz! Aguardando sua aprovação."
+        ? "Banner gerado! Aguardando sua aprovação."
         : "Copy gerado. Imagem original como referência (configure GEMINI_API_KEY para gerar banner automático).",
     };
   }

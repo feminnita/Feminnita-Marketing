@@ -73,11 +73,11 @@
   --input: oklch(0.92 0.004 286.32);
   --ring: oklch(0.623 0.214 259.815);
   /* Sidebar — tema escuro igual ao login */
-  --sidebar: #0f172a;
+  --sidebar: #334155;
   --sidebar-foreground: #cbd5e1;
   --sidebar-primary: #8B2635;
   --sidebar-primary-foreground: #E8C99A;
-  --sidebar-accent: #1e293b;
+  --sidebar-accent: #475569;
   --sidebar-accent-foreground: #E8C99A;
   --sidebar-border: rgba(255,255,255,0.08);
   --sidebar-ring: #8B2635;

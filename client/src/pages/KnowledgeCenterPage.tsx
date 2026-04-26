@@ -177,7 +177,6 @@ export default function KnowledgeCenterPage() {
             { agent: "Sofia", domains: "Instagram Orgânico" },
             { agent: "Clara", domains: "Tendências + Marketplaces" },
             { agent: "Mariana", domains: "Marketplaces + WhatsApp" },
-            { agent: "Beatriz", domains: "Tendências de Produto" },
           ].map((a) => (
             <div key={a.agent} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
               <img src={`/agents/${a.agent.toLowerCase()}.jpg`} alt={a.agent} className="w-7 h-9 rounded object-cover object-top" />

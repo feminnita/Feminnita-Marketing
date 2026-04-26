@@ -35,6 +35,7 @@ import {
   updateAdsetBudget,
 } from "../services/meta-ads-service";
 import { executeMetaAction } from "../agents/fernanda-executor";
+import { textToSpeech } from "../services/tts";
 
 function parseCreativeBlock(json: string): Record<string, string> {
   try { return JSON.parse(json.trim()); } catch { return {}; }
@@ -115,9 +116,24 @@ export const trafficManagerRouter = router({
         content: input.message,
       });
 
+      // Se mensagem curta afirmativa, injetar creative pendente no contexto para Fernanda não fazer loop
+      let messageForAgent = input.message;
+      const isPublishTrigger = /^\s*(pode|sim|ok|autorizado|publica|publ[ií]ca|confirmo|vai|manda|certo|isso|exato|perfeito|pode publicar|pode subir|sobe|vai lá)\s*[!.]?\s*$/i.test(input.message.trim());
+      if (isPublishTrigger) {
+        const [pendingCreative] = await db
+          .select({ id: adCreatives.id, briefTitle: adCreatives.briefTitle, headline: adCreatives.generatedHeadline })
+          .from(adCreatives)
+          .where(and(eq(adCreatives.status, "pending_approval"), eq(adCreatives.userId, ctx.user.id)))
+          .orderBy(desc(adCreatives.createdAt))
+          .limit(1);
+        if (pendingCreative) {
+          messageForAgent = `[SISTEMA: Creative ID ${pendingCreative.id} — "${pendingCreative.briefTitle}" — aguardando publicação. O usuário acabou de autorizar a publicação agora.]\n\n${input.message}`;
+        }
+      }
+
       // Chamar o agente
       const agentResponse = await chatWithAgent(
-        input.message,
+        messageForAgent,
         conversationHistory,
         { imageBase64: input.imageBase64, userId: ctx.user.id }
       );
@@ -158,6 +174,44 @@ export const trafficManagerRouter = router({
         }
         // Remove the structured block from the message shown to user
         cleanMessage = agentResponse.message.replace(creativePattern, "").trim();
+      }
+
+      // Auto-executar ação publish_creative se Fernanda a propôs
+      const publishAction = agentResponse.proposedActions.find(a => a.action === "publish_creative");
+      if (publishAction && publishAction.creative_id && publishAction.adset_id) {
+        try {
+          const [creative] = await db.select().from(adCreatives)
+            .where(and(eq(adCreatives.id, publishAction.creative_id), eq(adCreatives.userId, ctx.user.id)))
+            .limit(1);
+          if (!creative) {
+            cleanMessage = "Não encontrei o criativo para publicação. Envie a arte novamente.";
+          } else if (!creative.imageBase64) {
+            cleanMessage = "O criativo não possui imagem armazenada. Envie a arte novamente para que eu possa publicar.";
+          } else if (creative && creative.imageBase64) {
+            await db.update(adCreatives).set({ status: "uploading", campaignId: publishAction.campaign_id, adSetId: publishAction.adset_id, updatedAt: new Date() })
+              .where(eq(adCreatives.id, publishAction.creative_id));
+            const { executeMetaAction } = await import("../agents/fernanda-executor");
+            const resultMsg = await executeMetaAction("meta_create_full_ad", {
+              campaignId: publishAction.campaign_id || "",
+              adSetId: publishAction.adset_id,
+              adName: creative.briefTitle,
+              imageUrl: `data:image/png;base64,${creative.imageBase64}`,
+              title: creative.generatedHeadline || creative.briefTitle,
+              body: creative.generatedBody || creative.briefTitle,
+              linkUrl: "https://www.feminnita.com.br",
+              callToAction: "SHOP_NOW",
+            });
+            const metaAdId = resultMsg.match(/ID:\s*(\d+)/)?.[1];
+            await db.update(adCreatives).set({ status: "executed", metaAdId, updatedAt: new Date() })
+              .where(eq(adCreatives.id, publishAction.creative_id));
+            const adsetName = publishAction.target_name || publishAction.adset_id;
+            cleanMessage = `Anúncio publicado com sucesso no conjunto "${adsetName}".${metaAdId ? ` ID Meta: ${metaAdId}.` : ""} O criativo já está ativo na conta.`;
+          }
+        } catch (err: any) {
+          await db.update(adCreatives).set({ status: "failed", errorMessage: err.message, updatedAt: new Date() })
+            .where(eq(adCreatives.id, publishAction.creative_id!));
+          cleanMessage = `Erro ao publicar o anúncio: ${err.message}. Verifique as credenciais da Meta ou tente novamente.`;
+        }
       }
 
       // Salvar resposta do agente
@@ -632,5 +686,13 @@ export const trafficManagerRouter = router({
         executionResult,
         executionError,
       };
+    }),
+
+  speak: protectedProcedure
+    .input(z.object({ text: z.string().max(10000) }))
+    .mutation(async ({ input }) => {
+      const truncated = input.text.length > 4000 ? input.text.slice(0, 4000) + "…" : input.text;
+      const audioBuffer = await textToSpeech(truncated, "fernanda");
+      return { audioBase64: audioBuffer.toString("base64") };
     }),
 });

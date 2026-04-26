@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import {
@@ -12,7 +13,7 @@ import zaraPhoto from "@/assets/zara.jpg";
 import ninaPhoto from "@/assets/nina.jpg";
 import marcelaPhoto from "@/assets/marcela.jpg";
 
-const AGENT_PHOTOS: Record<string, string> = {
+export const AGENT_PHOTOS: Record<string, string> = {
   luna: lunaPhoto,
   maya: mayaPhoto,
   zara: zaraPhoto,
@@ -22,7 +23,7 @@ const AGENT_PHOTOS: Record<string, string> = {
 
 // ─── Agentes ──────────────────────────────────────────────────────────────────
 
-type AgentType = "luna" | "maya" | "zara" | "nina" | "marcela";
+export type AgentType = "luna" | "maya" | "zara" | "nina" | "marcela";
 
 interface Agent {
   id: AgentType;
@@ -33,7 +34,7 @@ interface Agent {
   description: string;
 }
 
-const AGENTS: Agent[] = [
+export const AGENTS: Agent[] = [
   { id: "luna", name: "Luna", role: "TikTok Ads", color: "#7C3AED", emoji: "📊", description: "Campanhas, ROAS, otimização de budget e criativos pagos" },
   { id: "maya", name: "Maya", role: "LIVE Commerce", color: "#DC2626", emoji: "🔴", description: "Produção de lives, scripts, conversão e amplificação ao vivo" },
   { id: "zara", name: "Zara", role: "Afiliados", color: "#059669", emoji: "🤝", description: "Recrutamento, gestão de criadores e programa de comissões" },
@@ -72,7 +73,7 @@ function StatusBadge({ status }: { status: string }) {
 
 // ─── Painel de um agente ──────────────────────────────────────────────────────
 
-function AgentPanel({ agent, account }: { agent: Agent; account: string }) {
+export function AgentPanel({ agent, account }: { agent: Agent; account: string }) {
   const [activeEvalId, setActiveEvalId] = useState<number | null>(null);
   const [polling, setPolling] = useState(false);
   const [expandedRecs, setExpandedRecs] = useState<Set<number>>(new Set());
@@ -277,7 +278,7 @@ function AgentPanel({ agent, account }: { agent: Agent; account: string }) {
               {messages.map((msg: any) => (
                 <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                   <div
-                    className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm ${msg.role === "user" ? "text-white" : "bg-gray-100 text-gray-800"}`}
+                    className={`max-w-[80%] px-3 py-2 rounded-2xl text-base ${msg.role === "user" ? "text-white" : "bg-gray-100 text-gray-800"}`}
                     style={msg.role === "user" ? { background: agent.color } : {}}
                   >
                     <p className="whitespace-pre-wrap">{msg.content}</p>
@@ -293,7 +294,7 @@ function AgentPanel({ agent, account }: { agent: Agent; account: string }) {
                 onChange={(e) => setChatInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
                 placeholder={`Pergunte para ${agent.name}…`}
-                className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2"
+                className="flex-1 text-base border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2"
                 style={{ "--tw-ring-color": agent.color } as any}
               />
               <button onClick={handleSend} disabled={sendingMsg || !chatInput.trim()} className="p-2 text-white rounded-lg disabled:opacity-50" style={{ background: agent.color }}>
@@ -600,7 +601,7 @@ function VideoStudio() {
                   value={url}
                   onChange={(e) => setUrl(i, e.target.value)}
                   placeholder={`URL da imagem ${i + 1}`}
-                  className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2"
+                  className="flex-1 text-base border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2"
                   style={{ "--tw-ring-color": STUDIO_COLOR } as any}
                 />
                 {imageUrls.length > 1 && (
@@ -758,82 +759,68 @@ function VideoStudio() {
 
 const TT_PINK = "#FE2C55";
 
-type AccountType = "feminnita" | "fnt";
+export type AccountType = "feminnita" | "fnt";
 
 export default function TiktokTeamPage() {
+  const [, setLocation] = useLocation();
   const getTabFromUrl = () => {
     const params = new URLSearchParams(window.location.search);
     const t = params.get("tab");
-    if (t === "videos" || t === "studio") return t as "videos" | "studio";
-    return "luna" as AgentType;
+    if (t === "studio") return "studio" as const;
+    return "videos" as const;
   };
-  const [activeTab, setActiveTab] = useState<AgentType | "videos" | "studio">(getTabFromUrl);
-  const [account, setAccount] = useState<AccountType>("feminnita");
+  const [activeTab, setActiveTab] = useState<"videos" | "studio">(getTabFromUrl);
 
   useEffect(() => {
     setActiveTab(getTabFromUrl());
   }, [window.location.search]);
 
-  const tabs = [
-    ...AGENTS.map((a) => ({ id: a.id as AgentType | "videos" | "studio", label: a.name, emoji: a.emoji, color: a.color })),
-    { id: "videos" as const, label: "Vídeos", emoji: "🎬", color: "#6B7280" },
-    { id: "studio" as const, label: "Studio", emoji: "✨", color: STUDIO_COLOR },
-  ];
-
   return (
     <div className="max-w-full px-6 py-6 space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <span className="text-2xl">🎵</span> Time TikTok Feminnita
-          </h1>
-          <p className="text-gray-500 text-sm mt-1">
-            5 especialistas ultra-preparadas para cada dimensão do TikTok + biblioteca de vídeos
-          </p>
-        </div>
-
-        {/* Seletor de conta */}
-        <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1 shrink-0">
-          <button
-            onClick={() => setAccount("feminnita")}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${account === "feminnita" ? "bg-white text-[#FE2C55] shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-          >
-            🎵 Feminnita
-          </button>
-          <button
-            onClick={() => setAccount("fnt")}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${account === "fnt" ? "bg-white text-[#FE2C55] shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-          >
-            🎵 FNT
-          </button>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <span className="text-2xl">🎵</span> Time TikTok Feminnita
+        </h1>
+        <p className="text-gray-500 text-sm mt-1">
+          5 especialistas ultra-preparadas para cada dimensão do TikTok. Clique em uma agente para conversar.
+        </p>
       </div>
 
       {/* Agent Cards */}
-      <div className="grid grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {AGENTS.map((agent) => (
           <button
             key={agent.id}
-            onClick={() => setActiveTab(agent.id)}
-            className={`rounded-xl p-3 text-center border transition-all ${activeTab === agent.id ? "shadow-sm" : "border-gray-200 hover:border-gray-300"}`}
-            style={activeTab === agent.id ? { borderColor: agent.color, border: `2px solid ${agent.color}`, background: `${agent.color}10` } : {}}
+            onClick={() => setLocation(`/tiktok/${agent.id}`)}
+            className="rounded-2xl p-4 text-center border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all bg-white group"
           >
             <img
               src={AGENT_PHOTOS[agent.id]}
               alt={agent.name}
-              className="w-24 h-32 rounded-xl object-cover object-top mx-auto mb-2 border-2"
-              style={{ borderColor: activeTab === agent.id ? agent.color : "#e5e7eb" }}
+              className="w-24 h-32 rounded-xl object-cover object-top mx-auto mb-3 border-2 border-gray-100 group-hover:border-current transition-colors"
+              style={{ borderColor: "transparent" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLImageElement).style.borderColor = agent.color; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLImageElement).style.borderColor = "transparent"; }}
             />
-            <p className="text-xs font-bold text-gray-800">{agent.name}</p>
-            <p className="text-xs text-gray-500 mt-0.5 leading-tight">{agent.role}</p>
+            <p className="text-sm font-bold text-gray-800">{agent.name}</p>
+            <p className="text-xs text-gray-500 mt-0.5 leading-tight mb-3">{agent.role}</p>
+            <span
+              className="text-xs px-3 py-1 rounded-full font-semibold text-white inline-block"
+              style={{ backgroundColor: agent.color }}
+            >
+              Conversar
+            </span>
           </button>
         ))}
       </div>
 
-      {/* Tab nav */}
-      <div className="flex gap-1 border-b border-gray-200 overflow-x-auto scrollbar-none">
-        {tabs.map((tab) => (
+      {/* Tab nav — Vídeos e Studio */}
+      <div className="flex gap-1 border-b border-gray-200">
+        {[
+          { id: "videos" as const, label: "Vídeos", emoji: "🎬", color: "#6B7280" },
+          { id: "studio" as const, label: "Studio ✨", emoji: "🎬", color: STUDIO_COLOR },
+        ].map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
@@ -847,14 +834,7 @@ export default function TiktokTeamPage() {
         ))}
       </div>
 
-      {/* Conteúdo da aba */}
-      {activeTab === "videos" ? (
-        <VideoLibrary />
-      ) : activeTab === "studio" ? (
-        <VideoStudio />
-      ) : (
-        <AgentPanel agent={AGENTS.find((a) => a.id === activeTab)!} account={account} />
-      )}
+      {activeTab === "studio" ? <VideoStudio /> : <VideoLibrary />}
     </div>
   );
 }

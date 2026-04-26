@@ -56,7 +56,7 @@ export const morningBriefingRouter = router({
     .input((input: unknown) => {
       if (typeof input !== "object" || input === null) throw new Error("Input inválido");
       const { agentName } = input as { agentName: string };
-      if (!["fernanda", "sofia", "beatriz", "clara", "mariana"].includes(agentName)) {
+      if (!["fernanda", "sofia", "clara", "mariana"].includes(agentName)) {
         throw new Error("Agente inválido");
       }
       return { agentName };

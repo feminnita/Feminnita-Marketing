@@ -122,15 +122,6 @@ const AGENTS = [
     href: "/agente/sofia",
   },
   {
-    name: "Beatriz — Conteúdo e Tendências",
-    icon: <Lightbulb className="w-5 h-5 text-yellow-500" />,
-    frequency: "Varredura diária de tendências",
-    description: "Pesquisa tendências de moda e pijamas na internet, sugere pautas, hashtags e calendário editorial baseado em dados reais.",
-    badge: "Conteúdo · SEO · Calendário",
-    badgeColor: "bg-yellow-100 text-yellow-700",
-    href: "/agente/beatriz",
-  },
-  {
     name: "Clara — Inteligência Competitiva",
     icon: <Eye className="w-5 h-5 text-blue-500" />,
     frequency: "Monitoramento diário de concorrentes",

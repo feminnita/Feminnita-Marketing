@@ -440,10 +440,10 @@ async function proposeActions(analysis: DailyAnalysisResult, today: string): Pro
       const actionType = inferActionType(rec);
       let description = rec;
 
-      // Se é para criar novo anúncio, chama a Beatriz para gerar o copy
+      // Se é para criar novo anúncio, gera o copy criativo
       if (actionType === "meta_create_full_ad") {
         try {
-          console.log(`[FernandaDaily] Chamando Beatriz para gerar copy: "${rec.slice(0, 60)}"`);
+          console.log(`[FernandaDaily] Gerando copy para: "${rec.slice(0, 60)}"`);
           const copy = await generateAdCopy(
             `Contexto da campanha Feminnita Pijamas:\n${rec}\n\nROAS atual: ${analysis.roas}x | Gasto: R$${analysis.spend.toFixed(2)}`
           );
@@ -454,12 +454,12 @@ async function proposeActions(analysis: DailyAnalysisResult, today: string): Pro
               body: copy.body,
               imageDescription: copy.imageDescription,
             },
-            generatedBy: "beatriz",
+            generatedBy: "fernanda",
             linkUrl: "https://www.feminnita.com.br",
           });
-          console.log(`[FernandaDaily] Beatriz gerou copy: "${copy.headline}"`);
+          console.log(`[FernandaDaily] Copy gerado: "${copy.headline}"`);
         } catch (err: any) {
-          console.error("[FernandaDaily] Beatriz falhou no copy, usando texto simples:", err.message);
+          console.error("[FernandaDaily] Falhou ao gerar copy, usando texto simples:", err.message);
         }
       }
 
@@ -479,7 +479,7 @@ async function proposeActions(analysis: DailyAnalysisResult, today: string): Pro
 
     if (toInsert.length > 0) {
       await db.insert(agentActions).values(toInsert);
-      console.log(`[FernandaDaily] ${toInsert.length} ações propostas (${toInsert.filter(a => a.actionType === "meta_create_full_ad").length} com copy da Beatriz)`);
+      console.log(`[FernandaDaily] ${toInsert.length} ações propostas (${toInsert.filter(a => a.actionType === "meta_create_full_ad").length} com copy criativo)`);
     }
   } catch (err: any) {
     console.error("[FernandaDaily] Erro ao propor ações:", err.message);

@@ -20,7 +20,6 @@ import { Badge } from "@/components/ui/badge";
 const AGENT_CONFIG: Record<string, { label: string; role: string; emoji: string; color: string; bg: string }> = {
   fernanda: { label: "Fernanda",  role: "Tráfego Pago",             emoji: "📊", color: "#8B2635", bg: "#FFF1F2" },
   sofia:    { label: "Sofia",     role: "Crescimento Instagram",     emoji: "📱", color: "#DB2777", bg: "#FCE7F3" },
-  beatriz:  { label: "Beatriz",   role: "Conteúdo & Tendências",     emoji: "✨", color: "#D97706", bg: "#FEF3C7" },
   clara:    { label: "Clara",     role: "Inteligência Competitiva",  emoji: "🔍", color: "#2563EB", bg: "#EFF6FF" },
   mariana:  { label: "Mariana",   role: "Vendas Multicanal",         emoji: "💰", color: "#059669", bg: "#D1FAE5" },
 };

@@ -39,11 +39,79 @@ import {
   BookOpen, Newspaper, CheckCircle, Brain, MessageCircle,
   Bell, Image, Briefcase, TrendingUp, ChevronDown, ChevronRight,
   Settings, Megaphone, BarChart2, Bot, ShoppingBag, Music, Video, ClipboardCheck, Globe, Pencil, Zap,
+  AlertTriangle, X, ExternalLink,
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
+
+// ─── Banner diário da Fernanda ────────────────────────────────────────────────
+
+function FernandaMorningBanner() {
+  const today = new Date().toISOString().slice(0, 10);
+  const dismissKey = `fernanda_briefing_dismissed_${today}`;
+  const [dismissed, setDismissed] = useState(() => !!localStorage.getItem(dismissKey));
+  const [, setLocation] = useLocation();
+
+  const { data } = trpc.morningBriefing.getToday.useQuery(undefined, {
+    enabled: !dismissed,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+
+  if (dismissed || !data) return null;
+
+  const topAlert = data.topAlerts?.[0];
+  const highCount = data.highPriorityActions ?? 0;
+
+  const handleDismiss = () => {
+    localStorage.setItem(dismissKey, "1");
+    setDismissed(true);
+  };
+
+  return (
+    <div className="flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-rose-900 to-pink-800 text-white text-sm flex-shrink-0">
+      <img
+        src="/agents/fernanda.jpg"
+        alt="Fernanda"
+        className="w-7 h-7 rounded-full object-cover object-top flex-shrink-0 border border-rose-400"
+        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+      />
+      <div className="flex-1 min-w-0 flex items-center gap-3 flex-wrap">
+        <span className="font-semibold text-rose-200 flex-shrink-0">Fernanda — {today}</span>
+        {data.pathTo100k && (
+          <span className="text-white/90 truncate">{data.pathTo100k}</span>
+        )}
+        {topAlert && (
+          <span className="flex items-center gap-1 text-amber-300 flex-shrink-0">
+            <AlertTriangle className="w-3.5 h-3.5" />
+            {topAlert}
+          </span>
+        )}
+        {highCount > 0 && (
+          <span className="bg-rose-700 text-white text-xs px-2 py-0.5 rounded-full flex-shrink-0">
+            {highCount} ação{highCount > 1 ? "ões" : ""} prioritária{highCount > 1 ? "s" : ""}
+          </span>
+        )}
+      </div>
+      <button
+        onClick={() => { setLocation("/briefing"); handleDismiss(); }}
+        className="flex items-center gap-1 text-xs text-rose-200 hover:text-white transition-colors flex-shrink-0 underline underline-offset-2"
+      >
+        Ver briefing completo
+        <ExternalLink className="w-3 h-3" />
+      </button>
+      <button
+        onClick={handleDismiss}
+        className="p-1 hover:bg-rose-700 rounded transition-colors flex-shrink-0"
+        title="Dispensar"
+      >
+        <X className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  );
+}
 
 const influencers = [
   { id: 1, name: "Carol", emoji: "👩‍👧‍👦" },
@@ -290,7 +358,7 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
               {/* Marketing */}
               <CollapsibleGroup icon={Megaphone} label="Marketing">
                 <SidebarMenuSubItem>
-                  <SidebarMenuSubButton onClick={() => setLocation("/gestor-trafego")}>
+                  <SidebarMenuSubButton onClick={() => setLocation("/traffic-manager")}>
                     <Bot className="h-3 w-3" /> Gestor de Tráfego IA
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
@@ -339,16 +407,10 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
-                  <SidebarMenuSubButton onClick={() => setLocation("/gestor-trafego")}>
+                  <SidebarMenuSubButton onClick={() => setLocation("/traffic-manager")}>
                     <Bot className="h-3 w-3" /> Fernanda — Meta Ads
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
-                <SidebarMenuSubItem>
-                  <SidebarMenuSubButton onClick={() => setLocation("/criativos")}>
-                    <ClipboardCheck className="h-3 w-3" /> Criativos — Aprovações
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-
                 <SidebarMenuSubItem>
                   <SidebarMenuSubButton onClick={() => setLocation("/duda-seo")}>
                     <Globe className="h-3 w-3" /> Duda — SEO Site
@@ -390,7 +452,32 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
                   <SidebarMenuSubButton onClick={() => setLocation("/tiktok-team")}>
-                    <Music className="h-3 w-3" /> Time TikTok (Equipe)
+                    <Music className="h-3 w-3" /> TikTok — Visão Geral
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/tiktok/luna")}>
+                    <Music className="h-3 w-3" /> Luna — TikTok Ads
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/tiktok/maya")}>
+                    <Music className="h-3 w-3" /> Maya — LIVE Commerce
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/tiktok/zara")}>
+                    <Music className="h-3 w-3" /> Zara — Afiliados
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/tiktok/nina")}>
+                    <Music className="h-3 w-3" /> Nina — Conteúdo
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/tiktok/marcela")}>
+                    <Music className="h-3 w-3" /> Marcela — Shop
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
@@ -534,13 +621,14 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
         />
       </div>
 
-      <SidebarInset>
+      <SidebarInset className="flex flex-col h-svh overflow-hidden">
         {isMobile && (
           <div className="flex border-b h-14 items-center justify-between bg-background/95 px-2 backdrop-blur sticky top-0 z-40">
             <SidebarTrigger className="h-9 w-9 rounded-lg bg-background" />
           </div>
         )}
-        <main className="flex-1 p-4">{children}</main>
+        <FernandaMorningBanner />
+        <div className="flex-1 min-h-0 p-4 flex flex-col overflow-y-auto">{children}</div>
       </SidebarInset>
     </>
   );

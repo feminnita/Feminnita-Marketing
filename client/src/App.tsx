@@ -21,7 +21,6 @@ const CollaboratorsManagement = lazy(() => import("@/pages/CollaboratorsManageme
 const ConfigureCredentials    = lazy(() => import("@/pages/ConfigureCredentials"));
 const IntegrationSetup        = lazy(() => import("@/pages/IntegrationSetup"));
 const CanvaOAuth              = lazy(() => import("@/pages/CanvaOAuth"));
-const BeatrizPage             = lazy(() => import("@/pages/BeatrizPage"));
 const KnowledgeCenterPage     = lazy(() => import("@/pages/KnowledgeCenterPage"));
 const MetaCapiSetup           = lazy(() => import("@/pages/MetaCapiSetup"));
 const TermosServico           = lazy(() => import("@/pages/TermosServico"));
@@ -62,10 +61,10 @@ const ShopeeAdsManagerPage    = lazy(() => import("@/pages/ShopeeAdsManagerPage"
 const TiktokShopPage          = lazy(() => import("@/pages/TiktokShopPage"));
 const TiktokTeamPage          = lazy(() => import("@/pages/TiktokTeamPage"));
 const AmazonPage              = lazy(() => import("@/pages/AmazonPage"));
-const CreativeAdsPage         = lazy(() => import("@/pages/CreativeAdsPage"));
 const SpecialistsPage         = lazy(() => import("@/pages/SpecialistsPage"));
 const PublicInfluencerBlog    = lazy(() => import("@/pages/PublicInfluencerBlog"));
 const MorningBriefingPage     = lazy(() => import("@/pages/MorningBriefingPage"));
+const TiktokAgentPage         = lazy(() => import("@/pages/TiktokAgentPage"));
 
 function PageLoader() {
   return (
@@ -149,8 +148,6 @@ export default function App() {
         return <CanvaOAuth />;
       case "/api/canva/callback":
         return <CanvaOAuth />;
-      case "/beatriz":
-        return <BeatrizPage />;
       case "/knowledge-center":
         return <KnowledgeCenterPage />;
       case "/meta-capi-setup":
@@ -205,8 +202,6 @@ export default function App() {
         return <TrafficManagerPage />;
       case "/acoes-agentes":
         return <AgentActionsPage />;
-      case "/criativos":
-        return <CreativeAdsPage />;
       case "/shopee-ads":
         return <ShopeeAdsManagerPage />;
       case "/tiktok-shop":
@@ -229,9 +224,13 @@ export default function App() {
         if (/^\/blog-publico\/\d+$/.test(location)) {
           return <PublicInfluencerBlog />;
         }
-        if (/^\/agente\/(sofia|beatriz|clara|mariana)$/.test(location)) {
+        if (/^\/agente\/(sofia|clara|mariana)$/.test(location)) {
           const agentName = location.split("/").pop()!;
           return <AgentDetailPage agentName={agentName} />;
+        }
+        if (/^\/tiktok\/(luna|maya|zara|nina|marcela)$/.test(location)) {
+          const agentName = location.split("/").pop()!;
+          return <TiktokAgentPage agentName={agentName} />;
         }
         return <Home />;
       }

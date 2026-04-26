@@ -14,6 +14,10 @@ import {
   fetchMetaAds,
 } from "../services/meta-ads-service";
 import { buildMemoryContext } from "../services/agentMemory";
+import { getDb } from "../db";
+import { adCreatives } from "../../drizzle/schema";
+import { eq, and, desc } from "drizzle-orm";
+import { executeMetaAction } from "./fernanda-executor";
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || "",
@@ -35,6 +39,7 @@ export interface ProposedAction {
     | "enable_advantage_plus"
     | "schedule_campaign"
     | "review_creative"
+    | "publish_creative"
     | "custom";
   target_id?: string;
   target_name?: string;
@@ -42,6 +47,9 @@ export interface ProposedAction {
   urgency: "alta" | "media" | "baixa";
   expected_impact?: string;
   custom_description?: string;
+  creative_id?: number;
+  adset_id?: string;
+  campaign_id?: string;
 }
 
 export interface DailyBriefingData {
@@ -174,11 +182,21 @@ const TOOLS: Anthropic.Tool[] = [
       required: ["url"],
     },
   },
+  {
+    name: "get_pending_creatives",
+    description:
+      "Lista os criativos salvos aguardando publicação. Use para verificar se há artes prontas para publicar, ou quando o usuário perguntar sobre o status de uma arte enviada.",
+    input_schema: {
+      type: "object" as const,
+      properties: {},
+      required: [],
+    },
+  },
 ];
 
 // ─── Execução das ferramentas ─────────────────────────────────────────────────
 
-async function executeTool(name: string, input: Record<string, any>): Promise<string> {
+async function executeTool(name: string, input: Record<string, any>, userId?: number): Promise<string> {
   try {
     if (name === "get_account_summary") {
       const data = await fetchMetaAdsData();
@@ -320,6 +338,23 @@ async function executeTool(name: string, input: Record<string, any>): Promise<st
       })));
     }
 
+    if (name === "get_pending_creatives") {
+      const db = await getDb();
+      if (!db) return JSON.stringify({ error: "DB indisponível" });
+      const conditions = [eq(adCreatives.status, "pending_approval")];
+      if (userId) conditions.push(eq(adCreatives.userId, userId));
+      const creatives = await db.select({
+        id: adCreatives.id,
+        briefTitle: adCreatives.briefTitle,
+        headline: adCreatives.generatedHeadline,
+        body: adCreatives.generatedBody,
+        status: adCreatives.status,
+        createdAt: adCreatives.createdAt,
+      }).from(adCreatives).where(and(...conditions)).orderBy(desc(adCreatives.createdAt)).limit(5);
+      if (creatives.length === 0) return JSON.stringify({ pending: [], message: "Nenhum criativo aguardando publicação." });
+      return JSON.stringify({ pending: creatives });
+    }
+
     return JSON.stringify({ error: `Ferramenta desconhecida: ${name}` });
   } catch (err: any) {
     console.error(`[Tool ${name}] Erro:`, err.message);
@@ -352,6 +387,8 @@ Você tem acesso direto à conta Meta Ads. SEMPRE use as ferramentas para buscar
 - get_meta_insights: métricas detalhadas por nível (campanha/adset/anúncio)
 - get_meta_ads: anúncios individuais com criativo completo — thumbnail, imagem, copy (title/body), URL de destino da landing page, CTA.
 - fetch_landing_page: acessa a URL de destino de um anúncio e extrai o conteúdo textual.
+- get_pending_creatives: lista artes salvas aguardando publicação.
+- publish_creative: publica uma arte diretamente no Meta Ads após autorização do usuário.
 
 ═══ SEU PERFIL E EXPERTISE ═══
 - Domina Meta Ads profundamente: campanhas ASC (Advantage Shopping Campaigns), Advantage+ Audience, Broad targeting, pixel events, CAPI server-side, Value Optimization
@@ -487,6 +524,160 @@ QUANDO PROPOR NOVO CRIATIVO, especifique:
 - O visual: produto, modelo, cenário, vibe
 - Para qual público e campanha será testado
 
+━━━ OS 5 NÍVEIS DE CONSCIÊNCIA (Eugene Schwartz) ━━━
+"O trabalho do marqueteiro não é criar desejo — é canalizar o desejo que já existe."
+Antes de criar qualquer campanha, identifique em qual nível de consciência está o público. O nível determina o criativo, o copy e a oferta.
+
+NÍVEL 1 — SEM CONSCIÊNCIA (público mais frio)
+Estado: não sabe que pode revender pijamas
+Abordagem: falar do estilo de vida, liberdade financeira, renda extra
+Copy: "Você sabia que tem mulheres faturando R$3K/mês vendendo pijama?"
+Objetivo: Awareness / Alcance
+
+NÍVEL 2 — COM PROBLEMA (público frio)
+Estado: quer renda extra mas não sabe como ou com o que
+Abordagem: apresentar pijama como categoria com alto giro
+Copy: "Se você quer revender mas não sabe o que escolher — pijama é a resposta"
+Objetivo: Engajamento / Tráfego
+
+NÍVEL 3 — COM SOLUÇÃO (público morno)
+Estado: sabe que pode revender roupas, mas não conhece a Feminnita
+Abordagem: posicionar a Feminnita como a melhor fornecedora
+Copy: "Pijama suede tem o maior giro no atacado — e poucas revendedoras sabem disso"
+Objetivo: Conversão / Lead para WhatsApp
+
+NÍVEL 4 — COM PRODUTO (público morno/quente)
+Estado: conhece a Feminnita mas ainda não comprou
+Abordagem: prova social + oferta com urgência + margem demonstrada
+Copy: "Kit de 12 peças — R$38/peça → revende a R$70 → R$384 de lucro por kit"
+Objetivo: Conversão / Mensagem WhatsApp
+
+NÍVEL 5 — MAIS CONSCIENTE (retargeting — público quente)
+Estado: já comprou, precisa de motivo para recomprar
+Abordagem: novidade, exclusividade, desconto progressivo, kit novo
+Copy: "Chegou a nova coleção. Revendedoras que compraram o kit de inverno estão pedindo o dobro"
+Objetivo: Conversão / Reativação
+
+REGRA: nunca use copy de nível 4 para público de nível 1. Anúncio de preço para quem não sabe que quer comprar não converte — e desperdiça verba.
+
+━━━ O CICLO OPERACIONAL — GECO + ANA OLIVEIRA (Pedro Sobral) ━━━
+"Gestão de tráfego é ciclo, não evento."
+
+BLOCO 1 — GECO (Geração e Coleta)
+GE — GERAÇÃO de dados: lançar campanhas, criativos e audiências. Mínimo 72h antes de qualquer decisão.
+CO — COLETA de dados — métricas por campanha:
+  Impressões / Alcance / Frequência
+  CPM / CPC / CTR
+  Hook Rate (% que assiste 3s) / Hold Rate (% que assiste 25%)
+  Custo por resultado (lead, mensagem, compra)
+  ROAS / CAC
+
+BLOCO 2 — ANA OLIVEIRA (Análise e Otimização)
+AN — ANÁLISE: o que os dados estão dizendo? Comparar com benchmarks. Identificar: problema no criativo? audiência? oferta? página?
+A — Anúncio com problema → trocar criativo
+U — Audiência com problema → revisar segmentação ou lookalike
+D — Destino com problema (WhatsApp/DM não converte) → alertar Mariana
+I — Investimento mal distribuído → realocar budget
+Ê — Escalar o que funciona antes de testar o novo
+
+OLIVEIRA — OTIMIZAÇÃO: pausar o que não performa, escalar o que performa, lançar novos criativos em teste (10–20% do budget sempre em teste)
+
+Cadência: Diária (5 min) verificar gasto + frequência + CPM | Semanal (30 min) ciclo completo | Quinzenal relatório para Mariana.
+
+━━━ O 80/20 DO TRÁFEGO (Perry Marshall) ━━━
+"80% dos seus resultados vêm de 20% dos seus anúncios. Encontre os 20% e duplique neles."
+
+80/20 DE CRIATIVOS: de cada 10 testados, 2 geram 80% dos resultados. Não otimize os ruins — pause e escale os vencedores. Criativo vencedor identificado = aumentar budget, não criar novo ainda.
+
+80/20 DE AUDIÊNCIA: 20% das revendedoras geram 80% do faturamento. Lookalike das que compraram mais de 3 vezes (LTV-sourced) > lookalike de toda a base.
+
+80/20 DE CANAIS: qual canal gera 80% dos resultados com 20% do budget? Concentrar antes de diversificar. ML Product Ads e Meta Ads primeiro.
+
+80/20 DE HORÁRIO: verificar em quais horários/dias o CAC é menor. Concentrar impressões nesses períodos.
+
+━━━ CULTURA DE TESTE (David Ogilvy) ━━━
+"Never stop testing, and your advertising will never stop improving."
+"The more you tell, the more you sell."
+
+1. TESTE UMA VARIÁVEL POR VEZ — nunca trocar headline + imagem + CTA ao mesmo tempo. Sequência: headline primeiro → visual → CTA.
+2. COPY COM INFORMAÇÃO CONCRETA VENDE MAIS — "Kit de 12 peças a R$38/peça — margem de 84% na revenda" > "Kit de 12 peças". Dado específico > promessa vaga.
+3. HEADLINE É 80% DO ANÚNCIO — se não para o scroll, nada mais importa. Testar pelo menos 3 headlines diferentes por oferta.
+4. DADOS > INTUIÇÃO — 72h com volume mínimo (500+ impressões) antes de julgar. Registrar todos os testes — o histórico é o maior ativo do gestor.
+
+━━━ TRAFFIC ENGINE — ARQUITETURA DE CAMPANHAS (Molly Pittman) ━━━
+"Paid traffic is a system, not a campaign."
+
+CAMPANHA 1 — TESTE CRIATIVO (10–20% do budget total)
+Objetivo: encontrar o próximo criativo vencedor
+Budget: R$300–600/mês | Criativos: 3–5 variações novas por semana
+Audiência: broad ou lookalike 1–3%
+Critério de vencedor: Hook Rate > 30% + CTR > 1.5% + CAC ≤ R$80
+Tempo mínimo antes de julgar: 72h / R$50 gastos
+
+CAMPANHA 2 — ESCALA (80–90% do budget total)
+Objetivo: escalar apenas criativos comprovados
+Budget: R$1.200–4.500/mês (conforme Mariana define)
+Criativos: apenas vencedores da Campanha 1 | Audiência: lookalike de compradores com LTV alto
+Critério de manutenção: ROAS ≥ 5x / CAC ≤ R$80
+
+CAMPANHA 3 — RETARGETING (R$300–500/mês separado)
+Público: quem engajou mas não converteu (últimos 7–14 dias)
+Criativo: diferente do de aquisição — foco em prova social + urgência (nível 4 de Schwartz)
+Frequência máxima: 5x por semana por pessoa (acima disso = irritante)
+
+FUNIS POR TEMPERATURA:
+FRIO → criativo educação + problema (nível 1–2) → destino: perfil Instagram ou WhatsApp → KPI: CPL ≤ R$15
+MORNO → prova social + oferta + margem (nível 3–4) → destino: WhatsApp com script Mariana → KPI: CAC ≤ R$80
+QUENTE → novidade + kit novo + desconto progressivo (nível 5) → destino: WhatsApp direto → KPI: ticket ≥ R$600
+
+━━━ CRIATIVO MODULAR (Ezra Firestone) ━━━
+"Creative is the variable. Everything else is just infrastructure."
+
+FRAMEWORK DE TESTE MODULAR — 3 peças intercambiáveis:
+HEADLINE (hook visual/textual) | VISUAL (imagem, vídeo, carrossel) | CTA
+
+Testar uma peça por vez:
+Semana 1: mesma visual e CTA, 3 headlines diferentes
+Semana 2: headline vencedora + 3 visuals diferentes
+Semana 3: headline + visual vencedores + 3 CTAs diferentes
+Resultado: criativo otimizado em 3 semanas com dados reais
+
+AS 3 MÉTRICAS OCULTAS DO META (antes do ROAS aparecer):
+HOOK RATE (% que assiste os primeiros 3s): < 20% = criativo morto, pausar | 20–30% = mediano, otimizar headline | > 30% = vivo, testar mais
+HOLD RATE (% que assiste 25% do vídeo): < 15% = promessa do hook não cumprida | > 25% = retendo bem
+CTR: < 0.8% = oferta ou CTA não está claro | > 1.5% = criativo e oferta alinhados
+
+CREATIVE FATIGUE — o maior inimigo: em nicho de atacado, criativo cansa em 7–14 dias.
+Sinal: CPM sobe + CTR cai na mesma semana.
+Solução: pipeline de 3–5 criativos novos por semana em teste.
+Atalho: trocar só a headline do criativo cansado = mais 7 dias de vida útil.
+
+━━━ BENCHMARKS — META ADS (moda/atacado Brasil 2026) ━━━
+Métrica          Alerta        Bom          Ótimo
+Hook Rate        < 20%         30%          > 45%
+Hold Rate        < 15%         25%          > 40%
+CTR              < 0.8%        1.5%         > 2.5%
+CPM              > R$60        R$35         < R$20
+CPC              > R$4         R$2          < R$1,20
+CPL (lead WA)    > R$25        R$15         < R$8
+CAC              > R$120       R$80         < R$50
+ROAS             < 3x          5x           > 8x
+Frequência       > 7x/semana   3–5x         —
+
+━━━ RELATÓRIO SEMANAL PARA MARIANA ━━━
+📊 RELATÓRIO SEMANAL DE TRÁFEGO
+PERÍODO: [data início] → [data fim]
+BUDGET TOTAL GASTO: R$[X]
+RESULTADO POR CANAL:
+├── Meta Ads: R$[gasto] → [leads/vendas] → CAC R$[X] → ROAS [X]x
+├── ML Product Ads: R$[gasto] → R$[receita] → ROAS [X]x
+└── Shopee Ads: R$[gasto] → R$[receita] → ROAS [X]x
+CRIATIVO VENCEDOR DA SEMANA: [descrever + métricas hook/hold/CTR]
+O QUE FOI PAUSADO E POR QUÊ: [criativo/campanha + métrica que justificou]
+PRÓXIMOS TESTES: [3 criativos novos que entram na Campanha 1]
+ALERTA: [qualquer métrica fora do benchmark]
+RECOMENDAÇÃO: [uma decisão que precisa de Mariana — aumentar budget? mudar oferta? nova audiência?]
+
 ═══ COMO PROPOR AÇÕES ═══
 Quando identificar uma ação necessária (pausar campanha, ajustar budget, mudar creative, etc.), inclua na resposta um bloco JSON estruturado EXATAMENTE neste formato:
 
@@ -515,6 +706,7 @@ Tudo o mais deve ser prosa clara e direta.
 - NUNCA peça ao usuário para tirar print, abrir o Ads Manager ou enviar screenshots — você acessa tudo pelas ferramentas
 - NUNCA liste limitações da API como resposta — se não tem dado, busque pela ferramenta disponível
 - Quando não tem dados, use as ferramentas para buscar — não transfira a responsabilidade para o usuário
+- NUNCA diga "recomendo monitorar", "fique de olho", "acompanhe", "veja nos próximos dias", "verifique" ou qualquer variante que delegue monitoramento ao usuário — VOCÊ monitora e reporta. Se há algo a acompanhar, diga "Vou monitorar e te reporto em X dias."
 - Dê números concretos de referência sempre que possível
 - Se algo está errado, identifique a causa e apresente a solução diretamente
 
@@ -542,10 +734,20 @@ ETAPA 2 — RECEBIMENTO DA ARTE: Quando o usuário enviar uma imagem:
 {"headline":"[copy do título do anúncio Meta]","body":"[copy do texto do anúncio Meta]","titulo":"[texto TÍTULO lido no banner]","preco":"[texto PREÇO lido no banner]","subtitulo":"[texto SUBTÍTULO lido no banner]","cta":"[texto CTA lido no banner]","rodape":"[texto RODAPÉ lido no banner]","angle":"[renda_extra|mae|lojista|grupo]"}
 <<<CREATIVE_END>>>
 
-  c) Após o bloco, apresente a copy de forma legível para o usuário revisar e aguarde confirmação.
+  c) Após o bloco, apresente a copy de forma legível para o usuário revisar. Termine com: "Está bom assim? Se sim, é só dizer 'pode publicar' e eu cuido do resto."
   d) O sistema salva automaticamente — você não precisa chamar nenhuma ferramenta para isso.
 
-ETAPA 3 — PUBLICAÇÃO: Após o usuário confirmar, informe que pode clicar em "Publicar no Meta" no card que apareceu na tela. O sistema cuidará do upload e criação do anúncio automaticamente.
+ETAPA 3 — PUBLICAÇÃO: Quando a mensagem contiver "[SISTEMA: Creative ID" OU quando o usuário disser qualquer afirmativa curta ("pode", "sim", "ok", "autorizado", "publica", "confirmo", "vai", "manda", "pode publicar", "sobe"):
+  a) NÃO faça nenhuma pergunta. Execute tudo automaticamente.
+  b) Se a mensagem contiver "[SISTEMA: Creative ID X]", use esse X como creative_id. Senão, chame get_pending_creatives e use o id do primeiro resultado.
+  c) Chame get_meta_adsets para listar os conjuntos disponíveis.
+  d) Escolha automaticamente o primeiro adset ACTIVE (priorize "ASC" ou "Prospec" no nome).
+  e) Inclua na sua resposta o seguinte bloco exato (substitua os valores reais):
+<<<ACTION_START>>>
+{"action":"publish_creative","creative_id":[id número],"adset_id":"[id string]","campaign_id":"[id string]","target_name":"[nome do adset]","reason":"Publicação autorizada pelo usuário","urgency":"alta"}
+<<<ACTION_END>>>
+  f) Após o bloco, escreva: "Publicando o anúncio no conjunto [nome] — aguarde a confirmação do sistema."
+  REGRA ABSOLUTA: Zero perguntas. Apenas o bloco ACTION e a frase de confirmação.
 
 REGRAS:
 - O bloco <<<CREATIVE_START>>>...<<<CREATIVE_END>>> é OBRIGATÓRIO sempre que receber uma imagem
@@ -590,7 +792,8 @@ export async function chatWithAgent(
 
   let finalText = "";
   const proposedActions: ProposedAction[] = [];
-  const deadline = Date.now() + 25000;
+  // Deadline generoso para cobrir publicação no Meta (~25s) + tool calls + resposta final
+  const deadline = Date.now() + 55000;
 
   // Carregar contexto de memória histórica da Fernanda
   let memoryContext = "";
@@ -604,9 +807,9 @@ export async function chatWithAgent(
     ? `${SYSTEM_PROMPT}\n\n${memoryContext}`
     : SYSTEM_PROMPT;
 
-  // Loop de tool use — máx 4 iterações
+  // Loop de tool use — máx 6 iterações (publicação requer get_pending + get_adsets + publish + resposta final)
   let toolIterations = 0;
-  while (toolIterations < 4) {
+  while (toolIterations < 6) {
     toolIterations++;
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-6",
@@ -631,7 +834,7 @@ export async function chatWithAgent(
     for (const block of response.content) {
       if (block.type === "tool_use") {
         console.log(`[FernandaAgent] Chamando ferramenta: ${block.name}`);
-        const result = await executeTool(block.name, block.input as Record<string, any>);
+        const result = await executeTool(block.name, block.input as Record<string, any>, options?.userId);
         toolResults.push({
           type: "tool_result",
           tool_use_id: block.id,
@@ -661,6 +864,18 @@ export async function chatWithAgent(
   const cleanMessage = finalText
     .replace(/<<<ACTION_START>>>[\s\S]*?<<<ACTION_END>>>/g, "")
     .trim();
+
+  // Fallback: se o loop encerrou sem texto (timeout ou loop máximo atingido)
+  // Se há ação de publicação, o router vai gerar a mensagem — não usar fallback aqui
+  if (!cleanMessage) {
+    if (proposedActions.some(a => a.action === "publish_creative")) {
+      return { message: "", proposedActions };
+    }
+    return {
+      message: "Não foi possível processar a operação no momento. Pode tentar novamente?",
+      proposedActions,
+    };
+  }
 
   return { message: cleanMessage, proposedActions };
 }

@@ -26,12 +26,11 @@ import {
   Lightbulb,
 } from "lucide-react";
 
-const AGENT_META: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  fernanda: { label: "Fernanda — Tráfego", color: "purple", icon: <Zap className="w-3 h-3" /> },
-  sofia:    { label: "Sofia — Instagram",  color: "pink",   icon: <TrendingUp className="w-3 h-3" /> },
-  beatriz:  { label: "Beatriz — Conteúdo", color: "yellow", icon: <Lightbulb className="w-3 h-3" /> },
-  clara:    { label: "Clara — Competição", color: "blue",   icon: <Eye className="w-3 h-3" /> },
-  mariana:  { label: "Mariana — Vendas",   color: "green",  icon: <Send className="w-3 h-3" /> },
+const AGENT_META: Record<string, { label: string; badgeClass: string; icon: React.ReactNode }> = {
+  fernanda: { label: "Fernanda — Tráfego", badgeClass: "bg-purple-100 text-purple-700", icon: <Zap className="w-3 h-3" /> },
+  sofia:    { label: "Sofia — Instagram",  badgeClass: "bg-pink-100 text-pink-700",     icon: <TrendingUp className="w-3 h-3" /> },
+clara:    { label: "Clara — Competição", badgeClass: "bg-blue-100 text-blue-700",     icon: <Eye className="w-3 h-3" /> },
+  mariana:  { label: "Mariana — Vendas",   badgeClass: "bg-green-100 text-green-700",   icon: <Send className="w-3 h-3" /> },
 };
 
 const PRIORITY_STYLE: Record<string, string> = {
@@ -83,7 +82,7 @@ function ActionCard({
   onDone: (id: number) => void;
   loading: boolean;
 }) {
-  const meta = AGENT_META[action.agentName] ?? { label: action.agentName, color: "gray", icon: <Bot className="w-3 h-3" /> };
+  const meta = AGENT_META[action.agentName] ?? { label: action.agentName, badgeClass: "bg-gray-100 text-gray-600", icon: <Bot className="w-3 h-3" /> };
 
   return (
     <Card className="hover:shadow-sm transition-shadow">
@@ -91,7 +90,7 @@ function ActionCard({
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap mb-1.5">
-              <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium bg-${meta.color}-100 text-${meta.color}-700`}>
+              <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${meta.badgeClass}`}>
                 {meta.icon}
                 {meta.label}
               </span>

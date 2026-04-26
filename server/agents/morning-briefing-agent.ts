@@ -14,7 +14,6 @@
 
 import { runDailyAnalysis } from "./fernanda-daily-agent";
 import { runSofiaAnalysis } from "./sofia-agent";
-import { runBeatrizAnalysis } from "./beatriz-agent";
 import { runClaraAnalysis } from "./clara-agent";
 import { runMarianaAnalysis } from "./mariana-agent";
 import { saveMemory } from "../services/agentMemory";
@@ -63,11 +62,10 @@ export async function runMorningBriefing(): Promise<MorningBriefingResult> {
       throw err;
     });
 
-  const [fernandaResult, sofiaResult, beatrizResult, claraResult, marianaResult] =
+  const [fernandaResult, sofiaResult, claraResult, marianaResult] =
     await Promise.allSettled([
       withTimeout(runDailyAnalysis(), "fernanda"),
       withTimeout(runSofiaAnalysis(), "sofia"),
-      withTimeout(runBeatrizAnalysis(), "beatriz"),
       withTimeout(runClaraAnalysis(), "clara"),
       withTimeout(runMarianaAnalysis(), "mariana"),
     ]);
@@ -106,7 +104,6 @@ export async function runMorningBriefing(): Promise<MorningBriefingResult> {
 
   agents.push(extractBriefing(fernandaResult, "fernanda", "Gestora de Tráfego Meta Ads"));
   agents.push(extractBriefing(sofiaResult, "sofia", "Especialista em Crescimento Instagram"));
-  agents.push(extractBriefing(beatrizResult, "beatriz", "Especialista em Conteúdo e Tendências"));
   agents.push(extractBriefing(claraResult, "clara", "Inteligência Competitiva"));
   agents.push(extractBriefing(marianaResult, "mariana", "Estratégia de Vendas Multicanal"));
 
@@ -126,7 +123,6 @@ export async function runMorningBriefing(): Promise<MorningBriefingResult> {
     const agentResults = [
       { name: "fernanda", result: fernandaResult },
       { name: "sofia", result: sofiaResult },
-      { name: "beatriz", result: beatrizResult },
       { name: "clara", result: claraResult },
       { name: "mariana", result: marianaResult },
     ];

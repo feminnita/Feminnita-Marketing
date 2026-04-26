@@ -1,9 +1,10 @@
 /**
- * Specialist Chat Router — Chat com Sofia, Beatriz, Clara e Mariana
+ * Specialist Chat Router — Chat com Sofia, Clara e Mariana
  */
 
 import { z } from "zod";
 import { router, protectedProcedure } from "../_core/trpc";
+import { textToSpeech } from "../services/tts";
 import { TRPCError } from "@trpc/server";
 import { getDb } from "../db";
 import {
@@ -15,7 +16,7 @@ import { eq, desc, and } from "drizzle-orm";
 import { chatWithSpecialist } from "../agents/specialist-chat-agent";
 import { agentActions } from "../../drizzle/schema";
 
-const VALID_AGENTS = ["sofia", "beatriz", "clara", "mariana"] as const;
+const VALID_AGENTS = ["sofia", "clara", "mariana"] as const;
 type AgentName = typeof VALID_AGENTS[number];
 
 export const specialistChatRouter = router({
@@ -184,5 +185,13 @@ export const specialistChatRouter = router({
         .from(specialistMessages)
         .where(eq(specialistMessages.conversationId, input.conversationId))
         .orderBy(specialistMessages.createdAt);
+    }),
+
+  speak: protectedProcedure
+    .input(z.object({ text: z.string().max(10000), agentName: z.string() }))
+    .mutation(async ({ input }) => {
+      const truncated = input.text.length > 4000 ? input.text.slice(0, 4000) + "…" : input.text;
+      const audioBuffer = await textToSpeech(truncated, input.agentName);
+      return { audioBase64: audioBuffer.toString("base64") };
     }),
 });

@@ -271,7 +271,7 @@ export const creativeAdsRouter = router({
     }
   }),
 
-  // Chat direto com a Beatriz
+  // Chat direto com o agente de criativos
   chat: protectedProcedure
     .input(z.object({
       messages: z.array(z.object({

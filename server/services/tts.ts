@@ -21,13 +21,12 @@ const MODEL_ID = process.env.ELEVENLABS_MODEL_ID || "eleven_flash_v2_5";
 const DEFAULT_VOICE = process.env.ELEVENLABS_VOICE_ID || "EXAVITQu4vr4xnSDxMaL";
 
 const VOICE_MAP: Record<string, string> = {
-  fernanda: DEFAULT_VOICE,
+  fernanda: process.env.ELEVENLABS_VOICE_ID_FERNANDA || DEFAULT_VOICE,
   carol:    process.env.ELEVENLABS_VOICE_ID_CAROL    || DEFAULT_VOICE,
   renata:   process.env.ELEVENLABS_VOICE_ID_RENATA   || DEFAULT_VOICE,
   vanessa:  process.env.ELEVENLABS_VOICE_ID_VANESSA  || DEFAULT_VOICE,
   luiza:    process.env.ELEVENLABS_VOICE_ID_LUIZA    || DEFAULT_VOICE,
   sofia:    process.env.ELEVENLABS_VOICE_ID_SOFIA    || DEFAULT_VOICE,
-  beatriz:  process.env.ELEVENLABS_VOICE_ID_BEATRIZ  || DEFAULT_VOICE,
   clara:    process.env.ELEVENLABS_VOICE_ID_CLARA    || DEFAULT_VOICE,
   mariana:  process.env.ELEVENLABS_VOICE_ID_MARIANA  || DEFAULT_VOICE,
 };

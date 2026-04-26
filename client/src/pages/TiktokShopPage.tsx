@@ -1,12 +1,15 @@
 import { useState, useEffect, useRef } from "react";
+import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import {
+  ArrowLeft,
   Bot,
   CheckCircle,
   ChevronDown,
   ChevronUp,
   Clock,
+  Globe,
   Loader2,
   MessageSquare,
   PlayCircle,
@@ -19,6 +22,9 @@ import {
   Package,
 } from "lucide-react";
 import liaPhoto from "@/assets/lia.jpg";
+
+const BANNER_FROM = "#881337";
+const BANNER_TO = "#9d174d";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -193,16 +199,68 @@ export default function TiktokShopPage() {
     sendMsgMut.mutate({ evaluationId: activeEvalId, message: chatInput.trim() });
   }
 
-  return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6">
+  const [, setLocation] = useLocation();
 
-      {/* ── Persona Card — Lia ── */}
-      <div className="bg-white border border-gray-200 rounded-xl p-5 flex items-center gap-5">
+  return (
+    <div className="flex flex-col min-h-screen bg-slate-50">
+
+      {/* Header */}
+      <header className="flex items-center gap-3 px-4 py-3 bg-white border-b border-slate-200 flex-shrink-0">
+        <button
+          onClick={() => setLocation("/equipe-marketing")}
+          className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-500"
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </button>
         <img
           src={liaPhoto}
           alt="Lia"
-          className="w-24 h-32 rounded-xl object-cover object-top border-2 border-pink-200 shrink-0"
+          className="w-11 h-14 rounded-xl object-cover object-top border border-slate-200 shadow-sm"
         />
+        <div>
+          <h1 className="text-base font-bold text-slate-900">Lia</h1>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+            <span className="text-xs text-emerald-700 font-medium">Online</span>
+            <span className="text-xs text-slate-400 ml-1">· Especialista TikTok Shop</span>
+          </div>
+        </div>
+      </header>
+
+      {/* Banner */}
+      <div
+        className="flex items-stretch flex-shrink-0"
+        style={{ background: `linear-gradient(to right, ${BANNER_FROM}, ${BANNER_TO})` }}
+      >
+        <div className="flex-shrink-0">
+          <img
+            src={liaPhoto}
+            alt="Lia"
+            className="h-44 w-32 object-cover object-top"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+          />
+        </div>
+        <div className="flex flex-col justify-center px-6 py-4 flex-1">
+          <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: "rgba(255,255,255,0.5)" }}>
+            Especialista TikTok Shop
+          </p>
+          <h2 className="text-2xl font-bold text-white leading-tight">Lia</h2>
+          <p className="text-sm mt-1.5 leading-relaxed max-w-lg" style={{ color: "rgba(255,255,255,0.75)" }}>
+            Social commerce · 11 anos em e-commerce de moda · Partner certificada TikTok Shop Academy
+          </p>
+          <div className="flex items-center gap-1.5 mt-3">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
+            <span className="text-xs text-emerald-300 font-medium">Online agora</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Conteúdo */}
+      <div className="flex-1 overflow-y-auto">
+      <div className="max-w-5xl mx-auto p-6 space-y-6">
+
+      {/* ── Info Card — Lia ── */}
+      <div className="bg-white border border-gray-200 rounded-xl p-5 flex items-center gap-5">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
             <h2 className="text-lg font-bold text-gray-900">Lia</h2>
@@ -487,6 +545,8 @@ export default function TiktokShopPage() {
           </button>
         </div>
       )}
+    </div>
+      </div>
     </div>
   );
 }
