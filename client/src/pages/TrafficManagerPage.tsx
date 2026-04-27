@@ -462,7 +462,7 @@ export default function TrafficManagerPage() {
 
   const { data: conversations } = trpc.trafficManager.listConversations.useQuery(
     { limit: 15 },
-    { enabled: showHistory }
+    { enabled: showHistory || showBriefing }
   );
 
   const { data: restoredMessages } = trpc.trafficManager.getMessages.useQuery(
@@ -492,7 +492,7 @@ export default function TrafficManagerPage() {
     if (!restoredMessages || restoredRef.current) return;
     restoredRef.current = true;
     if (restoredMessages.length > 0) {
-      setMessages(restoredMessages.map((m) => ({
+      setMessages(restoredMessages.map((m: { role: string; content: string }) => ({
         role: m.role as "user" | "assistant",
         content: m.content,
       })));
@@ -601,7 +601,7 @@ export default function TrafficManagerPage() {
               <h3 className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-3">
                 Conversas Anteriores
               </h3>
-              {conversations.length === 0 ? (
+              {!conversations || conversations.length === 0 ? (
                 <p className="text-xs text-slate-400">Nenhuma conversa ainda.</p>
               ) : (
                 <div className="space-y-1">
@@ -639,7 +639,7 @@ export default function TrafficManagerPage() {
         <main className="flex-1 flex flex-col overflow-hidden">
 
           {/* ── Retrato da Fernanda ────────────────────────────────────────── */}
-          <div className="flex items-stretch gap-0 bg-gradient-to-r from-rose-900 via-rose-800 to-pink-800 flex-shrink-0">
+          <div className="flex items-stretch gap-0 flex-shrink-0" style={{ background: "linear-gradient(to right, #6B1030, #7B1040)" }}>
             <div className="flex-shrink-0">
               <img
                 src="/agents/fernanda.jpg"

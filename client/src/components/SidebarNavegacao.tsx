@@ -87,6 +87,12 @@ const categorias: Categoria[] = [
       { id: 'briefing', label: 'Briefing Matinal', icon: '☀️', href: '/briefing' },
       { id: 'equipe-marketing', label: 'Equipe de Agentes', icon: '👥', href: '/equipe-marketing' },
       { id: 'fernanda', label: 'Fernanda — Tráfego', icon: '🟣', href: '/gestor-trafego' },
+      { id: 'gabi-ml', label: 'Gabi — ML', icon: '🟡', href: '/ml-gabi' },
+      { id: 'luiza-shopee', label: 'Luiza — Shopee', icon: '🟠', href: '/shopee-luiza' },
+      { id: 'isabela-shein', label: 'Isabela — Shein', icon: '🔴', href: '/shein-isabela' },
+      { id: 'alice-amazon', label: 'Alice — Amazon', icon: '📦', href: '/amazon-alice' },
+      { id: 'duda-tray', label: 'Duda — Tray SEO', icon: '🟤', href: '/duda-seo' },
+      { id: 'any-tray', label: 'Any — Tray Afil.', icon: '🟤', href: '/any-afiliadas' },
       { id: 'sofia', label: 'Sofia — Instagram', icon: '🩷', href: '/agente/sofia' },
 { id: 'clara', label: 'Clara — Inteligência', icon: '🔵', href: '/agente/clara' },
       { id: 'mariana', label: 'Mariana — Vendas', icon: '🟢', href: '/agente/mariana' },
@@ -189,7 +195,7 @@ export default function SidebarNavegacao({ onSelectTab, activeTab }: SidebarNave
           <div className="p-4 border-b border-amber-200">
             <div className="flex items-center justify-between mb-4">
               <div className={`transition-opacity ${isOpen ? 'opacity-100' : 'opacity-0'}`}>
-                <span className="font-bold text-lg" style={{ color: '#8B2635' }}>Feminnita</span>
+                <span className="font-bold text-lg" style={{ color: '#6B1D28' }}>Feminnita</span>
               </div>
               <button
                 onClick={() => setIsOpen(!isOpen)}
@@ -258,7 +264,7 @@ export default function SidebarNavegacao({ onSelectTab, activeTab }: SidebarNave
                             }`}
                             style={{
                               minWidth: 0,
-                              ...(activeTab === aba.id ? { backgroundColor: '#fdf0e8', color: '#8B2635' } : {}),
+                              ...(activeTab === aba.id ? { backgroundColor: '#fdf0e8', color: '#6B1D28' } : {}),
                             }}
                           >
                             <span className="text-sm" style={{ flexShrink: 0 }}>{aba.icon}</span>
