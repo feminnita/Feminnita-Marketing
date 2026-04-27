@@ -96,6 +96,15 @@ interface ChatMessage {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+function toStr(item: any): string {
+  if (typeof item === "string") return item;
+  if (item === null || item === undefined) return "";
+  if (typeof item === "object") {
+    return item.issue || item.summary || item.descricao || item.text || item.message || item.titulo || JSON.stringify(item);
+  }
+  return String(item);
+}
+
 const priorityColors: Record<string, string> = {
   alta: "bg-red-100 text-red-800 border-red-200",
   media: "bg-yellow-100 text-yellow-800 border-yellow-200",
@@ -388,14 +397,14 @@ export default function AdsManagerPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-lg font-bold text-gray-700 flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-[#8B2635]" /> Meta Ads
+            <BarChart3 className="w-5 h-5 text-[#6B1D28]" /> Meta Ads
           </h1>
         </div>
 
         <button
           onClick={() => triggerMut.mutate()}
           disabled={triggerMut.isPending || polling}
-          className="flex items-center gap-2 px-5 py-2.5 bg-[#8B2635] text-white rounded-lg font-medium hover:bg-[#7a1f2d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center gap-2 px-5 py-2.5 bg-[#6B1D28] text-white rounded-lg font-medium hover:bg-[#7a1f2d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {polling ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -409,7 +418,7 @@ export default function AdsManagerPage() {
       {/* ── Fernanda + Chat ── */}
       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
         <div className="flex items-center gap-4 px-5 py-4 border-b border-gray-100" style={{ background: 'linear-gradient(to right, #fff5f6, #fff)' }}>
-          <img src="/agents/fernanda.jpg" alt="Fernanda" className="w-14 h-20 rounded-xl object-cover object-top border-2 shadow-md flex-shrink-0" style={{ borderColor: '#8B2635' }} />
+          <img src="/agents/fernanda.jpg" alt="Fernanda" className="w-14 h-20 rounded-xl object-cover object-top border-2 shadow-md flex-shrink-0" style={{ borderColor: '#6B1D28' }} />
           <div className="flex-1">
             <p className="font-bold text-gray-900 text-lg">Fernanda</p>
             <p className="text-xs text-gray-400 mt-0.5">Especialista Meta Ads · Feminnita</p>
@@ -417,7 +426,7 @@ export default function AdsManagerPage() {
           <button
             onClick={() => triggerMut.mutate()}
             disabled={triggerMut.isPending || polling}
-            className="flex items-center gap-2 px-4 py-2 bg-[#8B2635] text-white rounded-lg font-medium hover:bg-[#7a1f2d] disabled:opacity-50 transition-colors text-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-[#6B1D28] text-white rounded-lg font-medium hover:bg-[#7a1f2d] disabled:opacity-50 transition-colors text-sm"
           >
             {polling ? <Loader2 className="w-4 h-4 animate-spin" /> : <PlayCircle className="w-4 h-4" />}
             {polling ? "Analisando…" : "Avaliar Conta"}
@@ -437,14 +446,14 @@ export default function AdsManagerPage() {
           )}
           {messages.map((msg) => (
             <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div className={`${msg.role === "user" ? "max-w-[60%]" : "max-w-[92%]"} rounded-2xl px-4 py-3 text-base leading-relaxed ${msg.role === "user" ? "bg-[#8B2635] text-white" : "bg-gray-100 text-gray-800"}`}>
+              <div className={`${msg.role === "user" ? "max-w-[60%]" : "max-w-[92%]"} rounded-2xl px-4 py-3 text-base leading-relaxed ${msg.role === "user" ? "bg-[#6B1D28] text-white" : "bg-gray-100 text-gray-800"}`}>
                 {msg.role === "assistant" && (
                   <div className="flex items-center justify-between gap-2 mb-1.5">
                     <span className="flex items-center gap-1.5 text-xs text-gray-500 font-semibold">
                       <img src="/agents/fernanda.jpg" alt="" className="w-5 h-6 rounded object-cover object-top" />
                       Fernanda
                     </span>
-                    <button onClick={() => handleSpeak(msg.id, extractAnalysisText(msg.content))} className="text-[#8B2635] hover:text-[#6d1e2a] transition-colors" title={playingMsgId === msg.id ? "Parar" : "Ouvir"}>
+                    <button onClick={() => handleSpeak(msg.id, extractAnalysisText(msg.content))} className="text-[#6B1D28] hover:text-[#6d1e2a] transition-colors" title={playingMsgId === msg.id ? "Parar" : "Ouvir"}>
                       {playingMsgId === msg.id ? <StopCircle className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                     </button>
                   </div>
@@ -484,9 +493,9 @@ export default function AdsManagerPage() {
               onClick={() => fileInputRef.current?.click()}
               disabled={sendingMsg || !activeEvalId}
               title="Anexar imagem"
-              className="flex items-center gap-1.5 px-3 py-2.5 border border-gray-200 rounded-xl text-gray-500 hover:text-[#8B2635] hover:border-[#8B2635] disabled:opacity-40 transition-colors bg-white text-sm font-medium"
+              className="flex items-center gap-1.5 px-3 py-2.5 border border-gray-200 rounded-xl text-gray-500 hover:text-[#6B1D28] hover:border-[#6B1D28] disabled:opacity-40 transition-colors bg-white text-sm font-medium"
             >
-              {imageBase64 ? <Image className="w-4 h-4 text-[#8B2635]" /> : <Paperclip className="w-4 h-4" />}
+              {imageBase64 ? <Image className="w-4 h-4 text-[#6B1D28]" /> : <Paperclip className="w-4 h-4" />}
               <span>Anexar</span>
             </button>
             <input
@@ -495,10 +504,10 @@ export default function AdsManagerPage() {
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
               placeholder={activeEvalId ? "Pergunte ou anexe uma imagem para análise…" : "Inicie uma avaliação para conversar"}
-              className="flex-1 text-base border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#8B2635]/30 focus:border-[#8B2635] bg-white"
+              className="flex-1 text-base border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#6B1D28]/30 focus:border-[#6B1D28] bg-white"
               disabled={sendingMsg || !activeEvalId}
             />
-            <button onClick={handleSend} disabled={(!chatInput.trim() && !imageBase64) || sendingMsg || !activeEvalId} className="px-4 py-2.5 bg-[#8B2635] text-white rounded-xl hover:bg-[#7a1f2d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            <button onClick={handleSend} disabled={(!chatInput.trim() && !imageBase64) || sendingMsg || !activeEvalId} className="px-4 py-2.5 bg-[#6B1D28] text-white rounded-xl hover:bg-[#7a1f2d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
               <Send className="w-4 h-4" />
             </button>
           </div>
@@ -509,7 +518,7 @@ export default function AdsManagerPage() {
       <div className="bg-white border border-gray-200 rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold text-gray-800 flex items-center gap-2">
-            <Activity className="w-4 h-4 text-[#8B2635]" /> Campanhas ao Vivo
+            <Activity className="w-4 h-4 text-[#6B1D28]" /> Campanhas ao Vivo
             <span className="text-xs font-normal text-gray-400">(últimos 7 dias)</span>
           </h2>
           <button
@@ -559,7 +568,12 @@ export default function AdsManagerPage() {
                   <tr key={c.id} className="hover:bg-gray-50">
                     <td className="py-2.5 pr-4 max-w-[220px]">
                       <p className="font-medium text-gray-800 truncate" title={c.name}>{c.name}</p>
-                      <p className="text-xs text-gray-400">{c.objective}</p>
+                      <p className="text-xs text-gray-400">
+                        {c.objective}
+                        {c.ads?.length > 0 && (
+                          <span className="ml-2 text-blue-500">{c.ads.length} anúncio{c.ads.length !== 1 ? "s" : ""}</span>
+                        )}
+                      </p>
                     </td>
                     <td className="py-2.5 text-center">
                       <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -591,7 +605,7 @@ export default function AdsManagerPage() {
                     }`}>
                       {c.insights && c.insights.cpc > 0 ? `R$ ${c.insights.cpc.toFixed(2)}` : "—"}
                     </td>
-                    <td className="py-2.5 text-right font-semibold text-[#8B2635]">
+                    <td className="py-2.5 text-right font-semibold text-[#6B1D28]">
                       {c.insights ? (c.insights.purchases > 0 ? c.insights.purchases : "0") : "—"}
                     </td>
                   </tr>
@@ -655,7 +669,7 @@ export default function AdsManagerPage() {
                       <p className="text-xs text-gray-500 leading-relaxed">{action.description}</p>
                     )}
                     {action.estimatedImpact && (
-                      <p className="text-xs text-[#8B2635] mt-1 font-medium">{action.estimatedImpact}</p>
+                      <p className="text-xs text-[#6B1D28] mt-1 font-medium">{action.estimatedImpact}</p>
                     )}
                     {/* Copy do anúncio — só aparece em ações de criação de anúncio */}
                     {(() => {
@@ -679,7 +693,7 @@ export default function AdsManagerPage() {
                         onClick={() => executeActionMut.mutate({ actionId: action.id })}
                         disabled={executeActionMut.isPending}
                         title="Aprovar e executar na Meta Ads"
-                        className="flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg bg-[#8B2635] text-white hover:bg-[#7a1f2d] disabled:opacity-50 transition-colors"
+                        className="flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg bg-[#6B1D28] text-white hover:bg-[#7a1f2d] disabled:opacity-50 transition-colors"
                       >
                         {executeActionMut.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
                         Executar
@@ -740,7 +754,7 @@ export default function AdsManagerPage() {
               }}
               className={`w-full text-left p-3 rounded-lg border transition-colors ${
                 activeEvalId === ev.id
-                  ? "border-[#8B2635] bg-rose-50"
+                  ? "border-[#6B1D28] bg-rose-50"
                   : "border-gray-200 hover:border-gray-300 bg-white"
               }`}
             >
@@ -797,7 +811,7 @@ export default function AdsManagerPage() {
               <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-[#8B2635]" /> Resumo
+                    <TrendingUp className="w-5 h-5 text-[#6B1D28]" /> Resumo
                   </h3>
                   <span className="text-xs text-gray-400">{fmtDate(currentEval.completedAt)}</span>
                 </div>
@@ -820,9 +834,20 @@ export default function AdsManagerPage() {
                     {currentEval.rawMetrics.map((c: any) => (
                       <div key={c.id} className="border border-gray-100 rounded-lg p-3">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-sm text-gray-800">{c.name}</span>
+                          <div>
+                            <span className="font-medium text-sm text-gray-800">{c.name}</span>
+                            {c.ads?.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {c.ads.map((ad: any) => (
+                                  <span key={ad.id} className={`text-xs px-1.5 py-0.5 rounded font-medium ${ad.status === "ACTIVE" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-400"}`}>
+                                    {ad.name.length > 30 ? ad.name.slice(0, 30) + "…" : ad.name} · {ad.status === "ACTIVE" ? "ativo" : "pausado"}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                           <span
-                            className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                            className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${
                               c.status === "ACTIVE"
                                 ? "bg-green-100 text-green-700"
                                 : "bg-gray-100 text-gray-500"
@@ -952,13 +977,13 @@ export default function AdsManagerPage() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="font-semibold text-gray-800 flex items-center gap-2 text-lg">
-            <Brain className="w-5 h-5 text-[#8B2635]" />
+            <Brain className="w-5 h-5 text-[#6B1D28]" />
             Histórico de Análises Diárias
           </h2>
           <button
             onClick={() => triggerDailyMut.mutate()}
             disabled={triggerDailyMut.isPending}
-            className="flex items-center gap-2 px-4 py-2 bg-[#8B2635] text-white rounded-lg text-sm font-medium hover:bg-[#7a1f2d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-[#6B1D28] text-white rounded-lg text-sm font-medium hover:bg-[#7a1f2d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {triggerDailyMut.isPending ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -974,9 +999,9 @@ export default function AdsManagerPage() {
           const entry = latestAnalysisQuery.data as AgentMemoryEntry & { contentParsed: DailyAnalysisContent | null };
           const data = entry.contentParsed;
           return (
-            <div className="bg-white border border-[#8B2635]/20 rounded-xl p-5 shadow-sm">
+            <div className="bg-white border border-[#6B1D28]/20 rounded-xl p-5 shadow-sm">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-semibold text-[#8B2635]">
+                <span className="text-sm font-semibold text-[#6B1D28]">
                   Última análise — {entry.period}
                 </span>
                 {data && (
@@ -993,27 +1018,27 @@ export default function AdsManagerPage() {
               {data ? (
                 <div className="space-y-3">
                   <p className="text-sm text-gray-700 leading-relaxed">{data.summary}</p>
-                  {data.highlights.length > 0 && (
+                  {(data.highlights?.length ?? 0) > 0 && (
                     <div>
                       <p className="text-xs font-semibold text-green-700 mb-1">Destaques</p>
                       <ul className="space-y-1">
-                        {data.highlights.map((h, i) => (
+                        {data.highlights?.map((h, i) => (
                           <li key={i} className="text-sm text-green-800 flex items-start gap-2">
                             <CheckCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                            {h}
+                            {toStr(h)}
                           </li>
                         ))}
                       </ul>
                     </div>
                   )}
-                  {data.alerts.length > 0 && (
+                  {(data.alerts?.length ?? 0) > 0 && (
                     <div>
                       <p className="text-xs font-semibold text-orange-700 mb-1">Alertas</p>
                       <ul className="space-y-1">
-                        {data.alerts.map((a, i) => (
+                        {data.alerts?.map((a, i) => (
                           <li key={i} className="text-sm text-orange-800 flex items-start gap-2">
                             <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                            {a}
+                            {toStr(a)}
                           </li>
                         ))}
                       </ul>
@@ -1074,13 +1099,13 @@ export default function AdsManagerPage() {
                   {isOpen && data && (
                     <div className="px-4 pb-4 border-t border-gray-100 space-y-2 pt-3">
                       <p className="text-sm text-gray-700">{data.summary}</p>
-                      {data.recommendations.length > 0 && (
+                      {(data.recommendations?.length ?? 0) > 0 && (
                         <div>
                           <p className="text-xs font-semibold text-gray-500 mb-1">Recomendações</p>
                           <ul className="space-y-1">
-                            {data.recommendations.map((r, i) => (
+                            {data.recommendations?.map((r, i) => (
                               <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
-                                <span className="text-[#8B2635] mt-0.5">→</span> {r}
+                                <span className="text-[#6B1D28] mt-0.5">→</span> {toStr(r)}
                               </li>
                             ))}
                           </ul>
@@ -1335,92 +1360,6 @@ function CreativosSection() {
         )}
       </div>
 
-      {/* Fila de aprovação */}
-      {(pendingQuery.data?.length ?? 0) > 0 && (
-        <div className="bg-white border border-amber-200 rounded-xl p-5 shadow-sm">
-          <h2 className="font-semibold text-gray-800 flex items-center gap-2 text-lg mb-4">
-            <CheckCircle className="w-5 h-5 text-amber-500" />
-            Criativos Aguardando Aprovação
-            <span className="ml-auto text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">
-              {pendingQuery.data!.length}
-            </span>
-          </h2>
-
-          <div className="space-y-4">
-            {pendingQuery.data!.map((c: any) => (
-              <div key={c.id} className="border border-amber-100 rounded-xl p-4 bg-amber-50 space-y-3">
-                <div className="flex items-start gap-3">
-                  {c.imageBase64 && (
-                    <img
-                      src={`data:image/jpeg;base64,${c.imageBase64}`}
-                      alt={c.briefTitle}
-                      className="w-24 h-24 object-cover rounded-lg shrink-0"
-                    />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 text-sm">{c.briefTitle}</p>
-                    {c.generatedHeadline && (
-                      <p className="text-sm text-gray-700 mt-1">
-                        <span className="font-medium text-purple-700">Headline: </span>{c.generatedHeadline}
-                      </p>
-                    )}
-                    {c.generatedBody && (
-                      <p className="text-sm text-gray-600 mt-1">
-                        <span className="font-medium">Copy: </span>{c.generatedBody}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Campos de campanha/conjunto para execução imediata */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">ID da Campanha Meta</label>
-                    <input
-                      className="w-full text-xs border border-gray-200 rounded px-2 py-1.5"
-                      placeholder="ex: 120210123456"
-                      value={approvalFields[c.id]?.campaignId ?? ""}
-                      onChange={e => setApprovalFields(prev => ({ ...prev, [c.id]: { ...prev[c.id], campaignId: e.target.value, adSetId: prev[c.id]?.adSetId ?? "" } }))}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">ID do Conjunto de Anúncios</label>
-                    <input
-                      className="w-full text-xs border border-gray-200 rounded px-2 py-1.5"
-                      placeholder="ex: 120210789012"
-                      value={approvalFields[c.id]?.adSetId ?? ""}
-                      onChange={e => setApprovalFields(prev => ({ ...prev, [c.id]: { ...prev[c.id], adSetId: e.target.value, campaignId: prev[c.id]?.campaignId ?? "" } }))}
-                    />
-                  </div>
-                </div>
-                <p className="text-xs text-gray-400">Com os IDs preenchidos a Fernanda sobe o anúncio agora (PAUSADO). Sem eles, apenas aprova para o próximo ciclo.</p>
-
-                <div className="flex gap-2 justify-end">
-                  <button
-                    onClick={() => rejectMut.mutate({ id: c.id })}
-                    disabled={rejectMut.isPending}
-                    className="flex items-center gap-1.5 px-3 py-1.5 border border-red-200 text-red-600 rounded-lg text-xs font-medium hover:bg-red-50 transition-colors disabled:opacity-50"
-                  >
-                    <ThumbsDown className="w-3.5 h-3.5" /> Rejeitar
-                  </button>
-                  <button
-                    onClick={() => approveMut.mutate({
-                      id: c.id,
-                      campaignId: approvalFields[c.id]?.campaignId || undefined,
-                      adSetId: approvalFields[c.id]?.adSetId || undefined,
-                    })}
-                    disabled={approveMut.isPending}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
-                  >
-                    {approveMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ThumbsUp className="w-3.5 h-3.5" />}
-                    {approvalFields[c.id]?.campaignId && approvalFields[c.id]?.adSetId ? "Aprovar e Subir Agora" : "Aprovar"}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
