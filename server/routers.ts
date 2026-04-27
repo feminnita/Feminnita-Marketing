@@ -97,6 +97,10 @@ import { creativeAdsRouter } from "./routers/creative-ads";
 import { specialistsRouter } from "./routers/specialists";
 import { trayDudaRouter } from "./routers/tray-duda";
 import { trayAnyRouter } from "./routers/tray-any";
+import { mlGabiRouter } from "./routers/ml-gabi";
+import { shopeeLuizaRouter } from "./routers/shopee-luiza";
+import { amazonAliceRouter } from "./routers/amazon-alice";
+import { sheinIsabelaRouter } from "./routers/shein-isabela";
 import { getDb } from "./db";
 import { influencers, influencerPosts } from "../drizzle/schema";
 
@@ -245,6 +249,10 @@ export const appRouter = router({
   specialists: specialistsRouter,
   trayDuda: trayDudaRouter,
   trayAny: trayAnyRouter,
+  mlGabi: mlGabiRouter,
+  shopeeLuiza: shopeeLuizaRouter,
+  amazonAlice: amazonAliceRouter,
+  sheinIsabela: sheinIsabelaRouter,
   influencers: router({
     list: protectedProcedure.query(async ({ ctx }) => {
       try {

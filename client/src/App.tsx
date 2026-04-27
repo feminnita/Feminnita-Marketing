@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import DashboardLayout from "@/components/DashboardLayout";
 import PublicLayout from "@/components/PublicLayout";
 import { Toaster } from "@/components/ui/sonner";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Páginas carregadas imediatamente (rota inicial + login)
 import Home from "@/pages/Home";
@@ -45,6 +46,10 @@ const WhatsAppBaileysSimplePage  = lazy(() => import("./pages/WhatsAppBaileysSim
 const WhatsAppNotificationsPage  = lazy(() => import("./pages/WhatsAppNotificationsPage"));
 const AssetLibraryPage        = lazy(() => import("@/pages/AssetLibraryPage"));
 const TrayDudaPage            = lazy(() => import("@/pages/TrayDudaPage"));
+const MlGabiPage              = lazy(() => import("@/pages/MlGabiPage"));
+const ShopeeLuizaPage         = lazy(() => import("@/pages/ShopeeLuizaPage"));
+const AmazonAlicePage         = lazy(() => import("@/pages/AmazonAlicePage"));
+const SheinIsabelaPage        = lazy(() => import("@/pages/SheinIsabelaPage"));
 const TrayAnyPage             = lazy(() => import("@/pages/TrayAnyPage"));
 const MarketingTeamPage       = lazy(() => import("@/pages/MarketingTeamPage"));
 const AfiliadasPage           = lazy(() => import("@/pages/AfiliadasPage"));
@@ -182,6 +187,14 @@ export default function App() {
         return <AssetLibraryPage />;
       case "/duda-seo":
         return <TrayDudaPage />;
+      case "/ml-gabi":
+        return <MlGabiPage />;
+      case "/shopee-luiza":
+        return <ShopeeLuizaPage />;
+      case "/amazon-alice":
+        return <AmazonAlicePage />;
+      case "/shein-isabela":
+        return <SheinIsabelaPage />;
       case "/any-afiliadas":
         return <TrayAnyPage />;
       case "/equipe-marketing":
@@ -241,9 +254,11 @@ export default function App() {
     return (
       <>
         <PublicLayout>
-          <Suspense fallback={<PageLoader />}>
-            {getPageComponent()}
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense fallback={<PageLoader />}>
+              {getPageComponent()}
+            </Suspense>
+          </ErrorBoundary>
         </PublicLayout>
         <Toaster />
       </>
@@ -253,9 +268,11 @@ export default function App() {
   return (
     <>
       <DashboardLayout>
-        <Suspense fallback={<PageLoader />}>
-          {getPageComponent()}
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<PageLoader />}>
+            {getPageComponent()}
+          </Suspense>
+        </ErrorBoundary>
       </DashboardLayout>
       <Toaster />
     </>

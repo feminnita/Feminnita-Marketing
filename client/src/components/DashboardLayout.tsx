@@ -1,4 +1,5 @@
 import { useAuth } from "@/_core/hooks/useAuth";
+import c4xLogo from "@/assets/c4x-logo.png";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -283,22 +284,22 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
     <>
       <div className="relative" ref={sidebarRef}>
         <Sidebar collapsible="icon" className="border-r-0" disableTransition={isResizing}>
-          <SidebarHeader className="h-16 justify-center">
-            <div className="flex items-center gap-3 px-2 w-full">
+          <SidebarHeader className="justify-center py-3" style={{ overflow: "visible" }}>
+            <div className="flex flex-col gap-2 px-2 w-full" style={{ overflow: "visible" }}>
               <button
                 onClick={toggleSidebar}
-                className="h-8 w-8 flex items-center justify-center hover:bg-accent rounded-lg transition-colors focus:outline-none shrink-0"
+                className="h-7 w-7 flex items-center justify-center hover:bg-accent rounded-lg transition-colors focus:outline-none shrink-0"
               >
                 <PanelLeft className="h-4 w-4 text-muted-foreground" />
               </button>
               {!isCollapsed && (
-                <span
-                  className="font-bold text-lg truncate cursor-pointer hover:opacity-80 transition-opacity"
-                  style={{ color: '#FAF6EE' }}
+                <img
+                  src={c4xLogo}
+                  alt="C4X Soluções IA"
+                  className="w-full cursor-pointer hover:opacity-80 transition-opacity object-contain"
+                  style={{ height: "215px" }}
                   onClick={() => setLocation("/")}
-                >
-                  Feminnita
-                </span>
+                />
               )}
             </div>
           </SidebarHeader>
@@ -320,13 +321,8 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
-                  <SidebarMenuSubButton onClick={() => setLocation("/blog-influencers")}>
-                    <BookOpen className="h-3 w-3" /> Blog Geral
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-                <SidebarMenuSubItem>
                   <SidebarMenuSubButton onClick={() => setLocation("/blog-publico")}>
-                    <Newspaper className="h-3 w-3" /> Blogs Públicos
+                    <Newspaper className="h-3 w-3" /> Blog Feminnita
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
               </CollapsibleGroup>
@@ -523,6 +519,11 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                 <SidebarMenuSubItem>
                   <SidebarMenuSubButton onClick={() => setLocation("/amazon-alice")}>
                     <ShoppingBag className="h-3 w-3" /> Amazon — Alice Ads
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/shein-isabela")}>
+                    <ShoppingBag className="h-3 w-3" /> Shein — Isabela
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
               </CollapsibleGroup>
