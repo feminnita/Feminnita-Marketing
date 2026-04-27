@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2, Send } from "lucide-react";
+import isabelaPhoto from "@/assets/isabela-shein.jpg";
 
 interface Message {
   role: "user" | "assistant";
@@ -96,12 +97,11 @@ export default function SheinIsabelaPage() {
         </button>
 
         {/* Avatar */}
-        <div
-          className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
-          style={{ background: SHEIN_PINK }}
-        >
-          IS
-        </div>
+        <img
+          src={isabelaPhoto}
+          alt="Isabela"
+          className="w-10 h-10 rounded-full object-cover shrink-0"
+        />
 
         <div className="flex-1 min-w-0">
           <div className="font-semibold text-slate-800 text-sm">Isabela</div>
@@ -155,12 +155,11 @@ export default function SheinIsabelaPage() {
         ))}
         {isLoading && (
           <div className="flex gap-3 justify-start">
-            <div
-              className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 mt-0.5"
-              style={{ background: SHEIN_PINK }}
-            >
-              IS
-            </div>
+            <img
+              src={isabelaPhoto}
+              alt="Isabela"
+              className="w-7 h-7 rounded-full object-cover shrink-0 mt-0.5"
+            />
             <div className="bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
               <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
             </div>
