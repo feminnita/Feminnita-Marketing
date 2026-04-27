@@ -23,6 +23,7 @@ interface CampaignRaw {
   id: string;
   name: string;
   status: string;
+  effective_status?: string;
   objective: string;
   daily_budget?: string;
   lifetime_budget?: string;
@@ -42,12 +43,21 @@ interface InsightRaw {
   date_stop?: string;
 }
 
+interface AdRaw {
+  id: string;
+  name: string;
+  status: string;
+  created_time?: string;
+}
+
 interface CampaignData {
   id: string;
   name: string;
   status: string;
+  effectiveStatus?: string;
   objective: string;
   dailyBudget: number;
+  ads?: Array<{ id: string; name: string; status: string }>;
   insights: {
     period: string;
     impressions: number;
@@ -94,7 +104,7 @@ export interface AdsEvaluationResult {
 async function fetchCampaigns(): Promise<CampaignRaw[]> {
   const url =
     `${GRAPH_BASE}/${AD_ACCOUNT_ID}/campaigns` +
-    `?fields=id,name,status,objective,daily_budget,lifetime_budget,created_time` +
+    `?fields=id,name,status,effective_status,objective,daily_budget,lifetime_budget,created_time` +
     `&limit=50` +
     `&access_token=${META_TOKEN}`;
 
@@ -108,6 +118,18 @@ async function fetchCampaigns(): Promise<CampaignRaw[]> {
   return data.data || [];
 }
 
+async function fetchWithTimeout(url: string, timeoutMs = 8000): Promise<any> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    const data = await res.json();
+    return { ok: res.ok, data };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function fetchInsights(campaignId: string): Promise<InsightRaw | null> {
   const url =
     `${GRAPH_BASE}/${campaignId}/insights` +
@@ -115,15 +137,37 @@ async function fetchInsights(campaignId: string): Promise<InsightRaw | null> {
     `&date_preset=last_7d` +
     `&access_token=${META_TOKEN}`;
 
-  const res = await fetch(url);
-  const data = await res.json();
-
-  if (!res.ok || data.error) {
-    console.warn(`[AdsManager] Insights indisponíveis para campanha ${campaignId}: ${data.error?.message}`);
+  try {
+    const { ok, data } = await fetchWithTimeout(url);
+    if (!ok || data.error) {
+      console.warn(`[AdsManager] Insights indisponíveis para campanha ${campaignId}: ${data.error?.message}`);
+      return null;
+    }
+    return data.data?.[0] || null;
+  } catch (err: any) {
+    console.warn(`[AdsManager] Timeout/erro em insights ${campaignId}: ${err.message}`);
     return null;
   }
+}
 
-  return data.data?.[0] || null;
+async function fetchAds(campaignId: string): Promise<AdRaw[]> {
+  const url =
+    `${GRAPH_BASE}/${campaignId}/ads` +
+    `?fields=id,name,status,created_time` +
+    `&limit=50` +
+    `&access_token=${META_TOKEN}`;
+
+  try {
+    const { ok, data } = await fetchWithTimeout(url);
+    if (!ok || data.error) {
+      console.warn(`[AdsManager] Ads indisponíveis para campanha ${campaignId}: ${data.error?.message}`);
+      return [];
+    }
+    return data.data || [];
+  } catch (err: any) {
+    console.warn(`[AdsManager] Timeout/erro em ads ${campaignId}: ${err.message}`);
+    return [];
+  }
 }
 
 function parseInsights(raw: InsightRaw | null): CampaignData["insights"] {
@@ -155,22 +199,26 @@ function parseInsights(raw: InsightRaw | null): CampaignData["insights"] {
 
 // ─── Coleta completa ──────────────────────────────────────────────────────────
 
-export async function collectAdsData(): Promise<{ campaigns: CampaignData[]; adAccountId: string }> {
+export async function collectAdsData(includeAds = false): Promise<{ campaigns: CampaignData[]; adAccountId: string }> {
   const rawCampaigns = await fetchCampaigns();
 
-  const campaigns: CampaignData[] = [];
-
-  for (const c of rawCampaigns) {
-    const rawInsights = await fetchInsights(c.id);
-    campaigns.push({
+  // Busca insights (e ads) de todas as campanhas em paralelo
+  const campaigns = await Promise.all(rawCampaigns.map(async (c) => {
+    const [rawInsights, rawAds] = await Promise.all([
+      fetchInsights(c.id),
+      includeAds ? fetchAds(c.id) : Promise.resolve([]),
+    ]);
+    return {
       id: c.id,
       name: c.name,
       status: c.status,
       objective: c.objective,
       dailyBudget: c.daily_budget ? parseFloat(c.daily_budget) / 100 : 0,
+      effectiveStatus: c.effective_status,
+      ads: rawAds.length > 0 ? rawAds.map((a) => ({ id: a.id, name: a.name, status: a.status })) : undefined,
       insights: parseInsights(rawInsights),
-    });
-  }
+    };
+  }));
 
   return { campaigns, adAccountId: AD_ACCOUNT_ID };
 }
@@ -380,12 +428,42 @@ export async function analyzeWithLLM(
 ): Promise<Pick<AdsEvaluationResult, "analysis" | "recommendations" | "summary" | "creativeBriefs">> {
   const dataStr = JSON.stringify(campaigns, null, 2);
 
+  // Resumo legível dos anúncios por campanha para o LLM não ignorar
+  const adsSummary = campaigns.map(c => {
+    const effLabel = c.effectiveStatus && c.effectiveStatus !== c.status
+      ? ` | effective_status: ${c.effectiveStatus}`
+      : "";
+    const adsList = c.ads && c.ads.length > 0
+      ? c.ads.map(a => `    • [${a.status}] ${a.name} (ID: ${a.id})`).join("\n")
+      : "    (nenhum anúncio encontrado nesta busca)";
+    return `Campanha: ${c.name} [status: ${c.status}${effLabel}]\n  Anúncios (${c.ads?.length ?? 0}):\n${adsList}`;
+  }).join("\n\n");
+
   const result = await invokeLLM({
     messages: [
       { role: "system", content: SYSTEM_PROMPT },
       {
         role: "user",
-        content: `Avalie o estado atual da conta Meta Ads com os dados abaixo e gere o relatório completo.\n\nDados das campanhas:\n${dataStr}`,
+        content: `Avalie o estado atual da conta Meta Ads com os dados abaixo e gere o relatório completo.
+
+REGRA CRÍTICA SOBRE STATUS:
+- O campo "status" é o status da CAMPANHA em si (ACTIVE, PAUSED).
+- O campo "effective_status" considera também status de níveis superiores (conta, carteira).
+- Um anúncio individual com status PAUSED NÃO SIGNIFICA que a campanha está pausada.
+- Uma campanha pode estar ACTIVE mesmo que alguns anúncios dentro dela estejam PAUSED.
+- Nunca diga que uma campanha está pausada baseado no status dos anúncios dentro dela.
+- Se uma campanha tem status ACTIVE, diga claramente que ela está ATIVA, mesmo que haja anúncios PAUSED dentro.
+
+ATENÇÃO: Os dados incluem os anúncios individuais dentro de cada campanha. Na sua análise, liste explicitamente:
+1. O status de cada CAMPANHA (ACTIVE ou PAUSED)
+2. Quantos anúncios existem por campanha e quais estão ACTIVE vs PAUSED
+Não confunda o status da campanha com o status dos anúncios dentro dela.
+
+━━━ ANÚNCIOS POR CAMPANHA ━━━
+${adsSummary}
+
+━━━ DADOS COMPLETOS (campanhas + métricas) ━━━
+${dataStr}`,
       },
     ],
     outputSchema: {
@@ -467,6 +545,8 @@ import {
   resumeCampaign,
   pauseAdset,
   resumeAdset,
+  pauseAd,
+  resumeAd,
   updateCampaignBudget,
   updateAdsetBudget,
 } from "../services/meta-ads-service";
@@ -568,6 +648,30 @@ const CHAT_TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "pause_ad",
+    description: "Pausa um anúncio individual dentro de um conjunto de anúncios.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        ad_id: { type: "string", description: "ID do anúncio a pausar" },
+        ad_name: { type: "string", description: "Nome do anúncio (para log)" },
+      },
+      required: ["ad_id"],
+    },
+  },
+  {
+    name: "resume_ad",
+    description: "Reativa um anúncio individual pausado dentro de um conjunto de anúncios.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        ad_id: { type: "string", description: "ID do anúncio a reativar" },
+        ad_name: { type: "string", description: "Nome do anúncio (para log)" },
+      },
+      required: ["ad_id"],
+    },
+  },
+  {
     name: "update_campaign_budget",
     description: "Atualiza o budget diário de uma campanha (CBO). Valor em reais — ex: 50 para R$50/dia.",
     input_schema: {
@@ -621,7 +725,10 @@ async function executeChatTool(name: string, input: Record<string, any>): Promis
         const purchaseAction = (ins.actions || []).find((a: any) => a.action_type === "purchase" || a.action_type === "omni_purchase");
         const revenue = purchaseAction ? parseFloat(purchaseAction.value) : 0;
         return {
-          id: c.id, name: c.name, status: c.status, objective: c.objective,
+          id: c.id, name: c.name,
+          status: c.status,
+          status_note: c.status === "ACTIVE" ? "CAMPANHA ATIVA" : "CAMPANHA PAUSADA",
+          objective: c.objective,
           spend: `R$${spend.toFixed(2)}`,
           roas: spend > 0 && revenue > 0 ? (revenue / spend).toFixed(2) + "x" : "N/D",
           cpm: ins.cpm ? `R$${parseFloat(ins.cpm).toFixed(2)}` : "N/D",
@@ -674,6 +781,14 @@ async function executeChatTool(name: string, input: Record<string, any>): Promis
       await resumeAdset(input.adset_id);
       return JSON.stringify({ success: true, message: `Adset ${input.adset_id} reativado.` });
     }
+    if (name === "pause_ad") {
+      await pauseAd(input.ad_id);
+      return JSON.stringify({ success: true, message: `Anúncio ${input.ad_name || input.ad_id} pausado.` });
+    }
+    if (name === "resume_ad") {
+      await resumeAd(input.ad_id);
+      return JSON.stringify({ success: true, message: `Anúncio ${input.ad_name || input.ad_id} reativado.` });
+    }
     if (name === "update_campaign_budget") {
       const cents = Math.round(input.daily_budget_brl * 100);
       await updateCampaignBudget(input.campaign_id, cents);
@@ -707,6 +822,13 @@ CONTEXTO DESTA CONVERSA: Você acabou de analisar a conta. Dados da avaliação:
 ${rawMetrics}
 
 FERRAMENTAS DISPONÍVEIS: Você tem acesso direto à Meta Ads API. Use as ferramentas para buscar dados atualizados, executar ações (pausar, reativar, alterar budget) sem pedir permissão ao usuário para ações que você já diagnosticou como necessárias. Quando o usuário pedir uma ação, execute-a diretamente usando a ferramenta correta.
+
+REGRA CRÍTICA SOBRE STATUS DE CAMPANHAS:
+- Uma campanha com status ACTIVE está ATIVA — mesmo que os anúncios dentro dela estejam PAUSED.
+- Um anúncio PAUSED dentro de uma campanha ACTIVE não significa que a campanha está pausada.
+- Nunca afirme que uma campanha está pausada baseado no status dos anúncios internos.
+- Para verificar o status real de campanhas, use a ferramenta get_meta_campaigns.
+- Para verificar o status dos anúncios individuais dentro de uma campanha, use get_meta_ads.
 
 REGRAS CRÍTICAS:
 1. Português brasileiro claro e acessível. Sem gírias, sem tecnicismos desnecessários, sem siglas sem explicação.
@@ -816,8 +938,20 @@ export async function runAdsEvaluation(evaluationId: number): Promise<void> {
       return;
     }
 
-    const { campaigns, adAccountId } = await collectAdsData();
-    const llmResult = await analyzeWithLLM(campaigns);
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Avaliação excedeu 90 segundos — Meta API ou LLM lento")), 90_000)
+    );
+
+    const { campaigns, adAccountId } = await Promise.race([
+      collectAdsData(true),
+      timeoutPromise,
+    ]);
+    const llmResult = await Promise.race([
+      analyzeWithLLM(campaigns),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("LLM não respondeu em 60 segundos")), 60_000)
+      ),
+    ]);
 
     await db
       .update(adsEvaluations)

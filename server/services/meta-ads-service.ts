@@ -122,15 +122,16 @@ export async function fetchMetaAdsData(): Promise<MetaAccountData> {
   }
 }
 
-export async function fetchMetaCampaignsList(): Promise<{ id: string; name: string; status: string; objective: string }[]> {
+export async function fetchMetaCampaignsList(): Promise<{ id: string; name: string; status: string; effectiveStatus: string; objective: string }[]> {
   const data = await metaGet(`/${META_ACCOUNT}/campaigns`, {
-    fields: "id,name,status,objective",
+    fields: "id,name,status,effective_status,objective",
     limit: "30",
   });
   return (data.data || []).map((c: any) => ({
     id: c.id,
     name: c.name,
     status: c.status,
+    effectiveStatus: c.effective_status || c.status,
     objective: c.objective,
   }));
 }
@@ -317,5 +318,15 @@ export async function updateCampaignBudget(
   dailyBudgetCents: number
 ): Promise<{ success: boolean }> {
   await metaPost(`/${campaignId}`, { daily_budget: String(dailyBudgetCents) });
+  return { success: true };
+}
+
+export async function pauseAd(adId: string): Promise<{ success: boolean }> {
+  await metaPost(`/${adId}`, { status: "PAUSED" });
+  return { success: true };
+}
+
+export async function resumeAd(adId: string): Promise<{ success: boolean }> {
+  await metaPost(`/${adId}`, { status: "ACTIVE" });
   return { success: true };
 }
