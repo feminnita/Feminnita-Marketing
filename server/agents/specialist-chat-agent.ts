@@ -121,6 +121,7 @@ const FERNANDA_META_TOOLS: Anthropic.Tool[] = [
 async function fetchMetaCampaigns(): Promise<string> {
   const token = process.env.META_SYSTEM_USER_TOKEN || process.env.META_ACCESS_TOKEN || "";
   const accountId = process.env.META_AD_ACCOUNT_ID || "act_231648936319132";
+  console.log(`[FernandaMeta] fetchMetaCampaigns — token length: ${token.length}, account: ${accountId}`);
   if (!token) return "Erro: META_ACCESS_TOKEN não configurado no servidor.";
 
   try {
@@ -128,6 +129,7 @@ async function fetchMetaCampaigns(): Promise<string> {
     const url = `https://graph.facebook.com/v20.0/${accountId}/campaigns?fields=${fields}&date_preset=last_30d&access_token=${token}`;
     const res = await fetch(url);
     const data = await res.json() as any;
+    console.log(`[FernandaMeta] Resposta API: ${JSON.stringify(data).slice(0, 200)}`);
     if (data.error) return `Erro Meta API: ${data.error.message} (código ${data.error.code})`;
 
     const campaigns: any[] = data.data || [];
@@ -834,6 +836,7 @@ export async function chatWithSpecialist(
   userMessage: string,
   conversationHistory: Array<{ role: "user" | "assistant"; content: string }>
 ): Promise<SpecialistChatResponse> {
+  console.log(`[SpecialistChat] agente=${agentName} msg="${userMessage.slice(0, 60)}"`);
   const systemPrompt = SYSTEM_PROMPTS[agentName];
   if (!systemPrompt) {
     throw new Error(`Agente "${agentName}" não reconhecido`);
