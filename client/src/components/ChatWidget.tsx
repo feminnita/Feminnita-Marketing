@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { ChevronLeft, Clock, Loader2, MessageCircle, Send, Users, X } from "lucide-react";
+import { ChevronLeft, Clock, FileText, Loader2, MessageCircle, Paperclip, Send, Users, X } from "lucide-react";
 
 // ─── Push helpers ─────────────────────────────────────────────────────────────
 
@@ -89,8 +89,12 @@ export default function ChatWidget() {
   const contactRef = useRef<Contact | null>(null);
   const bottomRef  = useRef<HTMLDivElement>(null);
 
+  const fileRef           = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
   const chatMutation      = trpc.specialistChat.chat.useMutation();
   const taskMutation      = trpc.agentTasks.submit.useMutation();
+  const uploadMutation    = trpc.chatUpload.upload.useMutation();
   const vapidQuery        = trpc.pushSubscriptions.vapidPublicKey.useQuery(undefined, { staleTime: Infinity });
   const subscribeMutation = trpc.pushSubscriptions.subscribe.useMutation();
   const teamQuery         = trpc.users.list.useQuery(undefined, { staleTime: 60_000 });
@@ -226,6 +230,48 @@ export default function ChatWidget() {
     }
   }
 
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !contact) return;
+    if (file.size > 10 * 1024 * 1024) { alert("Arquivo muito grande (máx 10MB)"); return; }
+    setUploading(true);
+    try {
+      const base64 = await new Promise<string>((res, rej) => {
+        const reader = new FileReader();
+        reader.onload = () => res((reader.result as string).split(",")[1]);
+        reader.onerror = rej;
+        reader.readAsDataURL(file);
+      });
+      const result = await uploadMutation.mutateAsync({ fileName: file.name, mimeType: file.type, fileData: base64 });
+      const fileMsg = JSON.stringify({ _type: "file", url: result.url, name: result.fileName, mime: result.mimeType });
+      if (contact.kind === "group" && socketRef.current && connected) {
+        socketRef.current.emit("chat:send", fileMsg);
+      } else if (contact.kind === "human" && socketRef.current && connected) {
+        const tid = contact.id as number;
+        setDmMsgs(prev => ({ ...prev, [tid]: [...(prev[tid] ?? []), { role: "sent", text: fileMsg, ts: Date.now() }] }));
+        socketRef.current.emit("dm:send", { toUserId: tid, text: fileMsg });
+      }
+    } catch { alert("Erro ao enviar arquivo"); }
+    finally { setUploading(false); if (fileRef.current) fileRef.current.value = ""; }
+  }
+
+  function renderMsgText(text: string) {
+    try {
+      const p = JSON.parse(text);
+      if (p._type === "file") {
+        const isImg = p.mime?.startsWith("image/");
+        if (isImg) return <img src={p.url} alt={p.name} style={{ maxWidth: "100%", maxHeight: 200, borderRadius: 6, marginTop: 4, display: "block" }} />;
+        return (
+          <a href={p.url} target="_blank" rel="noreferrer" download={p.name}
+            style={{ display: "flex", alignItems: "center", gap: 6, color: "#93c5fd", fontSize: 12, marginTop: 4 }}>
+            <FileText size={14} /> {p.name}
+          </a>
+        );
+      }
+    } catch {}
+    return text;
+  }
+
   function handleToggle() {
     const newOpen = !open;
     setOpen(newOpen);
@@ -345,7 +391,7 @@ export default function ChatWidget() {
                             <span style={{ fontSize: 12, fontWeight: 600, color: isMe ? "#8B2635" : (m.color ?? "#94a3b8") }}>{m.name}{isMe ? " (você)" : ""}</span>
                             <span style={{ fontSize: 10, color: "#475569" }}>{new Date(m.ts).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
                           </div>}
-                          <div style={{ fontSize: 13, lineHeight: 1.55, color: "#e2e8f0", wordBreak: "break-word" }}>{m.text}</div>
+                          <div style={{ fontSize: 13, lineHeight: 1.55, color: "#e2e8f0", wordBreak: "break-word" }}>{renderMsgText(m.text)}</div>
                         </div>
                       );
                     })}
@@ -392,7 +438,7 @@ export default function ChatWidget() {
                         <div key={i} style={{ marginTop: 8, display: "flex", flexDirection: isMe ? "row-reverse" : "row", alignItems: "flex-start", gap: 6 }}>
                           {!isMe && <Avatar c={contact} size={26} />}
                           <div style={{ maxWidth: "78%", background: isMe ? "#8B2635" : "#1a2f48", borderRadius: isMe ? "12px 12px 2px 12px" : "12px 12px 12px 2px", padding: "8px 11px" }}>
-                            <div style={{ fontSize: 12.5, lineHeight: 1.6, color: "#e2e8f0", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{m.text}</div>
+                            <div style={{ fontSize: 12.5, lineHeight: 1.6, color: "#e2e8f0", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{renderMsgText(m.text)}</div>
                             <div style={{ fontSize: 10, color: "rgba(255,255,255,.35)", marginTop: 4, textAlign: isMe ? "right" : "left" }}>{new Date(m.ts).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div>
                           </div>
                         </div>
@@ -406,7 +452,15 @@ export default function ChatWidget() {
 
               {/* Input */}
               <div style={{ padding: "8px 10px", borderTop: "1px solid #334155", display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
+                <input ref={fileRef} type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip" style={{ display: "none" }} onChange={handleFileSelect} />
                 <div style={{ display: "flex", gap: 6 }}>
+                  {(contact.kind === "group" || contact.kind === "human") && (
+                    <button onClick={() => fileRef.current?.click()} disabled={uploading || !connected}
+                      style={{ padding: "8px 10px", background: "#1e293b", border: "1px solid #334155", borderRadius: 8, cursor: "pointer", display: "flex", alignItems: "center", color: uploading ? "#f59e0b" : "#94a3b8", flexShrink: 0 }}
+                      title="Enviar arquivo">
+                      {uploading ? <Loader2 size={14} className="animate-spin" /> : <Paperclip size={14} />}
+                    </button>
+                  )}
                   <input
                     value={input}
                     onChange={e => setInput(e.target.value)}
