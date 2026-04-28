@@ -96,7 +96,14 @@ export const publicBlogsRouter = router({
       if (!db) return [];
 
       const allInfluencers = await db.select().from(influencers);
-      return allInfluencers;
+      // Deduplicar por nome (mantém o primeiro registro de cada nome)
+      const seen = new Set<string>();
+      return allInfluencers.filter((inf: any) => {
+        const key = (inf.name || "").toLowerCase().trim();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
     } catch (error) {
       console.error("[Public Blogs] Erro ao listar influencers:", error);
       return [];
