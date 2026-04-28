@@ -141,24 +141,25 @@ export function registerMLOAuthRoutes(app: Express) {
     const results: any[] = [];
 
     const urls = [
+      `https://api.mercadolibre.com/advertising/advertisers`,
+      `https://api.mercadolibre.com/advertising/advertisers?user_id=${userId}`,
+      `https://api.mercadolibre.com/advertising`,
+      `https://api.mercadolibre.com/users/${userId}/advertising_accounts`,
       `https://api.mercadolibre.com/advertising/advertisers/${userId}/campaigns`,
       `https://api.mercadolibre.com/advertising/advertisers/${userId}`,
-      `https://api.mercadolibre.com/advertising/advertisers/${userId}/ad_groups`,
       `https://api.mercadolibre.com/users/${userId}/advertising`,
-      `https://api.mercadolibre.com/advertising/advertisers/${userId}/product_ads`,
-      `https://api.mercadolibre.com/advertising/advertisers/${userId}/campaigns?limit=10&offset=0`,
     ];
 
     for (const url of urls) {
       try {
-        const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+        const r = await fetch(url, { headers: { Authorization: `Bearer ${token}`, "x-format-new": "true" } });
         const body = await r.json();
         results.push({ url, status: r.status, body });
       } catch (e: any) {
         results.push({ url, error: e.message });
       }
     }
-    return res.json({ userId, results });
+    return res.json({ userId, tokenLength: token.length, results });
   });
 
 
