@@ -104,7 +104,7 @@ export default function ChatWidget() {
       kind: "human" as ContactKind,
       id: u.id,
       name: u.name || u.email,
-      role: "Equipe",
+      role: u.email,
       photo: "",
       color: "#6B1D28",
     })),
