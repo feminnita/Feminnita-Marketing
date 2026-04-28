@@ -70,6 +70,7 @@ const SpecialistsPage         = lazy(() => import("@/pages/SpecialistsPage"));
 const PublicInfluencerBlog    = lazy(() => import("@/pages/PublicInfluencerBlog"));
 const MorningBriefingPage     = lazy(() => import("@/pages/MorningBriefingPage"));
 const TiktokAgentPage         = lazy(() => import("@/pages/TiktokAgentPage"));
+const ChatPage                = lazy(() => import("@/pages/ChatPage"));
 
 function PageLoader() {
   return (
@@ -84,6 +85,15 @@ function PageLoader() {
 
 export default function App() {
   const [location] = useLocation();
+
+  // Rota de chat popup (sem sidebar)
+  if (location === "/chat") {
+    return (
+      <Suspense fallback={<div style={{ height: "100vh", background: "#0f172a" }} />}>
+        <ChatPage />
+      </Suspense>
+    );
+  }
 
   // Rotas de autenticação (sem layout)
   if (location === "/login" || location === "/signup") {
