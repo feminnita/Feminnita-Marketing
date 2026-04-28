@@ -107,3 +107,75 @@ export async function updateMLStock(itemId: string, quantity: number, account = 
   await mlPut(`/items/${itemId}`, { available_quantity: quantity }, token);
   return `Estoque do anúncio ${itemId} atualizado para ${quantity} unidades.`;
 }
+
+export async function getMLItemDetails(itemId: string, account = "feminnita"): Promise<string> {
+  const token = getMLToken(account);
+  if (!token) throw new Error("ML_ACCESS_TOKEN não configurado no servidor");
+  console.log(`[GabiML] getMLItemDetails — ${itemId} (${account})`);
+
+  const [item, description] = await Promise.all([
+    mlGet(`/items/${itemId}`, token),
+    mlGet(`/items/${itemId}/description`, token).catch(() => null),
+  ]);
+
+  const attrs = (item.attributes || []).map((a: any) =>
+    `  • ${a.name}: ${Array.isArray(a.values) ? a.values.map((v: any) => v.name).join(", ") : (a.value_name || "—")}`
+  ).join("\n");
+
+  const missing = (item.attributes || []).filter((a: any) =>
+    (!a.values || a.values.length === 0) && (!a.value_name)
+  ).map((a: any) => a.name);
+
+  return [
+    `ANÚNCIO: ${itemId}`,
+    `Título: ${item.title}`,
+    `Status: ${item.status} | Tipo: ${item.listing_type_id}`,
+    `Preço: R$${item.price} | Estoque: ${item.available_quantity}`,
+    `Categoria: ${item.category_id}`,
+    `Health: ${item.health ?? "N/A"}`,
+    ``,
+    `ATRIBUTOS PREENCHIDOS (${(item.attributes || []).length}):`,
+    attrs || "  Nenhum",
+    ``,
+    missing.length > 0 ? `⚠️ ATRIBUTOS VAZIOS (${missing.length}): ${missing.join(", ")}` : "✅ Todos os atributos preenchidos",
+    description?.plain_text ? `\nDESCRIÇÃO: ${description.plain_text.slice(0, 300)}...` : "",
+  ].join("\n");
+}
+
+export async function getMLCategoryAttributes(categoryId: string, account = "feminnita"): Promise<string> {
+  const token = getMLToken(account);
+  if (!token) throw new Error("ML_ACCESS_TOKEN não configurado no servidor");
+  console.log(`[GabiML] getMLCategoryAttributes — ${categoryId}`);
+
+  const data = await mlGet(`/categories/${categoryId}/attributes`, token);
+  const required = (data as any[]).filter((a: any) => a.tags?.required);
+  const recommended = (data as any[]).filter((a: any) => !a.tags?.required && a.tags?.catalog_required);
+
+  const fmt = (attrs: any[]) => attrs.map((a: any) => {
+    const values = a.values?.map((v: any) => v.name).slice(0, 5).join(", ");
+    return `  • ${a.name} (${a.id})${values ? ` → opções: ${values}` : ""}`;
+  }).join("\n");
+
+  return [
+    `CATEGORIA: ${categoryId}`,
+    ``,
+    `OBRIGATÓRIOS (${required.length}):`,
+    fmt(required) || "  Nenhum",
+    ``,
+    `RECOMENDADOS CATÁLOGO (${recommended.length}):`,
+    fmt(recommended) || "  Nenhum",
+  ].join("\n");
+}
+
+export async function updateMLItemAttributes(
+  itemId: string,
+  attributes: Array<{ id: string; value_name: string }>,
+  account = "feminnita"
+): Promise<string> {
+  const token = getMLToken(account);
+  if (!token) throw new Error("ML_ACCESS_TOKEN não configurado no servidor");
+  console.log(`[GabiML] updateMLItemAttributes — ${itemId} attrs=${attributes.length} (${account})`);
+  await mlPut(`/items/${itemId}`, { attributes }, token);
+  const names = attributes.map(a => `${a.id}="${a.value_name}"`).join(", ");
+  return `Atributos de ${itemId} atualizados: ${names}`;
+}

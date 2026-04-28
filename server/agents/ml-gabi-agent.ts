@@ -8,7 +8,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { invokeLLM } from "../_core/llm";
 import { buildMemoryContext, saveMemory } from "../services/agentMemory";
 import { getLatestKnowledge } from "./knowledge-updater";
-import { listMLItems, pauseMLItem, activateMLItem, updateMLPrice, updateMLStock } from "./gabi-executor";
+import { listMLItems, pauseMLItem, activateMLItem, updateMLPrice, updateMLStock, getMLItemDetails, getMLCategoryAttributes, updateMLItemAttributes } from "./gabi-executor";
 
 const AGENT_NAME = "gabi";
 
@@ -68,6 +68,51 @@ const GABI_ML_TOOLS: Anthropic.Tool[] = [
         itemTitle: { type: "string", description: "Título do anúncio" },
       },
       required: ["itemId", "quantity"],
+    },
+  },
+  {
+    name: "ml_get_item_details",
+    description: "Busca detalhes completos de um anúncio: título, status, atributos preenchidos e vazios, health score, descrição. Use para auditar o EDS de um item específico antes de propor melhorias.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        itemId: { type: "string", description: "ID do anúncio (ex: MLB5965767278)" },
+      },
+      required: ["itemId"],
+    },
+  },
+  {
+    name: "ml_get_category_attributes",
+    description: "Busca todos os atributos obrigatórios e recomendados de uma categoria do ML. Use para saber exatamente o que preencher em cada anúncio.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        categoryId: { type: "string", description: "ID da categoria (ex: MLB5765 — encontrado no ml_get_item_details)" },
+      },
+      required: ["categoryId"],
+    },
+  },
+  {
+    name: "ml_update_item_attributes",
+    description: "Atualiza atributos EDS de um anúncio (composição, cor, tamanho, marca, etc). Execute somente após o usuário confirmar. Use ml_get_category_attributes para descobrir os IDs corretos dos atributos.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        itemId: { type: "string", description: "ID do anúncio" },
+        attributes: {
+          type: "array",
+          description: "Lista de atributos a atualizar",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "string", description: "ID do atributo (ex: BRAND, GENDER, FABRIC)" },
+              value_name: { type: "string", description: "Valor do atributo (ex: Feminnita, Feminino, Viscose)" },
+            },
+            required: ["id", "value_name"],
+          },
+        },
+      },
+      required: ["itemId", "attributes"],
     },
   },
 ];
@@ -185,6 +230,12 @@ export async function chatWithGabi(
           result = await updateMLPrice(inp.itemId, inp.price, account);
         } else if (toolUse.name === "ml_update_stock") {
           result = await updateMLStock(inp.itemId, inp.quantity, account);
+        } else if (toolUse.name === "ml_get_item_details") {
+          result = await getMLItemDetails(inp.itemId, account);
+        } else if (toolUse.name === "ml_get_category_attributes") {
+          result = await getMLCategoryAttributes(inp.categoryId, account);
+        } else if (toolUse.name === "ml_update_item_attributes") {
+          result = await updateMLItemAttributes(inp.itemId, inp.attributes, account);
         } else {
           result = `Ferramenta desconhecida: ${toolUse.name}`;
         }
