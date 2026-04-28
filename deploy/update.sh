@@ -24,6 +24,10 @@ pnpm install
 echo "[update] Fazendo build..."
 pnpm build
 
+echo "[update] Gerando ícones PWA..."
+convert $APP_DIR/dist/public/logo.png -resize 512x512 -background '#6B1D28' -gravity center -extent 512x512 $APP_DIR/dist/public/icon-512.png 2>/dev/null || true
+convert $APP_DIR/dist/public/icon-512.png -resize 192x192 $APP_DIR/dist/public/icon-192.png 2>/dev/null || true
+
 echo "[update] Reiniciando serviço..."
 # Garantir que a porta 3000 está livre antes de subir o novo processo
 fuser -k 3000/tcp 2>/dev/null || true
