@@ -26,6 +26,15 @@ import {
   Volume2,
 } from "lucide-react";
 
+function toStr(item: any): string {
+  if (typeof item === "string") return item;
+  if (item === null || item === undefined) return "";
+  if (typeof item === "object") {
+    return item.summary || item.titulo || item.message || item.text || JSON.stringify(item);
+  }
+  return String(item);
+}
+
 // ─── Config por agente ────────────────────────────────────────────────────────
 
 const AGENT_CONFIG: Record<string, {
@@ -51,9 +60,9 @@ const AGENT_CONFIG: Record<string, {
     bgColor: "bg-rose-50",
     borderColor: "border-rose-200",
     focusClass: "focus-within:border-rose-400 focus-within:ring-rose-100",
-    btnHex: "#8B2635",
-    bannerFrom: "#881337",
-    bannerTo: "#9d174d",
+    btnHex: "#6B1D28",
+    bannerFrom: "#6B1030",
+    bannerTo: "#7B1040",
     suggestions: [
       "Quais Reels devo criar essa semana?",
       "Como crescer seguidores revendedoras?",
@@ -70,9 +79,9 @@ const AGENT_CONFIG: Record<string, {
     bgColor: "bg-rose-50",
     borderColor: "border-rose-200",
     focusClass: "focus-within:border-rose-400 focus-within:ring-rose-100",
-    btnHex: "#8B2635",
-    bannerFrom: "#881337",
-    bannerTo: "#9d174d",
+    btnHex: "#6B1D28",
+    bannerFrom: "#6B1030",
+    bannerTo: "#7B1040",
     suggestions: [
       "Quem são meus maiores concorrentes?",
       "Como está a precificação do mercado?",
@@ -89,9 +98,9 @@ const AGENT_CONFIG: Record<string, {
     bgColor: "bg-rose-50",
     borderColor: "border-rose-200",
     focusClass: "focus-within:border-rose-400 focus-within:ring-rose-100",
-    btnHex: "#8B2635",
-    bannerFrom: "#881337",
-    bannerTo: "#9d174d",
+    btnHex: "#6B1D28",
+    bannerFrom: "#6B1030",
+    bannerTo: "#7B1040",
     suggestions: [
       "Como reativar clientes inativos no WhatsApp?",
       "Como configurar vendas no Mercado Livre?",
@@ -207,7 +216,7 @@ function SidePanel({ agentName }: { agentName: string }) {
               Análise de {latestAnalysis?.period}
             </span>
           </div>
-          <p className="text-xs text-slate-700 leading-relaxed">{analysis.summary}</p>
+          <p className="text-xs text-slate-700 leading-relaxed">{toStr(analysis.summary)}</p>
 
           {analysis.highlights && analysis.highlights.length > 0 && (
             <div className="mt-2 space-y-1">

@@ -763,7 +763,7 @@ export default function AdsManagerPage() {
                 <span className="text-xs text-gray-400">{fmtDate(ev.triggeredAt)}</span>
               </div>
               {ev.summary && (
-                <p className="text-xs text-gray-600 line-clamp-2 mt-1">{ev.summary}</p>
+                <p className="text-xs text-gray-600 line-clamp-2 mt-1">{toStr(ev.summary)}</p>
               )}
               {ev.errorMessage && (
                 <p className="text-xs text-red-500 mt-1">{ev.errorMessage}</p>
