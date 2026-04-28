@@ -140,34 +140,25 @@ export function registerMLOAuthRoutes(app: Express) {
 
     const results: any[] = [];
 
-    // Testa GET em vários endpoints
-    const getUrls = [
-      `https://api.mercadolibre.com/users/${userId}/advertising/product_ads/campaigns?limit=50&offset=0`,
-      `https://api.mercadolibre.com/advertising/product_ads/items?user_id=${userId}`,
+    const urls = [
+      `https://api.mercadolibre.com/advertising/advertisers/${userId}/campaigns`,
+      `https://api.mercadolibre.com/advertising/advertisers/${userId}`,
+      `https://api.mercadolibre.com/advertising/advertisers/${userId}/ad_groups`,
+      `https://api.mercadolibre.com/users/${userId}/advertising`,
+      `https://api.mercadolibre.com/advertising/advertisers/${userId}/product_ads`,
+      `https://api.mercadolibre.com/advertising/advertisers/${userId}/campaigns?limit=10&offset=0`,
     ];
-    for (const url of getUrls) {
+
+    for (const url of urls) {
       try {
         const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
         const body = await r.json();
-        results.push({ method: "GET", url, status: r.status, body });
+        results.push({ url, status: r.status, body });
       } catch (e: any) {
-        results.push({ method: "GET", url, error: (e as any).message });
+        results.push({ url, error: e.message });
       }
     }
-
-    // Testa POST no endpoint que dá 405 no GET
-    try {
-      const r = await fetch("https://api.mercadolibre.com/advertising/product_ads/campaigns", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId }),
-      });
-      const body = await r.json();
-      results.push({ method: "POST", url: "/advertising/product_ads/campaigns", status: r.status, body });
-    } catch (e: any) {
-      results.push({ method: "POST", url: "/advertising/product_ads/campaigns", error: (e as any).message });
-    }
-    return res.json(results);
+    return res.json({ userId, results });
   });
 
 
