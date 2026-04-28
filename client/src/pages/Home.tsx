@@ -5,6 +5,12 @@ import {
   Package, Music, Bell,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import gabiPhoto from "@/assets/gabi.jpg";
+import luizaShopeePhoto from "@/assets/luiza-shopee.jpg";
+import isabelaPhoto from "@/assets/isabela-shein.jpg";
+import alicePhoto from "@/assets/alice.jpg";
+import dudaPhoto from "@/assets/duda.jpg";
+import anyPhoto from "@/assets/any.jpg";
 
 // ─── Cards de acesso rápido ───────────────────────────────────────────────────
 
@@ -22,7 +28,7 @@ const QUICK_CARDS: QuickCard[] = [
     label: "Ações da Equipe IA",
     description: "Aprove ou rejeite ações propostas pelos agentes",
     path: "/acoes-agentes",
-    color: "#8B2635",
+    color: "#6B1D28",
   },
   {
     icon: <Megaphone className="w-5 h-5" />,
@@ -71,7 +77,7 @@ const QUICK_CARDS: QuickCard[] = [
     label: "Blog Feminnita",
     description: "Gerar e publicar posts com IA",
     path: "/blog-feminnita",
-    color: "#8B2635",
+    color: "#6B1D28",
   },
   {
     icon: <MessageSquare className="w-5 h-5" />,
@@ -112,6 +118,15 @@ const TEAM = [
   { name: "Mariana", role: "Vendas", path: "/agente/mariana", photo: "/agents/mariana.jpg" },
 ];
 
+const MARKETPLACE_TEAM = [
+  { name: "Gabi", role: "ML — EDS", path: "/ml-gabi", photo: gabiPhoto, color: "#FFD100", textColor: "#1a1a1a" },
+  { name: "Luiza", role: "Shopee Ads", path: "/shopee-luiza", photo: luizaShopeePhoto, color: "#EE4D2D", textColor: "#fff" },
+  { name: "Isabela", role: "Shein", path: "/shein-isabela", photo: isabelaPhoto, color: "#FF2D55", textColor: "#fff" },
+  { name: "Alice", role: "Amazon", path: "/amazon-alice", photo: alicePhoto, color: "#FF9900", textColor: "#1a1a1a" },
+  { name: "Duda", role: "Tray SEO", path: "/duda-seo", photo: dudaPhoto, color: "#6B1D28", textColor: "#fff" },
+  { name: "Any", role: "Tray Afil.", path: "/any-afiliadas", photo: anyPhoto, color: "#7C3AED", textColor: "#fff" },
+];
+
 // ─── Página ───────────────────────────────────────────────────────────────────
 
 export default function Home() {
@@ -129,8 +144,8 @@ export default function Home() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: "#8B2635" }}>
-            Feminnita — Gestão de Marketing
+          <h1 className="text-2xl font-bold" style={{ color: "#6B1D28" }}>
+            Gestão de Marketing
           </h1>
           <p className="text-slate-500 text-sm mt-1">
             Atacado de Pijamas · Painel de controle centralizado
@@ -149,16 +164,16 @@ export default function Home() {
           className="w-full flex items-center gap-3 px-5 py-4 rounded-xl border text-left transition-colors hover:opacity-90"
           style={{ background: "#FFF5F6", borderColor: "#f9c0c8" }}
         >
-          <Bell className="w-5 h-5 shrink-0" style={{ color: "#8B2635" }} />
+          <Bell className="w-5 h-5 shrink-0" style={{ color: "#6B1D28" }} />
           <div>
-            <p className="font-semibold text-sm" style={{ color: "#8B2635" }}>
+            <p className="font-semibold text-sm" style={{ color: "#6B1D28" }}>
               {pendingCount} {pendingCount === 1 ? "ação pendente" : "ações pendentes"} da equipe IA
             </p>
             <p className="text-xs text-slate-500 mt-0.5">
               Clique para revisar e aprovar as recomendações de hoje
             </p>
           </div>
-          <Zap className="w-4 h-4 ml-auto shrink-0" style={{ color: "#8B2635" }} />
+          <Zap className="w-4 h-4 ml-auto shrink-0" style={{ color: "#6B1D28" }} />
         </button>
       )}
 
@@ -178,6 +193,33 @@ export default function Home() {
               <div className="text-center">
                 <p className="font-semibold text-slate-800 text-base leading-none">{agent.name}</p>
                 <p className="text-sm text-slate-400 mt-1">{agent.role}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Especialistas de Marketplace */}
+      <div>
+        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">
+          Especialistas de Marketplace
+        </h2>
+        <div className="flex flex-wrap gap-3">
+          {MARKETPLACE_TEAM.map((agent) => (
+            <button
+              key={agent.name}
+              onClick={() => setLocation(agent.path)}
+              className="flex items-center gap-3 px-4 py-3 bg-white border border-slate-200 rounded-xl hover:shadow-sm transition-all w-44"
+            >
+              <div
+                className="w-10 h-10 rounded-full overflow-hidden border-2 flex-shrink-0"
+                style={{ borderColor: agent.color }}
+              >
+                <img src={agent.photo} alt={agent.name} className="w-full h-full object-cover object-top" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-slate-800 text-sm leading-none">{agent.name}</p>
+                <p className="text-xs mt-1 font-medium" style={{ color: agent.color }}>{agent.role}</p>
               </div>
             </button>
           ))}
@@ -215,7 +257,7 @@ export default function Home() {
       <div className="bg-white border border-slate-200 rounded-xl p-5">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-semibold text-slate-800 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4" style={{ color: "#8B2635" }} />
+            <TrendingUp className="w-4 h-4" style={{ color: "#6B1D28" }} />
             Meta de Vendas
           </h2>
           <span className="text-xs text-slate-400">Atualizado pela Mariana</span>
@@ -226,7 +268,7 @@ export default function Home() {
             <p className="text-xs text-slate-400 mt-1">Atual / mês</p>
           </div>
           <div>
-            <p className="text-2xl font-bold" style={{ color: "#8B2635" }}>R$100K</p>
+            <p className="text-2xl font-bold" style={{ color: "#6B1D28" }}>R$100K</p>
             <p className="text-xs text-slate-400 mt-1">Meta urgente</p>
           </div>
           <div>
@@ -237,7 +279,7 @@ export default function Home() {
         <div className="mt-4 bg-slate-100 rounded-full h-2">
           <div
             className="h-2 rounded-full transition-all"
-            style={{ width: "20%", background: "#8B2635" }}
+            style={{ width: "20%", background: "#6B1D28" }}
           />
         </div>
         <p className="text-xs text-slate-400 mt-2 text-right">20% da meta</p>
