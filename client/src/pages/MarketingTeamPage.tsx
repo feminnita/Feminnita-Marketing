@@ -41,6 +41,15 @@ import {
   Send,
 } from "lucide-react";
 
+function toStr(item: any): string {
+  if (typeof item === "string") return item;
+  if (item === null || item === undefined) return "";
+  if (typeof item === "object") {
+    return item.action || item.summary || item.message || item.text || JSON.stringify(item);
+  }
+  return String(item);
+}
+
 // ─── tipos locais ────────────────────────────────────────────────
 type BriefStatus = "all" | "pending" | "generated" | "approved" | "published";
 type BriefType = "all" | "carousel" | "reel" | "story" | "post";
@@ -602,7 +611,7 @@ export default function MarketingTeamPage() {
                           {rec.priority ?? "baixa"}
                         </Badge>
                         <p className="text-sm text-gray-700">
-                          {rec.action}{rec.rationale ? ` — ${rec.rationale}` : ""}
+                          {toStr(rec.action)}{rec.rationale ? ` — ${toStr(rec.rationale)}` : ""}
                         </p>
                       </div>
                     ))}
