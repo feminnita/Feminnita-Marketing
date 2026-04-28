@@ -209,10 +209,12 @@ export async function executeMetaAction(
       await resumeCampaign(payload.campaignId);
       return `Campanha "${payload.campaignName || payload.campaignId}" reativada.`;
 
-    case "meta_update_budget":
-      if (!payload.campaignId || !payload.dailyBudgetReais) throw new Error("campaignId e dailyBudgetReais obrigatórios");
-      await updateCampaignBudget(payload.campaignId, payload.dailyBudgetReais);
-      return `Orçamento de "${payload.campaignName}" atualizado para R$${payload.dailyBudgetReais}/dia.`;
+    case "meta_update_budget": {
+      const budget = payload.newDailyBudget || payload.dailyBudgetReais;
+      if (!payload.campaignId || !budget) throw new Error("campaignId e dailyBudgetReais obrigatórios");
+      await updateCampaignBudget(payload.campaignId, budget);
+      return `Orçamento de "${payload.campaignName || payload.campaignId}" atualizado para R$${budget}/dia.`;
+    }
 
     case "meta_create_campaign":
       if (!payload.name || !payload.objective || !payload.dailyBudgetReais) throw new Error("name, objective e dailyBudgetReais obrigatórios");
@@ -223,13 +225,6 @@ export async function executeMetaAction(
       if (!payload.campaignId || !payload.name) throw new Error("campaignId e name obrigatórios");
       const copyId = await duplicateCampaign(payload.campaignId, payload.name);
       return `Campanha duplicada: "${payload.name}" (ID: ${copyId}). Status: PAUSADA.`;
-
-    case "meta_update_budget":
-      if (!payload.campaignId) throw new Error("campaignId obrigatório");
-      const budget = payload.newDailyBudget || payload.dailyBudgetReais;
-      if (!budget) throw new Error("newDailyBudget obrigatório");
-      await updateCampaignBudget(payload.campaignId, budget);
-      return `Orçamento de "${payload.campaignName || payload.campaignId}" atualizado para R$${budget}/dia.`;
 
     case "meta_upload_image":
       if (!payload.imageUrl) throw new Error("imageUrl obrigatório");
