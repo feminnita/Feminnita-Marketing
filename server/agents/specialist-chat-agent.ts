@@ -13,6 +13,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { buildMemoryContext } from "../services/agentMemory";
 import { searchWeb } from "../services/webSearch";
 import { fetchAllPlatformMetrics, formatPlatformSummary } from "../services/marketplaceAds";
+import { executeMetaAction } from "./fernanda-executor";
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || "",
@@ -57,6 +58,100 @@ const SPECIALIST_TOOLS: Anthropic.Tool[] = [
   },
 ];
 
+// ─── Ferramentas exclusivas da Fernanda (Meta Ads) ───────────────────────────
+
+const FERNANDA_META_TOOLS: Anthropic.Tool[] = [
+  {
+    name: "meta_get_campaigns",
+    description: "Busca todas as campanhas da conta Meta Ads com status, orçamento diário e métricas dos últimos 30 dias. Use SEMPRE antes de fazer qualquer alteração para ter os IDs corretos.",
+    input_schema: { type: "object" as const, properties: {}, required: [] },
+  },
+  {
+    name: "meta_update_budget",
+    description: "Atualiza o orçamento diário de uma campanha no Meta Ads. Execute somente após o usuário confirmar explicitamente.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        campaignId: { type: "string", description: "ID da campanha (obtido via meta_get_campaigns)" },
+        campaignName: { type: "string", description: "Nome da campanha (para confirmar ao usuário)" },
+        dailyBudgetReais: { type: "number", description: "Novo orçamento diário em R$ (ex: 100 para R$100/dia)" },
+      },
+      required: ["campaignId", "dailyBudgetReais"],
+    },
+  },
+  {
+    name: "meta_pause_campaign",
+    description: "Pausa uma campanha no Meta Ads. Execute somente após o usuário confirmar.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        campaignId: { type: "string" },
+        campaignName: { type: "string" },
+      },
+      required: ["campaignId"],
+    },
+  },
+  {
+    name: "meta_resume_campaign",
+    description: "Reativa uma campanha pausada no Meta Ads. Execute somente após o usuário confirmar.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        campaignId: { type: "string" },
+        campaignName: { type: "string" },
+      },
+      required: ["campaignId"],
+    },
+  },
+  {
+    name: "meta_create_campaign",
+    description: "Cria uma nova campanha no Meta Ads. A campanha é sempre criada PAUSADA para revisão antes de ativar.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        name: { type: "string", description: "Nome da campanha" },
+        objective: { type: "string", description: "OUTCOME_SALES | OUTCOME_TRAFFIC | OUTCOME_AWARENESS | OUTCOME_LEADS" },
+        dailyBudgetReais: { type: "number", description: "Orçamento diário em R$" },
+      },
+      required: ["name", "objective", "dailyBudgetReais"],
+    },
+  },
+];
+
+async function fetchMetaCampaigns(): Promise<string> {
+  const token = process.env.META_SYSTEM_USER_TOKEN || process.env.META_ACCESS_TOKEN || "";
+  const accountId = process.env.META_AD_ACCOUNT_ID || "act_231648936319132";
+  if (!token) return "Erro: META_ACCESS_TOKEN não configurado no servidor.";
+
+  try {
+    const fields = "id,name,status,effective_status,daily_budget,lifetime_budget,objective,insights{spend,impressions,clicks,actions}";
+    const url = `https://graph.facebook.com/v20.0/${accountId}/campaigns?fields=${fields}&date_preset=last_30d&access_token=${token}`;
+    const res = await fetch(url);
+    const data = await res.json() as any;
+    if (data.error) return `Erro Meta API: ${data.error.message} (código ${data.error.code})`;
+
+    const campaigns: any[] = data.data || [];
+    if (campaigns.length === 0) return "Nenhuma campanha encontrada na conta.";
+
+    const lines = campaigns.map((c: any) => {
+      const budget = c.daily_budget
+        ? `R$${(parseInt(c.daily_budget) / 100).toFixed(2)}/dia`
+        : c.lifetime_budget
+          ? `R$${(parseInt(c.lifetime_budget) / 100).toFixed(2)} total`
+          : "sem orçamento";
+      const insight = c.insights?.data?.[0];
+      const spend = insight ? ` | Gasto 30d: R$${parseFloat(insight.spend || "0").toFixed(2)}` : "";
+      const purchases = insight?.actions?.find((a: any) => a.action_type === "purchase")?.value;
+      const purchasesStr = purchases ? ` | Compras: ${purchases}` : "";
+      return `• ID: ${c.id} | "${c.name}" | ${c.effective_status || c.status} | ${budget}${spend}${purchasesStr}`;
+    });
+
+    return `CAMPANHAS NA CONTA (${campaigns.length} total):\n${lines.join("\n")}`;
+  } catch (e: any) {
+    return `Erro ao buscar campanhas: ${e.message}`;
+  }
+}
+
 // ─── Execução das ferramentas ─────────────────────────────────────────────────
 
 async function executeSpecialistTool(
@@ -82,6 +177,41 @@ async function executeSpecialistTool(
   if (name === "get_sales_metrics") {
     const platforms = await fetchAllPlatformMetrics(input.days ?? 7);
     return formatPlatformSummary(platforms);
+  }
+
+  // Ferramentas Meta Ads (Fernanda)
+  if (name === "meta_get_campaigns") {
+    return fetchMetaCampaigns();
+  }
+
+  if (name === "meta_update_budget") {
+    return executeMetaAction("meta_update_budget", {
+      campaignId: input.campaignId,
+      campaignName: input.campaignName,
+      newDailyBudget: input.dailyBudgetReais,
+    });
+  }
+
+  if (name === "meta_pause_campaign") {
+    return executeMetaAction("meta_pause_campaign", {
+      campaignId: input.campaignId,
+      campaignName: input.campaignName,
+    });
+  }
+
+  if (name === "meta_resume_campaign") {
+    return executeMetaAction("meta_resume_campaign", {
+      campaignId: input.campaignId,
+      campaignName: input.campaignName,
+    });
+  }
+
+  if (name === "meta_create_campaign") {
+    return executeMetaAction("meta_create_campaign", {
+      name: input.name,
+      objective: input.objective,
+      dailyBudgetReais: input.dailyBudgetReais,
+    });
   }
 
   return JSON.stringify({ error: `Ferramenta desconhecida: ${name}` });
@@ -116,11 +246,24 @@ ${FEMINNITA_CONTEXT}
 - Budget diário atual: R$50/dia (R$1.500/mês) — meta: ROAS ≥ 4x, CPA ≤ R$80
 
 ═══ O QUE VOCÊ FAZ NESTE CHAT ═══
-Responda perguntas sobre campanhas, criativos, métricas e estratégia de Meta Ads.
-Se o usuário trouxer números reais (ROAS, CPC, CPL), analise e dê recomendação imediata.
-Se precisar de dados atualizados de mercado, use search_web.
+Você analisa E executa. Você tem acesso direto à conta Meta Ads da Feminnita para:
+- Ver campanhas, orçamentos e métricas reais em tempo real
+- Atualizar orçamento diário de campanhas
+- Pausar ou reativar campanhas
+- Criar novas campanhas (sempre criadas PAUSADAS para revisão)
+
+FLUXO OBRIGATÓRIO ANTES DE EXECUTAR:
+1. Use meta_get_campaigns para ver o estado atual da conta
+2. Analise os dados e proponha a ação ao usuário com justificativa
+3. Execute SOMENTE após o usuário confirmar explicitamente ("pode fazer", "vai", "confirma", "sim")
+4. Relate o resultado da execução
 
 FERRAMENTAS DISPONÍVEIS:
+- meta_get_campaigns: lista campanhas com ID, status, orçamento e métricas reais
+- meta_update_budget: atualiza orçamento diário (requer confirmação do usuário)
+- meta_pause_campaign: pausa uma campanha (requer confirmação)
+- meta_resume_campaign: reativa uma campanha pausada (requer confirmação)
+- meta_create_campaign: cria nova campanha pausada (requer confirmação)
 - search_web: benchmarks de Meta Ads, tendências de criativos, novidades da plataforma
 
 FORMATO DA RESPOSTA: SEMPRE responda em texto natural, português BR. NUNCA retorne JSON bruto. O único bloco estruturado permitido é o <<<ACTION_START>>>...<<<ACTION_END>>>.
@@ -724,11 +867,15 @@ export async function chatWithSpecialist(
   while (iterations < 5) {
     iterations++;
 
+    const agentTools = agentName === "fernanda"
+      ? [...SPECIALIST_TOOLS, ...FERNANDA_META_TOOLS]
+      : SPECIALIST_TOOLS;
+
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 4096,
       system: systemWithMemory,
-      tools: SPECIALIST_TOOLS,
+      tools: agentTools,
       messages,
     });
 
