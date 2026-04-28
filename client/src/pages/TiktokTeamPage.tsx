@@ -770,7 +770,7 @@ const TT_PINK = "#FE2C55";
 export type AccountType = "feminnita" | "fnt";
 
 export default function TiktokTeamPage() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const getTabFromUrl = () => {
     const params = new URLSearchParams(window.location.search);
     const t = params.get("tab");
@@ -781,7 +781,7 @@ export default function TiktokTeamPage() {
 
   useEffect(() => {
     setActiveTab(getTabFromUrl());
-  }, [window.location.search]);
+  }, [location]);
 
   return (
     <div className="max-w-full px-6 py-6 space-y-6">
