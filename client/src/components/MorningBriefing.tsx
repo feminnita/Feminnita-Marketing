@@ -27,6 +27,14 @@ import {
   Globe,
 } from "lucide-react";
 
+function toStr(item: any): string {
+  if (typeof item === "string") return item;
+  if (item === null || item === undefined) return "";
+  if (typeof item === "object")
+    return item.issue || item.summary || item.descricao || item.text || item.message || item.titulo || JSON.stringify(item);
+  return String(item);
+}
+
 const AGENT_ICONS: Record<string, React.ReactNode> = {
   fernanda: <Zap className="w-4 h-4 text-purple-500" />,
   sofia:    <TrendingUp className="w-4 h-4 text-pink-500" />,
@@ -116,7 +124,7 @@ export default function MorningBriefing() {
             {briefing.topAlerts.slice(0, 3).map((alert, i) => (
               <span key={i} className="text-xs bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded-full flex items-center gap-1">
                 <AlertTriangle className="w-3 h-3" />
-                {alert}
+                {toStr(alert)}
               </span>
             ))}
           </div>
@@ -126,7 +134,7 @@ export default function MorningBriefing() {
         {briefing?.pathTo100k && !expanded && (
           <p className="text-xs text-green-700 bg-green-50 border border-green-200 rounded px-2.5 py-1.5 mt-2 flex items-start gap-1.5">
             <Target className="w-3 h-3 mt-0.5 shrink-0" />
-            <span className="line-clamp-2">{briefing.pathTo100k}</span>
+            <span className="line-clamp-2">{toStr(briefing.pathTo100k)}</span>
           </p>
         )}
       </CardHeader>
@@ -139,7 +147,7 @@ export default function MorningBriefing() {
                 <Target className="w-4 h-4 text-green-600" />
                 <span className="text-sm font-semibold text-green-800">Caminho para R$100K</span>
               </div>
-              <p className="text-xs text-green-700">{briefing.pathTo100k}</p>
+              <p className="text-xs text-green-700">{toStr(briefing.pathTo100k)}</p>
             </div>
           )}
 
@@ -151,7 +159,7 @@ export default function MorningBriefing() {
               >
                 <div className="flex items-center gap-1.5 mb-1">
                   {AGENT_ICONS[agent.agentName] ?? <Bot className="w-4 h-4 text-gray-400" />}
-                  <span className="text-xs font-semibold text-gray-800">{agent.agentRole}</span>
+                  <span className="text-xs font-semibold text-gray-800">{toStr(agent.agentRole)}</span>
                   {agent.error && (
                     <span className="text-xs text-red-500 ml-auto">erro</span>
                   )}
@@ -161,12 +169,12 @@ export default function MorningBriefing() {
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-gray-600">{agent.summary}</p>
+                <p className="text-xs text-gray-600">{toStr(agent.summary)}</p>
                 {agent.alerts && agent.alerts.length > 0 && (
                   <div className="mt-1 flex flex-wrap gap-1">
                     {agent.alerts.map((alert, i) => (
                       <span key={i} className="text-xs text-red-600 bg-red-50 px-1.5 py-0.5 rounded">
-                        ⚠ {alert}
+                        ⚠ {toStr(alert)}
                       </span>
                     ))}
                   </div>
@@ -174,7 +182,7 @@ export default function MorningBriefing() {
                 {agent.recommendations && agent.recommendations.length > 0 && (
                   <div className="mt-1">
                     {agent.recommendations.slice(0, 2).map((rec, i) => (
-                      <p key={i} className="text-xs text-gray-500">→ {rec}</p>
+                      <p key={i} className="text-xs text-gray-500">→ {toStr(rec)}</p>
                     ))}
                   </div>
                 )}
