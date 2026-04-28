@@ -112,10 +112,7 @@ export function initializeWebSocket(httpServer: HTTPServer) {
         text: safe,
         ts: Date.now(),
       };
-      const recipientSockets = connectedUsers.get(toUserId);
-      if (recipientSockets) {
-        recipientSockets.forEach(sid => io!.to(sid).emit("dm:receive", msg));
-      }
+      io!.to(`user_${toUserId}`).emit("dm:receive", msg);
     });
 
     // Chat: send message
