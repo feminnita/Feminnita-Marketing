@@ -4,6 +4,36 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { ChevronLeft, Loader2, MessageCircle, Send, Users, X } from "lucide-react";
 
+// ─── Push Notification helpers ────────────────────────────────────────────────
+
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = atob(base64);
+  return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+}
+
+async function registerPushSubscription(vapidKey: string, subscribeFn: (sub: { endpoint: string; p256dh: string; auth: string }) => void) {
+  if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+  try {
+    const reg = await navigator.serviceWorker.register("/sw.js");
+    await navigator.serviceWorker.ready;
+    const existing = await reg.pushManager.getSubscription();
+    const sub = existing ?? await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(vapidKey),
+    });
+    const json = sub.toJSON();
+    subscribeFn({
+      endpoint: json.endpoint!,
+      p256dh:   (json.keys as any)?.p256dh ?? "",
+      auth:     (json.keys as any)?.auth    ?? "",
+    });
+  } catch (err) {
+    console.warn("[Push] Falha ao registrar:", err);
+  }
+}
+
 // ─── Contatos disponíveis ──────────────────────────────────────────────────────
 
 type ContactKind = "group" | "agent";
@@ -74,7 +104,9 @@ export default function ChatWidget() {
   const openRef    = useRef(false);
   const bottomRef  = useRef<HTMLDivElement>(null);
 
-  const chatMutation = trpc.specialistChat.chat.useMutation();
+  const chatMutation      = trpc.specialistChat.chat.useMutation();
+  const vapidQuery        = trpc.pushSubscriptions.vapidPublicKey.useQuery(undefined, { staleTime: Infinity });
+  const subscribeMutation = trpc.pushSubscriptions.subscribe.useMutation();
 
   useEffect(() => { openRef.current = open; }, [open]);
 
@@ -110,15 +142,21 @@ export default function ChatWidget() {
     return () => { socket.disconnect(); joinedRef.current = false; };
   }, [user]);
 
-  // ── Reset unread & pedir notificação ──────────────────────────────────────
+  // ── Reset unread & registrar push ─────────────────────────────────────────
   useEffect(() => {
     if (open) {
       setUnread(0);
       if (typeof Notification !== "undefined" && Notification.permission === "default") {
-        Notification.requestPermission();
+        Notification.requestPermission().then((perm) => {
+          if (perm === "granted" && vapidQuery.data?.key) {
+            registerPushSubscription(vapidQuery.data.key, (sub) => subscribeMutation.mutate(sub));
+          }
+        });
+      } else if (Notification.permission === "granted" && vapidQuery.data?.key) {
+        registerPushSubscription(vapidQuery.data.key, (sub) => subscribeMutation.mutate(sub));
       }
     }
-  }, [open]);
+  }, [open, vapidQuery.data?.key]);
 
   // ── Scroll para baixo ─────────────────────────────────────────────────────
   useEffect(() => {

@@ -1588,3 +1588,12 @@ export const specialistPlatformMessages = mysqlTable("specialist_platform_messag
   content: text("content").notNull(),
   createdAt: timestamp("createdAt").defaultNow(),
 });
+
+export const pushSubscriptions = mysqlTable("push_subscriptions", {
+  id:        int("id").autoincrement().primaryKey(),
+  userId:    int("userId").notNull(),
+  endpoint:  text("endpoint").notNull(),
+  p256dh:    text("p256dh").notNull(),
+  auth:      varchar("auth", { length: 255 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow(),
+});

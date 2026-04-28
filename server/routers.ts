@@ -92,6 +92,7 @@ import { agentActionsRouter } from "./routers/agent-actions";
 import { morningBriefingRouter } from "./routers/morning-briefing";
 import { marketKnowledgeRouter } from "./routers/market-knowledge";
 import { specialistChatRouter } from "./routers/specialist-chat";
+import { pushSubscriptionsRouter } from "./routers/push-subscriptions";
 import { whatsappBlastsRouter } from "./routers/whatsapp-blasts";
 import { creativeAdsRouter } from "./routers/creative-ads";
 import { specialistsRouter } from "./routers/specialists";
@@ -244,6 +245,7 @@ export const appRouter = router({
   morningBriefing: morningBriefingRouter,
   marketKnowledge: marketKnowledgeRouter,
   specialistChat: specialistChatRouter,
+  pushSubscriptions: pushSubscriptionsRouter,
   whatsappBlasts: whatsappBlastsRouter,
   creativeAds: creativeAdsRouter,
   specialists: specialistsRouter,

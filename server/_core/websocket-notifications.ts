@@ -1,5 +1,9 @@
 import { Server as HTTPServer } from "http";
 import { Server as SocketIOServer, Socket } from "socket.io";
+import { getDb } from "../db";
+import { pushSubscriptions } from "../../drizzle/schema";
+import { sendPush } from "../services/webPush";
+import { eq, ne } from "drizzle-orm";
 
 let io: SocketIOServer | null = null;
 
@@ -33,6 +37,33 @@ function pushChatMessage(msg: ChatMessage) {
   chatHistory.push(msg);
   if (chatHistory.length > MAX_CHAT_HISTORY) chatHistory.shift();
   if (io) io.emit('chat:message', msg);
+
+  // Enviar push para usuários offline (apenas mensagens reais)
+  if (msg.type === "message") {
+    sendChatPushToOfflineUsers(msg).catch(() => {});
+  }
+}
+
+async function sendChatPushToOfflineUsers(msg: ChatMessage) {
+  const db = await getDb();
+  if (!db) return;
+
+  const subs = await db.select().from(pushSubscriptions);
+  for (const sub of subs) {
+    // Pular usuários online (já recebem via socket)
+    if (isUserConnected(sub.userId)) continue;
+
+    try {
+      await sendPush(
+        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+        { title: `Chat — ${msg.name ?? "Equipe"}`, body: msg.text.slice(0, 120), url: "/" }
+      );
+    } catch (err: any) {
+      if (err.expired) {
+        await db.delete(pushSubscriptions).where(eq(pushSubscriptions.id, sub.id));
+      }
+    }
+  }
 }
 
 export function initializeWebSocket(httpServer: HTTPServer) {
