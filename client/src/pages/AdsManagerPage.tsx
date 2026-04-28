@@ -664,12 +664,12 @@ export default function AdsManagerPage() {
                       </span>
                       <span className="text-xs text-gray-400">{action.date}</span>
                     </div>
-                    <p className="text-sm font-medium text-gray-800 mb-1">{action.title}</p>
+                    <p className="text-sm font-medium text-gray-800 mb-1">{toStr(action.title)}</p>
                     {action.description && action.description !== action.title && (
-                      <p className="text-xs text-gray-500 leading-relaxed">{action.description}</p>
+                      <p className="text-xs text-gray-500 leading-relaxed">{toStr(action.description)}</p>
                     )}
                     {action.estimatedImpact && (
-                      <p className="text-xs text-[#6B1D28] mt-1 font-medium">{action.estimatedImpact}</p>
+                      <p className="text-xs text-[#6B1D28] mt-1 font-medium">{toStr(action.estimatedImpact)}</p>
                     )}
                     {/* Copy do anúncio — só aparece em ações de criação de anúncio */}
                     {(() => {
@@ -680,9 +680,9 @@ export default function AdsManagerPage() {
                           <p className="text-xs font-semibold text-blue-700 flex items-center gap-1">
                             <Sparkles className="w-3 h-3" /> Copy gerado pela IA
                           </p>
-                          <p className="text-xs"><span className="font-medium text-gray-600">Título:</span> {copy.headline}</p>
-                          <p className="text-xs"><span className="font-medium text-gray-600">Texto:</span> {copy.body}</p>
-                          <p className="text-xs text-gray-400 italic"><span className="font-medium not-italic text-gray-500">Imagem:</span> {copy.imageDescription}</p>
+                          <p className="text-xs"><span className="font-medium text-gray-600">Título:</span> {toStr(copy.headline)}</p>
+                          <p className="text-xs"><span className="font-medium text-gray-600">Texto:</span> {toStr(copy.body)}</p>
+                          <p className="text-xs text-gray-400 italic"><span className="font-medium not-italic text-gray-500">Imagem:</span> {toStr(copy.imageDescription)}</p>
                         </div>
                       );
                     })()}
@@ -880,7 +880,7 @@ export default function AdsManagerPage() {
                             </div>
                             <div>
                               <span className="text-gray-400 block">Compras</span>
-                              {c.insights.purchases}
+                              {toStr(c.insights.purchases)}
                             </div>
                           </div>
                         ) : (
