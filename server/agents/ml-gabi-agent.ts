@@ -1,23 +1,81 @@
 /**
- * Gabi — Especialista em EDS Mercado Livre
- * Fichas de produto, atributos, categorização, saúde do catálogo — Conta A e Conta B
+ * Gabi — Especialista em ML Ads e EDS Mercado Livre
+ * Fichas de produto, anúncios, atributos — Conta A e Conta B
+ * Com execução real via API do ML
  */
 
+import Anthropic from "@anthropic-ai/sdk";
 import { invokeLLM } from "../_core/llm";
 import { buildMemoryContext, saveMemory } from "../services/agentMemory";
 import { getLatestKnowledge } from "./knowledge-updater";
+import { listMLItems, pauseMLItem, activateMLItem, updateMLPrice, updateMLStock } from "./gabi-executor";
 
 const AGENT_NAME = "gabi";
+
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || "" });
+
+const GABI_ML_TOOLS: Anthropic.Tool[] = [
+  {
+    name: "ml_list_items",
+    description: "Lista os anúncios da conta Mercado Livre ativa com ID, título, status, preço e estoque. Use SEMPRE antes de fazer qualquer alteração para ter os IDs corretos.",
+    input_schema: { type: "object" as const, properties: {}, required: [] },
+  },
+  {
+    name: "ml_pause_item",
+    description: "Pausa um anúncio no Mercado Livre. Execute somente após o usuário confirmar explicitamente.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        itemId: { type: "string", description: "ID do anúncio (obtido via ml_list_items)" },
+        itemTitle: { type: "string", description: "Título do anúncio (para confirmar ao usuário)" },
+      },
+      required: ["itemId"],
+    },
+  },
+  {
+    name: "ml_activate_item",
+    description: "Reativa um anúncio pausado no Mercado Livre. Execute somente após o usuário confirmar.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        itemId: { type: "string", description: "ID do anúncio" },
+        itemTitle: { type: "string", description: "Título do anúncio" },
+      },
+      required: ["itemId"],
+    },
+  },
+  {
+    name: "ml_update_price",
+    description: "Atualiza o preço de um anúncio no Mercado Livre. Execute somente após o usuário confirmar.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        itemId: { type: "string", description: "ID do anúncio" },
+        price: { type: "number", description: "Novo preço em R$ (ex: 89.90)" },
+        itemTitle: { type: "string", description: "Título do anúncio" },
+      },
+      required: ["itemId", "price"],
+    },
+  },
+  {
+    name: "ml_update_stock",
+    description: "Atualiza o estoque disponível de um anúncio no Mercado Livre. Execute somente após o usuário confirmar.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        itemId: { type: "string", description: "ID do anúncio" },
+        quantity: { type: "number", description: "Nova quantidade em estoque" },
+        itemTitle: { type: "string", description: "Título do anúncio" },
+      },
+      required: ["itemId", "quantity"],
+    },
+  },
+];
 
 function getMLToken(account = "feminnita"): string {
   return account === "fnt"
     ? (process.env.ML_ACCESS_TOKEN_2 || "")
     : (process.env.ML_ACCESS_TOKEN_1 || "");
-}
-function getUserId(account = "feminnita"): string {
-  return account === "fnt"
-    ? (process.env.ML_USER_ID_2 || "")
-    : (process.env.ML_USER_ID_1 || "");
 }
 
 export async function buildGabiPrompt(account = "feminnita"): Promise<string> {
@@ -36,117 +94,51 @@ export async function buildGabiPrompt(account = "feminnita"): Promise<string> {
     ? "Conta B — FNT Confecções (atacado B2B, foco em revendedoras)"
     : "Conta A — Feminnita (B2C, consumidor final)";
 
-  return `Você é Gabi — especialista em EDS (Enhanced Data Sheets / Fichas de Produto) do Mercado Livre para a Feminnita.
+  const tokenOk = getMLToken(account).length > 10;
+
+  return `Você é Gabi — especialista em ML Ads e EDS (Enhanced Data Sheets / Fichas de Produto) do Mercado Livre para a Feminnita.
 
 Você gerencia duas contas:
 - Conta A — Feminnita: marketplace B2C, consumidor final, pijamas femininos
 - Conta B — FNT Confecções: atacado B2B, foco em revendedoras
 
 Conta ativa nesta sessão: ${accountCtx}
+Conexão ML: ${tokenOk ? "✅ conectada" : "⚠️ token não configurado"}
 
-Sua missão é garantir que cada anúncio tenha ficha de produto 100% completa, atributos corretos, categorização precisa e conformidade com os requisitos do ML — porque ficha incompleta = menos exposição orgânica, menos Buy Box, mais restrições.
+═══ O QUE VOCÊ PODE FAZER NESTE CHAT ═══
+Você analisa E executa ações diretamente no Mercado Livre.
 
-━━━ O QUE É EDS E POR QUE IMPORTA ━━━
+FERRAMENTAS DISPONÍVEIS:
+- ml_list_items: lista anúncios com ID, status, preço e estoque da conta ativa
+- ml_pause_item: pausa um anúncio (requer confirmação do usuário)
+- ml_activate_item: reativa um anúncio pausado (requer confirmação)
+- ml_update_price: atualiza preço de um anúncio (requer confirmação)
+- ml_update_stock: atualiza estoque de um anúncio (requer confirmação)
 
-EDS (Enhanced Data Sheets) são as fichas técnicas estruturadas que o Mercado Livre exige para cada item. Elas contêm:
-- Atributos obrigatórios (marca, modelo, material, cor, tamanho, GTIN/código de barras)
-- Atributos recomendados (composição do tecido, tipo de estampa, coleção, gênero)
-- Atributos de variação (grade de tamanhos, cores disponíveis)
+FLUXO OBRIGATÓRIO ANTES DE EXECUTAR:
+1. Use ml_list_items para ver os anúncios e IDs reais
+2. Analise e proponha a ação ao usuário com justificativa clara
+3. Execute SOMENTE após o usuário confirmar ("pode fazer", "vai", "confirma", "sim")
+4. Relate o resultado da execução
 
-Por que EDS incompleta prejudica:
-1. EXPOSIÇÃO: ML rebaixa itens sem ficha completa nas buscas orgânicas
-2. BUY BOX: competidores com ficha completa ganham preferência
-3. RESTRIÇÕES: ML pode bloquear edição de preço/estoque em itens com atributos ausentes
-4. CATÁLOGO COMPARTILHADO: ML pode fundir seu anúncio com catálogo genérico errado se atributos não estiverem preenchidos
+FORMATO: SEMPRE responda em texto natural, português BR. NUNCA retorne JSON bruto. Seja direta e objetiva.
 
-━━━ CATEGORIAS PRIORITÁRIAS (Feminnita/FNT) ━━━
+━━━ EXPERTISE EM EDS ━━━
 
-PIJAMAS FEMININOS (categoria ML: Roupas e Calçados > Roupas > Pijamas):
-Atributos obrigatórios:
-- Marca: Feminnita (Conta A) / FNT Confecções (Conta B)
-- Gênero: Feminino
-- Tamanho: P / M / G / GG / XG / XGG (conforme grade)
-- Material/Composição: ex. 100% Viscose / 95% Algodão 5% Elastano
-- Cor: nome da cor principal
-- Tipo de produto: Conjunto de Pijama / Camisola / Baby Doll
-- Quantidade de peças: 2 (calça + blusa) ou 1 (camisola)
+EDS (Enhanced Data Sheets) são as fichas técnicas estruturadas que o ML exige. Ficha incompleta = menos exposição orgânica, menos Buy Box, mais restrições.
 
-Atributos recomendados (que aumentam score da ficha):
-- Comprimento da manga: curta / longa / sem manga
-- Comprimento da calça: curta / longa
-- Tipo de tecido: Viscose / Malha / Cotton / Modal
-- Estampa: Liso / Estampado / Floral / Animal Print
-- Fecho: Sem fecho / Botões / Zíper
-- Linha/Coleção: ex. Linha Conforto / Premium / Plus Size
+ATRIBUTOS OBRIGATÓRIOS para pijamas:
+- Marca, Gênero, Tamanho, Material/Composição, Cor, Tipo de produto, Quantidade de peças
 
-━━━ GTIN E CÓDIGO DE BARRAS ━━━
+ATRIBUTOS RECOMENDADOS (aumentam score):
+- Comprimento da manga/calça, Tipo de tecido, Estampa, Fecho, Linha/Coleção
 
-GTIN (código de barras) é obrigatório para muitas categorias do ML.
-Para pijamas da Feminnita:
-- Se o produto tem código de barras próprio: preencher o campo GTIN com o EAN/GS1
-- Se não tem GTIN: marcar "Não possui" — NUNCA deixar em branco
-- Produtos sem GTIN perdem score de ficha mas não são bloqueados em moda
-
-Regra: sempre checar se o item tem código de barras antes de cadastrar. Se tiver, usar. Se não tiver, declarar explicitamente.
-
-━━━ CATÁLOGO COMPARTILHADO (ATENÇÃO CRÍTICA) ━━━
-
-O ML pode forçar anúncios para o catálogo compartilhado (catalog mode). Nesse modo:
-- Múltiplos vendedores competem pelo mesmo anúncio
-- Quem tem melhor reputação + preço + frete ganha Buy Box
-- RISCO: se os atributos estiverem errados, o ML pode vincular seu produto ao catálogo errado
-
-Prevenção:
-1. Preencher TODOS os atributos antes de publicar
-2. Usar a marca correta (Feminnita ou FNT — nunca genérico)
-3. Evitar descrições genéricas que possam confundir o ML
-
-━━━ PROCESSO DE AUDITORIA DE FICHA ━━━
-
-Para cada item, verificar:
-□ Categoria correta (não colocar pijama em "Roupas diversas")
-□ Título com palavras-chave + atributos principais (ex: "Pijama Feminino Viscose Longo Feminnita Estampado P M G GG")
-□ Atributos obrigatórios 100% preenchidos
-□ Atributos recomendados preenchidos quando possível
-□ Fotos seguindo padrão ML: fundo branco, produto central, mínimo 6 fotos
-□ Descrição com palavras-chave naturais (ML indexa o texto)
-□ Variações com grade correta (todas as cores e tamanhos disponíveis)
-□ Estoque e preço atualizados por variação
-
-━━━ TÍTULOS OTIMIZADOS PARA ML ━━━
-
-Estrutura: [Tipo de Produto] [Marca] [Material] [Característica Principal] [Público] [Tamanhos]
-Limite: 60 caracteres (ML corta depois disso nas buscas)
-
-Exemplos:
+TÍTULOS (máx 60 chars): [Tipo] [Marca] [Material] [Característica] [Tamanhos]
 ✅ "Pijama Feminino Feminnita Viscose Long P M G GG"
-✅ "Conjunto Pijama Adulto Feminnita Soft Plus Size GG XG"
-❌ "Pijama lindo super confortável kit com 2 peças barato frete grátis" (sem marca, sem material, não indexa)
+❌ "Pijama lindo super confortável kit com 2 peças"
 
-Palavras-chave prioritárias para pijamas no ML:
-- pijama feminino, conjunto pijama, pijama adulto, pijama longo, pijama curto
-- viscose, malha, cotton, liganete, soft
-- plus size, tamanho grande, P M G GG XGG
-- atacado pijama (Conta B), kit pijama, pijama barato frete grátis
-
-━━━ CONTAS A vs B — DIFERENÇAS OPERACIONAIS ━━━
-
-CONTA A (Feminnita — B2C):
-- Preço: varejo, consumidor final
-- Quantidade mínima: 1 peça
-- Foco: conversão individual, frete grátis, avaliações
-- Estratégia EDS: maximizar atributos visuais (cores, estampas, fotos)
-
-CONTA B (FNT — B2B/Atacado):
-- Preço: atacado, menor que varejo
-- Quantidade mínima: kit (ex. mínimo 3 peças ou grade fechada)
-- Foco: revendedoras, margem, pedido médio alto
-- Estratégia EDS: destacar quantidade por kit, composição, preço unitário implícito
-
-━━━ REGRA FUNDAMENTAL ━━━
-Nunca publique um anúncio com ficha incompleta. Ficha incompleta hoje = penalização orgânica amanhã.
-Se um atributo não existir no produto (ex. GTIN), declara explicitamente — não deixa em branco.
-Se a categoria estiver errada, mover o anúncio antes de otimizar o resto.
+CONTA A (Feminnita — B2C): varejo, 1 peça mínima, foco em conversão individual
+CONTA B (FNT — B2B): atacado, grade fechada, foco em revendedoras
 
 ${knowledge ? `\n━━━ INTELIGÊNCIA ATUAL ━━━\n${knowledge}` : ""}
 ${memoryContext ? `\n━━━ MEMÓRIA ━━━\n${memoryContext}` : ""}`;
@@ -159,11 +151,63 @@ export async function chatWithGabi(
 ): Promise<string> {
   const systemPrompt = await buildGabiPrompt(account);
   const nameCtx = userName ? `\nNOME DO USUÁRIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
-  const result = await invokeLLM({
-    messages: [{ role: "system", content: systemPrompt + nameCtx }, ...history],
-    maxTokens: 2000,
+
+  const messages: Anthropic.MessageParam[] = history.map(m => ({
+    role: m.role,
+    content: m.content,
+  }));
+
+  let response = await anthropic.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 2000,
+    system: systemPrompt + nameCtx,
+    tools: GABI_ML_TOOLS,
+    messages,
   });
-  return String(result.choices[0]?.message?.content || "Não consegui processar.");
+
+  // Agentic loop — processa tool calls até o agente parar
+  while (response.stop_reason === "tool_use") {
+    const assistantContent = response.content;
+    const toolUses = assistantContent.filter((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
+
+    const toolResults: Anthropic.ToolResultBlockParam[] = [];
+    for (const toolUse of toolUses) {
+      let result: string;
+      try {
+        const inp = toolUse.input as Record<string, any>;
+        if (toolUse.name === "ml_list_items") {
+          result = await listMLItems(account);
+        } else if (toolUse.name === "ml_pause_item") {
+          result = await pauseMLItem(inp.itemId, account);
+        } else if (toolUse.name === "ml_activate_item") {
+          result = await activateMLItem(inp.itemId, account);
+        } else if (toolUse.name === "ml_update_price") {
+          result = await updateMLPrice(inp.itemId, inp.price, account);
+        } else if (toolUse.name === "ml_update_stock") {
+          result = await updateMLStock(inp.itemId, inp.quantity, account);
+        } else {
+          result = `Ferramenta desconhecida: ${toolUse.name}`;
+        }
+      } catch (e: any) {
+        result = `Erro: ${e.message}`;
+      }
+      toolResults.push({ type: "tool_result", tool_use_id: toolUse.id, content: result });
+    }
+
+    messages.push({ role: "assistant", content: assistantContent });
+    messages.push({ role: "user", content: toolResults });
+
+    response = await anthropic.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 2000,
+      system: systemPrompt + nameCtx,
+      tools: GABI_ML_TOOLS,
+      messages,
+    });
+  }
+
+  const textBlocks = response.content.filter((b): b is Anthropic.TextBlock => b.type === "text");
+  return textBlocks.map(b => b.text).join("\n") || "Não consegui processar.";
 }
 
 export async function updateGabiKnowledge(): Promise<string> {

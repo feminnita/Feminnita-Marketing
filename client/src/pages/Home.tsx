@@ -119,7 +119,7 @@ const TEAM = [
 ];
 
 const MARKETPLACE_TEAM = [
-  { name: "Gabi", role: "ML — EDS", path: "/ml-gabi", photo: gabiPhoto, color: "#FFD100", textColor: "#1a1a1a" },
+  { name: "Gabi", role: "ML — Ads", path: "/ml-gabi", photo: gabiPhoto, color: "#FFD100", textColor: "#1a1a1a" },
   { name: "Luiza", role: "Shopee Ads", path: "/shopee-luiza", photo: luizaShopeePhoto, color: "#EE4D2D", textColor: "#fff" },
   { name: "Isabela", role: "Shein", path: "/shein-isabela", photo: isabelaPhoto, color: "#FF2D55", textColor: "#fff" },
   { name: "Alice", role: "Amazon", path: "/amazon-alice", photo: alicePhoto, color: "#FF9900", textColor: "#1a1a1a" },

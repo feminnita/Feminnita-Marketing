@@ -175,9 +175,16 @@ export async function collectMLAdsData(account = "feminnita"): Promise<MLPerform
 
   const period = `${new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toLocaleDateString("pt-BR")} — ${new Date().toLocaleDateString("pt-BR")} (30 dias)`;
 
+  const campaigns = items.map((i) => ({
+    ...i,
+    name: i.title,
+    type: i.listing_type_id === "gold_special" ? "Clássico" : i.listing_type_id === "gold_pro" ? "Premium" : (i.listing_type_id || "Grátis"),
+    sales: i.sold_quantity,
+  }));
+
   return {
     items,
-    campaigns: items, // alias para compatibilidade com frontend
+    campaigns,
     recentOrders: recentOrders.slice(0, 20), // limita payload
     sellerId: userId,
     period,

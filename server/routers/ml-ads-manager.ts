@@ -15,11 +15,21 @@ export const mlAdsManagerRouter = router({
    */
   getAuthStatus: protectedProcedure
     .input(z.object({ account: z.enum(["feminnita", "fnt"]).default("feminnita") }).optional())
-    .query(({ input }) => {
+    .query(async ({ input }) => {
       const acc = input?.account ?? "feminnita";
       const token = acc === "fnt" ? process.env.ML_ACCESS_TOKEN_2 : process.env.ML_ACCESS_TOKEN_1;
       const userId = acc === "fnt" ? process.env.ML_USER_ID_2 : process.env.ML_USER_ID_1;
-      return { connected: Boolean(token), userId: userId || undefined };
+      if (!token) return { connected: false, userId: undefined, expired: false };
+      try {
+        const res = await fetch("https://api.mercadolibre.com/users/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return { connected: false, userId, expired: true };
+        const data = await res.json() as any;
+        return { connected: true, userId: String(data.id || userId || ""), expired: false };
+      } catch {
+        return { connected: false, userId, expired: false };
+      }
     }),
 
   /**
@@ -110,11 +120,14 @@ export const mlAdsManagerRouter = router({
   /**
    * Busca campanhas ao vivo da ML Ads API.
    */
-  listCampaigns: protectedProcedure.query(async () => {
-    if (!process.env.ML_ACCESS_TOKEN_1)
-      throw new Error("ML_ACCESS_TOKEN_1 não configurado");
-    return collectMLAdsData();
-  }),
+  listCampaigns: protectedProcedure
+    .input(z.object({ account: z.enum(["feminnita", "fnt"]).default("feminnita") }).optional())
+    .query(async ({ input }) => {
+      const acc = input?.account ?? "feminnita";
+      const token = acc === "fnt" ? process.env.ML_ACCESS_TOKEN_2 : process.env.ML_ACCESS_TOKEN_1;
+      if (!token) throw new Error("Token ML não configurado para esta conta.");
+      return collectMLAdsData(acc);
+    }),
 
   /**
    * Envia uma mensagem de follow-up para o agente ML.

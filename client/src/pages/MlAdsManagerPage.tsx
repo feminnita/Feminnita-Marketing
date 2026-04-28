@@ -144,10 +144,10 @@ export default function MlAdsManagerPage() {
     { enabled: selectedEvaluationId !== null && selectedEv.data?.status === "done" }
   );
 
-  const campaigns = trpc.mlAdsManager.listCampaigns.useQuery(undefined, {
-    enabled: authStatus.data?.connected && showCampaigns,
-    retry: false,
-  });
+  const campaigns = trpc.mlAdsManager.listCampaigns.useQuery(
+    { account } as any,
+    { enabled: authStatus.data?.connected && showCampaigns, retry: false }
+  );
 
   // ─── Mutations ───────────────────────────────────────────────────────────────
 
@@ -205,17 +205,20 @@ export default function MlAdsManagerPage() {
   // ─── Not connected screen ─────────────────────────────────────────────────
 
   if (!authStatus.isLoading && !authStatus.data?.connected) {
+    const isExpired = authStatus.data?.expired;
     return (
       <div className="min-h-screen flex items-center justify-center p-6" style={{ backgroundColor: "#FAF6EE" }}>
         <div className="bg-white rounded-2xl shadow-lg p-10 max-w-md w-full text-center">
-          <div className="text-5xl mb-4">🛒</div>
+          <div className="text-5xl mb-4">{isExpired ? "⚠️" : "🛒"}</div>
           <h1 className="text-2xl font-bold text-[#FFD100] mb-2">Gabi — ML Ads & EDS</h1>
           <p className="text-gray-500 mb-6">
-            Conecte sua conta do Mercado Livre para analisar campanhas, fichas de produto e performance com a Gabi.
+            {isExpired
+              ? "Token do Mercado Livre expirou. Reconecte a conta para continuar usando a Gabi."
+              : "Conecte sua conta do Mercado Livre para analisar campanhas, fichas de produto e performance com a Gabi."}
           </p>
           <a
             href="/api/ml/start"
-            className="inline-flex items-center gap-2 bg-yellow-400 hover:bg-[#0f1f4d]0 text-gray-900 font-semibold px-6 py-3 rounded-xl transition-colors shadow"
+            className="inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-semibold px-6 py-3 rounded-xl transition-colors shadow"
           >
             <Link className="w-4 h-4" />
             Conectar conta Mercado Livre
