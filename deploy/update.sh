@@ -8,21 +8,24 @@ set -e
 APP_DIR="/opt/marketing"
 SERVICE="marketing"
 
-echo "[update] Parando serviço..."
-systemctl stop $SERVICE
-
 echo "[update] Atualizando código..."
 cd $APP_DIR
+
+# Descartar modificações locais para garantir pull limpo
+git stash --include-untracked 2>/dev/null || true
+# Remover arquivos não rastreados que possam bloquear o pull
+git clean -fd --exclude="*.env" 2>/dev/null || true
 git pull
 
 echo "[update] Instalando dependências..."
-pnpm install --frozen-lockfile
+# Sem --frozen-lockfile para tolerar atualizações de package.json
+pnpm install
 
 echo "[update] Fazendo build..."
 pnpm build
 
 echo "[update] Reiniciando serviço..."
-systemctl start $SERVICE
+systemctl restart $SERVICE
 
 echo "[update] Concluído!"
 systemctl status $SERVICE --no-pager -l | head -10
