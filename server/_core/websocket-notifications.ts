@@ -6,6 +6,35 @@ let io: SocketIOServer | null = null;
 // Mapa de usuários conectados: userId -> Set de socket IDs
 const connectedUsers = new Map<number, Set<string>>();
 
+// ── Chat interno ──────────────────────────────────────────────────────────────
+const CHAT_COLORS = ['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22','#e91e63','#00bcd4','#ff5722'];
+let chatColorIdx = 0;
+const MAX_CHAT_HISTORY = 100;
+
+interface ChatMessage {
+  type: 'message' | 'system';
+  id: string;
+  name?: string;
+  color?: string;
+  text: string;
+  ts: number;
+}
+
+const chatHistory: ChatMessage[] = [];
+const chatUsers = new Map<string, { name: string; color: string; userId: number }>();
+
+function broadcastChatUsers() {
+  if (!io) return;
+  const users = [...chatUsers.values()].map(u => ({ name: u.name, color: u.color }));
+  io.emit('chat:users', users);
+}
+
+function pushChatMessage(msg: ChatMessage) {
+  chatHistory.push(msg);
+  if (chatHistory.length > MAX_CHAT_HISTORY) chatHistory.shift();
+  if (io) io.emit('chat:message', msg);
+}
+
 export function initializeWebSocket(httpServer: HTTPServer) {
   io = new SocketIOServer(httpServer, {
     cors: {
@@ -26,8 +55,35 @@ export function initializeWebSocket(httpServer: HTTPServer) {
       console.log(`[WebSocket] Usuário ${userId} registrado (socket: ${socket.id})`);
     });
 
+    // Chat: join
+    socket.on("chat:join", ({ userId, name }: { userId: number; name: string }) => {
+      const safeName = String(name || "Usuário").trim().slice(0, 30);
+      const color = CHAT_COLORS[chatColorIdx % CHAT_COLORS.length];
+      chatColorIdx++;
+      chatUsers.set(socket.id, { name: safeName, color, userId });
+      socket.emit("chat:history", chatHistory);
+      broadcastChatUsers();
+      pushChatMessage({ type: "system", id: `${Date.now()}`, text: `${safeName} entrou`, ts: Date.now() });
+    });
+
+    // Chat: send message
+    socket.on("chat:send", (text: unknown) => {
+      const user = chatUsers.get(socket.id);
+      if (!user) return;
+      const safe = String(text ?? "").trim().slice(0, 1000);
+      if (!safe) return;
+      pushChatMessage({ type: "message", id: `${Date.now()}-${Math.random()}`, name: user.name, color: user.color, text: safe, ts: Date.now() });
+    });
+
     // Quando cliente se desconecta
     socket.on("disconnect", () => {
+      // Chat: remover do chat
+      const chatUser = chatUsers.get(socket.id);
+      if (chatUser) {
+        chatUsers.delete(socket.id);
+        broadcastChatUsers();
+        pushChatMessage({ type: "system", id: `${Date.now()}`, text: `${chatUser.name} saiu`, ts: Date.now() });
+      }
       // Remover socket de todos os usuários
       const entriesToDelete: number[] = [];
       connectedUsers.forEach((sockets, userId) => {

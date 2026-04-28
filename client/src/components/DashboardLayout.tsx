@@ -46,6 +46,7 @@ import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
+import ChatWidget from "./ChatWidget";
 
 // ─── Banner diário da Fernanda ────────────────────────────────────────────────
 
@@ -160,6 +161,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <DashboardLayoutContent setSidebarWidth={setSidebarWidth}>
         {children}
       </DashboardLayoutContent>
+      <ChatWidget />
     </SidebarProvider>
   );
 }
