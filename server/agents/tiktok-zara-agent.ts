@@ -73,10 +73,11 @@ TIPOS DE AFILIADO:
 2. TARGETED COLLABORATION: você convida creators específicos (pode dar comissão maior + amostra)
 3. EXCLUSIVE COLLABORATION: acordo formal com creator (conteúdo dedicado, taxa garantida)
 
-COMISSÃO IDEAL (moda/pijamas Brasil):
-- Open: 10–15% por venda
-- Targeted: 15–20% + amostra grátis
-- Exclusive (micro-influencer 10K–100K): 20–25% + fee fixo + amostra
+COMISSÃO IDEAL (moda/pijamas Brasil — padrão 2026):
+- Open: 25–30% por venda (mínimo para aparecer no radar de afiliados sérios)
+- Targeted: 30–35% + amostra grátis
+- Exclusive (micro-influencer 10K–100K): 35–40% + fee fixo + amostra
+- Para recrutar sem prova social (< 50 reviews): 40–50% como clickbait de entrada
 
 ═══════════════════════════════════════════════════════
 RECRUTAMENTO DE CREATORS
@@ -139,6 +140,45 @@ CONTA: ${account === "fnt" ? "FNT" : "FEMINNITA"}
 ${knowledge ? `---\n## INTELIGÊNCIA DE MERCADO\n${knowledge}\n---` : ""}
 
 ${memoryContext ? `---\n${memoryContext}\n---` : ""}
+
+━━━ INTELIGÊNCIA OPERACIONAL 2026 (operador $7.7M TikTok Shop) ━━━
+
+PERÍODO DE PROBAÇÃO — REAL E CRÍTICO:
+• Todo listing novo é SUPRIMIDO pelo TikTok: limite de views, vendas e viralização
+• Saída da probação: ~300–500 vendas + reviews consistentes + envios no prazo + conteúdo próprio ativo
+• O que acelera: preço agressivo → conversão fácil → avaliações positivas → histórico de entrega confiável
+• Não há prazo definido — são os sinais de confiabilidade que determinam quando o TikTok "abre o tap"
+
+PRECIFICAÇÃO PARA TIKTOK SHOP:
+• TikTok é uma plataforma de desconto — compradores esperam preço baixo
+• Estratégia: comece com preço menor para ganhar momentum → aumente depois de ter reviews e tração
+• Frete grátis + preço agressivo = conversão explode → alimenta o algoritmo → sai da probação mais rápido
+• O lucro real no início vem das vendas orgânicas (sem comissão de afiliado) — não tente maximizar margem logo
+
+LIMITES DE MENSAGENS TIKTOK (DM outreach):
+• 0 vendas: 2.000 mensagens/semana
+• GMV entre 2K–50K/mês: 7.000 mensagens/semana (1.000/dia)
+• Acima de 50K/mês em GMV: ilimitado
+• Implicação: nos primeiros meses, cada mensagem conta — foque nos 20 creators certos, não nos 2.000 errados
+
+SNIPING DE AFILIADOS DA CONCORRÊNCIA:
+• Use ferramentas de intel (ex: Cali Data) para ver quais creators promovem concorrentes e quanto geram
+• Alvo: creators gerando R$2K–20K/mês — os grandes não respondem, os pequenos não convertem
+• Esses mid-tiers já provaram que convertem produtos similares → risco mínimo de investir amostra neles
+• Abordagem: "Vi que você promove [nicho similar]. Tenho 35% de comissão + amostra grátis. Topas 2 vídeos?"
+
+REVIEWS — ESTRATÉGIA INICIAL:
+• TikTok (ao contrário do Amazon) ainda não tem sistema de penalidade para reviews de amigos/família
+• Primeiras 10–15 avaliações: pedir para pessoas próximas deixarem com foto
+• Foto no review ajuda no ranking e estabelece credibilidade visual
+• Responder TODOS os reviews (positivos e negativos) — futuros compradores leem as respostas
+• Nunca responder de forma defensiva — sempre solucionar publicamente ("vamos resolver isso!")
+
+FLYWHEEL MULTI-CANAL — NÃO DEPENDA SÓ DO TIKTOK:
+• TikTok = conteúdo + awareness + primeiras vendas (inconsistente, mas gera o ativo criativo)
+• WhatsApp / Shopee / ML / Amazon = receita mais estável e margem melhor
+• O conteúdo que funciona no TikTok alimenta todos os outros canais — é o motor criativo do negócio
+• Regra crítica: nunca construa 100% do negócio sobre o TikTok — ele pode ser derrubado, suspenso ou mudar
 
 ═══════════════════════════════════════════════════════
 PLAYBOOK COMPROVADO (operadores reais 2025–2026)

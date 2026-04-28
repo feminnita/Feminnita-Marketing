@@ -78,10 +78,10 @@ export function SistemaFeedbackClientesSection() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Feedback de Clientes</h2>
+          <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Feedback de Clientes</h2>
           <p className="text-slate-500 text-sm mt-1">Análise de sentimento e satisfação por persona</p>
         </div>
-        <Button onClick={() => setShowForm(!showForm)} style={{ backgroundColor: '#8B2635' }} className="text-white" size="sm">
+        <Button onClick={() => setShowForm(!showForm)} style={{ backgroundColor: '#6B1D28' }} className="text-white" size="sm">
           <Plus className="w-3.5 h-3.5 mr-1.5" />
           Novo Feedback
         </Button>
@@ -127,7 +127,7 @@ export function SistemaFeedbackClientesSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <MessageSquare className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <MessageSquare className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Feedbacks Recentes
           </CardTitle>
         </CardHeader>
@@ -163,7 +163,7 @@ export function SistemaFeedbackClientesSection() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button onClick={adicionar} size="sm" style={{ backgroundColor: '#8B2635' }} className="text-white">
+                <Button onClick={adicionar} size="sm" style={{ backgroundColor: '#6B1D28' }} className="text-white">
                   <Plus className="w-3.5 h-3.5 mr-1.5" />Adicionar
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => setShowForm(false)}>Cancelar</Button>
@@ -272,7 +272,7 @@ export function SistemaFeedbackClientesSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <TrendingUp className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <TrendingUp className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Melhores Práticas de Feedback
           </CardTitle>
         </CardHeader>

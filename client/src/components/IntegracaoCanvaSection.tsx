@@ -12,7 +12,7 @@ const DESIGNS = [
     category: "Catálogo",
     editUrl: "https://www.canva.com/d/wmVPPo8M2H1ropd",
     icon: <BookOpen className="w-4 h-4" />,
-    color: "#8B2635",
+    color: "#6B1D28",
     bg: "#fdf0e8",
   },
   {
@@ -22,7 +22,7 @@ const DESIGNS = [
     category: "Catálogo",
     editUrl: "https://www.canva.com/d/7-4VpImG71m2XZm",
     icon: <BookOpen className="w-4 h-4" />,
-    color: "#8B2635",
+    color: "#6B1D28",
     bg: "#fdf0e8",
   },
   {
@@ -121,7 +121,7 @@ export function IntegracaoCanvaSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Canva — Designs Feminnita</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Canva — Designs Feminnita</h2>
         <p className="text-slate-500 text-sm mt-1">
           Seus designs reais no Canva. Clique em qualquer card para editar diretamente.
         </p>
@@ -132,7 +132,7 @@ export function IntegracaoCanvaSection() {
         <CardContent className="pt-4 pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#8B2635' }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#6B1D28' }}>
                 <Palette className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -145,7 +145,7 @@ export function IntegracaoCanvaSection() {
               target="_blank"
               rel="noreferrer"
               className="flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg"
-              style={{ color: '#8B2635', backgroundColor: 'rgba(139,38,53,0.08)' }}
+              style={{ color: '#6B1D28', backgroundColor: 'rgba(139,38,53,0.08)' }}
             >
               <ExternalLink className="w-3.5 h-3.5" />
               Abrir brand kit
@@ -163,7 +163,7 @@ export function IntegracaoCanvaSection() {
         ].map(({ label, value }) => (
           <Card key={label} className="border-0 shadow-sm">
             <CardContent className="pt-4 pb-4 text-center">
-              <p className="text-2xl font-bold" style={{ color: '#8B2635' }}>{value}</p>
+              <p className="text-2xl font-bold" style={{ color: '#6B1D28' }}>{value}</p>
               <p className="text-xs text-slate-500 mt-0.5">{label}</p>
             </CardContent>
           </Card>
@@ -219,7 +219,7 @@ export function IntegracaoCanvaSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm flex items-center gap-2">
-            <Palette className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <Palette className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Atalhos rápidos
           </CardTitle>
         </CardHeader>
@@ -237,7 +237,7 @@ export function IntegracaoCanvaSection() {
                 rel="noreferrer"
                 className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors"
               >
-                <ExternalLink className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#8B2635' }} />
+                <ExternalLink className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#6B1D28' }} />
                 <div>
                   <p className="text-sm font-semibold text-slate-800">{label}</p>
                   <p className="text-xs text-slate-500">{desc}</p>

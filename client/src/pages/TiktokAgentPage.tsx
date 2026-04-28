@@ -3,8 +3,8 @@ import { useLocation } from "wouter";
 import { ArrowLeft, Music } from "lucide-react";
 import { AgentPanel, AGENTS, AGENT_PHOTOS, type AccountType } from "./TiktokTeamPage";
 
-const BANNER_FROM = "#881337";
-const BANNER_TO = "#9d174d";
+const BANNER_FROM = "#6B1030";
+const BANNER_TO = "#7B1040";
 
 export default function TiktokAgentPage({ agentName }: { agentName: string }) {
   const [, setLocation] = useLocation();

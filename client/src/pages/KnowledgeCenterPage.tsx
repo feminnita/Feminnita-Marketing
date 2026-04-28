@@ -30,7 +30,7 @@ const DOMAIN_META: Record<string, { label: string; description: string; icon: Re
     label: "Tendências de Produto",
     description: "Produtos, categorias, sazonalidade e comportamento do comprador",
     icon: <Sparkles className="w-5 h-5" />,
-    color: "#8B2635",
+    color: "#6B1D28",
   },
   whatsapp_sales: {
     label: "WhatsApp Vendas",
@@ -94,7 +94,7 @@ export default function KnowledgeCenterPage() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <Brain className="w-6 h-6 text-[#8B2635]" /> Central de Conhecimento
+            <Brain className="w-6 h-6 text-[#6B1D28]" /> Central de Conhecimento
           </h1>
           <p className="text-sm text-gray-500 mt-1">
             Inteligência de mercado atualizada semanalmente e injetada automaticamente nos agentes de IA
@@ -103,7 +103,7 @@ export default function KnowledgeCenterPage() {
         <button
           onClick={updateAll}
           disabled={triggerMut.isPending}
-          className="flex items-center gap-2 px-4 py-2.5 bg-[#8B2635] text-white rounded-xl font-medium text-sm hover:bg-[#7a1f2d] disabled:opacity-50 transition-colors"
+          className="flex items-center gap-2 px-4 py-2.5 bg-[#6B1D28] text-white rounded-xl font-medium text-sm hover:bg-[#7a1f2d] disabled:opacity-50 transition-colors"
         >
           {isUpdatingAll ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
           {isUpdatingAll ? "Atualizando…" : "Atualizar Tudo"}

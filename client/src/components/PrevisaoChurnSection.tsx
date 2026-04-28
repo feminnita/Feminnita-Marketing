@@ -54,7 +54,7 @@ export function PrevisaoChurnSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Previsão de Churn</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Previsão de Churn</h2>
         <p className="text-slate-500 text-sm mt-1">Monitore clientes em risco de abandono e defina ações de retenção</p>
       </div>
 
@@ -98,7 +98,7 @@ export function PrevisaoChurnSection() {
               <TrendingDown className="w-4 h-4 text-red-500" />
               Clientes em risco
             </CardTitle>
-            <Button size="sm" onClick={() => setShowForm(!showForm)} style={{ backgroundColor: '#8B2635' }} className="text-white">
+            <Button size="sm" onClick={() => setShowForm(!showForm)} style={{ backgroundColor: '#6B1D28' }} className="text-white">
               <Plus className="w-3.5 h-3.5 mr-1.5" />Adicionar
             </Button>
           </div>
@@ -132,7 +132,7 @@ export function PrevisaoChurnSection() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button onClick={adicionar} size="sm" style={{ backgroundColor: '#8B2635' }} className="text-white">
+                <Button onClick={adicionar} size="sm" style={{ backgroundColor: '#6B1D28' }} className="text-white">
                   <Plus className="w-3.5 h-3.5 mr-1.5" />Adicionar
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => setShowForm(false)}>Cancelar</Button>

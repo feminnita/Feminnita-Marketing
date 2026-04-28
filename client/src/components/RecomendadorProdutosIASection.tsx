@@ -11,7 +11,7 @@ export function RecomendadorProdutosIASection() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Recomendador de Produtos com IA</h2>
+          <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Recomendador de Produtos com IA</h2>
           <p className="text-slate-500 text-sm mt-1">Sugira produtos personalizados para aumentar conversão e ticket médio</p>
         </div>
       </div>
@@ -36,7 +36,7 @@ export function RecomendadorProdutosIASection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Brain className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <Brain className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Recomendações Ativas
           </CardTitle>
         </CardHeader>
@@ -57,7 +57,7 @@ export function RecomendadorProdutosIASection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Zap className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <Zap className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Como a IA Recomenda Produtos
           </CardTitle>
         </CardHeader>
@@ -88,7 +88,7 @@ export function RecomendadorProdutosIASection() {
               <div key={item.step} className="flex items-start gap-3 p-3 border border-slate-200 rounded-lg">
                 <div
                   className="w-6 h-6 rounded-full text-white flex items-center justify-center text-xs font-bold flex-shrink-0"
-                  style={{ backgroundColor: '#8B2635' }}
+                  style={{ backgroundColor: '#6B1D28' }}
                 >
                   {item.step}
                 </div>
@@ -106,15 +106,15 @@ export function RecomendadorProdutosIASection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <TrendingUp className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <TrendingUp className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Potencial de Impacto
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-slate-700">
-          <p><span className="font-semibold" style={{ color: '#8B2635' }}>Cross-sell:</span> Produtos complementares (ex: pijama → robe) aumentam ticket médio em 15–30%</p>
-          <p><span className="font-semibold" style={{ color: '#8B2635' }}>Upsell:</span> Upgrade de versão casual para premium com clientes recorrentes</p>
-          <p><span className="font-semibold" style={{ color: '#8B2635' }}>Bundle:</span> Clientes que compram 2x/mês respondem bem a kits com desconto progressivo</p>
-          <p><span className="font-semibold" style={{ color: '#8B2635' }}>VIP:</span> Clientes com ticket alto têm alta aceitação de edições limitadas e exclusivas</p>
+          <p><span className="font-semibold" style={{ color: '#6B1D28' }}>Cross-sell:</span> Produtos complementares (ex: pijama → robe) aumentam ticket médio em 15–30%</p>
+          <p><span className="font-semibold" style={{ color: '#6B1D28' }}>Upsell:</span> Upgrade de versão casual para premium com clientes recorrentes</p>
+          <p><span className="font-semibold" style={{ color: '#6B1D28' }}>Bundle:</span> Clientes que compram 2x/mês respondem bem a kits com desconto progressivo</p>
+          <p><span className="font-semibold" style={{ color: '#6B1D28' }}>VIP:</span> Clientes com ticket alto têm alta aceitação de edições limitadas e exclusivas</p>
         </CardContent>
       </Card>
     </div>

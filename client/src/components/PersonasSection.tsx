@@ -37,7 +37,7 @@ function EditModal({ influencer, onClose }: { influencer: Influencer; onClose: (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-lg font-bold" style={{ color: '#8B2635' }}>Editar {influencer.name}</h2>
+          <h2 className="text-lg font-bold" style={{ color: '#6B1D28' }}>Editar {influencer.name}</h2>
           <button onClick={onClose} className="p-1 hover:bg-slate-100 rounded-lg transition-colors">
             <X className="w-5 h-5 text-slate-500" />
           </button>
@@ -81,7 +81,7 @@ function EditModal({ influencer, onClose }: { influencer: Influencer; onClose: (
           <Button variant="outline" className="flex-1" onClick={onClose}>Cancelar</Button>
           <Button
             className="flex-1 text-white"
-            style={{ backgroundColor: '#8B2635' }}
+            style={{ backgroundColor: '#6B1D28' }}
             disabled={update.isPending}
             onClick={() => update.mutate({ id: influencer.id, ...form })}
           >
@@ -94,7 +94,7 @@ function EditModal({ influencer, onClose }: { influencer: Influencer; onClose: (
   );
 }
 
-const ACCENT_COLORS = ['#8B2635', '#A63D4A', '#6B7A3A', '#3A5A6B'];
+const ACCENT_COLORS = ['#6B1D28', '#A63D4A', '#6B7A3A', '#3A5A6B'];
 const BG_COLORS = ['#fdf0e8', '#fce8ea', '#eef5e8', '#e8f2f5'];
 
 export default function PersonasSection() {
@@ -106,7 +106,7 @@ export default function PersonasSection() {
   if (isLoading) {
     return (
       <div className="flex justify-center py-16">
-        <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#8B2635' }} />
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#6B1D28' }} />
       </div>
     );
   }
@@ -120,7 +120,7 @@ export default function PersonasSection() {
           Crie as 4 personas padrão da Feminnita (Carol, Renata, Vanessa, Luiza) automaticamente.
         </p>
         <Button
-          style={{ backgroundColor: '#8B2635' }}
+          style={{ backgroundColor: '#6B1D28' }}
           className="text-white"
           disabled={seed.isPending}
           onClick={() => seed.mutate()}
@@ -138,7 +138,7 @@ export default function PersonasSection() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Influencers</h2>
+          <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Influencers</h2>
           <p className="text-slate-500 text-sm mt-1">
             Perfis das influenciadoras. A IA usa esses dados para gerar conteúdo com a voz de cada uma.
           </p>

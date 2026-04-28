@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc";
 import { Mail, Lock, User, Loader2, AlertCircle } from "lucide-react";
+import c4xLogo from "@/assets/c4x-logo.png";
 
 export default function LoginSignup() {
   const [mode, setMode] = useState<"login" | "signup">("login");
@@ -39,7 +40,7 @@ export default function LoginSignup() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2" style={{ color: '#E8C99A' }}>Feminnita</h1>
+          <img src={c4xLogo} alt="C4X Soluções IA" className="h-28 mx-auto object-contain mb-2" />
           <p className="text-slate-400">Estratégia de Marketing Digital</p>
         </div>
 
@@ -116,7 +117,7 @@ export default function LoginSignup() {
               <Button
                 type="submit"
                 disabled={isPending}
-                className="w-full bg-[#8B2635] hover:bg-[#6B1E28] text-white"
+                className="w-full bg-[#6B1D28] hover:bg-[#6B1E28] text-white"
               >
                 {isPending ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Processando...</>
@@ -128,13 +129,13 @@ export default function LoginSignup() {
               {mode === "login" ? (
                 <>Não tem conta?{" "}
                   <button onClick={() => { setMode("signup"); setError(""); }}
-                    className="text-[#8B2635] hover:text-[#C4A882] font-medium">
+                    className="text-[#6B1D28] hover:text-[#C4A882] font-medium">
                     Criar uma
                   </button></>
               ) : (
                 <>Já tem conta?{" "}
                   <button onClick={() => { setMode("login"); setError(""); }}
-                    className="text-[#8B2635] hover:text-[#C4A882] font-medium">
+                    className="text-[#6B1D28] hover:text-[#C4A882] font-medium">
                     Entrar
                   </button></>
               )}

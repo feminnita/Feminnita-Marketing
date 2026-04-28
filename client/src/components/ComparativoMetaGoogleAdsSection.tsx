@@ -45,14 +45,14 @@ export const ComparativoMetaGoogleAdsSection = () => {
 
   if (isLoading) return (
     <div className="flex justify-center py-16">
-      <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#8B2635' }} />
+      <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#6B1D28' }} />
     </div>
   );
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Meta vs Google Ads</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Meta vs Google Ads</h2>
         <p className="text-slate-500 text-sm mt-1">Comparativo de performance baseado nas suas campanhas cadastradas.</p>
       </div>
 
@@ -122,7 +122,7 @@ export const ComparativoMetaGoogleAdsSection = () => {
             <Card className="border-0 shadow-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4" style={{ color: '#8B2635' }} />
+                  <BarChart3 className="w-4 h-4" style={{ color: '#6B1D28' }} />
                   Comparativo Direto
                 </CardTitle>
               </CardHeader>
@@ -162,7 +162,7 @@ export const ComparativoMetaGoogleAdsSection = () => {
             <Card className="border-0 shadow-sm" style={{ backgroundColor: '#fdf0e8' }}>
               <CardContent className="pt-5">
                 <div className="flex items-start gap-3">
-                  <TrendingUp className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#8B2635' }} />
+                  <TrendingUp className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#6B1D28' }} />
                   <div>
                     <p className="font-semibold text-slate-800">
                       {meta.roi >= google.roi

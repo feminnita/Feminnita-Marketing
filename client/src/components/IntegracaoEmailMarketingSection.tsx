@@ -68,7 +68,7 @@ export function IntegracaoEmailMarketingSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Email Marketing</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Email Marketing</h2>
         <p className="text-slate-500 text-sm mt-1">Gerencie campanhas e automações de email por persona</p>
       </div>
 
@@ -113,10 +113,10 @@ export function IntegracaoEmailMarketingSection() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Mail className="w-4 h-4" style={{ color: '#8B2635' }} />
+              <Mail className="w-4 h-4" style={{ color: '#6B1D28' }} />
               Campanhas de email
             </CardTitle>
-            <Button size="sm" onClick={() => setShowForm(!showForm)} style={{ backgroundColor: '#8B2635' }} className="text-white">
+            <Button size="sm" onClick={() => setShowForm(!showForm)} style={{ backgroundColor: '#6B1D28' }} className="text-white">
               <Plus className="w-3.5 h-3.5 mr-1.5" />Adicionar
             </Button>
           </div>
@@ -162,7 +162,7 @@ export function IntegracaoEmailMarketingSection() {
                 ))}
               </div>
               <div className="flex gap-2">
-                <Button onClick={adicionar} size="sm" style={{ backgroundColor: '#8B2635' }} className="text-white">
+                <Button onClick={adicionar} size="sm" style={{ backgroundColor: '#6B1D28' }} className="text-white">
                   <Plus className="w-3.5 h-3.5 mr-1.5" />Adicionar
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => setShowForm(false)}>Cancelar</Button>
@@ -228,7 +228,7 @@ export function IntegracaoEmailMarketingSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Zap className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <Zap className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Fluxos de automação recomendados por persona
           </CardTitle>
         </CardHeader>
@@ -253,16 +253,16 @@ export function IntegracaoEmailMarketingSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <TrendingUp className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <TrendingUp className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Benchmarks de email marketing para moda
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-slate-700">
-          <p><span className="font-semibold" style={{ color: '#8B2635' }}>Taxa de abertura:</span> 55–70% (acima de 60% = bom)</p>
-          <p><span className="font-semibold" style={{ color: '#8B2635' }}>Taxa de clique:</span> 15–30% de quem abriu</p>
-          <p><span className="font-semibold" style={{ color: '#8B2635' }}>Taxa de conversão:</span> 10–25% de quem clicou</p>
-          <p><span className="font-semibold" style={{ color: '#8B2635' }}>Melhor horário:</span> terça a quinta, 10h–11h ou 19h–20h</p>
-          <p><span className="font-semibold" style={{ color: '#8B2635' }}>Frequência ideal:</span> 1–3 emails/semana por persona</p>
+          <p><span className="font-semibold" style={{ color: '#6B1D28' }}>Taxa de abertura:</span> 55–70% (acima de 60% = bom)</p>
+          <p><span className="font-semibold" style={{ color: '#6B1D28' }}>Taxa de clique:</span> 15–30% de quem abriu</p>
+          <p><span className="font-semibold" style={{ color: '#6B1D28' }}>Taxa de conversão:</span> 10–25% de quem clicou</p>
+          <p><span className="font-semibold" style={{ color: '#6B1D28' }}>Melhor horário:</span> terça a quinta, 10h–11h ou 19h–20h</p>
+          <p><span className="font-semibold" style={{ color: '#6B1D28' }}>Frequência ideal:</span> 1–3 emails/semana por persona</p>
         </CardContent>
       </Card>
     </div>

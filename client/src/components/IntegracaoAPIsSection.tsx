@@ -37,7 +37,7 @@ export default function IntegracaoAPIsSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Integração Instagram / TikTok API</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Integração Instagram / TikTok API</h2>
         <p className="text-slate-500 text-sm mt-1">Conecte suas contas e monitore dados em tempo real</p>
       </div>
 
@@ -87,7 +87,7 @@ export default function IntegracaoAPIsSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Zap className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <Zap className="w-4 h-4" style={{ color: '#6B1D28' }} />
             O que você terá após conectar
           </CardTitle>
           <CardDescription className="text-xs">Dados sincronizados a cada 5 minutos</CardDescription>

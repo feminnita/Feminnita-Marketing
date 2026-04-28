@@ -61,7 +61,7 @@ export default function IntegracaoAfiliados() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Integração de Afiliados</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Integração de Afiliados</h2>
         <p className="text-slate-500 text-sm mt-1">Gerencie afiliadas e acompanhe vendas por parceiro</p>
       </div>
 
@@ -102,10 +102,10 @@ export default function IntegracaoAfiliados() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Users className="w-4 h-4" style={{ color: '#8B2635' }} />
+              <Users className="w-4 h-4" style={{ color: '#6B1D28' }} />
               Afiliadas cadastradas
             </CardTitle>
-            <Button size="sm" onClick={() => setShowForm(!showForm)} style={{ backgroundColor: '#8B2635' }} className="text-white">
+            <Button size="sm" onClick={() => setShowForm(!showForm)} style={{ backgroundColor: '#6B1D28' }} className="text-white">
               <Plus className="w-3.5 h-3.5 mr-1.5" />Adicionar
             </Button>
           </div>
@@ -139,7 +139,7 @@ export default function IntegracaoAfiliados() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button onClick={adicionar} size="sm" style={{ backgroundColor: '#8B2635' }} className="text-white">
+                <Button onClick={adicionar} size="sm" style={{ backgroundColor: '#6B1D28' }} className="text-white">
                   <Plus className="w-3.5 h-3.5 mr-1.5" />Adicionar
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => setShowForm(false)}>Cancelar</Button>
@@ -200,7 +200,7 @@ export default function IntegracaoAfiliados() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <TrendingUp className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <TrendingUp className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Regras de comissão
           </CardTitle>
         </CardHeader>

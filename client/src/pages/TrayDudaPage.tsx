@@ -10,9 +10,9 @@ interface Message {
   content: string;
 }
 
-const BANNER_FROM = "#881337";
-const BANNER_TO = "#9d174d";
-const BTN_HEX = "#8B2635";
+const BANNER_FROM = "#6B1030";
+const BANNER_TO = "#7B1040";
+const BTN_HEX = "#6B1D28";
 
 const SUGGESTIONS = [
   "Analise a home do site e me diga o que otimizar primeiro",

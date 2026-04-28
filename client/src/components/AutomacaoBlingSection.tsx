@@ -60,7 +60,7 @@ export function AutomacaoBlingSection() {
   if (loadingStatus) {
     return (
       <div className="flex justify-center py-16">
-        <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#8B2635' }} />
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#6B1D28' }} />
       </div>
     );
   }
@@ -68,7 +68,7 @@ export function AutomacaoBlingSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Bling ERP</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Bling ERP</h2>
         <p className="text-slate-500 text-sm mt-1">
           Sincronize produtos, pedidos, clientes e estoque direto do Bling.
         </p>
@@ -108,7 +108,7 @@ export function AutomacaoBlingSection() {
                   Desconectar
                 </Button>
               ) : (
-                <Button style={{ backgroundColor: '#8B2635' }} className="text-white"
+                <Button style={{ backgroundColor: '#6B1D28' }} className="text-white"
                   disabled={!urlData?.url}
                   onClick={() => { if (urlData?.url) window.location.href = urlData.url; }}>
                   <Link2 className="w-4 h-4 mr-2" />

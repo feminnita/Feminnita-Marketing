@@ -40,10 +40,10 @@ export function IntegracaoWhatsAppSection() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>WhatsApp</h2>
+          <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>WhatsApp</h2>
           <p className="text-slate-500 text-sm mt-1">Mensagens automáticas para clientes — boas-vindas, abandono, pós-venda.</p>
         </div>
-        <Button style={{ backgroundColor: '#8B2635' }} className="text-white" onClick={() => setShowForm(true)}>
+        <Button style={{ backgroundColor: '#6B1D28' }} className="text-white" onClick={() => setShowForm(true)}>
           <Plus className="w-4 h-4 mr-2" /> Nova Automação
         </Button>
       </div>

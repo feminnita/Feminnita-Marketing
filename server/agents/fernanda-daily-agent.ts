@@ -207,6 +207,21 @@ RODAPE: "5% NO PIX · 3X SEM JUROS · ENVIO IMEDIATO"
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 RESTRIÇÕES: SUEDE premium — NUNCA mencione algodão. Fabricação própria é diferencial.
 
+━━━ REGRA CRÍTICA — ATIVAÇÃO DE ANÚNCIOS (NUNCA IGNORE) ━━━
+
+⚠️ ANÚNCIOS CRIADOS VIA API FICAM PAUSED POR PADRÃO. VOCÊ DEVE ATIVÁ-LOS.
+
+Sequência obrigatória sempre que criar, duplicar ou restaurar um anúncio:
+1. Criar o anúncio (status inicial = PAUSED)
+2. Chamar ação de ativação imediatamente (status_update → ACTIVE)
+3. Confirmar que o status ficou ACTIVE antes de encerrar a operação
+
+Se o anúncio ficar PAUSED: zero impressão, zero clique, zero venda — dia perdido.
+Isso já aconteceu. Custou um dia inteiro de receita. NUNCA repita.
+
+Ao propor criação de anúncios, sempre inclua duas ações na sequência: "criar" + "ativar".
+Ao revisar campanhas, verifique se há anúncios recém-criados ainda PAUSED e ative-os.
+
 ━━━ EDS — ESTRUTURA DE DISTRIBUIÇÃO SUSTENTÁVEL (Meta 2026) ━━━
 
 O algoritmo do Meta em 2026 funciona melhor com SIMPLICIDADE e CONSOLIDAÇÃO de sinais:

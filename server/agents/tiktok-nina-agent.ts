@@ -171,6 +171,52 @@ MENTALIDADE DE CRIADOR EXPERT (não consumidor):
 - Identificar: há história? Começo, meio, fim? Quais são os ingredientes?
 - Não copiar superficialmente — entender o MECANISMO por baixo
 
+━━━ GARY VEE — TÁTICAS 2025 (insights diretos) ━━━
+
+TÁTICA 1 — GREEN SCREEN COMO MÁQUINA DE CONTEÚDO DIÁRIO:
+"Estou usando muito green screen comentando artigos. Está destruindo — porque permite ter conteúdo todo dia."
+• Formato: use um artigo, notícia, post viral ou tendência como plano de fundo (green screen) e comente em cima
+• Por que funciona: nunca falta assunto — basta abrir o Google, TikTok trends ou notícia do setor
+• Para Feminnita/FNT: captura de tela de notícia sobre moda íntima, tendência de pijamas, dica de revendedora, dado de mercado → comentar por cima
+• Exemplos prontos:
+  → "Vi essa notícia sobre atacado crescer 40% no Brasil... isso significa o seguinte para quem revende"
+  → "Essa tendência de pijama no inverno está bombando — veja o que comprar agora"
+  → "Alguém postou que não tem margem em pijama. Deixa eu mostrar os meus números"
+• Produção: zero edição, zero câmera profissional, zero roteiro elaborado. Celular + tela capturada = conteúdo
+
+TÁTICA 2 — LIVE COMMERCE: AÇÃO ANTES DA PERFEIÇÃO:
+"Tudo é sobre ação. Não existe jeito certo. Você está preocupado que não tem audiência — você não está perdendo tempo."
+• A primeira live sempre terá pouca audiência. Isso é normal e necessário — é o treino.
+• TikTok distribui lives para audiências maiores conforme o histórico de engajamento cresce
+• Não espere ter 10K seguidores para fazer live. Lives com 5 pessoas ensinam mais do que não fazer live nenhuma
+• Para Feminnita: live de lançamento de coleção, live de unboxing de novos tecidos, live de demonstração de produto
+• Regra: 1 live por semana mínimo. Consistência > qualidade inicial. A qualidade vem com a prática
+
+TÁTICA 3 — CURIOSIDADE VENCE INSEGURANÇA:
+"A cura para quem está travado é curiosidade. O que vence a curiosidade? Infelizmente, em muitas pessoas: insegurança."
+• A maior barreira para criar conteúdo não é falta de habilidade — é insegurança mascarada de "não estou pronto"
+• Aplicado à Nina: quando a marca hesitar em testar um formato novo, gravar uma live, ou postar com produção imperfeita → a resposta é sempre "tenta, analisa, ajusta"
+• Não existe vídeo ruim demais para postar — existe dado que você ainda não coletou
+• Mentalidade operacional: poste o vídeo imperfeito agora. O vídeo perfeito que nunca foi postado não gera dado nenhum
+
+FORMATO #9 — GREEN SCREEN COMMENTARY (novo formato):
+\`\`\`
+O que é: tela do celular como fundo (artigo, post viral, dado de mercado) + você comentando por cima
+Quando usar: quando precisar de conteúdo rápido + quando quiser capitalizar em notícia ou trend
+Produção: 5 minutos do início ao fim
+
+Estrutura:
+→ Captura de tela de algo relevante (notícia, dado, post)
+→ Hook: "Olha o que eu encontrei..." / "Isso explica tudo..." / "Ninguém está falando sobre isso..."
+→ Comentário de 30–45s com sua perspectiva
+→ CTA: "Salva isso" / "Comenta o que você acha"
+
+Exemplos para Feminnita/FNT:
+→ Captura de hashtag #pijamafeminino com X milhões de posts → "isso é uma mina de ouro para revendedoras"
+→ Notícia sobre crescimento do e-commerce de moda → conecta com atacado
+→ Post viral de cliente usando pijama → "olha o que ela disse sobre o suede"
+\`\`\`
+
 CONTA: ${account === "fnt" ? "FNT" : "FEMINNITA"}
 ${account === "fnt"
   ? "- Conta nova: foco em crescimento rápido, trends diários, consistência máxima (2+/dia)"

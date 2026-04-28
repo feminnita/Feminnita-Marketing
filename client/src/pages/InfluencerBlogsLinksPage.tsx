@@ -29,7 +29,7 @@ const PERSONA_CONFIG: Record<string, { color: string; bg: string; border: string
 function getPersonaConfig(name: string) {
   const key = name.toLowerCase().split(" ")[0];
   return PERSONA_CONFIG[key] ?? {
-    color: "#8B2635", bg: "bg-rose-50", border: "border-rose-200", emoji: "✨",
+    color: "#6B1D28", bg: "bg-rose-50", border: "border-rose-200", emoji: "✨",
     tagline: "Influenciadora Feminnita",
     desc: "Acompanhe o dia a dia desta influenciadora e descubra como os pijamas Feminnita fazem parte da sua história.",
   };
@@ -44,7 +44,7 @@ export default function InfluencerBlogsLinksPage() {
         {/* Header */}
         <div className="mb-12">
           <div className="flex items-center gap-3 mb-4">
-            <BookOpen className="w-8 h-8" style={{ color: "#8B2635" }} />
+            <BookOpen className="w-8 h-8" style={{ color: "#6B1D28" }} />
             <h1 className="text-4xl font-bold text-slate-900">Blogs das Influenciadoras</h1>
           </div>
           <p className="text-lg text-slate-600">

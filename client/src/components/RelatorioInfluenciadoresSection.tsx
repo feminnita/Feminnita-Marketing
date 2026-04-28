@@ -22,7 +22,7 @@ export function RelatorioInfluenciadoresSection() {
 
   if (isLoading) return (
     <div className="flex justify-center py-16">
-      <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#8B2635', borderTopColor: 'transparent' }} />
+      <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#6B1D28', borderTopColor: 'transparent' }} />
     </div>
   );
 
@@ -62,7 +62,7 @@ export function RelatorioInfluenciadoresSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Relatório por Influencer</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Relatório por Influencer</h2>
         <p className="text-slate-500 text-sm mt-1">Performance das personas baseada nas campanhas ativas</p>
       </div>
 
@@ -146,7 +146,7 @@ export function RelatorioInfluenciadoresSection() {
           <Card className="border-0 shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <Target className="w-4 h-4" style={{ color: '#8B2635' }} />
+                <Target className="w-4 h-4" style={{ color: '#6B1D28' }} />
                 Canal recomendado por persona
               </CardTitle>
             </CardHeader>

@@ -51,7 +51,7 @@ export const RelatorioROISegmentoSection = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>ROI por Segmento</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>ROI por Segmento</h2>
         <p className="text-slate-500 text-sm mt-1">Estratégias e performance por segmento de cliente</p>
       </div>
 
@@ -98,7 +98,7 @@ export const RelatorioROISegmentoSection = () => {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <Users className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <Users className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Estratégia por segmento de cliente
           </CardTitle>
         </CardHeader>
@@ -127,7 +127,7 @@ export const RelatorioROISegmentoSection = () => {
         <Card className="border-0 shadow-sm">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <BarChart3 className="w-4 h-4" style={{ color: '#8B2635' }} />
+              <BarChart3 className="w-4 h-4" style={{ color: '#6B1D28' }} />
               Performance de campanhas (dados reais)
             </CardTitle>
           </CardHeader>

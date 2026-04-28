@@ -41,11 +41,11 @@ export function CRMClientesSection() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>CRM de Clientes</h2>
+          <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>CRM de Clientes</h2>
           <p className="text-slate-500 text-sm mt-1">Contatos sincronizados do Bling ERP.</p>
         </div>
         {status?.conectado && !status.expirado && (
-          <Button style={{ backgroundColor: '#8B2635' }} className="text-white"
+          <Button style={{ backgroundColor: '#6B1D28' }} className="text-white"
             disabled={sync.isPending}
             onClick={() => sync.mutate({})}>
             {sync.isPending
@@ -80,7 +80,7 @@ export function CRMClientesSection() {
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           <Card className="border-0 shadow-sm">
             <CardContent className="pt-5">
-              <p className="text-2xl font-bold" style={{ color: '#8B2635' }}>{contatos.length}</p>
+              <p className="text-2xl font-bold" style={{ color: '#6B1D28' }}>{contatos.length}</p>
               <p className="text-xs text-slate-500 mt-1">Total de contatos</p>
             </CardContent>
           </Card>
@@ -122,7 +122,7 @@ export function CRMClientesSection() {
                   <div key={(c.id as string) ?? i}
                     className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors border border-slate-100">
                     <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
-                      style={{ backgroundColor: '#8B2635' }}>
+                      style={{ backgroundColor: '#6B1D28' }}>
                       {(c.nome ?? "?")[0].toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">

@@ -42,7 +42,7 @@ export default function FerramentaClonagemCampanhasSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Ferramenta de Clonagem de Campanhas</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Ferramenta de Clonagem de Campanhas</h2>
         <p className="text-slate-500 text-sm mt-1">Copie campanhas bem-sucedidas com ajustes automáticos por persona</p>
       </div>
 
@@ -70,7 +70,7 @@ export default function FerramentaClonagemCampanhasSection() {
                       ? "border-slate-800 bg-slate-50"
                       : "border-slate-200 hover:border-slate-300"
                   }`}
-                  style={selectedIdx === idx ? { borderColor: '#8B2635' } : {}}
+                  style={selectedIdx === idx ? { borderColor: '#6B1D28' } : {}}
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div>
@@ -124,7 +124,7 @@ export default function FerramentaClonagemCampanhasSection() {
                         ? "border-slate-800 bg-slate-50"
                         : "border-slate-200 hover:border-slate-300"
                     } ${persona.nome === (currentCampanha.persona ?? '') ? "opacity-50 cursor-not-allowed" : ""}`}
-                    style={selectedPersonaIdx === idx ? { borderColor: '#8B2635' } : {}}
+                    style={selectedPersonaIdx === idx ? { borderColor: '#6B1D28' } : {}}
                   >
                     <p className="text-2xl mb-2">{persona.imagem}</p>
                     <p className="font-semibold text-sm text-slate-900">{persona.nome}</p>
@@ -141,7 +141,7 @@ export default function FerramentaClonagemCampanhasSection() {
           <Card className="border-0 shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <Zap className="w-4 h-4" style={{ color: '#8B2635' }} />
+                <Zap className="w-4 h-4" style={{ color: '#6B1D28' }} />
                 Ajustes Automáticos
               </CardTitle>
               <CardDescription className="text-xs">Elementos que serão adaptados para {personaDestino.nome}</CardDescription>
@@ -172,7 +172,7 @@ export default function FerramentaClonagemCampanhasSection() {
           <Card className="border-0 shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <Settings className="w-4 h-4" style={{ color: '#8B2635' }} />
+                <Settings className="w-4 h-4" style={{ color: '#6B1D28' }} />
                 Configurações da Clonagem
               </CardTitle>
             </CardHeader>
@@ -193,7 +193,7 @@ export default function FerramentaClonagemCampanhasSection() {
           </Card>
 
           {/* Preview */}
-          <Card className="border-0 shadow-sm border-l-4" style={{ borderLeftColor: '#8B2635' }}>
+          <Card className="border-0 shadow-sm border-l-4" style={{ borderLeftColor: '#6B1D28' }}>
             <CardHeader>
               <CardTitle className="text-base">Preview da Campanha Clonada</CardTitle>
             </CardHeader>
@@ -214,7 +214,7 @@ export default function FerramentaClonagemCampanhasSection() {
               </div>
               <button
                 className="w-full py-3 text-white rounded-lg font-medium flex items-center justify-center gap-2 hover:opacity-90 transition"
-                style={{ backgroundColor: '#8B2635' }}
+                style={{ backgroundColor: '#6B1D28' }}
               >
                 <Copy className="w-4 h-4" />
                 Clonar Campanha para {personaDestino.nome}

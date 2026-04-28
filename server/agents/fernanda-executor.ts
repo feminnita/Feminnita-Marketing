@@ -160,16 +160,16 @@ export async function createFullAd(params: {
     callToAction: params.callToAction,
   });
 
-  // 3. Criar anúncio (sempre pausado para revisão)
+  // 3. Criar anúncio como ACTIVE
   console.log(`[FernandaExecutor] Criando anúncio...`);
   const adData = await metaPost(`${AD_ACCOUNT_ID}/ads`, {
     name: params.adName,
     adset_id: params.adSetId,
     creative: { creative_id: creativeId },
-    status: "PAUSED",
+    status: "ACTIVE",
   });
 
-  console.log(`[FernandaExecutor] ✓ Anúncio criado (pausado): ${adData.id}`);
+  console.log(`[FernandaExecutor] ✓ Anúncio criado (ativo): ${adData.id}`);
   return { adId: adData.id, creativeId, imageHash };
 }
 

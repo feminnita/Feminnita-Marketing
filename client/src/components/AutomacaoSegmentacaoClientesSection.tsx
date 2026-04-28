@@ -55,7 +55,7 @@ export const AutomacaoSegmentacaoClientesSection = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Automação de Segmentação</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Automação de Segmentação</h2>
         <p className="text-slate-500 text-sm mt-1">
           Regras para mover clientes entre segmentos automaticamente com base em comportamento
         </p>

@@ -113,6 +113,26 @@ REFERÊNCIAS E METODOLOGIA (2024–2025)
 - **Live Sell Academy — Método REAL™** — framework para live shopping: Relacionamento (warm-up inicial), Engajamento (perguntas, contagem regressiva), Ancoragem (preço cheio → desconto relâmpago), Liquidação (urgência final). Foco em completion rate e viewer-to-buyer.
 - **Coach CC (@coachcc_)** — treinadora de live presenters TikTok. Foco em confiança, energia constante, scripts de ativação de comentários e como lidar com queda de audiência no meio da live.
 
+═══════════════════════════════════════════════════════
+INTELIGÊNCIA ESTRATÉGICA — Grace Andrews (Diary of a CEO)
+═══════════════════════════════════════════════════════
+• **A marca é uma empresa de mídia que vende produto** — não o contrário. Cada live, cada reel, cada story deve ser pensado como conteúdo que entretém e educa primeiro; venda é consequência.
+• **Funil real 2025: Atenção → Conexão → Confiança** — o funil linear (awareness→consideration→conversion) morreu. Hoje a descoberta é não-linear: uma pessoa te encontra no TikTok, vê um clip no Instagram, recebe no WhatsApp de uma amiga e então compra. Múltiplos touchpoints em plataformas diferentes constroem a confiança.
+• **Viralidade é sugar rush** — o pico de views sem audiência fidelizada some em 48h. Foco real: aparecer várias vezes para as pessoas certas até a compra parecer inevitável.
+• **Fórmula do crescimento: Consistência × Experimentação** — consistência sozinha gera platô. É preciso testar novos formatos, trends e features toda semana para ter crescimento em hockey-stick.
+• **Meça outcomes de negócio, não vaidade** — antes de cada live defina: o que estou medindo? Pedidos? Novos seguidores qualificados? DMs de revendedoras? Views é métrica de plataforma, não de negócio.
+• **Pessoas confiam em pessoas, não em logos** — a apresentadora da live é o ativo. Sua personalidade, consistência e energia constroem o relacionamento com a audiência que converte em recompra.
+
+═══════════════════════════════════════════════════════
+INTELIGÊNCIA DE VENDAS — Grant Cardone (Sales & Scaling)
+═══════════════════════════════════════════════════════
+• **Roda de Vendas & Escala (7 etapas)**: Ideia → Atenção → Leads → Gestão de Leads → Vendas → Gestão de Pessoas → Escala. A roda nunca para — cada live reinicia o ciclo.
+• **Apenas 2% convertem na primeira vez** — a maioria da audiência que assiste a live não compra na primeira. Nutrição de leads (remarketing, DM de follow-up, próxima live) dobra o faturamento.
+• **3 requisitos para fechar**: decisor presente + qualificado (tem o dinheiro/interesse) + urgência criada. Sem os 3, não fecha. Na live: quem está assistindo É o decisor — crie urgência real (estoque, prazo, preço exclusivo live).
+• **Feche a porta dos fundos**: após o "sim", pergunte — *"Tem algum motivo que faria você mudar de ideia antes de finalizar o pedido?"* — previne o fantasma/cancelamento.
+• **Escreva o cliente** (write up the customer): "sim" sem clique no carrinho não é venda. Sempre empurre para a ação concreta: "clica no produto fixado agora, finaliza o pedido". "Sim" sem dinheiro = lead, não venda.
+• **Meta grande ou você vai desistir** — a apresentadora que não tem meta financeira clara vai perder energia no meio da live. A meta (R$X em vendas hoje) é o combustível para manter energia nas 2 horas.
+
 Responda em português do Brasil. Seja prática e específica — scripts prontos, horários exatos, metas de métricas concretas.`;
 }
 

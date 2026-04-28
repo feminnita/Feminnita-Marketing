@@ -18,7 +18,7 @@ export default function GoogleAnalyticsSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Integração Google Analytics</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Integração Google Analytics</h2>
         <p className="text-slate-500 text-sm mt-1">Conecte sua propriedade GA4 para monitorar dados reais de campanhas e tráfego</p>
       </div>
 
@@ -37,7 +37,7 @@ export default function GoogleAnalyticsSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Link2 className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <Link2 className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Conectar Google Analytics 4
           </CardTitle>
         </CardHeader>
@@ -55,7 +55,7 @@ export default function GoogleAnalyticsSection() {
                   />
                   <Button
                     onClick={() => { if (gaId.trim()) setConectado(true); }}
-                    style={{ backgroundColor: '#8B2635' }}
+                    style={{ backgroundColor: '#6B1D28' }}
                     className="text-white hover:opacity-90"
                   >
                     Conectar
@@ -96,7 +96,7 @@ export default function GoogleAnalyticsSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Zap className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <Zap className="w-4 h-4" style={{ color: '#6B1D28' }} />
             O que você terá após conectar
           </CardTitle>
           <CardDescription className="text-xs">Dados reais sincronizados da sua propriedade GA4</CardDescription>

@@ -61,7 +61,7 @@ export default function ModuloTesteABAvancadoSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Módulo de Testes A/B</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Módulo de Testes A/B</h2>
         <p className="text-slate-500 text-sm mt-1">Compare variações de conteúdo com significância estatística</p>
       </div>
 
@@ -104,10 +104,10 @@ export default function ModuloTesteABAvancadoSection() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Zap className="w-4 h-4" style={{ color: '#8B2635' }} />
+              <Zap className="w-4 h-4" style={{ color: '#6B1D28' }} />
               Testes em andamento
             </CardTitle>
-            <Button size="sm" onClick={() => setShowForm(!showForm)} style={{ backgroundColor: '#8B2635' }} className="text-white">
+            <Button size="sm" onClick={() => setShowForm(!showForm)} style={{ backgroundColor: '#6B1D28' }} className="text-white">
               <Plus className="w-3.5 h-3.5 mr-1.5" />Criar teste
             </Button>
           </div>
@@ -148,7 +148,7 @@ export default function ModuloTesteABAvancadoSection() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button onClick={adicionar} size="sm" style={{ backgroundColor: '#8B2635' }} className="text-white">
+                <Button onClick={adicionar} size="sm" style={{ backgroundColor: '#6B1D28' }} className="text-white">
                   <Plus className="w-3.5 h-3.5 mr-1.5" />Criar teste
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => setShowForm(false)}>Cancelar</Button>
@@ -219,11 +219,11 @@ export default function ModuloTesteABAvancadoSection() {
           <CardTitle className="text-base">Boas práticas de testes A/B</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-slate-700">
-          <p><span className="font-semibold" style={{ color: '#8B2635' }}>1 variável por vez:</span> Teste apenas um elemento (hook, CTA, imagem) por vez para isolar o impacto</p>
-          <p><span className="font-semibold" style={{ color: '#8B2635' }}>Amostra mínima:</span> Aguarde ao menos 500–1.000 impressões por variação antes de declarar vencedor</p>
-          <p><span className="font-semibold" style={{ color: '#8B2635' }}>Duração mínima:</span> 7 dias para capturar variações de dia da semana</p>
-          <p><span className="font-semibold" style={{ color: '#8B2635' }}>Confiança estatística:</span> Declare vencedor apenas com 90%+ de confiança (ferramentas: AB Testguide, VWO)</p>
-          <p><span className="font-semibold" style={{ color: '#8B2635' }}>Prioridade:</span> Comece pelos hooks — são o maior driver de CTR em vídeos curtos</p>
+          <p><span className="font-semibold" style={{ color: '#6B1D28' }}>1 variável por vez:</span> Teste apenas um elemento (hook, CTA, imagem) por vez para isolar o impacto</p>
+          <p><span className="font-semibold" style={{ color: '#6B1D28' }}>Amostra mínima:</span> Aguarde ao menos 500–1.000 impressões por variação antes de declarar vencedor</p>
+          <p><span className="font-semibold" style={{ color: '#6B1D28' }}>Duração mínima:</span> 7 dias para capturar variações de dia da semana</p>
+          <p><span className="font-semibold" style={{ color: '#6B1D28' }}>Confiança estatística:</span> Declare vencedor apenas com 90%+ de confiança (ferramentas: AB Testguide, VWO)</p>
+          <p><span className="font-semibold" style={{ color: '#6B1D28' }}>Prioridade:</span> Comece pelos hooks — são o maior driver de CTR em vídeos curtos</p>
         </CardContent>
       </Card>
     </div>

@@ -504,3 +504,10 @@ export async function updateLunaKnowledge(): Promise<string> {
   await saveMemory(AGENT_NAME, "weekly_summary", period, { summary });
   return summary;
 }
+
+export async function chatWithLuna(history: Array<{ role: "user" | "assistant"; content: string }>, userName?: string): Promise<string> {
+  const systemPrompt = await buildLunaPrompt();
+  const nameCtx = userName ? `\nNOME DO USUÁRIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
+  const result = await invokeLLM({ messages: [{ role: "system", content: systemPrompt + nameCtx }, ...history], maxTokens: 2000 });
+  return String(result.choices[0]?.message?.content || "Não consegui processar.");
+}

@@ -40,7 +40,7 @@ export default function DashboardMobileResponsivoSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Dashboard Mobile Responsivo</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Dashboard Mobile Responsivo</h2>
         <p className="text-slate-500 text-sm mt-1">Visualize métricas principais otimizadas para celular</p>
       </div>
 
@@ -48,7 +48,7 @@ export default function DashboardMobileResponsivoSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Smartphone className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <Smartphone className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Preview mobile
           </CardTitle>
         </CardHeader>
@@ -56,11 +56,11 @@ export default function DashboardMobileResponsivoSection() {
           <div className="flex justify-center mb-4">
             <div className="w-72 bg-black rounded-3xl p-3 shadow-2xl" style={{ aspectRatio: '9/16' }}>
               <div className="bg-white rounded-2xl h-full overflow-hidden flex flex-col">
-                <div className="text-white px-4 py-2 text-xs flex justify-between items-center" style={{ backgroundColor: '#8B2635' }}>
+                <div className="text-white px-4 py-2 text-xs flex justify-between items-center" style={{ backgroundColor: '#6B1D28' }}>
                   <span>9:41</span>
                   <div className="flex gap-1"><span>📶</span><span>🔋</span></div>
                 </div>
-                <div className="text-white px-4 py-3" style={{ backgroundColor: '#8B2635' }}>
+                <div className="text-white px-4 py-3" style={{ backgroundColor: '#6B1D28' }}>
                   <h1 className="font-bold text-base">Feminnita</h1>
                   <p className="text-xs opacity-80">Dashboard</p>
                 </div>
@@ -134,7 +134,7 @@ export default function DashboardMobileResponsivoSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Users className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <Users className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Personas — visualização mobile
           </CardTitle>
         </CardHeader>

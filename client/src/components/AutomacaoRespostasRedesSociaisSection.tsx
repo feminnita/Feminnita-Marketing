@@ -51,7 +51,7 @@ export function AutomacaoRespostasRedesSociaisSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Automação de Respostas</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Automação de Respostas</h2>
         <p className="text-slate-500 text-sm mt-1">Templates de resposta automática para comentários e DMs nas redes sociais</p>
       </div>
 
@@ -102,7 +102,7 @@ export function AutomacaoRespostasRedesSociaisSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <MessageCircle className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <MessageCircle className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Ferramentas recomendadas
           </CardTitle>
         </CardHeader>

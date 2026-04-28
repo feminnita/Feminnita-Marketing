@@ -41,10 +41,10 @@ export function AutomacaoEmailInteligenteSection() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Automação de Email</h2>
+          <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Automação de Email</h2>
           <p className="text-slate-500 text-sm mt-1">Fluxos automáticos que enviam o email certo, na hora certa.</p>
         </div>
-        <Button style={{ backgroundColor: '#8B2635' }} className="text-white" onClick={() => setShowForm(v => !v)}>
+        <Button style={{ backgroundColor: '#6B1D28' }} className="text-white" onClick={() => setShowForm(v => !v)}>
           <Plus className="w-4 h-4 mr-2" />
           Nova Automação
         </Button>
@@ -52,7 +52,7 @@ export function AutomacaoEmailInteligenteSection() {
 
       {/* Form */}
       {showForm && (
-        <Card className="border-0 shadow-sm border-l-4" style={{ borderLeftColor: '#8B2635' }}>
+        <Card className="border-0 shadow-sm border-l-4" style={{ borderLeftColor: '#6B1D28' }}>
           <CardContent className="pt-5 space-y-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {TEMPLATES.map(t => (
@@ -67,7 +67,7 @@ export function AutomacaoEmailInteligenteSection() {
             <Textarea placeholder="Corpo do email..." value={body} onChange={e => setBody(e.target.value)} rows={3} />
             <div className="flex gap-3 flex-wrap">
               <Input type="datetime-local" value={schedule} onChange={e => setSchedule(e.target.value)} className="flex-1" />
-              <Button style={{ backgroundColor: '#8B2635' }} className="text-white"
+              <Button style={{ backgroundColor: '#6B1D28' }} className="text-white"
                 disabled={!subject || !body || criar.isPending}
                 onClick={() => criar.mutate({ nome: subject, tipo: "email", plataforma: "email", conteudo: body, agendamento: schedule })}>
                 {criar.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Send className="w-4 h-4 mr-2" />}
@@ -91,7 +91,7 @@ export function AutomacaoEmailInteligenteSection() {
         </div>
 
         {isLoading ? (
-          <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" style={{ color: '#8B2635' }} /></div>
+          <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" style={{ color: '#6B1D28' }} /></div>
         ) : emailAutos.length === 0 ? (
           <div className="text-center py-10 border-2 border-dashed border-slate-200 rounded-xl">
             <Mail className="w-8 h-8 mx-auto mb-2 text-slate-300" />
@@ -158,7 +158,7 @@ export function AutomacaoEmailInteligenteSection() {
               <div key={i} className="bg-slate-50 rounded-xl p-3 text-center">
                 <p className="font-bold text-slate-800 text-sm">{t.dia} {t.hora}</p>
                 <p className="text-xs text-slate-500 mt-0.5">{t.desc}</p>
-                <p className="text-lg font-bold mt-1" style={{ color: '#8B2635' }}>{t.taxa}</p>
+                <p className="text-lg font-bold mt-1" style={{ color: '#6B1D28' }}>{t.taxa}</p>
               </div>
             ))}
           </div>
@@ -183,13 +183,13 @@ export function AutomacaoEmailInteligenteSection() {
             ].map((p, i) => (
               <div key={i} className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                  style={{ backgroundColor: ['#8B2635','#A63D4A','#6B7A3A','#3A5A6B'][i] }}>
+                  style={{ backgroundColor: ['#6B1D28','#A63D4A','#6B7A3A','#3A5A6B'][i] }}>
                   {p.persona[0]}
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-slate-800">{p.persona}</p>
                   <p className="text-xs text-slate-500">{p.estilo}</p>
-                  <p className="text-xs font-medium mt-0.5" style={{ color: '#8B2635' }}>CTA: {p.cta}</p>
+                  <p className="text-xs font-medium mt-0.5" style={{ color: '#6B1D28' }}>CTA: {p.cta}</p>
                 </div>
               </div>
             ))}

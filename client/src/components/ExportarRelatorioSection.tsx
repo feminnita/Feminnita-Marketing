@@ -54,7 +54,7 @@ export default function ExportarRelatorioSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Exportar Relatórios</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Exportar Relatórios</h2>
         <p className="text-slate-500 text-sm mt-1">Baixe relatórios em PDF ou Excel</p>
       </div>
 
@@ -175,7 +175,7 @@ export default function ExportarRelatorioSection() {
           </div>
           <button onClick={criarAgendamento}
             disabled={!novoAgendamento.relatorio || !novoAgendamento.email}
-            style={{ backgroundColor: '#8B2635' }}
+            style={{ backgroundColor: '#6B1D28' }}
             className="w-full py-2 text-white rounded text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
             Criar agendamento
           </button>

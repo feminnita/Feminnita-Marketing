@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Users, BarChart3, AlertCircle } from "lucide-react";
 
 const PERSONA_STYLES = [
-  { bg: 'bg-rose-50',   text: 'text-rose-700',   accent: '#8B2635' },
+  { bg: 'bg-rose-50',   text: 'text-rose-700',   accent: '#6B1D28' },
   { bg: 'bg-purple-50', text: 'text-purple-700', accent: '#6B3A8B' },
   { bg: 'bg-blue-50',   text: 'text-blue-700',   accent: '#2563EB' },
   { bg: 'bg-orange-50', text: 'text-orange-700', accent: '#C2410C' },
@@ -33,14 +33,14 @@ export default function DashboardROIPersonaSection() {
 
   if (isLoading) return (
     <div className="flex justify-center py-16">
-      <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#8B2635', borderTopColor: 'transparent' }} />
+      <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#6B1D28', borderTopColor: 'transparent' }} />
     </div>
   );
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>ROI por Persona</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>ROI por Persona</h2>
         <p className="text-slate-500 text-sm mt-1">Performance das influenciadoras baseada nas campanhas de marketing</p>
       </div>
 
@@ -121,7 +121,7 @@ export default function DashboardROIPersonaSection() {
           <Card className="border-0 shadow-sm">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <TrendingUp className="w-4 h-4" style={{ color: '#8B2635' }} />
+                <TrendingUp className="w-4 h-4" style={{ color: '#6B1D28' }} />
                 Campanhas por persona
               </CardTitle>
             </CardHeader>

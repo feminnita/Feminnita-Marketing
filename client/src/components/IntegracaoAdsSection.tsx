@@ -48,7 +48,7 @@ export default function IntegracaoAdsSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Integração de Ads</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Integração de Ads</h2>
         <p className="text-slate-500 text-sm mt-1">Gerencie campanhas Google Ads, Meta Ads e TikTok Ads</p>
       </div>
 
@@ -94,7 +94,7 @@ export default function IntegracaoAdsSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Target className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <Target className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Campanhas por plataforma
           </CardTitle>
         </CardHeader>
@@ -129,7 +129,7 @@ export default function IntegracaoAdsSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Settings className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <Settings className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Como conectar as APIs de Ads
           </CardTitle>
         </CardHeader>

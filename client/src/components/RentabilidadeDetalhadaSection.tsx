@@ -38,7 +38,7 @@ export default function RentabilidadeDetalhadaSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Rentabilidade Detalhada</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Rentabilidade Detalhada</h2>
         <p className="text-slate-500 text-sm mt-1">Análise de rentabilidade por persona/produto e oportunidades de mix</p>
       </div>
 
@@ -58,7 +58,7 @@ export default function RentabilidadeDetalhadaSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <BarChart3 className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <BarChart3 className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Performance de campanhas por persona
           </CardTitle>
         </CardHeader>
@@ -113,7 +113,7 @@ export default function RentabilidadeDetalhadaSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <TrendingUp className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <TrendingUp className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Estratégias de mix de produtos
           </CardTitle>
         </CardHeader>

@@ -31,7 +31,7 @@ export function GoogleAnalytics4Section() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Google Analytics 4</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Google Analytics 4</h2>
         <p className="text-slate-500 text-sm mt-1">
           Acompanhe sessões, conversões e jornada do cliente em tempo real.
         </p>
@@ -62,7 +62,7 @@ export function GoogleAnalytics4Section() {
       <div className="grid grid-cols-2 gap-3">
         <Card className="border-0 shadow-sm">
           <CardContent className="pt-5">
-            <p className="text-2xl font-bold" style={{ color: '#8B2635' }}>{totalConversoes.toLocaleString('pt-BR')}</p>
+            <p className="text-2xl font-bold" style={{ color: '#6B1D28' }}>{totalConversoes.toLocaleString('pt-BR')}</p>
             <p className="text-xs text-slate-500 mt-1">Conversões (Campanhas)</p>
           </CardContent>
         </Card>
@@ -79,7 +79,7 @@ export function GoogleAnalytics4Section() {
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center gap-2">
-              <BarChart3 className="w-4 h-4" style={{ color: '#8B2635' }} />
+              <BarChart3 className="w-4 h-4" style={{ color: '#6B1D28' }} />
               Como configurar o GA4
             </CardTitle>
           </CardHeader>
@@ -87,7 +87,7 @@ export function GoogleAnalytics4Section() {
             {SETUP_STEPS.map(({ step, title, desc }) => (
               <div key={step} className="flex items-start gap-3">
                 <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                  style={{ backgroundColor: '#8B2635' }}>
+                  style={{ backgroundColor: '#6B1D28' }}>
                   {step}
                 </div>
                 <div>
@@ -100,7 +100,7 @@ export function GoogleAnalytics4Section() {
               VITE_GA4_MEASUREMENT_ID=G-XXXXXXXXXX
             </div>
             <a href="https://analytics.google.com" target="_blank" rel="noreferrer"
-              className="flex items-center gap-2 text-sm font-medium mt-2" style={{ color: '#8B2635' }}>
+              className="flex items-center gap-2 text-sm font-medium mt-2" style={{ color: '#6B1D28' }}>
               <ExternalLink className="w-4 h-4" />
               Abrir Google Analytics
             </a>

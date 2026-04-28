@@ -64,7 +64,7 @@ export function RecomendacaoOrcamentoCanalSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Recomendação de Orçamento por Canal</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Recomendação de Orçamento por Canal</h2>
         <p className="text-slate-500 text-sm mt-1">Estratégia de alocação de budget baseada em performance real e benchmarks</p>
       </div>
 
@@ -83,7 +83,7 @@ export function RecomendacaoOrcamentoCanalSection() {
         <Card className="border-0 shadow-sm">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <BarChart3 className="w-4 h-4" style={{ color: '#8B2635' }} />
+              <BarChart3 className="w-4 h-4" style={{ color: '#6B1D28' }} />
               Performance real por plataforma
             </CardTitle>
           </CardHeader>
@@ -118,7 +118,7 @@ export function RecomendacaoOrcamentoCanalSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <Target className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <Target className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Estratégia de alocação por canal
           </CardTitle>
         </CardHeader>
@@ -148,7 +148,7 @@ export function RecomendacaoOrcamentoCanalSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <TrendingUp className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <TrendingUp className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Regras de escalonamento
           </CardTitle>
         </CardHeader>

@@ -70,7 +70,7 @@ export default function FeedbackRatingsSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Sistema de Feedback e Ratings</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Sistema de Feedback e Ratings</h2>
         <p className="text-slate-500 text-sm mt-1">Avalie e acompanhe a performance dos seus templates de conteúdo</p>
       </div>
 
@@ -107,10 +107,10 @@ export default function FeedbackRatingsSection() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Star className="w-4 h-4" style={{ color: '#8B2635' }} />
+              <Star className="w-4 h-4" style={{ color: '#6B1D28' }} />
               Templates
             </CardTitle>
-            <Button size="sm" onClick={() => setShowAddTemplate(!showAddTemplate)} style={{ backgroundColor: '#8B2635' }} className="text-white">
+            <Button size="sm" onClick={() => setShowAddTemplate(!showAddTemplate)} style={{ backgroundColor: '#6B1D28' }} className="text-white">
               <Plus className="w-3.5 h-3.5 mr-1.5" />Adicionar
             </Button>
           </div>
@@ -133,7 +133,7 @@ export default function FeedbackRatingsSection() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button onClick={adicionarTemplate} size="sm" style={{ backgroundColor: '#8B2635' }} className="text-white">
+                <Button onClick={adicionarTemplate} size="sm" style={{ backgroundColor: '#6B1D28' }} className="text-white">
                   <Plus className="w-3.5 h-3.5 mr-1.5" />Adicionar
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => setShowAddTemplate(false)}>Cancelar</Button>
@@ -234,7 +234,7 @@ export default function FeedbackRatingsSection() {
                   <Textarea placeholder="Compartilhe sua experiência com este template..."
                     value={novoFeedback} onChange={e => setNovoFeedback(e.target.value)} rows={3} className="resize-none" />
                 </div>
-                <Button onClick={adicionarFeedback} size="sm" style={{ backgroundColor: '#8B2635' }} className="text-white">
+                <Button onClick={adicionarFeedback} size="sm" style={{ backgroundColor: '#6B1D28' }} className="text-white">
                   <MessageSquare className="w-3.5 h-3.5 mr-1.5" />Enviar feedback
                 </Button>
               </div>

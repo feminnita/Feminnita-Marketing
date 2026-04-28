@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, ChevronLeft, ChevronRight, X, Loader2 } from "lucide-react";
 
-const ACCENT_COLORS = ['#8B2635', '#A63D4A', '#6B7A3A', '#3A5A6B'];
+const ACCENT_COLORS = ['#6B1D28', '#A63D4A', '#6B7A3A', '#3A5A6B'];
 const WEEK_DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const MONTHS_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
@@ -75,7 +75,7 @@ export default function CalendarioConteudoSection() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Calendário de Conteúdo</h2>
+          <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Calendário de Conteúdo</h2>
           <p className="text-slate-500 text-sm mt-1">Posts de todas as influencers. Cada cor é uma persona.</p>
         </div>
       </div>
@@ -108,7 +108,7 @@ export default function CalendarioConteudoSection() {
         <CardContent>
           {isLoading ? (
             <div className="flex justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#8B2635' }} />
+              <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#6B1D28' }} />
             </div>
           ) : (
             <>
@@ -125,10 +125,10 @@ export default function CalendarioConteudoSection() {
                   return (
                     <div key={day}
                       className={`min-h-[60px] rounded-lg p-1 border transition-colors ${isToday ? 'border-current' : 'border-transparent hover:border-slate-200'}`}
-                      style={isToday ? { borderColor: '#8B2635' } : {}}
+                      style={isToday ? { borderColor: '#6B1D28' } : {}}
                     >
                       <div className={`text-xs font-medium mb-1 w-5 h-5 rounded-full flex items-center justify-center ${isToday ? 'text-white' : 'text-slate-600'}`}
-                        style={isToday ? { backgroundColor: '#8B2635' } : {}}>
+                        style={isToday ? { backgroundColor: '#6B1D28' } : {}}>
                         {day}
                       </div>
                       <div className="space-y-0.5">

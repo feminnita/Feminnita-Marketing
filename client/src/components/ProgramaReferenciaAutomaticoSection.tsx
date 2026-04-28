@@ -67,7 +67,7 @@ export function ProgramaReferenciaAutomaticoSection() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Programa de Referência</h2>
+          <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Programa de Referência</h2>
           <p className="text-slate-500 text-sm mt-1">Recompense clientes que indicam amigos com descontos</p>
         </div>
       </div>
@@ -109,10 +109,10 @@ export function ProgramaReferenciaAutomaticoSection() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Users className="w-4 h-4" style={{ color: '#8B2635' }} />
+              <Users className="w-4 h-4" style={{ color: '#6B1D28' }} />
               Histórico de Referências
             </CardTitle>
-            <Button size="sm" onClick={() => setShowForm(!showForm)} style={{ backgroundColor: '#8B2635' }} className="text-white">
+            <Button size="sm" onClick={() => setShowForm(!showForm)} style={{ backgroundColor: '#6B1D28' }} className="text-white">
               <Plus className="w-3.5 h-3.5 mr-1.5" />Adicionar
             </Button>
           </div>
@@ -151,7 +151,7 @@ export function ProgramaReferenciaAutomaticoSection() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button onClick={adicionar} size="sm" style={{ backgroundColor: '#8B2635' }} className="text-white">
+                <Button onClick={adicionar} size="sm" style={{ backgroundColor: '#6B1D28' }} className="text-white">
                   <Plus className="w-3.5 h-3.5 mr-1.5" />Adicionar
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => setShowForm(false)}>Cancelar</Button>
@@ -211,7 +211,7 @@ export function ProgramaReferenciaAutomaticoSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Gift className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <Gift className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Estrutura de recompensas por persona
           </CardTitle>
         </CardHeader>

@@ -70,6 +70,44 @@ Teste de litmus para conteúdo: se você assistir ao vídeo e não souber o que 
 Para crescer no TikTok Shop: poste, analise o resultado, identifique qual detalhe fez diferença entre os 10% que performaram e os 90% que não performaram, repita o que funcionou. Volume sem análise é desperdício. Análise sem volume é lenta demais. A combinação dos dois é o crescimento.
 Método prático: compare os vídeos/fichas que mais converteram — o que eles têm em comum que os outros não têm? Aplique esse padrão. Evite repetir os erros identificados. Progrida por eliminação de falhas + replicação de acertos.
 
+━━━ INTELIGÊNCIA DE PLATAFORMA — Vinícius Arjona (Executivo de Mídia TikTok) ━━━
+
+TIKTOK SHOP — COMO A PLATAFORMA FUNCIONA DE VERDADE:
+• A jornada completa acontece DENTRO do app: descoberta → pesquisa → compra, sem site ou landing page externa. Isso elimina fricção e aumenta conversão diretamente.
+• O TikTok é hoje um buscador — não apenas entretenimento. Usuários pesquisam produtos e comunidades ativamente antes de comprar.
+• O algoritmo mapeia hashtags e comunidades. Usar as hashtags certas é entrar na comunidade certa. Uma hashtag quente = alto volume de posts + visualizações + engajamento.
+• TikTok Search (pago) está chegando: marcas poderão comprar palavras-chave como segmentação de campanha, similar ao Google Ads mas dentro do TikTok Shop.
+
+FORYOU — COMO O ALGORITMO FUNCIONA:
+• Cada usuário tem uma ForYou completamente única, baseada no que assiste e pesquisa.
+• O que é viral hoje pode não ser amanhã. O algoritmo muda praticamente diariamente.
+• Regra crítica: quem não consome TikTok não consegue escalar no TikTok. É impossível capturar as nuances sem estar dentro da plataforma.
+
+MAPEAMENTO ANTES DE INVESTIR:
+• Antes de criar qualquer campanha, verifique: o produto já está sendo falado no TikTok? A comunidade já existe?
+• Se o produto já tem menção orgânica → prioridade máxima para entrar no TikTok Shop e profissionalizar.
+• Se não existe menção → precisa de awareness primeiro antes de investir em performance.
+
+PROGRAMA DE AFILIADOS TIKTOK SHOP:
+• A marca define a taxa de comissão; os criadores se inscrevem por conta própria.
+• Quanto maior a comissão → mais criadores interessados.
+• Cada conteúdo de afiliado deve ser individualizado e humanizado — o TikTok penaliza copy-paste massificado sem personalização.
+• A marca tem controle total da comunicação e briefing com cada criador inscrito.
+
+MISSÃO DE MARCA (branding em escala):
+• Produto do TikTok para reconhecimento: briefing aberto onde qualquer usuário cria conteúdo para a marca.
+• Objetivo: volume de criação, não performance de venda. Use para awareness. Para conversão/GMV, use afiliados personalizados com briefing.
+
+LIVE COMMERCE — O FUTURO QUE JÁ CHEGOU:
+• Na Ásia, grande parte da receita de mídia digital já vem de Live Commerce.
+• No Brasil, está crescendo mas exige adaptação cultural — uma live no Brasil é completamente diferente da Ásia ou EUA.
+• Para Feminnita: lives com demonstração de pijamas, kits e kit de revendedora são uma oportunidade ainda pouco explorada.
+
+SÍNTESE ESTRATÉGICA:
+→ Vender no TikTok Shop = vender entretenimento + produto. Criador que gosta da marca + produto que resolve um problema = venda quase certa.
+→ Mapeie onde sua comunidade (revendedoras, compradoras de pijama) já existe no TikTok — isso define toda a estratégia de conteúdo.
+→ Afiliados + lives + conteúdo orgânico próprio = trifecta de crescimento no TikTok Shop.
+
 ━━━ MENTALIDADE OPERACIONAL ━━━
 O TikTok Shop é um marketplace dentro de uma rede social — os produtos que aparecem primeiro são os que combinam boa ficha + reviews + conteúdo linkado. Ao contrário de Shopee/ML, no TikTok Shop o conteúdo orgânico e as lives são o principal motor de vendas. Uma ficha perfeita sem conteúdo vende pouco. Conteúdo sem ficha otimizada perde conversão.
 

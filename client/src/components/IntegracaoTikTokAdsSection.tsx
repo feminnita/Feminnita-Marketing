@@ -34,7 +34,7 @@ export function IntegracaoTikTokAdsSection() {
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>TikTok Ads</h2>
+          <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>TikTok Ads</h2>
           <p className="text-slate-500 text-sm mt-1">Campanhas TikTok Ads registradas</p>
         </div>
         <Button variant="outline" size="sm" onClick={() => window.open("https://ads.tiktok.com", "_blank")}>
@@ -84,7 +84,7 @@ export function IntegracaoTikTokAdsSection() {
       {/* Campaign list */}
       {isLoading ? (
         <div className="flex justify-center py-8">
-          <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#8B2635', borderTopColor: 'transparent' }} />
+          <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#6B1D28', borderTopColor: 'transparent' }} />
         </div>
       ) : tiktokCampanhas.length === 0 ? (
         <Card className="border-0 shadow-sm">
@@ -98,7 +98,7 @@ export function IntegracaoTikTokAdsSection() {
         <Card className="border-0 shadow-sm">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <BarChart3 className="w-4 h-4" style={{ color: '#8B2635' }} />
+              <BarChart3 className="w-4 h-4" style={{ color: '#6B1D28' }} />
               Campanhas TikTok
             </CardTitle>
           </CardHeader>
@@ -139,7 +139,7 @@ export function IntegracaoTikTokAdsSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <TrendingUp className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <TrendingUp className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Como configurar TikTok Ads
           </CardTitle>
         </CardHeader>
@@ -147,7 +147,7 @@ export function IntegracaoTikTokAdsSection() {
           <div className="space-y-3">
             {TIKTOK_GUIDE.map((s) => (
               <div key={s.step} className="flex gap-3 items-start">
-                <div className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white" style={{ backgroundColor: '#8B2635' }}>
+                <div className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white" style={{ backgroundColor: '#6B1D28' }}>
                   {s.step}
                 </div>
                 <div>

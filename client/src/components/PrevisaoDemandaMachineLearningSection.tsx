@@ -39,7 +39,7 @@ export function PrevisaoDemandaMachineLearningSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Previsão de Demanda — Machine Learning</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Previsão de Demanda — Machine Learning</h2>
         <p className="text-slate-500 text-sm mt-1">Modelos ARIMA, Prophet e Random Forest para prever demanda por produto</p>
       </div>
 
@@ -61,7 +61,7 @@ export function PrevisaoDemandaMachineLearningSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <BarChart3 className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <BarChart3 className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Sinais de demanda (campanhas cadastradas)
           </CardTitle>
           <CardDescription className="text-xs">Dados reais disponíveis — usados como variáveis externas no modelo</CardDescription>
@@ -92,7 +92,7 @@ export function PrevisaoDemandaMachineLearningSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Zap className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <Zap className="w-4 h-4" style={{ color: '#6B1D28' }} />
             4 Modelos de Machine Learning
           </CardTitle>
           <CardDescription className="text-xs">Como cada modelo contribui para o ensemble final</CardDescription>
@@ -118,7 +118,7 @@ export function PrevisaoDemandaMachineLearningSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Target className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <Target className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Fatores que Influenciam a Previsão
           </CardTitle>
         </CardHeader>
@@ -131,7 +131,7 @@ export function PrevisaoDemandaMachineLearningSection() {
                   <span className="text-xs font-bold text-slate-500">{fator.peso}</span>
                 </div>
                 <div className="w-full bg-slate-200 rounded-full h-1.5 mb-1">
-                  <div className="h-1.5 rounded-full" style={{ width: fator.peso, backgroundColor: '#8B2635' }} />
+                  <div className="h-1.5 rounded-full" style={{ width: fator.peso, backgroundColor: '#6B1D28' }} />
                 </div>
                 <p className="text-xs text-slate-400">{fator.descricao}</p>
               </div>
@@ -144,7 +144,7 @@ export function PrevisaoDemandaMachineLearningSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <TrendingUp className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <TrendingUp className="w-4 h-4" style={{ color: '#6B1D28' }} />
             3 Cenários de Previsão
           </CardTitle>
           <CardDescription className="text-xs">Estrutura de planejamento por cenário</CardDescription>

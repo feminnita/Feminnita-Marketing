@@ -46,10 +46,10 @@ export function EmailMarketingSection() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Email Marketing</h2>
+          <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Email Marketing</h2>
           <p className="text-slate-500 text-sm mt-1">Crie e agende campanhas de email para sua base de clientes.</p>
         </div>
-        <Button style={{ backgroundColor: '#8B2635' }} className="text-white" onClick={() => setShowForm(true)}>
+        <Button style={{ backgroundColor: '#6B1D28' }} className="text-white" onClick={() => setShowForm(true)}>
           <Plus className="w-4 h-4 mr-2" /> Nova Campanha
         </Button>
       </div>
@@ -75,7 +75,7 @@ export function EmailMarketingSection() {
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Mail className="w-4 h-4" style={{ color: '#8B2635' }} />
+              <Mail className="w-4 h-4" style={{ color: '#6B1D28' }} />
               Nova campanha de email
             </CardTitle>
           </CardHeader>
@@ -94,7 +94,7 @@ export function EmailMarketingSection() {
             </div>
             <div className="flex gap-3">
               <Button variant="outline" className="flex-1" onClick={() => setShowForm(false)}>Cancelar</Button>
-              <Button className="flex-1 text-white" style={{ backgroundColor: '#8B2635' }}
+              <Button className="flex-1 text-white" style={{ backgroundColor: '#6B1D28' }}
                 disabled={criar.isPending || !subject.trim() || !body.trim()}
                 onClick={() => criar.mutate({ nome: subject, tipo: "email", plataforma: "email", conteudo: body, agendamento: schedule || "manual" })}>
                 {criar.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Send className="w-4 h-4 mr-2" />}
@@ -112,7 +112,7 @@ export function EmailMarketingSection() {
           {emailAutomacoes.length > 0 && <Badge variant="secondary" className="ml-2">{emailAutomacoes.length}</Badge>}
         </p>
 
-        {isLoading && <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" style={{ color: '#8B2635' }} /></div>}
+        {isLoading && <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" style={{ color: '#6B1D28' }} /></div>}
 
         {!isLoading && emailAutomacoes.length === 0 && (
           <div className="text-center py-8 text-slate-400 border border-dashed border-slate-200 rounded-xl">
@@ -127,7 +127,7 @@ export function EmailMarketingSection() {
             return (
               <div key={camp.id} className="flex items-start gap-4 p-4 rounded-xl bg-white border border-slate-100 shadow-sm">
                 <div className="p-2 rounded-lg" style={{ backgroundColor: '#fdf0e8' }}>
-                  <Mail className="w-4 h-4" style={{ color: '#8B2635' }} />
+                  <Mail className="w-4 h-4" style={{ color: '#6B1D28' }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">

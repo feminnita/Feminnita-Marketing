@@ -15,7 +15,7 @@ const PERSONA_CONFIG: Record<string, { color: string; bg: string; emoji: string;
 
 function getPersonaConfig(name: string) {
   const key = name.toLowerCase().split(" ")[0];
-  return PERSONA_CONFIG[key] ?? { color: "#8B2635", bg: "#FFF1F2", emoji: "✨", tagline: "Influenciadora Feminnita" };
+  return PERSONA_CONFIG[key] ?? { color: "#6B1D28", bg: "#FFF1F2", emoji: "✨", tagline: "Influenciadora Feminnita" };
 }
 
 function formatDate(date: Date | string | null) {
@@ -65,7 +65,7 @@ export default function PublicInfluencerBlog() {
       <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <span className="font-bold text-lg" style={{ color: "#8B2635" }}>Feminnita</span>
+            <span className="font-bold text-lg" style={{ color: "#6B1D28" }}>Feminnita</span>
             {influencer && (
               <span className="text-sm text-slate-400 hidden sm:inline">/ {influencer.name}</span>
             )}

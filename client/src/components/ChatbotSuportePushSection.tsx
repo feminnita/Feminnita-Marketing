@@ -62,7 +62,7 @@ export default function ChatbotSuportePushSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Chatbot, Suporte & Push</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Chatbot, Suporte & Push</h2>
         <p className="text-slate-500 text-sm mt-1">
           Automação de atendimento e notificações push para clientes.
         </p>
@@ -72,7 +72,7 @@ export default function ChatbotSuportePushSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm flex items-center gap-2">
-            <MessageCircle className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <MessageCircle className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Ferramentas de chatbot recomendadas
           </CardTitle>
         </CardHeader>
@@ -102,7 +102,7 @@ export default function ChatbotSuportePushSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm flex items-center gap-2">
-            <Bell className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <Bell className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Push notifications
           </CardTitle>
         </CardHeader>

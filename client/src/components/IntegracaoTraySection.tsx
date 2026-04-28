@@ -18,7 +18,7 @@ export function IntegracaoTraySection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Integração Tray</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Integração Tray</h2>
         <p className="text-slate-500 text-sm mt-1">Sincronize pedidos, clientes e produtos da sua loja Tray.</p>
       </div>
 
@@ -60,7 +60,7 @@ export function IntegracaoTraySection() {
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center gap-2">
-              <ShoppingCart className="w-4 h-4" style={{ color: '#8B2635' }} />
+              <ShoppingCart className="w-4 h-4" style={{ color: '#6B1D28' }} />
               Como configurar
             </CardTitle>
           </CardHeader>
@@ -68,7 +68,7 @@ export function IntegracaoTraySection() {
             {SETUP_STEPS.map(({ step, title, desc }) => (
               <div key={step} className="flex items-start gap-3">
                 <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                  style={{ backgroundColor: '#8B2635' }}>
+                  style={{ backgroundColor: '#6B1D28' }}>
                   {step}
                 </div>
                 <div>
@@ -78,7 +78,7 @@ export function IntegracaoTraySection() {
               </div>
             ))}
             <a href="https://app.tray.com.br" target="_blank" rel="noreferrer"
-              className="flex items-center gap-2 text-sm font-medium mt-2" style={{ color: '#8B2635' }}>
+              className="flex items-center gap-2 text-sm font-medium mt-2" style={{ color: '#6B1D28' }}>
               <ExternalLink className="w-4 h-4" />
               Abrir painel Tray
             </a>

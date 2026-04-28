@@ -56,7 +56,7 @@ export function AtribuicaoMulticanalSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Atribuição Multicanal</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Atribuição Multicanal</h2>
         <p className="text-slate-500 text-sm mt-1">Modelos de atribuição para entender qual canal tem mais impacto nas vendas</p>
       </div>
 
@@ -76,7 +76,7 @@ export function AtribuicaoMulticanalSection() {
         <Card className="border-0 shadow-sm">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <BarChart3 className="w-4 h-4" style={{ color: '#8B2635' }} />
+              <BarChart3 className="w-4 h-4" style={{ color: '#6B1D28' }} />
               Conversões por plataforma (dados reais)
             </CardTitle>
           </CardHeader>
@@ -90,7 +90,7 @@ export function AtribuicaoMulticanalSection() {
                     <span className="text-sm font-medium text-slate-700 w-28 capitalize">{platform}</span>
                     <div className="flex-1 bg-slate-100 rounded-full h-2">
                       <div className="h-2 rounded-full" style={{
-                        backgroundColor: '#8B2635',
+                        backgroundColor: '#6B1D28',
                         width: `${Math.min(100, (data.conversoes / Math.max(1, campanhas.reduce((s: number, c: any) => s + (c.performance?.conversoes ?? 0), 0))) * 100)}%`
                       }} />
                     </div>
@@ -110,7 +110,7 @@ export function AtribuicaoMulticanalSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <Target className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <Target className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Modelos de atribuição
           </CardTitle>
         </CardHeader>

@@ -28,7 +28,7 @@ export default function PrevisaoVendasSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Previsão de Vendas</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Previsão de Vendas</h2>
         <p className="text-slate-500 text-sm mt-1">Acompanhe progresso vs meta e calcule budget necessário</p>
       </div>
 
@@ -46,7 +46,7 @@ export default function PrevisaoVendasSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <Target className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <Target className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Configurar meta do mês
           </CardTitle>
         </CardHeader>
@@ -139,7 +139,7 @@ export default function PrevisaoVendasSection() {
         <Card className="border-0 shadow-sm">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" style={{ color: '#8B2635' }} />
+              <TrendingUp className="w-4 h-4" style={{ color: '#6B1D28' }} />
               Sinal de campanhas de marketing
             </CardTitle>
           </CardHeader>

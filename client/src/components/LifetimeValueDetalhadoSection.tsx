@@ -58,7 +58,7 @@ export function LifetimeValueDetalhadoSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Lifetime Value Detalhado</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Lifetime Value Detalhado</h2>
         <p className="text-slate-500 text-sm mt-1">Análise de LTV por segmento e estratégias de maximização</p>
       </div>
 
@@ -109,7 +109,7 @@ export function LifetimeValueDetalhadoSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <BarChart3 className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <BarChart3 className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Como calcular o LTV
           </CardTitle>
         </CardHeader>
@@ -129,7 +129,7 @@ export function LifetimeValueDetalhadoSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <Users className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <Users className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Estratégia de LTV por segmento
           </CardTitle>
         </CardHeader>
@@ -152,16 +152,16 @@ export function LifetimeValueDetalhadoSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <TrendingUp className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <TrendingUp className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Como aumentar o LTV
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2 text-sm text-slate-700">
-            <p><span className="font-semibold" style={{ color: '#8B2635' }}>↑ Ticket médio:</span> Kits, combos, upgrades de produto, pijama + robe</p>
-            <p><span className="font-semibold" style={{ color: '#8B2635' }}>↑ Frequência:</span> Email nurture, lançamentos sazonais, drops exclusivos VIP</p>
-            <p><span className="font-semibold" style={{ color: '#8B2635' }}>↑ Retenção:</span> Programa de pontos, atendimento pós-venda, comunidade (WhatsApp VIP)</p>
-            <p><span className="font-semibold" style={{ color: '#8B2635' }}>↓ Churn:</span> Detectar early signals, oferta de reativação antes dos 60 dias</p>
+            <p><span className="font-semibold" style={{ color: '#6B1D28' }}>↑ Ticket médio:</span> Kits, combos, upgrades de produto, pijama + robe</p>
+            <p><span className="font-semibold" style={{ color: '#6B1D28' }}>↑ Frequência:</span> Email nurture, lançamentos sazonais, drops exclusivos VIP</p>
+            <p><span className="font-semibold" style={{ color: '#6B1D28' }}>↑ Retenção:</span> Programa de pontos, atendimento pós-venda, comunidade (WhatsApp VIP)</p>
+            <p><span className="font-semibold" style={{ color: '#6B1D28' }}>↓ Churn:</span> Detectar early signals, oferta de reativação antes dos 60 dias</p>
           </div>
         </CardContent>
       </Card>

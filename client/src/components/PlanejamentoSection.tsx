@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Sparkles } from "lucide-react";
 
-const ACCENT_COLORS = ['#8B2635', '#A63D4A', '#6B7A3A', '#3A5A6B'];
+const ACCENT_COLORS = ['#6B1D28', '#A63D4A', '#6B7A3A', '#3A5A6B'];
 const BG_COLORS = ['#fdf0e8', '#fce8ea', '#eef5e8', '#e8f2f5'];
 const WEEK_DAYS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
@@ -80,7 +80,7 @@ export default function PlanejamentoSection() {
   const totalWeek = postsInWeek.reduce((s, d) => s + d.length, 0);
 
   if (loadingInf || loadingPosts) {
-    return <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin" style={{ color: '#8B2635' }} /></div>;
+    return <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin" style={{ color: '#6B1D28' }} /></div>;
   }
 
   return (
@@ -88,7 +88,7 @@ export default function PlanejamentoSection() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Planejamento Semanal</h2>
+          <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Planejamento Semanal</h2>
           <p className="text-slate-500 text-sm mt-1">Posts agendados na semana. Use "Gerar" para criar conteúdo com IA.</p>
         </div>
         <div className="flex items-center gap-2">
@@ -107,7 +107,7 @@ export default function PlanejamentoSection() {
       {/* KPIs rápidos */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="rounded-xl p-4 bg-white border border-slate-100 shadow-sm">
-          <p className="text-2xl font-bold" style={{ color: '#8B2635' }}>{totalWeek}</p>
+          <p className="text-2xl font-bold" style={{ color: '#6B1D28' }}>{totalWeek}</p>
           <p className="text-xs text-slate-500 mt-1">Posts na semana</p>
         </div>
         {influencers.slice(0, 3).map((inf: Inf, idx: number) => {

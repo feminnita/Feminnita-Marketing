@@ -54,7 +54,7 @@ export function RentabilidadeProdutoSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Rentabilidade de Produtos</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Rentabilidade de Produtos</h2>
         <p className="text-slate-500 text-sm mt-1">Análise de performance e estratégias de cross-sell / upsell</p>
       </div>
 
@@ -84,7 +84,7 @@ export function RentabilidadeProdutoSection() {
         <Card className="border-0 shadow-sm">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <BarChart3 className="w-4 h-4" style={{ color: '#8B2635' }} />
+              <BarChart3 className="w-4 h-4" style={{ color: '#6B1D28' }} />
               Performance de campanhas por produto
             </CardTitle>
           </CardHeader>
@@ -123,7 +123,7 @@ export function RentabilidadeProdutoSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <Link2 className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <Link2 className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Estratégia de cross-sell
           </CardTitle>
         </CardHeader>
@@ -147,7 +147,7 @@ export function RentabilidadeProdutoSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <TrendingUp className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <TrendingUp className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Estratégia de upsell
           </CardTitle>
         </CardHeader>

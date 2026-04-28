@@ -67,7 +67,7 @@ export function RelatorioCohortAnalysisSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Cohort Analysis</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Cohort Analysis</h2>
         <p className="text-slate-500 text-sm mt-1">Segmente clientes por data de primeira compra para medir retenção</p>
       </div>
 
@@ -114,10 +114,10 @@ export function RelatorioCohortAnalysisSection() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
-              <BarChart3 className="w-4 h-4" style={{ color: '#8B2635' }} />
+              <BarChart3 className="w-4 h-4" style={{ color: '#6B1D28' }} />
               Tabela de retenção por cohort
             </CardTitle>
-            <Button size="sm" onClick={() => setShowForm(!showForm)} style={{ backgroundColor: '#8B2635' }} className="text-white">
+            <Button size="sm" onClick={() => setShowForm(!showForm)} style={{ backgroundColor: '#6B1D28' }} className="text-white">
               <Plus className="w-3.5 h-3.5 mr-1.5" />Adicionar cohort
             </Button>
           </div>
@@ -146,7 +146,7 @@ export function RelatorioCohortAnalysisSection() {
                 ))}
               </div>
               <div className="flex gap-2">
-                <Button onClick={adicionar} size="sm" style={{ backgroundColor: '#8B2635' }} className="text-white">
+                <Button onClick={adicionar} size="sm" style={{ backgroundColor: '#6B1D28' }} className="text-white">
                   <Plus className="w-3.5 h-3.5 mr-1.5" />Adicionar
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => setShowForm(false)}>Cancelar</Button>
@@ -204,7 +204,7 @@ export function RelatorioCohortAnalysisSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <TrendingUp className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <TrendingUp className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Como interpretar cohort analysis
           </CardTitle>
         </CardHeader>

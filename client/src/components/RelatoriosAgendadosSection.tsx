@@ -75,7 +75,7 @@ export default function RelatoriosAgendadosSection() {
   if (isLoading) {
     return (
       <div className="flex justify-center py-16">
-        <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#8B2635' }} />
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#6B1D28' }} />
       </div>
     );
   }
@@ -84,10 +84,10 @@ export default function RelatoriosAgendadosSection() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Relatórios</h2>
+          <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Relatórios</h2>
           <p className="text-slate-500 text-sm mt-1">Visão consolidada em tempo real. Exporte para compartilhar com a equipe.</p>
         </div>
-        <Button style={{ backgroundColor: '#8B2635' }} className="text-white" onClick={exportarRelatorio}>
+        <Button style={{ backgroundColor: '#6B1D28' }} className="text-white" onClick={exportarRelatorio}>
           <Download className="w-4 h-4 mr-2" />
           Exportar Relatório
         </Button>
@@ -119,7 +119,7 @@ export default function RelatoriosAgendadosSection() {
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center gap-2">
-              <BarChart3 className="w-4 h-4" style={{ color: '#8B2635' }} />
+              <BarChart3 className="w-4 h-4" style={{ color: '#6B1D28' }} />
               Performance por Plataforma
             </CardTitle>
           </CardHeader>
@@ -148,7 +148,7 @@ export default function RelatoriosAgendadosSection() {
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center gap-2">
-              <Users className="w-4 h-4" style={{ color: '#8B2635' }} />
+              <Users className="w-4 h-4" style={{ color: '#6B1D28' }} />
               Posts por Influencer ({totalPosts} total)
             </CardTitle>
           </CardHeader>
@@ -163,7 +163,7 @@ export default function RelatoriosAgendadosSection() {
                     <div key={inf} className="flex items-center justify-between p-2 rounded-lg bg-slate-50">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                          style={{ backgroundColor: ['#8B2635','#A63D4A','#6B7A3A','#3A5A6B'][i % 4] }}>
+                          style={{ backgroundColor: ['#6B1D28','#A63D4A','#6B7A3A','#3A5A6B'][i % 4] }}>
                           {inf[0]}
                         </div>
                         <p className="text-sm font-medium text-slate-800">{inf}</p>
@@ -182,7 +182,7 @@ export default function RelatoriosAgendadosSection() {
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center gap-2">
-              <FileText className="w-4 h-4" style={{ color: '#8B2635' }} />
+              <FileText className="w-4 h-4" style={{ color: '#6B1D28' }} />
               Top Campanhas por ROI
             </CardTitle>
           </CardHeader>
@@ -201,7 +201,7 @@ export default function RelatoriosAgendadosSection() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-bold" style={{ color: '#8B2635' }}>{c.performance.roi || 0}%</p>
+                      <p className="text-sm font-bold" style={{ color: '#6B1D28' }}>{c.performance.roi || 0}%</p>
                       <p className="text-xs text-slate-400">ROI</p>
                     </div>
                   </div>

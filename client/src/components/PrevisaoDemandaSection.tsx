@@ -45,7 +45,7 @@ export function PrevisaoDemandaSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Previsão de Demanda</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Previsão de Demanda</h2>
         <p className="text-slate-500 text-sm mt-1">Sinais de demanda por canal e fatores de sazonalidade</p>
       </div>
 
@@ -89,7 +89,7 @@ export function PrevisaoDemandaSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <BarChart3 className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <BarChart3 className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Sinais de demanda por canal (campanhas cadastradas)
           </CardTitle>
           <CardDescription className="text-xs">Baseado em conversões reais das campanhas cadastradas</CardDescription>
@@ -124,7 +124,7 @@ export function PrevisaoDemandaSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Calendar className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <Calendar className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Índice de Sazonalidade (moda/pijamas Brasil)
           </CardTitle>
           <CardDescription className="text-xs">Padrões típicos de demanda por mês — referência de mercado</CardDescription>
@@ -144,7 +144,7 @@ export function PrevisaoDemandaSection() {
                   <div className="w-full bg-slate-200 rounded-full h-2">
                     <div className="h-2 rounded-full" style={{
                       width: `${(sazon.indice / 1.3) * 100}%`,
-                      backgroundColor: '#8B2635',
+                      backgroundColor: '#6B1D28',
                     }} />
                   </div>
                 </div>
@@ -158,7 +158,7 @@ export function PrevisaoDemandaSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Zap className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <Zap className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Fatores que Influenciam a Demanda
           </CardTitle>
           <CardDescription className="text-xs">Peso estimado de cada fator na previsão de vendas</CardDescription>
@@ -175,7 +175,7 @@ export function PrevisaoDemandaSection() {
                   <div className="w-full bg-slate-200 rounded-full h-2">
                     <div className="h-2 rounded-full" style={{
                       width: fator.peso,
-                      backgroundColor: '#8B2635',
+                      backgroundColor: '#6B1D28',
                     }} />
                   </div>
                   <p className="text-xs text-slate-400 mt-0.5">Impacto: {fator.impacto}</p>

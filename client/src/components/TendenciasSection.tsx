@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, TrendingUp, Zap, ArrowUp, ArrowDown, Minus, Instagram, Music2, RefreshCw } from "lucide-react";
 
-const ACCENT_COLORS = ['#8B2635', '#A63D4A', '#6B7A3A', '#3A5A6B'];
+const ACCENT_COLORS = ['#6B1D28', '#A63D4A', '#6B7A3A', '#3A5A6B'];
 const BG_COLORS = ['#fdf0e8', '#fce8ea', '#eef5e8', '#e8f2f5'];
 
 const MOMENTUM_CONFIG: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
@@ -40,7 +40,7 @@ export default function TendenciasSection() {
   ] as const;
 
   if (loadingInfluencers) {
-    return <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin" style={{ color: '#8B2635' }} /></div>;
+    return <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin" style={{ color: '#6B1D28' }} /></div>;
   }
 
   if (influencers.length === 0) {
@@ -55,7 +55,7 @@ export default function TendenciasSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Tendências Virais</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Tendências Virais</h2>
         <p className="text-slate-500 text-sm mt-1">
           A IA analisa o que está em alta na plataforma e sugere conteúdo relevante para cada influencer.
         </p>
@@ -91,7 +91,7 @@ export default function TendenciasSection() {
                 onClick={() => setSelectedPlatform(p.value)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border-2 text-sm transition-all"
                 style={selectedPlatform === p.value
-                  ? { borderColor: '#8B2635', backgroundColor: '#fdf0e8', color: '#8B2635' }
+                  ? { borderColor: '#6B1D28', backgroundColor: '#fdf0e8', color: '#6B1D28' }
                   : { borderColor: '#e5e7eb', color: '#6b7280' }
                 }
               >
@@ -103,7 +103,7 @@ export default function TendenciasSection() {
       </div>
 
       <Button
-        style={{ backgroundColor: selectedIdx >= 0 ? ACCENT_COLORS[selectedIdx % ACCENT_COLORS.length] : '#8B2635' }}
+        style={{ backgroundColor: selectedIdx >= 0 ? ACCENT_COLORS[selectedIdx % ACCENT_COLORS.length] : '#6B1D28' }}
         className="text-white"
         disabled={monitorTrends.isPending || !selectedInfluencerId}
         onClick={() => {
@@ -157,7 +157,7 @@ export default function TendenciasSection() {
                         <div className="h-full rounded-full transition-all"
                           style={{
                             width: `${relevance}%`,
-                            backgroundColor: selectedIdx >= 0 ? ACCENT_COLORS[selectedIdx % ACCENT_COLORS.length] : '#8B2635'
+                            backgroundColor: selectedIdx >= 0 ? ACCENT_COLORS[selectedIdx % ACCENT_COLORS.length] : '#6B1D28'
                           }} />
                       </div>
                     </div>

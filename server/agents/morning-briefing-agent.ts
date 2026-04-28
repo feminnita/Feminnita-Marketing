@@ -20,6 +20,46 @@ import { saveMemory } from "../services/agentMemory";
 import { getDb } from "../db";
 import { agentActions } from "../../drizzle/schema";
 
+// ─── Verificação de anúncios/campanhas pausadas ───────────────────────────────
+
+async function checkPausedCampaigns(): Promise<string[]> {
+  const token = process.env.META_ACCESS_TOKEN;
+  const adAccountId = process.env.META_AD_ACCOUNT_ID || "act_231648936319132";
+  if (!token) return [];
+
+  try {
+    const params = new URLSearchParams({
+      fields: "id,name,status,created_time",
+      effective_status: '["PAUSED"]',
+      limit: "50",
+      access_token: token,
+    });
+    const res = await fetch(`https://graph.facebook.com/v20.0/${adAccountId}/campaigns?${params}`);
+    const data = await res.json();
+    if (!res.ok || data.error || !Array.isArray(data.data)) return [];
+
+    const cutoff = Date.now() - 3 * 24 * 60 * 60 * 1000; // últimas 72h
+    const recentPaused = (data.data as any[]).filter((c: any) => {
+      const created = new Date(c.created_time).getTime();
+      return created > cutoff;
+    });
+
+    if (recentPaused.length > 0) {
+      return [`⚠️ ${recentPaused.length} campanha(s) criada(s) nos últimos 3 dias estão PAUSADAS: ${recentPaused.map((c: any) => c.name).join(", ")} — verifique se precisam ser ativadas`];
+    }
+
+    // Checa também se há campanhas com nome sugerindo que foram criadas recentemente mas estão paradas
+    const allPaused = (data.data as any[]);
+    if (allPaused.length > 0) {
+      return [`ℹ️ ${allPaused.length} campanha(s) atualmente PAUSADAS no Meta Ads — confirme se alguma deveria estar ativa`];
+    }
+
+    return [];
+  } catch {
+    return [];
+  }
+}
+
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
 export interface AgentBriefing {
@@ -62,13 +102,16 @@ export async function runMorningBriefing(): Promise<MorningBriefingResult> {
       throw err;
     });
 
-  const [fernandaResult, sofiaResult, claraResult, marianaResult] =
+  const [fernandaResult, sofiaResult, claraResult, marianaResult, pausedAlertsResult] =
     await Promise.allSettled([
       withTimeout(runDailyAnalysis(), "fernanda"),
       withTimeout(runSofiaAnalysis(), "sofia"),
       withTimeout(runClaraAnalysis(), "clara"),
       withTimeout(runMarianaAnalysis(), "mariana"),
+      checkPausedCampaigns(),
     ]);
+
+  const pausedAlerts: string[] = pausedAlertsResult.status === "fulfilled" ? pausedAlertsResult.value : [];
 
   // Mapear resultados
   const agents: AgentBriefing[] = [];
@@ -168,11 +211,11 @@ export async function runMorningBriefing(): Promise<MorningBriefingResult> {
     console.log(`[MorningBriefing] ${allActions.length} ações salvas para aprovação`);
   }
 
-  // Agregar alertas importantes
-  const topAlerts = agents
-    .flatMap((a) => a.alerts)
-    .filter(Boolean)
-    .slice(0, 5);
+  // Agregar alertas importantes — pausedAlerts primeiro (alta prioridade)
+  const topAlerts = [
+    ...pausedAlerts,
+    ...agents.flatMap((a) => a.alerts).filter(Boolean),
+  ].slice(0, 5);
 
   const totalActions = agents.reduce((sum, a) => sum + a.actionCount, 0);
   const highPriorityActions = 0; // calculado na query

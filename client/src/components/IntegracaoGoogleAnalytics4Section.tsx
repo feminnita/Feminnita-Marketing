@@ -33,7 +33,7 @@ export default function IntegracaoGoogleAnalytics4Section() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Integração Google Analytics 4</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Integração Google Analytics 4</h2>
         <p className="text-slate-500 text-sm mt-1">Sincronize dados de tráfego, conversões e comportamento de usuários</p>
       </div>
 
@@ -81,7 +81,7 @@ export default function IntegracaoGoogleAnalytics4Section() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Settings className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <Settings className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Como configurar o GA4
           </CardTitle>
         </CardHeader>
@@ -90,7 +90,7 @@ export default function IntegracaoGoogleAnalytics4Section() {
             {SETUP_STEPS.map((step, idx) => (
               <li key={idx} className="flex gap-3 items-start text-sm text-slate-700">
                 <span className="flex-shrink-0 w-6 h-6 rounded-full text-white text-xs font-bold flex items-center justify-center"
-                  style={{ backgroundColor: '#8B2635' }}>
+                  style={{ backgroundColor: '#6B1D28' }}>
                   {idx + 1}
                 </span>
                 <span>{step}</span>
@@ -104,7 +104,7 @@ export default function IntegracaoGoogleAnalytics4Section() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <BarChart3 className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <BarChart3 className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Eventos-chave para rastrear
           </CardTitle>
         </CardHeader>
@@ -127,7 +127,7 @@ export default function IntegracaoGoogleAnalytics4Section() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <TrendingUp className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <TrendingUp className="w-4 h-4" style={{ color: '#6B1D28' }} />
             O que estará disponível após integração
           </CardTitle>
         </CardHeader>

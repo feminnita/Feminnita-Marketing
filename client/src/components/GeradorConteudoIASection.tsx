@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Loader2, Copy, Check, Clock, TrendingUp, Instagram, Music2 } from "lucide-react";
 
-const ACCENT_COLORS = ['#8B2635', '#A63D4A', '#6B7A3A', '#3A5A6B'];
+const ACCENT_COLORS = ['#6B1D28', '#A63D4A', '#6B7A3A', '#3A5A6B'];
 const BG_COLORS = ['#fdf0e8', '#fce8ea', '#eef5e8', '#e8f2f5'];
 
 const PLATFORMS = [
@@ -63,7 +63,7 @@ export default function GeradorConteudoIASection() {
   if (loadingInfluencers) {
     return (
       <div className="flex justify-center py-16">
-        <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#8B2635' }} />
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#6B1D28' }} />
       </div>
     );
   }
@@ -80,7 +80,7 @@ export default function GeradorConteudoIASection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Gerador de Conteúdo IA</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Gerador de Conteúdo IA</h2>
         <p className="text-slate-500 text-sm mt-1">
           A IA escreve na voz de cada influencer. Escolha quem, onde e o tema — ela cria a legenda.
         </p>
@@ -179,7 +179,7 @@ export default function GeradorConteudoIASection() {
 
             <Button
               className="w-full text-white"
-              style={{ backgroundColor: selectedIdx >= 0 ? ACCENT_COLORS[selectedIdx % ACCENT_COLORS.length] : '#8B2635' }}
+              style={{ backgroundColor: selectedIdx >= 0 ? ACCENT_COLORS[selectedIdx % ACCENT_COLORS.length] : '#6B1D28' }}
               disabled={generate.isPending || !selectedInfluencerId || !theme.trim()}
               onClick={() => {
                 setResult(null);
@@ -216,7 +216,7 @@ export default function GeradorConteudoIASection() {
           <CardContent>
             {generate.isPending && (
               <div className="flex flex-col items-center justify-center py-12 text-slate-400 space-y-3">
-                <Loader2 className="w-8 h-8 animate-spin" style={{ color: selected ? ACCENT_COLORS[selectedIdx % ACCENT_COLORS.length] : '#8B2635' }} />
+                <Loader2 className="w-8 h-8 animate-spin" style={{ color: selected ? ACCENT_COLORS[selectedIdx % ACCENT_COLORS.length] : '#6B1D28' }} />
                 <p className="text-sm">
                   {selected?.name} está criando o conteúdo...
                 </p>

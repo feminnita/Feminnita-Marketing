@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Sparkles, Instagram, Music2, Send, Trash2, Clock, CheckCircle2, FileText } from "lucide-react";
 
-const ACCENT_COLORS = ['#8B2635', '#A63D4A', '#6B7A3A', '#3A5A6B'];
+const ACCENT_COLORS = ['#6B1D28', '#A63D4A', '#6B7A3A', '#3A5A6B'];
 const BG_COLORS = ['#fdf0e8', '#fce8ea', '#eef5e8', '#e8f2f5'];
 
 const PLATFORM_LABELS: Record<string, string> = {
@@ -65,7 +65,7 @@ export default function ModuloInfluenciadorasSection() {
   if (isLoading) {
     return (
       <div className="flex justify-center py-16">
-        <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#8B2635' }} />
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#6B1D28' }} />
       </div>
     );
   }
@@ -82,7 +82,7 @@ export default function ModuloInfluenciadorasSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Módulo Influenciadoras</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Módulo Influenciadoras</h2>
         <p className="text-slate-500 text-sm mt-1">Selecione uma influencer para gerar conteúdo com a voz dela usando IA.</p>
       </div>
 

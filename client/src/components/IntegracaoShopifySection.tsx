@@ -38,7 +38,7 @@ export function IntegracaoShopifySection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Integração com Shopify</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Integração com Shopify</h2>
         <p className="text-slate-500 text-sm mt-1">Sincronize pedidos, clientes e produtos automaticamente</p>
       </div>
 
@@ -57,7 +57,7 @@ export function IntegracaoShopifySection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Zap className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <Zap className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Como conectar o Shopify
           </CardTitle>
         </CardHeader>
@@ -66,7 +66,7 @@ export function IntegracaoShopifySection() {
             {SETUP_STEPS.map((step, idx) => (
               <li key={idx} className="flex gap-3 items-start text-sm text-slate-700">
                 <span className="flex-shrink-0 w-6 h-6 rounded-full text-white text-xs font-bold flex items-center justify-center"
-                  style={{ backgroundColor: '#8B2635' }}>
+                  style={{ backgroundColor: '#6B1D28' }}>
                   {idx + 1}
                 </span>
                 <span>{step}</span>
@@ -80,7 +80,7 @@ export function IntegracaoShopifySection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <TrendingUp className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <TrendingUp className="w-4 h-4" style={{ color: '#6B1D28' }} />
             O que a integração habilita
           </CardTitle>
         </CardHeader>
@@ -88,7 +88,7 @@ export function IntegracaoShopifySection() {
           <div className="space-y-3">
             {BENEFITS.map((b, idx) => (
               <div key={idx} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: '#8B2635' }}></div>
+                <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: '#6B1D28' }}></div>
                 <div>
                   <p className="font-medium text-sm text-slate-900">{b.titulo}</p>
                   <p className="text-xs text-slate-500 mt-0.5">{b.descricao}</p>
@@ -103,7 +103,7 @@ export function IntegracaoShopifySection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <ShoppingCart className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <ShoppingCart className="w-4 h-4" style={{ color: '#6B1D28' }} />
             Dados disponíveis após integração
           </CardTitle>
         </CardHeader>

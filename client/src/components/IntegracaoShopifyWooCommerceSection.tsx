@@ -28,7 +28,7 @@ export default function IntegracaoShopifyWooCommerceSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: '#8B2635' }}>Integração Shopify/WooCommerce</h2>
+        <h2 className="text-2xl font-bold" style={{ color: '#6B1D28' }}>Integração Shopify/WooCommerce</h2>
         <p className="text-slate-500 text-sm mt-1">Sincronize inventário, pedidos e dados de vendas</p>
       </div>
 
@@ -75,7 +75,7 @@ export default function IntegracaoShopifyWooCommerceSection() {
       <Card className="border-0 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Zap className="w-4 h-4" style={{ color: '#8B2635' }} />
+            <Zap className="w-4 h-4" style={{ color: '#6B1D28' }} />
             O que você terá após conectar
           </CardTitle>
         </CardHeader>
