@@ -210,7 +210,7 @@ export default function MlAdsManagerPage() {
       <div className="min-h-screen flex items-center justify-center p-6" style={{ backgroundColor: "#FAF6EE" }}>
         <div className="bg-white rounded-2xl shadow-lg p-10 max-w-md w-full text-center">
           <div className="text-5xl mb-4">{isExpired ? "⚠️" : "🛒"}</div>
-          <h1 className="text-2xl font-bold text-[#FFD100] mb-2">Gabi — ML Ads & EDS</h1>
+          <h1 className="text-2xl font-bold text-[#FFD100] mb-2">Gabi — ML Ads</h1>
           <p className="text-gray-500 mb-6">
             {isExpired
               ? "Token do Mercado Livre expirou. Reconecte a conta para continuar usando a Gabi."
@@ -243,7 +243,7 @@ export default function MlAdsManagerPage() {
           <div className="flex items-center gap-3">
             <ShoppingCart className="w-7 h-7 text-[#FFD100]" />
             <div>
-              <h1 className="text-xl font-bold text-[#FFD100]">Gabi — ML Ads & EDS</h1>
+              <h1 className="text-xl font-bold text-[#FFD100]">Gabi — ML Ads</h1>
               <p className="text-xs text-yellow-300">
                 {authStatus.data?.userId ? `Conta: ${authStatus.data.userId}` : "Especialista Mercado Livre"}
               </p>
@@ -402,7 +402,7 @@ export default function MlAdsManagerPage() {
             {!selectedEvaluationId ? (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col items-center justify-center py-16 text-center px-6">
                 <Bot className="w-12 h-12 text-yellow-400 mb-3" />
-                <h3 className="font-semibold text-gray-900 mb-1">Gabi — ML Ads & EDS</h3>
+                <h3 className="font-semibold text-gray-900 mb-1">Gabi — ML Ads</h3>
                 <p className="text-sm text-gray-500 max-w-sm">
                   Clique em "Nova Avaliação" para analisar campanhas, fichas de produto e performance com a Gabi.
                 </p>

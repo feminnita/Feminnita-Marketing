@@ -506,7 +506,8 @@ function VideoLibrary() {
 const STUDIO_COLOR = "#8B5CF6";
 
 function VideoStudio() {
-  const [imageUrls, setImageUrls] = useState<string[]>([""]);
+  const [selectedAssets, setSelectedAssets] = useState<Array<{id: number; name: string; url: string; thumbnailUrl?: string | null}>>([]);
+  const [showPicker, setShowPicker] = useState(false);
   const [hookText, setHookText] = useState("");
   const [ctaText, setCtaText] = useState("");
   const [durationPerImage, setDurationPerImage] = useState(4);
@@ -514,6 +515,7 @@ function VideoStudio() {
   const [dubbing, setDubbing] = useState(true);
   const [generatingId, setGeneratingId] = useState<number | null>(null);
   const utils = trpc.useUtils();
+  const assetsQuery = trpc.assetLibrary.listAssets.useQuery({});
 
   const listQuery = trpc.tiktokTeam.listVideos.useQuery(undefined, {
     refetchInterval: generatingId ? 3000 : false,
@@ -543,27 +545,21 @@ function VideoStudio() {
     }
   }, [listQuery.data, generatingId]);
 
-  function addImageUrl() {
-    if (imageUrls.length < 5) setImageUrls([...imageUrls, ""]);
-  }
-
-  function removeImageUrl(i: number) {
-    setImageUrls(imageUrls.filter((_, idx) => idx !== i));
-  }
-
-  function setUrl(i: number, val: string) {
-    const next = [...imageUrls];
-    next[i] = val;
-    setImageUrls(next);
+  function toggleAsset(asset: { id: number; name: string; url: string; thumbnailUrl?: string | null }) {
+    setSelectedAssets((prev) => {
+      const exists = prev.find((a) => a.id === asset.id);
+      if (exists) return prev.filter((a) => a.id !== asset.id);
+      if (prev.length >= 5) { toast.error("Máximo 5 imagens."); return prev; }
+      return [...prev, asset];
+    });
   }
 
   function handleGenerate() {
-    const validUrls = imageUrls.map((u) => u.trim()).filter(Boolean);
     if (!title.trim()) return toast.error("Preencha o título do vídeo.");
-    if (validUrls.length === 0) return toast.error("Adicione pelo menos 1 imagem.");
+    if (selectedAssets.length === 0) return toast.error("Selecione pelo menos 1 imagem do Banco de Imagens.");
     generateMut.mutate({
       title: title.trim(),
-      imageUrls: validUrls,
+      imageUrls: selectedAssets.map((a) => a.url),
       hookText: hookText.trim(),
       ctaText: ctaText.trim(),
       durationPerImage,
@@ -582,7 +578,7 @@ function VideoStudio() {
           Gerar Vídeo com IA
         </h3>
         <p className="text-xs text-gray-500">
-          Cole URLs de imagens de produto (1–5), escreva os textos e gere um vídeo vertical 9:16 pronto para TikTok/Reels.
+          Selecione imagens do Banco de Imagens (1–5), escreva os textos e gere um vídeo vertical 9:16 pronto para TikTok/Reels.
         </p>
 
         {/* Title */}
@@ -598,32 +594,96 @@ function VideoStudio() {
           />
         </div>
 
-        {/* Image URLs */}
+        {/* Image picker do Banco de Imagens */}
         <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1">Imagens do produto (URLs)</label>
-          <div className="space-y-2">
-            {imageUrls.map((url, i) => (
-              <div key={i} className="flex gap-2">
-                <input
-                  type="text"
-                  value={url}
-                  onChange={(e) => setUrl(i, e.target.value)}
-                  placeholder={`URL da imagem ${i + 1}`}
-                  className="flex-1 text-base border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2"
-                  style={{ "--tw-ring-color": STUDIO_COLOR } as any}
-                />
-                {imageUrls.length > 1 && (
-                  <button onClick={() => removeImageUrl(i)} className="p-2 text-gray-400 hover:text-red-500 rounded-lg border border-gray-200">
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-          {imageUrls.length < 5 && (
-            <button onClick={addImageUrl} className="mt-2 flex items-center gap-1.5 text-xs font-medium text-purple-600 hover:text-purple-800">
-              <Plus className="w-3.5 h-3.5" /> Adicionar imagem
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-xs font-semibold text-gray-600">
+              Imagens do produto ({selectedAssets.length}/5)
+            </label>
+            <button
+              onClick={() => setShowPicker((v) => !v)}
+              className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-all"
+              style={showPicker
+                ? { background: STUDIO_COLOR, color: "#fff", borderColor: STUDIO_COLOR }
+                : { borderColor: "#e5e7eb", color: STUDIO_COLOR }}
+            >
+              <Plus className="w-3.5 h-3.5" />
+              {showPicker ? "Fechar" : "Banco de Imagens"}
             </button>
+          </div>
+
+          {/* Thumbnails selecionadas */}
+          {selectedAssets.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {selectedAssets.map((asset) => (
+                <div key={asset.id} className="relative group">
+                  <img
+                    src={asset.thumbnailUrl || asset.url}
+                    alt={asset.name}
+                    className="w-16 h-16 object-cover rounded-lg border-2 border-purple-400"
+                  />
+                  <button
+                    onClick={() => toggleAsset(asset)}
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="w-3 h-3 text-white" />
+                  </button>
+                  <p className="text-xs text-gray-500 mt-0.5 w-16 truncate text-center">{asset.name}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {selectedAssets.length === 0 && !showPicker && (
+            <p className="text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-3 text-center">
+              Nenhuma imagem selecionada — clique em "Banco de Imagens" para escolher
+            </p>
+          )}
+
+          {/* Grade do banco */}
+          {showPicker && (
+            <div className="border border-gray-200 rounded-xl overflow-hidden">
+              {assetsQuery.isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-5 h-5 animate-spin" style={{ color: STUDIO_COLOR }} />
+                </div>
+              ) : (assetsQuery.data || []).length === 0 ? (
+                <div className="text-center py-8 text-sm text-gray-400">
+                  <p>Banco de imagens vazio.</p>
+                  <a href="/banco-imagens" className="underline text-xs mt-1 block" style={{ color: STUDIO_COLOR }}>
+                    Adicionar imagens
+                  </a>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-2 p-3 max-h-64 overflow-y-auto">
+                  {(assetsQuery.data || []).map((asset: any) => {
+                    const isSelected = selectedAssets.some((a) => a.id === asset.id);
+                    return (
+                      <button
+                        key={asset.id}
+                        onClick={() => toggleAsset({ id: asset.id, name: asset.name, url: asset.url, thumbnailUrl: asset.thumbnailUrl })}
+                        className={`relative rounded-lg overflow-hidden border-2 transition-all aspect-square ${
+                          isSelected ? "border-purple-500 ring-2 ring-purple-300" : "border-transparent hover:border-gray-300"
+                        }`}
+                      >
+                        <img
+                          src={asset.thumbnailUrl || asset.url}
+                          alt={asset.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                        />
+                        {isSelected && (
+                          <div className="absolute inset-0 bg-purple-500/20 flex items-center justify-center">
+                            <CheckCircle className="w-6 h-6 text-purple-600" />
+                          </div>
+                        )}
+                        <p className="absolute bottom-0 inset-x-0 bg-black/50 text-white text-xs px-1 py-0.5 truncate">{asset.name}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           )}
         </div>
 
