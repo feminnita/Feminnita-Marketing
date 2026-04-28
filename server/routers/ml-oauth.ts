@@ -47,6 +47,52 @@ function updateEnvFile(updates: Record<string, string>) {
   fs.writeFileSync(envPath, content, "utf-8");
 }
 
+// ─── Refresh automático de token ─────────────────────────────────────────────
+
+export async function refreshMLToken(account: "feminnita" | "fnt" = "feminnita"): Promise<boolean> {
+  const isFnt = account === "fnt";
+  const clientId     = isFnt ? (process.env.ML_CLIENT_ID_2     || ML_CLIENT_ID)     : ML_CLIENT_ID;
+  const clientSecret = isFnt ? (process.env.ML_CLIENT_SECRET_2 || ML_CLIENT_SECRET) : ML_CLIENT_SECRET;
+  const refreshToken = isFnt ? process.env.ML_REFRESH_TOKEN_2  : process.env.ML_REFRESH_TOKEN_1;
+
+  if (!refreshToken || !clientId || !clientSecret) {
+    console.warn(`[MLOAuth] refresh impossível — falta refresh_token ou credenciais (account=${account})`);
+    return false;
+  }
+
+  try {
+    const res = await fetch("https://api.mercadolibre.com/oauth/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type:    "refresh_token",
+        client_id:     clientId,
+        client_secret: clientSecret,
+        refresh_token: refreshToken,
+      }),
+    });
+
+    const data = await res.json() as any;
+    if (!res.ok || data.error) {
+      console.error(`[MLOAuth] Refresh falhou (${account}):`, data.message || data.error);
+      return false;
+    }
+
+    const suffix = isFnt ? "2" : "1";
+    updateEnvFile({
+      [`ML_ACCESS_TOKEN_${suffix}`]:  data.access_token,
+      [`ML_REFRESH_TOKEN_${suffix}`]: data.refresh_token || refreshToken,
+      [`ML_USER_ID_${suffix}`]:       String(data.user_id || ""),
+    });
+
+    console.log(`[MLOAuth] ✅ Token ML renovado automaticamente (account=${account})`);
+    return true;
+  } catch (e: any) {
+    console.error(`[MLOAuth] Erro ao renovar token (${account}):`, e.message);
+    return false;
+  }
+}
+
 export function registerMLOAuthRoutes(app: Express) {
   /**
    * GET /api/ml/debug-ads

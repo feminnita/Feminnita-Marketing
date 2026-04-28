@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getDb } from "../db";
 import { mlAdsEvaluations, mlAdsEvaluationMessages } from "../../drizzle/schema";
 import { eq, and, desc } from "drizzle-orm";
+import { refreshMLToken } from "./ml-oauth";
 import {
   runMLAdsEvaluation,
   chatWithMLAgent,
@@ -17,19 +18,36 @@ export const mlAdsManagerRouter = router({
     .input(z.object({ account: z.enum(["feminnita", "fnt"]).default("feminnita") }).optional())
     .query(async ({ input }) => {
       const acc = input?.account ?? "feminnita";
-      const token = acc === "fnt" ? process.env.ML_ACCESS_TOKEN_2 : process.env.ML_ACCESS_TOKEN_1;
-      const userId = acc === "fnt" ? process.env.ML_USER_ID_2 : process.env.ML_USER_ID_1;
-      if (!token) return { connected: false, userId: undefined, expired: false };
-      try {
-        const res = await fetch("https://api.mercadolibre.com/users/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) return { connected: false, userId, expired: true };
-        const data = await res.json() as any;
-        return { connected: true, userId: String(data.id || userId || ""), expired: false };
-      } catch {
-        return { connected: false, userId, expired: false };
+
+      async function testToken(): Promise<{ ok: boolean; userId?: string }> {
+        const token = acc === "fnt" ? process.env.ML_ACCESS_TOKEN_2 : process.env.ML_ACCESS_TOKEN_1;
+        const envUserId = acc === "fnt" ? process.env.ML_USER_ID_2 : process.env.ML_USER_ID_1;
+        if (!token) return { ok: false };
+        try {
+          const res = await fetch("https://api.mercadolibre.com/users/me", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (!res.ok) return { ok: false, userId: envUserId };
+          const data = await res.json() as any;
+          return { ok: true, userId: String(data.id || envUserId || "") };
+        } catch {
+          return { ok: false, userId: envUserId };
+        }
       }
+
+      const first = await testToken();
+      if (first.ok) return { connected: true, userId: first.userId, expired: false };
+
+      // Tenta refresh automático
+      const refreshed = await refreshMLToken(acc);
+      if (refreshed) {
+        const second = await testToken();
+        if (second.ok) return { connected: true, userId: second.userId, expired: false };
+      }
+
+      const envUserId = acc === "fnt" ? process.env.ML_USER_ID_2 : process.env.ML_USER_ID_1;
+      const hasToken = Boolean(acc === "fnt" ? process.env.ML_ACCESS_TOKEN_2 : process.env.ML_ACCESS_TOKEN_1);
+      return { connected: false, userId: envUserId, expired: hasToken };
     }),
 
   /**
