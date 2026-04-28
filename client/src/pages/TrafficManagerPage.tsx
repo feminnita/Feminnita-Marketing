@@ -58,6 +58,15 @@ function AlertBg(level: string) {
   return "bg-blue-50 border-blue-200";
 }
 
+function toStr(item: any): string {
+  if (typeof item === "string") return item;
+  if (item === null || item === undefined) return "";
+  if (typeof item === "object") {
+    return item.message || item.action || item.issue || item.text || item.summary || item.impact || item.expected_impact || JSON.stringify(item);
+  }
+  return String(item);
+}
+
 function PriorityIcon({ priority }: { priority: string }) {
   if (priority === "alta") return <TrendingUp className="w-3.5 h-3.5 text-red-600" />;
   if (priority === "media") return <TrendingUp className="w-3.5 h-3.5 text-amber-600" />;
@@ -317,7 +326,7 @@ function BriefingPanel() {
                 className={`flex items-start gap-2 border rounded-lg px-3 py-2 text-sm ${AlertBg(a.level)}`}
               >
                 <AlertIcon level={a.level} />
-                <span className="text-slate-800">{a.message}</span>
+                <span className="text-slate-800">{toStr(a.message)}</span>
               </div>
             ))}
           </div>
@@ -359,8 +368,8 @@ function BriefingPanel() {
                     {r.priority}
                   </span>
                 </div>
-                <p className="text-sm text-slate-800">{r.action}</p>
-                <p className="text-xs text-slate-500 mt-1">{r.expected_impact}</p>
+                <p className="text-sm text-slate-800">{toStr(r.action)}</p>
+                <p className="text-xs text-slate-500 mt-1">{toStr(r.expected_impact)}</p>
               </div>
             ))}
           </div>
