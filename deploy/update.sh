@@ -25,6 +25,9 @@ echo "[update] Fazendo build..."
 pnpm build
 
 echo "[update] Reiniciando serviço..."
+# Garantir que a porta 3000 está livre antes de subir o novo processo
+fuser -k 3000/tcp 2>/dev/null || true
+sleep 1
 systemctl restart $SERVICE
 
 echo "[update] Concluído!"
