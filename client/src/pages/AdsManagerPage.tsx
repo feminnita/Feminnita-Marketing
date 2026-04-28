@@ -950,16 +950,16 @@ export default function AdsManagerPage() {
                     {currentEval.creativeBriefs.map((brief, i) => (
                       <div key={i} className="border border-purple-100 rounded-lg p-4 bg-purple-50">
                         <div className="flex items-center gap-2 mb-3">
-                          <span className="text-xs font-bold uppercase tracking-wide bg-purple-200 text-purple-800 px-2 py-0.5 rounded-full">{brief.publico}</span>
-                          <span className="text-xs font-semibold text-gray-500">{brief.formato}</span>
+                          <span className="text-xs font-bold uppercase tracking-wide bg-purple-200 text-purple-800 px-2 py-0.5 rounded-full">{toStr(brief.publico)}</span>
+                          <span className="text-xs font-semibold text-gray-500">{toStr(brief.formato)}</span>
                         </div>
                         <div className="grid grid-cols-1 gap-2 text-sm">
-                          <div><span className="font-semibold text-gray-700">Visual: </span><span className="text-gray-600">{brief.visual}</span></div>
-                          <div><span className="font-semibold text-gray-700">Headline: </span><span className="text-gray-800 font-medium">"{brief.headline}"</span></div>
-                          <div><span className="font-semibold text-gray-700">Copy: </span><span className="text-gray-600">{brief.copy}</span></div>
-                          <div><span className="font-semibold text-gray-700">CTA: </span><span className="text-purple-700 font-medium">{brief.cta}</span></div>
+                          <div><span className="font-semibold text-gray-700">Visual: </span><span className="text-gray-600">{toStr(brief.visual)}</span></div>
+                          <div><span className="font-semibold text-gray-700">Headline: </span><span className="text-gray-800 font-medium">"{toStr(brief.headline)}"</span></div>
+                          <div><span className="font-semibold text-gray-700">Copy: </span><span className="text-gray-600">{toStr(brief.copy)}</span></div>
+                          <div><span className="font-semibold text-gray-700">CTA: </span><span className="text-purple-700 font-medium">{toStr(brief.cta)}</span></div>
                           {brief.observacoes && (
-                            <div><span className="font-semibold text-gray-700">Obs: </span><span className="text-gray-500 italic">{brief.observacoes}</span></div>
+                            <div><span className="font-semibold text-gray-700">Obs: </span><span className="text-gray-500 italic">{toStr(brief.observacoes)}</span></div>
                           )}
                         </div>
                       </div>
