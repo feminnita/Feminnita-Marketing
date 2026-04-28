@@ -479,12 +479,12 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
-                  <SidebarMenuSubButton onClick={() => setLocation("/tiktok-team?tab=videos")}>
+                  <SidebarMenuSubButton onClick={() => { setLocation("/tiktok-team"); window.dispatchEvent(new CustomEvent("tiktok-tab", { detail: "videos" })); }}>
                     <Video className="h-3 w-3" /> TikTok — Vídeos
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
-                  <SidebarMenuSubButton onClick={() => setLocation("/tiktok-team?tab=studio")}>
+                  <SidebarMenuSubButton onClick={() => { setLocation("/tiktok-team"); window.dispatchEvent(new CustomEvent("tiktok-tab", { detail: "studio" })); }}>
                     <Video className="h-3 w-3" /> TikTok — Studio ✨
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>

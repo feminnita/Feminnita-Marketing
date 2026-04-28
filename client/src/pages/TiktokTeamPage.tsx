@@ -770,18 +770,14 @@ const TT_PINK = "#FE2C55";
 export type AccountType = "feminnita" | "fnt";
 
 export default function TiktokTeamPage() {
-  const [location, setLocation] = useLocation();
-  const getTabFromUrl = () => {
-    const params = new URLSearchParams(window.location.search);
-    const t = params.get("tab");
-    if (t === "studio") return "studio" as const;
-    return "videos" as const;
-  };
-  const [activeTab, setActiveTab] = useState<"videos" | "studio">(getTabFromUrl);
+  const [, setLocation] = useLocation();
+  const [activeTab, setActiveTab] = useState<"videos" | "studio">("videos");
 
   useEffect(() => {
-    setActiveTab(getTabFromUrl());
-  }, [location]);
+    const handler = (e: Event) => setActiveTab((e as CustomEvent).detail as "videos" | "studio");
+    window.addEventListener("tiktok-tab", handler);
+    return () => window.removeEventListener("tiktok-tab", handler);
+  }, []);
 
   return (
     <div className="max-w-full px-6 py-6 space-y-6">
