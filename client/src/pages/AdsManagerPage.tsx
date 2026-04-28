@@ -914,7 +914,7 @@ export default function AdsManagerPage() {
                             >
                               {priorityLabel[rec.priority]}
                             </span>
-                            <span className="text-sm font-medium">{rec.titulo}</span>
+                            <span className="text-sm font-medium">{toStr(rec.titulo)}</span>
                           </div>
                           {expandedRecs.has(i) ? (
                             <ChevronUp className="w-4 h-4 shrink-0" />
@@ -924,13 +924,13 @@ export default function AdsManagerPage() {
                         </button>
                         {expandedRecs.has(i) && (
                           <div className="px-3 pb-3 space-y-1 text-sm border-t border-current border-opacity-20">
-                            <p className="text-xs opacity-70 font-medium mt-2">{rec.campanha}</p>
-                            <p>{rec.descricao}</p>
+                            <p className="text-xs opacity-70 font-medium mt-2">{toStr(rec.campanha)}</p>
+                            <p>{toStr(rec.descricao)}</p>
                             <div className="mt-2 bg-white bg-opacity-60 rounded p-2">
                               <span className="font-semibold text-xs uppercase tracking-wide opacity-70">
                                 Ação sugerida:{" "}
                               </span>
-                              {rec.acao}
+                              {toStr(rec.acao)}
                             </div>
                           </div>
                         )}
@@ -1017,7 +1017,7 @@ export default function AdsManagerPage() {
               </div>
               {data ? (
                 <div className="space-y-3">
-                  <p className="text-sm text-gray-700 leading-relaxed">{data.summary}</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">{toStr(data.summary)}</p>
                   {(data.highlights?.length ?? 0) > 0 && (
                     <div>
                       <p className="text-xs font-semibold text-green-700 mb-1">Destaques</p>
@@ -1098,7 +1098,7 @@ export default function AdsManagerPage() {
                   </button>
                   {isOpen && data && (
                     <div className="px-4 pb-4 border-t border-gray-100 space-y-2 pt-3">
-                      <p className="text-sm text-gray-700">{data.summary}</p>
+                      <p className="text-sm text-gray-700">{toStr(data.summary)}</p>
                       {(data.recommendations?.length ?? 0) > 0 && (
                         <div>
                           <p className="text-xs font-semibold text-gray-500 mb-1">Recomendações</p>
