@@ -140,14 +140,11 @@ export function registerMLOAuthRoutes(app: Express) {
 
     const results: any[] = [];
 
+    // product_id é obrigatório — testando os valores conhecidos do ML Ads
+    const productIds = ["MPP", "MADS", "PDA", "1", "2", "3"];
     const urls = [
-      `https://api.mercadolibre.com/advertising/advertisers`,
-      `https://api.mercadolibre.com/advertising/advertisers?user_id=${userId}`,
-      `https://api.mercadolibre.com/advertising`,
-      `https://api.mercadolibre.com/users/${userId}/advertising_accounts`,
-      `https://api.mercadolibre.com/advertising/advertisers/${userId}/campaigns`,
-      `https://api.mercadolibre.com/advertising/advertisers/${userId}`,
-      `https://api.mercadolibre.com/users/${userId}/advertising`,
+      ...productIds.map(pid => `https://api.mercadolibre.com/advertising/advertisers?product_id=${pid}&user_id=${userId}`),
+      ...productIds.map(pid => `https://api.mercadolibre.com/advertising/advertisers?product_id=${pid}`),
     ];
 
     for (const url of urls) {
