@@ -438,12 +438,17 @@ export const appRouter = router({
       }),
   }),
 
-  // TODO: add feature routers here, e.g.
-  // todo: router({
-  //   list: protectedProcedure.query(({ ctx }) =>
-  //     db.getUserTodos(ctx.user.id)
-  //   ),
-  // }),
+  users: router({
+    list: protectedProcedure.query(async ({ ctx }) => {
+      const dbConn = await getDb();
+      if (!dbConn) return [];
+      const { ne } = await import("drizzle-orm");
+      const { users: usersTable } = await import("../drizzle/schema");
+      return dbConn.select({ id: usersTable.id, name: usersTable.name, email: usersTable.email })
+        .from(usersTable)
+        .where(ne(usersTable.id, ctx.user.id));
+    }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

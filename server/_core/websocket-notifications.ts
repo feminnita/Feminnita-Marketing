@@ -97,6 +97,26 @@ export function initializeWebSocket(httpServer: HTTPServer) {
       pushChatMessage({ type: "system", id: `${Date.now()}`, text: `${safeName} entrou`, ts: Date.now() });
     });
 
+    // DM: mensagem direta entre humanos
+    socket.on("dm:send", ({ toUserId, text }: { toUserId: number; text: unknown }) => {
+      const sender = chatUsers.get(socket.id);
+      if (!sender) return;
+      const safe = String(text ?? "").trim().slice(0, 1000);
+      if (!safe) return;
+      const msg = {
+        id: `${Date.now()}-${Math.random()}`,
+        fromUserId: sender.userId,
+        fromName: sender.name,
+        color: sender.color,
+        text: safe,
+        ts: Date.now(),
+      };
+      const recipientSockets = connectedUsers.get(toUserId);
+      if (recipientSockets) {
+        recipientSockets.forEach(sid => io!.to(sid).emit("dm:receive", msg));
+      }
+    });
+
     // Chat: send message
     socket.on("chat:send", (text: unknown) => {
       const user = chatUsers.get(socket.id);
