@@ -102,6 +102,7 @@ import { mlGabiRouter } from "./routers/ml-gabi";
 import { shopeeLuizaRouter } from "./routers/shopee-luiza";
 import { amazonAliceRouter } from "./routers/amazon-alice";
 import { sheinIsabelaRouter } from "./routers/shein-isabela";
+import { agentTasksRouter } from "./routers/agent-tasks";
 import { getDb } from "./db";
 import { influencers, influencerPosts } from "../drizzle/schema";
 
@@ -437,6 +438,8 @@ export const appRouter = router({
         }));
       }),
   }),
+
+  agentTasks: agentTasksRouter,
 
   users: router({
     list: protectedProcedure.query(async ({ ctx }) => {

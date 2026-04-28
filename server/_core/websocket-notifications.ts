@@ -83,6 +83,7 @@ export function initializeWebSocket(httpServer: HTTPServer) {
         connectedUsers.set(userId, new Set());
       }
       connectedUsers.get(userId)!.add(socket.id);
+      socket.join(`user_${userId}`);
       console.log(`[WebSocket] Usuário ${userId} registrado (socket: ${socket.id})`);
     });
 

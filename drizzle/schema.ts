@@ -1597,3 +1597,15 @@ export const pushSubscriptions = mysqlTable("push_subscriptions", {
   auth:      varchar("auth", { length: 255 }).notNull(),
   createdAt: timestamp("createdAt").defaultNow(),
 });
+
+export const agentTasks = mysqlTable("agent_tasks", {
+  id:          int("id").autoincrement().primaryKey(),
+  userId:      int("userId").notNull(),
+  agentName:   varchar("agentName", { length: 50 }).notNull(),
+  message:     text("message").notNull(),
+  status:      mysqlEnum("status", ["pending", "processing", "done", "error"]).notNull().default("pending"),
+  result:      text("result"),
+  startedAt:   timestamp("startedAt"),
+  finishedAt:  timestamp("finishedAt"),
+  createdAt:   timestamp("createdAt").defaultNow(),
+});

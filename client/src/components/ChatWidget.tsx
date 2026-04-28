@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { ChevronLeft, Loader2, MessageCircle, Send, Users, X } from "lucide-react";
+import { ChevronLeft, Clock, Loader2, MessageCircle, Send, Users, X } from "lucide-react";
 
 // ─── Push helpers ─────────────────────────────────────────────────────────────
 
@@ -90,6 +90,7 @@ export default function ChatWidget() {
   const bottomRef  = useRef<HTMLDivElement>(null);
 
   const chatMutation      = trpc.specialistChat.chat.useMutation();
+  const taskMutation      = trpc.agentTasks.submit.useMutation();
   const vapidQuery        = trpc.pushSubscriptions.vapidPublicKey.useQuery(undefined, { staleTime: Infinity });
   const subscribeMutation = trpc.pushSubscriptions.subscribe.useMutation();
   const teamQuery         = trpc.users.list.useQuery(undefined, { staleTime: 60_000 });
@@ -137,6 +138,23 @@ export default function ChatWidget() {
       }
     });
     socket.on("chat:users", (u: OnlineUser[]) => setOnlineUsers(u));
+
+    // Tarefa assíncrona concluída
+    socket.on("agent:task:done", (payload: { taskId: number; agentName: string; agentDisplay: string; message: string; originalMessage: string; ts: number }) => {
+      const taskMsg: AgentMsg = { role: "assistant", text: payload.message, ts: payload.ts };
+      setAgentCtxs(p => ({
+        ...p,
+        [payload.agentName]: {
+          msgs: [...(p[payload.agentName]?.msgs ?? []), taskMsg],
+          convId: p[payload.agentName]?.convId ?? null,
+        },
+      }));
+      const viewing = openRef.current && contactRef.current?.agentName === payload.agentName;
+      if (!viewing) {
+        setUnread(n => n + 1);
+        notify(`${payload.agentDisplay} concluiu`, payload.message.slice(0, 100));
+      }
+    });
 
     socket.on("dm:receive", (msg: { id: string; fromUserId: number; fromName: string; text: string; ts: number }) => {
       setDmMsgs(prev => ({ ...prev, [msg.fromUserId]: [...(prev[msg.fromUserId] ?? []), { role: "received", text: msg.text, ts: msg.ts, fromName: msg.fromName }] }));
@@ -387,27 +405,47 @@ export default function ChatWidget() {
               </div>
 
               {/* Input */}
-              <div style={{ padding: "8px 10px", borderTop: "1px solid #334155", display: "flex", gap: 6, flexShrink: 0 }}>
-                <input
-                  value={input}
-                  onChange={e => setInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-                  placeholder={
-                    contact.kind === "group" || contact.kind === "human"
-                      ? (connected ? `Mensagem... (Enter)` : "Conectando...")
-                      : isAgentLoading ? "Aguardando resposta..." : `Mensagem para ${contact.name}...`
-                  }
-                  disabled={(contact.kind === "group" || contact.kind === "human") ? !connected : isAgentLoading}
-                  autoFocus
-                  style={{ flex: 1, padding: "8px 10px", background: "#0f172a", border: "1px solid #334155", borderRadius: 8, color: "#f1f5f9", fontSize: 13, outline: "none" }}
-                />
-                <button
-                  onClick={send}
-                  disabled={!input.trim() || isAgentLoading || ((contact.kind === "group" || contact.kind === "human") && !connected)}
-                  style={{ padding: "8px 12px", background: "#8B2635", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", display: "flex", alignItems: "center", opacity: (!input.trim() || isAgentLoading) ? 0.5 : 1 }}
-                >
-                  <Send size={14} />
-                </button>
+              <div style={{ padding: "8px 10px", borderTop: "1px solid #334155", display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <input
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+                    placeholder={
+                      contact.kind === "group" || contact.kind === "human"
+                        ? (connected ? `Mensagem... (Enter)` : "Conectando...")
+                        : isAgentLoading ? "Aguardando resposta..." : `Mensagem para ${contact.name}...`
+                    }
+                    disabled={(contact.kind === "group" || contact.kind === "human") ? !connected : isAgentLoading}
+                    autoFocus
+                    style={{ flex: 1, padding: "8px 10px", background: "#0f172a", border: "1px solid #334155", borderRadius: 8, color: "#f1f5f9", fontSize: 13, outline: "none" }}
+                  />
+                  <button
+                    onClick={send}
+                    disabled={!input.trim() || isAgentLoading || ((contact.kind === "group" || contact.kind === "human") && !connected)}
+                    style={{ padding: "8px 12px", background: "#8B2635", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", display: "flex", alignItems: "center", opacity: (!input.trim() || isAgentLoading) ? 0.5 : 1 }}
+                  >
+                    <Send size={14} />
+                  </button>
+                </div>
+                {contact.kind === "agent" && (
+                  <button
+                    onClick={async () => {
+                      const text = input.trim();
+                      if (!text || !contact.agentName) return;
+                      setInput("");
+                      const taskMsg: AgentMsg = { role: "user", text: `⏳ Tarefa enviada: ${text}`, ts: Date.now() };
+                      setAgentCtxs(p => ({ ...p, [contact.agentName!]: { msgs: [...(p[contact.agentName!]?.msgs ?? []), taskMsg], convId: p[contact.agentName!]?.convId ?? null } }));
+                      await taskMutation.mutateAsync({ agentName: contact.agentName!, message: text });
+                    }}
+                    disabled={!input.trim() || taskMutation.isPending}
+                    style={{ width: "100%", padding: "5px", background: "#1e3a5f", color: "#93c5fd", border: "1px solid #2563eb", borderRadius: 6, cursor: "pointer", fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, opacity: !input.trim() ? 0.4 : 1 }}
+                    title="Envia como tarefa — ela processa em background e te avisa quando terminar"
+                  >
+                    <Clock size={11} />
+                    Enviar como tarefa (responde quando terminar)
+                  </button>
+                )}
               </div>
             </>
           )}

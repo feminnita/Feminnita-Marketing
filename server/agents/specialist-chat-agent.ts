@@ -123,7 +123,8 @@ Se precisar de dados atualizados de mercado, use search_web.
 FERRAMENTAS DISPONÍVEIS:
 - search_web: benchmarks de Meta Ads, tendências de criativos, novidades da plataforma
 
-FORMATO DA RESPOSTA: Texto natural em português BR. Direto, com números quando possível.
+FORMATO DA RESPOSTA: SEMPRE responda em texto natural, português BR. NUNCA retorne JSON bruto. O único bloco estruturado permitido é o <<<ACTION_START>>>...<<<ACTION_END>>>.
+
 COMO PROPOR AÇÕES:
 <<<ACTION_START>>>
 {"title":"Nome da ação","description":"O que fazer exatamente","type":"meta_ads","priority":"alta|media|baixa","estimatedImpact":"Impacto esperado"}
