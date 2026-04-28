@@ -18,11 +18,20 @@ import { Badge } from "@/components/ui/badge";
 // ─── Config por agente ────────────────────────────────────────────────────────
 
 const AGENT_CONFIG: Record<string, { label: string; role: string; emoji: string; color: string; bg: string }> = {
-  fernanda: { label: "Fernanda",  role: "Tráfego Pago",             emoji: "📊", color: "#8B2635", bg: "#FFF1F2" },
+  fernanda: { label: "Fernanda",  role: "Tráfego Pago",             emoji: "📊", color: "#6B1D28", bg: "#FFF1F2" },
   sofia:    { label: "Sofia",     role: "Crescimento Instagram",     emoji: "📱", color: "#DB2777", bg: "#FCE7F3" },
   clara:    { label: "Clara",     role: "Inteligência Competitiva",  emoji: "🔍", color: "#2563EB", bg: "#EFF6FF" },
   mariana:  { label: "Mariana",   role: "Vendas Multicanal",         emoji: "💰", color: "#059669", bg: "#D1FAE5" },
 };
+
+function toStr(item: any): string {
+  if (typeof item === "string") return item;
+  if (item === null || item === undefined) return "";
+  if (typeof item === "object") {
+    return item.summary || item.titulo || item.message || item.text || JSON.stringify(item);
+  }
+  return String(item);
+}
 
 function formatDateTime(iso: string) {
   return new Date(iso).toLocaleString("pt-BR", {
@@ -81,7 +90,7 @@ function AgentCard({ agent }: { agent: any }) {
           <p className="text-sm text-red-600 italic">{agent.error}</p>
         ) : (
           <>
-            <p className="text-sm text-slate-700 leading-relaxed">{agent.summary}</p>
+            <p className="text-sm text-slate-700 leading-relaxed">{toStr(agent.summary)}</p>
 
             {/* Highlights */}
             {agent.highlights?.length > 0 && (
@@ -171,7 +180,7 @@ export default function MorningBriefingPage() {
         <Button
           onClick={() => triggerMutation.mutate()}
           disabled={isGenerating}
-          style={{ backgroundColor: "#8B2635" }}
+          style={{ backgroundColor: "#6B1D28" }}
           className="text-white gap-2"
         >
           {isGenerating ? (

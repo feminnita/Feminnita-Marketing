@@ -6,6 +6,15 @@ import {
   MessageSquare, PlayCircle, Send, TrendingUp, XCircle, AlertTriangle,
 } from "lucide-react";
 
+function toStr(item: any): string {
+  if (typeof item === "string") return item;
+  if (item === null || item === undefined) return "";
+  if (typeof item === "object") {
+    return item.titulo || item.summary || item.descricao || item.acao || item.message || item.text || JSON.stringify(item);
+  }
+  return String(item);
+}
+
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
 type SpecialistType = "shopee_eds" | "shopee_promo" | "ml_eds" | "shopee_live" | "instagram_live" | "tiktok_live";
@@ -206,13 +215,13 @@ function SpecialistPanel({ specialist, account }: { specialist: typeof SPECIALIS
                       <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${priorityColors[rec.priority] || priorityColors.media}`}>
                         {rec.priority === "alta" ? "Alta" : rec.priority === "media" ? "Média" : "Baixa"}
                       </span>
-                      <span className="text-sm font-medium text-gray-800">{rec.titulo}</span>
+                      <span className="text-sm font-medium text-gray-800">{toStr(rec.titulo)}</span>
                     </div>
                     {expandedRecs.has(i) ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
                   </button>
                   {expandedRecs.has(i) && (
                     <div className="px-4 pb-4 space-y-2 bg-gray-50 border-t border-gray-100">
-                      <p className="text-sm text-gray-700 mt-3">{rec.descricao}</p>
+                      <p className="text-sm text-gray-700 mt-3">{toStr(rec.descricao)}</p>
                       <div className="bg-white border border-gray-200 rounded-lg p-3">
                         <p className="text-xs font-semibold text-gray-500 mb-1">Ação</p>
                         <p className="text-sm text-gray-800">{rec.acao}</p>

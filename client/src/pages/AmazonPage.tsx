@@ -17,6 +17,15 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
+function toStr(item: any): string {
+  if (typeof item === "string") return item;
+  if (item === null || item === undefined) return "";
+  if (typeof item === "object") {
+    return item.titulo || item.summary || item.descricao || item.acao || item.message || item.text || JSON.stringify(item);
+  }
+  return String(item);
+}
+
 interface Recommendation {
   priority: "alta" | "media" | "baixa";
   titulo: string;
@@ -293,13 +302,13 @@ export default function AmazonPage() {
                         <span className={`text-xs font-semibold px-2 py-0.5 rounded border ${priorityColors[rec.priority]}`}>
                           {priorityLabel[rec.priority]}
                         </span>
-                        <span className="text-sm font-medium text-gray-800">{rec.titulo}</span>
+                        <span className="text-sm font-medium text-gray-800">{toStr(rec.titulo)}</span>
                       </div>
                       {expandedRecs.has(i) ? <ChevronUp className="w-4 h-4 text-gray-400 shrink-0" /> : <ChevronDown className="w-4 h-4 text-gray-400 shrink-0" />}
                     </button>
                     {expandedRecs.has(i) && (
                       <div className="px-4 pb-4 space-y-2 bg-gray-50 border-t border-gray-100">
-                        <p className="text-sm text-gray-600 pt-3">{rec.descricao}</p>
+                        <p className="text-sm text-gray-600 pt-3">{toStr(rec.descricao)}</p>
                         <div className="bg-white border border-gray-200 rounded-lg px-3 py-2">
                           <p className="text-xs font-semibold text-gray-500 mb-1">Ação recomendada</p>
                           <p className="text-sm text-gray-800">{rec.acao}</p>

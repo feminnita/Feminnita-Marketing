@@ -24,6 +24,15 @@ import {
   Link,
 } from "lucide-react";
 
+function toStr(item: any): string {
+  if (typeof item === "string") return item;
+  if (item === null || item === undefined) return "";
+  if (typeof item === "object") {
+    return item.titulo || item.summary || item.descricao || item.acao || item.message || item.text || JSON.stringify(item);
+  }
+  return String(item);
+}
+
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
 interface Recommendation {
@@ -451,13 +460,13 @@ export default function ShopeeAdsManagerPage() {
                       <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${priorityColors[rec.priority] || priorityColors.media}`}>
                         {priorityLabel[rec.priority] || rec.priority}
                       </span>
-                      <span className="text-sm font-medium text-gray-800">{rec.titulo}</span>
+                      <span className="text-sm font-medium text-gray-800">{toStr(rec.titulo)}</span>
                     </div>
                     {expandedRecs.has(i) ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
                   </button>
                   {expandedRecs.has(i) && (
                     <div className="px-4 pb-4 space-y-2 border-t border-gray-100 bg-gray-50">
-                      <p className="text-sm text-gray-700 mt-3">{rec.descricao}</p>
+                      <p className="text-sm text-gray-700 mt-3">{toStr(rec.descricao)}</p>
                       <div className="flex items-start gap-2 bg-white border border-gray-200 rounded-lg p-3">
                         <span className="text-xs font-semibold text-gray-500 uppercase mt-0.5">Ação</span>
                         <p className="text-sm text-gray-800">{rec.acao}</p>
@@ -546,7 +555,7 @@ export default function ShopeeAdsManagerPage() {
                     <StatusBadge status={ev.status} />
                     <span className="text-sm text-gray-600">{fmtDate(ev.triggeredAt)}</span>
                     {ev.summary && (
-                      <span className="text-xs text-gray-400 truncate max-w-[300px]">{ev.summary}</span>
+                      <span className="text-xs text-gray-400 truncate max-w-[300px]">{toStr(ev.summary)}</span>
                     )}
                   </div>
                   {expandedHistory.has(ev.id) ? (

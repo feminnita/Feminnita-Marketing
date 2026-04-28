@@ -13,6 +13,15 @@ import zaraPhoto from "@/assets/zara.jpg";
 import ninaPhoto from "@/assets/nina.jpg";
 import marcelaPhoto from "@/assets/marcela.jpg";
 
+function toStr(item: any): string {
+  if (typeof item === "string") return item;
+  if (item === null || item === undefined) return "";
+  if (typeof item === "object") {
+    return item.titulo || item.summary || item.descricao || item.acao || item.message || item.text || JSON.stringify(item);
+  }
+  return String(item);
+}
+
 export const AGENT_PHOTOS: Record<string, string> = {
   luna: lunaPhoto,
   maya: mayaPhoto,
@@ -155,7 +164,6 @@ export function AgentPanel({ agent, account }: { agent: Agent; account: string }
     <div className="space-y-4">
       {/* Header do agente */}
       <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-4">
-        <img src={AGENT_PHOTOS[agent.id]} alt={agent.name} className="w-16 h-20 rounded-xl object-cover object-top border-2 shrink-0" style={{ borderColor: agent.color }} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h3 className="font-bold text-gray-900">{agent.name}</h3>
@@ -222,13 +230,13 @@ export function AgentPanel({ agent, account }: { agent: Agent; account: string }
                     <button className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-gray-50" onClick={() => toggleRec(i)}>
                       <div className="flex items-center gap-2">
                         <span className={`text-xs font-semibold px-2 py-0.5 rounded border ${priorityColors[rec.priority]}`}>{rec.priority}</span>
-                        <span className="text-sm font-medium text-gray-800">{rec.titulo}</span>
+                        <span className="text-sm font-medium text-gray-800">{toStr(rec.titulo)}</span>
                       </div>
                       {expandedRecs.has(i) ? <ChevronUp className="w-4 h-4 text-gray-400 shrink-0" /> : <ChevronDown className="w-4 h-4 text-gray-400 shrink-0" />}
                     </button>
                     {expandedRecs.has(i) && (
                       <div className="px-3 pb-3 bg-gray-50 border-t border-gray-100 space-y-2 pt-2">
-                        <p className="text-sm text-gray-600">{rec.descricao}</p>
+                        <p className="text-sm text-gray-600">{toStr(rec.descricao)}</p>
                         <div className="bg-white border border-gray-200 rounded px-3 py-2">
                           <p className="text-xs font-semibold text-gray-500 mb-0.5">Ação</p>
                           <p className="text-sm text-gray-800">{rec.acao}</p>

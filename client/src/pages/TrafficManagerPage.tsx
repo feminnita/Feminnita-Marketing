@@ -282,7 +282,7 @@ function BriefingPanel() {
 
       {/* Resumo */}
       <div className="bg-rose-50 border border-rose-200 rounded-xl p-3">
-        <p className="text-sm text-rose-900 leading-relaxed">{briefing.summary}</p>
+        <p className="text-sm text-rose-900 leading-relaxed">{toStr(briefing.summary)}</p>
       </div>
 
       {/* Campanhas */}
