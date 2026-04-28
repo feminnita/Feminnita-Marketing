@@ -48,19 +48,18 @@ export async function listMLItems(account = "feminnita"): Promise<string> {
   if (!token || !userId) return "Erro: tokens ML não configurados no servidor.";
 
   try {
-    const [searchActive, searchPaused] = await Promise.all([
-      mlGet(`/users/${userId}/items/search?limit=50&status=active`, token),
-      mlGet(`/users/${userId}/items/search?limit=20&status=paused`, token),
-    ]);
+    // Busca todos os itens sem filtro de status
+    const search = await mlGet(`/users/${userId}/items/search?limit=50`, token);
+    const allIds: string[] = search.results || [];
+    const total: number = search.paging?.total || allIds.length;
 
-    const activeIds: string[] = searchActive.results || [];
-    const pausedIds: string[] = searchPaused.results || [];
-    const allIds = [...activeIds, ...pausedIds].slice(0, 20);
+    console.log(`[GabiML] listMLItems total=${total} ids=${allIds.length} userId=${userId}`);
 
-    if (allIds.length === 0) return `Nenhum anúncio encontrado em ${label}.`;
+    if (allIds.length === 0) return `Nenhum anúncio encontrado em ${label}. Total na conta: ${total}.`;
 
+    const top20 = allIds.slice(0, 20);
     const details = await mlGet(
-      `/items?ids=${allIds.join(",")}&attributes=id,title,status,price,available_quantity`,
+      `/items?ids=${top20.join(",")}&attributes=id,title,status,price,available_quantity`,
       token
     );
 
@@ -71,8 +70,7 @@ export async function listMLItems(account = "feminnita"): Promise<string> {
       return `• ID: ${d.id} | "${(d.title || "").slice(0, 55)}" | ${d.status} | R$${d.price} | Estoque: ${stock}`;
     }).filter(Boolean);
 
-    const total = searchActive.paging?.total || activeIds.length;
-    return `ANÚNCIOS ${label} (${total} ativos, ${searchPaused.paging?.total || pausedIds.length} pausados — exibindo ${allIds.length}):\n${lines.join("\n")}`;
+    return `ANÚNCIOS ${label} (${total} total — exibindo ${top20.length}):\n${lines.join("\n")}`;
   } catch (e: any) {
     return `Erro ao listar anúncios: ${e.message}`;
   }

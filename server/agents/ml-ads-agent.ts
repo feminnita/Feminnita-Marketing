@@ -73,16 +73,17 @@ async function fetchActiveItems(account = "feminnita"): Promise<MLItem[]> {
   const userId = getUserId(account);
   if (!token || !userId) return [];
 
-  // Busca IDs dos itens ativos
+  // Busca IDs de todos os itens (sem filtro de status)
   const searchRes = await fetch(
-    `${ML_BASE}/users/${userId}/items/search?status=active&limit=50`,
+    `${ML_BASE}/users/${userId}/items/search?limit=50`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
   if (!searchRes.ok) {
-    console.warn(`[MLAgent] items/search HTTP ${searchRes.status}`);
+    console.warn(`[MLAgent] items/search HTTP ${searchRes.status} userId=${userId}`);
     return [];
   }
   const searchData = await searchRes.json();
+  console.log(`[MLAgent] items/search total=${searchData.paging?.total} results=${(searchData.results||[]).length}`);
   const ids: string[] = searchData.results || [];
   if (!ids.length) return [];
 

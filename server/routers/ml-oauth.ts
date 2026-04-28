@@ -95,6 +95,41 @@ export async function refreshMLToken(account: "feminnita" | "fnt" = "feminnita")
 
 export function registerMLOAuthRoutes(app: Express) {
   /**
+   * GET /api/ml/debug-items
+   * Diagnóstico: mostra itens reais da conta ML (sem filtro de status).
+   */
+  app.get("/api/ml/debug-items", async (_req, res) => {
+    const token = process.env.ML_ACCESS_TOKEN_1 || "";
+    const userId = process.env.ML_USER_ID_1 || "";
+    if (!token) return res.status(500).json({ error: "ML_ACCESS_TOKEN_1 não configurado" });
+
+    const results: any[] = [];
+
+    // Testa identidade
+    try {
+      const r = await fetch("https://api.mercadolibre.com/users/me", { headers: { Authorization: `Bearer ${token}` } });
+      const body = await r.json();
+      results.push({ step: "users/me", status: r.status, userId: (body as any).id, nickname: (body as any).nickname });
+    } catch (e: any) { results.push({ step: "users/me", error: e.message }); }
+
+    // Lista itens sem filtro
+    try {
+      const r = await fetch(`https://api.mercadolibre.com/users/${userId}/items/search?limit=10`, { headers: { Authorization: `Bearer ${token}` } });
+      const body = await r.json() as any;
+      results.push({ step: "items/search (all)", status: r.status, total: body.paging?.total, results: body.results?.slice(0, 5) });
+    } catch (e: any) { results.push({ step: "items/search", error: e.message }); }
+
+    // Lista itens ativos
+    try {
+      const r = await fetch(`https://api.mercadolibre.com/users/${userId}/items/search?status=active&limit=10`, { headers: { Authorization: `Bearer ${token}` } });
+      const body = await r.json() as any;
+      results.push({ step: "items/search (active)", status: r.status, total: body.paging?.total, results: body.results?.slice(0, 5) });
+    } catch (e: any) { results.push({ step: "items/search active", error: e.message }); }
+
+    return res.json({ userId, tokenLength: token.length, results });
+  });
+
+  /**
    * GET /api/ml/debug-ads
    * Diagnóstico: mostra o que a ML Ads API retorna com o token atual.
    */
