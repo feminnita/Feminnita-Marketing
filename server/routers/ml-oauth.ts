@@ -140,11 +140,20 @@ export function registerMLOAuthRoutes(app: Express) {
 
     const results: any[] = [];
 
-    // product_id é obrigatório — testando os valores conhecidos do ML Ads
-    const productIds = ["MPP", "MADS", "PDA", "1", "2", "3"];
     const urls = [
-      ...productIds.map(pid => `https://api.mercadolibre.com/advertising/advertisers?product_id=${pid}&user_id=${userId}`),
-      ...productIds.map(pid => `https://api.mercadolibre.com/advertising/advertisers?product_id=${pid}`),
+      // Tenta listar os produtos disponíveis
+      `https://api.mercadolibre.com/advertising/products`,
+      `https://api.mercadolibre.com/advertising/product_types`,
+      // Tenta site_id como parâmetro (padrão ML)
+      `https://api.mercadolibre.com/advertising/advertisers?site_id=MLB&user_id=${userId}`,
+      `https://api.mercadolibre.com/advertising/advertisers?site_id=MLB`,
+      // Tenta product_id com valores brasil/MLB
+      `https://api.mercadolibre.com/advertising/advertisers?product_id=MLB&user_id=${userId}`,
+      `https://api.mercadolibre.com/advertising/advertisers?product_id=BRAND_ADS&user_id=${userId}`,
+      `https://api.mercadolibre.com/advertising/advertisers?product_id=PRODUCT_ADS&user_id=${userId}`,
+      `https://api.mercadolibre.com/advertising/advertisers?product_id=display&user_id=${userId}`,
+      // Sem user_id, sem product_id — vê o erro completo
+      `https://api.mercadolibre.com/advertising/advertisers?user_id=${userId}`,
     ];
 
     for (const url of urls) {
