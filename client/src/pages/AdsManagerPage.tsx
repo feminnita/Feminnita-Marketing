@@ -815,7 +815,7 @@ export default function AdsManagerPage() {
                   </h3>
                   <span className="text-xs text-gray-400">{fmtDate(currentEval.completedAt)}</span>
                 </div>
-                <p className="text-gray-700 text-sm font-medium">{currentEval.summary}</p>
+                <p className="text-gray-700 text-sm font-medium">{toStr(currentEval.summary)}</p>
               </div>
 
               {/* Análise completa */}
