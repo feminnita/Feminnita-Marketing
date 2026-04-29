@@ -8,6 +8,7 @@ import { runMayaEvaluation, chatWithMaya, updateMayaKnowledge } from "../agents/
 import { runZaraEvaluation, chatWithZara, updateZaraKnowledge } from "../agents/tiktok-zara-agent";
 import { runNinaEvaluation, chatWithNina, updateNinaKnowledge } from "../agents/tiktok-nina-agent";
 import { runMarcelaEvaluation, chatWithMarcela, updateMarcelaKnowledge } from "../agents/tiktok-marcela-agent";
+import { generateVideoFromImages } from "../agents/video-generator";
 
 const AGENT_TYPE = z.enum(["luna", "maya", "zara", "nina", "marcela"]);
 const ACCOUNT_TYPE = z.enum(["feminnita", "fnt"]);
@@ -275,7 +276,7 @@ export const tiktokTeamRouter = router({
 
       (async () => {
         try {
-          const { generateVideoFromImages } = await import("../agents/video-generator");
+          console.log(`[VideoGen] Iniciando geração do vídeo ${videoId}...`);
           const url = await generateVideoFromImages({
             imageUrls: input.imageUrls,
             hookText: input.hookText,

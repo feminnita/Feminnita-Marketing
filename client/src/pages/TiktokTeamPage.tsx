@@ -548,10 +548,10 @@ function VideoStudio() {
   useEffect(() => {
     if (!generatingId) return;
     const found = listQuery.data?.find((v: any) => v.id === generatingId);
-    if (found && found.status !== "processing") {
+    if (found && (found.status === "ready" || found.status === "error")) {
       setGeneratingId(null);
       if (found.status === "ready") toast.success("Vídeo gerado com sucesso!");
-      if (found.status === "error") toast.error("Falha ao gerar vídeo. Verifique o log.");
+      if (found.status === "error") toast.error(`Falha: ${found.description || "erro desconhecido"}`);
     }
   }, [listQuery.data, generatingId]);
 
