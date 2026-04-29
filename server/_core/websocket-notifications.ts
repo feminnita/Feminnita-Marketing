@@ -1,7 +1,7 @@
 import { Server as HTTPServer } from "http";
 import { Server as SocketIOServer, Socket } from "socket.io";
 import { getDb } from "../db";
-import { pushSubscriptions } from "../../drizzle/schema";
+import { pushSubscriptions, directMessages } from "../../drizzle/schema";
 import { sendPush } from "../services/webPush";
 import { eq, ne } from "drizzle-orm";
 
@@ -114,6 +114,17 @@ export function initializeWebSocket(httpServer: HTTPServer) {
         ts: Date.now(),
       };
       io!.to(`user_${toUserId}`).emit("dm:receive", msg);
+
+      // Persiste no banco
+      getDb().then(db => {
+        if (!db) return;
+        db.insert(directMessages).values({
+          fromUserId: sender.userId,
+          toUserId,
+          fromName: sender.name,
+          text: safe,
+        } as any).catch(() => {});
+      });
 
       // Push para destinatário offline
       if (!isUserConnected(toUserId)) {

@@ -97,6 +97,24 @@ export default function ChatPage() {
   const subscribeMutation = trpc.pushSubscriptions.subscribe.useMutation();
   const teamQuery         = trpc.users.list.useQuery(undefined, { staleTime: 60_000 });
 
+  const dmWithUserId = contact?.kind === "human" ? (contact.id as number) : null;
+  const dmHistoryQuery = trpc.dm.history.useQuery(
+    { withUserId: dmWithUserId ?? 0 },
+    { enabled: dmWithUserId !== null, staleTime: 0 }
+  );
+
+  // Carrega histórico de DMs do banco quando abre conversa com alguém
+  useEffect(() => {
+    if (!dmHistoryQuery.data || dmWithUserId === null) return;
+    const loaded: DmMsg[] = dmHistoryQuery.data.map((m: any) => ({
+      role: m.fromUserId === user?.id ? "sent" : "received",
+      text: m.text,
+      ts: new Date(m.createdAt).getTime(),
+      fromName: m.fromName,
+    }));
+    setDmMsgs(prev => ({ ...prev, [dmWithUserId]: loaded }));
+  }, [dmHistoryQuery.data, dmWithUserId]);
+
   useEffect(() => { contactRef.current = contact; }, [contact]);
 
   const contacts: Contact[] = [

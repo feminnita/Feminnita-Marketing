@@ -1609,3 +1609,16 @@ export const agentTasks = mysqlTable("agent_tasks", {
   finishedAt:  timestamp("finishedAt"),
   createdAt:   timestamp("createdAt").defaultNow(),
 });
+
+// ─── Mensagens Diretas (DMs) entre membros da equipe ─────────────────────────
+
+export const directMessages = mysqlTable("direct_messages", {
+  id:         int("id").autoincrement().primaryKey(),
+  fromUserId: int("fromUserId").notNull(),
+  toUserId:   int("toUserId").notNull(),
+  fromName:   varchar("fromName", { length: 100 }).notNull(),
+  text:       text("text").notNull(),
+  createdAt:  timestamp("createdAt").defaultNow(),
+});
+
+export type DirectMessage = typeof directMessages.$inferSelect;
