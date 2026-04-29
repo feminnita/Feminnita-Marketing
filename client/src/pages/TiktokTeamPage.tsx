@@ -640,9 +640,21 @@ function VideoStudio() {
                         onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                       />
                       {isSelected && (
-                        <div className="absolute inset-0 bg-purple-500/20 flex items-center justify-center">
-                          <CheckCircle className="w-6 h-6 text-purple-600" />
-                        </div>
+                        <>
+                          <div className="absolute inset-0 bg-purple-500/20" />
+                          <div
+                            className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 rounded-full p-0.5 z-10"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedAssets(prev => prev.filter(a => a.id !== asset.id));
+                            }}
+                          >
+                            <X className="w-3 h-3 text-white" />
+                          </div>
+                          <div className="absolute bottom-5 left-1">
+                            <CheckCircle className="w-4 h-4 text-purple-600" />
+                          </div>
+                        </>
                       )}
                       <p className="absolute bottom-0 inset-x-0 bg-black/50 text-white text-xs px-1 py-0.5 truncate">{asset.name}</p>
                     </button>
@@ -685,7 +697,7 @@ function VideoStudio() {
         <div>
           <label className="block text-xs font-semibold text-gray-600 mb-1">Duração por imagem</label>
           <div className="flex gap-2">
-            {[2, 3, 4, 5, 6].map((s) => (
+            {[2, 3, 4, 5, 6, 8, 10].map((s) => (
               <button
                 key={s}
                 onClick={() => setDurationPerImage(s)}
