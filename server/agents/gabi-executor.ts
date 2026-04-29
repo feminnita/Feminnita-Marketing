@@ -181,78 +181,38 @@ export async function updateMLItemAttributes(
 }
 
 // ─── ML Ads (Product Ads) ─────────────────────────────────────────────────────
+// ATENÇÃO: A API de Product Ads do ML não é pública para contas de vendedor.
+// Os endpoints /advertising/advertisers/... retornam 404 com token OAuth padrão.
+// O acesso requer aprovação especial de parceiro certificado pelo Mercado Livre.
+// Todas as funções abaixo retornam instrução para gerenciar via Seller Center.
 
-const ML_ADS_ADVERTISER_ID = "140649";
-const ML_ADS_ACCOUNT_ID    = "150815";
+const ML_ADS_SELLER_CENTER_URL = "https://www.mercadolivre.com.br/advertising/product-ads";
 
-export async function listMLAdsCampaigns(account = "feminnita"): Promise<string> {
-  const token = getMLToken(account);
-  if (!token) throw new Error("ML_ACCESS_TOKEN não configurado");
-  console.log(`[GabiAds] listMLAdsCampaigns — advertiser=${ML_ADS_ADVERTISER_ID}`);
+const ML_ADS_UNAVAILABLE = `⚠️ API de Product Ads indisponível via integração direta.
 
-  try {
-    const data = await mlGet(
-      `/advertising/advertisers/${ML_ADS_ADVERTISER_ID}/campaigns?account_id=${ML_ADS_ACCOUNT_ID}`,
-      token
-    );
-    const campaigns = Array.isArray(data) ? data : (data.campaigns || data.results || []);
-    if (campaigns.length === 0) return "Nenhuma campanha de Product Ads encontrada.";
+O Mercado Livre restringe o acesso à API de campanhas apenas para parceiros certificados. Com o token OAuth padrão, os endpoints retornam 404.
 
-    const lines = campaigns.map((c: any) =>
-      `• ID: ${c.id} | "${c.name}" | Status: ${c.status} | Budget: R$${c.daily_budget ?? c.budget ?? "?"} | Gasto: R$${c.spent ?? "?"}`
-    ).join("\n");
-    return `CAMPANHAS ML PRODUCT ADS (advertiser ${ML_ADS_ADVERTISER_ID}):\n${lines}`;
-  } catch (e: any) {
-    return `Erro ao listar campanhas: ${e.message}`;
-  }
+Para gerenciar suas campanhas de Product Ads, acesse diretamente:
+👉 ${ML_ADS_SELLER_CENTER_URL}
+
+Lá você pode: ver todas as campanhas, pausar/ativar, ajustar budget e ver métricas completas (impressões, cliques, CTR, ROAS).`;
+
+export async function listMLAdsCampaigns(_account = "feminnita"): Promise<string> {
+  return ML_ADS_UNAVAILABLE;
 }
 
-export async function pauseMLAdsCampaign(campaignId: string, account = "feminnita"): Promise<string> {
-  const token = getMLToken(account);
-  if (!token) throw new Error("ML_ACCESS_TOKEN não configurado");
-  console.log(`[GabiAds] pauseMLAdsCampaign — ${campaignId}`);
-  await mlPut(`/advertising/advertisers/${ML_ADS_ADVERTISER_ID}/campaigns/${campaignId}`, { status: "paused" }, token);
-  return `Campanha ${campaignId} pausada com sucesso.`;
+export async function pauseMLAdsCampaign(_campaignId: string, _account = "feminnita"): Promise<string> {
+  return ML_ADS_UNAVAILABLE;
 }
 
-export async function activateMLAdsCampaign(campaignId: string, account = "feminnita"): Promise<string> {
-  const token = getMLToken(account);
-  if (!token) throw new Error("ML_ACCESS_TOKEN não configurado");
-  console.log(`[GabiAds] activateMLAdsCampaign — ${campaignId}`);
-  await mlPut(`/advertising/advertisers/${ML_ADS_ADVERTISER_ID}/campaigns/${campaignId}`, { status: "active" }, token);
-  return `Campanha ${campaignId} reativada com sucesso.`;
+export async function activateMLAdsCampaign(_campaignId: string, _account = "feminnita"): Promise<string> {
+  return ML_ADS_UNAVAILABLE;
 }
 
-export async function updateMLAdsBudget(campaignId: string, dailyBudget: number, account = "feminnita"): Promise<string> {
-  const token = getMLToken(account);
-  if (!token) throw new Error("ML_ACCESS_TOKEN não configurado");
-  console.log(`[GabiAds] updateMLAdsBudget — ${campaignId} R$${dailyBudget}`);
-  await mlPut(`/advertising/advertisers/${ML_ADS_ADVERTISER_ID}/campaigns/${campaignId}`, { daily_budget: dailyBudget }, token);
-  return `Budget da campanha ${campaignId} atualizado para R$${dailyBudget}/dia.`;
+export async function updateMLAdsBudget(_campaignId: string, _dailyBudget: number, _account = "feminnita"): Promise<string> {
+  return ML_ADS_UNAVAILABLE;
 }
 
-export async function getMLAdsCampaignStats(campaignId: string, dateFrom: string, dateTo: string, account = "feminnita"): Promise<string> {
-  const token = getMLToken(account);
-  if (!token) throw new Error("ML_ACCESS_TOKEN não configurado");
-  console.log(`[GabiAds] getMLAdsCampaignStats — ${campaignId} ${dateFrom}→${dateTo}`);
-
-  try {
-    const data = await mlGet(
-      `/advertising/advertisers/${ML_ADS_ADVERTISER_ID}/campaigns/${campaignId}/stats?date_from=${dateFrom}&date_to=${dateTo}&account_id=${ML_ADS_ACCOUNT_ID}`,
-      token
-    );
-    const s = data.summary || data;
-    return [
-      `STATS campanha ${campaignId} (${dateFrom} → ${dateTo}):`,
-      `Impressões: ${s.prints ?? s.impressions ?? "?"}`,
-      `Cliques: ${s.clicks ?? "?"}`,
-      `CTR: ${s.ctr ?? "?"}%`,
-      `Gasto: R$${s.cost ?? s.spent ?? "?"}`,
-      `CPC: R$${s.cpc ?? "?"}`,
-      `Conversões: ${s.conversions ?? "?"}`,
-      `ROAS: ${s.roas ?? "?"}`,
-    ].join("\n");
-  } catch (e: any) {
-    return `Erro ao buscar stats: ${e.message}`;
-  }
+export async function getMLAdsCampaignStats(_campaignId: string, _dateFrom: string, _dateTo: string, _account = "feminnita"): Promise<string> {
+  return ML_ADS_UNAVAILABLE;
 }
