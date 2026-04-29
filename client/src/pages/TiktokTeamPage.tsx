@@ -631,28 +631,32 @@ function VideoStudio() {
                 {(assetsQuery.data || []).map((asset: any) => {
                   const isSelected = selectedAssets.some((a) => a.id === asset.id);
                   return (
-                    <div key={asset.id} className="relative aspect-square">
-                      {/* Botão de seleção */}
-                      <button
+                    <div key={asset.id} className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${isSelected ? "border-purple-500 ring-2 ring-purple-300" : "border-gray-200 hover:border-purple-300"}`}>
+                      {/* Área clicável de seleção — não inclui o canto superior direito */}
+                      <div
                         onClick={() => toggleAsset({ id: asset.id, name: asset.name, url: asset.url, thumbnailUrl: asset.thumbnailUrl })}
-                        className={`w-full h-full rounded-lg overflow-hidden border-2 transition-all flex flex-col items-center justify-center bg-gray-50 ${
-                          isSelected ? "border-purple-500 ring-2 ring-purple-300" : "border-gray-200 hover:border-purple-300"
-                        }`}
+                        className="absolute inset-0 cursor-pointer bg-gray-100 flex items-center justify-center"
+                        style={{ right: 28 }}
                       >
                         <img
                           src={asset.thumbnailUrl || asset.url}
                           alt={asset.name}
-                          className="w-full h-full object-cover absolute inset-0"
+                          className="w-full h-full object-cover"
                           onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                         />
-                        {isSelected && <div className="absolute inset-0 bg-purple-500/20" />}
-                        {isSelected && <CheckCircle className="absolute top-1 left-1 w-4 h-4 text-purple-600 drop-shadow" />}
-                        <p className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-xs px-1 py-0.5 truncate">{asset.name}</p>
-                      </button>
-                      {/* Botão deletar — sempre visível */}
+                      </div>
+                      {/* Clique no restante da imagem também seleciona */}
+                      <div
+                        onClick={() => toggleAsset({ id: asset.id, name: asset.name, url: asset.url, thumbnailUrl: asset.thumbnailUrl })}
+                        className="absolute inset-0 cursor-pointer"
+                      />
+                      {isSelected && <div className="absolute inset-0 bg-purple-500/20 pointer-events-none" />}
+                      {isSelected && <CheckCircle className="absolute top-1 left-1 w-4 h-4 text-purple-600 drop-shadow pointer-events-none" />}
+                      <p className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-xs px-1 py-0.5 truncate pointer-events-none">{asset.name}</p>
+                      {/* Botão deletar — canto superior direito, stopPropagation */}
                       <button
-                        onClick={() => deleteAssetMut.mutate({ id: asset.id })}
-                        className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 rounded-full p-0.5 z-10"
+                        onClick={(e) => { e.stopPropagation(); deleteAssetMut.mutate({ id: asset.id }); }}
+                        className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 rounded-full p-1 z-20"
                         title="Remover do banco de imagens"
                       >
                         <X className="w-3 h-3 text-white" />
