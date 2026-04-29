@@ -12,6 +12,67 @@ import { eq, and, desc } from "drizzle-orm";
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || "" });
 const LOJA_URL = process.env.TRAY_STORE_URL || "https://www.feminnita.com.br";
 
+// ─── Horário de funcionamento ─────────────────────────────────────────────────
+// Seg-Qui: 08:00–17:30 | Sex: 08:00–16:00 | Sáb-Dom: fechado
+// Fuso: America/Sao_Paulo
+
+function isBusinessHours(): boolean {
+  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+  const day  = now.getDay(); // 0=Dom, 1=Seg … 6=Sáb
+  const mins = now.getHours() * 60 + now.getMinutes();
+
+  if (day === 0 || day === 6) return false;          // fim de semana
+  if (day >= 1 && day <= 4) return mins >= 480 && mins < 1050; // Seg–Qui 08:00–17:30
+  if (day === 5)            return mins >= 480 && mins < 960;  // Sex 08:00–16:00
+  return false;
+}
+
+function outOfHoursMessage(contactName: string): string {
+  const name = contactName ? `, ${contactName.split(" ")[0]}` : "";
+  return (
+    `Olá${name}! 😊 Obrigada pelo contato com a Feminnita Pijamas.\n\n` +
+    `No momento estamos fora do horário de atendimento. Nosso expediente é:\n` +
+    `📅 Segunda a quinta: 8h às 17h30\n` +
+    `📅 Sexta-feira: 8h às 16h\n` +
+    `🚫 Sábados e domingos: não trabalhamos\n\n` +
+    `Sua mensagem foi registrada e nossa equipe retorna assim que reabrir! ` +
+    `Se preferir, você também pode ver nossos produtos a qualquer hora em ${LOJA_URL} 🛍️`
+  );
+}
+
+// ─── Alerta interno ───────────────────────────────────────────────────────────
+
+async function notifyTeamEscalation(
+  from: string,
+  contactName: string,
+  message: string
+): Promise<void> {
+  const internalNumber = process.env.WHATSAPP_INTERNAL_NUMBER;
+  const token          = process.env.WHATSAPP_ACCESS_TOKEN;
+  const phoneNumberId  = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  if (!internalNumber || !token || !phoneNumberId) return;
+
+  const name    = contactName || from;
+  const preview = message.slice(0, 120);
+  const alert   =
+    `🔔 *Atendimento solicitado*\n\n` +
+    `👤 Cliente: ${name}\n` +
+    `📱 Número: +${from}\n` +
+    `💬 Mensagem: "${preview}"\n\n` +
+    `Acesse o WhatsApp para continuar o atendimento.`;
+
+  await fetch(`https://graph.facebook.com/v19.0/${phoneNumberId}/messages`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      to: internalNumber,
+      type: "text",
+      text: { body: alert },
+    }),
+  }).catch(e => console.warn("[WA Lia] Falha ao notificar equipe:", e.message));
+}
+
 // ─── Acesso à loja Tray ───────────────────────────────────────────────────────
 
 async function fetchTrayPage(url: string): Promise<string> {
@@ -163,6 +224,10 @@ THIAGO CONCER — Técnica IEV:
 "Não conheço a marca" → "É normal! A Feminnita é fabricação própria, aqui em Santa Catarina. O que mais aparece no feedback das clientes é o caimento e o tecido — sente diferença na hora de usar"
 "Tem desconto?" → "Desconto pontual eu não tenho agora, mas temos kit com [X] peças que sai mais em conta por unidade — quer que eu busque pra você?"
 
+━━━ HORÁRIO DE ATENDIMENTO ━━━
+Segunda a quinta: 8h às 17h30 | Sexta: 8h às 16h | Sábado e domingo: fechado
+Se a cliente perguntar sobre horário ou quando pode ser atendida por uma pessoa, informe esses horários.
+
 ━━━ QUANDO ESCALAR ━━━
 Responda "Vou chamar nossa equipe para te ajudar com isso! Um momento 😊" e PARE quando:
 - A cliente pedir para falar com atendente/humano/pessoa
@@ -185,7 +250,26 @@ export async function runWhatsAppFunnelAgent(
 ): Promise<string> {
   const db = await getDb();
 
-  // Escalação imediata — sem chamar Claude
+  // Fora do horário de funcionamento
+  if (!isBusinessHours()) {
+    const msg = outOfHoursMessage(contactName);
+    if (db) {
+      await db.insert(conversationHistory).values({
+        userId,
+        whatsappPhoneNumber: phoneNumber,
+        whatsappContactName: contactName || null,
+        userMessage: incomingMessage,
+        aiResponse: msg,
+        confidence: "1.00",
+        escalated: false,
+        status: "out_of_hours",
+      } as any).catch(() => null);
+    }
+    console.log(`[WA Lia] Fora do expediente — ${phoneNumber}`);
+    return msg;
+  }
+
+  // Escalação imediata — notifica equipe e encerra
   if (needsEscalation(incomingMessage)) {
     const msg = "Vou chamar nossa equipe para te ajudar com isso! Um momento 😊";
     if (db) {
@@ -200,6 +284,8 @@ export async function runWhatsAppFunnelAgent(
         status: "escalated",
       } as any).catch(() => null);
     }
+    // Dispara alerta no WhatsApp interno
+    notifyTeamEscalation(phoneNumber, contactName, incomingMessage);
     console.log(`[WA Lia] Escalação: ${phoneNumber} — "${incomingMessage.slice(0, 60)}"`);
     return msg;
   }
