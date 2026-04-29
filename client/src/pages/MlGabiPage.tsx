@@ -33,9 +33,9 @@ const SUGGESTIONS: Record<Account, string[]> = {
 
 const WELCOME: Record<Account, string> = {
   feminnita:
-    "Olá! Sou a Gabi, especialista em EDS (fichas de produto) do Mercado Livre — Conta A Feminnita. Posso auditar seus anúncios, identificar atributos faltando, otimizar títulos e garantir que suas fichas estejam completas para máxima exposição orgânica. O que precisa hoje?",
+    "Olá! Sou a Gabi — Conta A Feminnita. Cuido dos anúncios e das campanhas de Product Ads do Mercado Livre. Posso listar seus anúncios, auditar fichas, ajustar preços e estoque, gerenciar campanhas de Ads e muito mais. O que precisa hoje?",
   fnt:
-    "Olá! Sou a Gabi, especialista em EDS do Mercado Livre — Conta B FNT Confecções (atacado). Posso ajudar com fichas de produto para kits de atacado, atributos obrigatórios e como posicionar seus anúncios para revendedoras. O que precisa hoje?",
+    "Olá! Sou a Gabi — Conta B FNT Confecções (atacado). Cuido dos anúncios e campanhas de Product Ads do Mercado Livre para revendedoras. O que precisa hoje?",
 };
 
 export default function MlGabiPage() {
@@ -105,7 +105,7 @@ export default function MlGabiPage() {
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
               <span className="text-xs text-emerald-700 font-medium">Online</span>
-              <span className="text-xs text-slate-400 ml-1">· EDS Mercado Livre</span>
+              <span className="text-xs text-slate-400 ml-1">· ML Ads & Anúncios</span>
             </div>
           </div>
         </div>
@@ -163,7 +163,7 @@ export default function MlGabiPage() {
             </div>
             <h2 className="text-2xl font-bold text-white leading-tight">Gabi</h2>
             <p className="text-sm mt-1.5 leading-relaxed max-w-lg" style={{ color: "rgba(255,255,255,0.7)" }}>
-              Especialista em EDS — fichas de produto, atributos e catálogo ML
+              Anúncios, fichas de produto e campanhas de Ads no Mercado Livre
             </p>
             <div className="flex items-center gap-1.5 mt-3">
               <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
@@ -246,7 +246,7 @@ export default function MlGabiPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={`Pergunte à Gabi sobre EDS ${account === "fnt" ? "(Conta B)" : "(Conta A)"}...`}
+              placeholder={`Pergunte à Gabi sobre anúncios ou Ads ${account === "fnt" ? "(Conta B)" : "(Conta A)"}...`}
               className="flex-1 resize-none bg-transparent outline-none text-base text-slate-800 placeholder-slate-400 min-h-[24px] max-h-[160px]"
               rows={1}
             />
