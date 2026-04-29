@@ -43,7 +43,6 @@ export default function ChatWidget() {
 
     return () => {
       socket.disconnect();
-      joinedRef.current = false;
     };
   }, [user]);
 
