@@ -8,6 +8,7 @@ import { registerMLOAuthRoutes } from "../routers/ml-oauth";
 import { registerShopeeOAuthRoutes } from "../routers/shopee-oauth";
 import { registerTiktokShopOAuthRoutes } from "../routers/tiktok-shop-oauth";
 import { registerInstagramWebhook } from "../routers/instagram-comments";
+import { registerWhatsAppFunnelWebhook } from "../routers/whatsapp-funnel-webhook";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -102,6 +103,8 @@ async function startServer() {
   app.post("/api/tray/webhook", handleTrayWebhook);
   // Instagram comments webhook (GET = verificação, POST = eventos)
   registerInstagramWebhook(app);
+  // WhatsApp Funnel webhook (GET = verificação Meta, POST = mensagens)
+  registerWhatsAppFunnelWebhook(app);
   
   // Baileys debug routes
   setupBaileysDebugRoutes(app);

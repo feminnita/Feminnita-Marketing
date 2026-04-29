@@ -548,6 +548,11 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/whatsapp-funnel")}>
+                    <MessageCircle className="h-3 w-3" /> Ana — Funil Vendas
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
                   <SidebarMenuSubButton onClick={() => setLocation("/ia-treinamento")}>
                     <Brain className="h-3 w-3" /> Treinar IA
                   </SidebarMenuSubButton>
