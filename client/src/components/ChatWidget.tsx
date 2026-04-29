@@ -1,17 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { MessageCircle, X, Minus } from "lucide-react";
-import { io, Socket } from "socket.io-client";
 import { useAuth } from "@/_core/hooks/useAuth";
 
 const PANEL_KEY = "feminnita-chat-open";
 
 export default function ChatWidget() {
   const { user } = useAuth();
-  const socketRef = useRef<Socket | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [unread, setUnread] = useState(0);
 
-  // Abre automaticamente se foi o último estado salvo (ou primeira vez = aberto)
   const [isOpen, setIsOpen] = useState(() => {
     try { return localStorage.getItem(PANEL_KEY) !== "false"; } catch { return true; }
   });
@@ -20,6 +17,8 @@ export default function ChatWidget() {
     setIsOpen(true);
     setUnread(0);
     try { localStorage.setItem(PANEL_KEY, "true"); } catch {}
+    // Avisa o iframe que o painel abriu (para zerar badge interno)
+    iframeRef.current?.contentWindow?.postMessage({ type: "chat:panel:open" }, "*");
   }
 
   function closePanel() {
@@ -27,29 +26,16 @@ export default function ChatWidget() {
     try { localStorage.setItem(PANEL_KEY, "false"); } catch {}
   }
 
-  // Conexão socket em background para contar não lidas quando painel fechado
+  // Recebe badge count do iframe via postMessage
   useEffect(() => {
-    if (!user) return;
-    const socket = io(window.location.origin, { path: "/socket.io" });
-    socketRef.current = socket;
-
-    socket.on("connect", () => {
-      socket.emit("register-user", user.id);
-    });
-
-    socket.on("chat:message", (msg: any) => {
-      if (msg.type !== "message") return;
-      const myName = (user as any).name || (user as any).email;
-      if (msg.name === myName) return;
-      if (!isOpen) setUnread(n => n + 1);
-    });
-
-    socket.on("dm:receive", () => {
-      if (!isOpen) setUnread(n => n + 1);
-    });
-
-    return () => { socket.disconnect(); };
-  }, [user]);
+    function onMessage(e: MessageEvent) {
+      if (e.data?.type === "chat:unread") {
+        setUnread(e.data.count ?? 0);
+      }
+    }
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
 
   // Zera não lidas quando abre o painel
   useEffect(() => { if (isOpen) setUnread(0); }, [isOpen]);

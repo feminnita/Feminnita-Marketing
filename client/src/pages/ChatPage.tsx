@@ -161,7 +161,10 @@ export default function ChatPage() {
       const myName = (user as any).name || (user as any).email;
       if (msg.type === "message" && msg.name !== myName) {
         const viewing = contactRef.current?.id === "group";
-        if (!viewing) { setUnread((n) => n + 1); notify(msg.name ?? "Chat", msg.text); }
+        if (!viewing) {
+          setUnread((n) => { const next = n + 1; window.parent?.postMessage({ type: "chat:unread", count: next }, "*"); return next; });
+          notify(msg.name ?? "Chat", msg.text);
+        }
       }
     });
     socket.on("chat:users", (u: OnlineUser[]) => setOnlineUsers(u));
@@ -179,7 +182,10 @@ export default function ChatPage() {
     socket.on("dm:receive", (msg: { id: string; fromUserId: number; fromName: string; text: string; ts: number }) => {
       setDmMsgs(prev => ({ ...prev, [msg.fromUserId]: [...(prev[msg.fromUserId] ?? []), { role: "received", text: msg.text, ts: msg.ts, fromName: msg.fromName }] }));
       const viewing = contactRef.current?.id === msg.fromUserId;
-      if (!viewing) { setUnread(n => n + 1); notify(msg.fromName ?? "Mensagem", msg.text); }
+      if (!viewing) {
+        setUnread(n => { const next = n + 1; window.parent?.postMessage({ type: "chat:unread", count: next }, "*"); return next; });
+        notify(msg.fromName ?? "Mensagem", msg.text);
+      }
     });
 
     return () => { socket.disconnect(); };
