@@ -9,6 +9,8 @@ import { getDb } from "../db";
 import { conversationHistory } from "../../drizzle/schema";
 import { eq, and, desc } from "drizzle-orm";
 
+import { cartContextStore } from "../routers/whatsapp-cart-recovery";
+
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || "" });
 const LOJA_URL = process.env.TRAY_STORE_URL || "https://www.feminnita.com.br";
 
@@ -314,11 +316,25 @@ export async function runWhatsAppFunnelAgent(
 
   const nameCtx = contactName ? `\nCliente atual: ${contactName}` : "";
 
+  // Injeta contexto do carrinho abandonado se a cliente está em recuperação
+  const cartCtx = cartContextStore.get(phoneNumber);
+  const cartNote = cartCtx
+    ? `\n\n━━━ CONTEXTO: CARRINHO ABANDONADO ━━━\n` +
+      `Esta cliente estava recuperando um carrinho. Use isso para retomar a conversa de forma natural.\n` +
+      `Itens no carrinho:\n${cartCtx.items.map(i => `• ${i.name}${i.price ? ` — ${i.price}` : ""}${i.url ? ` (${i.url})` : ""}`).join("\n")}\n` +
+      `Valor total: R$${cartCtx.cartValue.toFixed(2)}\n` +
+      `Segmento: ${cartCtx.isB2B ? "B2B (atacado)" : "B2C (varejo)"}\n` +
+      (cartCtx.cartUrl ? `Link do carrinho: ${cartCtx.cartUrl}\n` : "") +
+      `Abordagem: mencione os produtos do carrinho dela, ofereça ajuda para finalizar, use técnica de urgência (estoque limitado).`
+    : "";
+
   // Agentic loop — Lia pode usar ferramentas antes de responder
+  const fullSystem = SYSTEM_PROMPT + nameCtx + cartNote;
+
   let response = await anthropic.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 700,
-    system: SYSTEM_PROMPT + nameCtx,
+    system: fullSystem,
     tools: LIA_TOOLS,
     messages,
   });
@@ -353,7 +369,7 @@ export async function runWhatsAppFunnelAgent(
     response = await anthropic.messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 700,
-      system: SYSTEM_PROMPT + nameCtx,
+      system: fullSystem,
       tools: LIA_TOOLS,
       messages,
     });

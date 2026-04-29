@@ -9,6 +9,7 @@ import { registerShopeeOAuthRoutes } from "../routers/shopee-oauth";
 import { registerTiktokShopOAuthRoutes } from "../routers/tiktok-shop-oauth";
 import { registerInstagramWebhook } from "../routers/instagram-comments";
 import { registerWhatsAppFunnelWebhook } from "../routers/whatsapp-funnel-webhook";
+import { registerCartRecoveryWebhook, scheduleCartFollowUps } from "../routers/whatsapp-cart-recovery";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -105,6 +106,9 @@ async function startServer() {
   registerInstagramWebhook(app);
   // WhatsApp Funnel webhook (GET = verificação Meta, POST = mensagens)
   registerWhatsAppFunnelWebhook(app);
+  // WhatsApp Cart Recovery — recebe webhook Tray e envia mensagens de recuperação
+  registerCartRecoveryWebhook(app);
+  scheduleCartFollowUps();
   
   // Baileys debug routes
   setupBaileysDebugRoutes(app);
