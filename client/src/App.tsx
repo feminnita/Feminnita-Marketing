@@ -196,8 +196,7 @@ export default function App() {
         return <WhatsAppDisparosPage />;
       case "/whatsapp-funnel":
         return <WhatsAppFunnelPage />;
-      case "/banco-imagens":
-        return <AssetLibraryPage />;
+
       case "/duda-seo":
         return <TrayDudaPage />;
       case "/ml-gabi":

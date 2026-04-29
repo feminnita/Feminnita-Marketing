@@ -501,46 +501,23 @@ function VideoLibrary() {
   );
 }
 
-// ─── Asset Thumbnail ─────────────────────────────────────────────────────────
-
-function AssetThumbnail({ src, alt }: { src?: string | null; alt: string }) {
-  const [failed, setFailed] = useState(false);
-  const imgSrc = src || "";
-  if (!imgSrc || failed) {
-    return (
-      <div className="w-full h-full flex flex-col items-center justify-center gap-1 text-gray-400">
-        <Film className="w-6 h-6" />
-        <span className="text-xs">Sem prévia</span>
-      </div>
-    );
-  }
-  return (
-    <img
-      src={imgSrc}
-      alt={alt}
-      className="w-full h-full object-cover"
-      onError={() => setFailed(true)}
-    />
-  );
-}
-
 // ─── Video Studio ─────────────────────────────────────────────────────────────
 
 const STUDIO_COLOR = "#8B5CF6";
 
+interface SelectedImage { id: string; file: File; previewUrl: string; }
+
 function VideoStudio() {
-  const [selectedAssets, setSelectedAssets] = useState<Array<{id: number; name: string; url: string; thumbnailUrl?: string | null}>>([]);
+  const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([]);
   const [hookText, setHookText] = useState("");
   const [ctaText, setCtaText] = useState("");
   const [durationPerImage, setDurationPerImage] = useState(4);
   const [title, setTitle] = useState("");
   const [dubbing, setDubbing] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [generatingId, setGeneratingId] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const utils = trpc.useUtils();
-  const assetsQuery = trpc.assetLibrary.listAssets.useQuery({});
-  const deleteAssetMut = trpc.assetLibrary.deleteAsset.useMutation({
-    onSuccess: () => { utils.assetLibrary.listAssets.invalidate(); },
-  });
 
   const listQuery = trpc.tiktokTeam.listVideos.useQuery(undefined, {
     refetchInterval: generatingId ? 3000 : false,
@@ -559,7 +536,6 @@ function VideoStudio() {
     onSuccess: () => { utils.tiktokTeam.listVideos.invalidate(); toast.success("Removido"); },
   });
 
-  // Stop polling when the generating video is done/errored
   useEffect(() => {
     if (!generatingId) return;
     const found = listQuery.data?.find((v: any) => v.id === generatingId);
@@ -570,145 +546,153 @@ function VideoStudio() {
     }
   }, [listQuery.data, generatingId]);
 
-  function toggleAsset(asset: { id: number; name: string; url: string; thumbnailUrl?: string | null }) {
-    setSelectedAssets((prev) => {
-      const exists = prev.find((a) => a.id === asset.id);
-      if (exists) return prev.filter((a) => a.id !== asset.id);
-      if (prev.length >= 5) { toast.error("Máximo 5 imagens."); return prev; }
-      return [...prev, asset];
+  useEffect(() => {
+    return () => { selectedImages.forEach(i => URL.revokeObjectURL(i.previewUrl)); };
+  }, []);
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []);
+    const remaining = 5 - selectedImages.length;
+    if (remaining <= 0) { toast.error("Máximo 5 imagens."); return; }
+    const toAdd = files.slice(0, remaining);
+    if (files.length > remaining) toast.error(`Apenas ${remaining} imagem(ns) adicionada(s). Máximo 5.`);
+    setSelectedImages(prev => [...prev, ...toAdd.map(file => ({
+      id: `${Date.now()}-${Math.random()}`,
+      file,
+      previewUrl: URL.createObjectURL(file),
+    }))]);
+    e.target.value = "";
+  }
+
+  function removeImage(id: string) {
+    setSelectedImages(prev => {
+      const item = prev.find(i => i.id === id);
+      if (item) URL.revokeObjectURL(item.previewUrl);
+      return prev.filter(i => i.id !== id);
     });
   }
 
-  function handleGenerate() {
-    if (!title.trim()) return toast.error("Preencha o título do vídeo.");
-    if (selectedAssets.length === 0) return toast.error("Selecione pelo menos 1 imagem do Banco de Imagens.");
-    generateMut.mutate({
-      title: title.trim(),
-      imageUrls: selectedAssets.map((a) => a.url),
-      hookText: hookText.trim(),
-      ctaText: ctaText.trim(),
-      durationPerImage,
-      dubbing,
+  function moveImage(id: string, dir: -1 | 1) {
+    setSelectedImages(prev => {
+      const idx = prev.findIndex(i => i.id === id);
+      const newIdx = idx + dir;
+      if (idx < 0 || newIdx < 0 || newIdx >= prev.length) return prev;
+      const next = [...prev];
+      [next[idx], next[newIdx]] = [next[newIdx], next[idx]];
+      return next;
     });
+  }
+
+  async function handleGenerate() {
+    if (!title.trim()) return toast.error("Preencha o título do vídeo.");
+    if (selectedImages.length === 0) return toast.error("Selecione pelo menos 1 imagem.");
+    setUploading(true);
+    try {
+      const imageUrls: string[] = [];
+      for (const img of selectedImages) {
+        const fd = new FormData();
+        fd.append("file", img.file);
+        const resp = await fetch("/api/upload/media", { method: "POST", body: fd });
+        const data = await resp.json();
+        if (!data.url) throw new Error(data.error || "Upload falhou");
+        imageUrls.push(data.url);
+      }
+      generateMut.mutate({ title: title.trim(), imageUrls, hookText: hookText.trim(), ctaText: ctaText.trim(), durationPerImage, dubbing });
+    } catch (err: any) {
+      toast.error(`Upload falhou: ${err.message}`);
+    } finally {
+      setUploading(false);
+    }
   }
 
   const videos = ((listQuery.data || []) as any[]).filter((v: any) => v.source === "generated");
+  const isBusy = uploading || generateMut.isPending || !!generatingId;
 
   return (
     <div className="space-y-4">
-      {/* Form */}
       <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
         <h3 className="font-semibold text-gray-800 flex items-center gap-2">
           <Wand2 className="w-4 h-4" style={{ color: STUDIO_COLOR }} />
           Gerar Vídeo com IA
         </h3>
         <p className="text-xs text-gray-500">
-          Selecione imagens do Banco de Imagens (1–5), escreva os textos e gere um vídeo vertical 9:16 pronto para TikTok/Reels.
+          Selecione até 5 imagens do produto, escreva os textos e gere um vídeo vertical 9:16 pronto para TikTok/Reels.
         </p>
 
         {/* Title */}
         <div>
           <label className="block text-xs font-semibold text-gray-600 mb-1">Título do vídeo</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+          <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
             placeholder="Ex: Try-on pijama floral verão 2025"
             className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2"
-            style={{ "--tw-ring-color": STUDIO_COLOR } as any}
-          />
+            style={{ "--tw-ring-color": STUDIO_COLOR } as any} />
         </div>
 
-        {/* Image picker do Banco de Imagens — sempre visível */}
+        {/* Image picker — direct upload */}
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="block text-xs font-semibold text-gray-600">
-              Imagens do produto — clique para selecionar ({selectedAssets.length}/5)
+              Imagens ({selectedImages.length}/5)
+              {selectedImages.length > 0 && <span className="ml-2 font-normal text-gray-400">— 1ª imagem = capa do vídeo</span>}
             </label>
-            {selectedAssets.length > 0 && (
-              <button
-                onClick={() => setSelectedAssets([])}
-                className="text-xs text-red-400 hover:text-red-600 transition-colors"
-              >
-                Limpar todas
-              </button>
+            {selectedImages.length > 0 && (
+              <button onClick={() => { selectedImages.forEach(i => URL.revokeObjectURL(i.previewUrl)); setSelectedImages([]); }}
+                className="text-xs text-red-400 hover:text-red-600 transition-colors">Limpar todas</button>
             )}
           </div>
 
-          <div className="border border-gray-200 rounded-xl overflow-hidden">
-            {assetsQuery.isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-5 h-5 animate-spin" style={{ color: STUDIO_COLOR }} />
-              </div>
-            ) : (
-              <div className="grid grid-cols-3 gap-2 p-3 max-h-64 overflow-y-auto">
-                {/* Célula para adicionar novas imagens */}
-                <a
-                  href="/banco-imagens"
-                  className="aspect-square rounded-lg border-2 border-dashed border-gray-300 hover:border-purple-400 flex flex-col items-center justify-center gap-1 transition-colors text-gray-400 hover:text-purple-500"
-                >
-                  <Plus className="w-6 h-6" />
-                  <span className="text-xs font-medium">Adicionar</span>
-                </a>
+          {selectedImages.length > 0 && (
+            <div className="space-y-2 mb-3">
+              {selectedImages.map((img, idx) => (
+                <div key={img.id} className="flex items-center gap-3 p-2 border border-gray-200 rounded-lg bg-gray-50">
+                  <span className="text-xs font-bold text-gray-400 w-4 shrink-0 text-center">{idx + 1}</span>
+                  <img src={img.previewUrl} alt={img.file.name} className="w-14 h-14 object-cover rounded-lg shrink-0" />
+                  <span className="flex-1 text-xs text-gray-600 truncate">{img.file.name}</span>
+                  <div className="flex flex-col gap-0.5 shrink-0">
+                    <button type="button" onClick={() => moveImage(img.id, -1)} disabled={idx === 0}
+                      className="p-0.5 text-gray-400 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed">
+                      <ChevronUp className="w-4 h-4" />
+                    </button>
+                    <button type="button" onClick={() => moveImage(img.id, 1)} disabled={idx === selectedImages.length - 1}
+                      className="p-0.5 text-gray-400 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed">
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <button type="button" onClick={() => removeImage(img.id)}
+                    className="p-1 text-red-400 hover:text-red-600 shrink-0 rounded">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
-                {(assetsQuery.data || []).map((asset: any) => {
-                  const isSelected = selectedAssets.some((a) => a.id === asset.id);
-                  return (
-                    <div key={asset.id} className="flex flex-col rounded-lg border border-gray-200 overflow-hidden">
-                      {/* Imagem — clicável para selecionar */}
-                      <button
-                        type="button"
-                        onClick={() => toggleAsset({ id: asset.id, name: asset.name, url: asset.url, thumbnailUrl: asset.thumbnailUrl })}
-                        className={`relative w-full aspect-square bg-gray-100 overflow-hidden ${isSelected ? "ring-2 ring-purple-500" : ""}`}
-                      >
-                        <AssetThumbnail src={asset.thumbnailUrl || asset.url} alt={asset.name} />
-                        {isSelected && <div className="absolute inset-0 bg-purple-500/20 pointer-events-none" />}
-                        {isSelected && <CheckCircle className="absolute top-1 left-1 w-4 h-4 text-purple-600 pointer-events-none" />}
-                      </button>
-                      {/* Rodapé com nome e botão deletar */}
-                      <div className="flex items-center gap-1 px-1.5 py-1.5 bg-white border-t border-gray-100">
-                        <span className="flex-1 text-xs text-gray-600 truncate">{asset.name}</span>
-                        <button
-                          type="button"
-                          onClick={() => deleteAssetMut.mutate({ id: asset.id })}
-                          className="shrink-0 p-1 text-red-400 hover:text-red-600 rounded"
-                          title="Remover imagem"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          {selectedImages.length < 5 && (
+            <button type="button" onClick={() => fileInputRef.current?.click()}
+              className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-gray-300 hover:border-purple-400 rounded-xl text-sm text-gray-500 hover:text-purple-600 transition-colors">
+              <Plus className="w-5 h-5" />
+              {selectedImages.length === 0 ? "Selecionar imagens do produto" : "Adicionar mais imagens"}
+            </button>
+          )}
+          <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileSelect} />
         </div>
 
         {/* Texts */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1">Hook (início — primeiros 3s)</label>
-            <input
-              type="text"
-              value={hookText}
-              onChange={(e) => setHookText(e.target.value.slice(0, 70))}
+            <input type="text" value={hookText} onChange={(e) => setHookText(e.target.value.slice(0, 70))}
               placeholder="Ex: Você sabia que dá para comprar pijamas no preço de fábrica?"
               className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2"
-              style={{ "--tw-ring-color": STUDIO_COLOR } as any}
-            />
+              style={{ "--tw-ring-color": STUDIO_COLOR } as any} />
             <p className="text-xs text-gray-400 mt-1">{hookText.length}/70 caracteres</p>
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1">CTA (final — últimos 3s)</label>
-            <input
-              type="text"
-              value={ctaText}
-              onChange={(e) => setCtaText(e.target.value.slice(0, 70))}
+            <input type="text" value={ctaText} onChange={(e) => setCtaText(e.target.value.slice(0, 70))}
               placeholder="Ex: Comenta CATÁLOGO que eu mando tudo no DM"
               className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2"
-              style={{ "--tw-ring-color": STUDIO_COLOR } as any}
-            />
+              style={{ "--tw-ring-color": STUDIO_COLOR } as any} />
             <p className="text-xs text-gray-400 mt-1">{ctaText.length}/70 caracteres</p>
           </div>
         </div>
@@ -716,18 +700,11 @@ function VideoStudio() {
         {/* Duration */}
         <div>
           <label className="block text-xs font-semibold text-gray-600 mb-1">Duração por imagem</label>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {[2, 3, 4, 5, 6, 8, 10].map((s) => (
-              <button
-                key={s}
-                onClick={() => setDurationPerImage(s)}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
-                  durationPerImage === s
-                    ? "text-white border-transparent"
-                    : "border-gray-200 text-gray-600 hover:border-gray-300"
-                }`}
-                style={durationPerImage === s ? { background: STUDIO_COLOR } : {}}
-              >
+              <button key={s} onClick={() => setDurationPerImage(s)}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${durationPerImage === s ? "text-white border-transparent" : "border-gray-200 text-gray-600 hover:border-gray-300"}`}
+                style={durationPerImage === s ? { background: STUDIO_COLOR } : {}}>
                 {s}s
               </button>
             ))}
@@ -736,35 +713,23 @@ function VideoStudio() {
 
         {/* Dublagem */}
         <div className="flex items-center gap-3 bg-purple-50 border border-purple-200 rounded-xl px-4 py-3">
-          <input
-            type="checkbox"
-            id="dubbing"
-            checked={dubbing}
-            onChange={(e) => setDubbing(e.target.checked)}
-            className="w-4 h-4 accent-purple-600 cursor-pointer"
-          />
+          <input type="checkbox" id="dubbing" checked={dubbing} onChange={(e) => setDubbing(e.target.checked)}
+            className="w-4 h-4 accent-purple-600 cursor-pointer" />
           <label htmlFor="dubbing" className="text-sm font-medium text-purple-900 cursor-pointer select-none">
             🎙️ Dublagem com IA (ElevenLabs) — voz lê o hook e o CTA automaticamente
           </label>
         </div>
 
         {/* Generate button */}
-        <button
-          onClick={handleGenerate}
-          disabled={generateMut.isPending || !!generatingId}
+        <button onClick={handleGenerate} disabled={isBusy}
           className="w-full flex items-center justify-center gap-2 py-3 text-white rounded-xl font-semibold text-sm disabled:opacity-50"
-          style={{ background: STUDIO_COLOR }}
-        >
-          {generateMut.isPending || generatingId ? (
-            <><Loader2 className="w-4 h-4 animate-spin" /> Processando…</>
-          ) : (
-            <><Wand2 className="w-4 h-4" /> Gerar Vídeo</>
-          )}
+          style={{ background: STUDIO_COLOR }}>
+          {isBusy ? <><Loader2 className="w-4 h-4 animate-spin" /> {uploading ? "Enviando imagens…" : "Processando…"}</> : <><Wand2 className="w-4 h-4" /> Gerar Vídeo</>}
         </button>
 
         <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 text-xs text-purple-700 space-y-0.5">
           <p className="font-semibold">Como funciona:</p>
-          <p>• As imagens são baixadas e montadas em slideshow vertical 1080×1920 (9:16)</p>
+          <p>• As imagens são montadas em slideshow vertical 1080×1920 (9:16)</p>
           <p>• Hook e CTA aparecem como legenda no início e no final do vídeo</p>
           <p>• Saída: MP4 H.264, 30fps, sem áudio (adicione música no TikTok/Reels)</p>
           <p>• Processamento leva ~30–90 segundos dependendo do número de imagens</p>
@@ -781,31 +746,22 @@ function VideoStudio() {
             {videos.map((v: any) => (
               <div key={v.id} className="flex items-center gap-3 px-3 py-3 border border-gray-200 rounded-lg hover:bg-gray-50">
                 <div className="w-10 h-10 rounded flex items-center justify-center shrink-0" style={{ background: STUDIO_COLOR + "15" }}>
-                  {v.status === "processing" ? (
-                    <Loader2 className="w-5 h-5 animate-spin" style={{ color: STUDIO_COLOR }} />
-                  ) : v.status === "error" ? (
-                    <XCircle className="w-5 h-5 text-red-400" />
-                  ) : (
-                    <Film className="w-5 h-5" style={{ color: STUDIO_COLOR }} />
-                  )}
+                  {v.status === "processing" ? <Loader2 className="w-5 h-5 animate-spin" style={{ color: STUDIO_COLOR }} />
+                    : v.status === "error" ? <XCircle className="w-5 h-5 text-red-400" />
+                    : <Film className="w-5 h-5" style={{ color: STUDIO_COLOR }} />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-800 truncate">{v.title}</p>
                   <p className="text-xs text-gray-400">
-                    {fmtDate(v.createdAt)}
-                    {v.durationSeconds ? ` · ${v.durationSeconds}s` : ""}
+                    {fmtDate(v.createdAt)}{v.durationSeconds ? ` · ${v.durationSeconds}s` : ""}
                     {v.status === "processing" ? " · Processando…" : ""}
                     {v.status === "error" ? ` · Erro: ${v.description || "desconhecido"}` : ""}
                   </p>
                 </div>
                 {v.status === "ready" && v.filePath && (
-                  <a
-                    href={v.filePath}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <a href={v.filePath} target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white rounded-lg"
-                    style={{ background: STUDIO_COLOR }}
-                  >
+                    style={{ background: STUDIO_COLOR }}>
                     <Download className="w-3.5 h-3.5" /> Baixar
                   </a>
                 )}

@@ -346,11 +346,7 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                     <CheckCircle className="h-3 w-3" /> Aprovar Posts
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
-                <SidebarMenuSubItem>
-                  <SidebarMenuSubButton onClick={() => setLocation("/banco-imagens")}>
-                    <Image className="h-3 w-3" /> Banco de Imagens
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
+
               </CollapsibleGroup>
 
               {/* Marketing */}
