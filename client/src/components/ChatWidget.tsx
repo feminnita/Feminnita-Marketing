@@ -26,11 +26,16 @@ export default function ChatWidget() {
     try { localStorage.setItem(PANEL_KEY, "false"); } catch {}
   }
 
-  // Recebe badge count do iframe via postMessage
+  // Recebe badge e notificações do iframe via postMessage
   useEffect(() => {
     function onMessage(e: MessageEvent) {
       if (e.data?.type === "chat:unread") {
         setUnread(e.data.count ?? 0);
+      }
+      if (e.data?.type === "chat:notify") {
+        if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+          new Notification(e.data.title ?? "Chat", { body: e.data.body, icon: "/favicon.ico" });
+        }
       }
     }
     window.addEventListener("message", onMessage);

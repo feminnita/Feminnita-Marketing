@@ -33,9 +33,8 @@ async function registerPush(vapidKey: string, subscribeFn: (s: { endpoint: strin
 }
 
 function notify(title: string, body: string) {
-  if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-    new Notification(title, { body, icon: "/favicon.ico" });
-  }
+  // Delega ao pai — iframes não podem criar Notification diretamente na maioria dos browsers
+  window.parent?.postMessage({ type: "chat:notify", title, body }, "*");
 }
 
 // ─── Tipos ─────────────────────────────────────────────────────────────────────

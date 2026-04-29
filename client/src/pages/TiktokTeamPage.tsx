@@ -515,6 +515,9 @@ function VideoStudio() {
   const [generatingId, setGeneratingId] = useState<number | null>(null);
   const utils = trpc.useUtils();
   const assetsQuery = trpc.assetLibrary.listAssets.useQuery({});
+  const deleteAssetMut = trpc.assetLibrary.deleteAsset.useMutation({
+    onSuccess: () => { utils.assetLibrary.listAssets.invalidate(); },
+  });
 
   const listQuery = trpc.tiktokTeam.listVideos.useQuery(undefined, {
     refetchInterval: generatingId ? 3000 : false,
@@ -626,38 +629,46 @@ function VideoStudio() {
                 {(assetsQuery.data || []).map((asset: any) => {
                   const isSelected = selectedAssets.some((a) => a.id === asset.id);
                   return (
-                    <button
-                      key={asset.id}
-                      onClick={() => toggleAsset({ id: asset.id, name: asset.name, url: asset.url, thumbnailUrl: asset.thumbnailUrl })}
-                      className={`relative rounded-lg overflow-hidden border-2 transition-all aspect-square ${
-                        isSelected ? "border-purple-500 ring-2 ring-purple-300" : "border-transparent hover:border-gray-300"
-                      }`}
-                    >
-                      <img
-                        src={asset.thumbnailUrl || asset.url}
-                        alt={asset.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                      />
-                      {isSelected && (
-                        <>
-                          <div className="absolute inset-0 bg-purple-500/20" />
-                          <div
-                            className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 rounded-full p-0.5 z-10"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedAssets(prev => prev.filter(a => a.id !== asset.id));
-                            }}
-                          >
-                            <X className="w-3 h-3 text-white" />
-                          </div>
-                          <div className="absolute bottom-5 left-1">
-                            <CheckCircle className="w-4 h-4 text-purple-600" />
-                          </div>
-                        </>
-                      )}
-                      <p className="absolute bottom-0 inset-x-0 bg-black/50 text-white text-xs px-1 py-0.5 truncate">{asset.name}</p>
-                    </button>
+                    <div key={asset.id} className="relative group aspect-square">
+                      <button
+                        onClick={() => toggleAsset({ id: asset.id, name: asset.name, url: asset.url, thumbnailUrl: asset.thumbnailUrl })}
+                        className={`w-full h-full relative rounded-lg overflow-hidden border-2 transition-all ${
+                          isSelected ? "border-purple-500 ring-2 ring-purple-300" : "border-transparent hover:border-gray-300"
+                        }`}
+                      >
+                        <img
+                          src={asset.thumbnailUrl || asset.url}
+                          alt={asset.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const img = e.currentTarget as HTMLImageElement;
+                            img.style.display = "none";
+                            const ph = img.nextElementSibling as HTMLElement;
+                            if (ph) ph.style.display = "flex";
+                          }}
+                        />
+                        <div className="w-full h-full bg-gray-100 items-center justify-center" style={{ display: "none" }}>
+                          <Film className="w-6 h-6 text-gray-400" />
+                        </div>
+                        {isSelected && (
+                          <>
+                            <div className="absolute inset-0 bg-purple-500/20" />
+                            <div className="absolute bottom-5 left-1">
+                              <CheckCircle className="w-4 h-4 text-purple-600" />
+                            </div>
+                          </>
+                        )}
+                        <p className="absolute bottom-0 inset-x-0 bg-black/50 text-white text-xs px-1 py-0.5 truncate">{asset.name}</p>
+                      </button>
+                      {/* Botão deletar do banco */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); if (confirm(`Remover "${asset.name}" do banco?`)) deleteAssetMut.mutate({ id: asset.id }); }}
+                        className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 rounded-full p-0.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Remover do banco de imagens"
+                      >
+                        <X className="w-3 h-3 text-white" />
+                      </button>
+                    </div>
                   );
                 })}
               </div>
