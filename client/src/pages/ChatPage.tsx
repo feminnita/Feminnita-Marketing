@@ -331,6 +331,16 @@ export default function ChatPage() {
                 {unread > 0 && <span style={{ marginLeft: 6, background: "#ef4444", color: "#fff", borderRadius: 8, padding: "1px 6px", fontSize: 10, fontWeight: 700 }}>{unread} nova{unread > 1 ? "s" : ""}</span>}
               </div>
             </div>
+            {typeof Notification !== "undefined" && Notification.permission !== "granted" && (
+              <button
+                onClick={() => Notification.requestPermission().then(p => {
+                  if (p === "granted" && vapidQuery.data?.key) registerPush(vapidQuery.data.key, s => subscribeMutation.mutate(s));
+                })}
+                style={{ fontSize: 10, padding: "4px 8px", background: "#8B2635", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", whiteSpace: "nowrap" }}
+              >
+                🔔 Ativar
+              </button>
+            )}
           </div>
 
           <div style={{ flex: 1, overflowY: "auto", scrollbarWidth: "thin" }}>
