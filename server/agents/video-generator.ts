@@ -97,11 +97,13 @@ export async function generateVideoFromImages(params: VideoGenerationParams): Pr
       await renderSlideshow({ imagePaths, durationPerImage, outputPath, audioPath });
     }
 
-    // Upload to storage and return public URL
-    const videoBuffer = await fs.readFile(outputPath);
-    const fileKey = `videos/generated/${Date.now()}-${crypto.randomBytes(8).toString("hex")}.mp4`;
-    const { url } = await storagePut(fileKey, videoBuffer, "video/mp4");
-    return url;
+    // Salvar vídeo em /uploads/ local e retornar URL relativa
+    const uploadsDir = path.resolve(process.cwd(), "uploads");
+    await fs.mkdir(uploadsDir, { recursive: true });
+    const filename = `${Date.now()}-${crypto.randomBytes(8).toString("hex")}.mp4`;
+    const destPath = path.join(uploadsDir, filename);
+    await fs.copyFile(outputPath, destPath);
+    return `/uploads/${filename}`;
   } finally {
     await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
   }
