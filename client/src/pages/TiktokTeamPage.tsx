@@ -501,6 +501,29 @@ function VideoLibrary() {
   );
 }
 
+// ─── Asset Thumbnail ─────────────────────────────────────────────────────────
+
+function AssetThumbnail({ src, alt }: { src?: string | null; alt: string }) {
+  const [failed, setFailed] = useState(false);
+  const imgSrc = src || "";
+  if (!imgSrc || failed) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center gap-1 text-gray-400">
+        <Film className="w-6 h-6" />
+        <span className="text-xs">Sem prévia</span>
+      </div>
+    );
+  }
+  return (
+    <img
+      src={imgSrc}
+      alt={alt}
+      className="w-full h-full object-cover"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 // ─── Video Studio ─────────────────────────────────────────────────────────────
 
 const STUDIO_COLOR = "#8B5CF6";
@@ -631,36 +654,29 @@ function VideoStudio() {
                 {(assetsQuery.data || []).map((asset: any) => {
                   const isSelected = selectedAssets.some((a) => a.id === asset.id);
                   return (
-                    <div key={asset.id} className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${isSelected ? "border-purple-500 ring-2 ring-purple-300" : "border-gray-200 hover:border-purple-300"}`}>
-                      {/* Área clicável de seleção — não inclui o canto superior direito */}
-                      <div
-                        onClick={() => toggleAsset({ id: asset.id, name: asset.name, url: asset.url, thumbnailUrl: asset.thumbnailUrl })}
-                        className="absolute inset-0 cursor-pointer bg-gray-100 flex items-center justify-center"
-                        style={{ right: 28 }}
-                      >
-                        <img
-                          src={asset.thumbnailUrl || asset.url}
-                          alt={asset.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                        />
-                      </div>
-                      {/* Clique no restante da imagem também seleciona */}
-                      <div
-                        onClick={() => toggleAsset({ id: asset.id, name: asset.name, url: asset.url, thumbnailUrl: asset.thumbnailUrl })}
-                        className="absolute inset-0 cursor-pointer"
-                      />
-                      {isSelected && <div className="absolute inset-0 bg-purple-500/20 pointer-events-none" />}
-                      {isSelected && <CheckCircle className="absolute top-1 left-1 w-4 h-4 text-purple-600 drop-shadow pointer-events-none" />}
-                      <p className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-xs px-1 py-0.5 truncate pointer-events-none">{asset.name}</p>
-                      {/* Botão deletar — canto superior direito, stopPropagation */}
+                    <div key={asset.id} className="flex flex-col rounded-lg border border-gray-200 overflow-hidden">
+                      {/* Imagem — clicável para selecionar */}
                       <button
-                        onClick={(e) => { e.stopPropagation(); deleteAssetMut.mutate({ id: asset.id }); }}
-                        className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 rounded-full p-1 z-20"
-                        title="Remover do banco de imagens"
+                        type="button"
+                        onClick={() => toggleAsset({ id: asset.id, name: asset.name, url: asset.url, thumbnailUrl: asset.thumbnailUrl })}
+                        className={`relative w-full aspect-square bg-gray-100 overflow-hidden ${isSelected ? "ring-2 ring-purple-500" : ""}`}
                       >
-                        <X className="w-3 h-3 text-white" />
+                        <AssetThumbnail src={asset.thumbnailUrl || asset.url} alt={asset.name} />
+                        {isSelected && <div className="absolute inset-0 bg-purple-500/20 pointer-events-none" />}
+                        {isSelected && <CheckCircle className="absolute top-1 left-1 w-4 h-4 text-purple-600 pointer-events-none" />}
                       </button>
+                      {/* Rodapé com nome e botão deletar */}
+                      <div className="flex items-center gap-1 px-1.5 py-1.5 bg-white border-t border-gray-100">
+                        <span className="flex-1 text-xs text-gray-600 truncate">{asset.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => deleteAssetMut.mutate({ id: asset.id })}
+                          className="shrink-0 p-1 text-red-400 hover:text-red-600 rounded"
+                          title="Remover imagem"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
