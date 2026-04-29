@@ -78,13 +78,18 @@ export function initializeWebSocket(httpServer: HTTPServer) {
     console.log(`[WebSocket] Cliente conectado: ${socket.id}`);
 
     // Quando cliente se conecta, ele envia seu userId
-    socket.on("register-user", (userId: number) => {
+    socket.on("register-user", (rawUserId: unknown) => {
+      const userId = Number(rawUserId);
+      if (!userId) {
+        console.warn(`[WebSocket] register-user com userId inválido: ${rawUserId}`);
+        return;
+      }
       if (!connectedUsers.has(userId)) {
         connectedUsers.set(userId, new Set());
       }
       connectedUsers.get(userId)!.add(socket.id);
       socket.join(`user_${userId}`);
-      console.log(`[WebSocket] Usuário ${userId} registrado (socket: ${socket.id})`);
+      console.log(`[WebSocket] Usuário ${userId} registrado (socket: ${socket.id}) — ${connectedUsers.get(userId)!.size} socket(s) ativos`);
     });
 
     // Chat: join
@@ -101,13 +106,22 @@ export function initializeWebSocket(httpServer: HTTPServer) {
 
     // DM: mensagem direta entre humanos
     socket.on("dm:send", ({ toUserId, text, fromName: clientName }: { toUserId: number; text: unknown; fromName?: string }) => {
+      // Coerce toUserId para number (pode chegar como string via JSON serialization)
+      const toUserIdNum = Number(toUserId);
+      if (!toUserIdNum) return;
+
       // Resolve fromUserId a partir do mapa connectedUsers (populado por register-user,
       // sempre emitido no connect). Não depende de chat:join para não bloquear DMs.
       let fromUserId: number | null = null;
       connectedUsers.forEach((sockets, uid) => {
         if (sockets.has(socket.id)) fromUserId = uid;
       });
-      if (!fromUserId) return; // socket não registrado ainda
+
+      // Fallback: se socket não registrou ainda, registra agora com o nome como identificador temporário
+      if (!fromUserId) {
+        console.warn(`[DM] dm:send de socket não registrado (${socket.id}) — descartando`);
+        return;
+      }
 
       // Prefere dados do chatUsers se disponíveis (tem nome e cor), senão usa fallback
       const chatSender = chatUsers.get(socket.id);
@@ -124,24 +138,36 @@ export function initializeWebSocket(httpServer: HTTPServer) {
         text: safe,
         ts: Date.now(),
       };
-      io!.to(`user_${toUserId}`).emit("dm:receive", msg);
+
+      // Entrega diretamente para cada socket do destinatário via connectedUsers.
+      // NÃO usa io.to("user_X") para evitar race condition onde o socket ainda não
+      // completou o socket.join da room (pode acontecer em reconexões rápidas).
+      const destSockets = connectedUsers.get(toUserIdNum);
+      if (destSockets && destSockets.size > 0) {
+        destSockets.forEach(sid => {
+          io!.to(sid).emit("dm:receive", msg);
+        });
+        console.log(`[DM] ${fromUserId} → ${toUserIdNum}: entregue via ${destSockets.size} socket(s)`);
+      } else {
+        console.log(`[DM] ${fromUserId} → ${toUserIdNum}: destinatário offline, push será enviado`);
+      }
 
       // Persiste no banco
       getDb().then(db => {
         if (!db) return;
         db.insert(directMessages).values({
           fromUserId,
-          toUserId,
+          toUserId: toUserIdNum,
           fromName: senderName,
           text: safe,
         } as any).catch(() => {});
       });
 
       // Push para destinatário offline
-      if (!isUserConnected(toUserId)) {
+      if (!isUserConnected(toUserIdNum)) {
         getDb().then(db => {
           if (!db) return;
-          db.select().from(pushSubscriptions).where(eq(pushSubscriptions.userId, toUserId))
+          db.select().from(pushSubscriptions).where(eq(pushSubscriptions.userId, toUserIdNum))
             .then(subs => {
               for (const sub of subs) {
                 sendPush(
