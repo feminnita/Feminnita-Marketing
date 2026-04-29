@@ -98,7 +98,6 @@ export async function generateVideoFromImages(params: VideoGenerationParams): Pr
     }
 
     // Salvar vídeo em /uploads/ local e retornar URL relativa
-    const uploadsDir = path.resolve(process.cwd(), "uploads");
     await fs.mkdir(uploadsDir, { recursive: true });
     const filename = `${Date.now()}-${crypto.randomBytes(8).toString("hex")}.mp4`;
     const destPath = path.join(uploadsDir, filename);
