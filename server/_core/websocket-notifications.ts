@@ -100,16 +100,27 @@ export function initializeWebSocket(httpServer: HTTPServer) {
     });
 
     // DM: mensagem direta entre humanos
-    socket.on("dm:send", ({ toUserId, text }: { toUserId: number; text: unknown }) => {
-      const sender = chatUsers.get(socket.id);
-      if (!sender) return;
+    socket.on("dm:send", ({ toUserId, text, fromName: clientName }: { toUserId: number; text: unknown; fromName?: string }) => {
+      // Resolve fromUserId a partir do mapa connectedUsers (populado por register-user,
+      // sempre emitido no connect). Não depende de chat:join para não bloquear DMs.
+      let fromUserId: number | null = null;
+      connectedUsers.forEach((sockets, uid) => {
+        if (sockets.has(socket.id)) fromUserId = uid;
+      });
+      if (!fromUserId) return; // socket não registrado ainda
+
+      // Prefere dados do chatUsers se disponíveis (tem nome e cor), senão usa fallback
+      const chatSender = chatUsers.get(socket.id);
+      const senderName = chatSender?.name ?? clientName ?? "Usuário";
+      const senderColor = chatSender?.color ?? "#94a3b8";
+
       const safe = String(text ?? "").trim().slice(0, 1000);
       if (!safe) return;
       const msg = {
         id: `${Date.now()}-${Math.random()}`,
-        fromUserId: sender.userId,
-        fromName: sender.name,
-        color: sender.color,
+        fromUserId,
+        fromName: senderName,
+        color: senderColor,
         text: safe,
         ts: Date.now(),
       };
@@ -119,9 +130,9 @@ export function initializeWebSocket(httpServer: HTTPServer) {
       getDb().then(db => {
         if (!db) return;
         db.insert(directMessages).values({
-          fromUserId: sender.userId,
+          fromUserId,
           toUserId,
-          fromName: sender.name,
+          fromName: senderName,
           text: safe,
         } as any).catch(() => {});
       });
@@ -135,7 +146,7 @@ export function initializeWebSocket(httpServer: HTTPServer) {
               for (const sub of subs) {
                 sendPush(
                   { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-                  { title: `💬 ${sender.name}`, body: safe.slice(0, 120), url: "/chat" }
+                  { title: `💬 ${senderName}`, body: safe.slice(0, 120), url: "/chat" }
                 ).catch(() => {});
               }
             });

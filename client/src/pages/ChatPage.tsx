@@ -211,7 +211,7 @@ export default function ChatPage() {
       if (!socketRef.current || !connected) return;
       const tid = contact.id as number;
       setDmMsgs(prev => ({ ...prev, [tid]: [...(prev[tid] ?? []), { role: "sent", text, ts: Date.now() }] }));
-      socketRef.current.emit("dm:send", { toUserId: tid, text });
+      socketRef.current.emit("dm:send", { toUserId: tid, text, fromName: myName });
       return;
     }
 
@@ -257,7 +257,7 @@ export default function ChatPage() {
       } else if (contact.kind === "human" && socketRef.current && connected) {
         const tid = contact.id as number;
         setDmMsgs(prev => ({ ...prev, [tid]: [...(prev[tid] ?? []), { role: "sent", text: fileMsg, ts: Date.now() }] }));
-        socketRef.current.emit("dm:send", { toUserId: tid, text: fileMsg });
+        socketRef.current.emit("dm:send", { toUserId: tid, text: fileMsg, fromName: myName });
       }
     } catch { alert("Erro ao enviar arquivo"); }
     finally { setUploading(false); if (fileRef.current) fileRef.current.value = ""; }
