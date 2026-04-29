@@ -180,39 +180,36 @@ export async function updateMLItemAttributes(
   return `Atributos de ${itemId} atualizados: ${names}`;
 }
 
-// ─── ML Ads (Product Ads) ─────────────────────────────────────────────────────
-// ATENÇÃO: A API de Product Ads do ML não é pública para contas de vendedor.
-// Os endpoints /advertising/advertisers/... retornam 404 com token OAuth padrão.
-// O acesso requer aprovação especial de parceiro certificado pelo Mercado Livre.
-// Todas as funções abaixo retornam instrução para gerenciar via Seller Center.
+// ─── ML Ads (Product Ads via Browser Automation) ─────────────────────────────
+// A API REST do ML não é pública para Product Ads — usamos Playwright no Seller Center
 
-const ML_ADS_SELLER_CENTER_URL = "https://www.mercadolivre.com.br/advertising/product-ads";
+import {
+  listAdsCampaigns,
+  pauseAdsCampaign,
+  activateAdsCampaign,
+  updateAdsBudget,
+} from "./ml-ads-browser-agent";
 
-const ML_ADS_UNAVAILABLE = `⚠️ API de Product Ads indisponível via integração direta.
-
-O Mercado Livre restringe o acesso à API de campanhas apenas para parceiros certificados. Com o token OAuth padrão, os endpoints retornam 404.
-
-Para gerenciar suas campanhas de Product Ads, acesse diretamente:
-👉 ${ML_ADS_SELLER_CENTER_URL}
-
-Lá você pode: ver todas as campanhas, pausar/ativar, ajustar budget e ver métricas completas (impressões, cliques, CTR, ROAS).`;
-
-export async function listMLAdsCampaigns(_account = "feminnita"): Promise<string> {
-  return ML_ADS_UNAVAILABLE;
+export async function listMLAdsCampaigns(account = "feminnita"): Promise<string> {
+  console.log(`[GabiML] listMLAdsCampaigns via browser — account=${account}`);
+  return listAdsCampaigns(account as "feminnita" | "fnt").catch(e => `Erro ao listar campanhas: ${e.message}`);
 }
 
-export async function pauseMLAdsCampaign(_campaignId: string, _account = "feminnita"): Promise<string> {
-  return ML_ADS_UNAVAILABLE;
+export async function pauseMLAdsCampaign(campaignId: string, account = "feminnita"): Promise<string> {
+  console.log(`[GabiML] pauseMLAdsCampaign via browser — ${campaignId} (${account})`);
+  return pauseAdsCampaign(campaignId, account as "feminnita" | "fnt").catch(e => `Erro ao pausar campanha: ${e.message}`);
 }
 
-export async function activateMLAdsCampaign(_campaignId: string, _account = "feminnita"): Promise<string> {
-  return ML_ADS_UNAVAILABLE;
+export async function activateMLAdsCampaign(campaignId: string, account = "feminnita"): Promise<string> {
+  console.log(`[GabiML] activateMLAdsCampaign via browser — ${campaignId} (${account})`);
+  return activateAdsCampaign(campaignId, account as "feminnita" | "fnt").catch(e => `Erro ao ativar campanha: ${e.message}`);
 }
 
-export async function updateMLAdsBudget(_campaignId: string, _dailyBudget: number, _account = "feminnita"): Promise<string> {
-  return ML_ADS_UNAVAILABLE;
+export async function updateMLAdsBudget(campaignId: string, dailyBudget: number, account = "feminnita"): Promise<string> {
+  console.log(`[GabiML] updateMLAdsBudget via browser — ${campaignId} R$${dailyBudget} (${account})`);
+  return updateAdsBudget(campaignId, dailyBudget, account as "feminnita" | "fnt").catch(e => `Erro ao atualizar budget: ${e.message}`);
 }
 
 export async function getMLAdsCampaignStats(_campaignId: string, _dateFrom: string, _dateTo: string, _account = "feminnita"): Promise<string> {
-  return ML_ADS_UNAVAILABLE;
+  return "Métricas detalhadas (impressões, CTR, ROAS) ainda não disponíveis via automação. Acesse: https://www.mercadolivre.com.br/advertising/product-ads";
 }
