@@ -10,14 +10,21 @@ import * as crypto from "crypto";
 import { storagePut } from "../storage";
 import { textToSpeech } from "../services/tts";
 
-// Use bundled ffmpeg-static binary if available
+// Use bundled ffmpeg-static binary if it exists, otherwise use system ffmpeg
 try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const ffmpegStatic = require("ffmpeg-static");
-  if (ffmpegStatic) ffmpegLib.setFfmpegPath(ffmpegStatic);
-} catch {
-  // Fall back to system ffmpeg
-}
+  const fsSync = require("fs");
+  if (ffmpegStatic && fsSync.existsSync(ffmpegStatic)) {
+    ffmpegLib.setFfmpegPath(ffmpegStatic);
+  } else {
+    // Fall back to system ffmpeg (e.g. /usr/bin/ffmpeg installed via apt)
+    const { execSync } = require("child_process");
+    try {
+      const systemPath = execSync("which ffmpeg 2>/dev/null").toString().trim();
+      if (systemPath) ffmpegLib.setFfmpegPath(systemPath);
+    } catch { /* let fluent-ffmpeg search PATH */ }
+  }
+} catch { /* let fluent-ffmpeg search PATH */ }
 
 export interface VideoGenerationParams {
   imageUrls: string[];       // 1–5 image URLs (absolute or /uploads/...)
