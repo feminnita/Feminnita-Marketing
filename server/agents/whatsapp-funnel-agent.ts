@@ -1,6 +1,7 @@
 /**
- * Agente de Funil de Vendas WhatsApp — Feminnita Pijamas
- * Atende clientes via WhatsApp Business API com Claude
+ * Lia — Vendedora WhatsApp da Feminnita Pijamas
+ * Acessa a loja em tempo real, busca produtos e links, vence objeções
+ * Treinada pelos mestres: Jeb Blount, Jordão Ferreira, Thiago Concer, Zig Ziglar
  */
 
 import Anthropic from "@anthropic-ai/sdk";
@@ -9,58 +10,172 @@ import { conversationHistory } from "../../drizzle/schema";
 import { eq, and, desc } from "drizzle-orm";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || "" });
+const LOJA_URL = process.env.TRAY_STORE_URL || "https://www.feminnita.com.br";
 
-const LOJA_URL = process.env.FEMINNITA_LOJA_URL || "https://feminnita.com.br";
+// ─── Acesso à loja Tray ───────────────────────────────────────────────────────
 
-const SYSTEM_PROMPT = `Você é a Lia — atendente virtual da Feminnita Pijamas. Seu papel é ajudar clientes com dúvidas sobre produtos, pedidos e políticas da marca, com um tom equilibrado: próximo mas profissional, nunca informal demais nem frio demais. Use emojis com moderação.
+async function fetchTrayPage(url: string): Promise<string> {
+  try {
+    const res = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; FeminnitaBot/1.0)" },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) return `[HTTP ${res.status}]`;
+    const html = await res.text();
 
-SOBRE A FEMINNITA:
-- Marca própria de pijamas femininos, fabricação própria
-- Vende pelo site (Tray) e marketplaces
-- Catálogo amplo com muitas variações — cada produto pode ter dezenas de opções de cor, tamanho e modelo
+    // Extrai title, preço, descrição, variações e URL canônica
+    const title   = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.replace(/<[^>]+>/g, "").trim() || "";
+    const h1      = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1]?.replace(/<[^>]+>/g, "").trim() || "";
+    const prices  = [...html.matchAll(/R\$\s*[\d.,]+/g)].map(m => m[0]).slice(0, 4);
+    const canonical = html.match(/<link[^>]*rel=["']canonical["'][^>]*href=["']([^"']+)["']/i)?.[1] || url;
 
-CATÁLOGO E PRODUTOS:
-- NÃO tente listar ou descrever produtos específicos — o catálogo é extenso e muda constantemente
-- Sempre direcione a cliente para ver os produtos diretamente no site: ${LOJA_URL}
-- Cores e disponibilidade variam por produto e não podem ser garantidas sem verificar no site
-- Se a cliente pedir uma cor ou modelo específico, oriente a acessar o site e verificar o estoque em tempo real
+    // Extrai nomes e links de produtos (listagem de busca)
+    const productLinks: string[] = [];
+    const linkRe = /href=["'](https?:\/\/www\.feminnita\.com\.br\/[^"'?#]+)["'][^>]*>/gi;
+    let m;
+    while ((m = linkRe.exec(html)) !== null) {
+      const l = m[1];
+      if (!productLinks.includes(l) && !l.includes("/busca") && l.split("/").length >= 4) {
+        productLinks.push(l);
+      }
+    }
 
-FRETE:
-- O frete é calculado automaticamente no carrinho, com base no peso e valor do pedido
-- Há um seguro de transporte incluído calculado sobre o valor da compra
-- Não é possível informar o valor do frete antecipadamente — a cliente deve finalizar o carrinho para ver o valor exato
+    // Texto limpo (sem scripts/styles)
+    const text = html
+      .replace(/<script[\s\S]*?<\/script>/gi, "")
+      .replace(/<style[\s\S]*?<\/style>/gi, "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&nbsp;/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 2500);
 
-TROCA E DEVOLUÇÃO:
-- Prazo: até 7 dias após o recebimento do produto
-- Não são aceitas trocas ou devoluções com embalagem violada no recebimento
-- O processo é feito DIRETAMENTE com a Feminnita — não pelo marketplace
-- Para iniciar uma troca, a cliente deve entrar em contato com nossa equipe
+    return [
+      `URL: ${canonical}`,
+      title   ? `TÍTULO: ${title}` : "",
+      h1      ? `H1: ${h1}` : "",
+      prices.length ? `PREÇOS: ${prices.join(" | ")}` : "",
+      productLinks.length ? `LINKS DE PRODUTOS:\n${productLinks.slice(0, 12).join("\n")}` : "",
+      `CONTEÚDO: ${text}`,
+    ].filter(Boolean).join("\n");
+  } catch (e: any) {
+    return `[Erro ao acessar ${url}: ${e.message}]`;
+  }
+}
 
-SITUAÇÕES QUE VOCÊ DEVE ESCALAR (transferir para atendimento humano):
-- Reclamações de qualquer tipo
-- Pedido cancelado
-- Produto com defeito
-- Qualquer mensagem que mencione "falar com atendente", "falar com alguém", "falar com humano", "quero falar com uma pessoa", ou similar
+async function searchTrayProducts(query: string): Promise<string> {
+  const searchUrl = `${LOJA_URL}/busca?q=${encodeURIComponent(query)}`;
+  return fetchTrayPage(searchUrl);
+}
 
-REGRAS OBRIGATÓRIAS:
-1. Nunca invente preços, cores, disponibilidade ou prazos — redirecione ao site
-2. Respostas curtas e diretas — máximo 3 parágrafos
-3. Quando não souber algo, diga "vou verificar com nossa equipe" e escale
-4. Use *negrito* só para informações importantes
-5. Ao escalar, diga: "Vou chamar nossa equipe para te ajudar com isso! Um momento 😊"
-6. Nunca mencione concorrentes ou compare com outros marketplaces`;
+// ─── Tools da Lia ─────────────────────────────────────────────────────────────
+
+const LIA_TOOLS: Anthropic.Tool[] = [
+  {
+    name: "buscar_produtos",
+    description: "Busca produtos na loja Feminnita com base em uma descrição ou palavra-chave. Retorna lista de produtos com links e preços. Use SEMPRE que a cliente perguntar sobre um tipo de produto para poder oferecer opções reais.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        query: { type: "string", description: "Termo de busca (ex: 'pijama viscose', 'pijama plus size longo', 'babydoll')" },
+      },
+      required: ["query"],
+    },
+  },
+  {
+    name: "ver_produto",
+    description: "Acessa a página de um produto específico para ver preço atual, variações, cores disponíveis e estoque. Use quando a cliente se interessar por um produto específico.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        url: { type: "string", description: "URL completa do produto na loja Feminnita" },
+      },
+      required: ["url"],
+    },
+  },
+];
+
+// ─── Escalação ────────────────────────────────────────────────────────────────
 
 const ESCALATION_TRIGGERS = [
   "falar com atendente", "falar com alguém", "falar com humano", "falar com uma pessoa",
-  "falar com vocês", "quero atendente", "atendimento humano", "reclamação", "produto com defeito",
-  "produto danificado", "chegou errado", "pedido cancelado", "cancelar pedido",
-  "falar com um mano", "quero falar", "me chama",
+  "falar com vocês", "quero atendente", "atendimento humano", "falar com um mano",
+  "quero falar com", "me chama", "me passa para", "reclamação", "produto com defeito",
+  "produto danificado", "chegou errado", "chegou quebrado", "pedido cancelado",
+  "cancelar pedido", "reembolso", "devolução do dinheiro",
 ];
 
 function needsEscalation(message: string): boolean {
   const lower = message.toLowerCase();
   return ESCALATION_TRIGGERS.some(t => lower.includes(t));
 }
+
+// ─── System Prompt ────────────────────────────────────────────────────────────
+
+const SYSTEM_PROMPT = `Você é a Lia — vendedora da Feminnita Pijamas no WhatsApp. Não é uma atendente genérica: você é uma *vendedora treinada*, que entende de moda, conhece cada produto da loja e sabe conduzir uma conversa até o fechamento.
+
+Sua loja: ${LOJA_URL}
+
+━━━ SUA MISSÃO ━━━
+Transformar cada contato em venda. Não apenas tirar dúvidas — *vender*. Você busca os produtos em tempo real na loja, apresenta opções concretas com link direto, e conduz a cliente até o carrinho.
+
+━━━ TOM DE VOZ ━━━
+Equilibrado: próximo sem ser informal demais, profissional sem ser frio. Pense numa consultora de moda de uma boutique bem atendida. Use emojis com moderação — um ou dois por mensagem, nunca excessivo. Respostas curtas e diretas — máximo 3 parágrafos.
+
+━━━ COMO VOCÊ TRABALHA ━━━
+1. Quando a cliente perguntar sobre um produto → use *buscar_produtos* imediatamente
+2. Apresente 1 a 3 opções com o link direto — nunca diga "acesse o site" sem dar o link
+3. Se ela se interessar por um → use *ver_produto* para confirmar preço e disponibilidade
+4. Conduza para o fechamento: "Quer que eu te mande o link direto para já garantir o seu?"
+
+━━━ INFORMAÇÕES REAIS ━━━
+- Frete: calculado no carrinho (depende do peso + valor + seguro de transporte). Não informe valores antecipadamente.
+- Troca/devolução: até 7 dias após recebimento, embalagem intacta, direto com a Feminnita (não pelo marketplace)
+- Tamanhos: variam por produto — confirme sempre na página do produto
+- Cores: verificar disponibilidade em tempo real na página do produto
+
+━━━ MENTALIDADE DE VENDAS (os mestres) ━━━
+
+JEB BLOUNT — Rapport e urgência:
+→ Crie conexão antes de vender. Pergunte o contexto: "É presente? É pra você?"
+→ Urgência real: estoque limitado, lançamento, promoção pontual
+→ "Toda objeção é um pedido por mais informação"
+
+ZIG ZIGLAR — As 5 objeções reais:
+→ Sem necessidade → faça ela imaginar usando: "Imagina você acordando num pijama assim no frio de manhã..."
+→ Sem dinheiro → mostre valor, não desconto: compare com qualidade, conforto, durabilidade
+→ Sem pressa → crie urgência: "Esse modelo saiu bastante essa semana, não posso garantir o estoque"
+→ Sem desejo → conecte ao benefício emocional: conforto, autoestima, presente especial
+→ Sem confiança → prova social: "É nossa peça mais vendida, as clientes adoram o caimento"
+
+JORDÃO FERREIRA — "A venda começa quando o cliente diz não":
+→ Nunca aceite o "vou pensar" como final: "Claro! O que você ainda precisa saber pra decidir?"
+→ Reforce o valor antes de qualquer concessão de preço
+
+THIAGO CONCER — Técnica IEV:
+→ Identificar: o que ela realmente quer? (modelo, tamanho, ocasião, presente?)
+→ Explorar: "Você prefere manga longa ou curta? Tem alguma cor favorita?"
+→ Validar: "Então o [produto] parece perfeito pra você — quer ver?"
+
+━━━ OBJEÇÕES COMUNS ━━━
+"Tá caro" → "Entendo! Mas olha: é viscose premium, lava fácil, não amassa. Comparado com o que vende em loja de shopping pela metade da qualidade, esse preço faz sentido 😊 Quer ver as opções de kit que saem mais em conta por peça?"
+"Vou pensar" → "Claro, sem pressão! O que ficou em dúvida? Tamanho? Cor? Posso te ajudar a decidir agora mesmo"
+"Não conheço a marca" → "É normal! A Feminnita é fabricação própria, aqui em Santa Catarina. O que mais aparece no feedback das clientes é o caimento e o tecido — sente diferença na hora de usar"
+"Tem desconto?" → "Desconto pontual eu não tenho agora, mas temos kit com [X] peças que sai mais em conta por unidade — quer que eu busque pra você?"
+
+━━━ QUANDO ESCALAR ━━━
+Responda "Vou chamar nossa equipe para te ajudar com isso! Um momento 😊" e PARE quando:
+- A cliente pedir para falar com atendente/humano/pessoa
+- Reclamação, defeito, produto errado, pedido cancelado, reembolso
+- Qualquer situação que você não consiga resolver
+
+━━━ REGRAS ABSOLUTAS ━━━
+- NUNCA invente preço, cor ou disponibilidade — busque na loja antes de afirmar
+- NUNCA diga "acesse o site" sem dar o link direto do produto
+- NUNCA prometa desconto sem autorização
+- Se não souber → "Deixa eu verificar aqui pra você" e busque com a ferramenta`;
+
+// ─── Agente principal ─────────────────────────────────────────────────────────
 
 export async function runWhatsAppFunnelAgent(
   phoneNumber: string,
@@ -70,17 +185,34 @@ export async function runWhatsAppFunnelAgent(
 ): Promise<string> {
   const db = await getDb();
 
-  // Histórico recente da conversa (últimas 8 trocas)
+  // Escalação imediata — sem chamar Claude
+  if (needsEscalation(incomingMessage)) {
+    const msg = "Vou chamar nossa equipe para te ajudar com isso! Um momento 😊";
+    if (db) {
+      await db.insert(conversationHistory).values({
+        userId,
+        whatsappPhoneNumber: phoneNumber,
+        whatsappContactName: contactName || null,
+        userMessage: incomingMessage,
+        aiResponse: msg,
+        confidence: "1.00",
+        escalated: true,
+        status: "escalated",
+      } as any).catch(() => null);
+    }
+    console.log(`[WA Lia] Escalação: ${phoneNumber} — "${incomingMessage.slice(0, 60)}"`);
+    return msg;
+  }
+
+  // Histórico recente (últimas 8 trocas)
   const history = db
     ? await db
         .select()
         .from(conversationHistory)
-        .where(
-          and(
-            eq(conversationHistory.userId, userId),
-            eq(conversationHistory.whatsappPhoneNumber, phoneNumber)
-          )
-        )
+        .where(and(
+          eq(conversationHistory.userId, userId),
+          eq(conversationHistory.whatsappPhoneNumber, phoneNumber),
+        ))
         .orderBy(desc(conversationHistory.id))
         .limit(8)
     : [];
@@ -92,35 +224,54 @@ export async function runWhatsAppFunnelAgent(
       ...(h.aiResponse ? [{ role: "assistant" as const, content: h.aiResponse }] : []),
     ]);
 
-  // Verifica escalação antes de chamar o Claude
-  if (needsEscalation(incomingMessage)) {
-    const escalationMsg = "Vou chamar nossa equipe para te ajudar com isso! Um momento 😊";
-    if (db) {
-      await db.insert(conversationHistory).values({
-        userId,
-        whatsappPhoneNumber: phoneNumber,
-        whatsappContactName: contactName || null,
-        userMessage: incomingMessage,
-        aiResponse: escalationMsg,
-        confidence: "1.00",
-        escalated: true,
-        status: "escalated",
-      } as any).catch(() => null);
-    }
-    console.log(`[WA Lia] Escalação para ${phoneNumber}: "${incomingMessage.slice(0, 60)}"`);
-    return escalationMsg;
-  }
-
   messages.push({ role: "user", content: incomingMessage });
 
-  const nameCtx = contactName ? `\nCliente: ${contactName}` : "";
+  const nameCtx = contactName ? `\nCliente atual: ${contactName}` : "";
 
-  const response = await anthropic.messages.create({
+  // Agentic loop — Lia pode usar ferramentas antes de responder
+  let response = await anthropic.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 600,
+    max_tokens: 700,
     system: SYSTEM_PROMPT + nameCtx,
+    tools: LIA_TOOLS,
     messages,
   });
+
+  while (response.stop_reason === "tool_use") {
+    const assistantContent = response.content;
+    const toolUses = assistantContent.filter((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
+
+    const toolResults: Anthropic.ToolResultBlockParam[] = [];
+    for (const toolUse of toolUses) {
+      let result: string;
+      try {
+        const inp = toolUse.input as Record<string, string>;
+        if (toolUse.name === "buscar_produtos") {
+          console.log(`[WA Lia] buscando: "${inp.query}"`);
+          result = await searchTrayProducts(inp.query);
+        } else if (toolUse.name === "ver_produto") {
+          console.log(`[WA Lia] acessando produto: ${inp.url}`);
+          result = await fetchTrayPage(inp.url);
+        } else {
+          result = `Ferramenta desconhecida: ${toolUse.name}`;
+        }
+      } catch (e: any) {
+        result = `Erro: ${e.message}`;
+      }
+      toolResults.push({ type: "tool_result", tool_use_id: toolUse.id, content: result });
+    }
+
+    messages.push({ role: "assistant", content: assistantContent });
+    messages.push({ role: "user", content: toolResults });
+
+    response = await anthropic.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 700,
+      system: SYSTEM_PROMPT + nameCtx,
+      tools: LIA_TOOLS,
+      messages,
+    });
+  }
 
   const reply =
     response.content
@@ -128,7 +279,7 @@ export async function runWhatsAppFunnelAgent(
       .map((b) => b.text)
       .join("") || "Olá! Sou a Lia da Feminnita 😊 Como posso ajudar?";
 
-  // Salvar no histórico
+  // Salvar histórico
   if (db) {
     await db.insert(conversationHistory).values({
       userId,
