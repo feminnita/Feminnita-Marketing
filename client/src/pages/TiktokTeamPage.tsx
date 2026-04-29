@@ -523,6 +523,15 @@ function VideoStudio() {
   const [title, setTitle] = useState("");
   const [dubbing, setDubbing] = useState(true);
   const [voiceId, setVoiceId] = useState(STUDIO_VOICES[0].id);
+  const [previewingVoice, setPreviewingVoice] = useState<string | null>(null);
+  const previewMut = trpc.tiktokTeam.previewVoice.useMutation({
+    onSuccess: (data) => {
+      const audio = new Audio(`data:audio/mpeg;base64,${data.audio}`);
+      audio.play().catch(() => {});
+      setPreviewingVoice(null);
+    },
+    onError: () => { toast.error("Erro ao gerar preview."); setPreviewingVoice(null); },
+  });
   const [uploading, setUploading] = useState(false);
   const [generatingId, setGeneratingId] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -734,11 +743,19 @@ function VideoStudio() {
               <p className="text-xs font-semibold text-purple-800 mb-2">Escolha a voz:</p>
               <div className="flex gap-2 flex-wrap">
                 {STUDIO_VOICES.map((v) => (
-                  <button key={v.id} type="button" onClick={() => setVoiceId(v.id)}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${voiceId === v.id ? "text-white border-transparent" : "border-purple-300 text-purple-700 hover:border-purple-500 bg-white"}`}
-                    style={voiceId === v.id ? { background: STUDIO_COLOR } : {}}>
-                    {v.label}
-                  </button>
+                  <div key={v.id} className="flex items-center gap-1">
+                    <button type="button" onClick={() => setVoiceId(v.id)}
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${voiceId === v.id ? "text-white border-transparent" : "border-purple-300 text-purple-700 hover:border-purple-500 bg-white"}`}
+                      style={voiceId === v.id ? { background: STUDIO_COLOR } : {}}>
+                      {v.label}
+                    </button>
+                    <button type="button" title="Ouvir amostra"
+                      onClick={() => { setPreviewingVoice(v.id); previewMut.mutate({ voiceId: v.id }); }}
+                      disabled={previewingVoice === v.id}
+                      className="p-1 rounded-full text-purple-500 hover:bg-purple-100 disabled:opacity-50">
+                      {previewingVoice === v.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <PlayCircle className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>

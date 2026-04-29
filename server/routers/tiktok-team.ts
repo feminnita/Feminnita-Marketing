@@ -263,16 +263,16 @@ export const tiktokTeamRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Banco indisponível");
 
-      const result = await db.insert(tiktokVideos).values({
+      const [inserted] = await db.insert(tiktokVideos).values({
         userId: ctx.user.id,
         title: input.title,
         source: "generated",
         status: "draft",
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+      }).$returningId();
 
-      const videoId = (result as any).insertId;
+      const videoId = inserted.id;
 
       (async () => {
         try {
@@ -310,5 +310,13 @@ export const tiktokTeamRouter = router({
     .mutation(async ({ input }) => {
       const summary = await updateAgentKnowledge(input.agentType);
       return { ok: true, summary };
+    }),
+
+  previewVoice: protectedProcedure
+    .input(z.object({ voiceId: z.string() }))
+    .mutation(async ({ input }) => {
+      const { textToSpeech } = await import("../services/tts");
+      const buf = await textToSpeech("Olá! Essa é uma amostra da minha voz para o seu vídeo.", undefined, input.voiceId);
+      return { audio: buf.toString("base64") };
     }),
 });
