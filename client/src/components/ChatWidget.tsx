@@ -35,10 +35,6 @@ export default function ChatWidget() {
 
     socket.on("connect", () => {
       socket.emit("register-user", user.id);
-      socket.emit("chat:join", {
-        userId: user.id,
-        name: (user as any).name || (user as any).email || "Usuário",
-      });
     });
 
     socket.on("chat:message", (msg: any) => {
@@ -62,66 +58,64 @@ export default function ChatWidget() {
 
   return (
     <>
-      {/* Painel de chat embutido */}
-      {isOpen && (
+      {/* Painel de chat embutido — sempre montado, só oculto via CSS */}
+      <div
+        style={{
+          position: "fixed",
+          bottom: 0,
+          right: 24,
+          width: 390,
+          height: 600,
+          zIndex: 9998,
+          borderRadius: "12px 12px 0 0",
+          overflow: "hidden",
+          boxShadow: "0 -4px 32px rgba(0,0,0,0.35)",
+          display: isOpen ? "flex" : "none",
+          flexDirection: "column",
+          background: "#fff",
+        }}
+      >
+        {/* Barra superior */}
         <div
           style={{
-            position: "fixed",
-            bottom: 0,
-            right: 24,
-            width: 390,
-            height: 600,
-            zIndex: 9998,
-            borderRadius: "12px 12px 0 0",
-            overflow: "hidden",
-            boxShadow: "0 -4px 32px rgba(0,0,0,0.35)",
+            background: "#8B2635",
+            padding: "10px 14px",
             display: "flex",
-            flexDirection: "column",
-            background: "#fff",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexShrink: 0,
           }}
         >
-          {/* Barra superior */}
-          <div
-            style={{
-              background: "#8B2635",
-              padding: "10px 14px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              flexShrink: 0,
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <MessageCircle size={16} color="white" />
-              <span style={{ color: "white", fontWeight: 700, fontSize: 14 }}>Chat Interno</span>
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button
-                onClick={closePanel}
-                title="Minimizar"
-                style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }}
-              >
-                <Minus size={16} color="rgba(255,255,255,0.8)" />
-              </button>
-              <button
-                onClick={closePanel}
-                title="Fechar"
-                style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }}
-              >
-                <X size={16} color="rgba(255,255,255,0.8)" />
-              </button>
-            </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <MessageCircle size={16} color="white" />
+            <span style={{ color: "white", fontWeight: 700, fontSize: 14 }}>Chat Interno</span>
           </div>
-
-          {/* iframe com o ChatPage */}
-          <iframe
-            ref={iframeRef}
-            src="/chat"
-            style={{ flex: 1, border: "none", width: "100%" }}
-            title="Chat Interno Feminnita"
-          />
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              onClick={closePanel}
+              title="Minimizar"
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }}
+            >
+              <Minus size={16} color="rgba(255,255,255,0.8)" />
+            </button>
+            <button
+              onClick={closePanel}
+              title="Fechar"
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }}
+            >
+              <X size={16} color="rgba(255,255,255,0.8)" />
+            </button>
+          </div>
         </div>
-      )}
+
+        {/* iframe com o ChatPage — permanece montado */}
+        <iframe
+          ref={iframeRef}
+          src="/chat"
+          style={{ flex: 1, border: "none", width: "100%" }}
+          title="Chat Interno Feminnita"
+        />
+      </div>
 
       {/* Botão flutuante — só aparece quando painel está fechado */}
       {!isOpen && (
