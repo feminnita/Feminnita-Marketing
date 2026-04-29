@@ -164,7 +164,7 @@ export default function ChatPage() {
       if (!viewing) { setUnread(n => n + 1); notify(msg.fromName ?? "Mensagem", msg.text); }
     });
 
-    return () => { socket.disconnect(); joinedRef.current = false; };
+    return () => { socket.disconnect(); };
   }, [user]);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [groupMsgs, agentCtxs, dmMsgs, contact]);
