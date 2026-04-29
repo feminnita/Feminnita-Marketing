@@ -505,6 +505,14 @@ function VideoLibrary() {
 
 const STUDIO_COLOR = "#8B5CF6";
 
+const STUDIO_VOICES = [
+  { id: "sXSV9RZ095VZyL64w3ap", label: "Voz 1" },
+  { id: "r2fkFV8WAqXq2AqBpgJT", label: "Voz 2" },
+  { id: "x8FWrDHAK5xiFTJLpnHq", label: "Voz 3" },
+  { id: "PznTnBc8X6pvixs9UkQm", label: "Voz 4" },
+  { id: "ohZOfA9iwlZ5nOsoY7LB", label: "Voz 5" },
+];
+
 interface SelectedImage { id: string; file: File; previewUrl: string; }
 
 function VideoStudio() {
@@ -514,6 +522,7 @@ function VideoStudio() {
   const [durationPerImage, setDurationPerImage] = useState(4);
   const [title, setTitle] = useState("");
   const [dubbing, setDubbing] = useState(true);
+  const [voiceId, setVoiceId] = useState(STUDIO_VOICES[0].id);
   const [uploading, setUploading] = useState(false);
   const [generatingId, setGeneratingId] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -597,7 +606,7 @@ function VideoStudio() {
         if (!data.url) throw new Error(data.error || "Upload falhou");
         imageUrls.push(data.url);
       }
-      generateMut.mutate({ title: title.trim(), imageUrls, hookText: hookText.trim(), ctaText: ctaText.trim(), durationPerImage, dubbing });
+      generateMut.mutate({ title: title.trim(), imageUrls, hookText: hookText.trim(), ctaText: ctaText.trim(), durationPerImage, dubbing, voiceId: dubbing ? voiceId : undefined });
     } catch (err: any) {
       toast.error(`Upload falhou: ${err.message}`);
     } finally {
@@ -712,12 +721,28 @@ function VideoStudio() {
         </div>
 
         {/* Dublagem */}
-        <div className="flex items-center gap-3 bg-purple-50 border border-purple-200 rounded-xl px-4 py-3">
-          <input type="checkbox" id="dubbing" checked={dubbing} onChange={(e) => setDubbing(e.target.checked)}
-            className="w-4 h-4 accent-purple-600 cursor-pointer" />
-          <label htmlFor="dubbing" className="text-sm font-medium text-purple-900 cursor-pointer select-none">
-            🎙️ Dublagem com IA (ElevenLabs) — voz lê o hook e o CTA automaticamente
-          </label>
+        <div className="bg-purple-50 border border-purple-200 rounded-xl px-4 py-3 space-y-3">
+          <div className="flex items-center gap-3">
+            <input type="checkbox" id="dubbing" checked={dubbing} onChange={(e) => setDubbing(e.target.checked)}
+              className="w-4 h-4 accent-purple-600 cursor-pointer" />
+            <label htmlFor="dubbing" className="text-sm font-medium text-purple-900 cursor-pointer select-none">
+              🎙️ Dublagem com IA (ElevenLabs) — voz lê o hook e o CTA automaticamente
+            </label>
+          </div>
+          {dubbing && (
+            <div>
+              <p className="text-xs font-semibold text-purple-800 mb-2">Escolha a voz:</p>
+              <div className="flex gap-2 flex-wrap">
+                {STUDIO_VOICES.map((v) => (
+                  <button key={v.id} type="button" onClick={() => setVoiceId(v.id)}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${voiceId === v.id ? "text-white border-transparent" : "border-purple-300 text-purple-700 hover:border-purple-500 bg-white"}`}
+                    style={voiceId === v.id ? { background: STUDIO_COLOR } : {}}>
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Generate button */}

@@ -20,27 +20,40 @@ try {
 }
 
 export interface VideoGenerationParams {
-  imageUrls: string[];       // 1–5 image URLs
+  imageUrls: string[];       // 1–5 image URLs (absolute or /uploads/...)
   hookText?: string;         // Overlay text at the start (first 3s)
   ctaText?: string;          // Overlay text at the end (last 3s)
   durationPerImage?: number; // Seconds per image, default 4
   dubbing?: boolean;         // Se true, gera áudio com ElevenLabs lendo hook + CTA
+  voiceId?: string;          // ElevenLabs Voice ID override
 }
 
 export async function generateVideoFromImages(params: VideoGenerationParams): Promise<string> {
-  const { imageUrls, hookText = "", ctaText = "", durationPerImage = 4, dubbing = false } = params;
+  const { imageUrls, hookText = "", ctaText = "", durationPerImage = 4, dubbing = false, voiceId } = params;
 
   const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "feminnita-vid-"));
 
   try {
-    // Download each image to temp disk
+    // Download each image to temp disk — suporta URLs relativas /uploads/
+    const uploadsDir = path.resolve(process.cwd(), "uploads");
     const imagePaths: string[] = [];
     for (let i = 0; i < imageUrls.length; i++) {
-      const res = await fetch(imageUrls[i]);
-      if (!res.ok) throw new Error(`Imagem ${i + 1} não pôde ser baixada (${res.status})`);
-      const buf = Buffer.from(await res.arrayBuffer());
-      const ct = res.headers.get("content-type") || "image/jpeg";
-      const ext = ct.includes("png") ? ".png" : ct.includes("webp") ? ".webp" : ".jpg";
+      const url = imageUrls[i];
+      let buf: Buffer;
+      let ext = ".jpg";
+      if (url.startsWith("/uploads/")) {
+        // Leitura direta do disco — evita fetch de URL relativa
+        const localPath = path.join(uploadsDir, path.basename(url));
+        buf = await fs.readFile(localPath);
+        const localExt = path.extname(url).toLowerCase();
+        if (localExt) ext = localExt;
+      } else {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`Imagem ${i + 1} não pôde ser baixada (${res.status})`);
+        buf = Buffer.from(await res.arrayBuffer());
+        const ct = res.headers.get("content-type") || "image/jpeg";
+        ext = ct.includes("png") ? ".png" : ct.includes("webp") ? ".webp" : ".jpg";
+      }
       const imgPath = path.join(tmpDir, `img${i}${ext}`);
       await fs.writeFile(imgPath, buf);
       imagePaths.push(imgPath);
@@ -54,7 +67,7 @@ export async function generateVideoFromImages(params: VideoGenerationParams): Pr
     if (dubbing && (hookText || ctaText)) {
       try {
         const dubbingText = [hookText, ctaText].filter(Boolean).join(". ");
-        const audioBuffer = await textToSpeech(dubbingText);
+        const audioBuffer = await textToSpeech(dubbingText, undefined, voiceId);
         audioPath = path.join(tmpDir, "dubbing.mp3");
         await fs.writeFile(audioPath, audioBuffer);
       } catch (err: any) {

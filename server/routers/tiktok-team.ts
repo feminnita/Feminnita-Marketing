@@ -256,6 +256,7 @@ export const tiktokTeamRouter = router({
       ctaText: z.string().max(80).default(""),
       durationPerImage: z.number().int().min(2).max(8).default(4),
       dubbing: z.boolean().default(false),
+      voiceId: z.string().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
@@ -281,6 +282,7 @@ export const tiktokTeamRouter = router({
             ctaText: input.ctaText,
             durationPerImage: input.durationPerImage,
             dubbing: input.dubbing,
+            voiceId: input.voiceId,
           });
 
           await db.update(tiktokVideos).set({

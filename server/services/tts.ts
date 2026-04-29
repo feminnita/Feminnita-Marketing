@@ -54,10 +54,10 @@ function prepareForSpeech(text: string): string {
     .replace(/#{1,3}\s/g, "");
 }
 
-export async function textToSpeech(text: string, agentName?: string): Promise<Buffer> {
+export async function textToSpeech(text: string, agentName?: string, voiceIdOverride?: string): Promise<Buffer> {
   if (!ELEVENLABS_API_KEY) throw new Error("ELEVENLABS_API_KEY não configurado");
 
-  const voiceId = getVoiceId(agentName);
+  const voiceId = voiceIdOverride || getVoiceId(agentName);
   text = prepareForSpeech(text);
 
   const res = await fetch(
