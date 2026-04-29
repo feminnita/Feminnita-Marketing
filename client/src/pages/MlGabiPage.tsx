@@ -244,10 +244,16 @@ export default function MlGabiPage() {
             <textarea
               ref={textareaRef}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => {
+                setInput(e.target.value);
+                const el = e.target;
+                el.style.height = "auto";
+                el.style.height = Math.min(el.scrollHeight, 160) + "px";
+              }}
               onKeyDown={handleKeyDown}
               placeholder={`Pergunte à Gabi sobre anúncios ou Ads ${account === "fnt" ? "(Conta B)" : "(Conta A)"}...`}
-              className="flex-1 resize-none bg-transparent outline-none text-base text-slate-800 placeholder-slate-400 min-h-[24px] max-h-[160px]"
+              className="flex-1 resize-none bg-transparent outline-none text-base text-slate-800 placeholder-slate-400"
+              style={{ minHeight: 24, maxHeight: 160, overflowY: "auto" }}
               rows={1}
             />
             <button
