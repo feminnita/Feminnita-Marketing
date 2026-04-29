@@ -382,10 +382,10 @@ export default function ChatPage() {
                   return (
                     <div key={m.id || i} style={{ marginTop: showHeader ? 8 : 0 }}>
                       {showHeader && <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: isMe ? "#8B2635" : (m.color ?? "#94a3b8") }}>{m.name}{isMe ? " (você)" : ""}</span>
-                        <span style={{ fontSize: 10, color: "#475569" }}>{new Date(m.ts).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: isMe ? "#8B2635" : (m.color ?? "#94a3b8") }}>{m.name}{isMe ? " (você)" : ""}</span>
+                        <span style={{ fontSize: 12, color: "#475569" }}>{new Date(m.ts).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
                       </div>}
-                      <div style={{ fontSize: 13, lineHeight: 1.55, color: "#e2e8f0", wordBreak: "break-word" }}>{renderMsgText(m.text)}</div>
+                      <div style={{ fontSize: 15, lineHeight: 1.55, color: "#e2e8f0", wordBreak: "break-word" }}>{renderMsgText(m.text)}</div>
                     </div>
                   );
                 })}
@@ -403,7 +403,7 @@ export default function ChatPage() {
                     <div key={i} style={{ marginTop: 8, display: "flex", flexDirection: isMe ? "row-reverse" : "row", alignItems: "flex-start", gap: 6 }}>
                       {!isMe && <Avatar c={contact} size={26} />}
                       <div style={{ maxWidth: "82%", background: isMe ? "#8B2635" : "#1a2f48", borderRadius: isMe ? "12px 12px 2px 12px" : "12px 12px 12px 2px", padding: "8px 11px" }}>
-                        <div style={{ fontSize: 12.5, lineHeight: 1.6, color: "#e2e8f0", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{m.text}</div>
+                        <div style={{ fontSize: 14.5, lineHeight: 1.6, color: "#e2e8f0", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{m.text}</div>
                         <div style={{ fontSize: 10, color: "rgba(255,255,255,.35)", marginTop: 4, textAlign: isMe ? "right" : "left" }}>{new Date(m.ts).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div>
                       </div>
                     </div>
@@ -430,7 +430,7 @@ export default function ChatPage() {
                     <div key={i} style={{ marginTop: 8, display: "flex", flexDirection: isMe ? "row-reverse" : "row", alignItems: "flex-start", gap: 6 }}>
                       {!isMe && <Avatar c={contact} size={26} />}
                       <div style={{ maxWidth: "82%", background: isMe ? "#8B2635" : "#1a2f48", borderRadius: isMe ? "12px 12px 2px 12px" : "12px 12px 12px 2px", padding: "8px 11px" }}>
-                        <div style={{ fontSize: 12.5, lineHeight: 1.6, color: "#e2e8f0", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{renderMsgText(m.text)}</div>
+                        <div style={{ fontSize: 14.5, lineHeight: 1.6, color: "#e2e8f0", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{renderMsgText(m.text)}</div>
                         <div style={{ fontSize: 10, color: "rgba(255,255,255,.35)", marginTop: 4, textAlign: isMe ? "right" : "left" }}>{new Date(m.ts).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div>
                       </div>
                     </div>

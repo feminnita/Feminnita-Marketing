@@ -163,21 +163,19 @@ export function initializeWebSocket(httpServer: HTTPServer) {
         } as any).catch(() => {});
       });
 
-      // Push para destinatário offline
-      if (!isUserConnected(toUserIdNum)) {
-        getDb().then(db => {
-          if (!db) return;
-          db.select().from(pushSubscriptions).where(eq(pushSubscriptions.userId, toUserIdNum))
-            .then(subs => {
-              for (const sub of subs) {
-                sendPush(
-                  { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-                  { title: `💬 ${senderName}`, body: safe.slice(0, 120), url: "/chat" }
-                ).catch(() => {});
-              }
-            });
-        });
-      }
+      // Push sempre enviado para DMs — usuário pode estar em outra aba com socket ativo
+      getDb().then(db => {
+        if (!db) return;
+        db.select().from(pushSubscriptions).where(eq(pushSubscriptions.userId, toUserIdNum))
+          .then(subs => {
+            for (const sub of subs) {
+              sendPush(
+                { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+                { title: `💬 ${senderName}`, body: safe.slice(0, 120), url: "/chat" }
+              ).catch(() => {});
+            }
+          });
+      });
     });
 
     // Chat: send message

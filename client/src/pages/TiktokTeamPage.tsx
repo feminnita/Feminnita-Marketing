@@ -660,11 +660,12 @@ function VideoStudio() {
                         )}
                         <p className="absolute bottom-0 inset-x-0 bg-black/50 text-white text-xs px-1 py-0.5 truncate">{asset.name}</p>
                       </button>
-                      {/* Botão deletar do banco */}
+                      {/* Botão deletar do banco — clique duplo para confirmar */}
                       <button
-                        onClick={(e) => { e.stopPropagation(); if (confirm(`Remover "${asset.name}" do banco?`)) deleteAssetMut.mutate({ id: asset.id }); }}
+                        onDoubleClick={(e) => { e.stopPropagation(); deleteAssetMut.mutate({ id: asset.id }); }}
+                        onClick={(e) => e.stopPropagation()}
                         className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 rounded-full p-0.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
-                        title="Remover do banco de imagens"
+                        title="Duplo clique para remover do banco de imagens"
                       >
                         <X className="w-3 h-3 text-white" />
                       </button>
