@@ -34,7 +34,16 @@ export default function ChatWidget() {
       }
       if (e.data?.type === "chat:notify") {
         if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-          new Notification(e.data.title ?? "Chat", { body: e.data.body, icon: "/favicon.ico" });
+          // Usa service worker para notificação — funciona em segundo plano
+          if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.ready.then(reg => {
+              reg.showNotification(e.data.title ?? "Chat", { body: e.data.body, icon: "/favicon.ico", tag: "chat-dm" });
+            }).catch(() => {
+              new Notification(e.data.title ?? "Chat", { body: e.data.body, icon: "/favicon.ico" });
+            });
+          } else {
+            new Notification(e.data.title ?? "Chat", { body: e.data.body, icon: "/favicon.ico" });
+          }
         }
       }
     }
