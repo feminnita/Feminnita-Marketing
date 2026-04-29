@@ -112,6 +112,29 @@ async function startServer() {
   
   // Baileys debug routes
   setupBaileysDebugRoutes(app);
+
+  // Upload de mídias (imagens/vídeos) para o Studio
+  {
+    const multer = (await import("multer")).default;
+    const pathMod = await import("path");
+    const fsMod = await import("fs");
+    const cryptoMod = await import("crypto");
+    const uploadsDir = pathMod.default.resolve(process.cwd(), "uploads");
+    if (!fsMod.default.existsSync(uploadsDir)) fsMod.default.mkdirSync(uploadsDir, { recursive: true });
+    const storage = multer.diskStorage({
+      destination: (_req, _file, cb) => cb(null, uploadsDir),
+      filename: (_req, file, cb) => {
+        const ext = pathMod.default.extname(file.originalname) || ".jpg";
+        cb(null, `${Date.now()}-${cryptoMod.default.randomBytes(6).toString("hex")}${ext}`);
+      },
+    });
+    const upload = multer({ storage, limits: { fileSize: 20 * 1024 * 1024 } });
+    app.post("/api/upload/media", upload.single("file"), (req: any, res: any) => {
+      if (!req.file) return res.status(400).json({ error: "Nenhum arquivo enviado" });
+      res.json({ url: `/uploads/${req.file.filename}`, name: req.file.originalname });
+    });
+  }
+
   // tRPC API
   app.use(
     "/api/trpc",
