@@ -459,22 +459,27 @@ export const appRouter = router({
     history: protectedProcedure
       .input(z.object({ withUserId: z.number() }))
       .query(async ({ ctx, input }) => {
-        const dbConn = await getDb();
-        if (!dbConn) return [];
-        const { or, and, eq, desc } = await import("drizzle-orm");
-        const { directMessages } = await import("../drizzle/schema");
-        const msgs = await dbConn
-          .select()
-          .from(directMessages)
-          .where(
-            or(
-              and(eq(directMessages.fromUserId, ctx.user.id), eq(directMessages.toUserId, input.withUserId)),
-              and(eq(directMessages.fromUserId, input.withUserId), eq(directMessages.toUserId, ctx.user.id)),
+        try {
+          const dbConn = await getDb();
+          if (!dbConn) return [];
+          const { or, and, eq, desc } = await import("drizzle-orm");
+          const { directMessages } = await import("../drizzle/schema");
+          const msgs = await dbConn
+            .select()
+            .from(directMessages)
+            .where(
+              or(
+                and(eq(directMessages.fromUserId, ctx.user.id), eq(directMessages.toUserId, input.withUserId)),
+                and(eq(directMessages.fromUserId, input.withUserId), eq(directMessages.toUserId, ctx.user.id)),
+              )
             )
-          )
-          .orderBy(desc(directMessages.createdAt))
-          .limit(50);
-        return msgs.reverse();
+            .orderBy(desc(directMessages.createdAt))
+            .limit(50);
+          return msgs.reverse();
+        } catch (err) {
+          console.error("[dm.history] Erro ao buscar mensagens:", err);
+          return [];
+        }
       }),
   }),
 });
