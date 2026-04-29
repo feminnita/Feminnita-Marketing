@@ -33,7 +33,11 @@ async function registerPush(vapidKey: string, subscribeFn: (s: { endpoint: strin
 }
 
 function notify(title: string, body: string) {
-  // Delega ao pai — iframes não podem criar Notification diretamente na maioria dos browsers
+  // Notificação direta — funciona em iframes mesma origin
+  if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+    new Notification(title, { body, icon: "/favicon.ico" });
+  }
+  // Badge no ChatWidget pai
   window.parent?.postMessage({ type: "chat:notify", title, body }, "*");
 }
 
