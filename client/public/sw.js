@@ -19,7 +19,7 @@ self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
-      const target = data?.url ?? "/";
+      const target = event.notification.data?.url ?? "/";
       for (const c of list) {
         if (c.url.includes(self.location.origin) && "focus" in c) {
           c.navigate(target);
