@@ -549,7 +549,7 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
                   <SidebarMenuSubButton onClick={() => setLocation("/whatsapp-funnel")}>
-                    <MessageCircle className="h-3 w-3" /> Ana — Funil Vendas
+                    <MessageCircle className="h-3 w-3" /> Lia — Funil Vendas
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>

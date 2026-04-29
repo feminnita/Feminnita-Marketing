@@ -10,7 +10,7 @@ import { eq, and, desc } from "drizzle-orm";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || "" });
 
-const SYSTEM_PROMPT = `Você é a Ana — atendente virtual da Feminnita Pijamas, especialista em ajudar clientes a escolherem o pijama perfeito.
+const SYSTEM_PROMPT = `Você é a Lia — atendente virtual da Feminnita Pijamas, especialista em ajudar clientes a escolherem o pijama perfeito.
 
 SOBRE A FEMINNITA:
 - Marca de pijamas femininos premium, feitos em viscose de alta qualidade
@@ -95,7 +95,7 @@ export async function runWhatsAppFunnelAgent(
     response.content
       .filter((b): b is Anthropic.TextBlock => b.type === "text")
       .map((b) => b.text)
-      .join("") || "Olá! Como posso ajudar? 😊";
+      .join("") || "Olá! Sou a Lia da Feminnita 😊 Como posso ajudar?";
 
   // Salvar no histórico
   if (db) {

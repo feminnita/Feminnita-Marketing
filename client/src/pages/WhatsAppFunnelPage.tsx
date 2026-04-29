@@ -63,7 +63,7 @@ export default function WhatsAppFunnelPage() {
         </div>
         <div>
           <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#f1f5f9" }}>
-            Ana — Atendente WhatsApp
+            Lia — Atendente WhatsApp
           </h1>
           <p style={{ margin: 0, fontSize: 13, color: "#94a3b8" }}>
             Funil de vendas automatizado com IA via Meta Cloud API
@@ -80,7 +80,7 @@ export default function WhatsAppFunnelPage() {
         <Bot size={28} color="#22c55e" style={{ flexShrink: 0, marginTop: 2 }} />
         <div>
           <div style={{ color: "#f1f5f9", fontWeight: 600, fontSize: 15, marginBottom: 6 }}>
-            O que a Ana faz
+            O que a Lia faz
           </div>
           <ul style={{ margin: 0, padding: "0 0 0 18px", color: "#94a3b8", fontSize: 13, lineHeight: 1.8 }}>
             <li>Responde clientes automaticamente assim que chegam mensagens</li>
@@ -163,7 +163,7 @@ export default function WhatsAppFunnelPage() {
         </h2>
         <p style={{ margin: 0, color: "#94a3b8", fontSize: 13, lineHeight: 1.7 }}>
           Após configurar, envie uma mensagem de texto para o número WhatsApp da Feminnita.
-          A Ana deve responder em até 5 segundos. Se não responder, verifique os logs:{" "}
+          A Lia deve responder em até 5 segundos. Se não responder, verifique os logs:{" "}
           <code style={{ background: "#0f172a", padding: "2px 8px", borderRadius: 4, color: "#94a3b8" }}>
             journalctl -u marketing -f | grep "WA Funnel"
           </code>
