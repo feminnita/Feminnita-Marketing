@@ -15,15 +15,212 @@ const GRAPH_BASE = "https://graph.facebook.com/v20.0";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-async function metaPost(path: string, body: Record<string, any>): Promise<any> {
+function getToken(token?: string) { return token || META_TOKEN; }
+function getAccount(account?: string) { return account || AD_ACCOUNT_ID; }
+
+async function metaPost(path: string, body: Record<string, any>, token?: string): Promise<any> {
   const res = await fetch(`${GRAPH_BASE}/${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...body, access_token: META_TOKEN }),
+    body: JSON.stringify({ ...body, access_token: getToken(token) }),
   });
   const data = await res.json() as any;
   if (data.error) throw new Error(`Meta API: ${data.error.message} (código ${data.error.code})`);
   return data;
+}
+
+async function metaGet(path: string, params: Record<string, string> = {}, token?: string): Promise<any> {
+  const qs = new URLSearchParams({ ...params, access_token: getToken(token) }).toString();
+  const res = await fetch(`${GRAPH_BASE}/${path}?${qs}`);
+  const data = await res.json() as any;
+  if (data.error) throw new Error(`Meta API: ${data.error.message} (código ${data.error.code})`);
+  return data;
+}
+
+// ─── Leitura de dados ─────────────────────────────────────────────────────────
+
+export async function getCampaigns(token?: string, adAccountId?: string): Promise<string> {
+  const account = getAccount(adAccountId);
+  const data = await metaGet(`${account}/campaigns`, {
+    fields: "id,name,status,objective,daily_budget,lifetime_budget",
+    limit: "30",
+  }, token);
+
+  const campaigns = (data.data || []) as any[];
+  if (!campaigns.length) return "Nenhuma campanha encontrada na conta.";
+
+  const lines = campaigns.map((c: any) => {
+    const budget = c.daily_budget
+      ? `R$${(c.daily_budget / 100).toFixed(2)}/dia`
+      : c.lifetime_budget
+      ? `R$${(c.lifetime_budget / 100).toFixed(2)} total`
+      : "sem orçamento";
+    return `• [${c.id}] "${c.name}" | ${c.status} | ${c.objective} | ${budget}`;
+  });
+
+  return `CAMPANHAS (${campaigns.length}):\n${lines.join("\n")}`;
+}
+
+export async function getAdSets(campaignId: string, token?: string): Promise<string> {
+  const data = await metaGet(`${campaignId}/adsets`, {
+    fields: "id,name,status,daily_budget,targeting,optimization_goal",
+    limit: "20",
+  }, token);
+
+  const adsets = (data.data || []) as any[];
+  if (!adsets.length) return "Nenhum conjunto de anúncios encontrado.";
+
+  const lines = adsets.map((a: any) => {
+    const budget = a.daily_budget ? `R$${(a.daily_budget / 100).toFixed(2)}/dia` : "—";
+    return `• [${a.id}] "${a.name}" | ${a.status} | Budget: ${budget}`;
+  });
+
+  return `CONJUNTOS DE ANÚNCIOS:\n${lines.join("\n")}`;
+}
+
+export async function getAccountInsights(token?: string, adAccountId?: string): Promise<string> {
+  const account = getAccount(adAccountId);
+  const data = await metaGet(`${account}/insights`, {
+    fields: "campaign_name,adset_name,spend,impressions,clicks,actions,action_values,roas",
+    level: "adset",
+    date_preset: "last_7d",
+    limit: "20",
+  }, token);
+
+  const rows = (data.data || []) as any[];
+  if (!rows.length) return "Sem dados de performance nos últimos 7 dias.";
+
+  const lines = rows.map((r: any) => {
+    const purchases = (r.actions || []).find((a: any) => a.action_type === "purchase")?.value || "0";
+    const revenue = (r.action_values || []).find((a: any) => a.action_type === "purchase")?.value || "0";
+    const roas = r.spend > 0 ? (parseFloat(revenue) / parseFloat(r.spend)).toFixed(1) : "—";
+    return `• "${r.adset_name}" | Gasto: R$${parseFloat(r.spend || 0).toFixed(2)} | Compras: ${purchases} | Receita: R$${parseFloat(revenue).toFixed(2)} | ROAS: ${roas}x`;
+  });
+
+  return `PERFORMANCE (últimos 7 dias):\n${lines.join("\n")}`;
+}
+
+export async function getCustomAudiences(token?: string, adAccountId?: string): Promise<string> {
+  const account = getAccount(adAccountId);
+  const data = await metaGet(`${account}/customaudiences`, {
+    fields: "id,name,approximate_count,subtype",
+    limit: "30",
+  }, token);
+
+  const audiences = (data.data || []) as any[];
+  if (!audiences.length) return "Nenhum público personalizado encontrado.";
+
+  const lines = audiences.map((a: any) =>
+    `• [${a.id}] "${a.name}" | ${a.subtype} | ~${a.approximate_count?.toLocaleString("pt-BR") || "?"} pessoas`
+  );
+
+  return `PÚBLICOS PERSONALIZADOS (${audiences.length}):\n${lines.join("\n")}`;
+}
+
+// ─── Criação de públicos ──────────────────────────────────────────────────────
+
+export async function createPixelAudience(params: {
+  name: string;
+  pixelId: string;
+  event: string;          // AddToCart | InitiateCheckout | PageView | Purchase
+  retentionDays: number;
+  excludeEvent?: string;  // ex: "Purchase" para excluir quem já comprou
+  token?: string;
+  adAccountId?: string;
+}): Promise<string> {
+  const account = getAccount(params.adAccountId);
+
+  const rule: any = {
+    inclusions: {
+      operator: "or",
+      rules: [{
+        event_sources: [{ id: params.pixelId, type: "pixel" }],
+        retention_seconds: params.retentionDays * 86400,
+        filter: { operator: "and", filters: [{ field: "event", operator: "=", value: params.event }] },
+      }],
+    },
+  };
+
+  if (params.excludeEvent) {
+    rule.exclusions = {
+      operator: "or",
+      rules: [{
+        event_sources: [{ id: params.pixelId, type: "pixel" }],
+        retention_seconds: params.retentionDays * 86400,
+        filter: { operator: "and", filters: [{ field: "event", operator: "=", value: params.excludeEvent }] },
+      }],
+    };
+  }
+
+  const data = await metaPost(`${account}/customaudiences`, {
+    name: params.name,
+    subtype: "WEBSITE",
+    rule: JSON.stringify(rule),
+    pixel_id: params.pixelId,
+  }, params.token);
+
+  return `Público "${params.name}" criado com sucesso (ID: ${data.id}).`;
+}
+
+export async function createEngagementAudience(params: {
+  name: string;
+  igUserId: string;
+  retentionDays: number;
+  token?: string;
+  adAccountId?: string;
+}): Promise<string> {
+  const account = getAccount(params.adAccountId);
+
+  const data = await metaPost(`${account}/customaudiences`, {
+    name: params.name,
+    subtype: "ENGAGEMENT",
+    rule: JSON.stringify({
+      inclusions: {
+        operator: "or",
+        rules: [{
+          event_sources: [{ id: params.igUserId, type: "ig_business" }],
+          retention_seconds: params.retentionDays * 86400,
+          filter: { operator: "and", filters: [{ field: "event", operator: "=", value: "ig_business_profile_all" }] },
+        }],
+      },
+    }),
+  }, params.token);
+
+  return `Público de engajamento IG "${params.name}" criado (ID: ${data.id}).`;
+}
+
+// ─── Duplicar conjunto de anúncios ────────────────────────────────────────────
+
+export async function duplicateAdSet(params: {
+  adSetId: string;
+  newName: string;
+  audienceIds?: string[];   // IDs de públicos personalizados para o novo conjunto
+  dailyBudgetReais?: number;
+  token?: string;
+}): Promise<string> {
+  // Copia o ad set
+  const copyData = await metaPost(`${params.adSetId}/copies`, {
+    rename_options: JSON.stringify({ rename_prefix: "", rename_suffix: " - Cópia" }),
+    status_option: "PAUSED",
+  }, params.token);
+
+  const newAdSetId = copyData.copied_adset_id || copyData.id;
+  if (!newAdSetId) throw new Error("ID do conjunto duplicado não retornado pela API");
+
+  // Renomeia e atualiza o conjunto
+  const updateBody: Record<string, any> = { name: params.newName };
+  if (params.dailyBudgetReais) {
+    updateBody.daily_budget = Math.round(params.dailyBudgetReais * 100);
+  }
+  if (params.audienceIds && params.audienceIds.length > 0) {
+    updateBody.targeting = JSON.stringify({
+      custom_audiences: params.audienceIds.map(id => ({ id })),
+    });
+  }
+
+  await metaPost(newAdSetId, updateBody, params.token);
+
+  return `Conjunto duplicado: "${params.newName}" (ID: ${newAdSetId}) | Status: PAUSADO. Revise os públicos e publique quando pronto.`;
 }
 
 // ─── Ações individuais ────────────────────────────────────────────────────────

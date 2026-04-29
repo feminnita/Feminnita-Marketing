@@ -13,7 +13,17 @@ import Anthropic from "@anthropic-ai/sdk";
 import { buildMemoryContext } from "../services/agentMemory";
 import { searchWeb } from "../services/webSearch";
 import { fetchAllPlatformMetrics, formatPlatformSummary } from "../services/marketplaceAds";
-import { executeMetaAction } from "./fernanda-executor";
+import {
+  executeMetaAction,
+  getCampaigns,
+  getAdSets,
+  getAccountInsights,
+  getCustomAudiences,
+  createPixelAudience,
+  createEngagementAudience,
+  duplicateAdSet,
+  updateAdSetBudget,
+} from "./fernanda-executor";
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || "",
@@ -116,6 +126,81 @@ const FERNANDA_META_TOOLS: Anthropic.Tool[] = [
       required: ["name", "objective", "dailyBudgetReais"],
     },
   },
+  {
+    name: "meta_get_ad_sets",
+    description: "Lista os conjuntos de anúncios (ad sets) de uma campanha com orçamento, status e performance. Use para ver o estado atual antes de editar.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        campaignId: { type: "string", description: "ID da campanha (obtido via meta_get_campaigns)" },
+      },
+      required: ["campaignId"],
+    },
+  },
+  {
+    name: "meta_get_insights",
+    description: "Busca performance detalhada (ROAS, gasto, compras, receita) por conjunto de anúncios nos últimos 7 dias.",
+    input_schema: { type: "object" as const, properties: {}, required: [] },
+  },
+  {
+    name: "meta_get_audiences",
+    description: "Lista todos os públicos personalizados da conta (pixel, engajamento IG, listas). Use para ver o que já existe antes de criar novos.",
+    input_schema: { type: "object" as const, properties: {}, required: [] },
+  },
+  {
+    name: "meta_create_pixel_audience",
+    description: "Cria um público personalizado baseado em evento do pixel (ex: AddToCart, InitiateCheckout, PageView). Pode excluir quem já comprou.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        name: { type: "string", description: "Nome do público (ex: [RMK] Carrinho Abandonado - 60d)" },
+        pixelId: { type: "string", description: "ID do pixel Meta" },
+        event: { type: "string", description: "Evento: AddToCart | InitiateCheckout | PageView | Purchase" },
+        retentionDays: { type: "number", description: "Janela de retenção em dias (ex: 30, 60, 90)" },
+        excludeEvent: { type: "string", description: "Evento para excluir (ex: Purchase para excluir quem já comprou)" },
+      },
+      required: ["name", "pixelId", "event", "retentionDays"],
+    },
+  },
+  {
+    name: "meta_create_ig_engagement_audience",
+    description: "Cria um público de quem engajou com o perfil do Instagram da conta.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        name: { type: "string", description: "Nome do público (ex: [RMK] Engajamento IG - 30d)" },
+        igUserId: { type: "string", description: "ID do perfil Instagram" },
+        retentionDays: { type: "number", description: "Janela de retenção em dias" },
+      },
+      required: ["name", "igUserId", "retentionDays"],
+    },
+  },
+  {
+    name: "meta_duplicate_ad_set",
+    description: "Duplica um conjunto de anúncios e opcionalmente atribui novos públicos personalizados e novo orçamento. Criado sempre PAUSADO.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        adSetId: { type: "string", description: "ID do conjunto a duplicar" },
+        newName: { type: "string", description: "Nome do novo conjunto" },
+        audienceIds: { type: "array", items: { type: "string" }, description: "IDs dos públicos personalizados para o novo conjunto" },
+        dailyBudgetReais: { type: "number", description: "Orçamento diário em R$ para o novo conjunto" },
+      },
+      required: ["adSetId", "newName"],
+    },
+  },
+  {
+    name: "meta_update_ad_set_budget",
+    description: "Atualiza o orçamento diário de um conjunto de anúncios específico. Use para escalar sem reiniciar a fase de aprendizado (aumento máximo de 20%).",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        adSetId: { type: "string", description: "ID do conjunto de anúncios" },
+        dailyBudgetReais: { type: "number", description: "Novo orçamento diário em R$" },
+      },
+      required: ["adSetId", "dailyBudgetReais"],
+    },
+  },
 ];
 
 async function fetchMetaCampaigns(): Promise<string> {
@@ -216,6 +301,50 @@ async function executeSpecialistTool(
     });
   }
 
+  if (name === "meta_get_ad_sets") {
+    return getAdSets(input.campaignId);
+  }
+
+  if (name === "meta_get_insights") {
+    return getAccountInsights();
+  }
+
+  if (name === "meta_get_audiences") {
+    return getCustomAudiences();
+  }
+
+  if (name === "meta_create_pixel_audience") {
+    return createPixelAudience({
+      name: input.name,
+      pixelId: input.pixelId || process.env.META_PIXEL_ID || "",
+      event: input.event,
+      retentionDays: input.retentionDays,
+      excludeEvent: input.excludeEvent,
+    });
+  }
+
+  if (name === "meta_create_ig_engagement_audience") {
+    return createEngagementAudience({
+      name: input.name,
+      igUserId: input.igUserId || process.env.META_IG_ACCOUNT_ID || "",
+      retentionDays: input.retentionDays,
+    });
+  }
+
+  if (name === "meta_duplicate_ad_set") {
+    return duplicateAdSet({
+      adSetId: input.adSetId,
+      newName: input.newName,
+      audienceIds: input.audienceIds,
+      dailyBudgetReais: input.dailyBudgetReais,
+    });
+  }
+
+  if (name === "meta_update_ad_set_budget") {
+    await updateAdSetBudget(input.adSetId, input.dailyBudgetReais);
+    return `Orçamento do conjunto ${input.adSetId} atualizado para R$${input.dailyBudgetReais}/dia.`;
+  }
+
   return JSON.stringify({ error: `Ferramenta desconhecida: ${name}` });
 }
 
@@ -248,25 +377,32 @@ ${FEMINNITA_CONTEXT}
 - Budget diário atual: R$50/dia (R$1.500/mês) — meta: ROAS ≥ 4x, CPA ≤ R$80
 
 ═══ O QUE VOCÊ FAZ NESTE CHAT ═══
-Você analisa E executa. Você tem acesso direto à conta Meta Ads da Feminnita para:
-- Ver campanhas, orçamentos e métricas reais em tempo real
-- Atualizar orçamento diário de campanhas
-- Pausar ou reativar campanhas
-- Criar novas campanhas (sempre criadas PAUSADAS para revisão)
+Você analisa E executa. Você tem acesso direto à conta Meta Ads para:
+- Ver campanhas, conjuntos de anúncios, públicos e métricas reais (ROAS, gasto, compras)
+- Criar públicos personalizados de pixel (carrinho abandonado, checkout, visitantes) e engajamento IG
+- Atualizar orçamento de conjuntos de anúncios (escala segura de até 20%)
+- Duplicar conjuntos de anúncios com novos públicos
+- Pausar/reativar campanhas e criar novas campanhas
 
-FLUXO OBRIGATÓRIO ANTES DE EXECUTAR:
-1. Use meta_get_campaigns para ver o estado atual da conta
-2. Analise os dados e proponha a ação ao usuário com justificativa
-3. Execute SOMENTE após o usuário confirmar explicitamente ("pode fazer", "vai", "confirma", "sim")
-4. Relate o resultado da execução
+FLUXO OBRIGATÓRIO:
+1. Use meta_get_campaigns + meta_get_insights para ver o estado real da conta
+2. Analise os dados, identifique oportunidades e proponha as ações com justificativa
+3. Execute SOMENTE após confirmação explícita ("pode fazer", "vai", "confirma", "sim")
+4. Relate o resultado de cada ação executada
 
 FERRAMENTAS DISPONÍVEIS:
-- meta_get_campaigns: lista campanhas com ID, status, orçamento e métricas reais
-- meta_update_budget: atualiza orçamento diário (requer confirmação do usuário)
-- meta_pause_campaign: pausa uma campanha (requer confirmação)
-- meta_resume_campaign: reativa uma campanha pausada (requer confirmação)
-- meta_create_campaign: cria nova campanha pausada (requer confirmação)
-- search_web: benchmarks de Meta Ads, tendências de criativos, novidades da plataforma
+- meta_get_campaigns: campanhas com ID, status, orçamento
+- meta_get_ad_sets: conjuntos de anúncios de uma campanha com budget e status
+- meta_get_insights: ROAS, gasto, compras e receita por conjunto (últimos 7 dias)
+- meta_get_audiences: públicos personalizados existentes na conta
+- meta_create_pixel_audience: cria público de pixel (AddToCart, InitiateCheckout, PageView) com exclusões
+- meta_create_ig_engagement_audience: cria público de engajamento Instagram
+- meta_duplicate_ad_set: duplica conjunto com novos públicos e orçamento
+- meta_update_ad_set_budget: ajusta orçamento de conjunto (use aumento de até 20% para não reiniciar aprendizado)
+- meta_update_budget: atualiza orçamento de campanha
+- meta_pause_campaign / meta_resume_campaign: pausa ou reativa campanha
+- meta_create_campaign: cria nova campanha (sempre PAUSADA)
+- search_web: benchmarks, tendências e novidades de Meta Ads
 
 FORMATO DA RESPOSTA: SEMPRE responda em texto natural, português BR. NUNCA retorne JSON bruto. O único bloco estruturado permitido é o <<<ACTION_START>>>...<<<ACTION_END>>>.
 
