@@ -93,6 +93,7 @@ export function initializeWebSocket(httpServer: HTTPServer) {
       const color = CHAT_COLORS[chatColorIdx % CHAT_COLORS.length];
       chatColorIdx++;
       chatUsers.set(socket.id, { name: safeName, color, userId });
+      console.log(`[Chat] JOIN — socket=${socket.id} name=${safeName} userId=${userId} totalOnline=${chatUsers.size}`);
       socket.emit("chat:history", chatHistory);
       broadcastChatUsers();
       pushChatMessage({ type: "system", id: `${Date.now()}`, text: `${safeName} entrou`, ts: Date.now() });
@@ -113,12 +114,32 @@ export function initializeWebSocket(httpServer: HTTPServer) {
         ts: Date.now(),
       };
       io!.to(`user_${toUserId}`).emit("dm:receive", msg);
+
+      // Push para destinatário offline
+      if (!isUserConnected(toUserId)) {
+        getDb().then(db => {
+          if (!db) return;
+          db.select().from(pushSubscriptions).where(eq(pushSubscriptions.userId, toUserId))
+            .then(subs => {
+              for (const sub of subs) {
+                sendPush(
+                  { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+                  { title: `💬 ${sender.name}`, body: safe.slice(0, 120), url: "/chat" }
+                ).catch(() => {});
+              }
+            });
+        });
+      }
     });
 
     // Chat: send message
     socket.on("chat:send", (text: unknown) => {
       const user = chatUsers.get(socket.id);
-      if (!user) return;
+      console.log(`[Chat] SEND — socket=${socket.id} user=${user?.name ?? "NÃO ENCONTRADO"} totalOnline=${chatUsers.size} io=${io ? "ok" : "null"}`);
+      if (!user) {
+        console.warn(`[Chat] SEND BLOQUEADO — socket ${socket.id} não está em chatUsers. Keys: ${[...chatUsers.keys()].slice(0,5).join(",")}`);
+        return;
+      }
       const safe = String(text ?? "").trim().slice(0, 1000);
       if (!safe) return;
       pushChatMessage({ type: "message", id: `${Date.now()}-${Math.random()}`, name: user.name, color: user.color, text: safe, ts: Date.now() });

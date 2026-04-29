@@ -135,10 +135,10 @@ export const metaCapiRouter = router({
 
         // Construir dados customizados
         const customData: MetaCustomData = {
-          currency: input.currency,
+          currency: input.currency ?? "BRL",
         };
 
-        if (input.value) {
+        if (input.value !== undefined) {
           customData.value = input.value;
         }
         if (input.contentName) {
@@ -275,10 +275,10 @@ export const metaCapiRouter = router({
           }
 
           const customData: MetaCustomData = {
-            currency: evt.currency,
+            currency: evt.currency ?? "BRL",
           };
 
-          if (evt.value) customData.value = evt.value;
+          if (evt.value !== undefined) customData.value = evt.value;
           if (evt.contentName) customData.content_name = evt.contentName;
 
           return {

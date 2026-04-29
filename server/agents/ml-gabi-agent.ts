@@ -8,7 +8,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { invokeLLM } from "../_core/llm";
 import { buildMemoryContext, saveMemory } from "../services/agentMemory";
 import { getLatestKnowledge } from "./knowledge-updater";
-import { listMLItems, pauseMLItem, activateMLItem, updateMLPrice, updateMLStock, getMLItemDetails, getMLCategoryAttributes, updateMLItemAttributes } from "./gabi-executor";
+import { listMLItems, pauseMLItem, activateMLItem, updateMLPrice, updateMLStock, getMLItemDetails, getMLCategoryAttributes, updateMLItemAttributes, listMLAdsCampaigns, pauseMLAdsCampaign, activateMLAdsCampaign, updateMLAdsBudget, getMLAdsCampaignStats } from "./gabi-executor";
 
 const AGENT_NAME = "gabi";
 
@@ -90,6 +90,61 @@ const GABI_ML_TOOLS: Anthropic.Tool[] = [
         categoryId: { type: "string", description: "ID da categoria (ex: MLB5765 — encontrado no ml_get_item_details)" },
       },
       required: ["categoryId"],
+    },
+  },
+  {
+    name: "ml_ads_list_campaigns",
+    description: "Lista todas as campanhas de Product Ads (anúncios patrocinados) da conta Feminnita com ID, nome, status e budget.",
+    input_schema: { type: "object" as const, properties: {}, required: [] },
+  },
+  {
+    name: "ml_ads_pause_campaign",
+    description: "Pausa uma campanha de Product Ads. Execute somente após confirmação do usuário.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        campaignId: { type: "string", description: "ID da campanha" },
+        campaignName: { type: "string", description: "Nome da campanha para confirmar" },
+      },
+      required: ["campaignId"],
+    },
+  },
+  {
+    name: "ml_ads_activate_campaign",
+    description: "Reativa uma campanha de Product Ads pausada. Execute somente após confirmação.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        campaignId: { type: "string", description: "ID da campanha" },
+        campaignName: { type: "string", description: "Nome da campanha" },
+      },
+      required: ["campaignId"],
+    },
+  },
+  {
+    name: "ml_ads_update_budget",
+    description: "Atualiza o budget diário de uma campanha de Product Ads. Execute somente após confirmação.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        campaignId: { type: "string", description: "ID da campanha" },
+        dailyBudget: { type: "number", description: "Novo budget diário em R$" },
+        campaignName: { type: "string", description: "Nome da campanha" },
+      },
+      required: ["campaignId", "dailyBudget"],
+    },
+  },
+  {
+    name: "ml_ads_campaign_stats",
+    description: "Busca métricas de uma campanha: impressões, cliques, CTR, gasto, CPC, conversões, ROAS.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        campaignId: { type: "string", description: "ID da campanha" },
+        dateFrom: { type: "string", description: "Data início YYYY-MM-DD" },
+        dateTo: { type: "string", description: "Data fim YYYY-MM-DD" },
+      },
+      required: ["campaignId", "dateFrom", "dateTo"],
     },
   },
   {
@@ -236,6 +291,16 @@ export async function chatWithGabi(
           result = await getMLCategoryAttributes(inp.categoryId, account);
         } else if (toolUse.name === "ml_update_item_attributes") {
           result = await updateMLItemAttributes(inp.itemId, inp.attributes, account);
+        } else if (toolUse.name === "ml_ads_list_campaigns") {
+          result = await listMLAdsCampaigns(account);
+        } else if (toolUse.name === "ml_ads_pause_campaign") {
+          result = await pauseMLAdsCampaign(inp.campaignId, account);
+        } else if (toolUse.name === "ml_ads_activate_campaign") {
+          result = await activateMLAdsCampaign(inp.campaignId, account);
+        } else if (toolUse.name === "ml_ads_update_budget") {
+          result = await updateMLAdsBudget(inp.campaignId, inp.dailyBudget, account);
+        } else if (toolUse.name === "ml_ads_campaign_stats") {
+          result = await getMLAdsCampaignStats(inp.campaignId, inp.dateFrom, inp.dateTo, account);
         } else {
           result = `Ferramenta desconhecida: ${toolUse.name}`;
         }

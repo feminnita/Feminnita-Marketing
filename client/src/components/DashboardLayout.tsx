@@ -500,7 +500,7 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
                   <SidebarMenuSubButton onClick={() => setLocation("/ml-gabi")}>
-                    <ShoppingBag className="h-3 w-3" /> ML — Gabi EDS
+                    <ShoppingBag className="h-3 w-3" /> ML — Gabi
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>

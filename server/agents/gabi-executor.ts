@@ -179,3 +179,80 @@ export async function updateMLItemAttributes(
   const names = attributes.map(a => `${a.id}="${a.value_name}"`).join(", ");
   return `Atributos de ${itemId} atualizados: ${names}`;
 }
+
+// ─── ML Ads (Product Ads) ─────────────────────────────────────────────────────
+
+const ML_ADS_ADVERTISER_ID = "140649";
+const ML_ADS_ACCOUNT_ID    = "150815";
+
+export async function listMLAdsCampaigns(account = "feminnita"): Promise<string> {
+  const token = getMLToken(account);
+  if (!token) throw new Error("ML_ACCESS_TOKEN não configurado");
+  console.log(`[GabiAds] listMLAdsCampaigns — advertiser=${ML_ADS_ADVERTISER_ID}`);
+
+  try {
+    const data = await mlGet(
+      `/advertising/advertisers/${ML_ADS_ADVERTISER_ID}/campaigns?account_id=${ML_ADS_ACCOUNT_ID}`,
+      token
+    );
+    const campaigns = Array.isArray(data) ? data : (data.campaigns || data.results || []);
+    if (campaigns.length === 0) return "Nenhuma campanha de Product Ads encontrada.";
+
+    const lines = campaigns.map((c: any) =>
+      `• ID: ${c.id} | "${c.name}" | Status: ${c.status} | Budget: R$${c.daily_budget ?? c.budget ?? "?"} | Gasto: R$${c.spent ?? "?"}`
+    ).join("\n");
+    return `CAMPANHAS ML PRODUCT ADS (advertiser ${ML_ADS_ADVERTISER_ID}):\n${lines}`;
+  } catch (e: any) {
+    return `Erro ao listar campanhas: ${e.message}`;
+  }
+}
+
+export async function pauseMLAdsCampaign(campaignId: string, account = "feminnita"): Promise<string> {
+  const token = getMLToken(account);
+  if (!token) throw new Error("ML_ACCESS_TOKEN não configurado");
+  console.log(`[GabiAds] pauseMLAdsCampaign — ${campaignId}`);
+  await mlPut(`/advertising/advertisers/${ML_ADS_ADVERTISER_ID}/campaigns/${campaignId}`, { status: "paused" }, token);
+  return `Campanha ${campaignId} pausada com sucesso.`;
+}
+
+export async function activateMLAdsCampaign(campaignId: string, account = "feminnita"): Promise<string> {
+  const token = getMLToken(account);
+  if (!token) throw new Error("ML_ACCESS_TOKEN não configurado");
+  console.log(`[GabiAds] activateMLAdsCampaign — ${campaignId}`);
+  await mlPut(`/advertising/advertisers/${ML_ADS_ADVERTISER_ID}/campaigns/${campaignId}`, { status: "active" }, token);
+  return `Campanha ${campaignId} reativada com sucesso.`;
+}
+
+export async function updateMLAdsBudget(campaignId: string, dailyBudget: number, account = "feminnita"): Promise<string> {
+  const token = getMLToken(account);
+  if (!token) throw new Error("ML_ACCESS_TOKEN não configurado");
+  console.log(`[GabiAds] updateMLAdsBudget — ${campaignId} R$${dailyBudget}`);
+  await mlPut(`/advertising/advertisers/${ML_ADS_ADVERTISER_ID}/campaigns/${campaignId}`, { daily_budget: dailyBudget }, token);
+  return `Budget da campanha ${campaignId} atualizado para R$${dailyBudget}/dia.`;
+}
+
+export async function getMLAdsCampaignStats(campaignId: string, dateFrom: string, dateTo: string, account = "feminnita"): Promise<string> {
+  const token = getMLToken(account);
+  if (!token) throw new Error("ML_ACCESS_TOKEN não configurado");
+  console.log(`[GabiAds] getMLAdsCampaignStats — ${campaignId} ${dateFrom}→${dateTo}`);
+
+  try {
+    const data = await mlGet(
+      `/advertising/advertisers/${ML_ADS_ADVERTISER_ID}/campaigns/${campaignId}/stats?date_from=${dateFrom}&date_to=${dateTo}&account_id=${ML_ADS_ACCOUNT_ID}`,
+      token
+    );
+    const s = data.summary || data;
+    return [
+      `STATS campanha ${campaignId} (${dateFrom} → ${dateTo}):`,
+      `Impressões: ${s.prints ?? s.impressions ?? "?"}`,
+      `Cliques: ${s.clicks ?? "?"}`,
+      `CTR: ${s.ctr ?? "?"}%`,
+      `Gasto: R$${s.cost ?? s.spent ?? "?"}`,
+      `CPC: R$${s.cpc ?? "?"}`,
+      `Conversões: ${s.conversions ?? "?"}`,
+      `ROAS: ${s.roas ?? "?"}`,
+    ].join("\n");
+  } catch (e: any) {
+    return `Erro ao buscar stats: ${e.message}`;
+  }
+}

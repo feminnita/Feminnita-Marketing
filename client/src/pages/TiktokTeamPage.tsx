@@ -507,7 +507,6 @@ const STUDIO_COLOR = "#8B5CF6";
 
 function VideoStudio() {
   const [selectedAssets, setSelectedAssets] = useState<Array<{id: number; name: string; url: string; thumbnailUrl?: string | null}>>([]);
-  const [showPicker, setShowPicker] = useState(false);
   const [hookText, setHookText] = useState("");
   const [ctaText, setCtaText] = useState("");
   const [durationPerImage, setDurationPerImage] = useState(4);
@@ -594,97 +593,64 @@ function VideoStudio() {
           />
         </div>
 
-        {/* Image picker do Banco de Imagens */}
+        {/* Image picker do Banco de Imagens — sempre visível */}
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="block text-xs font-semibold text-gray-600">
-              Imagens do produto ({selectedAssets.length}/5)
+              Imagens do produto — clique para selecionar ({selectedAssets.length}/5)
             </label>
-            <button
-              onClick={() => setShowPicker((v) => !v)}
-              className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-all"
-              style={showPicker
-                ? { background: STUDIO_COLOR, color: "#fff", borderColor: STUDIO_COLOR }
-                : { borderColor: "#e5e7eb", color: STUDIO_COLOR }}
-            >
-              <Plus className="w-3.5 h-3.5" />
-              {showPicker ? "Fechar" : "Banco de Imagens"}
-            </button>
+            {selectedAssets.length > 0 && (
+              <button
+                onClick={() => setSelectedAssets([])}
+                className="text-xs text-red-400 hover:text-red-600 transition-colors"
+              >
+                Limpar todas
+              </button>
+            )}
           </div>
 
-          {/* Thumbnails selecionadas */}
-          {selectedAssets.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3">
-              {selectedAssets.map((asset) => (
-                <div key={asset.id} className="relative group">
-                  <img
-                    src={asset.thumbnailUrl || asset.url}
-                    alt={asset.name}
-                    className="w-16 h-16 object-cover rounded-lg border-2 border-purple-400"
-                  />
-                  <button
-                    onClick={() => toggleAsset(asset)}
-                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <X className="w-3 h-3 text-white" />
-                  </button>
-                  <p className="text-xs text-gray-500 mt-0.5 w-16 truncate text-center">{asset.name}</p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {selectedAssets.length === 0 && !showPicker && (
-            <p className="text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-3 text-center">
-              Nenhuma imagem selecionada — clique em "Banco de Imagens" para escolher
-            </p>
-          )}
-
-          {/* Grade do banco */}
-          {showPicker && (
-            <div className="border border-gray-200 rounded-xl overflow-hidden">
-              {assetsQuery.isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-5 h-5 animate-spin" style={{ color: STUDIO_COLOR }} />
-                </div>
-              ) : (assetsQuery.data || []).length === 0 ? (
-                <div className="text-center py-8 text-sm text-gray-400">
-                  <p>Banco de imagens vazio.</p>
-                  <a href="/banco-imagens" className="underline text-xs mt-1 block" style={{ color: STUDIO_COLOR }}>
-                    Adicionar imagens
-                  </a>
-                </div>
-              ) : (
-                <div className="grid grid-cols-3 gap-2 p-3 max-h-64 overflow-y-auto">
-                  {(assetsQuery.data || []).map((asset: any) => {
-                    const isSelected = selectedAssets.some((a) => a.id === asset.id);
-                    return (
-                      <button
-                        key={asset.id}
-                        onClick={() => toggleAsset({ id: asset.id, name: asset.name, url: asset.url, thumbnailUrl: asset.thumbnailUrl })}
-                        className={`relative rounded-lg overflow-hidden border-2 transition-all aspect-square ${
-                          isSelected ? "border-purple-500 ring-2 ring-purple-300" : "border-transparent hover:border-gray-300"
-                        }`}
-                      >
-                        <img
-                          src={asset.thumbnailUrl || asset.url}
-                          alt={asset.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                        />
-                        {isSelected && (
-                          <div className="absolute inset-0 bg-purple-500/20 flex items-center justify-center">
-                            <CheckCircle className="w-6 h-6 text-purple-600" />
-                          </div>
-                        )}
-                        <p className="absolute bottom-0 inset-x-0 bg-black/50 text-white text-xs px-1 py-0.5 truncate">{asset.name}</p>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
+          <div className="border border-gray-200 rounded-xl overflow-hidden">
+            {assetsQuery.isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-5 h-5 animate-spin" style={{ color: STUDIO_COLOR }} />
+              </div>
+            ) : (assetsQuery.data || []).length === 0 ? (
+              <div className="text-center py-8 text-sm text-gray-400">
+                <p>Banco de imagens vazio.</p>
+                <a href="/banco-imagens" className="underline text-xs mt-1 block" style={{ color: STUDIO_COLOR }}>
+                  Adicionar imagens
+                </a>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-2 p-3 max-h-56 overflow-y-auto">
+                {(assetsQuery.data || []).map((asset: any) => {
+                  const isSelected = selectedAssets.some((a) => a.id === asset.id);
+                  return (
+                    <button
+                      key={asset.id}
+                      onClick={() => toggleAsset({ id: asset.id, name: asset.name, url: asset.url, thumbnailUrl: asset.thumbnailUrl })}
+                      className={`relative rounded-lg overflow-hidden border-2 transition-all aspect-square ${
+                        isSelected ? "border-purple-500 ring-2 ring-purple-300" : "border-transparent hover:border-gray-300"
+                      }`}
+                    >
+                      <img
+                        src={asset.thumbnailUrl || asset.url}
+                        alt={asset.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                      />
+                      {isSelected && (
+                        <div className="absolute inset-0 bg-purple-500/20 flex items-center justify-center">
+                          <CheckCircle className="w-6 h-6 text-purple-600" />
+                        </div>
+                      )}
+                      <p className="absolute bottom-0 inset-x-0 bg-black/50 text-white text-xs px-1 py-0.5 truncate">{asset.name}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Texts */}

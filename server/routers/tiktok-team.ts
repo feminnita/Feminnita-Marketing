@@ -265,7 +265,7 @@ export const tiktokTeamRouter = router({
         userId: ctx.user.id,
         title: input.title,
         source: "generated",
-        status: "processing",
+        status: "draft",
         createdAt: new Date(),
         updatedAt: new Date(),
       });

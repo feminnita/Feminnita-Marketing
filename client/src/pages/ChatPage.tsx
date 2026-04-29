@@ -79,7 +79,6 @@ export default function ChatPage() {
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   const [connected, setConnected]     = useState(false);
   const socketRef                     = useRef<Socket | null>(null);
-  const joinedRef                     = useRef(false);
 
   const [agentCtxs, setAgentCtxs]     = useState<Record<string, AgentCtx>>({});
   const [agentLoading, setAgentLoading] = useState<string | null>(null);
@@ -134,10 +133,8 @@ export default function ChatPage() {
     socket.on("connect", () => {
       setConnected(true);
       socket.emit("register-user", user.id);
-      if (!joinedRef.current) {
-        socket.emit("chat:join", { userId: user.id, name: (user as any).name || (user as any).email || "Usuário" });
-        joinedRef.current = true;
-      }
+      // Sempre re-emite chat:join em qualquer conexão/reconexão para garantir registro no servidor
+      socket.emit("chat:join", { userId: user.id, name: (user as any).name || (user as any).email || "Usuário" });
     });
     socket.on("disconnect", () => setConnected(false));
     socket.on("chat:history", (h: GroupMsg[]) => setGroupMsgs(h));

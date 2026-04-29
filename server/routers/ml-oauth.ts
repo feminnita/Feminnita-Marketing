@@ -140,23 +140,24 @@ export function registerMLOAuthRoutes(app: Express) {
 
     const results: any[] = [];
 
-    const urls = [
-      // Tenta listar os produtos disponíveis
-      `https://api.mercadolibre.com/advertising/products`,
-      `https://api.mercadolibre.com/advertising/product_types`,
-      // Tenta site_id como parâmetro (padrão ML)
-      `https://api.mercadolibre.com/advertising/advertisers?site_id=MLB&user_id=${userId}`,
-      `https://api.mercadolibre.com/advertising/advertisers?site_id=MLB`,
-      // Tenta product_id com valores brasil/MLB
-      `https://api.mercadolibre.com/advertising/advertisers?product_id=MLB&user_id=${userId}`,
-      `https://api.mercadolibre.com/advertising/advertisers?product_id=BRAND_ADS&user_id=${userId}`,
-      `https://api.mercadolibre.com/advertising/advertisers?product_id=PRODUCT_ADS&user_id=${userId}`,
-      `https://api.mercadolibre.com/advertising/advertisers?product_id=display&user_id=${userId}`,
-      // Sem user_id, sem product_id — vê o erro completo
-      `https://api.mercadolibre.com/advertising/advertisers?user_id=${userId}`,
+    // IDs reais confirmados pelo Seller Center
+    const advertiserId = "140649";
+    const accountId = "150815";
+
+    const getUrls = [
+      // Acesso direto com advertiser_id real
+      `https://api.mercadolibre.com/advertising/advertisers/${advertiserId}`,
+      `https://api.mercadolibre.com/advertising/advertisers/${advertiserId}/campaigns`,
+      `https://api.mercadolibre.com/advertising/advertisers/${advertiserId}/campaigns?account_id=${accountId}`,
+      // product-ads com hífen (nome real confirmado no Seller Center)
+      `https://api.mercadolibre.com/advertising/advertisers?product_id=product-ads&user_id=${userId}`,
+      `https://api.mercadolibre.com/advertising/advertisers/${advertiserId}/campaigns?product_id=product-ads`,
+      // URL base alternativa
+      `https://api.mercadolibre.com/publicidade/product-ads/advertisers/${advertiserId}/campaigns`,
+      `https://api.mercadolibre.com/publicidade/product-ads/admin/campaigns?advertiser_id=${advertiserId}&account_id=${accountId}`,
     ];
 
-    for (const url of urls) {
+    for (const url of getUrls) {
       try {
         const r = await fetch(url, { headers: { Authorization: `Bearer ${token}`, "x-format-new": "true" } });
         const body = await r.json();
@@ -165,6 +166,20 @@ export function registerMLOAuthRoutes(app: Express) {
         results.push({ url, error: e.message });
       }
     }
+
+    // POST para /advertising/products — alguns endpoints ML exigem POST
+    try {
+      const r = await fetch(`https://api.mercadolibre.com/advertising/products`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId }),
+      });
+      const body = await r.json();
+      results.push({ url: "POST /advertising/products", status: r.status, body });
+    } catch (e: any) {
+      results.push({ url: "POST /advertising/products", error: e.message });
+    }
+
     return res.json({ userId, tokenLength: token.length, results });
   });
 
