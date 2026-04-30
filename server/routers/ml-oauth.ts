@@ -210,9 +210,10 @@ export function registerMLOAuthRoutes(app: Express) {
     const { verifier, challenge } = generatePKCE();
     const state = "mkt"; // Flask relay espera state === "mkt" exato
 
-    // Guarda "account:verifier" para recuperar no callback
+    // Guarda "account:verifier" na memória e também no .env (persiste reinicializações)
     pkceStore.set(state, `${account}:${verifier}`);
     setTimeout(() => pkceStore.delete(state), 10 * 60 * 1000);
+    updateEnvFile({ ML_PKCE_PENDING: `${account}:${verifier}` });
 
     const clientId = account === "fnt"
       ? (process.env.ML_CLIENT_ID_2 || ML_CLIENT_ID)
@@ -242,18 +243,20 @@ export function registerMLOAuthRoutes(app: Express) {
       return res.status(400).send(`Erro na autorização ML: ${error || "código ausente"}`);
     }
 
-    // Recupera "account:verifier" da store (state sempre "mkt" para compatibilidade Flask)
-    const stored = state ? pkceStore.get(state) : undefined;
-    if (stored) pkceStore.delete(state);
+    // Recupera "account:verifier" — tenta memória primeiro, depois .env como fallback
+    const stored = (state ? pkceStore.get(state) : undefined) || process.env.ML_PKCE_PENDING || "";
+    if (state && pkceStore.has(state)) pkceStore.delete(state);
+    // Limpa o pending do .env após uso
+    if (stored) updateEnvFile({ ML_PKCE_PENDING: "" });
 
-    const [storedAccount, codeVerifier] = stored ? stored.split(":") : ["feminnita", undefined];
+    const parts = stored.split(":");
+    const storedAccount = parts[0] || "feminnita";
+    const codeVerifier = parts.slice(1).join(":") || undefined;
     const isFnt = storedAccount === "fnt";
     const suffix = isFnt ? "2" : "1";
     const account = isFnt ? "fnt" : "feminnita";
 
-    if (!codeVerifier) {
-      console.warn(`[MLOAuth] code_verifier não encontrado para state=${state}. Tentando sem PKCE.`);
-    }
+    console.log(`[MLOAuth] Callback — state=${state} account=${account} hasVerifier=${!!codeVerifier}`);
 
     try {
       const clientId = isFnt ? (process.env.ML_CLIENT_ID_2 || ML_CLIENT_ID) : ML_CLIENT_ID;
