@@ -144,19 +144,28 @@ export function registerMLOAuthRoutes(app: Express) {
     const advertiserId = "140649";
     const accountId = "150815";
 
+    const productIdVariants = [
+      "MPAds", "mp_ads", "MP_ADS",
+      "SPONSORED", "sponsored", "sponsored_products", "SPONSORED_PRODUCTS",
+      "PLA", "PAI", "DISPLAY", "display",
+      "ProductAds", "productads",
+      "PDAS", "PAds",
+    ];
+
     const getUrls = [
-      // Sem product_id — endpoints que getAdvertiserId realmente usa
-      `https://api.mercadolibre.com/advertising/advertisers?user_id=${userId}`,
-      `https://api.mercadolibre.com/v2/advertising/advertisers?user_id=${userId}`,
-      // Variantes de product_id
-      `https://api.mercadolibre.com/advertising/advertisers?user_id=${userId}&product_id=PRODUCT_ADS`,
-      `https://api.mercadolibre.com/advertising/advertisers?user_id=${userId}&product_id=product_ads`,
-      // Endpoint do usuário
-      `https://api.mercadolibre.com/users/${userId}/advertising/product_ads`,
-      `https://api.mercadolibre.com/users/${userId}/product_ads/advertisers`,
-      // Advertiser direto (ID que estava hardcoded — provavelmente errado)
+      // product_id variants — encontrar qual o ML aceita
+      ...productIdVariants.map(pid =>
+        `https://api.mercadolibre.com/advertising/advertisers?user_id=${userId}&product_id=${pid}`
+      ),
+      // Advertiser direto pelo ID confirmado no Seller Center (140649)
       `https://api.mercadolibre.com/advertising/advertisers/${advertiserId}`,
       `https://api.mercadolibre.com/advertising/advertisers/${advertiserId}/campaigns`,
+      `https://api.mercadolibre.com/advertising/advertisers/${advertiserId}/campaigns?status=active`,
+      // Endpoint do usuário
+      `https://api.mercadolibre.com/users/${userId}/advertising/product_ads`,
+      // v2
+      `https://api.mercadolibre.com/v2/advertising/advertisers?user_id=${userId}&product_id=MPAds`,
+      `https://api.mercadolibre.com/v2/advertising/advertisers?user_id=${userId}&product_id=SPONSORED`,
     ];
 
     for (const url of getUrls) {
