@@ -174,9 +174,23 @@ async function withBrowser<T>(
     headless: true,
     args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
   });
+
+  const proxyHost = process.env.WEBSHARE_HOST;
+  const proxyPort = process.env.WEBSHARE_PORT;
+  const proxyUser = process.env.WEBSHARE_USER;
+  const proxyPass = process.env.WEBSHARE_PASS;
+  const proxyConfig = proxyHost && proxyPort ? {
+    server: `http://${proxyHost}:${proxyPort}`,
+    username: proxyUser,
+    password: proxyPass,
+  } : undefined;
+
+  if (proxyConfig) console.log(`[MLBrowser] Usando proxy residencial Webshare (${proxyHost})`);
+
   const context = await browser.newContext({
     userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
     locale: "pt-BR",
+    proxy: proxyConfig,
   });
   const page = await context.newPage();
 
