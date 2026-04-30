@@ -664,6 +664,7 @@ function VideoLibrary() {
   const [uploading, setUploading] = useState(false);
   const [videoTitle, setVideoTitle] = useState("");
   const [publishingVideo, setPublishingVideo] = useState<any | null>(null);
+  const [previewVideo, setPreviewVideo] = useState<any | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const utils = trpc.useUtils();
   const cancelMut = trpc.tiktokTeam.cancelSchedule.useMutation({
@@ -763,9 +764,13 @@ function VideoLibrary() {
           <div className="space-y-2">
             {videos.map((v: any) => (
               <div key={v.id} className="flex items-center gap-3 px-3 py-3 border border-gray-200 rounded-lg hover:bg-gray-50">
-                <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center shrink-0">
-                  <Film className="w-5 h-5 text-gray-400" />
-                </div>
+                <button
+                  onClick={() => v.filePath && setPreviewVideo(v)}
+                  className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center shrink-0 hover:bg-pink-50 hover:text-pink-500 transition-colors"
+                  title="Assistir vídeo"
+                >
+                  {v.filePath ? <PlayCircle className="w-5 h-5 text-pink-400" /> : <Film className="w-5 h-5 text-gray-400" />}
+                </button>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-800 truncate">{v.title}</p>
                   <p className="text-xs text-gray-400">
@@ -848,6 +853,24 @@ function VideoLibrary() {
 
       {publishingVideo && (
         <PublishModal video={publishingVideo} onClose={() => setPublishingVideo(null)} />
+      )}
+
+      {previewVideo && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onClick={() => setPreviewVideo(null)}>
+          <div className="relative w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-white text-sm font-medium truncate flex-1 mr-4">{previewVideo.title}</p>
+              <button onClick={() => setPreviewVideo(null)} className="text-white/70 hover:text-white text-xl font-bold shrink-0">✕</button>
+            </div>
+            <video
+              src={previewVideo.filePath}
+              controls
+              autoPlay
+              className="w-full rounded-xl max-h-[80vh] bg-black"
+              style={{ aspectRatio: "9/16" }}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
