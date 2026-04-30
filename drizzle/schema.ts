@@ -1554,6 +1554,25 @@ export type TiktokVideo = typeof tiktokVideos.$inferSelect;
 export type InsertTiktokVideo = typeof tiktokVideos.$inferInsert;
 export type InsertAdCreative = typeof adCreatives.$inferInsert;
 
+// === TIKTOK CONNECTED ACCOUNTS — OAuth Login Kit ===
+export const tiktokConnectedAccounts = mysqlTable("tiktok_connected_accounts", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  tiktokOpenId: varchar("tiktokOpenId", { length: 100 }).notNull(),
+  displayName: varchar("displayName", { length: 200 }),
+  avatarUrl: varchar("avatarUrl", { length: 500 }),
+  accountType: mysqlEnum("accountType", ["brand", "influencer"]).notNull().default("brand"),
+  label: varchar("label", { length: 100 }),
+  accessToken: text("accessToken").notNull(),
+  refreshToken: text("refreshToken"),
+  expiresAt: timestamp("expiresAt"),
+  scope: varchar("scope", { length: 500 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+export type TiktokConnectedAccount = typeof tiktokConnectedAccounts.$inferSelect;
+export type InsertTiktokConnectedAccount = typeof tiktokConnectedAccounts.$inferInsert;
+
 // ─── Especialistas por plataforma ─────────────────────────────────────────────
 
 export const specialistPlatformEvaluations = mysqlTable("specialist_platform_evaluations", {

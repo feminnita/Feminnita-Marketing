@@ -1,7 +1,8 @@
 import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
+import { createHmac } from "crypto";
 import { getDb } from "../db";
-import { tiktokTeamEvaluations, tiktokTeamMessages, tiktokVideos } from "../../drizzle/schema";
+import { tiktokTeamEvaluations, tiktokTeamMessages, tiktokVideos, tiktokConnectedAccounts } from "../../drizzle/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { runLunaEvaluation, chatWithLuna, updateLunaKnowledge } from "../agents/tiktok-luna-agent";
 import { runMayaEvaluation, chatWithMaya, updateMayaKnowledge } from "../agents/tiktok-maya-agent";
@@ -416,6 +417,90 @@ export const tiktokTeamRouter = router({
       }).where(and(eq(tiktokVideos.id, input.videoId), eq(tiktokVideos.userId, ctx.user.id)));
 
       return { ok: true };
+    }),
+
+  // ── Contas TikTok Conectadas ──────────────────────────────────────────────────
+
+  getConnectUrl: protectedProcedure
+    .input(z.object({
+      accountType: z.enum(["brand", "influencer"]).default("brand"),
+      label: z.string().max(100).default(""),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const payload = `${ctx.user.id}:${input.accountType}:${encodeURIComponent(input.label)}`;
+      const sig = createHmac("sha256", process.env.JWT_SECRET || "secret")
+        .update(payload).digest("hex").slice(0, 16);
+      const state = Buffer.from(`${payload}.${sig}`).toString("base64url");
+      return { url: `/api/tiktok/start?state=${state}` };
+    }),
+
+  listConnectedAccounts: protectedProcedure
+    .query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) return [];
+      return db.select({
+        id: tiktokConnectedAccounts.id,
+        tiktokOpenId: tiktokConnectedAccounts.tiktokOpenId,
+        displayName: tiktokConnectedAccounts.displayName,
+        avatarUrl: tiktokConnectedAccounts.avatarUrl,
+        accountType: tiktokConnectedAccounts.accountType,
+        label: tiktokConnectedAccounts.label,
+        scope: tiktokConnectedAccounts.scope,
+        expiresAt: tiktokConnectedAccounts.expiresAt,
+        createdAt: tiktokConnectedAccounts.createdAt,
+      }).from(tiktokConnectedAccounts)
+        .where(eq(tiktokConnectedAccounts.userId, ctx.user.id))
+        .orderBy(desc(tiktokConnectedAccounts.createdAt));
+    }),
+
+  disconnectAccount: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Banco indisponível");
+      await db.delete(tiktokConnectedAccounts)
+        .where(and(eq(tiktokConnectedAccounts.id, input.id), eq(tiktokConnectedAccounts.userId, ctx.user.id)));
+      return { ok: true };
+    }),
+
+  publishNow: protectedProcedure
+    .input(z.object({
+      videoId: z.number(),
+      accountId: z.number(),
+      caption: z.string().max(2200).default(""),
+      hashtags: z.string().max(500).default(""),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Banco indisponível");
+
+      const videos = await db.select().from(tiktokVideos)
+        .where(and(eq(tiktokVideos.id, input.videoId), eq(tiktokVideos.userId, ctx.user.id)));
+      if (!videos.length) throw new Error("Vídeo não encontrado");
+      const video = videos[0];
+      if (!video.filePath) throw new Error("Vídeo ainda não tem arquivo");
+
+      const accounts = await db.select().from(tiktokConnectedAccounts)
+        .where(and(eq(tiktokConnectedAccounts.id, input.accountId), eq(tiktokConnectedAccounts.userId, ctx.user.id)));
+      if (!accounts.length) throw new Error("Conta TikTok não encontrada");
+      const account = accounts[0];
+
+      const appUrl = process.env.APP_URL || "http://localhost:3000";
+      const videoUrl = video.filePath.startsWith("http") ? video.filePath : `${appUrl}${video.filePath}`;
+      const title = [input.caption, input.hashtags].filter(Boolean).join(" ").slice(0, 2200) || video.title;
+
+      const { publishVideoToTikTok } = await import("../services/tiktokContentApi");
+      const result = await publishVideoToTikTok(account.accessToken, videoUrl, video.fileSize || 0, { title });
+
+      await db.update(tiktokVideos).set({
+        status: "published",
+        publishedAt: new Date(),
+        tiktokPostId: result.publishId,
+        notes: JSON.stringify({ caption: input.caption, hashtags: input.hashtags, platforms: ["tiktok"], accountId: input.accountId }),
+        updatedAt: new Date(),
+      }).where(eq(tiktokVideos.id, input.videoId));
+
+      return { ok: true, publishId: result.publishId };
     }),
 
   generateVideoVeo: protectedProcedure

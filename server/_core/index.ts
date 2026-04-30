@@ -7,6 +7,7 @@ import { registerOAuthRoutes, registerDebugRoutes } from "./oauth";
 import { registerMLOAuthRoutes } from "../routers/ml-oauth";
 import { registerShopeeOAuthRoutes } from "../routers/shopee-oauth";
 import { registerTiktokShopOAuthRoutes } from "../routers/tiktok-shop-oauth";
+import { registerTiktokOAuthRoutes } from "../routers/tiktok-oauth";
 import { registerInstagramWebhook } from "../routers/instagram-comments";
 import { registerWhatsAppFunnelWebhook } from "../routers/whatsapp-funnel-webhook";
 import { registerCartRecoveryWebhook, scheduleCartFollowUps } from "../routers/whatsapp-cart-recovery";
@@ -87,6 +88,8 @@ async function startServer() {
   registerShopeeOAuthRoutes(app);
   // TikTok Shop OAuth routes: /api/tiktok-shop/start, /api/tiktok-shop/callback, /api/tiktok-shop/status
   registerTiktokShopOAuthRoutes(app);
+  // TikTok Login Kit OAuth routes: /api/tiktok/start, /api/tiktok/callback
+  registerTiktokOAuthRoutes(app);
 
   // Google Drive OAuth: /api/google/start e /api/google/callback
   const { getGoogleOAuthUrl, exchangeCodeForTokens } = await import("../services/googleDrive");

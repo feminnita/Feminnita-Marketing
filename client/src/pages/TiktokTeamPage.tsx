@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
   Bot, CheckCircle, ChevronDown, ChevronUp, Clock, Loader2,
   MessageSquare, PlayCircle, Send, XCircle, Upload, Video,
-  Trash2, Film, TrendingUp, Package, Calendar, Send,
+  Trash2, Film, TrendingUp, Package, Calendar, Link2, UserCircle,
 } from "lucide-react";
 import lunaPhoto from "@/assets/luna.jpg";
 import mayaPhoto from "@/assets/maya.jpg";
@@ -521,6 +521,10 @@ function PublishModal({ video, onClose }: { video: any; onClose: () => void }) {
   const [platforms, setPlatforms] = useState<("tiktok" | "instagram")[]>(saved.platforms || ["tiktok"]);
   const [scheduleMode, setScheduleMode] = useState<"now" | "later">("now");
   const [scheduledAt, setScheduledAt] = useState("");
+  const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
+
+  const accountsQuery = trpc.tiktokTeam.listConnectedAccounts.useQuery();
+  const accounts = (accountsQuery.data || []) as any[];
 
   const scheduleMut = trpc.tiktokTeam.schedulePost.useMutation({
     onSuccess: () => {
@@ -531,15 +535,32 @@ function PublishModal({ video, onClose }: { video: any; onClose: () => void }) {
     onError: (err) => toast.error(`Erro: ${err.message}`),
   });
 
+  const publishNowMut = trpc.tiktokTeam.publishNow.useMutation({
+    onSuccess: () => {
+      utils.tiktokTeam.listVideos.invalidate();
+      toast.success("Vídeo enviado para publicação no TikTok!");
+      onClose();
+    },
+    onError: (err) => toast.error(`Erro ao publicar: ${err.message}`),
+  });
+
   function togglePlatform(p: "tiktok" | "instagram") {
     setPlatforms((prev) =>
       prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]
     );
   }
 
+  const canPublishNow = scheduleMode === "now" && platforms.includes("tiktok") && selectedAccountId !== null;
+
   function handleSubmit() {
     if (!platforms.length) { toast.error("Selecione ao menos uma plataforma."); return; }
     if (scheduleMode === "later" && !scheduledAt) { toast.error("Informe data e hora do agendamento."); return; }
+
+    if (canPublishNow) {
+      publishNowMut.mutate({ videoId: video.id, accountId: selectedAccountId!, caption, hashtags });
+      return;
+    }
+
     scheduleMut.mutate({
       videoId: video.id,
       caption,
@@ -548,6 +569,8 @@ function PublishModal({ video, onClose }: { video: any; onClose: () => void }) {
       scheduledAt: scheduleMode === "later" ? scheduledAt : undefined,
     });
   }
+
+  const isPending = scheduleMut.isPending || publishNowMut.isPending;
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
@@ -578,11 +601,43 @@ function PublishModal({ video, onClose }: { video: any; onClose: () => void }) {
                 </button>
               ))}
             </div>
-            {platforms.map((p) => {
-              const info = PLATFORM_OPTIONS.find((x) => x.id === p);
-              return <p key={p} className="text-[11px] text-amber-600 mt-1">⚠ {info?.label}: {info?.note}</p>;
-            })}
           </div>
+
+          {/* Conta TikTok */}
+          {platforms.includes("tiktok") && (
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-2">Conta TikTok</label>
+              {accounts.length === 0 ? (
+                <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <UserCircle className="w-4 h-4 text-amber-500 shrink-0" />
+                  <p className="text-xs text-amber-700">Nenhuma conta conectada. Vá na aba <strong>Contas</strong> para conectar.</p>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  {accounts.map((acc: any) => (
+                    <button
+                      key={acc.id}
+                      onClick={() => setSelectedAccountId(selectedAccountId === acc.id ? null : acc.id)}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border-2 transition-all text-left ${
+                        selectedAccountId === acc.id ? "border-black bg-gray-50" : "border-gray-200"
+                      }`}
+                    >
+                      {acc.avatarUrl ? (
+                        <img src={acc.avatarUrl} alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
+                      ) : (
+                        <UserCircle className="w-7 h-7 text-gray-400 shrink-0" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-800 truncate">{acc.displayName || acc.tiktokOpenId}</p>
+                        <p className="text-xs text-gray-400">{acc.accountType === "brand" ? "Conta da marca" : "Influenciadora"}{acc.label ? ` · ${acc.label}` : ""}</p>
+                      </div>
+                      {selectedAccountId === acc.id && <span className="text-xs font-semibold text-black shrink-0">✓</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Legenda */}
           <div>
@@ -610,50 +665,182 @@ function PublishModal({ video, onClose }: { video: any; onClose: () => void }) {
           </div>
 
           {/* Agendamento */}
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-2">Quando publicar?</label>
-            <div className="flex gap-2 mb-3">
-              {[
-                { id: "now" as const, label: "Salvar configuração" },
-                { id: "later" as const, label: "Agendar data/hora" },
-              ].map((opt) => (
-                <button
-                  key={opt.id}
-                  onClick={() => setScheduleMode(opt.id)}
-                  className={`flex-1 py-2 text-xs font-semibold rounded-lg border-2 transition-all ${
-                    scheduleMode === opt.id ? "border-pink-500 text-pink-600 bg-pink-50" : "border-gray-200 text-gray-500"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
+          {!canPublishNow && (
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-2">Quando publicar?</label>
+              <div className="flex gap-2 mb-3">
+                {[
+                  { id: "now" as const, label: "Salvar configuração" },
+                  { id: "later" as const, label: "Agendar data/hora" },
+                ].map((opt) => (
+                  <button
+                    key={opt.id}
+                    onClick={() => setScheduleMode(opt.id)}
+                    className={`flex-1 py-2 text-xs font-semibold rounded-lg border-2 transition-all ${
+                      scheduleMode === opt.id ? "border-pink-500 text-pink-600 bg-pink-50" : "border-gray-200 text-gray-500"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              {scheduleMode === "later" && (
+                <input
+                  type="datetime-local"
+                  value={scheduledAt}
+                  onChange={(e) => setScheduledAt(e.target.value)}
+                  min={new Date().toISOString().slice(0, 16)}
+                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-300"
+                />
+              )}
             </div>
-            {scheduleMode === "later" && (
-              <input
-                type="datetime-local"
-                value={scheduledAt}
-                onChange={(e) => setScheduledAt(e.target.value)}
-                min={new Date().toISOString().slice(0, 16)}
-                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-300"
-              />
-            )}
-          </div>
-
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <p className="text-xs text-blue-700 font-semibold mb-1">📋 Próximos passos</p>
-            <p className="text-xs text-blue-600">Quando a API do TikTok e Instagram forem aprovadas, a publicação acontecerá automaticamente na data/hora agendada.</p>
-          </div>
+          )}
 
           <button
             onClick={handleSubmit}
-            disabled={scheduleMut.isPending}
-            className="w-full py-2.5 rounded-xl text-sm font-semibold text-white bg-gray-900 disabled:opacity-50 flex items-center justify-center gap-2"
+            disabled={isPending}
+            className="w-full py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 flex items-center justify-center gap-2"
+            style={{ background: canPublishNow ? "#010101" : "#1f2937" }}
           >
-            {scheduleMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Calendar className="w-4 h-4" />}
-            {scheduleMode === "later" ? "Agendar publicação" : "Salvar configuração"}
+            {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : (canPublishNow ? <Send className="w-4 h-4" /> : <Calendar className="w-4 h-4" />)}
+            {canPublishNow ? "Publicar agora no TikTok" : scheduleMode === "later" ? "Agendar publicação" : "Salvar configuração"}
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─── Painel de Contas Conectadas ─────────────────────────────────────────────
+
+function ConnectedAccountsPanel() {
+  const utils = trpc.useUtils();
+  const accountsQuery = trpc.tiktokTeam.listConnectedAccounts.useQuery();
+  const accounts = (accountsQuery.data || []) as any[];
+  const isLoading = accountsQuery.isLoading;
+  const connectMut = trpc.tiktokTeam.getConnectUrl.useMutation({
+    onSuccess: ({ url }) => { window.location.href = url; },
+    onError: (err) => toast.error(`Erro: ${err.message}`),
+  });
+  const disconnectMut = trpc.tiktokTeam.disconnectAccount.useMutation({
+    onSuccess: () => { utils.tiktokTeam.listConnectedAccounts.invalidate(); toast.success("Conta desconectada."); },
+    onError: (err) => toast.error(`Erro: ${err.message}`),
+  });
+
+  const [showModal, setShowModal] = useState(false);
+  const [accountType, setAccountType] = useState<"brand" | "influencer">("brand");
+  const [label, setLabel] = useState("");
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+        <p className="text-sm font-semibold text-blue-800 mb-1">Contas TikTok Vinculadas</p>
+        <p className="text-xs text-blue-600">
+          Conecte contas TikTok para publicar vídeos diretamente. Você pode conectar a conta da marca e contas de influenciadoras parceiras.
+        </p>
+      </div>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+        </div>
+      ) : accounts.length === 0 ? (
+        <div className="bg-white border border-gray-200 rounded-xl p-10 text-center space-y-3">
+          <UserCircle className="w-10 h-10 text-gray-300 mx-auto" />
+          <p className="text-sm font-semibold text-gray-800">Nenhuma conta conectada</p>
+          <p className="text-xs text-gray-400">Conecte uma conta TikTok para publicar vídeos diretamente pela plataforma.</p>
+        </div>
+      ) : (
+        <div className="bg-white border border-gray-200 rounded-xl p-5">
+          <h3 className="font-semibold text-gray-800 mb-3">Contas conectadas ({accounts.length})</h3>
+          <div className="space-y-2">
+            {accounts.map((acc: any) => (
+              <div key={acc.id} className="flex items-center gap-3 px-3 py-3 border border-gray-200 rounded-lg">
+                {acc.avatarUrl ? (
+                  <img src={acc.avatarUrl} alt={acc.displayName || ""} className="w-10 h-10 rounded-full object-cover shrink-0" />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                    <UserCircle className="w-6 h-6 text-gray-400" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-800 truncate">{acc.displayName || acc.tiktokOpenId}</p>
+                  <p className="text-xs text-gray-400">
+                    {acc.accountType === "brand" ? "Conta da marca" : "Influenciadora"}
+                    {acc.label ? ` · ${acc.label}` : ""}
+                  </p>
+                </div>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${acc.accountType === "brand" ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"}`}>
+                  {acc.accountType === "brand" ? "Marca" : "Influencer"}
+                </span>
+                <button
+                  onClick={() => disconnectMut.mutate({ id: acc.id })}
+                  className="p-1.5 text-gray-400 hover:text-red-500 rounded shrink-0"
+                  title="Desconectar conta"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <button
+        onClick={() => setShowModal(true)}
+        className="w-full py-2.5 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2"
+        style={{ background: "#010101" }}
+      >
+        <Link2 className="w-4 h-4" /> Conectar conta TikTok
+      </button>
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowModal(false)}>
+          <div className="bg-white rounded-2xl w-full max-w-sm p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-bold text-gray-800">Conectar conta TikTok</h3>
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-2">Tipo de conta</label>
+              <div className="flex gap-2">
+                {[{ id: "brand" as const, label: "Conta da marca" }, { id: "influencer" as const, label: "Influenciadora" }].map((opt) => (
+                  <button
+                    key={opt.id}
+                    onClick={() => setAccountType(opt.id)}
+                    className={`flex-1 py-2 text-xs font-semibold rounded-lg border-2 transition-all ${accountType === opt.id ? "border-pink-500 text-pink-600 bg-pink-50" : "border-gray-200 text-gray-500"}`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {accountType === "influencer" && (
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Nome da influenciadora</label>
+                <input
+                  value={label}
+                  onChange={(e) => setLabel(e.target.value)}
+                  placeholder="Ex: @influenciadora_fulana"
+                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-300"
+                />
+              </div>
+            )}
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <p className="text-xs text-amber-700">Você será redirecionado para o TikTok para autorizar o acesso. Após autorizar, voltará automaticamente.</p>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setShowModal(false)} className="flex-1 py-2 text-sm text-gray-500 border border-gray-200 rounded-lg">Cancelar</button>
+              <button
+                onClick={() => { connectMut.mutate({ accountType, label }); setShowModal(false); }}
+                disabled={connectMut.isPending}
+                className="flex-1 py-2 text-sm font-semibold text-white rounded-lg flex items-center justify-center gap-2"
+                style={{ background: "#010101" }}
+              >
+                {connectMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
+                Conectar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -885,12 +1072,20 @@ export type AccountType = "feminnita" | "fnt";
 
 export default function TiktokTeamPage() {
   const [, setLocation] = useLocation();
-  const [activeTab, setActiveTab] = useState<"videos" | "studio">("videos");
+  const [activeTab, setActiveTab] = useState<"videos" | "studio" | "accounts">("videos");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get("tab");
+    if (tab === "accounts" || tab === "studio" || tab === "videos") setActiveTab(tab);
+    if (params.get("connected") === "1") toast.success("Conta TikTok conectada com sucesso!");
+    if (params.get("error")) toast.error(`Erro ao conectar: ${params.get("error")}`);
+  }, []);
 
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail;
-      if (detail === "studio" || detail === "videos") setActiveTab(detail);
+      if (detail === "studio" || detail === "videos" || detail === "accounts") setActiveTab(detail);
     };
     window.addEventListener("tiktok-tab", handler);
     return () => window.removeEventListener("tiktok-tab", handler);
@@ -941,6 +1136,7 @@ export default function TiktokTeamPage() {
         {[
           { id: "videos" as const, label: "Vídeos", color: "#6B7280" },
           { id: "studio" as const, label: "Studio IA ✨", color: STUDIO_COLOR },
+          { id: "accounts" as const, label: "Contas", color: "#010101" },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -955,7 +1151,7 @@ export default function TiktokTeamPage() {
         ))}
       </div>
 
-      {activeTab === "studio" ? <VideoStudioAI /> : <VideoLibrary />}
+      {activeTab === "studio" ? <VideoStudioAI /> : activeTab === "accounts" ? <ConnectedAccountsPanel /> : <VideoLibrary />}
     </div>
   );
 }
