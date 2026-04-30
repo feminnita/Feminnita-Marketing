@@ -14,6 +14,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { handleBlingWebhook } from "./bling-webhook";
+import { registerDeployWebhook } from "./deploy-webhook";
 import { handleTrayWebhook } from "./tray-webhook";
 import { initializeBaileysOnStartup } from "./baileys-startup";
 import { setupBaileysDebugRoutes } from "./baileys-debug";
@@ -73,6 +74,9 @@ async function startServer() {
   } catch (error) {
     console.error("[Agents] Erro ao iniciar agentes:", error);
   }
+
+  // Auto-deploy via GitHub webhook
+  registerDeployWebhook(app);
 
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
