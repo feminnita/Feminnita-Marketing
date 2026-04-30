@@ -208,14 +208,12 @@ export function registerMLOAuthRoutes(app: Express) {
 
     const account = (req.query.account as string) === "fnt" ? "fnt" : "feminnita";
     const { verifier, challenge } = generatePKCE();
-    const state = `mkt_${account}`; // encode account in state
+    const state = "mkt"; // Flask relay espera state === "mkt" exato
 
-    // Guarda verifier para recuperar no callback
-    pkceStore.set(state, verifier);
-    // Limpa após 10 minutos (evita memory leak)
+    // Guarda "account:verifier" para recuperar no callback
+    pkceStore.set(state, `${account}:${verifier}`);
     setTimeout(() => pkceStore.delete(state), 10 * 60 * 1000);
 
-    // Conta FNT pode ter client_id próprio, senão usa o mesmo app ML
     const clientId = account === "fnt"
       ? (process.env.ML_CLIENT_ID_2 || ML_CLIENT_ID)
       : ML_CLIENT_ID;
@@ -229,7 +227,7 @@ export function registerMLOAuthRoutes(app: Express) {
       `&code_challenge=${challenge}` +
       `&code_challenge_method=S256`;
 
-    console.log(`[MLOAuth] Iniciando OAuth PKCE — account: ${account} state: ${state}`);
+    console.log(`[MLOAuth] Iniciando OAuth PKCE — account: ${account}`);
     return res.redirect(authUrl);
   });
 
@@ -244,17 +242,17 @@ export function registerMLOAuthRoutes(app: Express) {
       return res.status(400).send(`Erro na autorização ML: ${error || "código ausente"}`);
     }
 
-    // Detecta conta pelo state (mkt_fnt = conta 2, mkt ou mkt_feminnita = conta 1)
-    const isFnt = state?.includes("fnt");
+    // Recupera "account:verifier" da store (state sempre "mkt" para compatibilidade Flask)
+    const stored = state ? pkceStore.get(state) : undefined;
+    if (stored) pkceStore.delete(state);
+
+    const [storedAccount, codeVerifier] = stored ? stored.split(":") : ["feminnita", undefined];
+    const isFnt = storedAccount === "fnt";
     const suffix = isFnt ? "2" : "1";
     const account = isFnt ? "fnt" : "feminnita";
 
-    // Recupera code_verifier pelo state
-    const codeVerifier = state ? pkceStore.get(state) : undefined;
     if (!codeVerifier) {
       console.warn(`[MLOAuth] code_verifier não encontrado para state=${state}. Tentando sem PKCE.`);
-    } else {
-      pkceStore.delete(state);
     }
 
     try {
