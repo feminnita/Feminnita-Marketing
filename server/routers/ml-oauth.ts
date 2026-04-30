@@ -145,16 +145,18 @@ export function registerMLOAuthRoutes(app: Express) {
     const accountId = "150815";
 
     const getUrls = [
-      // Acesso direto com advertiser_id real
+      // Sem product_id — endpoints que getAdvertiserId realmente usa
+      `https://api.mercadolibre.com/advertising/advertisers?user_id=${userId}`,
+      `https://api.mercadolibre.com/v2/advertising/advertisers?user_id=${userId}`,
+      // Variantes de product_id
+      `https://api.mercadolibre.com/advertising/advertisers?user_id=${userId}&product_id=PRODUCT_ADS`,
+      `https://api.mercadolibre.com/advertising/advertisers?user_id=${userId}&product_id=product_ads`,
+      // Endpoint do usuário
+      `https://api.mercadolibre.com/users/${userId}/advertising/product_ads`,
+      `https://api.mercadolibre.com/users/${userId}/product_ads/advertisers`,
+      // Advertiser direto (ID que estava hardcoded — provavelmente errado)
       `https://api.mercadolibre.com/advertising/advertisers/${advertiserId}`,
       `https://api.mercadolibre.com/advertising/advertisers/${advertiserId}/campaigns`,
-      `https://api.mercadolibre.com/advertising/advertisers/${advertiserId}/campaigns?account_id=${accountId}`,
-      // product-ads com hífen (nome real confirmado no Seller Center)
-      `https://api.mercadolibre.com/advertising/advertisers?product_id=product-ads&user_id=${userId}`,
-      `https://api.mercadolibre.com/advertising/advertisers/${advertiserId}/campaigns?product_id=product-ads`,
-      // URL base alternativa
-      `https://api.mercadolibre.com/publicidade/product-ads/advertisers/${advertiserId}/campaigns`,
-      `https://api.mercadolibre.com/publicidade/product-ads/admin/campaigns?advertiser_id=${advertiserId}&account_id=${accountId}`,
     ];
 
     for (const url of getUrls) {
