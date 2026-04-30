@@ -9,6 +9,8 @@ import { runZaraEvaluation, chatWithZara, updateZaraKnowledge } from "../agents/
 import { runNinaEvaluation, chatWithNina, updateNinaKnowledge } from "../agents/tiktok-nina-agent";
 import { runMarcelaEvaluation, chatWithMarcela, updateMarcelaKnowledge } from "../agents/tiktok-marcela-agent";
 import { generateVideoFromImages } from "../agents/video-generator";
+import { generateVideoFromImage as minimaxGenerate } from "../services/minimax";
+import { generateVideoFromImageVeo } from "../services/google-veo";
 
 const AGENT_TYPE = z.enum(["luna", "maya", "zara", "nina", "marcela"]);
 const ACCOUNT_TYPE = z.enum(["feminnita", "fnt"]);
@@ -318,5 +320,151 @@ export const tiktokTeamRouter = router({
       const { textToSpeech } = await import("../services/tts");
       const buf = await textToSpeech("Olá! Essa é uma amostra da minha voz para o seu vídeo.", undefined, input.voiceId);
       return { audio: buf.toString("base64") };
+    }),
+
+  // ── MiniMax / Hailuo AI ──────────────────────────────────────────────────────
+
+  generateVideoAI: protectedProcedure
+    .input(z.object({
+      title: z.string().min(1).max(300),
+      imageUrl: z.string().min(1),
+      prompt: z.string().max(500).default(""),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Banco indisponível");
+
+      const [inserted] = await db.insert(tiktokVideos).values({
+        userId: ctx.user.id,
+        title: input.title,
+        source: "generated",
+        status: "draft",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }).$returningId();
+
+      const videoId = inserted.id;
+
+      (async () => {
+        try {
+          console.log(`[MinimaxGen] Iniciando geração do vídeo ${videoId}...`);
+          const url = await minimaxGenerate(
+            { imageUrl: input.imageUrl, prompt: input.prompt },
+            (msg) => console.log(`[MinimaxGen:${videoId}] ${msg}`)
+          );
+
+          await db.update(tiktokVideos).set({
+            filePath: url,
+            status: "ready",
+            updatedAt: new Date(),
+          }).where(eq(tiktokVideos.id, videoId));
+
+          console.log(`[MinimaxGen] Vídeo ${videoId} pronto: ${url}`);
+        } catch (err: any) {
+          console.error("[MinimaxGen] Erro:", err);
+          await db.update(tiktokVideos).set({
+            status: "error",
+            description: String(err?.message || "Erro desconhecido").slice(0, 500),
+            updatedAt: new Date(),
+          }).where(eq(tiktokVideos.id, videoId));
+        }
+      })().catch(console.error);
+
+      return { videoId, status: "processing" };
+    }),
+
+  schedulePost: protectedProcedure
+    .input(z.object({
+      videoId: z.number(),
+      caption: z.string().max(2200).default(""),
+      hashtags: z.string().max(500).default(""),
+      platforms: z.array(z.enum(["tiktok", "instagram"])).min(1),
+      scheduledAt: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Banco indisponível");
+
+      const notes = JSON.stringify({
+        caption: input.caption,
+        hashtags: input.hashtags,
+        platforms: input.platforms,
+      });
+
+      await db.update(tiktokVideos).set({
+        status: input.scheduledAt ? "scheduled" : "ready",
+        scheduledAt: input.scheduledAt ? new Date(input.scheduledAt) : null,
+        description: input.caption,
+        tags: input.hashtags,
+        notes,
+        updatedAt: new Date(),
+      }).where(and(eq(tiktokVideos.id, input.videoId), eq(tiktokVideos.userId, ctx.user.id)));
+
+      return { ok: true };
+    }),
+
+  cancelSchedule: protectedProcedure
+    .input(z.object({ videoId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Banco indisponível");
+
+      await db.update(tiktokVideos).set({
+        status: "ready",
+        scheduledAt: null,
+        updatedAt: new Date(),
+      }).where(and(eq(tiktokVideos.id, input.videoId), eq(tiktokVideos.userId, ctx.user.id)));
+
+      return { ok: true };
+    }),
+
+  generateVideoVeo: protectedProcedure
+    .input(z.object({
+      title: z.string().min(1).max(300),
+      imageUrl: z.string().min(1),
+      prompt: z.string().max(500).default(""),
+      resolution: z.enum(["720p", "1080p"]).default("1080p"),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Banco indisponível");
+
+      const [inserted] = await db.insert(tiktokVideos).values({
+        userId: ctx.user.id,
+        title: input.title,
+        source: "generated",
+        status: "draft",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }).$returningId();
+
+      const videoId = inserted.id;
+
+      (async () => {
+        try {
+          console.log(`[VeoGen] Iniciando geração do vídeo ${videoId}...`);
+          const url = await generateVideoFromImageVeo(
+            { imageUrl: input.imageUrl, prompt: input.prompt, resolution: input.resolution },
+            (msg) => console.log(`[VeoGen:${videoId}] ${msg}`)
+          );
+
+          await db.update(tiktokVideos).set({
+            filePath: url,
+            status: "ready",
+            updatedAt: new Date(),
+          }).where(eq(tiktokVideos.id, videoId));
+
+          console.log(`[VeoGen] Vídeo ${videoId} pronto: ${url}`);
+        } catch (err: any) {
+          console.error("[VeoGen] Erro:", err);
+          await db.update(tiktokVideos).set({
+            status: "error",
+            description: String(err?.message || "Erro desconhecido").slice(0, 500),
+            updatedAt: new Date(),
+          }).where(eq(tiktokVideos.id, videoId));
+        }
+      })().catch(console.error);
+
+      return { videoId, status: "processing" };
     }),
 });

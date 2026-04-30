@@ -1,164 +1,132 @@
-import { useAuth } from "@/_core/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft } from "lucide-react";
-import { useLocation } from "wouter";
-
 export default function TermsOfService() {
-  const [, setLocation] = useLocation();
-  const { user } = useAuth();
+  const today = "30 de abril de 2026";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur-md">
-        <div className="container py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setLocation("/")}
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <div>
-                <h1 className="text-2xl font-bold" style={{ color: "#A63D4A" }}>
-                  Feminnita
-                </h1>
-                <p className="text-sm text-slate-600">Termos de Serviço</p>
-              </div>
+    <div className="min-h-screen bg-white">
+      <div className="max-w-3xl mx-auto px-6 py-12">
+
+        {/* Header */}
+        <div className="mb-10 text-center">
+          <h1 className="text-3xl font-bold text-gray-900">Feminnita Pijamas</h1>
+          <p className="text-gray-500 mt-1 text-sm">marketing.feminnita.com.br</p>
+        </div>
+
+        {/* Termos de Uso */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 pb-2 border-b border-gray-200">Termos de Uso</h2>
+          <p className="text-sm text-gray-500 mb-6">Última atualização: {today}</p>
+
+          <div className="space-y-6 text-sm text-gray-700 leading-relaxed">
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">1. Sobre a Plataforma</h3>
+              <p>Este sistema de marketing digital é uma plataforma interna da Feminnita Pijamas LTDA (CNPJ: a informar), utilizada exclusivamente pela equipe interna para gestão de conteúdo, agendamento e publicação de vídeos nas redes sociais da marca.</p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">2. Uso Autorizado</h3>
+              <p>O acesso à plataforma é restrito a colaboradores autorizados da Feminnita Pijamas. É vedado o uso para fins alheios às atividades de marketing da empresa, bem como o compartilhamento de credenciais de acesso com terceiros não autorizados.</p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">3. Conteúdo Publicado</h3>
+              <p>Todo conteúdo enviado e publicado por meio desta plataforma é de responsabilidade da Feminnita Pijamas. A empresa se compromete a respeitar as diretrizes de conteúdo das plataformas integradas (TikTok, Instagram), incluindo as regras sobre direitos autorais, música, publicidade e transparência em parcerias com criadores de conteúdo.</p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">4. Integração com Redes Sociais</h3>
+              <p>A plataforma utiliza APIs oficiais do TikTok e Instagram para publicação de conteúdo orgânico. O acesso às contas é autorizado pelos respectivos titulares por meio de fluxo OAuth oficial. A Feminnita Pijamas não armazena senhas de redes sociais.</p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">5. Propriedade Intelectual</h3>
+              <p>Os vídeos, imagens e textos criados e publicados pela plataforma são de propriedade da Feminnita Pijamas ou utilizados com a devida autorização. A empresa respeita os direitos de terceiros e remove qualquer conteúdo mediante notificação fundamentada.</p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">6. Responsabilidades</h3>
+              <p>A Feminnita Pijamas não se responsabiliza por indisponibilidades temporárias das APIs de terceiros. Os usuários da plataforma devem garantir que o conteúdo publicado esteja em conformidade com a legislação brasileira e as políticas das plataformas de destino.</p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">7. Alterações nos Termos</h3>
+              <p>Estes Termos podem ser atualizados periodicamente. As alterações entram em vigor a partir da data de publicação nesta página.</p>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">8. Contato</h3>
+              <p>Para dúvidas sobre estes Termos, entre em contato pelo e-mail: <a href="mailto:feminnita@gmail.com" className="text-pink-600 underline">feminnita@gmail.com</a></p>
             </div>
           </div>
-        </div>
-      </header>
+        </section>
 
-      {/* Main Content */}
-      <main className="container py-12">
-        <Card className="max-w-4xl mx-auto">
-          <CardHeader>
-            <CardTitle className="text-3xl">Termos de Serviço</CardTitle>
-            <CardDescription>
-              Última atualização: {new Date().toLocaleDateString("pt-BR")}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-8 text-slate-700 leading-relaxed">
-            {/* Introduction */}
-            <section>
-              <h2 className="text-2xl font-bold mb-4 text-slate-900">1. Aceitação dos Termos</h2>
-              <p>
-                Bem-vindo à Feminnita Marketing. Estes Termos de Serviço ("Termos") constituem um acordo legal vinculativo entre você ("Usuário", "você" ou "seu") e a Feminnita Marketing ("Empresa", "nós", "nosso" ou "nos"). Ao acessar ou usar nosso Serviço, você concorda em estar vinculado por estes Termos.
-              </p>
-              <p className="mt-4">
-                Se você não concorda com qualquer parte destes Termos, você não pode usar nosso Serviço. Sua utilização contínua do Serviço após a publicação de alterações aos Termos constitui sua aceitação dessas alterações.
-              </p>
-            </section>
+        {/* Política de Privacidade */}
+        <section>
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 pb-2 border-b border-gray-200">Política de Privacidade</h2>
+          <p className="text-sm text-gray-500 mb-6">Última atualização: {today}</p>
 
-            {/* Service Description */}
-            <section>
-              <h2 className="text-2xl font-bold mb-4 text-slate-900">2. Descrição do Serviço</h2>
-              <p>
-                A Feminnita Marketing fornece uma plataforma de estratégia de marketing digital que inclui ferramentas para gerenciar campanhas de publicidade, analisar tendências, criar conteúdo e gerenciar influenciadoras. O Serviço é fornecido "como está" e "conforme disponível".
-              </p>
-            </section>
-
-            {/* User Responsibilities */}
-            <section>
-              <h2 className="text-2xl font-bold mb-4 text-slate-900">3. Responsabilidades do Usuário</h2>
-              <p className="mb-4">Você concorda em:</p>
-              <ul className="list-disc list-inside space-y-2 ml-4">
-                <li>Usar o Serviço apenas para fins legais e de acordo com estes Termos</li>
-                <li>Não usar o Serviço de forma que viole qualquer lei ou regulamento aplicável</li>
-                <li>Não enviar conteúdo que seja ilegal, ofensivo, difamatório ou que viole direitos de terceiros</li>
-                <li>Não tentar ganhar acesso não autorizado ao Serviço ou sistemas relacionados</li>
-                <li>Manter a confidencialidade de suas credenciais de login</li>
-                <li>Notificar-nos imediatamente sobre qualquer uso não autorizado de sua conta</li>
+          <div className="space-y-6 text-sm text-gray-700 leading-relaxed">
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">1. Dados Coletados</h3>
+              <p>Esta plataforma coleta apenas os dados estritamente necessários para seu funcionamento:</p>
+              <ul className="list-disc list-inside mt-2 space-y-1 text-gray-600">
+                <li>Nome e e-mail dos colaboradores cadastrados</li>
+                <li>Tokens de acesso OAuth das contas de redes sociais autorizadas</li>
+                <li>Vídeos e imagens enviados para publicação</li>
+                <li>Legendas, hashtags e configurações de agendamento</li>
               </ul>
-            </section>
+            </div>
 
-            {/* Intellectual Property */}
-            <section>
-              <h2 className="text-2xl font-bold mb-4 text-slate-900">4. Propriedade Intelectual</h2>
-              <p className="mb-4">
-                O Serviço e todo o seu conteúdo, incluindo, mas não limitado a, texto, gráficos, logos, imagens e software, são propriedade da Feminnita Marketing ou de seus fornecedores de conteúdo e são protegidos por leis internacionais de direitos autorais.
-              </p>
-              <p>
-                Você concede à Feminnita Marketing uma licença limitada, não exclusiva e não transferível para usar o conteúdo que você envia através do Serviço para fins de operação e melhoria do Serviço.
-              </p>
-            </section>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">2. Uso dos Dados</h3>
+              <p>Os dados coletados são utilizados exclusivamente para:</p>
+              <ul className="list-disc list-inside mt-2 space-y-1 text-gray-600">
+                <li>Autenticação e controle de acesso dos colaboradores</li>
+                <li>Publicação e agendamento de conteúdo nas redes sociais da Feminnita Pijamas</li>
+                <li>Análise de desempenho de publicações</li>
+              </ul>
+            </div>
 
-            {/* Limitation of Liability */}
-            <section>
-              <h2 className="text-2xl font-bold mb-4 text-slate-900">5. Limitação de Responsabilidade</h2>
-              <p className="mb-4">
-                NA MÁXIMA EXTENSÃO PERMITIDA PELA LEI, A FEMINNITA MARKETING NÃO SERÁ RESPONSÁVEL POR QUALQUER DANO INDIRETO, INCIDENTAL, ESPECIAL, CONSEQUENTE OU PUNITIVO, INCLUINDO PERDA DE LUCROS, DADOS OU USO, MESMO QUE TENHA SIDO AVISADA DA POSSIBILIDADE DE TAIS DANOS.
-              </p>
-              <p>
-                NOSSA RESPONSABILIDADE TOTAL POR QUALQUER RECLAMAÇÃO RELACIONADA AO SERVIÇO NÃO EXCEDERÁ O VALOR QUE VOCÊ PAGOU PELO SERVIÇO NOS ÚLTIMOS 12 MESES.
-              </p>
-            </section>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">3. Compartilhamento de Dados</h3>
+              <p>Os dados <strong>não são vendidos, alugados ou compartilhados</strong> com terceiros para fins comerciais. São transmitidos às APIs do TikTok e Instagram apenas os dados necessários para a publicação do conteúdo autorizado.</p>
+            </div>
 
-            {/* Disclaimer */}
-            <section>
-              <h2 className="text-2xl font-bold mb-4 text-slate-900">6. Isenção de Garantias</h2>
-              <p>
-                O SERVIÇO É FORNECIDO "COMO ESTÁ" E "CONFORME DISPONÍVEL" SEM GARANTIAS DE QUALQUER TIPO, EXPRESSAS OU IMPLÍCITAS. A FEMINNITA MARKETING NÃO GARANTE QUE O SERVIÇO SERÁ ININTERRUPTO, SEGURO OU LIVRE DE ERROS. A FEMINNITA MARKETING ISENTA-SE DE TODAS AS GARANTIAS, EXPRESSAS OU IMPLÍCITAS, INCLUINDO, MAS NÃO LIMITADO A, GARANTIAS IMPLÍCITAS DE COMERCIALIZAÇÃO, ADEQUAÇÃO A UM PROPÓSITO ESPECÍFICO E NÃO VIOLAÇÃO.
-              </p>
-            </section>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">4. Tokens de Acesso OAuth</h3>
+              <p>Os tokens de acesso das contas TikTok e Instagram são armazenados de forma segura e utilizados exclusivamente para publicação de conteúdo em nome dos titulares autorizados. O acesso pode ser revogado a qualquer momento diretamente nas configurações de cada plataforma.</p>
+            </div>
 
-            {/* Third Party Services */}
-            <section>
-              <h2 className="text-2xl font-bold mb-4 text-slate-900">7. Serviços de Terceiros</h2>
-              <p className="mb-4">
-                O Serviço pode conter links para serviços de terceiros, incluindo Meta Ads, Google Analytics e outras plataformas. Não somos responsáveis pela disponibilidade, precisão ou conteúdo desses serviços de terceiros.
-              </p>
-              <p>
-                Seu uso de serviços de terceiros está sujeito aos seus respectivos termos de serviço e políticas de privacidade. Recomendamos que você revise esses termos antes de usar qualquer serviço de terceiros através do nosso Serviço.
-              </p>
-            </section>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">5. Segurança</h3>
+              <p>Adotamos medidas técnicas adequadas para proteger os dados contra acesso não autorizado, incluindo autenticação segura, conexões HTTPS e armazenamento criptografado de credenciais.</p>
+            </div>
 
-            {/* Termination */}
-            <section>
-              <h2 className="text-2xl font-bold mb-4 text-slate-900">8. Rescisão</h2>
-              <p className="mb-4">
-                Podemos rescindir ou suspender sua conta e acesso ao Serviço imediatamente, sem aviso prévio ou responsabilidade, se você violar qualquer disposição destes Termos ou qualquer lei ou regulamento aplicável.
-              </p>
-              <p>
-                Você pode rescindir sua conta a qualquer momento entrando em contato conosco. Após a rescisão, você perderá o acesso ao Serviço, mas as disposições destes Termos que por sua natureza devem permanecer em vigor permanecerão em vigor.
-              </p>
-            </section>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">6. Retenção de Dados</h3>
+              <p>Os dados são mantidos enquanto a conta do colaborador estiver ativa. Após o encerramento, os dados são removidos em até 30 dias, exceto quando exigida retenção por obrigação legal.</p>
+            </div>
 
-            {/* Governing Law */}
-            <section>
-              <h2 className="text-2xl font-bold mb-4 text-slate-900">9. Lei Aplicável</h2>
-              <p>
-                Estes Termos serão regidos e interpretados de acordo com as leis do Brasil, sem considerar seus conflitos de disposições legais. Você concorda em se submeter à jurisdição exclusiva dos tribunais localizados no Brasil.
-              </p>
-            </section>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">7. Direitos dos Usuários (LGPD)</h3>
+              <p>Em conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018), os usuários têm direito a acessar, corrigir e solicitar a exclusão de seus dados pessoais. Solicitações podem ser feitas pelo e-mail: <a href="mailto:feminnita@gmail.com" className="text-pink-600 underline">feminnita@gmail.com</a></p>
+            </div>
 
-            {/* Contact Us */}
-            <section>
-              <h2 className="text-2xl font-bold mb-4 text-slate-900">10. Entre em Contato Conosco</h2>
-              <p>
-                Se você tiver dúvidas sobre estes Termos de Serviço, entre em contato conosco em:
-              </p>
-              <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
-                <p><strong>Email:</strong> feminnita@gmail.com</p>
-                <p><strong>Empresa:</strong> Feminnita Marketing</p>
-                <p><strong>Assunto:</strong> Termos de Serviço</p>
-              </div>
-            </section>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">8. Cookies</h3>
+              <p>A plataforma utiliza cookies de sessão exclusivamente para manter o usuário autenticado. Não são utilizados cookies de rastreamento ou publicidade de terceiros.</p>
+            </div>
 
-            {/* Changes to Terms */}
-            <section>
-              <h2 className="text-2xl font-bold mb-4 text-slate-900">11. Alterações nos Termos</h2>
-              <p>
-                Podemos atualizar estes Termos de tempos em tempos. Notificaremos você sobre qualquer alteração publicando os novos Termos nesta página e atualizando a data de "Última atualização" no topo desta página. Sua utilização contínua do Serviço após essas alterações constitui sua aceitação dos novos Termos.
-              </p>
-            </section>
-          </CardContent>
-        </Card>
-      </main>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-2">9. Contato — Encarregado de Dados (DPO)</h3>
+              <p>Para exercer seus direitos ou esclarecer dúvidas sobre privacidade: <a href="mailto:feminnita@gmail.com" className="text-pink-600 underline">feminnita@gmail.com</a></p>
+            </div>
+          </div>
+        </section>
+
+        <div className="mt-12 pt-6 border-t border-gray-200 text-center text-xs text-gray-400">
+          © {new Date().getFullYear()} Feminnita Pijamas LTDA — Todos os direitos reservados
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import {
   Bot, CheckCircle, ChevronDown, ChevronUp, Clock, Loader2,
   MessageSquare, PlayCircle, Send, XCircle, Upload, Video,
-  Trash2, Film, TrendingUp, Package, Wand2, Download, Plus, X,
+  Trash2, Film, TrendingUp, Package, Calendar, Send,
 } from "lucide-react";
 import lunaPhoto from "@/assets/luna.jpg";
 import mayaPhoto from "@/assets/maya.jpg";
@@ -366,13 +366,309 @@ export function AgentPanel({ agent, account }: { agent: Agent; account: string }
   );
 }
 
+// ─── Studio IA (Hailuo / MiniMax) ────────────────────────────────────────────
+
+const STUDIO_COLOR = "#EC4899";
+
+function VideoStudioAI() {
+  const [imageUrl, setImageUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [prompt, setPrompt] = useState("");
+  const [title, setTitle] = useState("");
+  const [pollingId, setPollingId] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const genMut = trpc.tiktokTeam.generateVideoAI.useMutation({
+    onSuccess: (data) => {
+      toast.success("Geração iniciada! O vídeo aparece na aba Vídeos quando pronto.");
+      setPollingId(data.videoId);
+      setImageUrl("");
+      setPrompt("");
+      setTitle("");
+    },
+    onError: (err) => toast.error(`Erro: ${err.message}`),
+  });
+
+  const videoQuery = trpc.tiktokTeam.listVideos.useQuery(undefined, {
+    refetchInterval: pollingId ? 5000 : false,
+  });
+
+  useEffect(() => {
+    if (!pollingId) return;
+    const found = videoQuery.data?.find((v: any) => v.id === pollingId);
+    if (found && (found.status === "ready" || found.status === "error")) {
+      setPollingId(null);
+      if (found.status === "ready") toast.success("Vídeo pronto! Veja na aba Vídeos.");
+      else toast.error("Erro na geração. Tente novamente.");
+    }
+  }, [videoQuery.data, pollingId]);
+
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload/media", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!data.url) throw new Error(data.error || "Upload falhou");
+      setImageUrl(data.url);
+      if (!title) setTitle(file.name.replace(/\.[^.]+$/, ""));
+    } catch (err: any) {
+      toast.error(`Upload falhou: ${err.message}`);
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  }
+
+  const isGenerating = genMut.isPending || !!pollingId;
+
+  return (
+    <div className="space-y-5">
+      <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-5">
+        <div className="flex items-center gap-2">
+          <span className="text-xl">🎬</span>
+          <h2 className="text-base font-bold text-gray-800">Studio IA</h2>
+          <span className="text-xs px-2 py-0.5 rounded-full font-semibold text-white" style={{ background: STUDIO_COLOR }}>Beta</span>
+        </div>
+        <p className="text-xs text-gray-500">Envie uma imagem de produto e a IA gera um vídeo com movimento real para TikTok.</p>
+
+        {/* Image upload */}
+        <div>
+          <label className="block text-xs font-medium text-gray-700 mb-1.5">Imagem base</label>
+          {imageUrl ? (
+            <div className="relative w-40">
+              <img src={imageUrl} alt="preview" className="w-40 h-52 object-cover rounded-xl border border-gray-200" />
+              <button
+                onClick={() => setImageUrl("")}
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold"
+              >✕</button>
+            </div>
+          ) : (
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="flex items-center gap-2 px-4 py-2.5 text-sm border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-purple-400 hover:text-purple-600 transition-colors"
+            >
+              {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+              {uploading ? "Enviando..." : "Selecionar imagem"}
+            </button>
+          )}
+          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
+        </div>
+
+        {/* Title */}
+        <div>
+          <label className="block text-xs font-medium text-gray-700 mb-1.5">Título do vídeo</label>
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Ex: Pijama Florido — movimento"
+            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2"
+            style={{ "--tw-ring-color": STUDIO_COLOR } as any}
+          />
+        </div>
+
+        {/* Prompt */}
+        <div>
+          <label className="block text-xs font-medium text-gray-700 mb-1.5">
+            Prompt de movimento <span className="text-gray-400 font-normal">(opcional)</span>
+          </label>
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            rows={3}
+            placeholder="Ex: modelo caminhando com o pijama, luz suave, câmera lenta..."
+            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 resize-none"
+            style={{ "--tw-ring-color": STUDIO_COLOR } as any}
+          />
+        </div>
+
+        <button
+          onClick={() => genMut.mutate({ title: title || "Vídeo IA", imageUrl, prompt })}
+          disabled={!imageUrl || !title || isGenerating}
+          className="w-full py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 flex items-center justify-center gap-2"
+          style={{ background: STUDIO_COLOR }}
+        >
+          {isGenerating
+            ? <><Loader2 className="w-4 h-4 animate-spin" /> Gerando vídeo…</>
+            : <>✨ Gerar Vídeo com Hailuo</>}
+        </button>
+
+        {pollingId && (
+          <p className="text-xs text-center text-gray-400 animate-pulse">Aguardando Hailuo… ~2-3 minutos.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Modal de Publicação ──────────────────────────────────────────────────────
+
+const PLATFORM_OPTIONS = [
+  { id: "tiktok" as const,    label: "TikTok",           color: "#010101", note: "API em aprovação — agendamento salvo" },
+  { id: "instagram" as const, label: "Instagram Reels",  color: "#E1306C", note: "API em aprovação — agendamento salvo" },
+];
+
+function PublishModal({ video, onClose }: { video: any; onClose: () => void }) {
+  const utils = trpc.useUtils();
+  const saved = (() => { try { return JSON.parse(video.notes || "{}"); } catch { return {}; } })();
+
+  const [caption, setCaption] = useState(saved.caption || video.description || "");
+  const [hashtags, setHashtags] = useState(saved.hashtags || video.tags || "");
+  const [platforms, setPlatforms] = useState<("tiktok" | "instagram")[]>(saved.platforms || ["tiktok"]);
+  const [scheduleMode, setScheduleMode] = useState<"now" | "later">("now");
+  const [scheduledAt, setScheduledAt] = useState("");
+
+  const scheduleMut = trpc.tiktokTeam.schedulePost.useMutation({
+    onSuccess: () => {
+      utils.tiktokTeam.listVideos.invalidate();
+      toast.success(scheduleMode === "later" ? "Publicação agendada!" : "Configuração salva!");
+      onClose();
+    },
+    onError: (err) => toast.error(`Erro: ${err.message}`),
+  });
+
+  function togglePlatform(p: "tiktok" | "instagram") {
+    setPlatforms((prev) =>
+      prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]
+    );
+  }
+
+  function handleSubmit() {
+    if (!platforms.length) { toast.error("Selecione ao menos uma plataforma."); return; }
+    if (scheduleMode === "later" && !scheduledAt) { toast.error("Informe data e hora do agendamento."); return; }
+    scheduleMut.mutate({
+      videoId: video.id,
+      caption,
+      hashtags,
+      platforms,
+      scheduledAt: scheduleMode === "later" ? scheduledAt : undefined,
+    });
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+          <div>
+            <h2 className="font-bold text-gray-800 flex items-center gap-2"><Send className="w-4 h-4" /> Publicar Vídeo</h2>
+            <p className="text-xs text-gray-500 mt-0.5 truncate max-w-sm">{video.title}</p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+        </div>
+
+        <div className="p-5 space-y-5">
+          {/* Plataformas */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 mb-2">Publicar em</label>
+            <div className="flex gap-2">
+              {PLATFORM_OPTIONS.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => togglePlatform(p.id)}
+                  className={`flex-1 py-2.5 px-3 rounded-xl border-2 text-sm font-semibold transition-all ${
+                    platforms.includes(p.id) ? "border-current text-white" : "border-gray-200 text-gray-500"
+                  }`}
+                  style={platforms.includes(p.id) ? { background: p.color, borderColor: p.color } : {}}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            {platforms.map((p) => {
+              const info = PLATFORM_OPTIONS.find((x) => x.id === p);
+              return <p key={p} className="text-[11px] text-amber-600 mt-1">⚠ {info?.label}: {info?.note}</p>;
+            })}
+          </div>
+
+          {/* Legenda */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+              Legenda <span className="font-normal text-gray-400">({caption.length}/2200)</span>
+            </label>
+            <textarea
+              value={caption}
+              onChange={(e) => setCaption(e.target.value.slice(0, 2200))}
+              rows={4}
+              placeholder="Escreva a legenda do post..."
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-300 resize-none"
+            />
+          </div>
+
+          {/* Hashtags */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Hashtags</label>
+            <input
+              value={hashtags}
+              onChange={(e) => setHashtags(e.target.value)}
+              placeholder="#feminnita #pijama #tiktok"
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-300"
+            />
+          </div>
+
+          {/* Agendamento */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 mb-2">Quando publicar?</label>
+            <div className="flex gap-2 mb-3">
+              {[
+                { id: "now" as const, label: "Salvar configuração" },
+                { id: "later" as const, label: "Agendar data/hora" },
+              ].map((opt) => (
+                <button
+                  key={opt.id}
+                  onClick={() => setScheduleMode(opt.id)}
+                  className={`flex-1 py-2 text-xs font-semibold rounded-lg border-2 transition-all ${
+                    scheduleMode === opt.id ? "border-pink-500 text-pink-600 bg-pink-50" : "border-gray-200 text-gray-500"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            {scheduleMode === "later" && (
+              <input
+                type="datetime-local"
+                value={scheduledAt}
+                onChange={(e) => setScheduledAt(e.target.value)}
+                min={new Date().toISOString().slice(0, 16)}
+                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-300"
+              />
+            )}
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-xs text-blue-700 font-semibold mb-1">📋 Próximos passos</p>
+            <p className="text-xs text-blue-600">Quando a API do TikTok e Instagram forem aprovadas, a publicação acontecerá automaticamente na data/hora agendada.</p>
+          </div>
+
+          <button
+            onClick={handleSubmit}
+            disabled={scheduleMut.isPending}
+            className="w-full py-2.5 rounded-xl text-sm font-semibold text-white bg-gray-900 disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {scheduleMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Calendar className="w-4 h-4" />}
+            {scheduleMode === "later" ? "Agendar publicação" : "Salvar configuração"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Módulo de Vídeos ─────────────────────────────────────────────────────────
 
 function VideoLibrary() {
   const [uploading, setUploading] = useState(false);
   const [videoTitle, setVideoTitle] = useState("");
+  const [publishingVideo, setPublishingVideo] = useState<any | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const utils = trpc.useUtils();
+  const cancelMut = trpc.tiktokTeam.cancelSchedule.useMutation({
+    onSuccess: () => { utils.tiktokTeam.listVideos.invalidate(); toast.success("Agendamento cancelado."); },
+  });
 
   const listQuery = trpc.tiktokTeam.listVideos.useQuery();
   const deleteMut = trpc.tiktokTeam.deleteVideo.useMutation({
@@ -475,13 +771,38 @@ function VideoLibrary() {
                   <p className="text-xs text-gray-400">
                     {v.source === "uploaded" ? "Upload" : "Gerado"} · {fmtSize(v.fileSize)} · {fmtDate(v.createdAt)}
                   </p>
+                  {v.status === "scheduled" && v.scheduledAt && (
+                    <p className="text-xs text-purple-600 font-medium mt-0.5 flex items-center gap-1">
+                      <Calendar className="w-3 h-3" /> {fmtDate(v.scheduledAt)}
+                      {(() => { try { const p = JSON.parse(v.notes || "{}"); return p.platforms?.join(" + "); } catch { return ""; } })()}
+                    </p>
+                  )}
                 </div>
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${
                   v.status === "published" ? "bg-green-100 text-green-700" :
+                  v.status === "scheduled" ? "bg-purple-100 text-purple-700" :
                   v.status === "ready" ? "bg-blue-100 text-blue-700" :
+                  v.status === "error" ? "bg-red-100 text-red-700" :
                   "bg-gray-100 text-gray-600"
-                }`}>{v.status}</span>
-                <button onClick={() => deleteMut.mutate({ id: v.id })} className="p-1.5 text-gray-400 hover:text-red-500 rounded">
+                }`}>{v.status === "scheduled" ? "agendado" : v.status === "ready" ? "pronto" : v.status === "published" ? "publicado" : v.status}</span>
+                {(v.status === "ready" || v.status === "draft") && (
+                  <button
+                    onClick={() => setPublishingVideo(v)}
+                    className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-white rounded-lg shrink-0"
+                    style={{ background: "#010101" }}
+                  >
+                    <Send className="w-3 h-3" /> Publicar
+                  </button>
+                )}
+                {v.status === "scheduled" && (
+                  <button
+                    onClick={() => { setPublishingVideo(v); }}
+                    className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-purple-700 bg-purple-50 border border-purple-200 rounded-lg shrink-0"
+                  >
+                    <Calendar className="w-3 h-3" /> Editar
+                  </button>
+                )}
+                <button onClick={() => deleteMut.mutate({ id: v.id })} className="p-1.5 text-gray-400 hover:text-red-500 rounded shrink-0">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
@@ -497,327 +818,41 @@ function VideoLibrary() {
           <p className="text-xs text-gray-400">Faça upload dos seus vídeos para organizar e publicar no TikTok.</p>
         </div>
       )}
-    </div>
-  );
-}
 
-// ─── Video Studio ─────────────────────────────────────────────────────────────
-
-const STUDIO_COLOR = "#8B5CF6";
-
-const STUDIO_VOICES = [
-  { id: "sXSV9RZ095VZyL64w3ap", label: "Voz 1" },
-  { id: "r2fkFV8WAqXq2AqBpgJT", label: "Voz 2" },
-  { id: "x8FWrDHAK5xiFTJLpnHq", label: "Voz 3" },
-  { id: "PznTnBc8X6pvixs9UkQm", label: "Voz 4" },
-  { id: "ohZOfA9iwlZ5nOsoY7LB", label: "Voz 5" },
-];
-
-interface SelectedImage { id: string; file: File; previewUrl: string; }
-
-function VideoStudio() {
-  const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([]);
-  const [hookText, setHookText] = useState("");
-  const [ctaText, setCtaText] = useState("");
-  const [durationPerImage, setDurationPerImage] = useState(4);
-  const [title, setTitle] = useState("");
-  const [dubbing, setDubbing] = useState(true);
-  const [voiceId, setVoiceId] = useState(STUDIO_VOICES[0].id);
-  const [previewingVoice, setPreviewingVoice] = useState<string | null>(null);
-  const previewMut = trpc.tiktokTeam.previewVoice.useMutation({
-    onSuccess: (data) => {
-      const audio = new Audio(`data:audio/mpeg;base64,${data.audio}`);
-      audio.play().catch(() => {});
-      setPreviewingVoice(null);
-    },
-    onError: () => { toast.error("Erro ao gerar preview."); setPreviewingVoice(null); },
-  });
-  const [uploading, setUploading] = useState(false);
-  const [generatingId, setGeneratingId] = useState<number | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const utils = trpc.useUtils();
-
-  const listQuery = trpc.tiktokTeam.listVideos.useQuery(undefined, {
-    refetchInterval: generatingId ? 3000 : false,
-  });
-
-  const generateMut = trpc.tiktokTeam.generateVideo.useMutation({
-    onSuccess: (data) => {
-      setGeneratingId(data.videoId);
-      utils.tiktokTeam.listVideos.invalidate();
-      toast.success("Vídeo em processamento…");
-    },
-    onError: (err) => toast.error(`Erro: ${err.message}`),
-  });
-
-  const deleteMut = trpc.tiktokTeam.deleteVideo.useMutation({
-    onSuccess: () => { utils.tiktokTeam.listVideos.invalidate(); toast.success("Removido"); },
-  });
-
-  useEffect(() => {
-    if (!generatingId) return;
-    const found = listQuery.data?.find((v: any) => v.id === generatingId);
-    if (found && (found.status === "ready" || found.status === "error")) {
-      setGeneratingId(null);
-      if (found.status === "ready") toast.success("Vídeo gerado com sucesso!");
-      if (found.status === "error") toast.error(`Falha: ${found.description || "erro desconhecido"}`);
-    }
-  }, [listQuery.data, generatingId]);
-
-  useEffect(() => {
-    return () => { selectedImages.forEach(i => URL.revokeObjectURL(i.previewUrl)); };
-  }, []);
-
-  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files || []);
-    const remaining = 5 - selectedImages.length;
-    if (remaining <= 0) { toast.error("Máximo 5 imagens."); return; }
-    const toAdd = files.slice(0, remaining);
-    if (files.length > remaining) toast.error(`Apenas ${remaining} imagem(ns) adicionada(s). Máximo 5.`);
-    setSelectedImages(prev => [...prev, ...toAdd.map(file => ({
-      id: `${Date.now()}-${Math.random()}`,
-      file,
-      previewUrl: URL.createObjectURL(file),
-    }))]);
-    e.target.value = "";
-  }
-
-  function removeImage(id: string) {
-    setSelectedImages(prev => {
-      const item = prev.find(i => i.id === id);
-      if (item) URL.revokeObjectURL(item.previewUrl);
-      return prev.filter(i => i.id !== id);
-    });
-  }
-
-  function moveImage(id: string, dir: -1 | 1) {
-    setSelectedImages(prev => {
-      const idx = prev.findIndex(i => i.id === id);
-      const newIdx = idx + dir;
-      if (idx < 0 || newIdx < 0 || newIdx >= prev.length) return prev;
-      const next = [...prev];
-      [next[idx], next[newIdx]] = [next[newIdx], next[idx]];
-      return next;
-    });
-  }
-
-  async function handleGenerate() {
-    if (!title.trim()) return toast.error("Preencha o título do vídeo.");
-    if (selectedImages.length === 0) return toast.error("Selecione pelo menos 1 imagem.");
-    setUploading(true);
-    try {
-      const imageUrls: string[] = [];
-      for (const img of selectedImages) {
-        const fd = new FormData();
-        fd.append("file", img.file);
-        const resp = await fetch("/api/upload/media", { method: "POST", body: fd });
-        const data = await resp.json();
-        if (!data.url) throw new Error(data.error || "Upload falhou");
-        imageUrls.push(data.url);
-      }
-      generateMut.mutate({ title: title.trim(), imageUrls, hookText: hookText.trim(), ctaText: ctaText.trim(), durationPerImage, dubbing, voiceId: dubbing ? voiceId : undefined });
-    } catch (err: any) {
-      toast.error(`Upload falhou: ${err.message}`);
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  const videos = ((listQuery.data || []) as any[]).filter((v: any) => v.source === "generated");
-  const isBusy = uploading || generateMut.isPending || !!generatingId;
-
-  return (
-    <div className="space-y-4">
-      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
-        <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-          <Wand2 className="w-4 h-4" style={{ color: STUDIO_COLOR }} />
-          Gerar Vídeo com IA
-        </h3>
-        <p className="text-xs text-gray-500">
-          Selecione até 5 imagens do produto, escreva os textos e gere um vídeo vertical 9:16 pronto para TikTok/Reels.
-        </p>
-
-        {/* Title */}
-        <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1">Título do vídeo</label>
-          <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
-            placeholder="Ex: Try-on pijama floral verão 2025"
-            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2"
-            style={{ "--tw-ring-color": STUDIO_COLOR } as any} />
-        </div>
-
-        {/* Image picker — direct upload */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="block text-xs font-semibold text-gray-600">
-              Imagens ({selectedImages.length}/5)
-              {selectedImages.length > 0 && <span className="ml-2 font-normal text-gray-400">— 1ª imagem = capa do vídeo</span>}
-            </label>
-            {selectedImages.length > 0 && (
-              <button onClick={() => { selectedImages.forEach(i => URL.revokeObjectURL(i.previewUrl)); setSelectedImages([]); }}
-                className="text-xs text-red-400 hover:text-red-600 transition-colors">Limpar todas</button>
-            )}
-          </div>
-
-          {selectedImages.length > 0 && (
-            <div className="space-y-2 mb-3">
-              {selectedImages.map((img, idx) => (
-                <div key={img.id} className="flex items-center gap-3 p-2 border border-gray-200 rounded-lg bg-gray-50">
-                  <span className="text-xs font-bold text-gray-400 w-4 shrink-0 text-center">{idx + 1}</span>
-                  <img src={img.previewUrl} alt={img.file.name} className="w-14 h-14 object-cover rounded-lg shrink-0" />
-                  <span className="flex-1 text-xs text-gray-600 truncate">{img.file.name}</span>
-                  <div className="flex flex-col gap-0.5 shrink-0">
-                    <button type="button" onClick={() => moveImage(img.id, -1)} disabled={idx === 0}
-                      className="p-0.5 text-gray-400 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed">
-                      <ChevronUp className="w-4 h-4" />
-                    </button>
-                    <button type="button" onClick={() => moveImage(img.id, 1)} disabled={idx === selectedImages.length - 1}
-                      className="p-0.5 text-gray-400 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed">
-                      <ChevronDown className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <button type="button" onClick={() => removeImage(img.id)}
-                    className="p-1 text-red-400 hover:text-red-600 shrink-0 rounded">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {selectedImages.length < 5 && (
-            <button type="button" onClick={() => fileInputRef.current?.click()}
-              className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-gray-300 hover:border-purple-400 rounded-xl text-sm text-gray-500 hover:text-purple-600 transition-colors">
-              <Plus className="w-5 h-5" />
-              {selectedImages.length === 0 ? "Selecionar imagens do produto" : "Adicionar mais imagens"}
-            </button>
-          )}
-          <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileSelect} />
-        </div>
-
-        {/* Texts */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Hook (início — primeiros 3s)</label>
-            <input type="text" value={hookText} onChange={(e) => setHookText(e.target.value.slice(0, 70))}
-              placeholder="Ex: Você sabia que dá para comprar pijamas no preço de fábrica?"
-              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2"
-              style={{ "--tw-ring-color": STUDIO_COLOR } as any} />
-            <p className="text-xs text-gray-400 mt-1">{hookText.length}/70 caracteres</p>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">CTA (final — últimos 3s)</label>
-            <input type="text" value={ctaText} onChange={(e) => setCtaText(e.target.value.slice(0, 70))}
-              placeholder="Ex: Comenta CATÁLOGO que eu mando tudo no DM"
-              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2"
-              style={{ "--tw-ring-color": STUDIO_COLOR } as any} />
-            <p className="text-xs text-gray-400 mt-1">{ctaText.length}/70 caracteres</p>
-          </div>
-        </div>
-
-        {/* Duration */}
-        <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1">Duração por imagem</label>
-          <div className="flex gap-2 flex-wrap">
-            {[2, 3, 4, 5, 6, 8, 10].map((s) => (
-              <button key={s} onClick={() => setDurationPerImage(s)}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${durationPerImage === s ? "text-white border-transparent" : "border-gray-200 text-gray-600 hover:border-gray-300"}`}
-                style={durationPerImage === s ? { background: STUDIO_COLOR } : {}}>
-                {s}s
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Dublagem */}
-        <div className="bg-purple-50 border border-purple-200 rounded-xl px-4 py-3 space-y-3">
-          <div className="flex items-center gap-3">
-            <input type="checkbox" id="dubbing" checked={dubbing} onChange={(e) => setDubbing(e.target.checked)}
-              className="w-4 h-4 accent-purple-600 cursor-pointer" />
-            <label htmlFor="dubbing" className="text-sm font-medium text-purple-900 cursor-pointer select-none">
-              🎙️ Dublagem com IA (ElevenLabs) — voz lê o hook e o CTA automaticamente
-            </label>
-          </div>
-          {dubbing && (
-            <div>
-              <p className="text-xs font-semibold text-purple-800 mb-2">Escolha a voz:</p>
-              <div className="flex gap-2 flex-wrap">
-                {STUDIO_VOICES.map((v) => (
-                  <div key={v.id} className="flex items-center gap-1">
-                    <button type="button" onClick={() => setVoiceId(v.id)}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${voiceId === v.id ? "text-white border-transparent" : "border-purple-300 text-purple-700 hover:border-purple-500 bg-white"}`}
-                      style={voiceId === v.id ? { background: STUDIO_COLOR } : {}}>
-                      {v.label}
-                    </button>
-                    <button type="button" title="Ouvir amostra"
-                      onClick={() => { setPreviewingVoice(v.id); previewMut.mutate({ voiceId: v.id }); }}
-                      disabled={previewingVoice === v.id}
-                      className="p-1 rounded-full text-purple-500 hover:bg-purple-100 disabled:opacity-50">
-                      {previewingVoice === v.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <PlayCircle className="w-3.5 h-3.5" />}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Generate button */}
-        <button onClick={handleGenerate} disabled={isBusy}
-          className="w-full flex items-center justify-center gap-2 py-3 text-white rounded-xl font-semibold text-sm disabled:opacity-50"
-          style={{ background: STUDIO_COLOR }}>
-          {isBusy ? <><Loader2 className="w-4 h-4 animate-spin" /> {uploading ? "Enviando imagens…" : "Processando…"}</> : <><Wand2 className="w-4 h-4" /> Gerar Vídeo</>}
-        </button>
-
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 text-xs text-purple-700 space-y-0.5">
-          <p className="font-semibold">Como funciona:</p>
-          <p>• As imagens são montadas em slideshow vertical 1080×1920 (9:16)</p>
-          <p>• Hook e CTA aparecem como legenda no início e no final do vídeo</p>
-          <p>• Saída: MP4 H.264, 30fps, sem áudio (adicione música no TikTok/Reels)</p>
-          <p>• Processamento leva ~30–90 segundos dependendo do número de imagens</p>
-        </div>
-      </div>
-
-      {/* Generated videos list */}
-      {videos.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <h3 className="font-semibold text-gray-800 flex items-center gap-2 mb-4">
-            <Video className="w-4 h-4 text-gray-400" /> Vídeos Gerados ({videos.length})
+      {/* Agendados */}
+      {videos.filter((v: any) => v.status === "scheduled").length > 0 && (
+        <div className="bg-purple-50 border border-purple-200 rounded-xl p-5">
+          <h3 className="font-semibold text-purple-800 flex items-center gap-2 mb-3">
+            <Calendar className="w-4 h-4" /> Agendados ({videos.filter((v: any) => v.status === "scheduled").length})
           </h3>
           <div className="space-y-2">
-            {videos.map((v: any) => (
-              <div key={v.id} className="flex items-center gap-3 px-3 py-3 border border-gray-200 rounded-lg hover:bg-gray-50">
-                <div className="w-10 h-10 rounded flex items-center justify-center shrink-0" style={{ background: STUDIO_COLOR + "15" }}>
-                  {v.status === "processing" ? <Loader2 className="w-5 h-5 animate-spin" style={{ color: STUDIO_COLOR }} />
-                    : v.status === "error" ? <XCircle className="w-5 h-5 text-red-400" />
-                    : <Film className="w-5 h-5" style={{ color: STUDIO_COLOR }} />}
+            {videos.filter((v: any) => v.status === "scheduled").map((v: any) => {
+              const meta = (() => { try { return JSON.parse(v.notes || "{}"); } catch { return {}; } })();
+              return (
+                <div key={v.id} className="flex items-center gap-3 bg-white rounded-lg px-3 py-2.5 border border-purple-100">
+                  <Calendar className="w-4 h-4 text-purple-400 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800 truncate">{v.title}</p>
+                    <p className="text-xs text-purple-600">{fmtDate(v.scheduledAt)} · {(meta.platforms || []).join(" + ")}</p>
+                  </div>
+                  <button
+                    onClick={() => cancelMut.mutate({ videoId: v.id })}
+                    className="text-xs text-red-400 hover:text-red-600 shrink-0"
+                  >Cancelar</button>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 truncate">{v.title}</p>
-                  <p className="text-xs text-gray-400">
-                    {fmtDate(v.createdAt)}{v.durationSeconds ? ` · ${v.durationSeconds}s` : ""}
-                    {v.status === "processing" ? " · Processando…" : ""}
-                    {v.status === "error" ? ` · Erro: ${v.description || "desconhecido"}` : ""}
-                  </p>
-                </div>
-                {v.status === "ready" && v.filePath && (
-                  <a href={v.filePath} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white rounded-lg"
-                    style={{ background: STUDIO_COLOR }}>
-                    <Download className="w-3.5 h-3.5" /> Baixar
-                  </a>
-                )}
-                <button onClick={() => deleteMut.mutate({ id: v.id })} className="p-1.5 text-gray-400 hover:text-red-500 rounded">
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
+      )}
+
+      {publishingVideo && (
+        <PublishModal video={publishingVideo} onClose={() => setPublishingVideo(null)} />
       )}
     </div>
   );
 }
+
 
 // ─── Página principal ─────────────────────────────────────────────────────────
 
@@ -830,7 +865,10 @@ export default function TiktokTeamPage() {
   const [activeTab, setActiveTab] = useState<"videos" | "studio">("videos");
 
   useEffect(() => {
-    const handler = (e: Event) => setActiveTab((e as CustomEvent).detail as "videos" | "studio");
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail === "studio" || detail === "videos") setActiveTab(detail);
+    };
     window.addEventListener("tiktok-tab", handler);
     return () => window.removeEventListener("tiktok-tab", handler);
   }, []);
@@ -875,11 +913,11 @@ export default function TiktokTeamPage() {
         ))}
       </div>
 
-      {/* Tab nav — Vídeos e Studio */}
+      {/* Tab nav */}
       <div className="flex gap-1 border-b border-gray-200">
         {[
-          { id: "videos" as const, label: "Vídeos", emoji: "🎬", color: "#6B7280" },
-          { id: "studio" as const, label: "Studio ✨", emoji: "🎬", color: STUDIO_COLOR },
+          { id: "videos" as const, label: "Vídeos", color: "#6B7280" },
+          { id: "studio" as const, label: "Studio IA ✨", color: STUDIO_COLOR },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -889,12 +927,12 @@ export default function TiktokTeamPage() {
             }`}
             style={activeTab === tab.id ? { color: tab.color, borderColor: tab.color } : {}}
           >
-            {tab.emoji} {tab.label}
+            {tab.label}
           </button>
         ))}
       </div>
 
-      {activeTab === "studio" ? <VideoStudio /> : <VideoLibrary />}
+      {activeTab === "studio" ? <VideoStudioAI /> : <VideoLibrary />}
     </div>
   );
 }

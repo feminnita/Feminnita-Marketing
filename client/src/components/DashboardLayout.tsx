@@ -481,7 +481,7 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
                   <SidebarMenuSubButton onClick={() => { setLocation("/tiktok-team"); window.dispatchEvent(new CustomEvent("tiktok-tab", { detail: "studio" })); }}>
-                    <Video className="h-3 w-3" /> TikTok — Studio ✨
+                    <Video className="h-3 w-3" /> TikTok — Studio IA ✨
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
