@@ -1,6 +1,8 @@
 import { getDb } from "../db";
 import { oauthTokens } from "../../drizzle/schema";
 import { eq, and, lte, isNotNull } from "drizzle-orm";
+import { refreshMLToken } from "../routers/ml-oauth";
+import { refreshShopeeToken } from "../routers/shopee-oauth";
 
 const REFRESH_INTERVAL_MS = 2 * 60 * 60 * 1000; // 2 horas
 const EXPIRY_THRESHOLD_MS = 24 * 60 * 60 * 1000; // 24 horas
@@ -168,6 +170,16 @@ async function runTokenRefresh(): Promise<void> {
   console.log("[TokenRefresh] Verificação concluída.");
 }
 
+async function runMarketplaceRefresh(): Promise<void> {
+  console.log("[MarketplaceRefresh] Renovando tokens ML (conta 1 e 2) e Shopee...");
+  await refreshMLToken("feminnita").catch((e) => console.error("[MarketplaceRefresh] ML feminnita:", e.message));
+  await refreshMLToken("fnt").catch((e) => console.error("[MarketplaceRefresh] ML fnt:", e.message));
+  await refreshShopeeToken().catch((e) => console.error("[MarketplaceRefresh] Shopee:", e.message));
+  console.log("[MarketplaceRefresh] Concluído.");
+}
+
+const MARKETPLACE_REFRESH_INTERVAL_MS = 5 * 60 * 60 * 1000; // 5 horas
+
 export function startTokenRefreshAgent(): () => void {
   console.log("[TokenRefresh] Agente iniciado (intervalo=2h, limiar=24h)");
 
@@ -177,8 +189,15 @@ export function startTokenRefreshAgent(): () => void {
     runTokenRefresh().catch((err) => console.error("[TokenRefresh] Erro no interval:", err));
   }, REFRESH_INTERVAL_MS);
 
+  // Marketplace tokens (ML Feminnita, ML FNT, Shopee) — renovar a cada 5h
+  runMarketplaceRefresh().catch((e) => console.error("[MarketplaceRefresh] Erro inicial:", e.message));
+  const mlInterval = setInterval(() => {
+    runMarketplaceRefresh().catch((e) => console.error("[MarketplaceRefresh] Erro:", e.message));
+  }, MARKETPLACE_REFRESH_INTERVAL_MS);
+
   return () => {
     clearInterval(interval);
+    clearInterval(mlInterval);
     console.log("[TokenRefresh] Agente encerrado.");
   };
 }

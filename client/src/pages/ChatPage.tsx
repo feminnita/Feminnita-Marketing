@@ -88,9 +88,10 @@ export default function ChatPage() {
 
   const [dmMsgs, setDmMsgs] = useState<Record<number, DmMsg[]>>({});
 
-  const contactRef = useRef<Contact | null>(null);
-  const bottomRef  = useRef<HTMLDivElement>(null);
-  const fileRef    = useRef<HTMLInputElement>(null);
+  const contactRef    = useRef<Contact | null>(null);
+  const bottomRef     = useRef<HTMLDivElement>(null);
+  const fileRef       = useRef<HTMLInputElement>(null);
+  const loadedAgents  = useRef(new Set<string>());
   const [uploading, setUploading] = useState(false);
 
   const chatMutation      = trpc.specialistChat.chat.useMutation();
@@ -99,6 +100,18 @@ export default function ChatPage() {
   const vapidQuery        = trpc.pushSubscriptions.vapidPublicKey.useQuery(undefined, { staleTime: Infinity });
   const subscribeMutation = trpc.pushSubscriptions.subscribe.useMutation();
   const teamQuery         = trpc.users.list.useQuery(undefined, { staleTime: 60_000 });
+
+  // Carrega histórico do banco quando usuário abre um agente
+  const currentAgentName = contact?.kind === "agent" ? contact.agentName : undefined;
+  const recentConvsQuery = trpc.specialistChat.listConversations.useQuery(
+    { agentName: currentAgentName ?? "fernanda", limit: 1 },
+    { enabled: !!currentAgentName, staleTime: 0 }
+  );
+  const recentConvId = recentConvsQuery.data?.[0]?.id ?? null;
+  const recentMsgsQuery = trpc.specialistChat.getMessages.useQuery(
+    { conversationId: recentConvId ?? 0 },
+    { enabled: !!recentConvId }
+  );
 
   const dmWithUserId = contact?.kind === "human" ? (contact.id as number) : null;
   const dmHistoryQuery = trpc.dm.history.useQuery(
@@ -195,6 +208,19 @@ export default function ChatPage() {
   }, [user]);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [groupMsgs, agentCtxs, dmMsgs, contact]);
+
+  // Quando carrega mensagens do banco, injeta no agentCtxs (só na primeira vez por agente/sessão)
+  useEffect(() => {
+    if (!currentAgentName || !recentConvId || !recentMsgsQuery.data?.length) return;
+    if (loadedAgents.current.has(currentAgentName)) return;
+    loadedAgents.current.add(currentAgentName);
+    const msgs: AgentMsg[] = recentMsgsQuery.data.map((m: any) => ({
+      role: m.role as "user" | "assistant",
+      text: m.content,
+      ts: new Date(m.createdAt).getTime(),
+    }));
+    setAgentCtxs(p => ({ ...p, [currentAgentName]: { msgs, convId: recentConvId } }));
+  }, [recentMsgsQuery.data, currentAgentName, recentConvId]);
 
   function selectContact(c: Contact) { setContact(c); setInput(""); }
   function goBack() { setContact(null); setInput(""); }

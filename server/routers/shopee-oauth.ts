@@ -38,6 +38,37 @@ function updateEnvFile(updates: Record<string, string>): void {
   fs.writeFileSync(envPath, content, "utf-8");
 }
 
+export async function refreshShopeeToken(): Promise<boolean> {
+  const refreshToken = process.env.SHOPEE_REFRESH_TOKEN || "";
+  const shopId = parseInt(process.env.SHOPEE_SHOP_ID || "0");
+  if (!refreshToken || !shopId) {
+    console.warn("[ShopeeOAuth] refresh impossível — token ou shopId ausente");
+    return false;
+  }
+  try {
+    const apiPath = "/api/v2/auth/access_token/get";
+    const ts = Math.floor(Date.now() / 1000);
+    const sign = shopeeSign(apiPath, ts);
+    const url = `${BASE_URL}${apiPath}?partner_id=${PARTNER_ID}&timestamp=${ts}&sign=${sign}`;
+    const r = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken, shop_id: shopId, partner_id: PARTNER_ID }),
+    });
+    const data = await r.json() as any;
+    if (data.access_token) {
+      updateEnvFile({ SHOPEE_ACCESS_TOKEN: data.access_token, SHOPEE_REFRESH_TOKEN: data.refresh_token || refreshToken });
+      console.log("[ShopeeOAuth] ✅ Token renovado automaticamente");
+      return true;
+    }
+    console.warn("[ShopeeOAuth] Refresh falhou:", JSON.stringify(data));
+    return false;
+  } catch (e: any) {
+    console.error("[ShopeeOAuth] Erro ao renovar token:", e.message);
+    return false;
+  }
+}
+
 export function registerShopeeOAuthRoutes(app: Express): void {
   // ── Inicia fluxo OAuth ──────────────────────────────────────────────────────
   app.get("/api/shopee/start", (_req, res) => {
