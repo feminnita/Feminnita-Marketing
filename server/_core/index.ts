@@ -132,7 +132,7 @@ async function startServer() {
         cb(null, `${Date.now()}-${cryptoMod.default.randomBytes(6).toString("hex")}${ext}`);
       },
     });
-    const upload = multer({ storage, limits: { fileSize: 20 * 1024 * 1024 } });
+    const upload = multer({ storage, limits: { fileSize: 500 * 1024 * 1024 } });
     app.post("/api/upload/media", upload.single("file"), (req: any, res: any) => {
       if (!req.file) return res.status(400).json({ error: "Nenhum arquivo enviado" });
       res.json({ url: `/uploads/${req.file.filename}`, name: req.file.originalname });
