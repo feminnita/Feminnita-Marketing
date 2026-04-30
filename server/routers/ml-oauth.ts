@@ -185,32 +185,51 @@ export function registerMLOAuthRoutes(app: Express) {
 
 
   /**
-   * GET /api/ml/start
+   * GET /api/ml/refresh?account=feminnita|fnt
+   * Renova o access token usando o refresh token salvo no .env.
+   */
+  app.get("/api/ml/refresh", async (req, res) => {
+    const account = (req.query.account as string) === "fnt" ? "fnt" : "feminnita";
+    const ok = await refreshMLToken(account);
+    if (ok) {
+      return res.send(`✅ Token ML (${account}) renovado com sucesso! <a href="/ml-ads">Voltar ao painel</a>`);
+    }
+    return res.status(500).send(`❌ Falha ao renovar token ML (${account}). Reconecte via <a href="/api/ml/start?account=${account}">OAuth</a>.`);
+  });
+
+  /**
+   * GET /api/ml/start?account=feminnita|fnt
    * Gera PKCE e redireciona para a página de autorização do ML.
    */
-  app.get("/api/ml/start", (_req, res) => {
+  app.get("/api/ml/start", (req, res) => {
     if (!ML_CLIENT_ID) {
       return res.status(500).send("ML_CLIENT_ID_1 não configurado no servidor");
     }
 
+    const account = (req.query.account as string) === "fnt" ? "fnt" : "feminnita";
     const { verifier, challenge } = generatePKCE();
-    const state = "mkt"; // Flask verifica state == 'mkt' para relay
+    const state = `mkt_${account}`; // encode account in state
 
     // Guarda verifier para recuperar no callback
     pkceStore.set(state, verifier);
     // Limpa após 10 minutos (evita memory leak)
     setTimeout(() => pkceStore.delete(state), 10 * 60 * 1000);
 
+    // Conta FNT pode ter client_id próprio, senão usa o mesmo app ML
+    const clientId = account === "fnt"
+      ? (process.env.ML_CLIENT_ID_2 || ML_CLIENT_ID)
+      : ML_CLIENT_ID;
+
     const authUrl =
       `https://auth.mercadolivre.com.br/authorization` +
       `?response_type=code` +
-      `&client_id=${ML_CLIENT_ID}` +
+      `&client_id=${clientId}` +
       `&redirect_uri=${encodeURIComponent(ML_REDIRECT_URL)}` +
       `&state=${encodeURIComponent(state)}` +
       `&code_challenge=${challenge}` +
       `&code_challenge_method=S256`;
 
-    console.log(`[MLOAuth] Iniciando OAuth PKCE — state: ${state}`);
+    console.log(`[MLOAuth] Iniciando OAuth PKCE — account: ${account} state: ${state}`);
     return res.redirect(authUrl);
   });
 
@@ -225,6 +244,11 @@ export function registerMLOAuthRoutes(app: Express) {
       return res.status(400).send(`Erro na autorização ML: ${error || "código ausente"}`);
     }
 
+    // Detecta conta pelo state (mkt_fnt = conta 2, mkt ou mkt_feminnita = conta 1)
+    const isFnt = state?.includes("fnt");
+    const suffix = isFnt ? "2" : "1";
+    const account = isFnt ? "fnt" : "feminnita";
+
     // Recupera code_verifier pelo state
     const codeVerifier = state ? pkceStore.get(state) : undefined;
     if (!codeVerifier) {
@@ -234,12 +258,15 @@ export function registerMLOAuthRoutes(app: Express) {
     }
 
     try {
+      const clientId = isFnt ? (process.env.ML_CLIENT_ID_2 || ML_CLIENT_ID) : ML_CLIENT_ID;
+      const clientSecret = isFnt ? (process.env.ML_CLIENT_SECRET_2 || ML_CLIENT_SECRET) : ML_CLIENT_SECRET;
+
       const params: Record<string, string> = {
-        grant_type:   "authorization_code",
-        client_id:    ML_CLIENT_ID,
-        client_secret: ML_CLIENT_SECRET,
+        grant_type:    "authorization_code",
+        client_id:     clientId,
+        client_secret: clientSecret,
         code,
-        redirect_uri: ML_REDIRECT_URL,
+        redirect_uri:  ML_REDIRECT_URL,
       };
       if (codeVerifier) params.code_verifier = codeVerifier;
 
@@ -260,10 +287,11 @@ export function registerMLOAuthRoutes(app: Express) {
       const { access_token, refresh_token, user_id } = tokenData;
 
       updateEnvFile({
-        ML_ACCESS_TOKEN_1:  access_token,
-        ML_REFRESH_TOKEN_1: refresh_token || "",
-        ML_USER_ID_1:       String(user_id || ""),
+        [`ML_ACCESS_TOKEN_${suffix}`]:  access_token,
+        [`ML_REFRESH_TOKEN_${suffix}`]: refresh_token || "",
+        [`ML_USER_ID_${suffix}`]:       String(user_id || ""),
       });
+      console.log(`[MLOAuth] ✅ Conta ML conectada (${account}) — user_id: ${user_id}`);
 
       // Salva no DB (best effort)
       try {
@@ -281,7 +309,6 @@ export function registerMLOAuthRoutes(app: Express) {
         console.warn("[MLOAuth] DB indisponível:", e.message);
       }
 
-      console.log(`[MLOAuth] ✅ Conta ML conectada — user_id: ${user_id}`);
 
       return res.send(`<!DOCTYPE html>
 <html lang="pt-BR">
