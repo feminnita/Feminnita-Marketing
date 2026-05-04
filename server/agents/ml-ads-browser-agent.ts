@@ -14,6 +14,20 @@ const TWOCAPTCHA_KEY = process.env.TWOCAPTCHA_API_KEY || "";
 
 if (!fs.existsSync(SESSIONS_DIR)) fs.mkdirSync(SESSIONS_DIR, { recursive: true });
 
+// Mutex por conta — impede múltiplas instâncias simultâneas do browser
+const runningInstances = new Map<string, Promise<any>>();
+
+function withMutex<T>(account: string, fn: () => Promise<T>): Promise<T> {
+  const existing = runningInstances.get(account);
+  if (existing) {
+    console.log(`[MLBrowser] Instância já em execução para ${account} — aguardando...`);
+    return existing.then(() => fn()) as Promise<T>;
+  }
+  const promise = fn().finally(() => runningInstances.delete(account));
+  runningInstances.set(account, promise);
+  return promise;
+}
+
 // ─── Sessão persistente ───────────────────────────────────────────────────────
 
 function sessionFile(account: string) {
@@ -81,12 +95,13 @@ async function loginML(page: Page, account: "feminnita" | "fnt"): Promise<boolea
 
   try {
     await page.goto(LOGIN_URL, { waitUntil: "domcontentloaded", timeout: 30000 });
-    await page.waitForSelector('input[name="user_id"]', { timeout: 10000 });
-    await page.fill('input[name="user_id"]', email);
+    // ML pode usar name="user_id" ou type="email" dependendo da versão da página
+    await page.waitForSelector('input[name="user_id"], input[type="email"], input[id="user_id"]', { timeout: 15000 });
+    await page.fill('input[name="user_id"], input[type="email"], input[id="user_id"]', email);
     await page.click('button[type="submit"]');
 
-    await page.waitForSelector('input[name="password"]', { timeout: 10000 });
-    await page.fill('input[name="password"]', password);
+    await page.waitForSelector('input[name="password"], input[type="password"]', { timeout: 15000 });
+    await page.fill('input[name="password"], input[type="password"]', password);
 
     // Verifica se há reCAPTCHA antes de submeter
     const sitekey = await page.$eval(
@@ -262,7 +277,7 @@ async function withBrowser<T>(
 // ─── API pública (chamada pela Gabi) ──────────────────────────────────────────
 
 export async function listAdsCampaigns(account: "feminnita" | "fnt" = "feminnita"): Promise<string> {
-  return withBrowser(account, async (page) => {
+  return withMutex(account, () => withBrowser(account, async (page) => {
     await page.goto(SELLER_CENTER_URL, { waitUntil: "networkidle", timeout: 30000 });
     await page.waitForTimeout(2000);
 
@@ -287,11 +302,11 @@ export async function listAdsCampaigns(account: "feminnita" | "fnt" = "feminnita
       return `• [${c.id || "—"}] "${c.name}" | ${c.status} | Budget: ${c.budget}${metricsStr}`;
     });
     return `CAMPANHAS DE PRODUCT ADS (${account === "fnt" ? "Conta B" : "Conta A"}):\n${lines.join("\n")}`;
-  });
+  }));
 }
 
 export async function pauseAdsCampaign(campaignId: string, account: "feminnita" | "fnt" = "feminnita"): Promise<string> {
-  return withBrowser(account, async (page) => {
+  return withMutex(`${account}-pause`, () => withBrowser(account, async (page) => {
     await page.goto(SELLER_CENTER_URL, { waitUntil: "networkidle", timeout: 30000 });
     await page.waitForTimeout(2000);
 
@@ -303,11 +318,11 @@ export async function pauseAdsCampaign(campaignId: string, account: "feminnita" 
     await btn.click();
     await page.waitForTimeout(1500);
     return `Campanha "${campaignId}" pausada com sucesso via Seller Center.`;
-  });
+  }));
 }
 
 export async function activateAdsCampaign(campaignId: string, account: "feminnita" | "fnt" = "feminnita"): Promise<string> {
-  return withBrowser(account, async (page) => {
+  return withMutex(`${account}-activate`, () => withBrowser(account, async (page) => {
     await page.goto(SELLER_CENTER_URL, { waitUntil: "networkidle", timeout: 30000 });
     await page.waitForTimeout(2000);
 
@@ -318,11 +333,11 @@ export async function activateAdsCampaign(campaignId: string, account: "feminnit
     await btn.click();
     await page.waitForTimeout(1500);
     return `Campanha "${campaignId}" reativada com sucesso via Seller Center.`;
-  });
+  }));
 }
 
 export async function updateAdsBudget(campaignId: string, dailyBudget: number, account: "feminnita" | "fnt" = "feminnita"): Promise<string> {
-  return withBrowser(account, async (page) => {
+  return withMutex(`${account}-budget`, () => withBrowser(account, async (page) => {
     await page.goto(SELLER_CENTER_URL, { waitUntil: "networkidle", timeout: 30000 });
     await page.waitForTimeout(2000);
 
@@ -347,5 +362,5 @@ export async function updateAdsBudget(campaignId: string, dailyBudget: number, a
     await saveBtn.click();
     await page.waitForTimeout(1500);
     return `Budget diário da campanha "${campaignId}" atualizado para R$${dailyBudget} via Seller Center.`;
-  });
+  }));
 }
