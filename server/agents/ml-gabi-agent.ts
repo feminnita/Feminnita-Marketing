@@ -9,6 +9,8 @@ import { invokeLLM } from "../_core/llm";
 import { buildMemoryContext, saveMemory } from "../services/agentMemory";
 import { getLatestKnowledge } from "./knowledge-updater";
 import { listMLItems, pauseMLItem, activateMLItem, updateMLPrice, updateMLStock, getMLItemDetails, getMLCategoryAttributes, updateMLItemAttributes, listMLAdsCampaigns, pauseMLAdsCampaign, activateMLAdsCampaign, updateMLAdsBudget, getMLAdsCampaignStats } from "./gabi-executor";
+import { getDb } from "../db";
+import { agentActions as agentActionsTable } from "../../drizzle/schema";
 
 const AGENT_NAME = "gabi";
 
@@ -157,6 +159,34 @@ const GABI_ML_TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "propose_ads_actions",
+    description: "Salva uma lista de ações recomendadas no painel de aprovação (/acoes-agentes). Use SEMPRE após analisar campanhas para registrar suas recomendações. O usuário revisa e aprova antes da execução.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        actions: {
+          type: "array",
+          description: "Ações recomendadas",
+          items: {
+            type: "object",
+            properties: {
+              title:         { type: "string", description: "Título curto da ação (ex: 'Aumentar budget — INVERNO 2026')" },
+              actionType:    { type: "string", description: "ml_pause_campaign | ml_activate_campaign | ml_update_budget" },
+              campaignId:    { type: "string", description: "ID da campanha (número)" },
+              campaignName:  { type: "string", description: "Nome legível da campanha" },
+              currentValue:  { type: "string", description: "Situação atual (ex: 'budget: R$40, ACoS alvo: 7.69%')" },
+              proposedValue: { type: "string", description: "Valor proposto para a ação (ex: 'R$60' ou 'paused')" },
+              reason:        { type: "string", description: "Justificativa técnica" },
+              priority:      { type: "string", enum: ["alta", "media", "baixa"] },
+            },
+            required: ["title", "actionType", "campaignId", "currentValue", "proposedValue", "reason"],
+          },
+        },
+      },
+      required: ["actions"],
+    },
+  },
+  {
     name: "ml_update_item_attributes",
     description: "Atualiza atributos EDS de um anúncio (composição, cor, tamanho, marca, etc). Execute somente após o usuário confirmar. Use ml_get_category_attributes para descobrir os IDs corretos dos atributos.",
     input_schema: {
@@ -232,10 +262,18 @@ REGRA DE OURO: Responda apenas o que foi perguntado. Se a pergunta é sobre Ads,
 
 REGRA DE NÃO REPETIÇÃO: Se você já listou anúncios ou campanhas nesta conversa, NÃO liste de novo a não ser que o usuário peça. Use os IDs e nomes já conhecidos. Pergunte "Quer que eu liste novamente?" em vez de relist automaticamente.
 
-FLUXO OBRIGATÓRIO ANTES DE EXECUTAR QUALQUER AÇÃO:
+FLUXO OBRIGATÓRIO ANTES DE EXECUTAR QUALQUER AÇÃO DIRETA:
 1. Proponha a ação ao usuário com justificativa clara
 2. Execute SOMENTE após confirmação explícita ("pode fazer", "vai", "confirma", "sim")
 3. Relate o resultado
+
+━━━ ANÁLISE COMPLETA + PROPOSTA DE AÇÕES ━━━
+Quando o usuário pedir "análise completa", "auditoria", "proponha ações" ou similar:
+1. Chame ml_ads_list_campaigns para listar TODAS as campanhas
+2. Analise a estrutura: budgets vs. ROAS alvo, campanhas dormentes, ACoS inconsistentes, fragmentação de orçamento
+3. Monte ações concretas e chame propose_ads_actions com todas as recomendações
+4. Após salvar, resuma o que foi proposto e diga: "Suas X ações estão em /acoes-agentes aguardando aprovação."
+REGRA CRÍTICA: Durante análise, NUNCA execute diretamente — use sempre propose_ads_actions
 
 FORMATO: Texto natural, português BR. NUNCA JSON bruto. Direta e objetiva.
 
@@ -321,6 +359,30 @@ export async function chatWithGabi(
           call = updateMLAdsBudget(inp.campaignId, inp.dailyBudget, account);
         } else if (toolUse.name === "ml_ads_campaign_stats") {
           call = getMLAdsCampaignStats(inp.campaignId, inp.dateFrom, inp.dateTo, account);
+        } else if (toolUse.name === "propose_ads_actions") {
+          call = (async (): Promise<string> => {
+            const db = await getDb();
+            const today = new Date().toISOString().slice(0, 10);
+            const rows = ((inp.actions as any[]) || []).map((a: any) => ({
+              agentName: "gabi",
+              date: today,
+              title: String(a.title || ""),
+              description: JSON.stringify({
+                marketplace: "ml",
+                account,
+                targetId: String(a.campaignId || ""),
+                targetName: String(a.campaignName || ""),
+                currentValue: String(a.currentValue || ""),
+                proposedValue: String(a.proposedValue || ""),
+              }),
+              actionType: String(a.actionType || "ml_update_budget"),
+              priority: (["alta", "media", "baixa"].includes(a.priority) ? a.priority : "media") as "alta" | "media" | "baixa",
+              estimatedImpact: String(a.reason || ""),
+              status: "pending" as const,
+            }));
+            if (db && rows.length > 0) await db.insert(agentActionsTable).values(rows);
+            return `${rows.length} ação(ões) propostas salvas. Acesse /acoes-agentes para revisar e aprovar antes da execução.`;
+          })();
         } else {
           call = Promise.resolve(`Ferramenta desconhecida: ${toolUse.name}`);
         }

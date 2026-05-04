@@ -3,11 +3,60 @@
  * Campanhas pagas, ROAS, otimização de budget, criativos — Conta A e Conta B
  */
 
+import Anthropic from "@anthropic-ai/sdk";
 import { invokeLLM } from "../_core/llm";
 import { buildMemoryContext, saveMemory } from "../services/agentMemory";
 import { getLatestKnowledge } from "./knowledge-updater";
+import { shopeeGet } from "../services/shopeeApi";
+import { getDb } from "../db";
+import { agentActions as agentActionsTable } from "../../drizzle/schema";
 
 const AGENT_NAME = "luiza-shopee";
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || "" });
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Timeout ${ms / 1000}s em ${label}`)), ms)
+    ),
+  ]);
+}
+
+const LUIZA_SHOPEE_TOOLS: Anthropic.Tool[] = [
+  {
+    name: "get_shopee_campaigns",
+    description: "Lista as campanhas de Ads ativas na Shopee (GMV Max, Search Ads, Discovery Ads) com status e dados disponíveis. Use para obter dados reais antes de analisar ou propor ações.",
+    input_schema: { type: "object" as const, properties: {}, required: [] },
+  },
+  {
+    name: "propose_shopee_actions",
+    description: "Salva ações recomendadas no painel de aprovação (/acoes-agentes). Use SEMPRE após analisar as campanhas. O usuário revisa e aprova antes da execução.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        actions: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              title:         { type: "string", description: "Título curto (ex: 'Pausar campanha com ROAS abaixo do empate')" },
+              actionType:    { type: "string", description: "shopee_pause_campaign | shopee_activate_campaign | shopee_update_budget | shopee_update_roas" },
+              campaignId:    { type: "string", description: "ID da campanha" },
+              campaignName:  { type: "string", description: "Nome da campanha" },
+              currentValue:  { type: "string", description: "Situação atual" },
+              proposedValue: { type: "string", description: "Valor proposto" },
+              reason:        { type: "string", description: "Justificativa" },
+              priority:      { type: "string", enum: ["alta", "media", "baixa"] },
+            },
+            required: ["title", "actionType", "campaignId", "currentValue", "proposedValue", "reason"],
+          },
+        },
+      },
+      required: ["actions"],
+    },
+  },
+];
 
 export async function buildLuizaShopeePrompt(account = "feminnita"): Promise<string> {
   const [marketKnowledge, fashionKnowledge, memoryContext] = await Promise.all([
@@ -209,6 +258,14 @@ CONTA B (FNT — B2B):
 • Não define ROAS alvo sem calcular o ROAS de empate com Mariana
 • Não ativa Impulsão Rápida em produto com ROAS já abaixo do empate
 • Não usa orçamento ilimitado — sempre limitar o orçamento diário
+
+━━━ ANÁLISE COMPLETA + PROPOSTA DE AÇÕES ━━━
+Quando o usuário pedir "análise", "auditoria" ou "proponha ações":
+1. Chame get_shopee_campaigns para obter dados reais das campanhas
+2. Analise: ROAS alvo vs. empate, budget adequado por fase de produto, campanhas inativas, dados faltando
+3. Chame propose_shopee_actions com as recomendações concretas
+4. Resuma: "X ações estão em /acoes-agentes aguardando sua aprovação."
+REGRA: Durante análise, NUNCA execute diretamente — use propose_shopee_actions para registrar tudo
 ${knowledge ? `\n━━━ INTELIGÊNCIA ATUAL ━━━\n${knowledge}` : ""}
 ${memoryContext ? `\n━━━ MEMÓRIA ━━━\n${memoryContext}` : ""}`;
 }
@@ -220,11 +277,107 @@ export async function chatWithLuizaShopee(
 ): Promise<string> {
   const systemPrompt = await buildLuizaShopeePrompt(account);
   const nameCtx = userName ? `\nNOME DO USUÁRIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
-  const result = await invokeLLM({
-    messages: [{ role: "system", content: systemPrompt + nameCtx }, ...history],
-    maxTokens: 2000,
+
+  const messages: Anthropic.MessageParam[] = history.map(m => ({ role: m.role, content: m.content }));
+
+  let response = await anthropic.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 2000,
+    system: systemPrompt + nameCtx,
+    tools: LUIZA_SHOPEE_TOOLS,
+    messages,
   });
-  return String(result.choices[0]?.message?.content || "Não consegui processar.");
+
+  let iterations = 0;
+  while (response.stop_reason === "tool_use" && iterations < 6) {
+    iterations++;
+    const assistantContent = response.content;
+    const toolUses = assistantContent.filter((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
+
+    const toolResults: Anthropic.ToolResultBlockParam[] = [];
+    for (const toolUse of toolUses) {
+      let result: string;
+      try {
+        const inp = toolUse.input as Record<string, any>;
+        let call: Promise<string>;
+
+        if (toolUse.name === "get_shopee_campaigns") {
+          call = withTimeout((async (): Promise<string> => {
+            try {
+              const data = await shopeeGet("/api/v2/ads/get_product_level_campaign_id_list", { page_size: "50", page: "1" });
+              const campaigns: any[] = data?.response?.campaign_list || [];
+              if (campaigns.length === 0) return "Nenhuma campanha encontrada. A API de Shopee Ads pode não estar disponível para esta conta.";
+              return `CAMPANHAS SHOPEE (${campaigns.length}):\n` +
+                campaigns.slice(0, 20).map(c =>
+                  `• ID: ${c.campaign_id} | Tipo: ${c.ad_type || "N/A"}`
+                ).join("\n");
+            } catch (e: any) {
+              return `API Shopee Ads indisponível: ${e.message}. Trabalhe com dados fornecidos pelo usuário.`;
+            }
+          })(), 20000, "get_shopee_campaigns");
+        } else if (toolUse.name === "propose_shopee_actions") {
+          call = (async (): Promise<string> => {
+            const db = await getDb();
+            const today = new Date().toISOString().slice(0, 10);
+            const rows = ((inp.actions as any[]) || []).map((a: any) => ({
+              agentName: "luiza",
+              date: today,
+              title: String(a.title || ""),
+              description: JSON.stringify({
+                marketplace: "shopee",
+                account,
+                targetId: String(a.campaignId || ""),
+                targetName: String(a.campaignName || ""),
+                currentValue: String(a.currentValue || ""),
+                proposedValue: String(a.proposedValue || ""),
+              }),
+              actionType: String(a.actionType || "shopee_update_budget"),
+              priority: (["alta", "media", "baixa"].includes(a.priority) ? a.priority : "media") as "alta" | "media" | "baixa",
+              estimatedImpact: String(a.reason || ""),
+              status: "pending" as const,
+            }));
+            if (db && rows.length > 0) await db.insert(agentActionsTable).values(rows);
+            return `${rows.length} ação(ões) salvas em /acoes-agentes aguardando aprovação.`;
+          })();
+        } else {
+          call = Promise.resolve(`Ferramenta desconhecida: ${toolUse.name}`);
+        }
+
+        result = await withTimeout(call, 30000, toolUse.name);
+      } catch (e: any) {
+        result = `Erro: ${e.message}`;
+      }
+      toolResults.push({ type: "tool_result", tool_use_id: toolUse.id, content: result });
+    }
+
+    messages.push({ role: "assistant", content: assistantContent });
+    messages.push({ role: "user", content: toolResults });
+
+    response = await anthropic.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 2000,
+      system: systemPrompt + nameCtx,
+      tools: LUIZA_SHOPEE_TOOLS,
+      messages,
+    });
+  }
+
+  const textBlocks = response.content.filter((b): b is Anthropic.TextBlock => b.type === "text");
+  let finalText = textBlocks.map(b => b.text).join("\n");
+
+  if (!finalText) {
+    const forced = await anthropic.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1000,
+      system: systemPrompt + nameCtx,
+      messages: [...messages, { role: "assistant", content: response.content }],
+    });
+    finalText = forced.content
+      .filter((b): b is Anthropic.TextBlock => b.type === "text")
+      .map(b => b.text).join("\n");
+  }
+
+  return finalText || "Não consegui processar.";
 }
 
 export async function updateLuizaShopeeKnowledge(): Promise<string> {

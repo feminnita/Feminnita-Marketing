@@ -151,6 +151,46 @@ export async function shopeePost(apiPath: string, body: any): Promise<any> {
   return res.json();
 }
 
+/** Requisição autenticada genérica com suporte a conta A/B */
+export async function shopeeRequest(
+  method: "GET" | "POST",
+  apiPath: string,
+  body?: Record<string, any>,
+  account = "feminnita"
+): Promise<any> {
+  const ts = Math.floor(Date.now() / 1000);
+  const accessToken =
+    account === "fnt"
+      ? (process.env.SHOPEE_ACCESS_TOKEN_2 || process.env.SHOPEE_ACCESS_TOKEN || "")
+      : (process.env.SHOPEE_ACCESS_TOKEN || "");
+  const shopId = parseInt(
+    account === "fnt"
+      ? (process.env.SHOPEE_SHOP_ID_2 || process.env.SHOPEE_SHOP_ID || "0")
+      : (process.env.SHOPEE_SHOP_ID || "0")
+  );
+
+  const sign = shopeeSign(apiPath, ts, accessToken || undefined, shopId || undefined);
+  const params = new URLSearchParams({
+    partner_id: String(PARTNER_ID),
+    timestamp: String(ts),
+    sign,
+  });
+  if (accessToken) params.set("access_token", accessToken);
+  if (shopId) params.set("shop_id", String(shopId));
+
+  const url = `${BASE_URL}${apiPath}?${params.toString()}`;
+  const res = await fetch(url, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    ...(body && method === "POST" ? { body: JSON.stringify(body) } : {}),
+  });
+  const data = await res.json() as any;
+  if (data?.error && data.error !== "") {
+    throw new Error(`Shopee ${apiPath}: ${data.message || data.error}`);
+  }
+  return data;
+}
+
 /** Gera URL de autorização OAuth Shopee */
 export function shopeeAuthUrl(): string {
   const apiPath = "/api/v2/shop/auth_partner";

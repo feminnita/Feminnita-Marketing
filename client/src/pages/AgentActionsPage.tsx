@@ -23,15 +23,26 @@ import {
   TrendingUp,
   Send,
   Eye,
-  Lightbulb,
+  Loader2,
+  Play,
+  ShoppingCart,
 } from "lucide-react";
+import { toast } from "sonner";
 
 const AGENT_META: Record<string, { label: string; badgeClass: string; icon: React.ReactNode }> = {
-  fernanda: { label: "Fernanda — Tráfego", badgeClass: "bg-purple-100 text-purple-700", icon: <Zap className="w-3 h-3" /> },
-  sofia:    { label: "Sofia — Instagram",  badgeClass: "bg-pink-100 text-pink-700",     icon: <TrendingUp className="w-3 h-3" /> },
-clara:    { label: "Clara — Competição", badgeClass: "bg-blue-100 text-blue-700",     icon: <Eye className="w-3 h-3" /> },
-  mariana:  { label: "Mariana — Vendas",   badgeClass: "bg-green-100 text-green-700",   icon: <Send className="w-3 h-3" /> },
+  fernanda: { label: "Fernanda — Tráfego",  badgeClass: "bg-purple-100 text-purple-700",  icon: <Zap className="w-3 h-3" /> },
+  sofia:    { label: "Sofia — Instagram",   badgeClass: "bg-pink-100 text-pink-700",      icon: <TrendingUp className="w-3 h-3" /> },
+  clara:    { label: "Clara — Competição",  badgeClass: "bg-blue-100 text-blue-700",      icon: <Eye className="w-3 h-3" /> },
+  mariana:  { label: "Mariana — Vendas",    badgeClass: "bg-green-100 text-green-700",    icon: <Send className="w-3 h-3" /> },
+  gabi:     { label: "Gabi — ML Ads",       badgeClass: "bg-yellow-100 text-yellow-800",  icon: <ShoppingCart className="w-3 h-3" /> },
+  luiza:    { label: "Luiza — Shopee Ads",  badgeClass: "bg-orange-100 text-orange-700",  icon: <ShoppingCart className="w-3 h-3" /> },
 };
+
+const MARKETPLACE_ACTION_TYPES = new Set([
+  "ml_pause_campaign", "ml_activate_campaign", "ml_update_budget",
+  "ml_pause_item", "ml_activate_item", "ml_update_price", "ml_update_stock",
+  "shopee_pause_campaign", "shopee_activate_campaign", "shopee_update_budget", "shopee_update_roas",
+]);
 
 const PRIORITY_STYLE: Record<string, string> = {
   alta:  "bg-red-100 text-red-700 border-red-200",
@@ -74,12 +85,14 @@ function ActionCard({
   onApprove,
   onReject,
   onDone,
+  onExecute,
   loading,
 }: {
   action: Action;
   onApprove: (id: number) => void;
   onReject: (id: number) => void;
   onDone: (id: number) => void;
+  onExecute?: (id: number) => void;
   loading: boolean;
 }) {
   const meta = AGENT_META[action.agentName] ?? { label: action.agentName, badgeClass: "bg-gray-100 text-gray-600", icon: <Bot className="w-3 h-3" /> };
@@ -107,7 +120,20 @@ function ActionCard({
               )}
             </div>
             <h3 className="font-semibold text-sm text-gray-900">{action.title}</h3>
-            <p className="text-xs text-gray-600 mt-1 line-clamp-2">{action.description}</p>
+            {MARKETPLACE_ACTION_TYPES.has(action.actionType) ? (() => {
+              try {
+                const p = JSON.parse(action.description);
+                return (
+                  <p className="text-xs text-gray-600 mt-1">
+                    <span className="font-medium">{p.targetName || p.targetId}</span>
+                    {p.currentValue ? ` · Atual: ${p.currentValue}` : ""}
+                    {p.proposedValue ? ` → ${p.proposedValue}` : ""}
+                  </p>
+                );
+              } catch { return <p className="text-xs text-gray-600 mt-1 line-clamp-2">{action.description}</p>; }
+            })() : (
+              <p className="text-xs text-gray-600 mt-1 line-clamp-2">{action.description}</p>
+            )}
             {action.estimatedImpact && (
               <p className="text-xs text-green-700 bg-green-50 px-2 py-1 rounded mt-2">
                 <span className="font-medium">Impacto estimado:</span> {action.estimatedImpact}
@@ -140,15 +166,34 @@ function ActionCard({
           )}
 
           {action.status === "approved" && (
-            <Button
-              size="sm"
-              className="gap-1 bg-purple-600 hover:bg-purple-700 text-xs h-7 px-2 shrink-0"
-              onClick={() => onDone(action.id)}
-              disabled={loading}
-            >
-              <CheckCircle2 className="w-3 h-3" />
-              Concluída
-            </Button>
+            MARKETPLACE_ACTION_TYPES.has(action.actionType) ? (
+              <Button
+                size="sm"
+                className="gap-1 bg-indigo-600 hover:bg-indigo-700 text-xs h-7 px-2 shrink-0"
+                onClick={() => onExecute?.(action.id)}
+                disabled={loading}
+              >
+                <Play className="w-3 h-3" />
+                Executar
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                className="gap-1 bg-purple-600 hover:bg-purple-700 text-xs h-7 px-2 shrink-0"
+                onClick={() => onDone(action.id)}
+                disabled={loading}
+              >
+                <CheckCircle2 className="w-3 h-3" />
+                Concluída
+              </Button>
+            )
+          )}
+
+          {action.status === "executing" && (
+            <div className="flex items-center gap-1 text-xs text-blue-600 shrink-0">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              Executando…
+            </div>
           )}
         </div>
       </CardContent>
@@ -186,13 +231,23 @@ export default function AgentActionsPage() {
   const doneMutation = trpc.agentActions.markDone.useMutation({ onSuccess: refetchAll });
   const approveManyMutation = trpc.agentActions.approveMany.useMutation({ onSuccess: refetchAll });
   const rejectManyMutation = trpc.agentActions.rejectMany.useMutation({ onSuccess: refetchAll });
+  const executeMutation = trpc.agentActions.execute.useMutation({
+    onSuccess: (data) => { toast.success(`Executado: ${data.result}`); refetchAll(); },
+    onError: (e) => toast.error(`Erro na execução: ${e.message}`),
+  });
+  const executeAllMutation = trpc.agentActions.executeAllApproved.useMutation({
+    onSuccess: (data) => { toast.success(`${data.executed}/${data.total} ações executadas.`); refetchAll(); },
+    onError: (e) => toast.error(`Erro: ${e.message}`),
+  });
 
   const loading =
     approveMutation.isPending ||
     rejectMutation.isPending ||
     doneMutation.isPending ||
     approveManyMutation.isPending ||
-    rejectManyMutation.isPending;
+    rejectManyMutation.isPending ||
+    executeMutation.isPending ||
+    executeAllMutation.isPending;
 
   // Ordenar pendentes: alta primeiro, depois media, depois baixa
   const sortedPending = [...(pendingActions || [])].sort((a, b) => {
@@ -320,6 +375,7 @@ export default function AgentActionsPage() {
                 onApprove={(id) => approveMutation.mutate({ id })}
                 onReject={(id) => rejectMutation.mutate({ id })}
                 onDone={(id) => doneMutation.mutate({ id })}
+                onExecute={(id) => executeMutation.mutate({ id })}
                 loading={loading}
               />
             ))
@@ -330,16 +386,32 @@ export default function AgentActionsPage() {
           {(approvedActions || []).length === 0 ? (
             <div className="text-center py-12 text-gray-400 text-sm">Nenhuma ação aprovada ainda.</div>
           ) : (
-            (approvedActions || []).map((action: Action) => (
-              <ActionCard
-                key={action.id}
-                action={action as Action}
-                onApprove={(id) => approveMutation.mutate({ id })}
-                onReject={(id) => rejectMutation.mutate({ id })}
-                onDone={(id) => doneMutation.mutate({ id })}
-                loading={loading}
-              />
-            ))
+            <>
+              {(approvedActions || []).some((a: Action) => MARKETPLACE_ACTION_TYPES.has(a.actionType)) && (
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    className="gap-2 bg-indigo-600 hover:bg-indigo-700"
+                    onClick={() => executeAllMutation.mutate({})}
+                    disabled={loading}
+                  >
+                    <Play className="w-4 h-4" />
+                    Executar todas as aprovadas
+                  </Button>
+                </div>
+              )}
+              {(approvedActions || []).map((action: Action) => (
+                <ActionCard
+                  key={action.id}
+                  action={action as Action}
+                  onApprove={(id) => approveMutation.mutate({ id })}
+                  onReject={(id) => rejectMutation.mutate({ id })}
+                  onDone={(id) => doneMutation.mutate({ id })}
+                  onExecute={(id) => executeMutation.mutate({ id })}
+                  loading={loading}
+                />
+              ))}
+            </>
           )}
         </TabsContent>
 
