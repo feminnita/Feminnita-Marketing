@@ -231,7 +231,8 @@ export function registerMLOAuthRoutes(app: Express) {
       `&redirect_uri=${encodeURIComponent(ML_REDIRECT_URL)}` +
       `&state=${encodeURIComponent(state)}` +
       `&code_challenge=${challenge}` +
-      `&code_challenge_method=S256`;
+      `&code_challenge_method=S256` +
+      `&scope=offline_access%20read%20write%20advertising_reports`;
 
     console.log(`[MLOAuth] Iniciando OAuth PKCE — account: ${account}`);
     return res.redirect(authUrl);

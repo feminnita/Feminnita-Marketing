@@ -137,30 +137,86 @@ async function ensureLoggedIn(page: Page, context: BrowserContext, account: "fem
 // ─── Parser de campanhas ──────────────────────────────────────────────────────
 
 interface Campaign {
-  id:     string;
-  name:   string;
-  status: string;
-  budget: string;
-  spent:  string;
+  id:          string;
+  name:        string;
+  status:      string;
+  budget:      string;
+  spent:       string;
+  impressions: string;
+  clicks:      string;
+  ctr:         string;
+  roas:        string;
+  sales:       string;
 }
 
 async function parseCampaigns(page: Page): Promise<Campaign[]> {
   return page.evaluate(() => {
+    // Tenta primeiro com seletores semânticos
     const rows = Array.from(document.querySelectorAll('[data-testid*="campaign-row"], .campaign-row, tr[class*="campaign"]'));
-    if (rows.length === 0) {
-      // Fallback: tenta extrair da tabela genérica
-      return Array.from(document.querySelectorAll("table tbody tr")).map(tr => {
-        const cells = Array.from(tr.querySelectorAll("td")).map(td => td.innerText.trim());
-        return { id: cells[0] || "", name: cells[1] || "", status: cells[2] || "", budget: cells[3] || "", spent: cells[4] || "" };
+
+    if (rows.length > 0) {
+      return rows.map(row => {
+        const text = (sel: string) =>
+          (row.querySelector(sel) as HTMLElement)?.innerText?.trim() || "";
+        return {
+          id:          (row.getAttribute("data-id") || row.querySelector("[data-id]")?.getAttribute("data-id") || "").trim(),
+          name:        text('[class*="name"], [data-testid*="name"]'),
+          status:      text('[class*="status"], [data-testid*="status"]'),
+          budget:      text('[class*="budget"], [data-testid*="budget"]'),
+          spent:       text('[class*="spent"], [data-testid*="spent"]'),
+          impressions: text('[class*="impression"], [data-testid*="impression"]'),
+          clicks:      text('[class*="click"], [data-testid*="click"]'),
+          ctr:         text('[class*="ctr"], [data-testid*="ctr"]'),
+          roas:        text('[class*="roas"], [data-testid*="roas"]'),
+          sales:       text('[class*="sale"], [data-testid*="sale"]'),
+        };
       }).filter(c => c.name);
     }
-    return rows.map(row => ({
-      id:     (row.getAttribute("data-id") || row.querySelector("[data-id]")?.getAttribute("data-id") || "").trim(),
-      name:   (row.querySelector('[class*="name"], [data-testid*="name"]') as HTMLElement)?.innerText?.trim() || "",
-      status: (row.querySelector('[class*="status"], [data-testid*="status"]') as HTMLElement)?.innerText?.trim() || "",
-      budget: (row.querySelector('[class*="budget"], [data-testid*="budget"]') as HTMLElement)?.innerText?.trim() || "",
-      spent:  (row.querySelector('[class*="spent"], [data-testid*="spent"]') as HTMLElement)?.innerText?.trim() || "",
-    })).filter(c => c.name);
+
+    // Fallback: extrai da tabela genérica mapeando por header
+    const table = document.querySelector("table");
+    if (!table) return [];
+
+    const headers = Array.from(table.querySelectorAll("thead th")).map(
+      th => (th as HTMLElement).innerText.trim().toLowerCase()
+    );
+
+    const idx = (terms: string[]) => {
+      for (const t of terms) {
+        const i = headers.findIndex(h => h.includes(t));
+        if (i >= 0) return i;
+      }
+      return -1;
+    };
+
+    const col = {
+      name:        idx(["campanha", "nome", "name"]),
+      status:      idx(["status", "estado"]),
+      budget:      idx(["orçamento", "budget"]),
+      spent:       idx(["gasto", "spent", "investimento"]),
+      impressions: idx(["impre", "impression"]),
+      clicks:      idx(["clique", "click"]),
+      ctr:         idx(["ctr"]),
+      roas:        idx(["roas"]),
+      sales:       idx(["venda", "sale", "receita"]),
+    };
+
+    return Array.from(table.querySelectorAll("tbody tr")).map(tr => {
+      const cells = Array.from(tr.querySelectorAll("td")).map(td => (td as HTMLElement).innerText.trim());
+      const get = (i: number) => (i >= 0 ? cells[i] : "") || "";
+      return {
+        id:          "",
+        name:        get(col.name),
+        status:      get(col.status),
+        budget:      get(col.budget),
+        spent:       get(col.spent),
+        impressions: get(col.impressions),
+        clicks:      get(col.clicks),
+        ctr:         get(col.ctr),
+        roas:        get(col.roas),
+        sales:       get(col.sales),
+      };
+    }).filter(c => c.name);
   });
 }
 
@@ -219,9 +275,17 @@ export async function listAdsCampaigns(account: "feminnita" | "fnt" = "feminnita
       return "Não foi possível listar as campanhas. Tente novamente ou acesse o Seller Center diretamente.";
     }
 
-    const lines = campaigns.map(c =>
-      `• [${c.id || "—"}] "${c.name}" | ${c.status} | Budget: ${c.budget} | Gasto: ${c.spent}`
-    );
+    const lines = campaigns.map(c => {
+      const metrics: string[] = [];
+      if (c.impressions) metrics.push(`Impressões: ${c.impressions}`);
+      if (c.clicks)      metrics.push(`Cliques: ${c.clicks}`);
+      if (c.ctr)         metrics.push(`CTR: ${c.ctr}`);
+      if (c.spent)       metrics.push(`Gasto: ${c.spent}`);
+      if (c.roas)        metrics.push(`ROAS: ${c.roas}`);
+      if (c.sales)       metrics.push(`Vendas: ${c.sales}`);
+      const metricsStr = metrics.length > 0 ? ` | ${metrics.join(" | ")}` : "";
+      return `• [${c.id || "—"}] "${c.name}" | ${c.status} | Budget: ${c.budget}${metricsStr}`;
+    });
     return `CAMPANHAS DE PRODUCT ADS (${account === "fnt" ? "Conta B" : "Conta A"}):\n${lines.join("\n")}`;
   });
 }
