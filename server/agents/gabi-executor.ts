@@ -3,6 +3,8 @@
  * Suporta Conta A (Feminnita) e Conta B (FNT Confecções)
  */
 
+import { listAdsCampaigns as browserListAdsCampaigns } from "./ml-ads-browser-agent";
+
 const ML_BASE = "https://api.mercadolibre.com";
 
 function getMLToken(account = "feminnita"): string {
@@ -288,38 +290,11 @@ export async function getMLAdsCampaignStats(campaignId: string, dateFrom: string
     const advertiserId = await getAdvertiserId(userId, token);
     if (!advertiserId) return "Sem perfil de anunciante ML Ads.";
 
-    // Tenta endpoint de search/reports com escopo advertising_reports
-    const params = new URLSearchParams({ date_from: dateFrom, date_to: dateTo });
-    if (campaignId) params.set("campaign_id", campaignId);
-
-    const endpoints = [
-      `/advertising/advertisers/${advertiserId}/product_ads/campaigns/search?${params}`,
-      `/advertising/advertisers/${advertiserId}/product_ads/reports?${params}`,
-    ];
-
-    for (const ep of endpoints) {
-      const res = await fetch(`${ML_BASE}${ep}`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) {
-        const data = await res.json() as any;
-        const rows: any[] = Array.isArray(data) ? data : (data.results ?? data.data ?? data.campaigns ?? []);
-        if (rows.length === 0) continue;
-
-        const lines = rows.map((r: any) => {
-          const parts: string[] = [`[${r.id ?? r.campaign_id ?? "—"}] "${r.name ?? ""}"`];
-          if (r.impressions != null) parts.push(`Impressões: ${r.impressions}`);
-          if (r.clicks != null)      parts.push(`Cliques: ${r.clicks}`);
-          if (r.ctr != null)         parts.push(`CTR: ${(r.ctr * 100).toFixed(2)}%`);
-          if (r.cost != null)        parts.push(`Gasto: R$${r.cost}`);
-          if (r.roas != null)        parts.push(`ROAS: ${r.roas}`);
-          if (r.sales != null)       parts.push(`Vendas: R$${r.sales}`);
-          return `• ${parts.join(" | ")}`;
-        });
-
-        return `MÉTRICAS ${label} (${dateFrom} → ${dateTo}):\n${lines.join("\n")}`;
-      }
-    }
-
-    return `Métricas não disponíveis via API para ${label} (${dateFrom} → ${dateTo}). Se o token foi renovado recentemente com escopo advertising_reports, tente reconectar via OAuth em /api/ml/start. Painel: https://www.mercadolivre.com.br/advertising/product-ads`;
+    // ML REST API não expõe métricas para este tipo de conta — usa browser agent (Playwright)
+    console.log(`[GabiML] getMLAdsCampaignStats — usando browser agent (${account})`);
+    const browserAccount = account === "fnt" ? "fnt" : "feminnita";
+    const result = await browserListAdsCampaigns(browserAccount);
+    return result;
   } catch (e: any) {
     return `Erro: ${e.message}`;
   }
