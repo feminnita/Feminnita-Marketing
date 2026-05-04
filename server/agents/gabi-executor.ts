@@ -240,7 +240,11 @@ export async function pauseMLAdsCampaign(campaignId: string, account = "feminnit
       body: JSON.stringify({ status: "paused" }),
     });
     const data = await res.json() as any;
-    if (!res.ok || data.error) return `Erro ao pausar: ${data.message || data.error}`;
+    if (!res.ok || data.error) {
+      console.log(`[GabiML] pauseMLAdsCampaign REST falhou, tentando browser (${account})`);
+      const { pauseAdsCampaign } = await import("./ml-ads-browser-agent");
+      return pauseAdsCampaign(campaignId, account as "feminnita" | "fnt");
+    }
     return `Campanha ${campaignId} pausada com sucesso.`;
   } catch (e: any) { return `Erro: ${e.message}`; }
 }
@@ -258,7 +262,11 @@ export async function activateMLAdsCampaign(campaignId: string, account = "femin
       body: JSON.stringify({ status: "active" }),
     });
     const data = await res.json() as any;
-    if (!res.ok || data.error) return `Erro ao ativar: ${data.message || data.error}`;
+    if (!res.ok || data.error) {
+      console.log(`[GabiML] activateMLAdsCampaign REST falhou, tentando browser (${account})`);
+      const { activateAdsCampaign } = await import("./ml-ads-browser-agent");
+      return activateAdsCampaign(campaignId, account as "feminnita" | "fnt");
+    }
     return `Campanha ${campaignId} reativada com sucesso.`;
   } catch (e: any) { return `Erro: ${e.message}`; }
 }
@@ -276,7 +284,11 @@ export async function updateMLAdsBudget(campaignId: string, dailyBudget: number,
       body: JSON.stringify({ daily_budget: dailyBudget }),
     });
     const data = await res.json() as any;
-    if (!res.ok || data.error) return `Erro ao atualizar budget: ${data.message || data.error}`;
+    if (!res.ok || data.error) {
+      console.log(`[GabiML] updateMLAdsBudget REST falhou, tentando browser (${account})`);
+      const { updateAdsBudget } = await import("./ml-ads-browser-agent");
+      return updateAdsBudget(campaignId, dailyBudget, account as "feminnita" | "fnt");
+    }
     return `Budget da campanha ${campaignId} atualizado para R$${dailyBudget}.`;
   } catch (e: any) { return `Erro: ${e.message}`; }
 }
