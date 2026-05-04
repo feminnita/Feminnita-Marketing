@@ -49,7 +49,7 @@ async function executeMarketplaceAction(actionType: string, payload: Marketplace
 
   if (marketplace === "shopee") {
     // Shopee executor — chamadas via Open Platform API
-    const { shopeeRequest } = await import("../services/shopee-api");
+    const { shopeeRequest } = await import("../services/shopeeApi");
     switch (actionType) {
       case "shopee_pause_campaign":
         await shopeeRequest("POST", "/api/v2/ads/pause_campaign", { campaign_id_list: [Number(targetId)] }, account);
