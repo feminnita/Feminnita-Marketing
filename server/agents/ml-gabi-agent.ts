@@ -14,6 +14,15 @@ const AGENT_NAME = "gabi";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || "" });
 
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Timeout de ${ms / 1000}s atingido em ${label}`)), ms)
+    ),
+  ]);
+}
+
 const GABI_ML_TOOLS: Anthropic.Tool[] = [
   {
     name: "ml_list_items",
@@ -272,8 +281,10 @@ export async function chatWithGabi(
     messages,
   });
 
-  // Agentic loop — processa tool calls até o agente parar
-  while (response.stop_reason === "tool_use") {
+  // Agentic loop — processa tool calls com limite de segurança
+  let iterations = 0;
+  while (response.stop_reason === "tool_use" && iterations < 8) {
+    iterations++;
     const assistantContent = response.content;
     const toolUses = assistantContent.filter((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
 
@@ -282,35 +293,38 @@ export async function chatWithGabi(
       let result: string;
       try {
         const inp = toolUse.input as Record<string, any>;
+        const TOOL_TIMEOUT = 45000;
+        let call: Promise<string>;
         if (toolUse.name === "ml_list_items") {
-          result = await listMLItems(account);
+          call = listMLItems(account);
         } else if (toolUse.name === "ml_pause_item") {
-          result = await pauseMLItem(inp.itemId, account);
+          call = pauseMLItem(inp.itemId, account);
         } else if (toolUse.name === "ml_activate_item") {
-          result = await activateMLItem(inp.itemId, account);
+          call = activateMLItem(inp.itemId, account);
         } else if (toolUse.name === "ml_update_price") {
-          result = await updateMLPrice(inp.itemId, inp.price, account);
+          call = updateMLPrice(inp.itemId, inp.price, account);
         } else if (toolUse.name === "ml_update_stock") {
-          result = await updateMLStock(inp.itemId, inp.quantity, account);
+          call = updateMLStock(inp.itemId, inp.quantity, account);
         } else if (toolUse.name === "ml_get_item_details") {
-          result = await getMLItemDetails(inp.itemId, account);
+          call = getMLItemDetails(inp.itemId, account);
         } else if (toolUse.name === "ml_get_category_attributes") {
-          result = await getMLCategoryAttributes(inp.categoryId, account);
+          call = getMLCategoryAttributes(inp.categoryId, account);
         } else if (toolUse.name === "ml_update_item_attributes") {
-          result = await updateMLItemAttributes(inp.itemId, inp.attributes, account);
+          call = updateMLItemAttributes(inp.itemId, inp.attributes, account);
         } else if (toolUse.name === "ml_ads_list_campaigns") {
-          result = await listMLAdsCampaigns(account);
+          call = listMLAdsCampaigns(account);
         } else if (toolUse.name === "ml_ads_pause_campaign") {
-          result = await pauseMLAdsCampaign(inp.campaignId, account);
+          call = pauseMLAdsCampaign(inp.campaignId, account);
         } else if (toolUse.name === "ml_ads_activate_campaign") {
-          result = await activateMLAdsCampaign(inp.campaignId, account);
+          call = activateMLAdsCampaign(inp.campaignId, account);
         } else if (toolUse.name === "ml_ads_update_budget") {
-          result = await updateMLAdsBudget(inp.campaignId, inp.dailyBudget, account);
+          call = updateMLAdsBudget(inp.campaignId, inp.dailyBudget, account);
         } else if (toolUse.name === "ml_ads_campaign_stats") {
-          result = await getMLAdsCampaignStats(inp.campaignId, inp.dateFrom, inp.dateTo, account);
+          call = getMLAdsCampaignStats(inp.campaignId, inp.dateFrom, inp.dateTo, account);
         } else {
-          result = `Ferramenta desconhecida: ${toolUse.name}`;
+          call = Promise.resolve(`Ferramenta desconhecida: ${toolUse.name}`);
         }
+        result = await withTimeout(call, TOOL_TIMEOUT, toolUse.name);
       } catch (e: any) {
         result = `Erro: ${e.message}`;
       }
@@ -330,7 +344,21 @@ export async function chatWithGabi(
   }
 
   const textBlocks = response.content.filter((b): b is Anthropic.TextBlock => b.type === "text");
-  return textBlocks.map(b => b.text).join("\n") || "Não consegui processar.";
+  let finalText = textBlocks.map(b => b.text).join("\n");
+
+  // Se chegou no limite de iterações sem resposta textual, força uma resposta final
+  if (!finalText) {
+    const forced = await anthropic.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1000,
+      system: systemPrompt + nameCtx,
+      messages: [...messages, { role: "assistant", content: response.content }],
+    });
+    const forcedText = forced.content.filter((b): b is Anthropic.TextBlock => b.type === "text");
+    finalText = forcedText.map(b => b.text).join("\n");
+  }
+
+  return finalText || "Não consegui processar.";
 }
 
 export async function updateGabiKnowledge(): Promise<string> {

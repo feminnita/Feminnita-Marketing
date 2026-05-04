@@ -8,11 +8,18 @@ import { invokeLLM } from "../_core/llm";
 
 const TRAY_STORE_URL = process.env.TRAY_STORE_URL || "https://feminnita.com.br";
 
-async function fetchPage(url: string): Promise<string> {
+// Cache simples: URL → { content, expiresAt }
+const pageCache = new Map<string, { content: string; expiresAt: number }>();
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
+
+async function fetchPage(url: string): Promise<string | null> {
+  const cached = pageCache.get(url);
+  if (cached && cached.expiresAt > Date.now()) return cached.content;
+
   try {
     const res = await fetch(url, {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; FeminnitaSEO/1.0)" },
-      signal: AbortSignal.timeout(12000),
+      signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) return `[HTTP ${res.status} em ${url}]`;
     const html = await res.text();
@@ -31,14 +38,17 @@ async function fetchPage(url: string): Promise<string> {
       .trim()
       .slice(0, 3000);
 
-    return `URL: ${url}
+    const content = `URL: ${url}
 TITLE: ${titleMatch?.[1]?.replace(/<[^>]+>/g, "").trim() || "(sem title)"}
 META DESCRIPTION: ${descMatch?.[1]?.trim() || "(sem meta description)"}
 H1: ${h1Match?.[1]?.replace(/<[^>]+>/g, "").trim() || "(sem H1)"}
 H2s: ${h2Matches.map((m) => m[1].replace(/<[^>]+>/g, "").trim()).join(" | ") || "(nenhum)"}
 CONTEÚDO: ${text}`;
+    pageCache.set(url, { content, expiresAt: Date.now() + CACHE_TTL_MS });
+    return content;
   } catch (err: any) {
-    return `[Erro ao acessar ${url}: ${err.message}]`;
+    console.warn(`[Duda] Falha ao buscar ${url}: ${err.message}`);
+    return null;
   }
 }
 
@@ -415,8 +425,10 @@ export async function chatWithDuda(
   let fetchedContext = "";
   if (urlsToFetch.length > 0) {
     console.log(`[Duda] Buscando ${urlsToFetch.length} páginas:`, urlsToFetch);
-    const pages = await Promise.all(urlsToFetch.map(fetchPage));
-    fetchedContext = "\n\n═══ CONTEÚDO ATUAL DO SITE (buscado agora) ═══\n" + pages.join("\n\n---\n\n");
+    const pages = (await Promise.all(urlsToFetch.map(fetchPage))).filter(Boolean) as string[];
+    if (pages.length > 0) {
+      fetchedContext = "\n\n═══ CONTEÚDO ATUAL DO SITE (buscado agora) ═══\n" + pages.join("\n\n---\n\n");
+    }
   }
 
   const systemWithFetch = SYSTEM_PROMPT + nameCtx + fetchedContext;

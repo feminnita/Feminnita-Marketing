@@ -3,8 +3,6 @@
  * Suporta Conta A (Feminnita) e Conta B (FNT Confecções)
  */
 
-import { listAdsCampaigns as browserListAdsCampaigns } from "./ml-ads-browser-agent";
-
 const ML_BASE = "https://api.mercadolibre.com";
 
 function getMLToken(account = "feminnita"): string {
@@ -294,20 +292,6 @@ export async function updateMLAdsBudget(campaignId: string, dailyBudget: number,
 }
 
 export async function getMLAdsCampaignStats(campaignId: string, dateFrom: string, dateTo: string, account = "feminnita"): Promise<string> {
-  const token = getMLToken(account);
-  const userId = getUserId(account);
   const label = account === "fnt" ? "Conta B (FNT)" : "Conta A (Feminnita)";
-  if (!token || !userId) return "Token ML não configurado.";
-  try {
-    const advertiserId = await getAdvertiserId(userId, token);
-    if (!advertiserId) return "Sem perfil de anunciante ML Ads.";
-
-    // ML REST API não expõe métricas para este tipo de conta — usa browser agent (Playwright)
-    console.log(`[GabiML] getMLAdsCampaignStats — usando browser agent (${account})`);
-    const browserAccount = account === "fnt" ? "fnt" : "feminnita";
-    const result = await browserListAdsCampaigns(browserAccount);
-    return result;
-  } catch (e: any) {
-    return `Erro: ${e.message}`;
-  }
+  return `Métricas em tempo real (impressões, cliques, gasto, ROAS) não estão disponíveis via API para ${label}. Para acessar os dados completos da campanha "${campaignId}" no período ${dateFrom} a ${dateTo}, acesse diretamente: https://www.mercadolivre.com.br/advertising/product-ads`;
 }
