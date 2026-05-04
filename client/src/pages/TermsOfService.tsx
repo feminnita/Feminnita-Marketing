@@ -7,7 +7,7 @@ export default function TermsOfService() {
 
         {/* Header */}
         <div className="mb-10 text-center">
-          <h1 className="text-3xl font-bold text-gray-900">Feminnita Pijamas</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Feminnita Marketing</h1>
           <p className="text-gray-500 mt-1 text-sm">marketing.feminnita.com.br</p>
         </div>
 
@@ -19,7 +19,7 @@ export default function TermsOfService() {
           <div className="space-y-6 text-sm text-gray-700 leading-relaxed">
             <div>
               <h3 className="font-semibold text-gray-900 mb-2">1. Sobre a Plataforma</h3>
-              <p>Este sistema de marketing digital é uma plataforma interna da Feminnita Pijamas LTDA (CNPJ: a informar), utilizada exclusivamente pela equipe interna para gestão de conteúdo, agendamento e publicação de vídeos nas redes sociais da marca.</p>
+              <p>O <strong>Feminnita Marketing</strong> (disponível em marketing.feminnita.com.br) é uma plataforma de gestão de marketing digital desenvolvida pela Feminnita Pijamas LTDA, utilizada exclusivamente pela equipe interna para gestão de conteúdo, agendamento e publicação de vídeos nas redes sociais da marca.</p>
             </div>
 
             <div>

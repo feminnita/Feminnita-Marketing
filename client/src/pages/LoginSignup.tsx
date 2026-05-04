@@ -144,7 +144,10 @@ export default function LoginSignup() {
         </Card>
 
         <p className="text-center text-xs text-slate-500 mt-8">
-          © 2026 Feminnita. Todos os direitos reservados.
+          © 2026 Feminnita Marketing. Todos os direitos reservados.{" "}
+          <a href="/terms" className="underline hover:text-slate-300">Termos de Uso</a>
+          {" · "}
+          <a href="/privacy" className="underline hover:text-slate-300">Política de Privacidade</a>
         </p>
       </div>
     </div>
