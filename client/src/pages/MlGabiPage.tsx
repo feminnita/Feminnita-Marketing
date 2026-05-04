@@ -38,15 +38,32 @@ const WELCOME: Record<Account, string> = {
     "Olá! Sou a Gabi — Conta B FNT Confecções (atacado). Cuido dos anúncios e campanhas de Product Ads do Mercado Livre para revendedoras. O que precisa hoje?",
 };
 
+const STORAGE_KEY = (acc: Account) => `gabi_messages_${acc}`;
+
+function loadMessages(acc: Account): Message[] {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY(acc));
+    if (saved) {
+      const parsed = JSON.parse(saved) as Message[];
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {}
+  return [{ role: "assistant", content: WELCOME[acc] }];
+}
+
 export default function MlGabiPage() {
   const [, setLocation] = useLocation();
   const [account, setAccount] = useState<Account>("feminnita");
-  const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: WELCOME.feminnita },
-  ]);
+  const [messages, setMessages] = useState<Message[]>(() => loadMessages("feminnita"));
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY(account), JSON.stringify(messages));
+    } catch {}
+  }, [messages, account]);
 
   const chatMutation = trpc.mlGabi.chat.useMutation({
     onSuccess: (data) => {
@@ -64,7 +81,7 @@ export default function MlGabiPage() {
 
   function switchAccount(acc: Account) {
     setAccount(acc);
-    setMessages([{ role: "assistant", content: WELCOME[acc] }]);
+    setMessages(loadMessages(acc));
     setInput("");
   }
 

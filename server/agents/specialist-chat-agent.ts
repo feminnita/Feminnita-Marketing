@@ -1003,7 +1003,7 @@ export async function chatWithSpecialist(
 
   // Loop de tool use
   let iterations = 0;
-  while (iterations < 5) {
+  while (iterations < 8) {
     iterations++;
 
     const agentTools = agentName === "fernanda"
@@ -1045,6 +1045,20 @@ export async function chatWithSpecialist(
 
     messages.push({ role: "assistant", content: response.content });
     messages.push({ role: "user", content: toolResults });
+  }
+
+  // Se o loop terminou sem texto (todas as iterações foram tool use), força resposta final
+  if (!finalText) {
+    console.warn(`[${agentName}Chat] Loop encerrado sem resposta de texto — forçando síntese final`);
+    const finalResponse = await anthropic.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 4096,
+      system: systemWithMemory,
+      messages,
+    });
+    for (const block of finalResponse.content) {
+      if (block.type === "text") finalText += block.text;
+    }
   }
 
   // Extrair ações propostas
