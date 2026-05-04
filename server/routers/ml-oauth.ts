@@ -144,28 +144,21 @@ export function registerMLOAuthRoutes(app: Express) {
     const advertiserId = "140649";
     const accountId = "150815";
 
-    const productIdVariants = [
-      "MPAds", "mp_ads", "MP_ADS",
-      "SPONSORED", "sponsored", "sponsored_products", "SPONSORED_PRODUCTS",
-      "PLA", "PAI", "DISPLAY", "display",
-      "ProductAds", "productads",
-      "PDAS", "PAds",
-    ];
-
+    // product_id=PAds confirmado — agora testando endpoints de campanhas
     const getUrls = [
-      // product_id variants — encontrar qual o ML aceita
-      ...productIdVariants.map(pid =>
-        `https://api.mercadolibre.com/advertising/advertisers?user_id=${userId}&product_id=${pid}`
-      ),
-      // Advertiser direto pelo ID confirmado no Seller Center (140649)
-      `https://api.mercadolibre.com/advertising/advertisers/${advertiserId}`,
+      // Advertiser confirmado via PAds
+      `https://api.mercadolibre.com/advertising/advertisers?user_id=${userId}&product_id=PAds`,
+      // Variantes de campanhas com advertiser_id=140649
+      `https://api.mercadolibre.com/advertising/advertisers/${advertiserId}/campaigns?product_id=PAds`,
       `https://api.mercadolibre.com/advertising/advertisers/${advertiserId}/campaigns`,
-      `https://api.mercadolibre.com/advertising/advertisers/${advertiserId}/campaigns?status=active`,
-      // Endpoint do usuário
-      `https://api.mercadolibre.com/users/${userId}/advertising/product_ads`,
-      // v2
-      `https://api.mercadolibre.com/v2/advertising/advertisers?user_id=${userId}&product_id=MPAds`,
-      `https://api.mercadolibre.com/v2/advertising/advertisers?user_id=${userId}&product_id=SPONSORED`,
+      `https://api.mercadolibre.com/advertising/advertisers/${advertiserId}/product_ads`,
+      `https://api.mercadolibre.com/advertising/advertisers/${advertiserId}/product_ads/campaigns`,
+      `https://api.mercadolibre.com/advertising/product_ads/advertisers/${advertiserId}/campaigns`,
+      `https://api.mercadolibre.com/advertising/product_ads/campaigns?advertiser_id=${advertiserId}`,
+      `https://api.mercadolibre.com/advertising/product_ads/campaigns?user_id=${userId}`,
+      `https://api.mercadolibre.com/advertising/product_ads?user_id=${userId}&product_id=PAds`,
+      `https://api.mercadolibre.com/advertising/campaigns?advertiser_id=${advertiserId}&product_id=PAds`,
+      `https://api.mercadolibre.com/advertising/campaigns?user_id=${userId}&product_id=PAds`,
     ];
 
     for (const url of getUrls) {

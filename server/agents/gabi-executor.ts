@@ -183,24 +183,16 @@ export async function updateMLItemAttributes(
 // ─── ML Ads (Product Ads REST API) ───────────────────────────────────────────
 
 async function getAdvertiserId(userId: string, token: string): Promise<string | null> {
-  const productIds = ["MPAds", "SPONSORED", "sponsored_products", "mp_ads", "PLA", "PAI", "DISPLAY"];
-  const urls: string[] = [
-    ...productIds.map(pid => `/advertising/advertisers?user_id=${userId}&product_id=${pid}`),
-    `/advertising/advertisers?user_id=${userId}`,
-    `/v2/advertising/advertisers?user_id=${userId}`,
-  ];
-  for (const url of urls) {
-    try {
-      const res = await fetch(`${ML_BASE}${url}`, { headers: { Authorization: `Bearer ${token}` } });
-      if (!res.ok) continue;
-      const data = await res.json() as any;
-      if (data?.error) continue;
-      const id = Array.isArray(data)
-        ? data[0]?.id
-        : (data?.advertiser_id ?? data?.results?.[0]?.id ?? data?.id ?? data?.[0]?.id);
-      if (id) { console.log(`[GabiML] advertiser_id=${id} via ${url}`); return String(id); }
-    } catch {}
-  }
+  // product_id=PAds é o valor correto confirmado pela ML API
+  const url = `/advertising/advertisers?user_id=${userId}&product_id=PAds`;
+  try {
+    const res = await fetch(`${ML_BASE}${url}`, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) return null;
+    const data = await res.json() as any;
+    if (data?.error) return null;
+    const id = data?.advertisers?.[0]?.advertiser_id ?? data?.[0]?.id ?? data?.advertiser_id;
+    if (id) { console.log(`[GabiML] advertiser_id=${id}`); return String(id); }
+  } catch {}
   return null;
 }
 
