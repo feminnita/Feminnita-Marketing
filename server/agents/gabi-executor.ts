@@ -228,6 +228,7 @@ export async function listMLAdsCampaigns(account = "feminnita"): Promise<string>
 export async function pauseMLAdsCampaign(campaignId: string, account = "feminnita"): Promise<string> {
   const token = getMLToken(account);
   const userId = getUserId(account);
+  const label = account === "fnt" ? "Conta B (FNT)" : "Conta A (Feminnita)";
   if (!token || !userId) return "Token ML não configurado.";
   try {
     const advertiserId = await getAdvertiserId(userId, token);
@@ -239,9 +240,7 @@ export async function pauseMLAdsCampaign(campaignId: string, account = "feminnit
     });
     const data = await res.json() as any;
     if (!res.ok || data.error) {
-      console.log(`[GabiML] pauseMLAdsCampaign REST falhou, tentando browser (${account})`);
-      const { pauseAdsCampaign } = await import("./ml-ads-browser-agent");
-      return pauseAdsCampaign(campaignId, account as "feminnita" | "fnt");
+      return `Erro ao pausar campanha ${campaignId} (${label}): ${data.message || data.error || `HTTP ${res.status}`}. Verifique em https://www.mercadolivre.com.br/advertising/product-ads`;
     }
     return `Campanha ${campaignId} pausada com sucesso.`;
   } catch (e: any) { return `Erro: ${e.message}`; }
@@ -250,6 +249,7 @@ export async function pauseMLAdsCampaign(campaignId: string, account = "feminnit
 export async function activateMLAdsCampaign(campaignId: string, account = "feminnita"): Promise<string> {
   const token = getMLToken(account);
   const userId = getUserId(account);
+  const label = account === "fnt" ? "Conta B (FNT)" : "Conta A (Feminnita)";
   if (!token || !userId) return "Token ML não configurado.";
   try {
     const advertiserId = await getAdvertiserId(userId, token);
@@ -261,9 +261,7 @@ export async function activateMLAdsCampaign(campaignId: string, account = "femin
     });
     const data = await res.json() as any;
     if (!res.ok || data.error) {
-      console.log(`[GabiML] activateMLAdsCampaign REST falhou, tentando browser (${account})`);
-      const { activateAdsCampaign } = await import("./ml-ads-browser-agent");
-      return activateAdsCampaign(campaignId, account as "feminnita" | "fnt");
+      return `Erro ao reativar campanha ${campaignId} (${label}): ${data.message || data.error || `HTTP ${res.status}`}. Verifique em https://www.mercadolivre.com.br/advertising/product-ads`;
     }
     return `Campanha ${campaignId} reativada com sucesso.`;
   } catch (e: any) { return `Erro: ${e.message}`; }
@@ -272,6 +270,7 @@ export async function activateMLAdsCampaign(campaignId: string, account = "femin
 export async function updateMLAdsBudget(campaignId: string, dailyBudget: number, account = "feminnita"): Promise<string> {
   const token = getMLToken(account);
   const userId = getUserId(account);
+  const label = account === "fnt" ? "Conta B (FNT)" : "Conta A (Feminnita)";
   if (!token || !userId) return "Token ML não configurado.";
   try {
     const advertiserId = await getAdvertiserId(userId, token);
@@ -283,15 +282,79 @@ export async function updateMLAdsBudget(campaignId: string, dailyBudget: number,
     });
     const data = await res.json() as any;
     if (!res.ok || data.error) {
-      console.log(`[GabiML] updateMLAdsBudget REST falhou, tentando browser (${account})`);
-      const { updateAdsBudget } = await import("./ml-ads-browser-agent");
-      return updateAdsBudget(campaignId, dailyBudget, account as "feminnita" | "fnt");
+      return `Erro ao atualizar budget da campanha ${campaignId} (${label}): ${data.message || data.error || `HTTP ${res.status}`}. Verifique em https://www.mercadolivre.com.br/advertising/product-ads`;
     }
     return `Budget da campanha ${campaignId} atualizado para R$${dailyBudget}.`;
   } catch (e: any) { return `Erro: ${e.message}`; }
 }
 
 export async function getMLAdsCampaignStats(campaignId: string, dateFrom: string, dateTo: string, account = "feminnita"): Promise<string> {
+  const token = getMLToken(account);
+  const userId = getUserId(account);
   const label = account === "fnt" ? "Conta B (FNT)" : "Conta A (Feminnita)";
-  return `Métricas em tempo real (impressões, cliques, gasto, ROAS) não estão disponíveis via API para ${label}. Para acessar os dados completos da campanha "${campaignId}" no período ${dateFrom} a ${dateTo}, acesse diretamente: https://www.mercadolivre.com.br/advertising/product-ads`;
+  if (!token || !userId) return "Token ML não configurado.";
+
+  try {
+    const advertiserId = await getAdvertiserId(userId, token);
+    if (!advertiserId) return `${label} sem perfil de anunciante ML Ads.`;
+
+    // Tenta endpoint de métricas agregadas da campanha
+    const url = `${ML_BASE}/advertising/advertisers/${advertiserId}/product_ads/campaigns/${campaignId}/metrics?date_from=${dateFrom}&date_to=${dateTo}`;
+    console.log(`[GabiML] getMLAdsCampaignStats — ${url}`);
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json() as any;
+
+    if (!res.ok || data.error) {
+      // Tenta endpoint alternativo (reporting)
+      const url2 = `${ML_BASE}/advertising/advertisers/${advertiserId}/product_ads/campaigns/${campaignId}/stats?date_from=${dateFrom}&date_to=${dateTo}`;
+      console.log(`[GabiML] getMLAdsCampaignStats fallback — ${url2}`);
+      const res2 = await fetch(url2, { headers: { Authorization: `Bearer ${token}` } });
+      const data2 = await res2.json() as any;
+
+      if (!res2.ok || data2.error) {
+        return [
+          `## ⚠️ Métricas indisponíveis via API — ${label}`,
+          ``,
+          `A API do ML retornou erro para a campanha "${campaignId}" no período ${dateFrom} → ${dateTo}.`,
+          `Erro: ${data2.message || data2.error || `HTTP ${res2.status}`}`,
+          ``,
+          `Para ver as métricas (impressões, cliques, CTR, gasto, ROAS), acesse:`,
+          `https://www.mercadolivre.com.br/advertising/product-ads`,
+        ].join("\n");
+      }
+
+      return formatCampaignStats(data2, campaignId, dateFrom, dateTo, label);
+    }
+
+    return formatCampaignStats(data, campaignId, dateFrom, dateTo, label);
+  } catch (e: any) {
+    return `Erro ao consultar métricas de ${campaignId}: ${e.message}`;
+  }
+}
+
+function formatCampaignStats(data: any, campaignId: string, dateFrom: string, dateTo: string, label: string): string {
+  const fmt = (v: any) => v != null ? String(v) : "N/A";
+  const fmtBrl = (v: any) => v != null ? `R$${Number(v).toFixed(2)}` : "N/A";
+  const fmtPct = (v: any) => v != null ? `${(Number(v) * (Number(v) <= 1 ? 100 : 1)).toFixed(2)}%` : "N/A";
+
+  const impressions  = fmt(data.impressions ?? data.total_impressions);
+  const clicks       = fmt(data.clicks ?? data.total_clicks);
+  const ctr          = fmtPct(data.ctr ?? data.click_through_rate);
+  const spend        = fmtBrl(data.spend ?? data.total_spend ?? data.cost ?? data.total_cost);
+  const conversions  = fmt(data.conversions ?? data.total_conversions ?? data.direct_conversions);
+  const roas         = data.roas != null ? Number(data.roas).toFixed(2) : "N/A";
+  const revenue      = fmtBrl(data.revenue ?? data.total_revenue ?? data.direct_revenue);
+
+  return [
+    `MÉTRICAS DA CAMPANHA "${campaignId}" — ${label}`,
+    `Período: ${dateFrom} → ${dateTo}`,
+    ``,
+    `• Impressões: ${impressions}`,
+    `• Cliques: ${clicks}`,
+    `• CTR: ${ctr}`,
+    `• Gasto: ${spend}`,
+    `• Conversões: ${conversions}`,
+    `• ROAS: ${roas}`,
+    `• Receita: ${revenue}`,
+  ].join("\n");
 }
