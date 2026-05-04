@@ -104,6 +104,7 @@ import { amazonAliceRouter } from "./routers/amazon-alice";
 import { sheinIsabelaRouter } from "./routers/shein-isabela";
 import { agentTasksRouter } from "./routers/agent-tasks";
 import { chatUploadRouter } from "./routers/chat-upload";
+import { hailuoImageRouter } from "./routers/hailuo-image";
 import { getDb } from "./db";
 import { influencers, influencerPosts } from "../drizzle/schema";
 
@@ -442,6 +443,7 @@ export const appRouter = router({
 
   agentTasks: agentTasksRouter,
   chatUpload: chatUploadRouter,
+  hailuoImage: hailuoImageRouter,
 
   users: router({
     list: protectedProcedure.query(async ({ ctx }) => {
