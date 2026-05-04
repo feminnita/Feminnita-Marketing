@@ -205,12 +205,12 @@ export async function listMLAdsCampaigns(account = "feminnita"): Promise<string>
   try {
     const advertiserId = await getAdvertiserId(userId, token);
     if (!advertiserId) return `${label} sem perfil de anunciante ML Ads. Acesse https://www.mercadolivre.com.br/advertising/product-ads para ativar.`;
-    const res = await fetch(`${ML_BASE}/advertising/advertisers/${advertiserId}/campaigns`, {
+    const res = await fetch(`${ML_BASE}/advertising/advertisers/${advertiserId}/product_ads/campaigns`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await res.json() as any;
     if (!res.ok || data.error) return `Erro ${res.status} (${label}): ${data.message || data.error}. advertiser_id=${advertiserId}`;
-    const campaigns: any[] = Array.isArray(data) ? data : (data.results ?? data.campaigns ?? []);
+    const campaigns: any[] = Array.isArray(data) ? data : (data.results ?? data.campaigns ?? data.data ?? []);
     if (campaigns.length === 0) return `Nenhuma campanha ativa em ${label} (advertiser: ${advertiserId}).`;
     const lines = campaigns.map(c => `• [${c.id}] "${c.name}" | ${c.status} | Budget: R$${c.daily_budget ?? c.budget ?? "—"}`);
     return `CAMPANHAS PRODUCT ADS ${label} (advertiser: ${advertiserId}):\n${lines.join("\n")}`;
@@ -226,7 +226,7 @@ export async function pauseMLAdsCampaign(campaignId: string, account = "feminnit
   try {
     const advertiserId = await getAdvertiserId(userId, token);
     if (!advertiserId) return "Sem perfil de anunciante.";
-    const res = await fetch(`${ML_BASE}/advertising/advertisers/${advertiserId}/campaigns/${campaignId}`, {
+    const res = await fetch(`${ML_BASE}/advertising/advertisers/${advertiserId}/product_ads/campaigns/${campaignId}`, {
       method: "PUT",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify({ status: "paused" }),
@@ -244,7 +244,7 @@ export async function activateMLAdsCampaign(campaignId: string, account = "femin
   try {
     const advertiserId = await getAdvertiserId(userId, token);
     if (!advertiserId) return "Sem perfil de anunciante.";
-    const res = await fetch(`${ML_BASE}/advertising/advertisers/${advertiserId}/campaigns/${campaignId}`, {
+    const res = await fetch(`${ML_BASE}/advertising/advertisers/${advertiserId}/product_ads/campaigns/${campaignId}`, {
       method: "PUT",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify({ status: "active" }),
@@ -262,7 +262,7 @@ export async function updateMLAdsBudget(campaignId: string, dailyBudget: number,
   try {
     const advertiserId = await getAdvertiserId(userId, token);
     if (!advertiserId) return "Sem perfil de anunciante.";
-    const res = await fetch(`${ML_BASE}/advertising/advertisers/${advertiserId}/campaigns/${campaignId}`, {
+    const res = await fetch(`${ML_BASE}/advertising/advertisers/${advertiserId}/product_ads/campaigns/${campaignId}`, {
       method: "PUT",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify({ daily_budget: dailyBudget }),
