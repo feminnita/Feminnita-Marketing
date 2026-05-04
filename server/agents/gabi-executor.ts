@@ -211,9 +211,15 @@ export async function listMLAdsCampaigns(account = "feminnita"): Promise<string>
     const data = await res.json() as any;
     if (!res.ok || data.error) return `Erro ${res.status} (${label}): ${data.message || data.error}. advertiser_id=${advertiserId}`;
     const campaigns: any[] = Array.isArray(data) ? data : (data.results ?? data.campaigns ?? data.data ?? []);
-    if (campaigns.length === 0) return `Nenhuma campanha ativa em ${label} (advertiser: ${advertiserId}).`;
-    const lines = campaigns.map(c => `• [${c.id}] "${c.name}" | ${c.status} | Budget: R$${c.daily_budget ?? c.budget ?? "—"}`);
-    return `CAMPANHAS PRODUCT ADS ${label} (advertiser: ${advertiserId}):\n${lines.join("\n")}`;
+    if (campaigns.length === 0) return `Nenhuma campanha em ${label} (advertiser: ${advertiserId}).`;
+    const lines = campaigns.map(c => {
+      const strategy = c.strategy ? ` | Estratégia: ${c.strategy}` : "";
+      const acos = c.acos_target ? ` | ACoS alvo: ${c.acos_target}%` : "";
+      const roas = c.roas_target ? ` | ROAS alvo: ${c.roas_target}` : "";
+      const auto = c.automatic_budget ? " | Budget: automático" : ` | Budget: R$${c.budget ?? "—"}`;
+      return `• [${c.id}] "${c.name}" | ${c.status}${auto}${strategy}${acos}${roas}`;
+    });
+    return `CAMPANHAS PRODUCT ADS ${label} — ${campaigns.length} total (advertiser: ${advertiserId}):\n${lines.join("\n")}\n\n⚠️ Métricas em tempo real (impressões, cliques, gasto) não estão disponíveis via API para esta conta. Acesse: https://www.mercadolivre.com.br/advertising/product-ads`;
   } catch (e: any) {
     return `Erro ao consultar ML Ads: ${e.message}`;
   }
@@ -285,23 +291,9 @@ export async function getMLAdsCampaignStats(campaignId: string, dateFrom: string
     const params = new URLSearchParams({ date_from: dateFrom, date_to: dateTo });
     if (campaignId) params.set("campaign_id", campaignId);
 
-    const res = await fetch(
-      `${ML_BASE}/advertising/advertisers/${advertiserId}/product_ads/campaigns/search?${params}`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    const data = await res.json() as any;
-    if (!res.ok || data.error) {
-      return `Métricas indisponíveis (${res.status}): ${data.message || data.error || data.description}. Acesse: https://www.mercadolivre.com.br/advertising/product-ads`;
-    }
-
-    const rows: any[] = Array.isArray(data) ? data : (data.results ?? data.data ?? [data]);
-    if (rows.length === 0) return `Sem dados de métricas para o período ${dateFrom} a ${dateTo}.`;
-
-    const lines = rows.map((r: any) =>
-      `• [${r.campaign_id ?? r.id ?? "—"}] Impressões: ${r.prints ?? "—"} | Cliques: ${r.clicks ?? "—"} | CTR: ${r.ctr ?? "—"} | Gasto: R$${r.cost ?? "—"} | ROAS: ${r.roas ?? "—"}`
-    );
-    return `MÉTRICAS PRODUCT ADS ${label} (${dateFrom} → ${dateTo}):\n${lines.join("\n")}`;
+    // ML Product Ads não expõe métricas em tempo real via API REST para esta conta
+    return `Métricas em tempo real (impressões, cliques, gasto, CTR, ROAS) não estão disponíveis via API para a conta ${label}. Acesse o painel diretamente: https://www.mercadolivre.com.br/advertising/product-ads`;
   } catch (e: any) {
-    return `Erro ao buscar métricas: ${e.message}`;
+    return `Erro: ${e.message}`;
   }
 }
