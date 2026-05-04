@@ -144,44 +144,45 @@ export function registerMLOAuthRoutes(app: Express) {
     const advertiserId = "140649";
     const accountId = "150815";
 
-    // product_id=PAds confirmado — agora testando endpoints de campanhas
-    const getUrls = [
-      // Advertiser confirmado via PAds
-      `https://api.mercadolibre.com/advertising/advertisers?user_id=${userId}&product_id=PAds`,
-      // Variantes de campanhas com advertiser_id=140649
-      `https://api.mercadolibre.com/advertising/advertisers/${advertiserId}/campaigns?product_id=PAds`,
-      `https://api.mercadolibre.com/advertising/advertisers/${advertiserId}/campaigns`,
-      `https://api.mercadolibre.com/advertising/advertisers/${advertiserId}/product_ads`,
-      `https://api.mercadolibre.com/advertising/advertisers/${advertiserId}/product_ads/campaigns`,
-      `https://api.mercadolibre.com/advertising/product_ads/advertisers/${advertiserId}/campaigns`,
-      `https://api.mercadolibre.com/advertising/product_ads/campaigns?advertiser_id=${advertiserId}`,
-      `https://api.mercadolibre.com/advertising/product_ads/campaigns?user_id=${userId}`,
-      `https://api.mercadolibre.com/advertising/product_ads?user_id=${userId}&product_id=PAds`,
-      `https://api.mercadolibre.com/advertising/campaigns?advertiser_id=${advertiserId}&product_id=PAds`,
-      `https://api.mercadolibre.com/advertising/campaigns?user_id=${userId}&product_id=PAds`,
+    // Busca lista de campanhas para pegar o primeiro campaign_id real
+    let firstCampaignId = "";
+    let firstCampaignObj: any = null;
+    try {
+      const cr = await fetch(`https://api.mercadolibre.com/advertising/advertisers/${advertiserId}/product_ads/campaigns?limit=1`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const cd = await cr.json() as any;
+      const camps: any[] = cd?.results ?? cd?.data ?? [];
+      firstCampaignId = String(camps[0]?.id ?? camps[0]?.campaign_id ?? "");
+      firstCampaignObj = camps[0] ?? null;
+      results.push({ step: "first_campaign_object", campaignId: firstCampaignId, keys: firstCampaignObj ? Object.keys(firstCampaignObj) : [], sample: firstCampaignObj });
+    } catch (e: any) {
+      results.push({ step: "first_campaign_object", error: (e as any).message });
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    const week = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+
+    // Métricas — variantes de endpoints
+    const metricsUrls = [
+      `https://api.mercadolibre.com/advertising/advertisers/${advertiserId}/product_ads/campaigns/search?date_from=${week}&date_to=${today}`,
+      `https://api.mercadolibre.com/advertising/advertisers/${advertiserId}/product_ads/reports?date_from=${week}&date_to=${today}`,
+      `https://api.mercadolibre.com/advertising/advertisers/${advertiserId}/product_ads/ads?date_from=${week}&date_to=${today}&limit=5`,
+      ...(firstCampaignId ? [
+        `https://api.mercadolibre.com/advertising/advertisers/${advertiserId}/product_ads/campaigns/${firstCampaignId}`,
+        `https://api.mercadolibre.com/advertising/advertisers/${advertiserId}/product_ads/campaigns/${firstCampaignId}/stats?date_from=${week}&date_to=${today}`,
+        `https://api.mercadolibre.com/advertising/advertisers/${advertiserId}/product_ads/campaigns/${firstCampaignId}/reports?date_from=${week}&date_to=${today}`,
+      ] : []),
     ];
 
-    for (const url of getUrls) {
+    for (const url of metricsUrls) {
       try {
-        const r = await fetch(url, { headers: { Authorization: `Bearer ${token}`, "x-format-new": "true" } });
+        const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
         const body = await r.json();
         results.push({ url, status: r.status, body });
       } catch (e: any) {
         results.push({ url, error: e.message });
       }
-    }
-
-    // POST para /advertising/products — alguns endpoints ML exigem POST
-    try {
-      const r = await fetch(`https://api.mercadolibre.com/advertising/products`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId }),
-      });
-      const body = await r.json();
-      results.push({ url: "POST /advertising/products", status: r.status, body });
-    } catch (e: any) {
-      results.push({ url: "POST /advertising/products", error: e.message });
     }
 
     return res.json({ userId, tokenLength: token.length, results });
