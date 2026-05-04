@@ -194,6 +194,17 @@ const TOOLS: Anthropic.Tool[] = [
   },
 ];
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Timeout de ${ms / 1000}s em ${label}`)), ms)
+    ),
+  ]);
+}
+
 // ─── Execução das ferramentas ─────────────────────────────────────────────────
 
 async function executeTool(name: string, input: Record<string, any>, userId?: number): Promise<string> {
@@ -834,7 +845,11 @@ export async function chatWithAgent(
     for (const block of response.content) {
       if (block.type === "tool_use") {
         console.log(`[FernandaAgent] Chamando ferramenta: ${block.name}`);
-        const result = await executeTool(block.name, block.input as Record<string, any>, options?.userId);
+        const result = await withTimeout(
+          executeTool(block.name, block.input as Record<string, any>, options?.userId),
+          30000,
+          block.name
+        ).catch((e: any) => `Erro: ${e.message}`);
         toolResults.push({
           type: "tool_result",
           tool_use_id: block.id,
