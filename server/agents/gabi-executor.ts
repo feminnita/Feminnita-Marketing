@@ -273,6 +273,35 @@ export async function updateMLAdsBudget(campaignId: string, dailyBudget: number,
   } catch (e: any) { return `Erro: ${e.message}`; }
 }
 
-export async function getMLAdsCampaignStats(_campaignId: string, _dateFrom: string, _dateTo: string, _account = "feminnita"): Promise<string> {
-  return "Métricas detalhadas (impressões, CTR, ROAS) disponíveis em: https://www.mercadolivre.com.br/advertising/product-ads";
+export async function getMLAdsCampaignStats(campaignId: string, dateFrom: string, dateTo: string, account = "feminnita"): Promise<string> {
+  const token = getMLToken(account);
+  const userId = getUserId(account);
+  const label = account === "fnt" ? "Conta B (FNT)" : "Conta A (Feminnita)";
+  if (!token || !userId) return "Token ML não configurado.";
+  try {
+    const advertiserId = await getAdvertiserId(userId, token);
+    if (!advertiserId) return "Sem perfil de anunciante ML Ads.";
+
+    const params = new URLSearchParams({ date_from: dateFrom, date_to: dateTo });
+    if (campaignId) params.set("campaign_id", campaignId);
+
+    const res = await fetch(
+      `${ML_BASE}/advertising/advertisers/${advertiserId}/product_ads/campaigns/search?${params}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    const data = await res.json() as any;
+    if (!res.ok || data.error) {
+      return `Métricas indisponíveis (${res.status}): ${data.message || data.error || data.description}. Acesse: https://www.mercadolivre.com.br/advertising/product-ads`;
+    }
+
+    const rows: any[] = Array.isArray(data) ? data : (data.results ?? data.data ?? [data]);
+    if (rows.length === 0) return `Sem dados de métricas para o período ${dateFrom} a ${dateTo}.`;
+
+    const lines = rows.map((r: any) =>
+      `• [${r.campaign_id ?? r.id ?? "—"}] Impressões: ${r.prints ?? "—"} | Cliques: ${r.clicks ?? "—"} | CTR: ${r.ctr ?? "—"} | Gasto: R$${r.cost ?? "—"} | ROAS: ${r.roas ?? "—"}`
+    );
+    return `MÉTRICAS PRODUCT ADS ${label} (${dateFrom} → ${dateTo}):\n${lines.join("\n")}`;
+  } catch (e: any) {
+    return `Erro ao buscar métricas: ${e.message}`;
+  }
 }
