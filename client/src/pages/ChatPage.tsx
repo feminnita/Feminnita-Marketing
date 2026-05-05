@@ -24,7 +24,7 @@ async function registerPush(vapidKey: string, subscribeFn: (s: { endpoint: strin
     const reg = await navigator.serviceWorker.register("/sw.js");
     await navigator.serviceWorker.ready;
     const existing = await reg.pushManager.getSubscription();
-    const sub = existing ?? await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(vapidKey) });
+    const sub = existing ?? await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(vapidKey) as unknown as BufferSource });
     const json = sub.toJSON();
     subscribeFn({ endpoint: json.endpoint!, p256dh: (json.keys as any)?.p256dh ?? "", auth: (json.keys as any)?.auth ?? "" });
   } catch (e) {
@@ -72,7 +72,7 @@ const STATIC_CONTACTS: Contact[] = [
 // ─── Componente principal ──────────────────────────────────────────────────────
 
 export default function ChatPage() {
-  const { user, isLoading } = useAuth();
+  const { user, loading: isLoading } = useAuth();
 
   const [contact, setContact]         = useState<Contact | null>(null);
   const [input, setInput]             = useState("");
@@ -135,7 +135,7 @@ export default function ChatPage() {
 
   const contacts: Contact[] = [
     ...STATIC_CONTACTS,
-    ...(teamQuery.data ?? []).map((u) => ({
+    ...(teamQuery.data ?? []).map((u: { id: number; name: string | null; email: string }) => ({
       kind: "human" as ContactKind,
       id: u.id,
       name: u.name || u.email,

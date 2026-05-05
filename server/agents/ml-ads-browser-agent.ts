@@ -354,7 +354,7 @@ export async function updateAdsBudget(campaignId: string, dailyBudget: number, a
     if (!await budgetInput.isVisible().catch(() => false)) {
       return "Campo de budget não encontrado. O layout do Seller Center pode ter mudado.";
     }
-    await budgetInput.triple_click();
+    await budgetInput.click({ clickCount: 3 });
     await budgetInput.fill(String(dailyBudget));
 
     // Salva
