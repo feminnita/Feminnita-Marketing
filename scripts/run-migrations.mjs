@@ -105,6 +105,9 @@ const pending = [
   "0035_shopee_ads",
   "0036_tiktok_shop",
   "0037_amazon",
+  "0038_influencer_profiles",
+  "0039_instagram_comments",
+  "0040_ad_creatives",
 ];
 
 for (const name of pending) {

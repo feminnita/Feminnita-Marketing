@@ -242,6 +242,10 @@ export default function App() {
         return <MorningBriefingPage />;
       case "/gerar-imagem":
         return <HailuoImagePage />;
+      case "/chat":
+        return <ChatPage />;
+      case "/asset-library":
+        return <AssetLibraryPage />;
       default: {
         if (/^\/influenciadora\/\d+$/.test(location)) {
           return <InfluencerProfilePage />;
