@@ -8,7 +8,7 @@ export const shopeeLuizaRouter = router({
       messages: z.array(z.object({
         role: z.enum(["user", "assistant"]),
         content: z.string(),
-      })).min(1).max(50),
+      })).min(1).max(200),
       account: z.enum(["feminnita", "fnt"]).default("feminnita"),
     }))
     .mutation(async ({ ctx, input }) => {

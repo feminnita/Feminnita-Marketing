@@ -8,7 +8,7 @@ export const trayAnyRouter = router({
       messages: z.array(z.object({
         role: z.enum(["user", "assistant"]),
         content: z.string(),
-      })).min(1).max(50),
+      })).min(1).max(200),
     }))
     .mutation(async ({ ctx, input }) => {
       const reply = await chatWithAny(input.messages, ctx.user?.name ?? undefined);
