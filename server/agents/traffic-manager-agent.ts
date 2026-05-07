@@ -10,8 +10,13 @@ import {
   fetchMetaCampaignsList,
   fetchMetaAdsets,
   fetchMetaInsights,
+  fetchMetaInsightsWithBreakdown,
   fetchMetaAdsData,
   fetchMetaAds,
+  pauseAd,
+  resumeAd,
+  duplicateCampaign,
+  swapUrlTags,
 } from "../services/meta-ads-service";
 import { buildMemoryContext } from "../services/agentMemory";
 import { getDb } from "../db";
@@ -192,6 +197,86 @@ const TOOLS: Anthropic.Tool[] = [
       required: [],
     },
   },
+  {
+    name: "get_insights_breakdown",
+    description:
+      "Busca insights com segmentação por idade/gênero, dispositivo ou posicionamento. Use para entender qual público está respondendo melhor, em qual dispositivo ou placement a campanha performa mais.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        level: {
+          type: "string",
+          enum: ["campaign", "adset", "ad"],
+          description: "Nível de agregação",
+        },
+        date_preset: {
+          type: "string",
+          enum: ["today", "yesterday", "last_7d", "last_14d", "last_30d", "this_month", "last_month"],
+          description: "Período",
+        },
+        breakdowns: {
+          type: "string",
+          enum: ["age,gender", "device_platform", "publisher_platform", "country", "region"],
+          description: "Segmentação: age,gender | device_platform | publisher_platform | country | region",
+        },
+        object_id: {
+          type: "string",
+          description: "ID de campanha ou adset para filtrar (opcional)",
+        },
+      },
+      required: ["level", "date_preset", "breakdowns"],
+    },
+  },
+  {
+    name: "pause_ad",
+    description: "Pausa um anúncio individual. Use quando um ad específico está com performance ruim e precisa ser pausado sem afetar outros ads do mesmo adset.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        ad_id: { type: "string", description: "ID do anúncio a pausar" },
+      },
+      required: ["ad_id"],
+    },
+  },
+  {
+    name: "resume_ad",
+    description: "Ativa um anúncio pausado. ATENÇÃO: confirmar com o usuário antes de executar.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        ad_id: { type: "string", description: "ID do anúncio a ativar" },
+      },
+      required: ["ad_id"],
+    },
+  },
+  {
+    name: "duplicate_campaign",
+    description:
+      "Duplica uma campanha completa (com todos os ad sets e ads) com status PAUSADO. Use para criar teste A/B ou duplicar uma campanha vencedora para escalar. SEMPRE confirmar com usuário antes de executar.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        campaign_id: { type: "string", description: "ID da campanha a duplicar" },
+      },
+      required: ["campaign_id"],
+    },
+  },
+  {
+    name: "swap_url_tags",
+    description:
+      "Corrige os UTM tags (utm_source, utm_medium, utm_campaign etc.) de um anúncio existente. Cria um novo criativo com os url_tags corretos e substitui no ad, pausando o ad antigo. Use quando o usuário precisar corrigir rastreamento de campanhas. SEMPRE confirmar com usuário antes.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        ad_id: { type: "string", description: "ID do anúncio a corrigir" },
+        url_tags: {
+          type: "string",
+          description: "String de UTM tags. Ex: utm_source=facebook&utm_medium=cpc&utm_campaign=remarketing",
+        },
+      },
+      required: ["ad_id", "url_tags"],
+    },
+  },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -366,6 +451,63 @@ async function executeTool(name: string, input: Record<string, any>, userId?: nu
       return JSON.stringify({ pending: creatives });
     }
 
+    if (name === "get_insights_breakdown") {
+      const rows = await fetchMetaInsightsWithBreakdown(
+        input.level,
+        input.date_preset,
+        input.breakdowns,
+        input.object_id,
+      );
+      return JSON.stringify(rows.map((row: any) => {
+        const spend = parseFloat(row.spend || "0");
+        const purchaseAction = (row.actions || []).find(
+          (a: any) => a.action_type === "purchase" || a.action_type === "omni_purchase"
+        );
+        const revenue = purchaseAction ? parseFloat(purchaseAction.value) : 0;
+        return {
+          segmento: [row.age, row.gender, row.device_platform, row.publisher_platform, row.country, row.region]
+            .filter(Boolean).join(" / ") || "total",
+          campanha: row.campaign_name,
+          adset: row.adset_name,
+          spend: `R$${spend.toFixed(2)}`,
+          impressoes: row.impressions,
+          cliques: row.clicks,
+          ctr: row.ctr ? `${parseFloat(row.ctr).toFixed(2)}%` : "N/D",
+          cpm: row.cpm ? `R$${parseFloat(row.cpm).toFixed(2)}` : "N/D",
+          roas: spend > 0 && revenue > 0 ? (revenue / spend).toFixed(2) + "x" : "N/D",
+        };
+      }));
+    }
+
+    if (name === "pause_ad") {
+      await pauseAd(input.ad_id);
+      return JSON.stringify({ success: true, message: `Anúncio ${input.ad_id} pausado com sucesso.` });
+    }
+
+    if (name === "resume_ad") {
+      await resumeAd(input.ad_id);
+      return JSON.stringify({ success: true, message: `Anúncio ${input.ad_id} ativado com sucesso.` });
+    }
+
+    if (name === "duplicate_campaign") {
+      const result = await duplicateCampaign(input.campaign_id);
+      return JSON.stringify({
+        success: true,
+        newCampaignId: result.newCampaignId,
+        name: result.name,
+        message: `Campanha duplicada com sucesso. Nova campanha "${result.name}" (ID: ${result.newCampaignId}) criada com status PAUSADO.`,
+      });
+    }
+
+    if (name === "swap_url_tags") {
+      const result = await swapUrlTags(input.ad_id, input.url_tags);
+      return JSON.stringify({
+        success: true,
+        newAdId: result.newAdId,
+        message: `URL tags atualizados com sucesso. Novo ad (ID: ${result.newAdId}) criado e ativado. Ad antigo (${input.ad_id}) pausado.`,
+      });
+    }
+
     return JSON.stringify({ error: `Ferramenta desconhecida: ${name}` });
   } catch (err: any) {
     console.error(`[Tool ${name}] Erro:`, err.message);
@@ -400,6 +542,11 @@ Você tem acesso direto à conta Meta Ads. SEMPRE use as ferramentas para buscar
 - fetch_landing_page: acessa a URL de destino de um anúncio e extrai o conteúdo textual.
 - get_pending_creatives: lista artes salvas aguardando publicação.
 - publish_creative: publica uma arte diretamente no Meta Ads após autorização do usuário.
+- get_insights_breakdown: insights segmentados por idade/gênero, dispositivo, placement, país ou região. Use para diagnóstico de público.
+- pause_ad: pausa um anúncio individual (sem afetar outros do mesmo adset).
+- resume_ad: ativa um anúncio pausado. SEMPRE confirmar com usuário antes.
+- duplicate_campaign: duplica campanha completa (adsets + ads) com status PAUSADO. Use para A/B test ou escalar vencedora. SEMPRE confirmar antes.
+- swap_url_tags: corrige UTM tags de um ad existente criando novo criativo + substituindo no ad. SEMPRE confirmar antes e mostrar os url_tags que serão aplicados.
 
 ═══ SEU PERFIL E EXPERTISE ═══
 - Domina Meta Ads profundamente: campanhas ASC (Advantage Shopping Campaigns), Advantage+ Audience, Broad targeting, pixel events, CAPI server-side, Value Optimization

@@ -187,6 +187,18 @@ const GABI_ML_TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "ml_get_ads_metrics",
+    description: "Lê métricas REAIS de campanhas de Ads coletadas via browser pelo agente Playwright (impressões, cliques, CTR, gasto, ROAS, ACoS, conversões, receita). Dados atualizados automaticamente a cada 6h. Use SEMPRE que precisar analisar performance de campanhas — estes dados substituem os dados bloqueados da API.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        account: { type: "string", enum: ["feminnita", "fnt"], description: "Conta ML a consultar (padrão: feminnita)" },
+        platform: { type: "string", enum: ["ml", "shopee", "amazon"], description: "Plataforma (padrão: ml)" },
+      },
+      required: [],
+    },
+  },
+  {
     name: "ml_update_item_attributes",
     description: "Atualiza atributos EDS de um anúncio (composição, cor, tamanho, marca, etc). Execute somente após o usuário confirmar. Use ml_get_category_attributes para descobrir os IDs corretos dos atributos.",
     input_schema: {
@@ -254,8 +266,9 @@ Ferramentas deste modo: ml_list_items, ml_pause_item, ml_activate_item, ml_updat
 → NÃO mencione campanhas de Ads neste modo
 
 ━━━ MODO ADS / CAMPANHAS ━━━
-Ativado quando: usuário fala de campanha, Product Ads, budget, CPC, ROAS, CTR, patrocinado, Ads
-Ferramentas deste modo: ml_ads_list_campaigns, ml_ads_pause_campaign, ml_ads_activate_campaign, ml_ads_update_budget, ml_ads_campaign_stats
+Ativado quando: usuário fala de campanha, Product Ads, budget, CPC, ROAS, CTR, patrocinado, Ads, métricas
+Ferramentas deste modo: ml_get_ads_metrics, ml_ads_list_campaigns, ml_ads_pause_campaign, ml_ads_activate_campaign, ml_ads_update_budget, ml_ads_campaign_stats
+REGRA CRÍTICA: A API do ML bloqueia métricas diretamente. USE SEMPRE ml_get_ads_metrics PRIMEIRO — esses dados são reais, coletados via browser a cada 6h. Se retornar vazio, informe que o agente está coletando e use ml_ads_list_campaigns para estrutura.
 → NÃO mencione anúncios/EDS neste modo
 
 REGRA DE OURO: Responda apenas o que foi perguntado. Se a pergunta é sobre Ads, fique em Ads. Se é sobre EDS, fique em EDS. Nunca misture os dois temas na mesma resposta sem que o usuário peça explicitamente.
@@ -333,55 +346,167 @@ export async function chatWithGabi(
         const inp = toolUse.input as Record<string, any>;
         const TOOL_TIMEOUT = 45000;
         let call: Promise<string>;
+        // Helper: salva ação na fila do Playwright quando a API falha
+        const queueAction = async (actionType: string, title: string, payload: Record<string, any>): Promise<string> => {
+          const db = await getDb();
+          if (!db) throw new Error("DB indisponível");
+          await db.insert(agentActionsTable).values({
+            agentName: "gabi",
+            date: new Date().toISOString().slice(0, 10),
+            title,
+            description: title,
+            actionType,
+            priority: "media",
+            status: "pending" as const,
+            payload: { platform: "ml", account, action: actionType, ...payload },
+          });
+          return `Ação "${title}" salva para aprovação. Acesse /acoes-agentes para aprovar — o agente Playwright executará via browser.`;
+        };
+
         if (toolUse.name === "ml_list_items") {
           call = listMLItems(account);
         } else if (toolUse.name === "ml_pause_item") {
-          call = pauseMLItem(inp.itemId, account);
+          call = pauseMLItem(inp.itemId, account).catch(() =>
+            queueAction("pause_item", `Pausar anúncio ${inp.itemTitle || inp.itemId}`, { itemId: inp.itemId, itemTitle: inp.itemTitle || "" })
+          );
         } else if (toolUse.name === "ml_activate_item") {
-          call = activateMLItem(inp.itemId, account);
+          call = activateMLItem(inp.itemId, account).catch(() =>
+            queueAction("activate_item", `Reativar anúncio ${inp.itemTitle || inp.itemId}`, { itemId: inp.itemId, itemTitle: inp.itemTitle || "" })
+          );
         } else if (toolUse.name === "ml_update_price") {
-          call = updateMLPrice(inp.itemId, inp.price, account);
+          call = updateMLPrice(inp.itemId, inp.price, account).catch(() =>
+            queueAction("update_price", `Atualizar preço de ${inp.itemTitle || inp.itemId} para R$${inp.price}`, { itemId: inp.itemId, itemTitle: inp.itemTitle || "", price: inp.price })
+          );
         } else if (toolUse.name === "ml_update_stock") {
-          call = updateMLStock(inp.itemId, inp.quantity, account);
+          call = updateMLStock(inp.itemId, inp.quantity, account).catch(() =>
+            queueAction("update_stock", `Atualizar estoque de ${inp.itemTitle || inp.itemId} para ${inp.quantity}`, { itemId: inp.itemId, itemTitle: inp.itemTitle || "", quantity: inp.quantity })
+          );
         } else if (toolUse.name === "ml_get_item_details") {
           call = getMLItemDetails(inp.itemId, account);
         } else if (toolUse.name === "ml_get_category_attributes") {
           call = getMLCategoryAttributes(inp.categoryId, account);
         } else if (toolUse.name === "ml_update_item_attributes") {
-          call = updateMLItemAttributes(inp.itemId, inp.attributes, account);
+          call = updateMLItemAttributes(inp.itemId, inp.attributes, account).catch(() =>
+            queueAction("update_item_attributes", `Atualizar atributos do anúncio ${inp.itemId}`, { itemId: inp.itemId, attributes: inp.attributes })
+          );
         } else if (toolUse.name === "ml_ads_list_campaigns") {
           call = listMLAdsCampaigns(account);
         } else if (toolUse.name === "ml_ads_pause_campaign") {
-          call = pauseMLAdsCampaign(inp.campaignId, account);
+          call = pauseMLAdsCampaign(inp.campaignId, account).catch(() =>
+            queueAction("pause_ads_campaign", `Pausar campanha ${inp.campaignName || inp.campaignId}`, { campaignId: inp.campaignId, campaignName: inp.campaignName || "" })
+          );
         } else if (toolUse.name === "ml_ads_activate_campaign") {
-          call = activateMLAdsCampaign(inp.campaignId, account);
+          call = activateMLAdsCampaign(inp.campaignId, account).catch(() =>
+            queueAction("activate_ads_campaign", `Ativar campanha ${inp.campaignName || inp.campaignId}`, { campaignId: inp.campaignId, campaignName: inp.campaignName || "" })
+          );
         } else if (toolUse.name === "ml_ads_update_budget") {
-          call = updateMLAdsBudget(inp.campaignId, inp.dailyBudget, account);
+          call = updateMLAdsBudget(inp.campaignId, inp.dailyBudget, account).catch(() =>
+            queueAction("update_ads_budget", `Atualizar orçamento campanha ${inp.campaignId} para R$${inp.dailyBudget}/dia`, { campaignId: inp.campaignId, budget: inp.dailyBudget })
+          );
         } else if (toolUse.name === "ml_ads_campaign_stats") {
           call = getMLAdsCampaignStats(inp.campaignId, inp.dateFrom, inp.dateTo, account);
+        } else if (toolUse.name === "ml_get_ads_metrics") {
+          call = (async (): Promise<string> => {
+            const db = await getDb();
+            if (!db) throw new Error("DB indisponível");
+            const { eq, and, desc } = await import("drizzle-orm");
+            const { marketplaceAdsMetrics } = await import("../../drizzle/schema");
+            const targetPlatform = (inp.platform || "ml") as string;
+            const targetAccount  = (inp.account  || account) as string;
+
+            const rows = await db
+              .select()
+              .from(marketplaceAdsMetrics)
+              .where(and(
+                eq(marketplaceAdsMetrics.platform, targetPlatform),
+                eq(marketplaceAdsMetrics.account, targetAccount),
+              ))
+              .orderBy(desc(marketplaceAdsMetrics.scrapedAt))
+              .limit(200);
+
+            // Sem dados — verificar se já há coleta em andamento antes de criar nova
+            if (!rows.length) {
+              const { or } = await import("drizzle-orm");
+              const pending = await db
+                .select({ id: agentActionsTable.id })
+                .from(agentActionsTable)
+                .where(and(
+                  eq(agentActionsTable.actionType, "scrape_ads_metrics"),
+                  or(
+                    eq(agentActionsTable.status, "approved"),
+                    eq(agentActionsTable.status, "executing"),
+                    eq(agentActionsTable.status, "pending"),
+                  ),
+                ))
+                .limit(1);
+              if (!pending.length) {
+                await db.insert(agentActionsTable).values({
+                  agentName: AGENT_NAME,
+                  date: new Date().toISOString().slice(0, 10),
+                  title: `Coletar métricas ${targetPlatform.toUpperCase()} — ${targetAccount}`,
+                  description: `Solicitado por Gabi: scraping de métricas de Ads do ${targetPlatform}`,
+                  actionType: "scrape_ads_metrics",
+                  priority: "alta" as const,
+                  status: "approved" as const,
+                  payload: { platform: targetPlatform, account: targetAccount },
+                });
+                return `Ainda não há métricas de ${targetPlatform.toUpperCase()}/${targetAccount} no banco. Solicitei a coleta ao agente Playwright — em 2–3 minutos os dados estarão disponíveis. Peça para eu buscar novamente.`;
+              }
+              return `O agente Playwright já está coletando métricas de ${targetPlatform.toUpperCase()}/${targetAccount}. Aguarde 2–3 minutos e peça novamente.`;
+            }
+
+            // Deduplicar: manter apenas registro mais recente por campanha
+            const seen = new Set<string>();
+            const latest = rows.filter((r: typeof rows[number]) => {
+              if (seen.has(r.campaignId)) return false;
+              seen.add(r.campaignId);
+              return true;
+            });
+            const scrapedAt = latest[0]?.scrapedAt?.toISOString().slice(0, 16) ?? "desconhecido";
+            const totalSpend = latest.reduce((s: number, r: typeof rows[number]) => s + Number(r.spend || 0), 0);
+            const totalRev   = latest.reduce((s: number, r: typeof rows[number]) => s + Number(r.revenue || 0), 0);
+            const lines = latest.map((r: typeof rows[number]) =>
+              `- [${r.campaignId}] ${r.campaignName || "–"} | impressões=${r.impressions} cliques=${r.clicks} CTR=${r.ctr}% gasto=R$${Number(r.spend).toFixed(2)} receita=R$${Number(r.revenue).toFixed(2)} ROAS=${r.roas} ACoS=${r.acos}% conversões=${r.conversions}`
+            );
+            return `Métricas ${targetPlatform.toUpperCase()} — conta=${targetAccount} (coletadas em ${scrapedAt})\n\nTotal: ${latest.length} campanhas | Gasto total=R$${totalSpend.toFixed(2)} | Receita total=R$${totalRev.toFixed(2)}\n\n${lines.join("\n")}`;
+          })();
         } else if (toolUse.name === "propose_ads_actions") {
           call = (async (): Promise<string> => {
             const db = await getDb();
             const today = new Date().toISOString().slice(0, 10);
-            const rows = ((inp.actions as any[]) || []).map((a: any) => ({
-              agentName: "gabi",
-              date: today,
-              title: String(a.title || ""),
-              description: JSON.stringify({
-                marketplace: "ml",
+            // Mapeia actionType do agente para o nome de ação do executor Playwright
+            const actionMap: Record<string, string> = {
+              ml_update_budget:      "update_ads_budget",
+              ml_pause_campaign:     "pause_ads_campaign",
+              ml_activate_campaign:  "activate_ads_campaign",
+              update_ads_budget:     "update_ads_budget",
+              pause_ads_campaign:    "pause_ads_campaign",
+              activate_ads_campaign: "activate_ads_campaign",
+            };
+            const rows = ((inp.actions as any[]) || []).map((a: any) => {
+              const playwrightAction = actionMap[String(a.actionType || "")] || String(a.actionType || "update_ads_budget");
+              const payload = {
+                platform: "ml",
                 account,
-                targetId: String(a.campaignId || ""),
-                targetName: String(a.campaignName || ""),
-                currentValue: String(a.currentValue || ""),
-                proposedValue: String(a.proposedValue || ""),
-              }),
-              actionType: String(a.actionType || "ml_update_budget"),
-              priority: (["alta", "media", "baixa"].includes(a.priority) ? a.priority : "media") as "alta" | "media" | "baixa",
-              estimatedImpact: String(a.reason || ""),
-              status: "pending" as const,
-            }));
+                action: playwrightAction,
+                campaignId:   String(a.campaignId   || ""),
+                campaignName: String(a.campaignName || ""),
+                budget: a.proposedValue ? Number(String(a.proposedValue).replace(/[^0-9.]/g, "")) : undefined,
+              };
+              return {
+                agentName: "gabi",
+                date: today,
+                title: String(a.title || ""),
+                description: `${String(a.campaignName || "")} — ${String(a.currentValue || "")} → ${String(a.proposedValue || "")}`,
+                actionType: playwrightAction,
+                priority: (["alta", "media", "baixa"].includes(a.priority) ? a.priority : "media") as "alta" | "media" | "baixa",
+                estimatedImpact: String(a.reason || ""),
+                status: "pending" as const,
+                payload,
+              };
+            });
             if (db && rows.length > 0) await db.insert(agentActionsTable).values(rows);
-            return `${rows.length} ação(ões) propostas salvas. Acesse /acoes-agentes para revisar e aprovar antes da execução.`;
+            return `${rows.length} ação(ões) propostas salvas com payload. Acesse /acoes-agentes para revisar e aprovar — o agente Playwright executará automaticamente após aprovação.`;
           })();
         } else {
           call = Promise.resolve(`Ferramenta desconhecida: ${toolUse.name}`);

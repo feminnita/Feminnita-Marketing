@@ -105,6 +105,7 @@ import { sheinIsabelaRouter } from "./routers/shein-isabela";
 import { agentTasksRouter } from "./routers/agent-tasks";
 import { chatUploadRouter } from "./routers/chat-upload";
 import { hailuoImageRouter } from "./routers/hailuo-image";
+import { ga4Router } from "./routers/ga4";
 import { getDb } from "./db";
 import { influencers, influencerPosts } from "../drizzle/schema";
 
@@ -172,6 +173,8 @@ export const appRouter = router({
 
   // Google Ads integration
   googleAds: googleAdsRouter,
+  // Google Analytics 4
+  ga4: ga4Router,
 
   // WhatsApp integration
   whatsapp: whatsappRouter,

@@ -330,3 +330,76 @@ export async function resumeAd(adId: string): Promise<{ success: boolean }> {
   await metaPost(`/${adId}`, { status: "ACTIVE" });
   return { success: true };
 }
+
+export async function fetchMetaInsightsWithBreakdown(
+  level: "campaign" | "adset" | "ad",
+  datePreset: string,
+  breakdowns: string,
+  objectId?: string,
+): Promise<any[]> {
+  const path = objectId ? `/${objectId}/insights` : `/${META_ACCOUNT}/insights`;
+  const fields = [
+    "campaign_name", "adset_name", "ad_name",
+    "spend", "impressions", "clicks", "ctr", "cpm", "reach", "frequency", "actions",
+  ].join(",");
+  const data = await metaGet(path, { level, date_preset: datePreset, fields, breakdowns, limit: "50" });
+  return data.data || [];
+}
+
+export async function duplicateCampaign(
+  campaignId: string,
+): Promise<{ newCampaignId: string; name: string }> {
+  const copy = await metaPost(`/${campaignId}/copies`, {
+    status_option: "PAUSED",
+    deep_copy: "true",
+  });
+  const newId = copy.copied_campaign_id as string;
+  const campaign = await metaGet(`/${newId}`, { fields: "id,name" });
+  return { newCampaignId: newId, name: campaign.name as string };
+}
+
+export async function swapUrlTags(
+  adId: string,
+  urlTags: string,
+): Promise<{ success: boolean; newAdId: string }> {
+  // 1. Buscar o ad e seu criativo atual
+  const adData = await metaGet(`/${adId}`, {
+    fields: "name,adset_id,status,creative{id,object_story_id,image_hash,body,title,call_to_action_type,link_url,url_tags},tracking_specs",
+  });
+  const creative = adData.creative || {};
+  const adsetId = adData.adset_id as string;
+
+  // 2. Criar novo criativo com os url_tags corretos
+  const newCreativeBody: Record<string, string> = {
+    name: `${creative.id || adData.name} [url_tags_fix]`,
+    url_tags: urlTags,
+  };
+
+  if (creative.object_story_id) {
+    newCreativeBody.object_story_id = creative.object_story_id;
+  } else {
+    throw new Error("Criativo baseado em post orgânico não encontrado (object_story_id ausente). Verifique o ad manualmente.");
+  }
+
+  const newCreative = await metaPost(`/${META_ACCOUNT}/adcreatives`, newCreativeBody);
+  const newCreativeId = newCreative.id as string;
+
+  // 3. Criar novo ad PAUSED com o criativo novo
+  const newAdBody: Record<string, string> = {
+    name: `${adData.name} [url_tags_fix]`,
+    adset_id: adsetId,
+    creative: JSON.stringify({ creative_id: newCreativeId }),
+    status: "PAUSED",
+  };
+  if (adData.tracking_specs) {
+    newAdBody.tracking_specs = JSON.stringify(adData.tracking_specs);
+  }
+  const newAd = await metaPost(`/${META_ACCOUNT}/ads`, newAdBody);
+  const newAdId = newAd.id as string;
+
+  // 4. Ativar novo ad e pausar o antigo
+  await metaPost(`/${newAdId}`, { status: "ACTIVE" });
+  await metaPost(`/${adId}`, { status: "PAUSED" });
+
+  return { success: true, newAdId };
+}
