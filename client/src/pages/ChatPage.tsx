@@ -350,8 +350,8 @@ export default function ChatPage() {
           <div style={hdr}>
             <MessageCircle size={18} color="#8B2635" />
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#f1f5f9" }}>Conversas</div>
-              <div style={{ fontSize: 11, color: "#94a3b8", display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: "#f1f5f9" }}>Conversas</div>
+              <div style={{ fontSize: 13, color: "#94a3b8", display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
                 <span style={{ width: 7, height: 7, borderRadius: "50%", background: connected ? "#22c55e" : "#ef4444", display: "inline-block" }} />
                 <Users size={10} /> {onlineUsers.length} online
                 {unread > 0 && <span style={{ marginLeft: 6, background: "#ef4444", color: "#fff", borderRadius: 8, padding: "1px 6px", fontSize: 10, fontWeight: 700 }}>{unread} nova{unread > 1 ? "s" : ""}</span>}
@@ -362,7 +362,7 @@ export default function ChatPage() {
                 onClick={() => Notification.requestPermission().then(p => {
                   if (p === "granted" && vapidQuery.data?.key) registerPush(vapidQuery.data.key, s => subscribeMutation.mutate(s));
                 })}
-                style={{ fontSize: 10, padding: "4px 8px", background: "#8B2635", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", whiteSpace: "nowrap" }}
+                style={{ fontSize: 12, padding: "4px 8px", background: "#8B2635", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", whiteSpace: "nowrap" }}
               >
                 🔔 Ativar
               </button>
@@ -382,8 +382,8 @@ export default function ChatPage() {
                     {isBusy && <span style={{ position: "absolute", bottom: 0, right: 0, width: 11, height: 11, borderRadius: "50%", background: "#f59e0b", border: "2px solid #1e293b" }} />}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: "#f1f5f9", lineHeight: 1.3 }}>{c.name}</div>
-                    <div style={{ fontSize: 11, color: isBusy ? "#f59e0b" : "#64748b", marginTop: 2 }}>{isBusy ? "processando..." : c.role}</div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: "#f1f5f9", lineHeight: 1.3 }}>{c.name}</div>
+                    <div style={{ fontSize: 13, color: isBusy ? "#f59e0b" : "#64748b", marginTop: 2 }}>{isBusy ? "processando..." : c.role}</div>
                   </div>
                   {c.kind === "group" && unread > 0 && (
                     <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: "#ef4444", color: "#fff", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 4px" }}>{unread > 9 ? "9+" : unread}</span>
@@ -402,8 +402,8 @@ export default function ChatPage() {
             <button onClick={goBack} style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", padding: "2px 4px", display: "flex", marginLeft: -4 }}><ChevronLeft size={18} /></button>
             <Avatar c={contact} size={32} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#f1f5f9" }}>{contact.name}</div>
-              <div style={{ fontSize: 11, color: isAgentLoading ? "#f59e0b" : "#94a3b8" }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: "#f1f5f9" }}>{contact.name}</div>
+              <div style={{ fontSize: 13, color: isAgentLoading ? "#f59e0b" : "#94a3b8" }}>
                 {contact.kind === "group" ? `${onlineUsers.length} online` : isAgentLoading ? "processando..." : contact.role}
               </div>
             </div>
@@ -414,18 +414,18 @@ export default function ChatPage() {
 
             {contact.kind === "group" && (
               <>
-                {groupMsgs.length === 0 && <div style={{ textAlign: "center", color: "#475569", fontSize: 12, marginTop: 40 }}>Nenhuma mensagem ainda.<br />Diga oi! 👋</div>}
+                {groupMsgs.length === 0 && <div style={{ textAlign: "center", color: "#475569", fontSize: 14, marginTop: 40 }}>Nenhuma mensagem ainda.<br />Diga oi! 👋</div>}
                 {groupMsgs.map((m, i) => {
-                  if (m.type === "system") return <div key={m.id || i} style={{ textAlign: "center", fontSize: 11, color: "#64748b", padding: "5px 0", fontStyle: "italic" }}>{m.text}</div>;
+                  if (m.type === "system") return <div key={m.id || i} style={{ textAlign: "center", fontSize: 13, color: "#64748b", padding: "5px 0", fontStyle: "italic" }}>{m.text}</div>;
                   const showHeader = i === 0 || groupMsgs[i - 1]?.name !== m.name || groupMsgs[i - 1]?.type === "system";
                   const isMe = m.name === myName;
                   return (
                     <div key={m.id || i} style={{ marginTop: showHeader ? 8 : 0 }}>
                       {showHeader && <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                        <span style={{ fontSize: 14, fontWeight: 600, color: isMe ? "#8B2635" : (m.color ?? "#94a3b8") }}>{m.name}{isMe ? " (você)" : ""}</span>
-                        <span style={{ fontSize: 12, color: "#475569" }}>{new Date(m.ts).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+                        <span style={{ fontSize: 16, fontWeight: 600, color: isMe ? "#8B2635" : (m.color ?? "#94a3b8") }}>{m.name}{isMe ? " (você)" : ""}</span>
+                        <span style={{ fontSize: 13, color: "#475569" }}>{new Date(m.ts).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
                       </div>}
-                      <div style={{ fontSize: 15, lineHeight: 1.55, color: "#e2e8f0", wordBreak: "break-word" }}>{renderMsgText(m.text)}</div>
+                      <div style={{ fontSize: 17, lineHeight: 1.55, color: "#e2e8f0", wordBreak: "break-word" }}>{renderMsgText(m.text)}</div>
                     </div>
                   );
                 })}
@@ -435,7 +435,7 @@ export default function ChatPage() {
             {contact.kind === "agent" && (
               <>
                 {(agentCtx?.msgs.length ?? 0) === 0 && !isAgentLoading && (
-                  <div style={{ textAlign: "center", color: "#475569", fontSize: 12, marginTop: 40 }}>Inicie a conversa com {contact.name} 💬</div>
+                  <div style={{ textAlign: "center", color: "#475569", fontSize: 14, marginTop: 40 }}>Inicie a conversa com {contact.name} 💬</div>
                 )}
                 {(agentCtx?.msgs ?? []).map((m, i) => {
                   const isMe = m.role === "user";
@@ -443,8 +443,8 @@ export default function ChatPage() {
                     <div key={i} style={{ marginTop: 8, display: "flex", flexDirection: isMe ? "row-reverse" : "row", alignItems: "flex-start", gap: 6 }}>
                       {!isMe && <Avatar c={contact} size={26} />}
                       <div style={{ maxWidth: "82%", background: isMe ? "#8B2635" : "#1a2f48", borderRadius: isMe ? "12px 12px 2px 12px" : "12px 12px 12px 2px", padding: "8px 11px" }}>
-                        <div style={{ fontSize: 14.5, lineHeight: 1.6, color: "#e2e8f0", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{m.text}</div>
-                        <div style={{ fontSize: 10, color: "rgba(255,255,255,.35)", marginTop: 4, textAlign: isMe ? "right" : "left" }}>{new Date(m.ts).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div>
+                        <div style={{ fontSize: 17, lineHeight: 1.6, color: "#e2e8f0", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{m.text}</div>
+                        <div style={{ fontSize: 12, color: "rgba(255,255,255,.35)", marginTop: 4, textAlign: isMe ? "right" : "left" }}>{new Date(m.ts).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div>
                       </div>
                     </div>
                   );
@@ -454,7 +454,7 @@ export default function ChatPage() {
                     <Avatar c={contact} size={26} />
                     <div style={{ background: "#1a2f48", borderRadius: "12px 12px 12px 2px", padding: "8px 12px", display: "flex", alignItems: "center", gap: 6 }}>
                       <Loader2 size={13} className="animate-spin" color="#94a3b8" />
-                      <span style={{ fontSize: 12, color: "#94a3b8" }}>digitando...</span>
+                      <span style={{ fontSize: 14, color: "#94a3b8" }}>digitando...</span>
                     </div>
                   </div>
                 )}
@@ -463,15 +463,15 @@ export default function ChatPage() {
 
             {contact.kind === "human" && (
               <>
-                {currentDmMsgs.length === 0 && <div style={{ textAlign: "center", color: "#475569", fontSize: 12, marginTop: 40 }}>Inicie uma conversa com {contact.name} 💬</div>}
+                {currentDmMsgs.length === 0 && <div style={{ textAlign: "center", color: "#475569", fontSize: 14, marginTop: 40 }}>Inicie uma conversa com {contact.name} 💬</div>}
                 {currentDmMsgs.map((m, i) => {
                   const isMe = m.role === "sent";
                   return (
                     <div key={i} style={{ marginTop: 8, display: "flex", flexDirection: isMe ? "row-reverse" : "row", alignItems: "flex-start", gap: 6 }}>
                       {!isMe && <Avatar c={contact} size={26} />}
                       <div style={{ maxWidth: "82%", background: isMe ? "#8B2635" : "#1a2f48", borderRadius: isMe ? "12px 12px 2px 12px" : "12px 12px 12px 2px", padding: "8px 11px" }}>
-                        <div style={{ fontSize: 14.5, lineHeight: 1.6, color: "#e2e8f0", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{renderMsgText(m.text)}</div>
-                        <div style={{ fontSize: 10, color: "rgba(255,255,255,.35)", marginTop: 4, textAlign: isMe ? "right" : "left" }}>{new Date(m.ts).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div>
+                        <div style={{ fontSize: 17, lineHeight: 1.6, color: "#e2e8f0", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{renderMsgText(m.text)}</div>
+                        <div style={{ fontSize: 12, color: "rgba(255,255,255,.35)", marginTop: 4, textAlign: isMe ? "right" : "left" }}>{new Date(m.ts).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div>
                       </div>
                     </div>
                   );
@@ -503,7 +503,7 @@ export default function ChatPage() {
                 }
                 disabled={(contact.kind === "group" || contact.kind === "human") ? !connected : isAgentLoading}
                 autoFocus
-                style={{ flex: 1, padding: "8px 10px", background: "#0f172a", border: "1px solid #334155", borderRadius: 8, color: "#f1f5f9", fontSize: 13, outline: "none" }}
+                style={{ flex: 1, padding: "8px 10px", background: "#0f172a", border: "1px solid #334155", borderRadius: 8, color: "#f1f5f9", fontSize: 15, outline: "none" }}
               />
               <button
                 onClick={send}
@@ -524,7 +524,7 @@ export default function ChatPage() {
                   await taskMutation.mutateAsync({ agentName: contact.agentName!, message: text });
                 }}
                 disabled={!input.trim() || taskMutation.isPending}
-                style={{ width: "100%", padding: "5px", background: "#1e3a5f", color: "#93c5fd", border: "1px solid #2563eb", borderRadius: 6, cursor: "pointer", fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, opacity: !input.trim() ? 0.4 : 1 }}
+                style={{ width: "100%", padding: "5px", background: "#1e3a5f", color: "#93c5fd", border: "1px solid #2563eb", borderRadius: 6, cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, opacity: !input.trim() ? 0.4 : 1 }}
               >
                 <Clock size={11} />
                 Enviar como tarefa (responde quando terminar)
