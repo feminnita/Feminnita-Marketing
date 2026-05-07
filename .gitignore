@@ -105,3 +105,4 @@ temp/
 *.db
 *.sqlite
 *.sqlite3
+scripts/get-ga4-token.py
