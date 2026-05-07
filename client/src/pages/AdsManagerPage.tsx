@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import MorningBriefing from "@/components/MorningBriefing";
 import { toast } from "sonner";
@@ -486,12 +487,23 @@ export default function AdsManagerPage() {
               <span className="text-xs text-gray-500">Imagem pronta para enviar</span>
             </div>
           )}
+          {!activeEvalId ? (
+            <div className="flex items-center justify-center gap-3 p-4 border-t border-gray-100">
+              <p className="text-sm text-gray-500">Inicie uma avaliação acima ou fale diretamente com a Fernanda:</p>
+              <button
+                onClick={() => { const [, setLoc] = [null, (v: string) => { window.location.href = v; }]; window.location.href = "/traffic-manager"; }}
+                className="flex items-center gap-2 px-4 py-2 bg-[#6B1D28] text-white rounded-xl text-sm font-medium hover:bg-[#7a1f2d] transition-colors whitespace-nowrap"
+              >
+                <Send className="w-4 h-4" /> Chat com Fernanda
+              </button>
+            </div>
+          ) : (
           <div className="flex gap-2 p-4">
             {/* Botão de imagem */}
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
             <button
               onClick={() => fileInputRef.current?.click()}
-              disabled={sendingMsg || !activeEvalId}
+              disabled={sendingMsg}
               title="Anexar imagem"
               className="flex items-center gap-1.5 px-3 py-2.5 border border-gray-200 rounded-xl text-gray-500 hover:text-[#6B1D28] hover:border-[#6B1D28] disabled:opacity-40 transition-colors bg-white text-sm font-medium"
             >
@@ -503,14 +515,15 @@ export default function AdsManagerPage() {
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-              placeholder={activeEvalId ? "Pergunte ou anexe uma imagem para análise…" : "Inicie uma avaliação para conversar"}
+              placeholder="Pergunte ou anexe uma imagem para análise…"
               className="flex-1 text-base border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#6B1D28]/30 focus:border-[#6B1D28] bg-white"
-              disabled={sendingMsg || !activeEvalId}
+              disabled={sendingMsg}
             />
-            <button onClick={handleSend} disabled={(!chatInput.trim() && !imageBase64) || sendingMsg || !activeEvalId} className="px-4 py-2.5 bg-[#6B1D28] text-white rounded-xl hover:bg-[#7a1f2d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            <button onClick={handleSend} disabled={(!chatInput.trim() && !imageBase64) || sendingMsg} className="px-4 py-2.5 bg-[#6B1D28] text-white rounded-xl hover:bg-[#7a1f2d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
               <Send className="w-4 h-4" />
             </button>
           </div>
+          )}
         </div>
       </div>
 

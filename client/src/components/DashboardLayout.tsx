@@ -133,6 +133,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return saved ? parseInt(saved, 10) : DEFAULT_WIDTH;
   });
   const { loading, user } = useAuth();
+  const [location] = useLocation();
 
   useEffect(() => {
     localStorage.setItem(SIDEBAR_WIDTH_KEY, sidebarWidth.toString());
@@ -161,7 +162,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <DashboardLayoutContent setSidebarWidth={setSidebarWidth}>
         {children}
       </DashboardLayoutContent>
-      <ChatWidget />
+      {location !== "/traffic-manager" && location !== "/gestor-trafego" && location !== "/chat" && <ChatWidget />}
     </SidebarProvider>
   );
 }
@@ -367,8 +368,8 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
-                  <SidebarMenuSubButton onClick={() => setLocation("/analytics")}>
-                    <BarChart2 className="h-3 w-3" /> Analytics
+                  <SidebarMenuSubButton onClick={() => setLocation("/ga4")}>
+                    <BarChart2 className="h-3 w-3" /> Google Analytics
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>

@@ -117,6 +117,7 @@ export const oauthTokens = mysqlTable("oauth_tokens", {
     "meta",
     "tiktok",
     "google_drive",
+    "google_analytics",
   ]).notNull(),
   accessToken: text("accessToken").notNull(), // Armazenado criptografado
   refreshToken: text("refreshToken"), // Armazenado criptografado
@@ -237,6 +238,23 @@ export const influencerInteractions = mysqlTable("influencer_interactions", {
   responseSent: boolean("response_sent").default(false),
   sentAt: datetime("sent_at"),
   createdAt: datetime("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const marketplaceAdsMetrics = mysqlTable("marketplace_ads_metrics", {
+  id: int("id").autoincrement().primaryKey(),
+  platform: varchar("platform", { length: 20 }).notNull(),
+  account: varchar("account", { length: 20 }).notNull(),
+  campaignId: varchar("campaignId", { length: 100 }).notNull(),
+  campaignName: text("campaignName"),
+  impressions: int("impressions").default(0),
+  clicks: int("clicks").default(0),
+  ctr: decimal("ctr", { precision: 6, scale: 3 }).default("0"),
+  spend: decimal("spend", { precision: 10, scale: 2 }).default("0"),
+  conversions: int("conversions").default(0),
+  roas: decimal("roas", { precision: 8, scale: 2 }).default("0"),
+  acos: decimal("acos", { precision: 6, scale: 2 }).default("0"),
+  revenue: decimal("revenue", { precision: 10, scale: 2 }).default("0"),
+  scrapedAt: timestamp("scrapedAt").defaultNow().notNull(),
 });
 
 export type Influencer = typeof influencers.$inferSelect;
@@ -1309,7 +1327,10 @@ export const agentActions = mysqlTable("agent_actions", {
   priority: mysqlEnum("priority", ["alta", "media", "baixa"]).notNull().default("media"),
   estimatedImpact: text("estimatedImpact"),
   status: mysqlEnum("status", ["pending", "approved", "rejected", "executing", "done"]).notNull().default("pending"),
-  userNote: text("userNote"),                                // nota do usuário ao aprovar/rejeitar
+  userNote: text("userNote"),
+  payload: json("payload"),                                  // dados estruturados para o agente Playwright executar
+  executionLog: text("executionLog"),                        // log do que o agente executou
+  executedAt: timestamp("executedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
 });

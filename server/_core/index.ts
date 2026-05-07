@@ -90,6 +90,9 @@ async function startServer() {
   registerTiktokShopOAuthRoutes(app);
   // TikTok Login Kit OAuth routes: /api/tiktok/start, /api/tiktok/callback
   registerTiktokOAuthRoutes(app);
+  // GA4 OAuth routes: /api/ga4/start, /api/ga4/callback
+  const { registerGA4OAuthRoutes } = await import("../routers/ga4-oauth");
+  registerGA4OAuthRoutes(app);
 
   // Google Drive OAuth: /api/google/start e /api/google/callback
   const { getGoogleOAuthUrl, exchangeCodeForTokens } = await import("../services/googleDrive");

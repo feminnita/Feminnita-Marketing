@@ -60,6 +60,7 @@ const AdsManagerPage          = lazy(() => import("@/pages/AdsManagerPage"));
 const MlAdsManagerPage        = lazy(() => import("@/pages/MlAdsManagerPage"));
 const BlogFeminnitaPage       = lazy(() => import("@/pages/BlogFeminnitaPage"));
 const TrafficManagerPage      = lazy(() => import("@/pages/TrafficManagerPage"));
+const GA4Page                 = lazy(() => import("@/pages/GA4Page"));
 const AgentActionsPage        = lazy(() => import("@/pages/AgentActionsPage"));
 const AgentDetailPage         = lazy(() => import("@/pages/AgentDetailPage"));
 const WhatsAppDisparosPage    = lazy(() => import("@/pages/WhatsAppDisparosPage"));
@@ -226,6 +227,8 @@ export default function App() {
         return <BlogFeminnitaPage />;
       case "/traffic-manager":
         return <TrafficManagerPage />;
+      case "/ga4":
+        return <GA4Page />;
       case "/acoes-agentes":
         return <AgentActionsPage />;
       case "/shopee-ads":

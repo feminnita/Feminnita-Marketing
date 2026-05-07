@@ -112,7 +112,7 @@ const QUICK_CARDS: QuickCard[] = [
 // ─── Equipe IA ────────────────────────────────────────────────────────────────
 
 const TEAM = [
-  { name: "Fernanda", role: "Meta Ads", path: "/gestor-trafego", photo: "/agents/fernanda.jpg" },
+  { name: "Fernanda", role: "Meta Ads", path: "/traffic-manager", photo: "/agents/fernanda.jpg" },
   { name: "Sofia", role: "Instagram", path: "/agente/sofia", photo: "/agents/sofia.jpg" },
   { name: "Clara", role: "Análise de Mercado", path: "/agente/clara", photo: "/agents/clara.jpg" },
   { name: "Mariana", role: "Vendas", path: "/agente/mariana", photo: "/agents/mariana.jpg" },
