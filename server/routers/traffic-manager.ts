@@ -33,6 +33,9 @@ import {
   resumeAdset,
   updateCampaignBudget,
   updateAdsetBudget,
+  getValidMetaCredentials,
+  getMetaConnectionStatus,
+  setMetaAdAccountId,
 } from "../services/meta-ads-service";
 import { executeMetaAction } from "../agents/fernanda-executor";
 import { textToSpeech } from "../services/tts";
@@ -253,9 +256,23 @@ export const trafficManagerRouter = router({
       };
     }),
 
+  // ── Status da conexão Meta do usuário ────────────────────────────────────
+  metaStatus: protectedProcedure.query(async ({ ctx }) => {
+    return getMetaConnectionStatus(ctx.user.id);
+  }),
+
+  // ── Salvar adAccountId do usuário ─────────────────────────────────────────
+  setAdAccountId: protectedProcedure
+    .input(z.object({ adAccountId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      await setMetaAdAccountId(ctx.user.id, input.adAccountId);
+      return { success: true };
+    }),
+
   // ── Listar adsets para seleção de publicação ──────────────────────────────
-  listAdsets: protectedProcedure.query(async () => {
-    const adsets = await fetchMetaAdsets();
+  listAdsets: protectedProcedure.query(async ({ ctx }) => {
+    const creds = await getValidMetaCredentials(ctx.user.id) ?? undefined;
+    const adsets = await fetchMetaAdsets(undefined, creds);
     return adsets.map((a: any) => ({
       id: a.id,
       name: a.name,
@@ -351,11 +368,12 @@ export const trafficManagerRouter = router({
     const userId = ctx.user.id;
     (async () => {
       try {
-        const metaData = await fetchMetaAdsData();
+        const creds = await getValidMetaCredentials(userId) ?? undefined;
+        const metaData = await fetchMetaAdsData(creds);
         const briefingData = await generateDailyBriefing(
           metaData.campaigns.length > 0
             ? {
-                adAccountId: process.env.META_AD_ACCOUNT_ID,
+                adAccountId: creds?.accountId,
                 spendToday: metaData.spendToday,
                 spendMonth: metaData.spendMonth,
                 campaigns: metaData.campaigns.map((c) => ({
@@ -430,11 +448,12 @@ export const trafficManagerRouter = router({
     // Disparar geração em background e retornar imediatamente
     (async () => {
       try {
-        const metaData = await fetchMetaAdsData();
+        const creds = await getValidMetaCredentials(userId) ?? undefined;
+        const metaData = await fetchMetaAdsData(creds);
         const briefingData = await generateDailyBriefing(
           metaData.campaigns.length > 0
             ? {
-                adAccountId: process.env.META_AD_ACCOUNT_ID,
+                adAccountId: creds?.accountId,
                 spendToday: metaData.spendToday,
                 spendMonth: metaData.spendMonth,
                 campaigns: metaData.campaigns.map((c) => ({
@@ -616,18 +635,19 @@ export const trafficManagerRouter = router({
       if (input.approved) {
         const targetId = payload.target_id as string | undefined;
         const actionType = action.actionType;
+        const creds = await getValidMetaCredentials(ctx.user.id) ?? undefined;
         try {
           if (actionType === "pause_campaign" && targetId) {
-            await pauseCampaign(targetId);
+            await pauseCampaign(targetId, creds);
             executionResult = `Campanha pausada com sucesso na Meta Ads API`;
           } else if (actionType === "resume_campaign" && targetId) {
-            await resumeCampaign(targetId);
+            await resumeCampaign(targetId, creds);
             executionResult = `Campanha reativada com sucesso na Meta Ads API`;
           } else if (actionType === "pause_adset" && targetId) {
-            await pauseAdset(targetId);
+            await pauseAdset(targetId, creds);
             executionResult = `Conjunto pausado com sucesso na Meta Ads API`;
           } else if (actionType === "resume_adset" && targetId) {
-            await resumeAdset(targetId);
+            await resumeAdset(targetId, creds);
             executionResult = `Conjunto reativado com sucesso na Meta Ads API`;
           } else if ((actionType === "increase_budget" || actionType === "decrease_budget") && targetId) {
             const newBudget = payload.new_daily_budget as number | undefined;
@@ -635,9 +655,9 @@ export const trafficManagerRouter = router({
               // Detectar se é campanha ou adset pelo prefixo do ID (adsets têm IDs diferentes)
               const isCampaign = payload.target_type === "campaign";
               if (isCampaign) {
-                await updateCampaignBudget(targetId, Math.round(newBudget * 100));
+                await updateCampaignBudget(targetId, Math.round(newBudget * 100), creds);
               } else {
-                await updateAdsetBudget(targetId, Math.round(newBudget * 100));
+                await updateAdsetBudget(targetId, Math.round(newBudget * 100), undefined, creds);
               }
               executionResult = `Budget atualizado para R$${newBudget}/dia na Meta Ads API`;
             } else {

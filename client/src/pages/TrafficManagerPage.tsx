@@ -7,6 +7,7 @@ import {
   ChevronUp,
   Clock,
   Info,
+  Link2,
   Loader2,
   MessageSquare,
   Paperclip,
@@ -406,6 +407,15 @@ export default function TrafficManagerPage() {
   };
   const [publishAdsetId, setPublishAdsetId] = useState("");
   const [publishCampaignId, setPublishCampaignId] = useState("");
+  const [adAccountInput, setAdAccountInput] = useState("");
+
+  const { data: metaStatus, refetch: refetchMetaStatus } = trpc.trafficManager.metaStatus.useQuery(
+    undefined, { retry: false, staleTime: 30000 }
+  );
+  const setAdAccountIdMut = trpc.trafficManager.setAdAccountId.useMutation({
+    onSuccess: () => { toast.success("Conta de anúncio salva!"); refetchMetaStatus(); setAdAccountInput(""); },
+    onError: (err) => toast.error("Erro ao salvar: " + err.message),
+  });
   const [showBriefing, setShowBriefing] = useState(false);
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -482,6 +492,20 @@ export default function TrafficManagerPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Detectar retorno do OAuth Meta e mostrar toast de sucesso
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("meta_connected") === "1") {
+      toast.success("Meta Ads conectado com sucesso!");
+      refetchMetaStatus();
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+    if (params.get("error")) {
+      toast.error("Erro ao conectar Meta Ads: " + params.get("error"));
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
 
   // Mensagem de boas-vindas na primeira carga (só quando não há conversa salva)
   useEffect(() => {
@@ -670,6 +694,42 @@ export default function TrafficManagerPage() {
               </div>
             </div>
           </div>
+
+          {/* Banner de conexão Meta */}
+          {metaStatus && !metaStatus.connected && (
+            <div className="flex-shrink-0 mx-6 mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 flex flex-wrap items-center gap-3">
+              <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+              <p className="text-sm text-amber-800 flex-1 min-w-0">
+                Conta Meta Ads não conectada — a Fernanda não consegue buscar dados reais.
+              </p>
+              <a
+                href="/api/meta/start"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1877F2] text-white text-xs font-semibold hover:bg-[#166FE5] transition-colors flex-shrink-0"
+              >
+                <Link2 className="w-3.5 h-3.5" />
+                Conectar Meta
+              </a>
+            </div>
+          )}
+          {metaStatus?.connected && !metaStatus.adAccountId && (
+            <div className="flex-shrink-0 mx-6 mt-3 rounded-xl border border-blue-200 bg-blue-50 p-3 flex flex-wrap items-center gap-2">
+              <Info className="w-4 h-4 text-blue-600 flex-shrink-0" />
+              <p className="text-sm text-blue-800 flex-1 min-w-0">Meta conectado. Informe o ID da conta de anúncio:</p>
+              <input
+                value={adAccountInput}
+                onChange={(e) => setAdAccountInput(e.target.value)}
+                placeholder="act_123456789"
+                className="border border-blue-300 rounded-lg px-2 py-1 text-xs w-36 focus:outline-none focus:ring-1 focus:ring-blue-400"
+              />
+              <button
+                disabled={!adAccountInput.trim() || setAdAccountIdMut.isPending}
+                onClick={() => setAdAccountIdMut.mutate({ adAccountId: adAccountInput.trim() })}
+                className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              >
+                {setAdAccountIdMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Salvar"}
+              </button>
+            </div>
+          )}
 
           {/* Mensagens */}
           <div className="flex-1 overflow-y-auto px-6 py-4">

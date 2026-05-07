@@ -93,6 +93,9 @@ async function startServer() {
   // GA4 OAuth routes: /api/ga4/start, /api/ga4/callback
   const { registerGA4OAuthRoutes } = await import("../routers/ga4-oauth");
   registerGA4OAuthRoutes(app);
+  // Meta OAuth routes: /api/meta/start, /api/meta/callback
+  const { registerMetaOAuthRoutes } = await import("../routers/meta-oauth");
+  registerMetaOAuthRoutes(app);
 
   // Google Drive OAuth: /api/google/start e /api/google/callback
   const { getGoogleOAuthUrl, exchangeCodeForTokens } = await import("../services/googleDrive");

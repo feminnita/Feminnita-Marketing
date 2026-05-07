@@ -17,6 +17,8 @@ import {
   resumeAd,
   duplicateCampaign,
   swapUrlTags,
+  getValidMetaCredentials,
+  type MetaCreds,
 } from "../services/meta-ads-service";
 import { buildMemoryContext } from "../services/agentMemory";
 import { getDb } from "../db";
@@ -293,9 +295,14 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
 // ─── Execução das ferramentas ─────────────────────────────────────────────────
 
 async function executeTool(name: string, input: Record<string, any>, userId?: number): Promise<string> {
+  // Fetch per-user Meta credentials from DB (falls back to env vars inside service if null)
+  const creds: MetaCreds | undefined = userId
+    ? (await getValidMetaCredentials(userId)) ?? undefined
+    : undefined;
+
   try {
     if (name === "get_account_summary") {
-      const data = await fetchMetaAdsData();
+      const data = await fetchMetaAdsData(creds);
       if (data.error) return JSON.stringify({ error: data.error });
       return JSON.stringify({
         spendToday: `R$${data.spendToday.toFixed(2)}`,
@@ -317,8 +324,8 @@ async function executeTool(name: string, input: Record<string, any>, userId?: nu
     if (name === "get_meta_campaigns") {
       const datePreset = input.date_preset || "this_month";
       const [campaigns, insights] = await Promise.all([
-        fetchMetaCampaignsList(),
-        fetchMetaInsights("campaign", datePreset),
+        fetchMetaCampaignsList(creds),
+        fetchMetaInsights("campaign", datePreset, undefined, creds),
       ]);
       const insMap: Record<string, any> = {};
       for (const row of insights) insMap[row.campaign_id || row.campaign_name] = row;
@@ -346,7 +353,7 @@ async function executeTool(name: string, input: Record<string, any>, userId?: nu
     }
 
     if (name === "get_meta_adsets") {
-      const adsets = await fetchMetaAdsets(input.campaign_id);
+      const adsets = await fetchMetaAdsets(input.campaign_id, creds);
       return JSON.stringify(adsets.map(a => ({
         id: a.id,
         name: a.name,
@@ -362,7 +369,7 @@ async function executeTool(name: string, input: Record<string, any>, userId?: nu
     }
 
     if (name === "get_meta_insights") {
-      const rows = await fetchMetaInsights(input.level, input.date_preset, input.object_id);
+      const rows = await fetchMetaInsights(input.level, input.date_preset, input.object_id, creds);
       return JSON.stringify(rows.map((row: any) => {
         const spend = parseFloat(row.spend || "0");
         const purchaseAction = (row.actions || []).find(
@@ -413,7 +420,7 @@ async function executeTool(name: string, input: Record<string, any>, userId?: nu
     }
 
     if (name === "get_meta_ads") {
-      const ads = await fetchMetaAds(input.adset_id, input.campaign_id);
+      const ads = await fetchMetaAds(input.adset_id, input.campaign_id, creds);
       return JSON.stringify(ads.map(ad => ({
         id: ad.id,
         name: ad.name,
@@ -457,6 +464,7 @@ async function executeTool(name: string, input: Record<string, any>, userId?: nu
         input.date_preset,
         input.breakdowns,
         input.object_id,
+        creds,
       );
       return JSON.stringify(rows.map((row: any) => {
         const spend = parseFloat(row.spend || "0");
@@ -480,17 +488,17 @@ async function executeTool(name: string, input: Record<string, any>, userId?: nu
     }
 
     if (name === "pause_ad") {
-      await pauseAd(input.ad_id);
+      await pauseAd(input.ad_id, creds);
       return JSON.stringify({ success: true, message: `Anúncio ${input.ad_id} pausado com sucesso.` });
     }
 
     if (name === "resume_ad") {
-      await resumeAd(input.ad_id);
+      await resumeAd(input.ad_id, creds);
       return JSON.stringify({ success: true, message: `Anúncio ${input.ad_id} ativado com sucesso.` });
     }
 
     if (name === "duplicate_campaign") {
-      const result = await duplicateCampaign(input.campaign_id);
+      const result = await duplicateCampaign(input.campaign_id, creds);
       return JSON.stringify({
         success: true,
         newCampaignId: result.newCampaignId,
@@ -500,7 +508,7 @@ async function executeTool(name: string, input: Record<string, any>, userId?: nu
     }
 
     if (name === "swap_url_tags") {
-      const result = await swapUrlTags(input.ad_id, input.url_tags);
+      const result = await swapUrlTags(input.ad_id, input.url_tags, creds);
       return JSON.stringify({
         success: true,
         newAdId: result.newAdId,
