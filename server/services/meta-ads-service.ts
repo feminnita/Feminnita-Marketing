@@ -60,11 +60,12 @@ export async function setMetaAdAccountId(userId: number, adAccountId: string): P
     .where(eq(oauthTokens.id, rows[0].id));
 }
 
-/** Status da conexão Meta do usuário. */
-export async function getMetaConnectionStatus(userId: number): Promise<{ connected: boolean; adAccountId: string | null }> {
+/** Status da conexão Meta do usuário. Fallback para env vars se não houver token no banco. */
+export async function getMetaConnectionStatus(userId: number): Promise<{ connected: boolean; adAccountId: string | null; source: "db" | "env" | "none" }> {
   const creds = await getValidMetaCredentials(userId);
-  if (!creds) return { connected: false, adAccountId: null };
-  return { connected: true, adAccountId: creds.accountId || null };
+  if (creds) return { connected: true, adAccountId: creds.accountId || null, source: "db" };
+  if (ENV_TOKEN) return { connected: true, adAccountId: ENV_ACCOUNT || null, source: "env" };
+  return { connected: false, adAccountId: null, source: "none" };
 }
 
 export interface MetaCampaignData {
