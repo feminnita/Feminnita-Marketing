@@ -4,12 +4,11 @@
  */
 
 import { getDb } from "../db";
-import { agentTasks } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { agentTasks, specialistConversations, specialistMessages, pushSubscriptions } from "../../drizzle/schema";
+import { eq, and, desc } from "drizzle-orm";
 import { chatWithSpecialist } from "./specialist-chat-agent";
 import { getIO, isUserConnected } from "../_core/websocket-notifications";
 import { sendPush } from "../services/webPush";
-import { pushSubscriptions } from "../../drizzle/schema";
 
 const AGENT_DISPLAY: Record<string, string> = {
   fernanda: "Fernanda",
@@ -36,7 +35,7 @@ export async function runAgentTask(
     // Executar o agente
     const response = await chatWithSpecialist(agentName, message, []);
 
-    // Salvar resultado
+    // Salvar resultado na tabela de tarefas
     await db.update(agentTasks)
       .set({
         status: "done",
@@ -44,6 +43,34 @@ export async function runAgentTask(
         finishedAt: new Date(),
       })
       .where(eq(agentTasks.id, taskId));
+
+    // Persistir no histórico de conversa da agente (mesma tabela do chat normal)
+    try {
+      const [existingConv] = await db.select().from(specialistConversations)
+        .where(and(
+          eq(specialistConversations.userId, userId),
+          eq(specialistConversations.agentName, agentName)
+        ))
+        .orderBy(desc(specialistConversations.updatedAt))
+        .limit(1);
+
+      let convId: number;
+      if (existingConv) {
+        convId = existingConv.id;
+        await db.update(specialistConversations).set({ updatedAt: new Date() }).where(eq(specialistConversations.id, convId));
+      } else {
+        await db.insert(specialistConversations).values({ userId, agentName, title: message.slice(0, 60) });
+        const [created] = await db.select().from(specialistConversations)
+          .where(and(eq(specialistConversations.userId, userId), eq(specialistConversations.agentName, agentName)))
+          .orderBy(desc(specialistConversations.createdAt)).limit(1);
+        convId = created.id;
+      }
+
+      await db.insert(specialistMessages).values({ conversationId: convId, role: "user", content: `⏳ Tarefa: ${message}` });
+      await db.insert(specialistMessages).values({ conversationId: convId, role: "assistant", content: response.message });
+    } catch (err: any) {
+      console.warn("[AgentTask] Não foi possível salvar no histórico de conversa:", err.message);
+    }
 
     // Notificar via WebSocket se usuário estiver online
     const io = getIO();

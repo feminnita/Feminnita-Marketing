@@ -110,7 +110,7 @@ export default function ChatPage() {
   const recentConvId = recentConvsQuery.data?.[0]?.id ?? null;
   const recentMsgsQuery = trpc.specialistChat.getMessages.useQuery(
     { conversationId: recentConvId ?? 0 },
-    { enabled: !!recentConvId }
+    { enabled: !!recentConvId, staleTime: 0, refetchOnMount: true }
   );
 
   const dmWithUserId = contact?.kind === "human" ? (contact.id as number) : null;
@@ -209,11 +209,9 @@ export default function ChatPage() {
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [groupMsgs, agentCtxs, dmMsgs, contact]);
 
-  // Quando carrega mensagens do banco, injeta no agentCtxs (só na primeira vez por agente/sessão)
+  // Quando carrega mensagens do banco, injeta no agentCtxs
   useEffect(() => {
     if (!currentAgentName || !recentConvId || !recentMsgsQuery.data?.length) return;
-    if (loadedAgents.current.has(currentAgentName)) return;
-    loadedAgents.current.add(currentAgentName);
     const msgs: AgentMsg[] = recentMsgsQuery.data.map((m: any) => ({
       role: m.role as "user" | "assistant",
       text: m.content,
