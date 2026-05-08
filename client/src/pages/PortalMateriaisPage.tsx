@@ -226,7 +226,7 @@ export default function PortalMateriaisPage() {
   );
 }
 
-const ANA_AVATAR = "https://api.dicebear.com/9.x/lorelei/svg?seed=Ana&backgroundColor=8C2F39&size=80";
+const ANA_AVATAR = "/agents/ana.jpg";
 
 function AnaCopyChat({ userName }: { userName?: string }) {
   const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([]);
