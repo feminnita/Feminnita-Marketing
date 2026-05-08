@@ -7,9 +7,9 @@ import Anthropic from "@anthropic-ai/sdk";
 import { invokeLLM } from "../_core/llm";
 import { buildMemoryContext, saveMemory } from "../services/agentMemory";
 import { getLatestKnowledge } from "./knowledge-updater";
-import { shopeeGet } from "../services/shopeeApi";
 import { getDb } from "../db";
 import { agentActions as agentActionsTable } from "../../drizzle/schema";
+import { collectShopeeAdsData } from "./shopee-ads-agent";
 
 const AGENT_NAME = "luiza-shopee";
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || "" });
@@ -304,17 +304,31 @@ export async function chatWithLuizaShopee(
         if (toolUse.name === "get_shopee_campaigns") {
           call = withTimeout((async (): Promise<string> => {
             try {
-              const data = await shopeeGet("/api/v2/ads/get_product_level_campaign_id_list", { page_size: "50", page: "1" });
-              const campaigns: any[] = data?.response?.campaign_list || [];
-              if (campaigns.length === 0) return "Nenhuma campanha encontrada. A API de Shopee Ads pode não estar disponível para esta conta.";
-              return `CAMPANHAS SHOPEE (${campaigns.length}):\n` +
-                campaigns.slice(0, 20).map(c =>
-                  `• ID: ${c.campaign_id} | Tipo: ${c.ad_type || "N/A"}`
-                ).join("\n");
+              const data = await collectShopeeAdsData(account);
+              const perf = (data as any).adsPerformance;
+              const lines: string[] = [
+                `━━━ PERFORMANCE GERAL (7 dias) ━━━`,
+                `Gasto: R$${(perf?.expense || 0).toFixed(2)} | GMV: R$${(perf?.gmv || 0).toFixed(2)} | ROAS: ${(perf?.roas || 0).toFixed(2)}x`,
+                `Cliques: ${perf?.clicks || 0} | CTR: ${(perf?.ctr || 0).toFixed(2)}% | CPC: R$${(perf?.cpc || 0).toFixed(2)}`,
+                `Pedidos via Ads: ${perf?.orders || 0} | Saldo: R$${(perf?.balance || 0).toFixed(2)}`,
+                ``,
+                `━━━ CAMPANHAS (${data.items.length} total, top 30 por gasto) ━━━`,
+              ];
+              const sorted = [...data.items].sort((a: any, b: any) => (b.expense || 0) - (a.expense || 0));
+              for (const c of sorted.slice(0, 30)) {
+                const cc = c as any;
+                const roas = cc.roas > 0 ? ` | ROAS ${cc.roas.toFixed(1)}x` : "";
+                const spent = cc.expense > 0 ? ` | Gasto R$${cc.expense.toFixed(2)}` : " | sem gasto";
+                const clk = cc.clicks > 0 ? ` | ${cc.clicks} cliques` : "";
+                lines.push(`• ${cc.name}${spent}${clk}${roas}`);
+              }
+              lines.push(``, `━━━ PEDIDOS ORGÂNICOS (30d) ━━━`);
+              lines.push(`Total: ${data.summary.totalOrders30d} | Receita: R$${data.summary.totalRevenue30d.toFixed(2)} | Ticket médio: R$${data.summary.avgOrderValue.toFixed(2)}`);
+              return lines.join("\n");
             } catch (e: any) {
               return `API Shopee Ads indisponível: ${e.message}. Trabalhe com dados fornecidos pelo usuário.`;
             }
-          })(), 20000, "get_shopee_campaigns");
+          })(), 60000, "get_shopee_campaigns");
         } else if (toolUse.name === "propose_shopee_actions") {
           call = (async (): Promise<string> => {
             const db = await getDb();
