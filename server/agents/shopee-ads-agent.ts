@@ -162,14 +162,15 @@ async function fetchAdsPerformance(): Promise<{ clicks: number; impressions: num
       end_date: toShopeeDate(new Date()),
     });
 
-    const rows: any[] = data?.response?.daily_performance || [];
+    // response é um array direto (não response.daily_performance)
+    const rows: any[] = Array.isArray(data?.response) ? data.response : [];
     return rows.reduce(
       (acc, r) => ({
-        clicks: acc.clicks + (r.click || 0),
-        impressions: acc.impressions + (r.impression || 0),
-        expense: acc.expense + (r.expense || 0),
-        orders: acc.orders + (r.order || 0),
-        gmv: acc.gmv + (r.gmv || 0),
+        clicks:      acc.clicks      + (r.clicks      || 0),
+        impressions: acc.impressions + (r.impression  || 0),
+        expense:     acc.expense     + (r.expense     || 0),
+        orders:      acc.orders      + (r.broad_order || 0),
+        gmv:         acc.gmv         + (r.broad_gmv   || 0),
       }),
       { clicks: 0, impressions: 0, expense: 0, orders: 0, gmv: 0 }
     );
