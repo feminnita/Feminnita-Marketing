@@ -43,13 +43,39 @@ export default function ShopeeLuizaPage() {
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", content: WELCOME.feminnita },
   ]);
+  const [conversationId, setConversationId] = useState<number | null>(null);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const agentName = account === "fnt" ? "luiza_fnt" : "luiza";
+
+  // Carrega última conversa do banco ao abrir
+  const { data: conversations } = trpc.specialistChat.listConversations.useQuery(
+    { agentName: agentName as any, limit: 1 },
+    { staleTime: Infinity }
+  );
+
+  const lastConvId = conversations?.[0]?.id;
+
+  const { data: savedMessages } = trpc.specialistChat.getMessages.useQuery(
+    { conversationId: lastConvId! },
+    { enabled: !!lastConvId && !historyLoaded }
+  );
+
+  useEffect(() => {
+    if (savedMessages && savedMessages.length > 0 && !historyLoaded) {
+      setMessages(savedMessages.map((m: any) => ({ role: m.role as "user" | "assistant", content: m.content })));
+      setConversationId(lastConvId!);
+      setHistoryLoaded(true);
+    }
+  }, [savedMessages, historyLoaded, lastConvId]);
+
   const chatMutation = trpc.shopeeLuiza.chat.useMutation({
     onSuccess: (data) => {
       setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
+      if (data.conversationId) setConversationId(data.conversationId);
     },
     onError: (e) => {
       toast.error("Erro ao enviar mensagem: " + e.message);
@@ -64,6 +90,8 @@ export default function ShopeeLuizaPage() {
   function switchAccount(acc: Account) {
     setAccount(acc);
     setMessages([{ role: "assistant", content: WELCOME[acc] }]);
+    setConversationId(null);
+    setHistoryLoaded(false);
     setInput("");
   }
 
@@ -73,7 +101,7 @@ export default function ShopeeLuizaPage() {
     const updated: Message[] = [...messages, { role: "user", content: text }];
     setMessages(updated);
     setInput("");
-    chatMutation.mutate({ messages: updated, account });
+    chatMutation.mutate({ messages: updated, account, conversationId: conversationId ?? undefined });
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {

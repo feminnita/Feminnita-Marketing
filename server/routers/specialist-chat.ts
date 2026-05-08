@@ -16,7 +16,7 @@ import { eq, desc, and } from "drizzle-orm";
 import { chatWithSpecialist } from "../agents/specialist-chat-agent";
 import { agentActions } from "../../drizzle/schema";
 
-const VALID_AGENTS = ["fernanda", "sofia", "clara", "mariana"] as const;
+const VALID_AGENTS = ["fernanda", "sofia", "clara", "mariana", "luiza", "luiza_fnt", "gabi"] as const;
 type AgentName = typeof VALID_AGENTS[number];
 
 export const specialistChatRouter = router({
