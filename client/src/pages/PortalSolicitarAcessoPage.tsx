@@ -97,7 +97,7 @@ export default function PortalSolicitarAcessoPage() {
           Feminn<span style={{ color: CHAMPAGNE }}>ita</span>
         </h1>
         <div style={{ width: 48, height: 2, background: CHAMPAGNE, margin: "0.75rem auto" }} />
-        <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.18em", color: CHAMPAGNE, textTransform: "uppercase" }}>
+        <p style={{ fontSize: "1rem", fontWeight: 700, letterSpacing: "0.12em", color: B, textTransform: "uppercase" }}>
           Sala de Arquivos
         </p>
       </div>
