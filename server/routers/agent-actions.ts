@@ -134,7 +134,7 @@ export const agentActionsRouter = router({
     };
   }),
 
-  // ── Aprovar ação ──────────────────────────────────────────────────────────
+  // ── Aprovar ação (auto-executa ações de marketplace) ─────────────────────
   approve: protectedProcedure
     .input(
       z.object({
@@ -146,12 +146,28 @@ export const agentActionsRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Banco indisponível" });
 
-      await db
-        .update(agentActions)
-        .set({ status: "approved", userNote: input.userNote })
-        .where(eq(agentActions.id, input.id));
+      const [action] = await db.select().from(agentActions).where(eq(agentActions.id, input.id)).limit(1);
+      if (!action) throw new TRPCError({ code: "NOT_FOUND", message: "Ação não encontrada" });
 
-      return { success: true };
+      // Tenta executar imediatamente se for ação de marketplace
+      let payload: MarketplacePayload | null = null;
+      try { payload = JSON.parse(action.description); } catch {}
+
+      if (payload?.marketplace) {
+        await db.update(agentActions).set({ status: "executing", userNote: input.userNote }).where(eq(agentActions.id, input.id));
+        try {
+          const result = await executeMarketplaceAction(action.actionType, payload);
+          await db.update(agentActions).set({ status: "done", executionLog: result, executedAt: new Date() }).where(eq(agentActions.id, input.id));
+          return { success: true, executed: true, result };
+        } catch (e: any) {
+          await db.update(agentActions).set({ status: "approved", executionLog: `Erro: ${e.message}` }).where(eq(agentActions.id, input.id));
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: e.message });
+        }
+      }
+
+      // Ação não-marketplace: apenas aprovar
+      await db.update(agentActions).set({ status: "approved", userNote: input.userNote }).where(eq(agentActions.id, input.id));
+      return { success: true, executed: false };
     }),
 
   // ── Rejeitar ação ─────────────────────────────────────────────────────────
@@ -189,21 +205,37 @@ export const agentActionsRouter = router({
       return { success: true };
     }),
 
-  // ── Aprovar múltiplas de uma vez ──────────────────────────────────────────
+  // ── Aprovar múltiplas (auto-executa marketplace) ─────────────────────────
   approveMany: protectedProcedure
     .input(z.object({ ids: z.array(z.number()) }))
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Banco indisponível" });
 
-      if (input.ids.length === 0) return { success: true, count: 0 };
+      if (input.ids.length === 0) return { success: true, count: 0, executed: 0 };
 
-      await db
-        .update(agentActions)
-        .set({ status: "approved" })
-        .where(inArray(agentActions.id, input.ids));
+      const actions = await db.select().from(agentActions).where(inArray(agentActions.id, input.ids));
+      let executed = 0;
 
-      return { success: true, count: input.ids.length };
+      for (const action of actions) {
+        let payload: MarketplacePayload | null = null;
+        try { payload = JSON.parse(action.description); } catch {}
+
+        if (payload?.marketplace) {
+          await db.update(agentActions).set({ status: "executing" }).where(eq(agentActions.id, action.id));
+          try {
+            const result = await executeMarketplaceAction(action.actionType, payload);
+            await db.update(agentActions).set({ status: "done", executionLog: result, executedAt: new Date() }).where(eq(agentActions.id, action.id));
+            executed++;
+          } catch (e: any) {
+            await db.update(agentActions).set({ status: "approved", executionLog: `Erro: ${e.message}` }).where(eq(agentActions.id, action.id));
+          }
+        } else {
+          await db.update(agentActions).set({ status: "approved" }).where(eq(agentActions.id, action.id));
+        }
+      }
+
+      return { success: true, count: actions.length, executed };
     }),
 
   // ── Rejeitar múltiplas de uma vez ─────────────────────────────────────────
