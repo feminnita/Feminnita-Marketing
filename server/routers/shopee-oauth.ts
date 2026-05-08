@@ -198,11 +198,18 @@ export function registerShopeeOAuthRoutes(app: Express): void {
     // Testa endpoints de Ads com parâmetros reais
     const now2 = Math.floor(Date.now() / 1000);
     const from2 = now2 - 7 * 24 * 60 * 60;
+    const startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const endDate = new Date().toISOString().slice(0, 10);
+    // IDs reais conhecidos para testar endpoints de detalhes
+    const sampleCampaignIds = "16002685,16338932,16475088";
+
     const tests = [
       { ep: "/api/v2/ads/get_total_balance", extra: `` },
       { ep: "/api/v2/ads/get_shop_toggle_info", extra: `` },
       { ep: "/api/v2/ads/get_product_level_campaign_id_list", extra: `&page_size=10&page=1` },
-      { ep: "/api/v2/ads/get_all_cpc_ads_daily_performance", extra: `&start_time=${from2}&end_time=${now2}` },
+      { ep: "/api/v2/ads/get_all_cpc_ads_daily_performance", extra: `&start_date=${startDate}&end_date=${endDate}` },
+      { ep: "/api/v2/ads/get_product_level_campaign", extra: `&campaign_id_list=${sampleCampaignIds}` },
+      { ep: "/api/v2/ads/get_product_campaign_daily_performance", extra: `&campaign_id_list=${sampleCampaignIds}&start_date=${startDate}&end_date=${endDate}` },
     ];
     for (const t of tests) {
       try {

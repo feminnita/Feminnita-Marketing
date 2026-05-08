@@ -324,7 +324,7 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
-                  <SidebarMenuSubButton onClick={() => setLocation("/blog-publico")}>
+                  <SidebarMenuSubButton onClick={() => setLocation("/blog-feminnita")}>
                     <Newspaper className="h-3 w-3" /> Blog Feminnita
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
