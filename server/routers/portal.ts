@@ -22,7 +22,7 @@ async function verifyPassword(password: string, stored: string): Promise<boolean
   return timingSafeEqual(hashBuf, derived);
 }
 
-const CATEGORIES = ["fotos", "videos", "banners", "copy", "lookbook", "calculadora", "links"] as const;
+const CATEGORIES = ["fotos", "videos", "banners", "copy", "lookbook", "calculadora", "links", "treinamento"] as const;
 const AVAILABLE_TO = ["revendedora", "influencer", "ambos"] as const;
 const PROFILE_TYPES = ["revendedora", "influencer"] as const;
 const STATUSES = ["pending", "approved", "blocked"] as const;
@@ -108,6 +108,7 @@ export const portalRouter = router({
         title: z.string().min(1),
         description: z.string().optional(),
         category: z.enum(CATEGORIES),
+        subcategory: z.string().optional(),
         url: z.string().url("URL inválida"),
         filename: z.string().optional(),
         availableTo: z.enum(AVAILABLE_TO),
@@ -123,6 +124,7 @@ export const portalRouter = router({
         title: z.string().min(1).optional(),
         description: z.string().optional(),
         category: z.enum(CATEGORIES).optional(),
+        subcategory: z.string().optional(),
         url: z.string().url().optional(),
         filename: z.string().optional(),
         availableTo: z.enum(AVAILABLE_TO).optional(),

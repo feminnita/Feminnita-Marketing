@@ -171,7 +171,8 @@ export async function listAllPortalMaterials() {
 export async function createPortalMaterial(data: {
   title: string;
   description?: string;
-  category: "fotos" | "videos" | "banners" | "copy" | "lookbook" | "calculadora" | "links";
+  category: "fotos" | "videos" | "banners" | "copy" | "lookbook" | "calculadora" | "links" | "treinamento";
+  subcategory?: string;
   url: string;
   filename?: string;
   availableTo: "revendedora" | "influencer" | "ambos";
@@ -183,6 +184,7 @@ export async function createPortalMaterial(data: {
     title: data.title,
     description: data.description ?? null,
     category: data.category,
+    subcategory: data.subcategory ?? null,
     url: data.url,
     filename: data.filename ?? null,
     availableTo: data.availableTo,

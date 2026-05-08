@@ -3,24 +3,30 @@ import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Download, ExternalLink, LogOut, Image, Video, Layout, FileText, BookOpen, Calculator, Link } from "lucide-react";
+import {
+  Download, ExternalLink, LogOut, Image, Video, Layout,
+  FileText, BookOpen, Calculator, Link, ChevronDown, ChevronRight,
+  GraduationCap, FolderOpen,
+} from "lucide-react";
 
-const CATEGORIES = [
-  { key: "todos", label: "Todos" },
-  { key: "fotos", label: "Fotos", icon: Image },
-  { key: "videos", label: "Vídeos", icon: Video },
-  { key: "banners", label: "Banners", icon: Layout },
-  { key: "copy", label: "Copy", icon: FileText },
-  { key: "lookbook", label: "Lookbook", icon: BookOpen },
-  { key: "calculadora", label: "Calculadora", icon: Calculator },
-  { key: "links", label: "Links", icon: Link },
+const CATEGORY_CONFIG = [
+  { key: "fotos",       label: "Fotos",       icon: Image,         color: "bg-pink-50 text-pink-600 border-pink-200" },
+  { key: "videos",      label: "Vídeos",      icon: Video,         color: "bg-purple-50 text-purple-600 border-purple-200" },
+  { key: "banners",     label: "Banners",     icon: Layout,        color: "bg-blue-50 text-blue-600 border-blue-200" },
+  { key: "lookbook",    label: "Lookbook",    icon: BookOpen,      color: "bg-amber-50 text-amber-600 border-amber-200" },
+  { key: "treinamento", label: "Treinamento", icon: GraduationCap, color: "bg-green-50 text-green-600 border-green-200" },
+  { key: "calculadora", label: "Calculadora", icon: Calculator,    color: "bg-orange-50 text-orange-600 border-orange-200" },
+  { key: "links",       label: "Links",       icon: Link,          color: "bg-slate-50 text-slate-600 border-slate-200" },
+  { key: "copy",        label: "Copy",        icon: FileText,      color: "bg-rose-50 text-rose-600 border-rose-200" },
 ] as const;
 
 export default function PortalMateriaisPage() {
   const [, setLocation] = useLocation();
-  const [activeCategory, setActiveCategory] = useState<string>("todos");
 
-  const { data: me } = trpc.portal.me.useQuery();
+  const { data: me } = trpc.portal.me.useQuery(undefined, {
+    onError: () => setLocation("/portal/login"),
+  });
+
   const { data: materiais = [], isLoading } = trpc.portal.materiais.useQuery(undefined, {
     enabled: !!me,
     onError: () => setLocation("/portal/login"),
@@ -31,117 +37,132 @@ export default function PortalMateriaisPage() {
     onError: () => setLocation("/portal/login"),
   });
 
-  if (!me) {
-    setLocation("/portal/login");
-    return null;
-  }
+  if (!me) return null;
 
-  const filtered = activeCategory === "todos"
-    ? materiais
-    : materiais.filter((m: any) => m.category === activeCategory);
+  // Group by category → subcategory
+  const grouped = CATEGORY_CONFIG.reduce((acc, cat) => {
+    const items = (materiais as any[]).filter(m => m.category === cat.key);
+    if (items.length > 0) acc[cat.key] = items;
+    return acc;
+  }, {} as Record<string, any[]>);
 
   return (
     <div className="min-h-screen bg-rose-50">
-      {/* Header */}
-      <header className="bg-white border-b border-rose-100 px-4 py-3">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-bold text-rose-700">Feminnita</h1>
-            <p className="text-xs text-rose-400">Sala de Arquivos</p>
+      <header className="bg-white border-b border-rose-100 px-4 py-3 sticky top-0 z-10">
+        <div className="max-w-3xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <FolderOpen className="h-5 w-5 text-rose-500" />
+            <div>
+              <h1 className="text-base font-bold text-rose-700 leading-none">Sala de Arquivos</h1>
+              <p className="text-xs text-rose-400">Feminnita</p>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right">
               <p className="text-sm font-medium text-gray-800">{(me as any).name}</p>
               <p className="text-xs text-gray-400 capitalize">{(me as any).profileType}</p>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => logout.mutate()}
-              className="text-gray-400 hover:text-rose-600"
-            >
+            <Button variant="ghost" size="sm" onClick={() => logout.mutate()} className="text-gray-400 hover:text-rose-600">
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-6">
-        <h2 className="text-xl font-bold text-gray-800 mb-5">Materiais</h2>
-
-        {/* Category tabs */}
-        <div className="flex gap-2 flex-wrap mb-6">
-          {CATEGORIES.map(cat => (
-            <button
-              key={cat.key}
-              onClick={() => setActiveCategory(cat.key)}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                activeCategory === cat.key
-                  ? "bg-rose-600 text-white"
-                  : "bg-white text-gray-600 border border-gray-200 hover:border-rose-300"
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
-
+      <main className="max-w-3xl mx-auto px-4 py-6 space-y-3">
         {isLoading ? (
           <div className="flex justify-center py-12">
             <div className="w-6 h-6 border-2 border-rose-500 border-t-transparent rounded-full animate-spin" />
           </div>
-        ) : filtered.length === 0 ? (
+        ) : Object.keys(grouped).length === 0 ? (
           <div className="text-center py-12 text-gray-400">
-            <p>Nenhum material disponível nesta categoria.</p>
+            <FolderOpen className="h-10 w-10 mx-auto mb-3 opacity-30" />
+            <p>Nenhum material disponível ainda.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {filtered.map((material: any) => (
-              <MaterialCard key={material.id} material={material} />
-            ))}
-          </div>
+          CATEGORY_CONFIG.filter(c => grouped[c.key]).map(cat => (
+            <CategoryGroup
+              key={cat.key}
+              category={cat}
+              items={grouped[cat.key]}
+            />
+          ))
         )}
       </main>
     </div>
   );
 }
 
-function MaterialCard({ material }: { material: any }) {
-  const categoryIcon: Record<string, React.ReactNode> = {
-    fotos: <Image className="h-5 w-5 text-rose-400" />,
-    videos: <Video className="h-5 w-5 text-rose-400" />,
-    banners: <Layout className="h-5 w-5 text-rose-400" />,
-    copy: <FileText className="h-5 w-5 text-rose-400" />,
-    lookbook: <BookOpen className="h-5 w-5 text-rose-400" />,
-    calculadora: <Calculator className="h-5 w-5 text-rose-400" />,
-    links: <Link className="h-5 w-5 text-rose-400" />,
-  };
+function CategoryGroup({ category, items }: { category: typeof CATEGORY_CONFIG[number]; items: any[] }) {
+  const [open, setOpen] = useState(true);
+  const Icon = category.icon;
 
+  // Group by subcategory within this category
+  const subcats = items.reduce((acc, item) => {
+    const sub = item.subcategory || "__sem_sub__";
+    if (!acc[sub]) acc[sub] = [];
+    acc[sub].push(item);
+    return acc;
+  }, {} as Record<string, any[]>);
+
+  const hasSubs = Object.keys(subcats).some(k => k !== "__sem_sub__");
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors"
+      >
+        <div className={`p-2 rounded-lg border ${category.color}`}>
+          <Icon className="h-4 w-4" />
+        </div>
+        <span className="font-semibold text-gray-800 flex-1 text-left">{category.label}</span>
+        <span className="text-xs text-gray-400 mr-2">{items.length} {items.length === 1 ? "item" : "itens"}</span>
+        {open ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronRight className="h-4 w-4 text-gray-400" />}
+      </button>
+
+      {open && (
+        <div className="border-t border-gray-100 px-4 py-3 space-y-4">
+          {hasSubs ? (
+            Object.entries(subcats).map(([sub, subItems]) => (
+              <div key={sub}>
+                {sub !== "__sem_sub__" && (
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{sub}</p>
+                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {subItems.map((m: any) => <MaterialCard key={m.id} material={m} />)}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {items.map((m: any) => <MaterialCard key={m.id} material={m} />)}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MaterialCard({ material }: { material: any }) {
   const isDownload = material.filename || ["fotos", "videos", "banners", "lookbook"].includes(material.category);
 
   return (
-    <div className="bg-white rounded-xl border border-rose-100 p-4 flex flex-col gap-3 hover:shadow-sm transition-shadow">
-      <div className="flex items-start gap-3">
-        <div className="p-2 bg-rose-50 rounded-lg">
-          {categoryIcon[material.category] ?? <FileText className="h-5 w-5 text-rose-400" />}
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-medium text-gray-800 text-sm leading-snug">{material.title}</p>
-          {material.description && (
-            <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{material.description}</p>
-          )}
-          <span className="inline-block mt-1 text-xs bg-rose-50 text-rose-500 px-2 py-0.5 rounded-full capitalize">
-            {material.category}
-          </span>
-        </div>
+    <div className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:border-rose-200 hover:bg-rose-50/30 transition-colors group">
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-gray-800 leading-snug">{material.title}</p>
+        {material.description && (
+          <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{material.description}</p>
+        )}
       </div>
       <a
         href={material.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center justify-center gap-1.5 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium transition-colors"
+        className="flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-medium transition-colors"
       >
-        {isDownload ? <Download className="h-3.5 w-3.5" /> : <ExternalLink className="h-3.5 w-3.5" />}
+        {isDownload ? <Download className="h-3 w-3" /> : <ExternalLink className="h-3 w-3" />}
         {isDownload ? "Baixar" : "Acessar"}
       </a>
     </div>

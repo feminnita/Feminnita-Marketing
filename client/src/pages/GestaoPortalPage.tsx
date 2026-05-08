@@ -6,7 +6,18 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { CheckCircle, XCircle, Clock, Trash2, Plus, ExternalLink } from "lucide-react";
 
-const CATEGORIES = ["fotos", "videos", "banners", "copy", "lookbook", "calculadora", "links"] as const;
+const CATEGORIES = ["fotos", "videos", "banners", "lookbook", "treinamento", "calculadora", "links", "copy"] as const;
+
+const SUBCATEGORY_SUGGESTIONS: Record<string, string[]> = {
+  fotos:       ["Produto fundo branco", "Lifestyle modelo", "Stories", "Feed"],
+  videos:      ["TikTok", "Reels", "Stories"],
+  banners:     ["Feed Instagram", "Stories", "WhatsApp", "Loja virtual"],
+  lookbook:    ["Coleção Verão", "Coleção Inverno", "Lançamento"],
+  treinamento: ["Como vender", "Scripts de vídeo", "Datas sazonais", "Objeções"],
+  calculadora: [],
+  links:       [],
+  copy:        [],
+};
 const AVAILABLE_TO = ["revendedora", "influencer", "ambos"] as const;
 
 type Tab = "pendentes" | "usuarios" | "materiais";
@@ -217,6 +228,7 @@ function MateriaisTab() {
                 </div>
                 <div className="flex gap-2 mt-0.5 flex-wrap">
                   <span className="text-xs bg-rose-50 text-rose-500 px-2 py-0.5 rounded-full">{m.category}</span>
+                  {m.subcategory && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{m.subcategory}</span>}
                   <span className="text-xs text-gray-400">→ {m.availableTo}</span>
                 </div>
               </div>
@@ -250,6 +262,7 @@ function AddMaterialForm({ onSuccess }: { onSuccess: () => void }) {
     title: "",
     description: "",
     category: "fotos" as typeof CATEGORIES[number],
+    subcategory: "",
     url: "",
     filename: "",
     availableTo: "ambos" as typeof AVAILABLE_TO[number],
@@ -262,6 +275,13 @@ function AddMaterialForm({ onSuccess }: { onSuccess: () => void }) {
 
   const set = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm(prev => ({ ...prev, [field]: e.target.value }));
+
+  const suggestions = SUBCATEGORY_SUGGESTIONS[form.category] ?? [];
+
+  const categoryLabels: Record<string, string> = {
+    fotos: "Fotos", videos: "Vídeos", banners: "Banners", lookbook: "Lookbook",
+    treinamento: "Treinamento", calculadora: "Calculadora", links: "Links", copy: "Copy",
+  };
 
   return (
     <div className="bg-rose-50 rounded-xl border border-rose-200 p-4 mb-4">
@@ -277,8 +297,12 @@ function AddMaterialForm({ onSuccess }: { onSuccess: () => void }) {
         </div>
         <div>
           <Label className="text-sm">Categoria</Label>
-          <select value={form.category} onChange={set("category")} className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm">
-            {CATEGORIES.map(c => <option key={c} value={c} className="capitalize">{c}</option>)}
+          <select
+            value={form.category}
+            onChange={e => setForm(prev => ({ ...prev, category: e.target.value as any, subcategory: "" }))}
+            className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
+          >
+            {CATEGORIES.map(c => <option key={c} value={c}>{categoryLabels[c] ?? c}</option>)}
           </select>
         </div>
         <div>
@@ -288,6 +312,28 @@ function AddMaterialForm({ onSuccess }: { onSuccess: () => void }) {
           </select>
         </div>
         <div className="sm:col-span-2">
+          <Label className="text-sm">Subcategoria <span className="text-gray-400 font-normal">(opcional — agrupa dentro da categoria)</span></Label>
+          <Input value={form.subcategory} onChange={set("subcategory")} className="mt-1" placeholder="Ex: TikTok, Stories, Como vender..." />
+          {suggestions.length > 0 && (
+            <div className="flex gap-1.5 flex-wrap mt-1.5">
+              {suggestions.map(s => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setForm(prev => ({ ...prev, subcategory: s }))}
+                  className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${
+                    form.subcategory === s
+                      ? "bg-rose-600 text-white border-rose-600"
+                      : "border-rose-200 text-rose-600 hover:bg-rose-50"
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="sm:col-span-2">
           <Label className="text-sm">Descrição (opcional)</Label>
           <Input value={form.description} onChange={set("description")} className="mt-1" placeholder="Descrição breve" />
         </div>
@@ -295,7 +341,12 @@ function AddMaterialForm({ onSuccess }: { onSuccess: () => void }) {
       <div className="flex gap-2 mt-4">
         <Button
           size="sm"
-          onClick={() => createMaterial.mutate({ ...form, description: form.description || undefined, filename: form.filename || undefined })}
+          onClick={() => createMaterial.mutate({
+            ...form,
+            description: form.description || undefined,
+            subcategory: form.subcategory || undefined,
+            filename: form.filename || undefined,
+          })}
           disabled={createMaterial.isPending}
           className="bg-rose-600 hover:bg-rose-700 text-white"
         >
