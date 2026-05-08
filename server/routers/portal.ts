@@ -7,6 +7,7 @@ import { getSessionCookieOptions } from "../_core/cookies";
 import { ONE_YEAR_MS } from "@shared/const";
 import * as db from "../db";
 import { sendTextMessage, getActiveSessions } from "../_core/baileys-service";
+import { chatWithAna } from "../agents/portal-copy-agent";
 
 async function notifyAdminPortalRequest(name: string, email: string, profileType: string, instagram?: string) {
   try {
@@ -96,6 +97,18 @@ export const portalRouter = router({
   materiais: portalProtectedProcedure.query(async ({ ctx }) => {
     return db.listPortalMaterials(ctx.portalUser.profileType);
   }),
+
+  chatCopy: portalProtectedProcedure
+    .input(z.object({
+      messages: z.array(z.object({
+        role: z.enum(["user", "assistant"]),
+        content: z.string(),
+      })).min(1).max(50),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const reply = await chatWithAna(input.messages, ctx.portalUser.name ?? undefined);
+      return { reply };
+    }),
 
   admin: router({
     listUsers: protectedProcedure.query(async () => {
