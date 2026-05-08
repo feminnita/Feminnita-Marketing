@@ -26,12 +26,12 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
 const LUIZA_SHOPEE_TOOLS: Anthropic.Tool[] = [
   {
     name: "get_shopee_campaigns",
-    description: "Lista as campanhas de Ads ativas na Shopee (GMV Max, Search Ads, Discovery Ads) com status e dados disponíveis. Use para obter dados reais antes de analisar ou propor ações.",
+    description: "Busca dados reais das campanhas Shopee Ads ativas (GMV Max, Search Ads, Discovery Ads). Use apenas quando o usuário pedir análise de performance, ROAS, campanhas ou otimizações — não use para perguntas conversacionais ou conceituais.",
     input_schema: { type: "object" as const, properties: {}, required: [] },
   },
   {
     name: "propose_shopee_actions",
-    description: "Salva ações recomendadas no painel de aprovação (/acoes-agentes). Use SEMPRE após analisar as campanhas. O usuário revisa e aprova antes da execução.",
+    description: "Salva ações concretas de otimização no painel de aprovação (/acoes-agentes). Use somente quando tiver dados reais e recomendações específicas de campanhas para salvar — não use em respostas educativas ou conversacionais. O usuário revisa e aprova antes da execução.",
     input_schema: {
       type: "object" as const,
       properties: {
