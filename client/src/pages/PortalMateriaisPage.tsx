@@ -89,7 +89,7 @@ export default function PortalMateriaisPage() {
               <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.4rem", fontWeight: 600, color: B, lineHeight: 1, letterSpacing: "0.01em" }}>
                 Feminn<span style={{ color: CHAMPAGNE }}>ita</span>
               </h1>
-              <p style={{ fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.15em", color: CHAMPAGNE, textTransform: "uppercase", marginTop: 2 }}>
+              <p style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.12em", color: B, textTransform: "uppercase", marginTop: 2 }}>
                 Sala de Arquivos
               </p>
             </div>
