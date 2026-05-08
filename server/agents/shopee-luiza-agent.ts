@@ -313,7 +313,7 @@ export async function chatWithLuizaShopee(
             if (!db) return "Banco indisponível — não foi possível executar as ações.";
             const { eq, and } = await import("drizzle-orm");
             const { agentActions: agentActionsTable2 } = await import("../../drizzle/schema");
-            const { shopeeRequest } = await import("../services/shopeeApi");
+            const { pauseShopeeCampaign, activateShopeeCampaign, updateShopeeBudget, updateShopeeRoas } = await import("./shopee-ads-browser-agent");
 
             const pending = await db.select().from(agentActionsTable2)
               .where(and(eq(agentActionsTable2.agentName, "luiza"), eq(agentActionsTable2.status, "pending")));
@@ -328,22 +328,23 @@ export async function chatWithLuizaShopee(
                   results.push(`❌ ${action.title}: payload sem campaignId`);
                   continue;
                 }
-                const campaignId = Number(payload.campaignId);
+                const campaignId = String(payload.campaignId);
                 const acc = (payload.account || account) as "feminnita" | "fnt";
                 const proposed = String(payload.proposedValue ?? "");
                 await db.update(agentActionsTable2).set({ status: "executing" as const }).where(eq(agentActionsTable2.id, action.id));
+                let res: string;
                 switch (action.actionType) {
                   case "shopee_pause_campaign":
-                    await shopeeRequest("POST", "/api/v2/ads/pause_campaign", { campaign_id_list: [campaignId] }, acc);
+                    res = await pauseShopeeCampaign(campaignId, acc);
                     break;
                   case "shopee_activate_campaign":
-                    await shopeeRequest("POST", "/api/v2/ads/enable_campaign", { campaign_id_list: [campaignId] }, acc);
+                    res = await activateShopeeCampaign(campaignId, acc);
                     break;
                   case "shopee_update_budget":
-                    await shopeeRequest("POST", "/api/v2/ads/update_campaign_budget", { campaign_id: campaignId, budget: Number(proposed) }, acc);
+                    res = await updateShopeeBudget(campaignId, Number(proposed), acc);
                     break;
                   case "shopee_update_roas":
-                    await shopeeRequest("POST", "/api/v2/ads/update_campaign_roas", { campaign_id: campaignId, target_roas: Number(proposed) }, acc);
+                    res = await updateShopeeRoas(campaignId, Number(proposed), acc);
                     break;
                   default:
                     results.push(`⚠️ ${action.title}: tipo de ação desconhecido (${action.actionType})`);
@@ -351,7 +352,7 @@ export async function chatWithLuizaShopee(
                     continue;
                 }
                 await db.update(agentActionsTable2).set({ status: "done" as const, executedAt: new Date() } as any).where(eq(agentActionsTable2.id, action.id));
-                results.push(`✅ ${action.title} (campaign_id=${campaignId})`);
+                results.push(`✅ ${action.title}: ${res}`);
               } catch (e: any) {
                 await db.update(agentActionsTable2).set({ status: "pending" as const }).where(eq(agentActionsTable2.id, action.id));
                 results.push(`❌ ${action.title}: ${e.message}`);
