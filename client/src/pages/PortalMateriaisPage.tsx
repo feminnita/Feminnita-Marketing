@@ -37,14 +37,14 @@ export default function PortalMateriaisPage() {
     return () => { document.head.removeChild(link); };
   }, []);
 
-  const { data: me } = trpc.portal.me.useQuery(undefined, {
-    onError: () => setLocation("/portal/login"),
+  const { data: me, isError: meError } = trpc.portal.me.useQuery(undefined);
+  const { data: materiais = [], isLoading, isError: matError } = trpc.portal.materiais.useQuery(undefined, {
+    enabled: !!me,
   });
 
-  const { data: materiais = [], isLoading } = trpc.portal.materiais.useQuery(undefined, {
-    enabled: !!me,
-    onError: () => setLocation("/portal/login"),
-  });
+  useEffect(() => {
+    if (meError || matError) setLocation("/portal/login");
+  }, [meError, matError]);
 
   const logout = trpc.portal.logout.useMutation({
     onSuccess: () => setLocation("/portal/login"),

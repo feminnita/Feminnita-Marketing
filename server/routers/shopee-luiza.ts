@@ -38,7 +38,7 @@ export const shopeeLuizaRouter = router({
 
         await db.insert(specialistMessages).values({ conversationId: convId, role: "user", content: userMessage.content });
         await db.insert(specialistMessages).values({ conversationId: convId, role: "assistant", content: reply });
-        await db.update(specialistConversations).set({ updatedAt: new Date() }).where(eq(specialistConversations.id, convId));
+        if (convId) await db.update(specialistConversations).set({ updatedAt: new Date() }).where(eq(specialistConversations.id, convId));
 
         return { reply, conversationId: convId };
       }

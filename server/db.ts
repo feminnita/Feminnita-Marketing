@@ -196,7 +196,7 @@ export async function createPortalMaterial(data: {
 export async function updatePortalMaterial(id: number, data: {
   title?: string;
   description?: string;
-  category?: "fotos" | "videos" | "banners" | "copy" | "lookbook" | "calculadora" | "links";
+  category?: "fotos" | "videos" | "banners" | "copy" | "lookbook" | "calculadora" | "links" | "treinamento";
   url?: string;
   filename?: string;
   availableTo?: "revendedora" | "influencer" | "ambos";

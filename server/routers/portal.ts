@@ -100,7 +100,7 @@ export const portalRouter = router({
   admin: router({
     listUsers: protectedProcedure.query(async () => {
       const users = await db.listPortalUsers();
-      return users.map(u => {
+      return users.map((u: Record<string, any>) => {
         const { passwordHash: _, ...safe } = u;
         return safe;
       });
