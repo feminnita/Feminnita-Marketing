@@ -100,7 +100,8 @@ async function fetchAdsCampaigns(): Promise<ShopeePerformanceData["items"]> {
     const endDate = toShopeeDate(new Date());
     const startDate = toShopeeDate(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
 
-    const perfMap: Record<number, { clicks: number; impressions: number; expense: number; orders: number; gmv: number }> = {};
+    type CampPerf = { name: string; placement: string; clicks: number; impressions: number; expense: number; orders: number; gmv: number };
+    const perfMap: Record<number, CampPerf> = {};
     for (const batch of chunk(idList.map((c) => c.campaign_id), 20)) {
       try {
         const perf = await shopeeGet("/api/v2/ads/get_product_campaign_daily_performance", {
@@ -108,14 +109,18 @@ async function fetchAdsCampaigns(): Promise<ShopeePerformanceData["items"]> {
           start_date: startDate,
           end_date: endDate,
         });
-        for (const p of (perf?.response?.campaign_performance_list || [])) {
-          if (!perfMap[p.campaign_id]) perfMap[p.campaign_id] = { clicks: 0, impressions: 0, expense: 0, orders: 0, gmv: 0 };
-          const d = perfMap[p.campaign_id];
-          d.clicks += p.click || 0;
-          d.impressions += p.impression || 0;
-          d.expense += p.expense || 0;
-          d.orders += p.order || 0;
-          d.gmv += p.gmv || 0;
+        // Estrutura real: response.campaign_list[].{ campaign_id, ad_name, campaign_placement, metrics_list[] }
+        for (const camp of (perf?.response?.campaign_list || [])) {
+          const id: number = camp.campaign_id;
+          if (!perfMap[id]) perfMap[id] = { name: camp.ad_name || "", placement: camp.campaign_placement || "", clicks: 0, impressions: 0, expense: 0, orders: 0, gmv: 0 };
+          const d = perfMap[id];
+          for (const m of (camp.metrics_list || [])) {
+            d.clicks     += m.clicks     || 0;
+            d.impressions += m.impression || 0;
+            d.expense    += m.expense    || 0;
+            d.orders     += m.broad_order || 0;
+            d.gmv        += m.broad_gmv  || 0;
+          }
         }
       } catch (err) {
         console.warn("[ShopeeAgent] Erro ao buscar performance por campanha:", err);
@@ -125,10 +130,12 @@ async function fetchAdsCampaigns(): Promise<ShopeePerformanceData["items"]> {
     return idList.map((c) => {
       const p = perfMap[c.campaign_id];
       const roas = p && p.expense > 0 ? p.gmv / p.expense : 0;
-      const cpc = p && p.clicks > 0 ? p.expense / p.clicks : 0;
+      const cpc  = p && p.clicks  > 0 ? p.expense / p.clicks : 0;
+      const placement = p?.placement ? ` · ${p.placement}` : "";
+      const adName = p?.name ? `${p.name}${placement}` : `${c.campaign_id}`;
       return {
         id: c.campaign_id,
-        name: `Campanha ${c.campaign_id} [${c.ad_type}]`,
+        name: `${adName} [${c.ad_type}]`,
         status: "ACTIVE",
         price: cpc,
         stock: p?.clicks || 0,
