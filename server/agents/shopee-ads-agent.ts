@@ -68,11 +68,24 @@ export interface ShopeePerformanceData {
   };
 }
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function toShopeeDate(d: Date): string {
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  return `${dd}-${mm}-${d.getFullYear()}`;
+}
+
+function chunk<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
 // ─── Fetch: Campanhas de Ads ──────────────────────────────────────────────────
 
 async function fetchAdsCampaigns(): Promise<ShopeePerformanceData["items"]> {
   try {
-    // Passo 1: lista de IDs (retorna só campaign_id + ad_type)
     const campaignList = await shopeeGet("/api/v2/ads/get_product_level_campaign_id_list", {
       page_size: "100",
       page: "1",
@@ -83,52 +96,12 @@ async function fetchAdsCampaigns(): Promise<ShopeePerformanceData["items"]> {
     console.log(`[ShopeeAgent] ${idList.length} campanhas encontradas`);
     if (!idList.length) return [];
 
-    // Passo 2: detalhes das campanhas (traz item_id + status + budget)
-    const detailMap: Record<number, { item_id: number; campaign_status: string; ad_type: string }> = {};
-    const detailBatches = chunk(idList.map((c) => c.campaign_id), 20);
-    for (const batch of detailBatches) {
-      try {
-        const res = await shopeeGet("/api/v2/ads/get_product_level_campaign", {
-          campaign_id_list: batch.join(","),
-        });
-        for (const d of (res?.response?.campaign_list || [])) {
-          detailMap[d.campaign_id] = {
-            item_id: d.item_id,
-            campaign_status: d.campaign_status || "ongoing",
-            ad_type: d.ad_type || "",
-          };
-        }
-      } catch (err) {
-        console.warn("[ShopeeAgent] Erro ao buscar detalhes de campanha:", err);
-      }
-    }
-
-    // Passo 3: nomes dos produtos vinculados às campanhas
-    const itemIds = [...new Set(Object.values(detailMap).map((d) => d.item_id).filter(Boolean))];
-    const itemNameMap: Record<number, string> = {};
-    const itemBatches = chunk(itemIds, 50);
-    for (const batch of itemBatches) {
-      try {
-        const res = await shopeeGet("/api/v2/product/get_item_base_info", {
-          item_id_list: batch.join(","),
-        });
-        for (const item of (res?.response?.item_list || [])) {
-          itemNameMap[item.item_id] = item.item_name;
-        }
-      } catch (err) {
-        console.warn("[ShopeeAgent] Erro ao buscar nomes de produto:", err);
-      }
-    }
-
-    // Passo 4: performance dos últimos 7 dias por campanha (em batches de 20)
-    const now = new Date();
-    const from = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const endDate = now.toISOString().slice(0, 10);
-    const startDate = from.toISOString().slice(0, 10);
+    // Performance dos últimos 7 dias por campanha (batches de 20)
+    const endDate = toShopeeDate(new Date());
+    const startDate = toShopeeDate(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
 
     const perfMap: Record<number, { clicks: number; impressions: number; expense: number; orders: number; gmv: number }> = {};
-    const perfBatches = chunk(idList.map((c) => c.campaign_id), 20);
-    for (const batch of perfBatches) {
+    for (const batch of chunk(idList.map((c) => c.campaign_id), 20)) {
       try {
         const perf = await shopeeGet("/api/v2/ads/get_product_campaign_daily_performance", {
           campaign_id_list: batch.join(","),
@@ -150,22 +123,13 @@ async function fetchAdsCampaigns(): Promise<ShopeePerformanceData["items"]> {
     }
 
     return idList.map((c) => {
-      const detail = detailMap[c.campaign_id];
-      const itemId = detail?.item_id;
-      const productName = itemId ? (itemNameMap[itemId] || `Produto ${itemId}`) : null;
-      const adTypeLabel = (c.ad_type || detail?.ad_type || "").replace(/_/g, " ");
-      const name = productName
-        ? `${productName} [${adTypeLabel}]`
-        : `Campanha ${c.campaign_id} [${adTypeLabel}]`;
-
       const p = perfMap[c.campaign_id];
       const roas = p && p.expense > 0 ? p.gmv / p.expense : 0;
       const cpc = p && p.clicks > 0 ? p.expense / p.clicks : 0;
       return {
         id: c.campaign_id,
-        item_id: itemId,
-        name,
-        status: detail?.campaign_status || "ACTIVE",
+        name: `Campanha ${c.campaign_id} [${c.ad_type}]`,
+        status: "ACTIVE",
         price: cpc,
         stock: p?.clicks || 0,
         clicks: p?.clicks || 0,
@@ -182,24 +146,13 @@ async function fetchAdsCampaigns(): Promise<ShopeePerformanceData["items"]> {
   }
 }
 
-function chunk<T>(arr: T[], size: number): T[][] {
-  const out: T[][] = [];
-  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
-  return out;
-}
-
 // ─── Fetch: Performance CPC diária ────────────────────────────────────────────
 
 async function fetchAdsPerformance(): Promise<{ clicks: number; impressions: number; expense: number; orders: number; gmv: number }> {
   try {
-    const now2 = new Date();
-    const from2 = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const endDate2 = now2.toISOString().slice(0, 10);
-    const startDate2 = from2.toISOString().slice(0, 10);
-
     const data = await shopeeGet("/api/v2/ads/get_all_cpc_ads_daily_performance", {
-      start_date: startDate2,
-      end_date: endDate2,
+      start_date: toShopeeDate(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)),
+      end_date: toShopeeDate(new Date()),
     });
 
     const rows: any[] = data?.response?.daily_performance || [];

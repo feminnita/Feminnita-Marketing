@@ -198,8 +198,9 @@ export function registerShopeeOAuthRoutes(app: Express): void {
     // Testa endpoints de Ads com parâmetros reais
     const now2 = Math.floor(Date.now() / 1000);
     const from2 = now2 - 7 * 24 * 60 * 60;
-    const startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-    const endDate = new Date().toISOString().slice(0, 10);
+    const fmtDate = (d: Date) => `${String(d.getDate()).padStart(2,"0")}-${String(d.getMonth()+1).padStart(2,"0")}-${d.getFullYear()}`;
+    const startDate = fmtDate(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+    const endDate = fmtDate(new Date());
     // IDs reais conhecidos para testar endpoints de detalhes
     const sampleCampaignIds = "16002685,16338932,16475088";
 
