@@ -269,7 +269,8 @@ Quando o usuário pedir "análise", "auditoria" ou "proponha ações":
 1. Chame get_shopee_campaigns para obter dados reais das campanhas
 2. Analise: ROAS alvo vs. empate, budget adequado por fase de produto, campanhas inativas, dados faltando
 3. Chame propose_shopee_actions com as recomendações concretas
-4. Resuma: "X ações estão em /acoes-agentes aguardando sua aprovação."
+   CRÍTICO: o campo campaignId deve ser EXATAMENTE o número mostrado como [ID:XXXXX] na listagem
+4. Resuma as ações e diga: "Quer que eu execute agora? Basta dizer 'pode continuar'."
 REGRA: Durante análise, NUNCA execute diretamente — use propose_shopee_actions para registrar tudo
 ${knowledge ? `\n━━━ INTELIGÊNCIA ATUAL ━━━\n${knowledge}` : ""}
 ${memoryContext ? `\n━━━ MEMÓRIA ━━━\n${memoryContext}` : ""}`;
@@ -322,26 +323,27 @@ export async function chatWithLuizaShopee(
             const results: string[] = [];
             for (const action of pending) {
               try {
-                let payload: any;
-                try { payload = JSON.parse(action.description); } catch {
-                  results.push(`❌ ${action.title}: payload inválido`);
+                const payload = action.payload as any;
+                if (!payload?.campaignId) {
+                  results.push(`❌ ${action.title}: payload sem campaignId`);
                   continue;
                 }
-                const targetId = Number(payload.targetId);
-                const proposed = payload.proposedValue ?? "";
+                const campaignId = Number(payload.campaignId);
+                const acc = (payload.account || account) as "feminnita" | "fnt";
+                const proposed = String(payload.proposedValue ?? "");
                 await db.update(agentActionsTable2).set({ status: "executing" as const }).where(eq(agentActionsTable2.id, action.id));
                 switch (action.actionType) {
                   case "shopee_pause_campaign":
-                    await shopeeRequest("POST", "/api/v2/ads/pause_campaign", { campaign_id_list: [targetId] }, account);
+                    await shopeeRequest("POST", "/api/v2/ads/pause_campaign", { campaign_id_list: [campaignId] }, acc);
                     break;
                   case "shopee_activate_campaign":
-                    await shopeeRequest("POST", "/api/v2/ads/enable_campaign", { campaign_id_list: [targetId] }, account);
+                    await shopeeRequest("POST", "/api/v2/ads/enable_campaign", { campaign_id_list: [campaignId] }, acc);
                     break;
                   case "shopee_update_budget":
-                    await shopeeRequest("POST", "/api/v2/ads/update_campaign_budget", { campaign_id: targetId, budget: Number(proposed) }, account);
+                    await shopeeRequest("POST", "/api/v2/ads/update_campaign_budget", { campaign_id: campaignId, budget: Number(proposed) }, acc);
                     break;
                   case "shopee_update_roas":
-                    await shopeeRequest("POST", "/api/v2/ads/update_campaign_roas", { campaign_id: targetId, target_roas: Number(proposed) }, account);
+                    await shopeeRequest("POST", "/api/v2/ads/update_campaign_roas", { campaign_id: campaignId, target_roas: Number(proposed) }, acc);
                     break;
                   default:
                     results.push(`⚠️ ${action.title}: tipo de ação desconhecido (${action.actionType})`);
@@ -349,7 +351,7 @@ export async function chatWithLuizaShopee(
                     continue;
                 }
                 await db.update(agentActionsTable2).set({ status: "done" as const, executedAt: new Date() } as any).where(eq(agentActionsTable2.id, action.id));
-                results.push(`✅ ${action.title}`);
+                results.push(`✅ ${action.title} (campaign_id=${campaignId})`);
               } catch (e: any) {
                 await db.update(agentActionsTable2).set({ status: "pending" as const }).where(eq(agentActionsTable2.id, action.id));
                 results.push(`❌ ${action.title}: ${e.message}`);
@@ -376,7 +378,7 @@ export async function chatWithLuizaShopee(
                 const roas = cc.roas > 0 ? ` | ROAS ${cc.roas.toFixed(1)}x` : "";
                 const spent = cc.expense > 0 ? ` | Gasto R$${cc.expense.toFixed(2)}` : " | sem gasto";
                 const clk = cc.clicks > 0 ? ` | ${cc.clicks} cliques` : "";
-                lines.push(`• ${cc.name}${spent}${clk}${roas}`);
+                lines.push(`• [ID:${cc.id}] ${cc.name}${spent}${clk}${roas}`);
               }
               lines.push(``, `━━━ PEDIDOS ORGÂNICOS (30d) ━━━`);
               lines.push(`Total: ${data.summary.totalOrders30d} | Receita: R$${data.summary.totalRevenue30d.toFixed(2)} | Ticket médio: R$${data.summary.avgOrderValue.toFixed(2)}`);
@@ -393,21 +395,23 @@ export async function chatWithLuizaShopee(
               agentName: "luiza",
               date: today,
               title: String(a.title || ""),
-              description: JSON.stringify({
-                marketplace: "shopee",
-                account,
-                targetId: String(a.campaignId || ""),
-                targetName: String(a.campaignName || ""),
-                currentValue: String(a.currentValue || ""),
-                proposedValue: String(a.proposedValue || ""),
-              }),
+              description: `${String(a.campaignName || "")} — ${String(a.currentValue || "")} → ${String(a.proposedValue || "")}`,
               actionType: String(a.actionType || "shopee_update_budget"),
               priority: (["alta", "media", "baixa"].includes(a.priority) ? a.priority : "media") as "alta" | "media" | "baixa",
               estimatedImpact: String(a.reason || ""),
               status: "pending" as const,
+              payload: {
+                marketplace: "shopee",
+                account,
+                campaignId: String(a.campaignId || ""),
+                campaignName: String(a.campaignName || ""),
+                currentValue: String(a.currentValue || ""),
+                proposedValue: String(a.proposedValue || ""),
+                action: String(a.actionType || "shopee_update_budget"),
+              },
             }));
             if (db && rows.length > 0) await db.insert(agentActionsTable).values(rows);
-            return `${rows.length} ação(ões) salvas em /acoes-agentes aguardando aprovação.`;
+            return `${rows.length} ação(ões) salvas. Diga "pode continuar" ou "autorizo" para executar agora, ou acesse /acoes-agentes para revisar primeiro.`;
           })();
         } else {
           call = Promise.resolve(`Ferramenta desconhecida: ${toolUse.name}`);

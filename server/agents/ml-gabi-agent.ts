@@ -199,6 +199,11 @@ const GABI_ML_TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "execute_pending_actions",
+    description: "Executa imediatamente todas as ações pendentes que você propôs via propose_ads_actions. Use quando o usuário disser 'pode executar', 'autorizo', 'pode continuar', 'confirmo', 'faz isso', 'vai lá' ou qualquer frase de aprovação. Não peça confirmação adicional.",
+    input_schema: { type: "object" as const, properties: {}, required: [] },
+  },
+  {
     name: "ml_update_item_attributes",
     description: "Atualiza atributos EDS de um anúncio (composição, cor, tamanho, marca, etc). Execute somente após o usuário confirmar. Use ml_get_category_attributes para descobrir os IDs corretos dos atributos.",
     input_schema: {
@@ -470,6 +475,42 @@ export async function chatWithGabi(
             );
             return `Métricas ${targetPlatform.toUpperCase()} — conta=${targetAccount} (coletadas em ${scrapedAt})\n\nTotal: ${latest.length} campanhas | Gasto total=R$${totalSpend.toFixed(2)} | Receita total=R$${totalRev.toFixed(2)}\n\n${lines.join("\n")}`;
           })();
+        } else if (toolUse.name === "execute_pending_actions") {
+          call = (async (): Promise<string> => {
+            const db = await getDb();
+            if (!db) return "Banco indisponível.";
+            const { eq, and } = await import("drizzle-orm");
+            const { pauseAdsCampaign, activateAdsCampaign, updateAdsBudget } = await import("./ml-ads-browser-agent");
+            const pending = await db.select().from(agentActionsTable)
+              .where(and(eq(agentActionsTable.agentName, "gabi"), eq(agentActionsTable.status, "pending")));
+            if (pending.length === 0) return "Nenhuma ação pendente encontrada. Use propose_ads_actions primeiro para criar ações, então peça para executar.";
+            const results: string[] = [];
+            for (const action of pending) {
+              try {
+                const payload = action.payload as any;
+                if (!payload) { results.push(`⚠️ ${action.title}: sem payload`); continue; }
+                const campaignId = String(payload.campaignId || "");
+                const acc = (payload.account || account) as "feminnita" | "fnt";
+                await db.update(agentActionsTable).set({ status: "executing" as const }).where(eq(agentActionsTable.id, action.id));
+                let res: string;
+                switch (payload.action) {
+                  case "pause_ads_campaign":    res = await pauseAdsCampaign(campaignId, acc); break;
+                  case "activate_ads_campaign": res = await activateAdsCampaign(campaignId, acc); break;
+                  case "update_ads_budget":     res = await updateAdsBudget(campaignId, Number(payload.budget || 0), acc); break;
+                  default:
+                    results.push(`⚠️ ${action.title}: tipo desconhecido (${payload.action})`);
+                    await db.update(agentActionsTable).set({ status: "pending" as const }).where(eq(agentActionsTable.id, action.id));
+                    continue;
+                }
+                await db.update(agentActionsTable).set({ status: "done" as const, executedAt: new Date() } as any).where(eq(agentActionsTable.id, action.id));
+                results.push(`✅ ${action.title}: ${res}`);
+              } catch (e: any) {
+                await db.update(agentActionsTable).set({ status: "pending" as const }).where(eq(agentActionsTable.id, action.id));
+                results.push(`❌ ${action.title}: ${e.message}`);
+              }
+            }
+            return `Execução concluída (${pending.length} ação(ões)):\n${results.join("\n")}`;
+          })();
         } else if (toolUse.name === "propose_ads_actions") {
           call = (async (): Promise<string> => {
             const db = await getDb();
@@ -506,7 +547,7 @@ export async function chatWithGabi(
               };
             });
             if (db && rows.length > 0) await db.insert(agentActionsTable).values(rows);
-            return `${rows.length} ação(ões) propostas salvas com payload. Acesse /acoes-agentes para revisar e aprovar — o agente Playwright executará automaticamente após aprovação.`;
+            return `${rows.length} ação(ões) propostas salvas. Para executar: diga "pode continuar" ou "autorizo" aqui mesmo, ou acesse /acoes-agentes para revisar primeiro.`;
           })();
         } else {
           call = Promise.resolve(`Ferramenta desconhecida: ${toolUse.name}`);
