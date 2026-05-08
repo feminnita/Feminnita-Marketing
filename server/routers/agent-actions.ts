@@ -11,14 +11,16 @@ import { getDb } from "../db";
 import { agentActions, AgentAction } from "../../drizzle/schema";
 import { eq, and, desc, inArray, gte } from "drizzle-orm";
 import {
-  pauseMLAdsCampaign,
-  activateMLAdsCampaign,
-  updateMLAdsBudget,
   pauseMLItem,
   activateMLItem,
   updateMLPrice,
   updateMLStock,
 } from "../agents/gabi-executor";
+import {
+  pauseAdsCampaign,
+  activateAdsCampaign,
+  updateAdsBudget,
+} from "../agents/ml-ads-browser-agent";
 
 // Payload JSON guardado em description para ações de marketplace
 interface MarketplacePayload {
@@ -36,9 +38,9 @@ async function executeMarketplaceAction(actionType: string, payload: Marketplace
 
   if (marketplace === "ml") {
     switch (actionType) {
-      case "ml_pause_campaign":    return pauseMLAdsCampaign(targetId, account);
-      case "ml_activate_campaign": return activateMLAdsCampaign(targetId, account);
-      case "ml_update_budget":     return updateMLAdsBudget(targetId, Number(proposed), account);
+      case "ml_pause_campaign":    return pauseAdsCampaign(targetId, account);
+      case "ml_activate_campaign": return activateAdsCampaign(targetId, account);
+      case "ml_update_budget":     return updateAdsBudget(targetId, Number(proposed), account);
       case "ml_pause_item":        return pauseMLItem(targetId, account);
       case "ml_activate_item":     return activateMLItem(targetId, account);
       case "ml_update_price":      return updateMLPrice(targetId, Number(proposed), account);
