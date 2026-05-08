@@ -30,7 +30,7 @@ export function registerDeployWebhook(app: any) {
     res.json({ ok: true, msg: "Deploy iniciado" });
 
     // Roda deploy em background
-    const cmd = "cd /opt/marketing && git pull && npm run build && pm2 restart feminnita";
+    const cmd = "cd /var/www/feminnita-marketing && git pull && npm run build && pm2 restart feminnita-marketing";
     exec(cmd, (err, stdout, stderr) => {
       if (err) {
         console.error("[Deploy] Erro:", err.message);

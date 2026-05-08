@@ -8,17 +8,13 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: 216.238.112.109
-          username: root
-          password: ${{ secrets.VPS_PASSWORD }}
-          port: 22
-          command_timeout: 10m
-          script: |
-            cd /var/www/feminnita-marketing
-            git pull origin main
-            npm run build
-            pm2 restart feminnita-marketing
-            echo "Deploy concluído"
+      - name: Trigger deploy webhook
+        run: |
+          BODY='{"ref":"refs/heads/main"}'
+          SIG=$(echo -n "$BODY" | openssl dgst -sha256 -hmac "${{ secrets.DEPLOY_SECRET }}" | awk '{print $2}')
+          curl -sf -X POST https://marketing.feminnita.com.br/api/deploy \
+            -H "Content-Type: application/json" \
+            -H "X-Hub-Signature-256: sha256=$SIG" \
+            -H "X-GitHub-Event: push" \
+            -d "$BODY"
+          echo "Deploy webhook disparado com sucesso"
