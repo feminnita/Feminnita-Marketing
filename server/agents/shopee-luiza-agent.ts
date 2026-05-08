@@ -30,8 +30,13 @@ const LUIZA_SHOPEE_TOOLS: Anthropic.Tool[] = [
     input_schema: { type: "object" as const, properties: {}, required: [] },
   },
   {
+    name: "execute_pending_actions",
+    description: "Executa imediatamente todas as ações pendentes que você propôs. Use quando o usuário disser 'pode executar', 'autorizo', 'pode continuar', 'confirmo', 'faz isso', 'vai lá' ou qualquer frase de aprovação. Não peça confirmação adicional — se o usuário autorizou, execute.",
+    input_schema: { type: "object" as const, properties: {}, required: [] },
+  },
+  {
     name: "propose_shopee_actions",
-    description: "Salva ações concretas de otimização no painel de aprovação (/acoes-agentes). Use somente quando tiver dados reais e recomendações específicas de campanhas para salvar — não use em respostas educativas ou conversacionais. O usuário revisa e aprova antes da execução.",
+    description: "Salva ações concretas de otimização aguardando aprovação do usuário. Use quando tiver dados reais e recomendações específicas. Após salvar, informe o usuário quais ações foram propostas e aguarde ele dizer 'autorizo' ou 'pode executar' para você chamar execute_pending_actions.",
     input_schema: {
       type: "object" as const,
       properties: {
@@ -301,7 +306,58 @@ export async function chatWithLuizaShopee(
         const inp = toolUse.input as Record<string, any>;
         let call: Promise<string>;
 
-        if (toolUse.name === "get_shopee_campaigns") {
+        if (toolUse.name === "execute_pending_actions") {
+          call = (async (): Promise<string> => {
+            const db = await getDb();
+            if (!db) return "Banco indisponível — não foi possível executar as ações.";
+            const { eq, and } = await import("drizzle-orm");
+            const { agentActions: agentActionsTable2 } = await import("../../drizzle/schema");
+            const { shopeeRequest } = await import("../services/shopeeApi");
+
+            const pending = await db.select().from(agentActionsTable2)
+              .where(and(eq(agentActionsTable2.agentName, "luiza"), eq(agentActionsTable2.status, "pending")));
+
+            if (pending.length === 0) return "Nenhuma ação pendente encontrada para executar.";
+
+            const results: string[] = [];
+            for (const action of pending) {
+              try {
+                let payload: any;
+                try { payload = JSON.parse(action.description); } catch {
+                  results.push(`❌ ${action.title}: payload inválido`);
+                  continue;
+                }
+                const targetId = Number(payload.targetId);
+                const proposed = payload.proposedValue ?? "";
+                await db.update(agentActionsTable2).set({ status: "executing" as const }).where(eq(agentActionsTable2.id, action.id));
+                switch (action.actionType) {
+                  case "shopee_pause_campaign":
+                    await shopeeRequest("POST", "/api/v2/ads/pause_campaign", { campaign_id_list: [targetId] }, account);
+                    break;
+                  case "shopee_activate_campaign":
+                    await shopeeRequest("POST", "/api/v2/ads/enable_campaign", { campaign_id_list: [targetId] }, account);
+                    break;
+                  case "shopee_update_budget":
+                    await shopeeRequest("POST", "/api/v2/ads/update_campaign_budget", { campaign_id: targetId, budget: Number(proposed) }, account);
+                    break;
+                  case "shopee_update_roas":
+                    await shopeeRequest("POST", "/api/v2/ads/update_campaign_roas", { campaign_id: targetId, target_roas: Number(proposed) }, account);
+                    break;
+                  default:
+                    results.push(`⚠️ ${action.title}: tipo de ação desconhecido (${action.actionType})`);
+                    await db.update(agentActionsTable2).set({ status: "pending" as const }).where(eq(agentActionsTable2.id, action.id));
+                    continue;
+                }
+                await db.update(agentActionsTable2).set({ status: "done" as const, executedAt: new Date() } as any).where(eq(agentActionsTable2.id, action.id));
+                results.push(`✅ ${action.title}`);
+              } catch (e: any) {
+                await db.update(agentActionsTable2).set({ status: "pending" as const }).where(eq(agentActionsTable2.id, action.id));
+                results.push(`❌ ${action.title}: ${e.message}`);
+              }
+            }
+            return `Execução concluída (${pending.length} ações):\n${results.join("\n")}`;
+          })();
+        } else if (toolUse.name === "get_shopee_campaigns") {
           call = withTimeout((async (): Promise<string> => {
             try {
               const data = await collectShopeeAdsData(account);
