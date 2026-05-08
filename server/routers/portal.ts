@@ -6,6 +6,22 @@ import { portalSdk, PORTAL_COOKIE_NAME } from "../_core/sdk";
 import { getSessionCookieOptions } from "../_core/cookies";
 import { ONE_YEAR_MS } from "@shared/const";
 import * as db from "../db";
+import { sendTextMessage, getActiveSessions } from "../_core/baileys-service";
+
+async function notifyAdminPortalRequest(name: string, email: string, profileType: string, instagram?: string) {
+  try {
+    const sessions = getActiveSessions();
+    if (sessions.length === 0) return;
+    const session = sessions[0];
+    if (!session.phoneNumber) return;
+    const perfil = profileType === "revendedora" ? "Revendedora" : "Influencer";
+    const ig = instagram ? `\nInstagram: ${instagram}` : "";
+    const msg = `🔔 *Nova solicitação na Sala de Arquivos*\n\n👤 ${name}\n📧 ${email}\n🏷️ ${perfil}${ig}\n\nAcesse /gestao-portal para aprovar ou recusar.`;
+    await sendTextMessage(session.userId, session.phoneNumber, msg);
+  } catch {
+    // notificação é best-effort, não bloqueia o cadastro
+  }
+}
 
 const scryptAsync = promisify(scrypt);
 
@@ -73,6 +89,7 @@ export const portalRouter = router({
         instagramHandle: input.instagramHandle,
         phone: input.phone,
       });
+      notifyAdminPortalRequest(input.name, input.email, input.profileType, input.instagramHandle);
       return { success: true as const };
     }),
 
