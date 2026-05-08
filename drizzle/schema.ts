@@ -1662,3 +1662,36 @@ export const directMessages = mysqlTable("direct_messages", {
 });
 
 export type DirectMessage = typeof directMessages.$inferSelect;
+
+// === MÓDULO PORTAL REVENDEDORAS/INFLUENCERS ===
+
+export const portalUsers = mysqlTable("portal_users", {
+  id:              int("id").autoincrement().primaryKey(),
+  email:           varchar("email", { length: 320 }).notNull().unique(),
+  passwordHash:    varchar("passwordHash", { length: 255 }).notNull(),
+  name:            varchar("name", { length: 255 }).notNull(),
+  profileType:     mysqlEnum("profileType", ["revendedora", "influencer"]).notNull(),
+  status:          mysqlEnum("status", ["pending", "approved", "blocked"]).default("pending").notNull(),
+  instagramHandle: varchar("instagramHandle", { length: 100 }),
+  phone:           varchar("phone", { length: 20 }),
+  notes:           text("notes"),
+  approvedBy:      int("approvedBy"),
+  approvedAt:      timestamp("approvedAt"),
+  createdAt:       timestamp("createdAt").defaultNow().notNull(),
+  updatedAt:       timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+export type PortalUser = typeof portalUsers.$inferSelect;
+
+export const portalMaterials = mysqlTable("portal_materials", {
+  id:          int("id").autoincrement().primaryKey(),
+  title:       varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  category:    mysqlEnum("category", ["fotos", "videos", "banners", "copy", "lookbook", "calculadora", "links"]).notNull(),
+  filename:    varchar("filename", { length: 500 }),
+  url:         varchar("url", { length: 1000 }).notNull(),
+  availableTo: mysqlEnum("availableTo", ["revendedora", "influencer", "ambos"]).default("ambos").notNull(),
+  isActive:    boolean("isActive").default(true).notNull(),
+  uploadedBy:  int("uploadedBy").notNull(),
+  createdAt:   timestamp("createdAt").defaultNow().notNull(),
+});
+export type PortalMaterial = typeof portalMaterials.$inferSelect;

@@ -106,6 +106,7 @@ import { agentTasksRouter } from "./routers/agent-tasks";
 import { chatUploadRouter } from "./routers/chat-upload";
 import { hailuoImageRouter } from "./routers/hailuo-image";
 import { ga4Router } from "./routers/ga4";
+import { portalRouter } from "./routers/portal";
 import { getDb } from "./db";
 import { influencers, influencerPosts } from "../drizzle/schema";
 
@@ -444,6 +445,7 @@ export const appRouter = router({
       }),
   }),
 
+  portal: portalRouter,
   agentTasks: agentTasksRouter,
   chatUpload: chatUploadRouter,
   hailuoImage: hailuoImageRouter,

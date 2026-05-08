@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2/promise";
-import { eq, and } from "drizzle-orm";
-import { users } from "../drizzle/schema";
+import { eq, and, or, desc } from "drizzle-orm";
+import { users, portalUsers, portalMaterials } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -87,6 +87,129 @@ export async function updateLastSignedIn(id: number) {
 }
 
 // TODO: add feature queries here as your schema grows.
+
+// ============ Portal Users ============
+
+export async function getPortalUserById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const [user] = await db.select().from(portalUsers).where(eq(portalUsers.id, id)).limit(1);
+  return user ?? undefined;
+}
+
+export async function getPortalUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const [user] = await db.select().from(portalUsers).where(eq(portalUsers.email, email)).limit(1);
+  return user ?? undefined;
+}
+
+export async function createPortalUser(data: {
+  email: string;
+  passwordHash: string;
+  name: string;
+  profileType: "revendedora" | "influencer";
+  instagramHandle?: string;
+  phone?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(portalUsers).values({
+    email: data.email,
+    passwordHash: data.passwordHash,
+    name: data.name,
+    profileType: data.profileType,
+    instagramHandle: data.instagramHandle ?? null,
+    phone: data.phone ?? null,
+    status: "pending",
+  });
+  const [user] = await db.select().from(portalUsers).where(eq(portalUsers.email, data.email)).limit(1);
+  return user;
+}
+
+export async function listPortalUsers() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(portalUsers).orderBy(desc(portalUsers.createdAt));
+}
+
+export async function updatePortalUserStatus(
+  id: number,
+  status: "pending" | "approved" | "blocked",
+  approvedById?: number
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const updates: Record<string, any> = { status };
+  if (status === "approved" && approvedById) {
+    updates.approvedBy = approvedById;
+    updates.approvedAt = new Date();
+  }
+  await db.update(portalUsers).set(updates).where(eq(portalUsers.id, id));
+}
+
+export async function listPortalMaterials(profileType?: "revendedora" | "influencer") {
+  const db = await getDb();
+  if (!db) return [];
+  if (profileType) {
+    return db.select().from(portalMaterials).where(
+      and(
+        eq(portalMaterials.isActive, true),
+        or(eq(portalMaterials.availableTo, profileType), eq(portalMaterials.availableTo, "ambos"))
+      )
+    );
+  }
+  return db.select().from(portalMaterials).where(eq(portalMaterials.isActive, true));
+}
+
+export async function listAllPortalMaterials() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(portalMaterials).orderBy(desc(portalMaterials.createdAt));
+}
+
+export async function createPortalMaterial(data: {
+  title: string;
+  description?: string;
+  category: "fotos" | "videos" | "banners" | "copy" | "lookbook" | "calculadora" | "links";
+  url: string;
+  filename?: string;
+  availableTo: "revendedora" | "influencer" | "ambos";
+  uploadedBy: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(portalMaterials).values({
+    title: data.title,
+    description: data.description ?? null,
+    category: data.category,
+    url: data.url,
+    filename: data.filename ?? null,
+    availableTo: data.availableTo,
+    uploadedBy: data.uploadedBy,
+    isActive: true,
+  });
+}
+
+export async function updatePortalMaterial(id: number, data: {
+  title?: string;
+  description?: string;
+  category?: "fotos" | "videos" | "banners" | "copy" | "lookbook" | "calculadora" | "links";
+  url?: string;
+  filename?: string;
+  availableTo?: "revendedora" | "influencer" | "ambos";
+  isActive?: boolean;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(portalMaterials).set(data).where(eq(portalMaterials.id, id));
+}
+
+export async function deactivatePortalMaterial(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(portalMaterials).set({ isActive: false }).where(eq(portalMaterials.id, id));
+}
 
 // ============ OAuth Tokens Management ============
 import { oauthTokens, InsertOAuthToken, OAuthToken } from "../drizzle/schema";

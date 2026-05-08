@@ -74,6 +74,10 @@ const PublicInfluencerBlog    = lazy(() => import("@/pages/PublicInfluencerBlog"
 const MorningBriefingPage     = lazy(() => import("@/pages/MorningBriefingPage"));
 const TiktokAgentPage         = lazy(() => import("@/pages/TiktokAgentPage"));
 const ChatPage                = lazy(() => import("@/pages/ChatPage"));
+const PortalLoginPage         = lazy(() => import("@/pages/PortalLoginPage"));
+const PortalSolicitarAcessoPage = lazy(() => import("@/pages/PortalSolicitarAcessoPage"));
+const PortalMateriaisPage     = lazy(() => import("@/pages/PortalMateriaisPage"));
+const GestaoPortalPage        = lazy(() => import("@/pages/GestaoPortalPage"));
 
 function PageLoader() {
   return (
@@ -105,6 +109,21 @@ export default function App() {
         <LoginSignup />
         <Toaster />
       </>
+    );
+  }
+
+  // Rotas do portal (sem layout do dashboard)
+  if (location === "/portal/login" || location === "/portal/solicitar-acesso" || location === "/portal/materiais") {
+    const portalPage = () => {
+      if (location === "/portal/login") return <PortalLoginPage />;
+      if (location === "/portal/solicitar-acesso") return <PortalSolicitarAcessoPage />;
+      return <PortalMateriaisPage />;
+    };
+    return (
+      <Suspense fallback={<div style={{ height: "100vh", background: "#fff5f5" }} />}>
+        {portalPage()}
+        <Toaster />
+      </Suspense>
     );
   }
 
@@ -249,6 +268,8 @@ export default function App() {
         return <ChatPage />;
       case "/asset-library":
         return <AssetLibraryPage />;
+      case "/gestao-portal":
+        return <GestaoPortalPage />;
       default: {
         if (/^\/influenciadora\/\d+$/.test(location)) {
           return <InfluencerProfilePage />;

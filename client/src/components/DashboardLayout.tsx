@@ -40,7 +40,7 @@ import {
   BookOpen, Newspaper, CheckCircle, Brain, MessageCircle,
   Bell, Image, Briefcase, TrendingUp, ChevronDown, ChevronRight,
   Settings, Megaphone, BarChart2, Bot, ShoppingBag, Music, Video, ClipboardCheck, Globe, Pencil, Zap,
-  AlertTriangle, X, ExternalLink, Sparkles,
+  AlertTriangle, X, ExternalLink, Sparkles, FolderOpen,
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -326,6 +326,11 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                 <SidebarMenuSubItem>
                   <SidebarMenuSubButton onClick={() => setLocation("/blog-feminnita")}>
                     <Newspaper className="h-3 w-3" /> Blog Feminnita
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/gestao-portal")}>
+                    <FolderOpen className="h-3 w-3" /> Sala de Arquivos
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
               </CollapsibleGroup>

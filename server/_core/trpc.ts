@@ -27,6 +27,16 @@ const requireUser = t.middleware(async opts => {
 
 export const protectedProcedure = t.procedure.use(requireUser);
 
+export const portalProtectedProcedure = t.procedure.use(
+  t.middleware(async opts => {
+    const { ctx, next } = opts;
+    if (!ctx.portalUser) {
+      throw new TRPCError({ code: "UNAUTHORIZED", message: "Acesso ao portal restrito" });
+    }
+    return next({ ctx: { ...ctx, portalUser: ctx.portalUser } });
+  }),
+);
+
 export const adminProcedure = t.procedure.use(
   t.middleware(async opts => {
     const { ctx, next } = opts;
