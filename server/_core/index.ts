@@ -128,7 +128,32 @@ async function startServer() {
 
   // Health check — confirma versão deployada
   app.get("/api/health", (_req, res) => {
-    res.json({ ok: true, version: "2026-05-09-v2", ts: new Date().toISOString() });
+    res.json({ ok: true, version: "2026-05-09-v3", ts: new Date().toISOString() });
+  });
+
+  // ML Session bootstrap — Chris faz login manual no browser e faz upload dos cookies
+  // curl -X POST http://localhost:3001/api/ml-session/feminnita \
+  //   -H "x-session-secret: SEU_SECRET" -H "Content-Type: application/json" -d @cookies.json
+  app.post("/api/ml-session/:account", async (req, res) => {
+    const secret = req.headers["x-session-secret"];
+    if (!process.env.ML_SESSION_SECRET || secret !== process.env.ML_SESSION_SECRET) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    const account = req.params.account;
+    if (!["feminnita", "fnt"].includes(account)) {
+      return res.status(400).json({ error: "Conta inválida. Use feminnita ou fnt." });
+    }
+    const cookies = req.body;
+    if (!Array.isArray(cookies) || cookies.length === 0) {
+      return res.status(400).json({ error: "Body deve ser array de cookies" });
+    }
+    try {
+      const { importMLSession } = await import("../agents/ml-ads-browser-agent");
+      await importMLSession(cookies, account as "feminnita" | "fnt");
+      return res.json({ ok: true, account, cookies: cookies.length });
+    } catch (e: any) {
+      return res.status(500).json({ error: e.message });
+    }
   });
 
   // Debug endpoint — últimas ações da Gabi (sem auth, VPS interno)

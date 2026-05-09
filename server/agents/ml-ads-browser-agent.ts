@@ -8,7 +8,8 @@ import fs from "fs";
 import path from "path";
 
 const SESSIONS_DIR = path.join(process.cwd(), ".ml-sessions");
-const SELLER_CENTER_URL = "https://ads.mercadolivre.com.br/";
+// Painel de Product Ads do Seller Center — redireciona para login se não autenticado
+const SELLER_CENTER_URL = "https://www.mercadolivre.com.br/publicidade/product-ads";
 const LOGIN_URL = "https://www.mercadolivre.com/jms/mlb/lgz/login";
 const TWOCAPTCHA_KEY = process.env.TWOCAPTCHA_API_KEY || "";
 
@@ -162,34 +163,32 @@ async function loginML(page: Page, account: "feminnita" | "fnt"): Promise<boolea
 }
 
 async function ensureLoggedIn(page: Page, context: BrowserContext, account: "feminnita" | "fnt"): Promise<boolean> {
-  // Verifica sessão indo direto para a página de ads (não home) para detectar redirect para login
-  console.log(`[MLBrowser] Verificando sessão de ${account} na página de ads...`);
+  // Carrega cookies salvos ANTES de navegar — evita reCAPTCHA no login
+  const hasSavedSession = await loadSession(context, account);
+  if (hasSavedSession) {
+    console.log(`[MLBrowser] Cookies carregados para ${account}, verificando validade...`);
+  }
+
   try {
     await page.goto(SELLER_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 25000 });
   } catch (e: any) {
-    console.warn(`[MLBrowser] Timeout ao carregar ads page: ${e.message}`);
+    console.warn(`[MLBrowser] Timeout ao carregar seller center: ${e.message}`);
   }
+
   const currentUrl = page.url();
-  const isOnLogin = currentUrl.includes("/login") || currentUrl.includes("/jms/");
-  if (!isOnLogin) {
+  const onLoginPage = currentUrl.includes("/login") || currentUrl.includes("/jms/");
+
+  if (!onLoginPage) {
     console.log(`[MLBrowser] Sessão válida para ${account} — URL: ${currentUrl}`);
     return true;
   }
 
-  console.log(`[MLBrowser] Sessão expirada para ${account}, tentando restaurar cookie...`);
-  // Tenta restaurar sessão salva
-  const loaded = await loadSession(context, account);
-  if (loaded) {
-    await page.goto(SELLER_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 25000 });
-    const urlAfterRestore = page.url();
-    if (!urlAfterRestore.includes("/login") && !urlAfterRestore.includes("/jms/")) {
-      console.log(`[MLBrowser] Sessão restaurada via cookie para ${account}`);
-      return true;
-    }
+  if (hasSavedSession) {
+    console.warn(`[MLBrowser] Cookies salvos expiraram para ${account} — fazendo login completo...`);
+  } else {
+    console.log(`[MLBrowser] Sem sessão salva para ${account} — fazendo login completo...`);
   }
 
-  // Login completo
-  console.log(`[MLBrowser] Executando login completo para ${account}...`);
   const ok = await loginML(page, account);
   if (ok) await saveSession(context, account);
   return ok;
@@ -413,6 +412,13 @@ export async function activateAdsCampaign(campaignId: string, account: "feminnit
     await page.waitForTimeout(2000);
     return `Campanha "${campaignName || campaignId}" reativada com sucesso.`;
   }));
+}
+
+/** Importa cookies de uma sessão existente (bootstrap manual). */
+export async function importMLSession(cookies: any[], account: "feminnita" | "fnt" = "feminnita"): Promise<void> {
+  const file = sessionFile(account);
+  fs.writeFileSync(file, JSON.stringify(cookies, null, 2));
+  console.log(`[MLBrowser] Sessão importada para ${account}: ${cookies.length} cookies → ${file}`);
 }
 
 export async function updateAdsBudget(campaignId: string, dailyBudget: number, account: "feminnita" | "fnt" = "feminnita", campaignName = ""): Promise<string> {
