@@ -54,15 +54,18 @@ export function registerDeployWebhook(app: any) {
 
     res.json({ ok: true, msg: "Deploy iniciado" });
 
-    // Roda deploy em background
-    // Playwright install é não-crítico: se falhar (disco, memória, rede), deploy continua
-    const cmd = "cd /var/www/feminnita-marketing && git pull && npm install --legacy-peer-deps && (npx playwright install chromium --with-deps || echo '[Deploy] Playwright install falhou — continuando') && npm run build && pm2 restart feminnita-marketing";
-    exec(cmd, (err, stdout, stderr) => {
+    // Fase 1: git pull + npm install + build + restart (crítico — deve sempre rodar)
+    const deployCmd = "cd /var/www/feminnita-marketing && git pull && npm install --legacy-peer-deps && npm run build && pm2 restart feminnita-marketing";
+    exec(deployCmd, (err, stdout, stderr) => {
       if (err) {
-        console.error("[Deploy] Erro:", err.message);
-        console.error("[Deploy] stderr:", stderr);
+        console.error("[Deploy] Erro na fase 1:", err.message);
+        console.error("[Deploy] stderr:", stderr.slice(-500));
       } else {
-        console.log("[Deploy] Concluído:", stdout.slice(-200));
+        console.log("[Deploy] Fase 1 concluída:", stdout.slice(-300));
+        // Fase 2: Playwright install em background, desacoplado do restart
+        exec("nohup npx playwright install chromium --with-deps > /tmp/playwright-install.log 2>&1 &", () => {
+          console.log("[Deploy] Playwright install rodando em background (/tmp/playwright-install.log)");
+        });
       }
     });
   });

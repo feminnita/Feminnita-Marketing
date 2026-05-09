@@ -126,6 +126,11 @@ async function startServer() {
   // Baileys debug routes
   setupBaileysDebugRoutes(app);
 
+  // Health check — confirma versão deployada
+  app.get("/api/health", (_req, res) => {
+    res.json({ ok: true, version: "2026-05-09-v2", ts: new Date().toISOString() });
+  });
+
   // Debug endpoint — últimas ações da Gabi (sem auth, VPS interno)
   app.get("/api/debug/agent-actions", async (_req, res) => {
     try {
