@@ -513,7 +513,9 @@ export async function pauseAdsCampaign(campaignId: string, account: "feminnita" 
     const row = await findCampaignRow(page, campaignId, campaignName);
     if (!row) {
       await debugScreenshot(page, `pause-${account}-notfound`);
-      return `Campanha "${campaignName || campaignId}" não encontrada. [URL: ${pauseUrl}] [Title: ${pauseTitle}]`;
+      const bodyText = await page.evaluate(() => document.body?.innerText?.slice(0, 400) ?? "").catch(() => "");
+      const rowCount = await page.evaluate(() => document.querySelectorAll("tr").length).catch(() => 0);
+      return `Campanha "${campaignName || campaignId}" não encontrada. [URL: ${pauseUrl}] [Title: ${pauseTitle}] [Rows: ${rowCount}] [Body: ${bodyText.replace(/\n/g, " ").slice(0, 300)}]`;
     }
 
     // Tenta toggle/switch de status ou botão de pausa
@@ -537,7 +539,11 @@ export async function activateAdsCampaign(campaignId: string, account: "feminnit
     const activateUrl = page.url();
     const activateTitle = await page.title().catch(() => "");
     const row = await findCampaignRow(page, campaignId, campaignName);
-    if (!row) return `Campanha "${campaignName || campaignId}" não encontrada. [URL: ${activateUrl}] [Title: ${activateTitle}]`;
+    if (!row) {
+      const bodyText = await page.evaluate(() => document.body?.innerText?.slice(0, 400) ?? "").catch(() => "");
+      const rowCount = await page.evaluate(() => document.querySelectorAll("tr").length).catch(() => 0);
+      return `Campanha "${campaignName || campaignId}" não encontrada. [URL: ${activateUrl}] [Title: ${activateTitle}] [Rows: ${rowCount}] [Body: ${bodyText.replace(/\n/g, " ").slice(0, 300)}]`;
+    }
 
     const activateBtn = row.locator('[role="switch"], button[aria-label*="tivar"], button[title*="tivar"]').first();
     if (!await activateBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
@@ -565,7 +571,11 @@ export async function updateAdsBudget(campaignId: string, dailyBudget: number, a
     const finalUrl = page.url();
     const pageTitle = await page.title().catch(() => "");
     const row = await findCampaignRow(page, campaignId, campaignName);
-    if (!row) return `Campanha "${campaignName || campaignId}" não encontrada. [URL: ${finalUrl}] [Title: ${pageTitle}]`;
+    if (!row) {
+      const bodyText = await page.evaluate(() => document.body?.innerText?.slice(0, 400) ?? "").catch(() => "");
+      const rowCount = await page.evaluate(() => document.querySelectorAll("tr").length).catch(() => 0);
+      return `Campanha "${campaignName || campaignId}" não encontrada. [URL: ${finalUrl}] [Title: ${pageTitle}] [Rows: ${rowCount}] [Body: ${bodyText.replace(/\n/g, " ").slice(0, 300)}]`;
+    }
 
     const editBtn = row.locator('button[aria-label*="ditar"], a[href*="edit"], button[title*="ditar"]').first();
     if (!await editBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
