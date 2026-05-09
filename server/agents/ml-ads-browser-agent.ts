@@ -120,8 +120,12 @@ async function loginML(page: Page, account: "feminnita" | "fnt"): Promise<boolea
     }
 
     await page.click('button[type="submit"]');
-    await page.waitForURL(/mercadolivre\.com\.br\/(home|myml|_)/, { timeout: 20000 });
-    console.log(`[MLBrowser] Login OK — ${account}`);
+    // Aceita qualquer URL que não seja a página de login (ML pode redirecionar para várias URLs)
+    await page.waitForFunction(
+      () => !window.location.href.includes('/login') && !window.location.href.includes('/jms/'),
+      { timeout: 25000 }
+    );
+    console.log(`[MLBrowser] Login OK — ${account} — URL: ${page.url()}`);
     return true;
   } catch (e: any) {
     console.error(`[MLBrowser] Falha no login (${account}):`, e.message);
@@ -130,20 +134,34 @@ async function loginML(page: Page, account: "feminnita" | "fnt"): Promise<boolea
 }
 
 async function ensureLoggedIn(page: Page, context: BrowserContext, account: "feminnita" | "fnt"): Promise<boolean> {
-  // Testa se a sessão ainda está válida
-  await page.goto("https://www.mercadolivre.com.br/home", { waitUntil: "domcontentloaded", timeout: 20000 });
-  const isLogged = await page.$('a[href*="logout"], [data-testid="header-user"]').then(Boolean).catch(() => false);
-  if (isLogged) return true;
+  // Verifica sessão indo direto para a página de ads (não home) para detectar redirect para login
+  console.log(`[MLBrowser] Verificando sessão de ${account} na página de ads...`);
+  try {
+    await page.goto(SELLER_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 25000 });
+  } catch (e: any) {
+    console.warn(`[MLBrowser] Timeout ao carregar ads page: ${e.message}`);
+  }
+  const currentUrl = page.url();
+  const isOnLogin = currentUrl.includes("/login") || currentUrl.includes("/jms/");
+  if (!isOnLogin) {
+    console.log(`[MLBrowser] Sessão válida para ${account} — URL: ${currentUrl}`);
+    return true;
+  }
 
+  console.log(`[MLBrowser] Sessão expirada para ${account}, tentando restaurar cookie...`);
   // Tenta restaurar sessão salva
   const loaded = await loadSession(context, account);
   if (loaded) {
-    await page.reload({ waitUntil: "domcontentloaded" });
-    const stillLogged = await page.$('a[href*="logout"], [data-testid="header-user"]').then(Boolean).catch(() => false);
-    if (stillLogged) return true;
+    await page.goto(SELLER_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 25000 });
+    const urlAfterRestore = page.url();
+    if (!urlAfterRestore.includes("/login") && !urlAfterRestore.includes("/jms/")) {
+      console.log(`[MLBrowser] Sessão restaurada via cookie para ${account}`);
+      return true;
+    }
   }
 
   // Login completo
+  console.log(`[MLBrowser] Executando login completo para ${account}...`);
   const ok = await loginML(page, account);
   if (ok) await saveSession(context, account);
   return ok;

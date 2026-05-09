@@ -126,6 +126,38 @@ async function startServer() {
   // Baileys debug routes
   setupBaileysDebugRoutes(app);
 
+  // Debug endpoint — últimas ações da Gabi (sem auth, VPS interno)
+  app.get("/api/debug/agent-actions", async (_req, res) => {
+    try {
+      const { getDb } = await import("../db");
+      const { desc, eq } = await import("drizzle-orm");
+      const { agentActions } = await import("../../drizzle/schema");
+      const db = await getDb();
+      if (!db) return res.status(503).json({ error: "Banco indisponível" });
+      const rows = await db
+        .select()
+        .from(agentActions)
+        .where(eq(agentActions.agentName, "gabi"))
+        .orderBy(desc(agentActions.createdAt))
+        .limit(20);
+      return res.json({
+        count: rows.length,
+        actions: rows.map(r => ({
+          id: r.id,
+          status: r.status,
+          actionType: r.actionType,
+          title: r.title,
+          createdAt: r.createdAt,
+          executedAt: r.executedAt,
+          executionLog: r.executionLog,
+          payload: r.payload,
+        })),
+      });
+    } catch (e: any) {
+      return res.status(500).json({ error: e.message });
+    }
+  });
+
   // Upload de mídias (imagens/vídeos) para o Studio
   {
     const multer = (await import("multer")).default;
