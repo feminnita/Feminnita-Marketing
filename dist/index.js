@@ -39001,6 +39001,38 @@ async function startServer() {
       return res.status(500).json({ error: e.message });
     }
   });
+  app.post("/api/debug/test-action", async (_req, res) => {
+    try {
+      const { getDb: getDb2 } = await Promise.resolve().then(() => (init_db(), db_exports));
+      const { agentActions: agentActions2 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
+      const db = await getDb2();
+      if (!db) return res.status(503).json({ error: "Banco indispon\xEDvel" });
+      const today = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+      await db.insert(agentActions2).values({
+        agentName: "gabi",
+        date: today,
+        title: "TESTE \u2014 Verificar autentica\xE7\xE3o Playwright",
+        description: "A\xE7\xE3o de teste para validar login do agente via token OAuth",
+        actionType: "update_ads_budget",
+        priority: "alta",
+        estimatedImpact: "Teste de integra\xE7\xE3o",
+        status: "pending",
+        payload: {
+          account: "feminnita",
+          action: "update_ads_budget",
+          budget: 50,
+          campaignId: "MLB6654249798",
+          campaignName: "Pijama Longo Thais Suede",
+          platform: "ml"
+        },
+        createdAt: /* @__PURE__ */ new Date(),
+        updatedAt: /* @__PURE__ */ new Date()
+      });
+      return res.json({ ok: true, message: "A\xE7\xE3o de teste criada \u2014 aguarde at\xE9 5min para execu\xE7\xE3o" });
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  });
   app.get("/api/debug/agent-actions", async (_req, res) => {
     try {
       const { getDb: getDb2 } = await Promise.resolve().then(() => (init_db(), db_exports));
