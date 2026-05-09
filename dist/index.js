@@ -4216,10 +4216,12 @@ async function pauseAdsCampaign(campaignId, account = "feminnita", campaignName 
     await page.goto(SELLER_CENTER_URL, { waitUntil: "networkidle", timeout: 3e4 });
     await page.waitForTimeout(2e3);
     await debugScreenshot(page, `pause-${account}-loaded`);
+    const pauseUrl = page.url();
+    const pauseTitle = await page.title().catch(() => "");
     const row = await findCampaignRow(page, campaignId, campaignName);
     if (!row) {
       await debugScreenshot(page, `pause-${account}-notfound`);
-      return `Campanha "${campaignName || campaignId}" n\xE3o encontrada na p\xE1gina de an\xFAncios. Verifique se est\xE1 ativa no Seller Center.`;
+      return `Campanha "${campaignName || campaignId}" n\xE3o encontrada. [URL: ${pauseUrl}] [Title: ${pauseTitle}]`;
     }
     const pauseBtn = row.locator('[role="switch"], button[aria-label*="ause"], button[aria-label*="ausar"], button[title*="ause"]').first();
     if (!await pauseBtn.isVisible({ timeout: 3e3 }).catch(() => false)) {
@@ -4236,8 +4238,10 @@ async function activateAdsCampaign(campaignId, account = "feminnita", campaignNa
   return withMutex(`${account}-activate`, () => withBrowser(account, async (page) => {
     await page.goto(SELLER_CENTER_URL, { waitUntil: "networkidle", timeout: 3e4 });
     await page.waitForTimeout(2e3);
+    const activateUrl = page.url();
+    const activateTitle = await page.title().catch(() => "");
     const row = await findCampaignRow(page, campaignId, campaignName);
-    if (!row) return `Campanha "${campaignName || campaignId}" n\xE3o encontrada.`;
+    if (!row) return `Campanha "${campaignName || campaignId}" n\xE3o encontrada. [URL: ${activateUrl}] [Title: ${activateTitle}]`;
     const activateBtn = row.locator('[role="switch"], button[aria-label*="tivar"], button[title*="tivar"]').first();
     if (!await activateBtn.isVisible({ timeout: 3e3 }).catch(() => false)) {
       return `Bot\xE3o de ativar n\xE3o encontrado para "${campaignName || campaignId}".`;
@@ -4256,8 +4260,11 @@ async function updateAdsBudget(campaignId, dailyBudget, account = "feminnita", c
   return withMutex(`${account}-budget`, () => withBrowser(account, async (page) => {
     await page.goto(SELLER_CENTER_URL, { waitUntil: "networkidle", timeout: 3e4 });
     await page.waitForTimeout(2e3);
+    await debugScreenshot(page, `budget-${account}-loaded`);
+    const finalUrl = page.url();
+    const pageTitle = await page.title().catch(() => "");
     const row = await findCampaignRow(page, campaignId, campaignName);
-    if (!row) return `Campanha "${campaignName || campaignId}" n\xE3o encontrada para edi\xE7\xE3o.`;
+    if (!row) return `Campanha "${campaignName || campaignId}" n\xE3o encontrada. [URL: ${finalUrl}] [Title: ${pageTitle}]`;
     const editBtn = row.locator('button[aria-label*="ditar"], a[href*="edit"], button[title*="ditar"]').first();
     if (!await editBtn.isVisible({ timeout: 3e3 }).catch(() => false)) {
       return `Bot\xE3o de editar n\xE3o encontrado para "${campaignName || campaignId}".`;
