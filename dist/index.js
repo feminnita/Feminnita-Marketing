@@ -4263,22 +4263,39 @@ async function updateAdsBudget(campaignId, dailyBudget, account = "feminnita", c
       const visible = await logVisibleCampaigns(page);
       return `Campanha "${campaignName || campaignId}" n\xE3o encontrada. [URL: ${page.url()}] [Rows: ${rowCount}] [Vis\xEDveis: ${visible}]`;
     }
-    const editBtn = row.locator('button[aria-label*="ditar"], a[href*="edit"], button[title*="ditar"]').first();
-    if (!await editBtn.isVisible({ timeout: 3e3 }).catch(() => false)) {
-      return `Bot\xE3o de editar n\xE3o encontrado para "${campaignName || campaignId}".`;
+    const budgetCell = row.locator('td, [class*="budget"], [class*="orcamento"], [class*="daily"]').filter({ hasText: /R\$|\d+,\d+/ }).first();
+    const hasBudgetCell = await budgetCell.isVisible({ timeout: 2e3 }).catch(() => false);
+    if (hasBudgetCell) {
+      await budgetCell.click();
+      await page.waitForTimeout(1e3);
+    } else {
+      await row.hover().catch(() => {
+      });
+      await page.waitForTimeout(500);
+      const pencil = row.locator('button[aria-label*="ditar"], button[aria-label*="dit"], svg[class*="edit"], [class*="pencil"]').first();
+      if (await pencil.isVisible({ timeout: 2e3 }).catch(() => false)) {
+        await pencil.click();
+        await page.waitForTimeout(1e3);
+      }
     }
-    await editBtn.click();
-    await page.waitForTimeout(2e3);
-    const budgetInput = await page.locator('input[name*="budget"], input[placeholder*="budget"], input[aria-label*="udget"]').first();
-    if (!await budgetInput.isVisible().catch(() => false)) {
-      return "Campo de budget n\xE3o encontrado. O layout do Seller Center pode ter mudado.";
+    const budgetInput = page.locator('input[name*="budget"], input[name*="Budget"], input[placeholder*="udget"], input[aria-label*="udget"], input[type="number"]').first();
+    if (!await budgetInput.isVisible({ timeout: 5e3 }).catch(() => false)) {
+      const rowText = await row.innerText().catch(() => "");
+      return `Campo de budget n\xE3o encontrado para "${campaignName || campaignId}". Conte\xFAdo da linha: ${rowText.slice(0, 200)}`;
     }
     await budgetInput.click({ clickCount: 3 });
     await budgetInput.fill(String(dailyBudget));
-    const saveBtn = await page.locator('button[type="submit"], button:has-text("Salvar"), button:has-text("Confirmar")').first();
-    await saveBtn.click();
-    await page.waitForTimeout(1500);
-    return `Budget di\xE1rio da campanha "${campaignId}" atualizado para R$${dailyBudget} via Seller Center.`;
+    await page.waitForTimeout(500);
+    const saveBtn = page.locator('button[type="submit"], button:has-text("Salvar"), button:has-text("Confirmar"), button:has-text("OK"), button[aria-label*="alvar"]').first();
+    if (await saveBtn.isVisible({ timeout: 3e3 }).catch(() => false)) {
+      await saveBtn.click();
+      await page.waitForTimeout(1500);
+    } else {
+      await budgetInput.press("Enter");
+      await page.waitForTimeout(1500);
+    }
+    await debugScreenshot(page, `budget-${account}-saved`);
+    return `Budget di\xE1rio da campanha "${campaignName || campaignId}" atualizado para R$${dailyBudget}.`;
   }));
 }
 var SESSIONS_DIR, SELLER_CENTER_URL, CAMPAIGNS_URL, LOGIN_URL, TWOCAPTCHA_KEY, runningInstances;
