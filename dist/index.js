@@ -3966,10 +3966,16 @@ async function waitForAuthCheck(page) {
   await page.waitForTimeout(1e3);
   return page.url();
 }
-async function isOnSellerDashboard(url) {
+async function isOnSellerDashboard(page) {
+  const url = page.url();
   const onLogin = url.includes("/login") || url.includes("/jms/lgz/") || url.includes("lgz/login");
+  if (onLogin) return false;
   const onAds = url.includes("productAds") || url.includes("ads.mercadolivre") || url.includes("publicidade");
-  return !onLogin && onAds;
+  if (!onAds) return false;
+  const bodyText = await page.evaluate(() => document.body?.innerText?.slice(0, 600) ?? "");
+  const isPublicLanding = bodyText.includes("Crie a sua conta") || bodyText.includes("Outros vendedores est\xE3o");
+  console.log(`[MLBrowser] isOnSellerDashboard \u2014 URL: ${url} \u2014 publicLanding: ${isPublicLanding}`);
+  return !isPublicLanding;
 }
 async function ensureLoggedIn(page, context, account) {
   const hasSaved = await loadSession(context, account);
@@ -3978,12 +3984,12 @@ async function ensureLoggedIn(page, context, account) {
       await page.goto(SELLER_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 25e3 });
     } catch {
     }
-    const url = await waitForAuthCheck(page);
-    if (await isOnSellerDashboard(url)) {
-      console.log(`[MLBrowser] Sess\xE3o v\xE1lida via cookies salvos \u2014 ${account} \u2014 URL: ${url}`);
+    await waitForAuthCheck(page);
+    if (await isOnSellerDashboard(page)) {
+      console.log(`[MLBrowser] Sess\xE3o v\xE1lida via cookies salvos \u2014 ${account}`);
       return true;
     }
-    console.warn(`[MLBrowser] Cookies salvos inv\xE1lidos para ${account} \u2014 URL: ${url}`);
+    console.warn(`[MLBrowser] Cookies salvos inv\xE1lidos/expirados para ${account}`);
   }
   const tokenOk = await tryTokenToBrowserSession(page, context, account);
   if (tokenOk) {
@@ -3991,26 +3997,14 @@ async function ensureLoggedIn(page, context, account) {
       await page.goto(SELLER_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 25e3 });
     } catch {
     }
-    const url = await waitForAuthCheck(page);
-    if (await isOnSellerDashboard(url)) {
+    await waitForAuthCheck(page);
+    if (await isOnSellerDashboard(page)) {
       console.log(`[MLBrowser] Sess\xE3o via token OK para ${account} \u2014 salvando...`);
       await saveSession(context, account);
       return true;
     }
-    console.warn(`[MLBrowser] auth-from-token n\xE3o funcionou para ${account} \u2014 URL: ${url}`);
+    console.warn(`[MLBrowser] auth-from-token n\xE3o funcionou para ${account}`);
   }
-  console.log(`[MLBrowser] Tentando acesso via localStorage token para ${account}...`);
-  try {
-    await page.goto(SELLER_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 25e3 });
-  } catch {
-  }
-  const urlAfterLs = await waitForAuthCheck(page);
-  if (await isOnSellerDashboard(urlAfterLs)) {
-    console.log(`[MLBrowser] Sess\xE3o via localStorage OK para ${account} \u2014 URL: ${urlAfterLs}`);
-    await saveSession(context, account);
-    return true;
-  }
-  console.warn(`[MLBrowser] localStorage n\xE3o autenticou para ${account} \u2014 URL: ${urlAfterLs}`);
   console.log(`[MLBrowser] Tentando login via formul\xE1rio para ${account}...`);
   const ok = await loginML(page, account);
   if (ok) await saveSession(context, account);
