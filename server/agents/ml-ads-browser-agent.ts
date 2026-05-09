@@ -628,44 +628,41 @@ export async function updateAdsBudget(campaignId: string, dailyBudget: number, a
       return `Campanha "${campaignName || campaignId}" não encontrada. [URL: ${page.url()}] [Rows: ${rowCount}] [Visíveis: ${visible}]`;
     }
 
-    // ML usa edição inline — clica diretamente na célula de orçamento do row
-    // Tenta 1: célula com valor R$ (edição inline)
-    const budgetCell = row.locator('td, [class*="budget"], [class*="orcamento"], [class*="daily"]').filter({ hasText: /R\$|\d+,\d+/ }).first();
-    const hasBudgetCell = await budgetCell.isVisible({ timeout: 2000 }).catch(() => false);
+    // Clica no nome da campanha para abrir a página de detalhes/edição
+    const campaignLink = row.locator('a, [role="link"], td:nth-child(3), td:nth-child(2)').first();
+    await campaignLink.click().catch(() => row.click());
+    await page.waitForTimeout(3000);
+    await debugScreenshot(page, `budget-${account}-detail`);
 
-    if (hasBudgetCell) {
-      await budgetCell.click();
-      await page.waitForTimeout(1000);
-    } else {
-      // Tenta 2: ícone de editar (lápis) que aparece ao hover
-      await row.hover().catch(() => {});
-      await page.waitForTimeout(500);
-      const pencil = row.locator('button[aria-label*="ditar"], button[aria-label*="dit"], svg[class*="edit"], [class*="pencil"]').first();
-      if (await pencil.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await pencil.click();
+    // Tenta encontrar input de budget na página de detalhe ou inline
+    let budgetInput = page.locator('input[name*="budget" i], input[name*="Budget"], input[placeholder*="udget" i], input[aria-label*="udget" i], input[type="number"]').first();
+
+    if (!await budgetInput.isVisible({ timeout: 4000 }).catch(() => false)) {
+      // Inline edit: procura célula com R$ e clica nela
+      const budgetCell = page.locator('td, span, div').filter({ hasText: /^R\$\s*[\d,.]+$/ }).first();
+      if (await budgetCell.isVisible({ timeout: 2000 }).catch(() => false)) {
+        await budgetCell.click();
         await page.waitForTimeout(1000);
       }
+      budgetInput = page.locator('input[type="number"], input[inputmode="numeric"], input[inputmode="decimal"]').first();
     }
 
-    // Aguarda input de budget aparecer (inline ou modal)
-    const budgetInput = page.locator('input[name*="budget"], input[name*="Budget"], input[placeholder*="udget"], input[aria-label*="udget"], input[type="number"]').first();
     if (!await budgetInput.isVisible({ timeout: 5000 }).catch(() => false)) {
-      const rowText = await row.innerText().catch(() => "");
-      return `Campo de budget não encontrado para "${campaignName || campaignId}". Conteúdo da linha: ${rowText.slice(0, 200)}`;
+      const pageText = await page.evaluate(() => document.body?.innerText?.slice(0, 600) ?? "").catch(() => "");
+      return `Campo de budget não encontrado para "${campaignName || campaignId}". [URL: ${page.url()}] [Página: ${pageText.replace(/\n/g, " ").slice(0, 400)}]`;
     }
+
     await budgetInput.click({ clickCount: 3 });
     await budgetInput.fill(String(dailyBudget));
     await page.waitForTimeout(500);
 
-    // Salva — tenta botão de confirmar inline ou submit
     const saveBtn = page.locator('button[type="submit"], button:has-text("Salvar"), button:has-text("Confirmar"), button:has-text("OK"), button[aria-label*="alvar"]').first();
     if (await saveBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
       await saveBtn.click();
-      await page.waitForTimeout(1500);
     } else {
       await budgetInput.press("Enter");
-      await page.waitForTimeout(1500);
     }
+    await page.waitForTimeout(2000);
     await debugScreenshot(page, `budget-${account}-saved`);
     return `Budget diário da campanha "${campaignName || campaignId}" atualizado para R$${dailyBudget}.`;
   }));
