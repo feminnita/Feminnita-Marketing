@@ -41,14 +41,39 @@ async function saveSession(context: BrowserContext, account: string) {
   fs.writeFileSync(sessionFile(account), JSON.stringify(cookies, null, 2));
 }
 
+function normalizeCookie(c: any): object {
+  // Cookie Editor exporta em formato diferente do Playwright — normaliza aqui
+  const sameSiteMap: Record<string, "Strict" | "Lax" | "None"> = {
+    no_restriction: "None",
+    unspecified: "None",
+    none: "None",
+    lax: "Lax",
+    strict: "Strict",
+  };
+  return {
+    name: c.name,
+    value: c.value,
+    domain: c.domain,
+    path: c.path || "/",
+    expires: c.expirationDate ? Math.floor(c.expirationDate) : (c.expires ?? -1),
+    httpOnly: c.httpOnly ?? false,
+    secure: c.secure ?? false,
+    sameSite: sameSiteMap[(c.sameSite ?? "").toLowerCase()] ?? "None",
+  };
+}
+
 async function loadSession(context: BrowserContext, account: string): Promise<boolean> {
   const file = sessionFile(account);
   if (!fs.existsSync(file)) return false;
   try {
-    const cookies = JSON.parse(fs.readFileSync(file, "utf8"));
+    const raw = JSON.parse(fs.readFileSync(file, "utf8"));
+    const cookies = Array.isArray(raw) ? raw.map(normalizeCookie) : [];
+    if (cookies.length === 0) return false;
     await context.addCookies(cookies);
+    console.log(`[MLBrowser] ${cookies.length} cookies carregados para ${account}`);
     return true;
-  } catch {
+  } catch (e: any) {
+    console.warn(`[MLBrowser] Erro ao carregar cookies para ${account}:`, e.message);
     return false;
   }
 }
