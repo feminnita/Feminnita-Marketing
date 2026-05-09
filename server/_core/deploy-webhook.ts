@@ -1,4 +1,6 @@
 import { exec } from "child_process";
+import * as fs from "fs";
+import * as path from "path";
 import { Request, Response } from "express";
 import * as crypto from "crypto";
 
@@ -25,6 +27,29 @@ export function registerDeployWebhook(app: any) {
     const branch = req.body?.ref;
     if (event === "push" && branch && !branch.endsWith("/main")) {
       return res.json({ ok: true, msg: "Branch ignorada" });
+    }
+
+    // Grava env vars no .env do servidor (se enviadas no payload)
+    const envVars = req.body?.envVars as Record<string, string> | undefined;
+    if (envVars && typeof envVars === "object") {
+      const envPath = path.join("/var/www/feminnita-marketing", ".env");
+      try {
+        let content = fs.existsSync(envPath) ? fs.readFileSync(envPath, "utf8") : "";
+        for (const [key, value] of Object.entries(envVars)) {
+          if (!/^[A-Z_][A-Z0-9_]*$/.test(key)) continue;
+          const line = `${key}=${value}`;
+          const regex = new RegExp(`^${key}=.*$`, "m");
+          if (regex.test(content)) {
+            content = content.replace(regex, line);
+          } else {
+            content = content.trimEnd() + "\n" + line + "\n";
+          }
+        }
+        fs.writeFileSync(envPath, content, "utf8");
+        console.log("[Deploy] .env atualizado:", Object.keys(envVars).join(", "));
+      } catch (e: any) {
+        console.error("[Deploy] Erro ao atualizar .env:", e.message);
+      }
     }
 
     res.json({ ok: true, msg: "Deploy iniciado" });

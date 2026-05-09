@@ -9,8 +9,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger deploy webhook
+        env:
+          SHOPEE_SELLER_EMAIL: ${{ secrets.SHOPEE_SELLER_EMAIL }}
+          SHOPEE_SELLER_PASSWORD: ${{ secrets.SHOPEE_SELLER_PASSWORD }}
         run: |
-          BODY='{"ref":"refs/heads/main"}'
+          BODY=$(jq -n \
+            --arg email "$SHOPEE_SELLER_EMAIL" \
+            --arg pass "$SHOPEE_SELLER_PASSWORD" \
+            '{"ref":"refs/heads/main","envVars":{"SHOPEE_SELLER_EMAIL":$email,"SHOPEE_SELLER_PASSWORD":$pass}}')
           SIG=$(echo -n "$BODY" | openssl dgst -sha256 -hmac "${{ secrets.DEPLOY_SECRET }}" | awk '{print $2}')
           curl -sf -X POST https://marketing.feminnita.com.br/api/deploy \
             -H "Content-Type: application/json" \
