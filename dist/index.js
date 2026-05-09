@@ -3857,6 +3857,7 @@ var init_tiktokContentApi = __esm({
 var ml_ads_browser_agent_exports = {};
 __export(ml_ads_browser_agent_exports, {
   activateAdsCampaign: () => activateAdsCampaign,
+  importMLSession: () => importMLSession,
   listAdsCampaigns: () => listAdsCampaigns,
   pauseAdsCampaign: () => pauseAdsCampaign,
   updateAdsBudget: () => updateAdsBudget
@@ -3988,29 +3989,26 @@ async function loginML(page, account) {
   }
 }
 async function ensureLoggedIn(page, context, account) {
-  console.log(`[MLBrowser] Verificando sess\xE3o de ${account} na p\xE1gina de ads...`);
+  const hasSavedSession = await loadSession(context, account);
+  if (hasSavedSession) {
+    console.log(`[MLBrowser] Cookies carregados para ${account}, verificando validade...`);
+  }
   try {
     await page.goto(SELLER_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 25e3 });
   } catch (e) {
-    console.warn(`[MLBrowser] Timeout ao carregar ads page: ${e.message}`);
+    console.warn(`[MLBrowser] Timeout ao carregar seller center: ${e.message}`);
   }
   const currentUrl = page.url();
-  const isOnLogin = currentUrl.includes("/login") || currentUrl.includes("/jms/");
-  if (!isOnLogin) {
+  const onLoginPage = currentUrl.includes("/login") || currentUrl.includes("/jms/");
+  if (!onLoginPage) {
     console.log(`[MLBrowser] Sess\xE3o v\xE1lida para ${account} \u2014 URL: ${currentUrl}`);
     return true;
   }
-  console.log(`[MLBrowser] Sess\xE3o expirada para ${account}, tentando restaurar cookie...`);
-  const loaded = await loadSession(context, account);
-  if (loaded) {
-    await page.goto(SELLER_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 25e3 });
-    const urlAfterRestore = page.url();
-    if (!urlAfterRestore.includes("/login") && !urlAfterRestore.includes("/jms/")) {
-      console.log(`[MLBrowser] Sess\xE3o restaurada via cookie para ${account}`);
-      return true;
-    }
+  if (hasSavedSession) {
+    console.warn(`[MLBrowser] Cookies salvos expiraram para ${account} \u2014 fazendo login completo...`);
+  } else {
+    console.log(`[MLBrowser] Sem sess\xE3o salva para ${account} \u2014 fazendo login completo...`);
   }
-  console.log(`[MLBrowser] Executando login completo para ${account}...`);
   const ok = await loginML(page, account);
   if (ok) await saveSession(context, account);
   return ok;
@@ -4182,6 +4180,11 @@ async function activateAdsCampaign(campaignId, account = "feminnita", campaignNa
     return `Campanha "${campaignName || campaignId}" reativada com sucesso.`;
   }));
 }
+async function importMLSession(cookies, account = "feminnita") {
+  const file = sessionFile(account);
+  fs8.writeFileSync(file, JSON.stringify(cookies, null, 2));
+  console.log(`[MLBrowser] Sess\xE3o importada para ${account}: ${cookies.length} cookies \u2192 ${file}`);
+}
 async function updateAdsBudget(campaignId, dailyBudget, account = "feminnita", campaignName = "") {
   return withMutex(`${account}-budget`, () => withBrowser(account, async (page) => {
     await page.goto(SELLER_CENTER_URL, { waitUntil: "networkidle", timeout: 3e4 });
@@ -4211,7 +4214,7 @@ var init_ml_ads_browser_agent = __esm({
   "server/agents/ml-ads-browser-agent.ts"() {
     "use strict";
     SESSIONS_DIR = path8.join(process.cwd(), ".ml-sessions");
-    SELLER_CENTER_URL = "https://ads.mercadolivre.com.br/";
+    SELLER_CENTER_URL = "https://www.mercadolivre.com.br/publicidade/product-ads";
     LOGIN_URL = "https://www.mercadolivre.com/jms/mlb/lgz/login";
     TWOCAPTCHA_KEY = process.env.TWOCAPTCHA_API_KEY || "";
     if (!fs8.existsSync(SESSIONS_DIR)) fs8.mkdirSync(SESSIONS_DIR, { recursive: true });
@@ -38908,7 +38911,28 @@ async function startServer() {
   scheduleCartFollowUps();
   setupBaileysDebugRoutes(app);
   app.get("/api/health", (_req, res) => {
-    res.json({ ok: true, version: "2026-05-09-v2", ts: (/* @__PURE__ */ new Date()).toISOString() });
+    res.json({ ok: true, version: "2026-05-09-v3", ts: (/* @__PURE__ */ new Date()).toISOString() });
+  });
+  app.post("/api/ml-session/:account", async (req, res) => {
+    const secret = req.headers["x-session-secret"];
+    if (!process.env.ML_SESSION_SECRET || secret !== process.env.ML_SESSION_SECRET) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    const account = req.params.account;
+    if (!["feminnita", "fnt"].includes(account)) {
+      return res.status(400).json({ error: "Conta inv\xE1lida. Use feminnita ou fnt." });
+    }
+    const cookies = req.body;
+    if (!Array.isArray(cookies) || cookies.length === 0) {
+      return res.status(400).json({ error: "Body deve ser array de cookies" });
+    }
+    try {
+      const { importMLSession: importMLSession2 } = await Promise.resolve().then(() => (init_ml_ads_browser_agent(), ml_ads_browser_agent_exports));
+      await importMLSession2(cookies, account);
+      return res.json({ ok: true, account, cookies: cookies.length });
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
   });
   app.get("/api/debug/agent-actions", async (_req, res) => {
     try {
