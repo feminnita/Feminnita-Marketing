@@ -19,14 +19,16 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Build dist/index.js with esbuild
-        run: |
-          npx --yes esbuild@0.25 server/_core/index.ts \
-            --platform=node \
-            --packages=external \
-            --bundle \
-            --format=esm \
-            --outdir=dist
+        run: pnpm run build:server
 
       - name: Commit built dist/index.js
         run: |
