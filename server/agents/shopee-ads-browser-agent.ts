@@ -305,7 +305,6 @@ export async function updateShopeeBudget(campaignId: string, newBudget: number, 
       return `Campo de orçamento não encontrado na tela de edição da campanha ${campaignId}.`;
     }
 
-    await budgetInput.triple_click();
     await budgetInput.fill(String(newBudget));
     await page.waitForTimeout(500);
 
@@ -349,7 +348,6 @@ export async function updateShopeeRoas(campaignId: string, targetRoas: number, a
     if (!await roasInput.isVisible({ timeout: 8000 }).catch(() => false)) {
       return `Campo de ROAS não encontrado para campanha ${campaignId}.`;
     }
-    await roasInput.triple_click();
     await roasInput.fill(String(targetRoas));
     await page.waitForTimeout(500);
 
