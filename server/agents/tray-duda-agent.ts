@@ -65,9 +65,7 @@ CONTEÚDO: ${text}`;
     pageCache.set(url, { content, expiresAt: Date.now() + CACHE_TTL_MS });
     return content;
   } catch (err: any) {
-    const status = err.response?.status;
-    console.warn(`[Duda] Falha ao buscar ${url}: ${err.message}`);
-    if (status) return `[HTTP ${status} em ${url} — site pode ter proteção anti-bot]`;
+    console.warn(`[Duda] Falha ao buscar ${url}: ${err.response?.status ?? err.message}`);
     return null;
   }
 }
