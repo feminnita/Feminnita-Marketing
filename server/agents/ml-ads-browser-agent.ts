@@ -628,25 +628,45 @@ export async function updateAdsBudget(campaignId: string, dailyBudget: number, a
       return `Campanha "${campaignName || campaignId}" não encontrada. [URL: ${page.url()}] [Rows: ${rowCount}] [Visíveis: ${visible}]`;
     }
 
-    const editBtn = row.locator('button[aria-label*="ditar"], a[href*="edit"], button[title*="ditar"]').first();
-    if (!await editBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-      return `Botão de editar não encontrado para "${campaignName || campaignId}".`;
-    }
-    await editBtn.click();
-    await page.waitForTimeout(2000);
+    // ML usa edição inline — clica diretamente na célula de orçamento do row
+    // Tenta 1: célula com valor R$ (edição inline)
+    const budgetCell = row.locator('td, [class*="budget"], [class*="orcamento"], [class*="daily"]').filter({ hasText: /R\$|\d+,\d+/ }).first();
+    const hasBudgetCell = await budgetCell.isVisible({ timeout: 2000 }).catch(() => false);
 
-    // Preenche o campo de budget
-    const budgetInput = await page.locator('input[name*="budget"], input[placeholder*="budget"], input[aria-label*="udget"]').first();
-    if (!await budgetInput.isVisible().catch(() => false)) {
-      return "Campo de budget não encontrado. O layout do Seller Center pode ter mudado.";
+    if (hasBudgetCell) {
+      await budgetCell.click();
+      await page.waitForTimeout(1000);
+    } else {
+      // Tenta 2: ícone de editar (lápis) que aparece ao hover
+      await row.hover().catch(() => {});
+      await page.waitForTimeout(500);
+      const pencil = row.locator('button[aria-label*="ditar"], button[aria-label*="dit"], svg[class*="edit"], [class*="pencil"]').first();
+      if (await pencil.isVisible({ timeout: 2000 }).catch(() => false)) {
+        await pencil.click();
+        await page.waitForTimeout(1000);
+      }
+    }
+
+    // Aguarda input de budget aparecer (inline ou modal)
+    const budgetInput = page.locator('input[name*="budget"], input[name*="Budget"], input[placeholder*="udget"], input[aria-label*="udget"], input[type="number"]').first();
+    if (!await budgetInput.isVisible({ timeout: 5000 }).catch(() => false)) {
+      const rowText = await row.innerText().catch(() => "");
+      return `Campo de budget não encontrado para "${campaignName || campaignId}". Conteúdo da linha: ${rowText.slice(0, 200)}`;
     }
     await budgetInput.click({ clickCount: 3 });
     await budgetInput.fill(String(dailyBudget));
+    await page.waitForTimeout(500);
 
-    // Salva
-    const saveBtn = await page.locator('button[type="submit"], button:has-text("Salvar"), button:has-text("Confirmar")').first();
-    await saveBtn.click();
-    await page.waitForTimeout(1500);
-    return `Budget diário da campanha "${campaignId}" atualizado para R$${dailyBudget} via Seller Center.`;
+    // Salva — tenta botão de confirmar inline ou submit
+    const saveBtn = page.locator('button[type="submit"], button:has-text("Salvar"), button:has-text("Confirmar"), button:has-text("OK"), button[aria-label*="alvar"]').first();
+    if (await saveBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await saveBtn.click();
+      await page.waitForTimeout(1500);
+    } else {
+      await budgetInput.press("Enter");
+      await page.waitForTimeout(1500);
+    }
+    await debugScreenshot(page, `budget-${account}-saved`);
+    return `Budget diário da campanha "${campaignName || campaignId}" atualizado para R$${dailyBudget}.`;
   }));
 }
