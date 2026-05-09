@@ -5,6 +5,7 @@
  */
 
 import { invokeLLM } from "../_core/llm";
+import axios from "axios";
 
 const TRAY_STORE_URL = process.env.TRAY_STORE_URL || "https://feminnita.com.br";
 
@@ -16,17 +17,30 @@ async function fetchPage(url: string): Promise<string | null> {
   const cached = pageCache.get(url);
   if (cached && cached.expiresAt > Date.now()) return cached.content;
 
+  const headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "pt-BR,pt;q=0.9",
+  };
+
+  const proxyHost = process.env.WEBSHARE_HOST;
+  const proxyPort = process.env.WEBSHARE_PORT;
+  const proxyUser = process.env.WEBSHARE_USER;
+  const proxyPass = process.env.WEBSHARE_PASS;
+  const proxyConfig = proxyHost && proxyPort ? {
+    host: proxyHost,
+    port: Number(proxyPort),
+    auth: proxyUser && proxyPass ? { username: proxyUser, password: proxyPass } : undefined,
+  } : undefined;
+
   try {
-    const res = await fetch(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "pt-BR,pt;q=0.9",
-      },
-      signal: AbortSignal.timeout(5000),
+    const res = await axios.get(url, {
+      headers,
+      proxy: proxyConfig,
+      timeout: 8000,
+      maxRedirects: 5,
     });
-    if (!res.ok) return `[HTTP ${res.status} em ${url}]`;
-    const html = await res.text();
+    const html: string = typeof res.data === "string" ? res.data : String(res.data);
 
     const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
     const descMatch = html.match(/name=["']description["'][^>]*content=["']([^"']+)["']/i)
@@ -51,7 +65,9 @@ CONTEÚDO: ${text}`;
     pageCache.set(url, { content, expiresAt: Date.now() + CACHE_TTL_MS });
     return content;
   } catch (err: any) {
+    const status = err.response?.status;
     console.warn(`[Duda] Falha ao buscar ${url}: ${err.message}`);
+    if (status) return `[HTTP ${status} em ${url} — site pode ter proteção anti-bot]`;
     return null;
   }
 }
