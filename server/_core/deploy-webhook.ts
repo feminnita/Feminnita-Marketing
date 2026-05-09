@@ -55,7 +55,8 @@ export function registerDeployWebhook(app: any) {
     res.json({ ok: true, msg: "Deploy iniciado" });
 
     // Roda deploy em background
-    const cmd = "cd /var/www/feminnita-marketing && git pull && npm install --legacy-peer-deps && npx playwright install chromium --with-deps && npm run build && pm2 restart feminnita-marketing";
+    // Playwright install é não-crítico: se falhar (disco, memória, rede), deploy continua
+    const cmd = "cd /var/www/feminnita-marketing && git pull && npm install --legacy-peer-deps && (npx playwright install chromium --with-deps || echo '[Deploy] Playwright install falhou — continuando') && npm run build && pm2 restart feminnita-marketing";
     exec(cmd, (err, stdout, stderr) => {
       if (err) {
         console.error("[Deploy] Erro:", err.message);
