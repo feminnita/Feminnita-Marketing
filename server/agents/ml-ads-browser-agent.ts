@@ -52,6 +52,83 @@ async function loadSession(context: BrowserContext, account: string): Promise<bo
   }
 }
 
+// ─── Auth via token OAuth (bypass reCAPTCHA) ─────────────────────────────────
+// Tenta converter o access_token OAuth (já existente no .env) em cookies de sessão
+// do browser ML — se funcionar, elimina completamente o login por formulário.
+
+async function tryTokenToBrowserSession(page: Page, context: BrowserContext, account: "feminnita" | "fnt"): Promise<boolean> {
+  const token = account === "fnt" ? process.env.ML_ACCESS_TOKEN_2 : process.env.ML_ACCESS_TOKEN_1;
+  if (!token) return false;
+
+  // Abordagem 1: endpoint auth-from-token (endpoint interno do ML para apps parceiros)
+  // Navega o browser direto — se ML aceitar, seta cookies e redireciona para a página destino
+  const authFromTokenUrl = `https://www.mercadolivre.com.br/jms/mlb/lgz/auth-from-token?access_token=${token}&platform_id=ML&go=${encodeURIComponent(SELLER_CENTER_URL)}`;
+  try {
+    console.log(`[MLBrowser] Tentando auth-from-token para ${account}...`);
+    await page.goto(authFromTokenUrl, { waitUntil: "domcontentloaded", timeout: 20000 });
+    await debugScreenshot(page, `token-auth-${account}-1`);
+    const url = page.url();
+    if (!url.includes("/login") && !url.includes("/jms/lgz/")) {
+      console.log(`[MLBrowser] auth-from-token OK — URL: ${url}`);
+      return true;
+    }
+  } catch (e: any) {
+    console.warn(`[MLBrowser] auth-from-token falhou:`, e.message);
+  }
+
+  // Abordagem 2: Server-side fetch para obter Set-Cookie e injetar no contexto
+  // Faz a troca token→cookies via fetch Node.js e injeta no browser context
+  const candidates = [
+    `https://www.mercadolivre.com.br/jms/mlb/lgz/auth-from-token?access_token=${token}&platform_id=ML&go=%2F`,
+    `https://auth.mercadolibre.com/authorization?response_type=token&access_token=${token}&platform_id=MP`,
+  ];
+
+  for (const url of candidates) {
+    try {
+      const res = await fetch(url, {
+        method: "GET",
+        redirect: "manual",
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
+          "Accept-Language": "pt-BR,pt;q=0.9",
+          "Accept": "text/html,application/xhtml+xml",
+        },
+      });
+
+      const location = res.headers.get("location") || "";
+      const rawCookies: string[] = typeof (res.headers as any).getSetCookie === "function"
+        ? (res.headers as any).getSetCookie()
+        : (res.headers.get("set-cookie") ? [res.headers.get("set-cookie")!] : []);
+
+      const isLoginRedirect = location.includes("/login") || location.includes("/jms/lgz/login");
+      if (rawCookies.length > 0 && !isLoginRedirect) {
+        const parsed = rawCookies.map(c => {
+          const main = c.split(";")[0];
+          const eq = main.indexOf("=");
+          return {
+            name: main.slice(0, eq).trim(),
+            value: main.slice(eq + 1).trim(),
+            domain: ".mercadolivre.com.br",
+            path: "/",
+            httpOnly: false,
+            secure: true,
+          };
+        }).filter(c => c.name && c.value);
+
+        if (parsed.length > 0) {
+          await context.addCookies(parsed);
+          console.log(`[MLBrowser] ${parsed.length} cookies de sessão injetados via fetch para ${account}`);
+          return true;
+        }
+      }
+    } catch (e: any) {
+      console.warn(`[MLBrowser] fetch candidate falhou:`, e.message);
+    }
+  }
+
+  return false;
+}
+
 // ─── 2captcha ─────────────────────────────────────────────────────────────────
 
 async function solve2captcha(sitekey: string, pageUrl: string, enterprise = false): Promise<string | null> {
@@ -163,32 +240,37 @@ async function loginML(page: Page, account: "feminnita" | "fnt"): Promise<boolea
 }
 
 async function ensureLoggedIn(page: Page, context: BrowserContext, account: "feminnita" | "fnt"): Promise<boolean> {
-  // Carrega cookies salvos ANTES de navegar — evita reCAPTCHA no login
-  const hasSavedSession = await loadSession(context, account);
-  if (hasSavedSession) {
-    console.log(`[MLBrowser] Cookies carregados para ${account}, verificando validade...`);
+  // 1. Tenta sessão salva em cookies (mais rápido)
+  const hasSaved = await loadSession(context, account);
+  if (hasSaved) {
+    try {
+      await page.goto(SELLER_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 25000 });
+    } catch {}
+    const url = page.url();
+    if (!url.includes("/login") && !url.includes("/jms/")) {
+      console.log(`[MLBrowser] Sessão válida via cookies salvos — ${account}`);
+      return true;
+    }
+    console.warn(`[MLBrowser] Cookies salvos expiraram para ${account}`);
   }
 
-  try {
-    await page.goto(SELLER_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 25000 });
-  } catch (e: any) {
-    console.warn(`[MLBrowser] Timeout ao carregar seller center: ${e.message}`);
+  // 2. Tenta converter o access_token OAuth em sessão de browser (bypass reCAPTCHA)
+  const tokenOk = await tryTokenToBrowserSession(page, context, account);
+  if (tokenOk) {
+    try {
+      await page.goto(SELLER_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 25000 });
+    } catch {}
+    const url = page.url();
+    if (!url.includes("/login") && !url.includes("/jms/")) {
+      console.log(`[MLBrowser] Sessão via token OK para ${account} — salvando...`);
+      await saveSession(context, account);
+      return true;
+    }
+    console.warn(`[MLBrowser] Token injetado mas seller center ainda exige login para ${account}`);
   }
 
-  const currentUrl = page.url();
-  const onLoginPage = currentUrl.includes("/login") || currentUrl.includes("/jms/");
-
-  if (!onLoginPage) {
-    console.log(`[MLBrowser] Sessão válida para ${account} — URL: ${currentUrl}`);
-    return true;
-  }
-
-  if (hasSavedSession) {
-    console.warn(`[MLBrowser] Cookies salvos expiraram para ${account} — fazendo login completo...`);
-  } else {
-    console.log(`[MLBrowser] Sem sessão salva para ${account} — fazendo login completo...`);
-  }
-
+  // 3. Último recurso: login via formulário (esbarra em reCAPTCHA se rodando em datacenter)
+  console.log(`[MLBrowser] Tentando login via formulário para ${account}...`);
   const ok = await loginML(page, account);
   if (ok) await saveSession(context, account);
   return ok;
