@@ -39194,6 +39194,36 @@ async function startServer() {
       return res.status(500).json({ error: e.message });
     }
   });
+  app.get("/api/debug/screenshot/:label?", async (req, res) => {
+    try {
+      const fsMod = await import("fs");
+      const pathMod2 = await import("path");
+      const dir = "/var/www/feminnita-marketing/debug-screenshots";
+      if (!fsMod.default.existsSync(dir)) return res.status(404).json({ error: "Nenhum screenshot ainda" });
+      const files = fsMod.default.readdirSync(dir).filter((f) => f.endsWith(".png")).map((f) => ({ name: f, mtime: fsMod.default.statSync(pathMod2.default.join(dir, f)).mtimeMs })).sort((a, b) => b.mtime - a.mtime);
+      if (!files.length) return res.status(404).json({ error: "Nenhum screenshot ainda" });
+      const label = req.params.label;
+      const match = label ? files.find((f) => f.name.includes(label)) : files[0];
+      const target = match || files[0];
+      res.setHeader("Content-Type", "image/png");
+      res.setHeader("X-Screenshot-Name", target.name);
+      fsMod.default.createReadStream(pathMod2.default.join(dir, target.name)).pipe(res);
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  });
+  app.get("/api/debug/screenshots", async (_req, res) => {
+    try {
+      const fsMod = await import("fs");
+      const pathMod2 = await import("path");
+      const dir = "/var/www/feminnita-marketing/debug-screenshots";
+      if (!fsMod.default.existsSync(dir)) return res.json({ files: [] });
+      const files = fsMod.default.readdirSync(dir).filter((f) => f.endsWith(".png")).map((f) => ({ name: f, mtime: new Date(fsMod.default.statSync(pathMod2.default.join(dir, f)).mtimeMs) })).sort((a, b) => b.mtime.getTime() - a.mtime.getTime()).slice(0, 20);
+      return res.json({ files });
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  });
   {
     const multer = (await import("multer")).default;
     const pathMod2 = await import("path");
