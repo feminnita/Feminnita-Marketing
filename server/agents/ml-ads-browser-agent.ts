@@ -8,7 +8,7 @@ import fs from "fs";
 import path from "path";
 
 const SESSIONS_DIR = path.join(process.cwd(), ".ml-sessions");
-const SELLER_CENTER_URL = "https://ads.mercadolivre.com.br/productAds";
+const SELLER_CENTER_URL = "https://ads.mercadolivre.com.br/";
 const LOGIN_URL = "https://www.mercadolivre.com/jms/mlb/lgz/login";
 const TWOCAPTCHA_KEY = process.env.TWOCAPTCHA_API_KEY || "";
 
@@ -53,35 +53,41 @@ async function loadSession(context: BrowserContext, account: string): Promise<bo
 
 // ─── 2captcha ─────────────────────────────────────────────────────────────────
 
-async function solve2captcha(sitekey: string, pageUrl: string): Promise<string | null> {
+async function solve2captcha(sitekey: string, pageUrl: string, enterprise = false): Promise<string | null> {
   if (!TWOCAPTCHA_KEY) return null;
   try {
-    // Submete o captcha
+    const params: Record<string, string> = {
+      key: TWOCAPTCHA_KEY,
+      method: "userrecaptcha",
+      googlekey: sitekey,
+      pageurl: pageUrl,
+      json: "1",
+    };
+    if (enterprise) params.enterprise = "1";
+
     const submitRes = await fetch("https://2captcha.com/in.php", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        key: TWOCAPTCHA_KEY,
-        method: "userrecaptcha",
-        googlekey: sitekey,
-        pageurl: pageUrl,
-        json: "1",
-      }).toString(),
+      body: new URLSearchParams(params).toString(),
     });
     const submit = await submitRes.json() as any;
-    if (submit.status !== 1) return null;
+    if (submit.status !== 1) {
+      console.warn("[MLBrowser] 2captcha submit falhou:", submit.request);
+      return null;
+    }
 
     const captchaId = submit.request;
-    // Aguarda resolução (até 120s)
-    for (let i = 0; i < 24; i++) {
+    console.log(`[MLBrowser] 2captcha id=${captchaId}, aguardando resolução...`);
+    for (let i = 0; i < 30; i++) {
       await new Promise(r => setTimeout(r, 5000));
       const resRes = await fetch(`https://2captcha.com/res.php?key=${TWOCAPTCHA_KEY}&action=get&id=${captchaId}&json=1`);
       const result = await resRes.json() as any;
-      if (result.status === 1) return result.request;
-      if (result.request !== "CAPCHA_NOT_READY") return null;
+      if (result.status === 1) { console.log("[MLBrowser] 2captcha resolvido"); return result.request; }
+      if (result.request !== "CAPCHA_NOT_READY") { console.warn("[MLBrowser] 2captcha erro:", result.request); return null; }
     }
     return null;
-  } catch {
+  } catch (e: any) {
+    console.error("[MLBrowser] 2captcha exception:", e.message);
     return null;
   }
 }
@@ -95,35 +101,57 @@ async function loginML(page: Page, account: "feminnita" | "fnt"): Promise<boolea
 
   try {
     await page.goto(LOGIN_URL, { waitUntil: "domcontentloaded", timeout: 30000 });
-    // ML pode usar name="user_id" ou type="email" dependendo da versão da página
     await page.waitForSelector('input[name="user_id"], input[type="email"], input[id="user_id"]', { timeout: 15000 });
     await page.fill('input[name="user_id"], input[type="email"], input[id="user_id"]', email);
     await page.click('button[type="submit"]');
+    await page.waitForTimeout(4000);
 
-    await page.waitForSelector('input[name="password"], input[type="password"]', { timeout: 15000 });
-    await page.fill('input[name="password"], input[type="password"]', password);
+    // ML tem passo intermediário com reCAPTCHA Enterprise antes da senha
+    // URL contém /msl/ ou user-recaptcha-social nesse caso
+    if (page.url().includes("/msl/") || page.url().includes("user-recaptcha")) {
+      console.log(`[MLBrowser] Passo intermediário reCAPTCHA detectado...`);
 
-    // Verifica se há reCAPTCHA antes de submeter
-    const sitekey = await page.$eval(
-      '.g-recaptcha',
-      (el: Element) => (el as HTMLElement).dataset.sitekey || ""
-    ).catch(() => "");
+      // Extrai sitekey do iframe do reCAPTCHA
+      const captchaIframeSrc = await page.evaluate(() => {
+        const iframe = document.querySelector('iframe[src*="recaptcha"]') as HTMLIFrameElement | null;
+        return iframe ? iframe.src : null;
+      });
 
-    if (sitekey) {
-      console.log("[MLBrowser] reCAPTCHA detectado, resolvendo via 2captcha...");
-      const token = await solve2captcha(sitekey, LOGIN_URL);
-      if (token) {
-        await page.evaluate((t) => {
-          (document.getElementById("g-recaptcha-response") as HTMLTextAreaElement).value = t;
-        }, token);
+      let token: string | null = null;
+      if (captchaIframeSrc) {
+        const skMatch = captchaIframeSrc.match(/[?&]k=([^&]+)/);
+        const sitekey = skMatch ? skMatch[1] : "";
+        if (sitekey) {
+          console.log(`[MLBrowser] reCAPTCHA Enterprise sitekey=${sitekey} — resolvendo via 2captcha...`);
+          token = await solve2captcha(sitekey, page.url(), true);
+        }
       }
+
+      if (token) {
+        // Injeta em todos os campos possíveis (gctkn e g-recaptcha-response)
+        await page.evaluate((t) => {
+          const gctkn = document.querySelector('input[name="gctkn"]') as HTMLInputElement | null;
+          if (gctkn) gctkn.value = t;
+          const resp = document.getElementById("g-recaptcha-response") as HTMLTextAreaElement | null;
+          if (resp) resp.value = t;
+        }, token);
+        console.log("[MLBrowser] Token injetado — clicando Continuar...");
+      } else {
+        console.warn("[MLBrowser] Não foi possível resolver reCAPTCHA — tentando continuar mesmo assim...");
+      }
+
+      await page.click('button[type="submit"], button:has-text("Continuar"), button:has-text("Continue")');
+      await page.waitForTimeout(5000);
     }
 
+    // Aguarda campo de senha
+    await page.waitForSelector('input[name="password"], input[type="password"]', { timeout: 25000 });
+    await page.fill('input[name="password"], input[type="password"]', password);
     await page.click('button[type="submit"]');
-    // Aceita qualquer URL que não seja a página de login (ML pode redirecionar para várias URLs)
+
     await page.waitForFunction(
       () => !window.location.href.includes('/login') && !window.location.href.includes('/jms/'),
-      { timeout: 25000 }
+      { timeout: 30000 }
     );
     console.log(`[MLBrowser] Login OK — ${account} — URL: ${page.url()}`);
     return true;
