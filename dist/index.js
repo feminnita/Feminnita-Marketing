@@ -3893,6 +3893,65 @@ async function loadSession(context, account) {
     return false;
   }
 }
+async function tryTokenToBrowserSession(page, context, account) {
+  const token = account === "fnt" ? process.env.ML_ACCESS_TOKEN_2 : process.env.ML_ACCESS_TOKEN_1;
+  if (!token) return false;
+  const authFromTokenUrl = `https://www.mercadolivre.com.br/jms/mlb/lgz/auth-from-token?access_token=${token}&platform_id=ML&go=${encodeURIComponent(SELLER_CENTER_URL)}`;
+  try {
+    console.log(`[MLBrowser] Tentando auth-from-token para ${account}...`);
+    await page.goto(authFromTokenUrl, { waitUntil: "domcontentloaded", timeout: 2e4 });
+    await debugScreenshot(page, `token-auth-${account}-1`);
+    const url = page.url();
+    if (!url.includes("/login") && !url.includes("/jms/lgz/")) {
+      console.log(`[MLBrowser] auth-from-token OK \u2014 URL: ${url}`);
+      return true;
+    }
+  } catch (e) {
+    console.warn(`[MLBrowser] auth-from-token falhou:`, e.message);
+  }
+  const candidates = [
+    `https://www.mercadolivre.com.br/jms/mlb/lgz/auth-from-token?access_token=${token}&platform_id=ML&go=%2F`,
+    `https://auth.mercadolibre.com/authorization?response_type=token&access_token=${token}&platform_id=MP`
+  ];
+  for (const url of candidates) {
+    try {
+      const res = await fetch(url, {
+        method: "GET",
+        redirect: "manual",
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
+          "Accept-Language": "pt-BR,pt;q=0.9",
+          "Accept": "text/html,application/xhtml+xml"
+        }
+      });
+      const location = res.headers.get("location") || "";
+      const rawCookies = typeof res.headers.getSetCookie === "function" ? res.headers.getSetCookie() : res.headers.get("set-cookie") ? [res.headers.get("set-cookie")] : [];
+      const isLoginRedirect = location.includes("/login") || location.includes("/jms/lgz/login");
+      if (rawCookies.length > 0 && !isLoginRedirect) {
+        const parsed = rawCookies.map((c) => {
+          const main = c.split(";")[0];
+          const eq106 = main.indexOf("=");
+          return {
+            name: main.slice(0, eq106).trim(),
+            value: main.slice(eq106 + 1).trim(),
+            domain: ".mercadolivre.com.br",
+            path: "/",
+            httpOnly: false,
+            secure: true
+          };
+        }).filter((c) => c.name && c.value);
+        if (parsed.length > 0) {
+          await context.addCookies(parsed);
+          console.log(`[MLBrowser] ${parsed.length} cookies de sess\xE3o injetados via fetch para ${account}`);
+          return true;
+        }
+      }
+    } catch (e) {
+      console.warn(`[MLBrowser] fetch candidate falhou:`, e.message);
+    }
+  }
+  return false;
+}
 async function solve2captcha(sitekey, pageUrl, enterprise = false) {
   if (!TWOCAPTCHA_KEY) return null;
   try {
@@ -3989,26 +4048,34 @@ async function loginML(page, account) {
   }
 }
 async function ensureLoggedIn(page, context, account) {
-  const hasSavedSession = await loadSession(context, account);
-  if (hasSavedSession) {
-    console.log(`[MLBrowser] Cookies carregados para ${account}, verificando validade...`);
+  const hasSaved = await loadSession(context, account);
+  if (hasSaved) {
+    try {
+      await page.goto(SELLER_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 25e3 });
+    } catch {
+    }
+    const url = page.url();
+    if (!url.includes("/login") && !url.includes("/jms/")) {
+      console.log(`[MLBrowser] Sess\xE3o v\xE1lida via cookies salvos \u2014 ${account}`);
+      return true;
+    }
+    console.warn(`[MLBrowser] Cookies salvos expiraram para ${account}`);
   }
-  try {
-    await page.goto(SELLER_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 25e3 });
-  } catch (e) {
-    console.warn(`[MLBrowser] Timeout ao carregar seller center: ${e.message}`);
+  const tokenOk = await tryTokenToBrowserSession(page, context, account);
+  if (tokenOk) {
+    try {
+      await page.goto(SELLER_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 25e3 });
+    } catch {
+    }
+    const url = page.url();
+    if (!url.includes("/login") && !url.includes("/jms/")) {
+      console.log(`[MLBrowser] Sess\xE3o via token OK para ${account} \u2014 salvando...`);
+      await saveSession(context, account);
+      return true;
+    }
+    console.warn(`[MLBrowser] Token injetado mas seller center ainda exige login para ${account}`);
   }
-  const currentUrl = page.url();
-  const onLoginPage = currentUrl.includes("/login") || currentUrl.includes("/jms/");
-  if (!onLoginPage) {
-    console.log(`[MLBrowser] Sess\xE3o v\xE1lida para ${account} \u2014 URL: ${currentUrl}`);
-    return true;
-  }
-  if (hasSavedSession) {
-    console.warn(`[MLBrowser] Cookies salvos expiraram para ${account} \u2014 fazendo login completo...`);
-  } else {
-    console.log(`[MLBrowser] Sem sess\xE3o salva para ${account} \u2014 fazendo login completo...`);
-  }
+  console.log(`[MLBrowser] Tentando login via formul\xE1rio para ${account}...`);
   const ok = await loginML(page, account);
   if (ok) await saveSession(context, account);
   return ok;
