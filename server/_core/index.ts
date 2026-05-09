@@ -147,7 +147,7 @@ async function startServer() {
         .limit(20);
       return res.json({
         count: rows.length,
-        actions: rows.map(r => ({
+        actions: rows.map((r: typeof rows[number]) => ({
           id: r.id,
           status: r.status,
           actionType: r.actionType,
