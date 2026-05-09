@@ -3892,32 +3892,45 @@ async function loadSession(context, account) {
     return false;
   }
 }
-async function solve2captcha(sitekey, pageUrl) {
+async function solve2captcha(sitekey, pageUrl, enterprise = false) {
   if (!TWOCAPTCHA_KEY) return null;
   try {
+    const params = {
+      key: TWOCAPTCHA_KEY,
+      method: "userrecaptcha",
+      googlekey: sitekey,
+      pageurl: pageUrl,
+      json: "1"
+    };
+    if (enterprise) params.enterprise = "1";
     const submitRes = await fetch("https://2captcha.com/in.php", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        key: TWOCAPTCHA_KEY,
-        method: "userrecaptcha",
-        googlekey: sitekey,
-        pageurl: pageUrl,
-        json: "1"
-      }).toString()
+      body: new URLSearchParams(params).toString()
     });
     const submit = await submitRes.json();
-    if (submit.status !== 1) return null;
+    if (submit.status !== 1) {
+      console.warn("[MLBrowser] 2captcha submit falhou:", submit.request);
+      return null;
+    }
     const captchaId = submit.request;
-    for (let i = 0; i < 24; i++) {
+    console.log(`[MLBrowser] 2captcha id=${captchaId}, aguardando resolu\xE7\xE3o...`);
+    for (let i = 0; i < 30; i++) {
       await new Promise((r) => setTimeout(r, 5e3));
       const resRes = await fetch(`https://2captcha.com/res.php?key=${TWOCAPTCHA_KEY}&action=get&id=${captchaId}&json=1`);
       const result = await resRes.json();
-      if (result.status === 1) return result.request;
-      if (result.request !== "CAPCHA_NOT_READY") return null;
+      if (result.status === 1) {
+        console.log("[MLBrowser] 2captcha resolvido");
+        return result.request;
+      }
+      if (result.request !== "CAPCHA_NOT_READY") {
+        console.warn("[MLBrowser] 2captcha erro:", result.request);
+        return null;
+      }
     }
     return null;
-  } catch {
+  } catch (e) {
+    console.error("[MLBrowser] 2captcha exception:", e.message);
     return null;
   }
 }
@@ -3930,25 +3943,42 @@ async function loginML(page, account) {
     await page.waitForSelector('input[name="user_id"], input[type="email"], input[id="user_id"]', { timeout: 15e3 });
     await page.fill('input[name="user_id"], input[type="email"], input[id="user_id"]', email);
     await page.click('button[type="submit"]');
-    await page.waitForSelector('input[name="password"], input[type="password"]', { timeout: 15e3 });
-    await page.fill('input[name="password"], input[type="password"]', password);
-    const sitekey = await page.$eval(
-      ".g-recaptcha",
-      (el) => el.dataset.sitekey || ""
-    ).catch(() => "");
-    if (sitekey) {
-      console.log("[MLBrowser] reCAPTCHA detectado, resolvendo via 2captcha...");
-      const token = await solve2captcha(sitekey, LOGIN_URL);
+    await page.waitForTimeout(4e3);
+    if (page.url().includes("/msl/") || page.url().includes("user-recaptcha")) {
+      console.log(`[MLBrowser] Passo intermedi\xE1rio reCAPTCHA detectado...`);
+      const captchaIframeSrc = await page.evaluate(() => {
+        const iframe = document.querySelector('iframe[src*="recaptcha"]');
+        return iframe ? iframe.src : null;
+      });
+      let token = null;
+      if (captchaIframeSrc) {
+        const skMatch = captchaIframeSrc.match(/[?&]k=([^&]+)/);
+        const sitekey = skMatch ? skMatch[1] : "";
+        if (sitekey) {
+          console.log(`[MLBrowser] reCAPTCHA Enterprise sitekey=${sitekey} \u2014 resolvendo via 2captcha...`);
+          token = await solve2captcha(sitekey, page.url(), true);
+        }
+      }
       if (token) {
         await page.evaluate((t2) => {
-          document.getElementById("g-recaptcha-response").value = t2;
+          const gctkn = document.querySelector('input[name="gctkn"]');
+          if (gctkn) gctkn.value = t2;
+          const resp = document.getElementById("g-recaptcha-response");
+          if (resp) resp.value = t2;
         }, token);
+        console.log("[MLBrowser] Token injetado \u2014 clicando Continuar...");
+      } else {
+        console.warn("[MLBrowser] N\xE3o foi poss\xEDvel resolver reCAPTCHA \u2014 tentando continuar mesmo assim...");
       }
+      await page.click('button[type="submit"], button:has-text("Continuar"), button:has-text("Continue")');
+      await page.waitForTimeout(5e3);
     }
+    await page.waitForSelector('input[name="password"], input[type="password"]', { timeout: 25e3 });
+    await page.fill('input[name="password"], input[type="password"]', password);
     await page.click('button[type="submit"]');
     await page.waitForFunction(
       () => !window.location.href.includes("/login") && !window.location.href.includes("/jms/"),
-      { timeout: 25e3 }
+      { timeout: 3e4 }
     );
     console.log(`[MLBrowser] Login OK \u2014 ${account} \u2014 URL: ${page.url()}`);
     return true;
@@ -4181,7 +4211,7 @@ var init_ml_ads_browser_agent = __esm({
   "server/agents/ml-ads-browser-agent.ts"() {
     "use strict";
     SESSIONS_DIR = path8.join(process.cwd(), ".ml-sessions");
-    SELLER_CENTER_URL = "https://ads.mercadolivre.com.br/productAds";
+    SELLER_CENTER_URL = "https://ads.mercadolivre.com.br/";
     LOGIN_URL = "https://www.mercadolivre.com/jms/mlb/lgz/login";
     TWOCAPTCHA_KEY = process.env.TWOCAPTCHA_API_KEY || "";
     if (!fs8.existsSync(SESSIONS_DIR)) fs8.mkdirSync(SESSIONS_DIR, { recursive: true });
