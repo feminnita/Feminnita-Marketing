@@ -38694,8 +38694,8 @@ function startMLActionsExecutor() {
               res = await updateAdsBudget2(campaignId, Number(payload.budget || 0), acc, campaignName);
               break;
             default:
-              console.warn(`[MLExecutor] Tipo desconhecido "${actionType}" id=${action.id} \u2014 pulando`);
-              await db.update(agentActions).set({ status: "pending" }).where(eq103(agentActions.id, action.id));
+              console.warn(`[MLExecutor] Tipo desconhecido "${actionType}" id=${action.id} \u2014 marcando como done para n\xE3o re-processar`);
+              await db.update(agentActions).set({ status: "done", executionLog: `Tipo n\xE3o suportado pelo MLExecutor: ${actionType}` }).where(eq103(agentActions.id, action.id));
               continue;
           }
           console.log(`[MLExecutor] \u2705 id=${action.id}: ${res}`);
