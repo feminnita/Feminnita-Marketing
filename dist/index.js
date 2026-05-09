@@ -3763,108 +3763,19 @@ Responda em portugu\xEAs do Brasil. Seja direta: entregue o copy pronto, o brief
   }
 });
 
-// server/services/tiktokContentApi.ts
-var tiktokContentApi_exports = {};
-__export(tiktokContentApi_exports, {
-  checkPublishStatus: () => checkPublishStatus,
-  publishVideoToTikTok: () => publishVideoToTikTok,
-  refreshTiktokToken: () => refreshTiktokToken
-});
-async function publishVideoToTikTok(accessToken, videoUrl, videoSize, postInfo) {
-  const size = videoSize || 1e7;
-  const resp = await fetch(`${API_BASE2}/post/publish/video/init/`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json; charset=UTF-8"
-    },
-    body: JSON.stringify({
-      post_info: {
-        title: postInfo.title.slice(0, 2200),
-        privacy_level: postInfo.privacyLevel || "PUBLIC_TO_EVERYONE",
-        disable_duet: false,
-        disable_comment: false,
-        disable_stitch: false,
-        video_cover_timestamp_ms: 1e3
-      },
-      source_info: {
-        source: "PULL_FROM_URL",
-        video_url: videoUrl,
-        video_size: size,
-        chunk_size: size,
-        total_chunk_count: 1
-      }
-    })
-  });
-  const data = await resp.json();
-  console.log("[TikTokContentAPI] publish/init response:", JSON.stringify(data));
-  if (data.error?.code && data.error.code !== "ok") {
-    throw new Error(`TikTok API: ${data.error.message || data.error.code}`);
-  }
-  return { publishId: data.data?.publish_id };
-}
-async function checkPublishStatus(accessToken, publishId) {
-  const resp = await fetch(`${API_BASE2}/post/publish/status/fetch/`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json; charset=UTF-8"
-    },
-    body: JSON.stringify({ publish_id: publishId })
-  });
-  const data = await resp.json();
-  return {
-    status: data.data?.status || "unknown",
-    failReason: data.data?.fail_reason,
-    publicationId: data.data?.publicaly_available_post_id?.[0]
-  };
-}
-async function refreshTiktokToken(refreshToken) {
-  const clientKey = process.env.TIKTOK_CLIENT_KEY || "";
-  const clientSecret = process.env.TIKTOK_CLIENT_SECRET || "";
-  if (!clientKey || !clientSecret) return null;
-  try {
-    const resp = await fetch(`${API_BASE2}/oauth/token/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        client_key: clientKey,
-        client_secret: clientSecret,
-        grant_type: "refresh_token",
-        refresh_token: refreshToken
-      }).toString()
-    });
-    const data = await resp.json();
-    if (data.error) return null;
-    return {
-      accessToken: data.access_token,
-      refreshToken: data.refresh_token || refreshToken,
-      expiresIn: data.expires_in || 86400
-    };
-  } catch {
-    return null;
-  }
-}
-var API_BASE2;
-var init_tiktokContentApi = __esm({
-  "server/services/tiktokContentApi.ts"() {
-    "use strict";
-    API_BASE2 = "https://open.tiktokapis.com/v2";
-  }
-});
-
 // server/agents/ml-ads-browser-agent.ts
 var ml_ads_browser_agent_exports = {};
 __export(ml_ads_browser_agent_exports, {
   activateAdsCampaign: () => activateAdsCampaign,
+  getMLSessionStatus: () => getMLSessionStatus,
   importMLSession: () => importMLSession,
   listAdsCampaigns: () => listAdsCampaigns,
   pauseAdsCampaign: () => pauseAdsCampaign,
   updateAdsBudget: () => updateAdsBudget
 });
 import { chromium } from "playwright";
-import fs8 from "fs";
-import path8 from "path";
+import fs7 from "fs";
+import path7 from "path";
 function withMutex(account, fn) {
   const existing = runningInstances.get(account);
   if (existing) {
@@ -3876,17 +3787,17 @@ function withMutex(account, fn) {
   return promise;
 }
 function sessionFile(account) {
-  return path8.join(SESSIONS_DIR, `ml-session-${account}.json`);
+  return path7.join(SESSIONS_DIR, `ml-session-${account}.json`);
 }
 async function saveSession(context, account) {
   const cookies = await context.cookies();
-  fs8.writeFileSync(sessionFile(account), JSON.stringify(cookies, null, 2));
+  fs7.writeFileSync(sessionFile(account), JSON.stringify(cookies, null, 2));
 }
 async function loadSession(context, account) {
   const file = sessionFile(account);
-  if (!fs8.existsSync(file)) return false;
+  if (!fs7.existsSync(file)) return false;
   try {
-    const cookies = JSON.parse(fs8.readFileSync(file, "utf8"));
+    const cookies = JSON.parse(fs7.readFileSync(file, "utf8"));
     await context.addCookies(cookies);
     return true;
   } catch {
@@ -4242,7 +4153,7 @@ async function findCampaignRow(page, campaignId, campaignName) {
 async function debugScreenshot(page, label) {
   try {
     const dir = "/var/www/feminnita-marketing/debug-screenshots";
-    if (!fs8.existsSync(dir)) fs8.mkdirSync(dir, { recursive: true });
+    if (!fs7.existsSync(dir)) fs7.mkdirSync(dir, { recursive: true });
     await page.screenshot({ path: `${dir}/${label}-${Date.now()}.png`, fullPage: false });
   } catch {
   }
@@ -4295,8 +4206,20 @@ async function activateAdsCampaign(campaignId, account = "feminnita", campaignNa
 }
 async function importMLSession(cookies, account = "feminnita") {
   const file = sessionFile(account);
-  fs8.writeFileSync(file, JSON.stringify(cookies, null, 2));
+  fs7.writeFileSync(file, JSON.stringify(cookies, null, 2));
   console.log(`[MLBrowser] Sess\xE3o importada para ${account}: ${cookies.length} cookies \u2192 ${file}`);
+}
+function getMLSessionStatus(account = "feminnita") {
+  const file = sessionFile(account);
+  if (!fs7.existsSync(file)) return { exists: false, savedAt: null, ageDays: null, cookieCount: null };
+  try {
+    const stat = fs7.statSync(file);
+    const cookies = JSON.parse(fs7.readFileSync(file, "utf8"));
+    const ageDays = Math.floor((Date.now() - stat.mtimeMs) / (1e3 * 60 * 60 * 24));
+    return { exists: true, savedAt: stat.mtime, ageDays, cookieCount: Array.isArray(cookies) ? cookies.length : null };
+  } catch {
+    return { exists: false, savedAt: null, ageDays: null, cookieCount: null };
+  }
 }
 async function updateAdsBudget(campaignId, dailyBudget, account = "feminnita", campaignName = "") {
   return withMutex(`${account}-budget`, () => withBrowser(account, async (page) => {
@@ -4333,12 +4256,102 @@ var SESSIONS_DIR, SELLER_CENTER_URL, LOGIN_URL, TWOCAPTCHA_KEY, runningInstances
 var init_ml_ads_browser_agent = __esm({
   "server/agents/ml-ads-browser-agent.ts"() {
     "use strict";
-    SESSIONS_DIR = path8.join(process.cwd(), ".ml-sessions");
+    SESSIONS_DIR = path7.join(process.cwd(), ".ml-sessions");
     SELLER_CENTER_URL = "https://ads.mercadolivre.com.br/productAds";
     LOGIN_URL = "https://www.mercadolivre.com/jms/mlb/lgz/login";
     TWOCAPTCHA_KEY = process.env.TWOCAPTCHA_API_KEY || "";
-    if (!fs8.existsSync(SESSIONS_DIR)) fs8.mkdirSync(SESSIONS_DIR, { recursive: true });
+    if (!fs7.existsSync(SESSIONS_DIR)) fs7.mkdirSync(SESSIONS_DIR, { recursive: true });
     runningInstances = /* @__PURE__ */ new Map();
+  }
+});
+
+// server/services/tiktokContentApi.ts
+var tiktokContentApi_exports = {};
+__export(tiktokContentApi_exports, {
+  checkPublishStatus: () => checkPublishStatus,
+  publishVideoToTikTok: () => publishVideoToTikTok,
+  refreshTiktokToken: () => refreshTiktokToken
+});
+async function publishVideoToTikTok(accessToken, videoUrl, videoSize, postInfo) {
+  const size = videoSize || 1e7;
+  const resp = await fetch(`${API_BASE2}/post/publish/video/init/`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json; charset=UTF-8"
+    },
+    body: JSON.stringify({
+      post_info: {
+        title: postInfo.title.slice(0, 2200),
+        privacy_level: postInfo.privacyLevel || "PUBLIC_TO_EVERYONE",
+        disable_duet: false,
+        disable_comment: false,
+        disable_stitch: false,
+        video_cover_timestamp_ms: 1e3
+      },
+      source_info: {
+        source: "PULL_FROM_URL",
+        video_url: videoUrl,
+        video_size: size,
+        chunk_size: size,
+        total_chunk_count: 1
+      }
+    })
+  });
+  const data = await resp.json();
+  console.log("[TikTokContentAPI] publish/init response:", JSON.stringify(data));
+  if (data.error?.code && data.error.code !== "ok") {
+    throw new Error(`TikTok API: ${data.error.message || data.error.code}`);
+  }
+  return { publishId: data.data?.publish_id };
+}
+async function checkPublishStatus(accessToken, publishId) {
+  const resp = await fetch(`${API_BASE2}/post/publish/status/fetch/`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json; charset=UTF-8"
+    },
+    body: JSON.stringify({ publish_id: publishId })
+  });
+  const data = await resp.json();
+  return {
+    status: data.data?.status || "unknown",
+    failReason: data.data?.fail_reason,
+    publicationId: data.data?.publicaly_available_post_id?.[0]
+  };
+}
+async function refreshTiktokToken(refreshToken) {
+  const clientKey = process.env.TIKTOK_CLIENT_KEY || "";
+  const clientSecret = process.env.TIKTOK_CLIENT_SECRET || "";
+  if (!clientKey || !clientSecret) return null;
+  try {
+    const resp = await fetch(`${API_BASE2}/oauth/token/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_key: clientKey,
+        client_secret: clientSecret,
+        grant_type: "refresh_token",
+        refresh_token: refreshToken
+      }).toString()
+    });
+    const data = await resp.json();
+    if (data.error) return null;
+    return {
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token || refreshToken,
+      expiresIn: data.expires_in || 86400
+    };
+  } catch {
+    return null;
+  }
+}
+var API_BASE2;
+var init_tiktokContentApi = __esm({
+  "server/services/tiktokContentApi.ts"() {
+    "use strict";
+    API_BASE2 = "https://open.tiktokapis.com/v2";
   }
 });
 
@@ -23085,6 +23098,33 @@ var mlAdsManagerRouter = router({
     return { reply };
   }),
   /**
+   * Retorna o status da sessão Playwright salva localmente.
+   */
+  getMLSessionStatus: protectedProcedure.input(z58.object({ account: z58.enum(["feminnita", "fnt"]).default("feminnita") }).optional()).query(async ({ input }) => {
+    const acc = input?.account ?? "feminnita";
+    const { getMLSessionStatus: getMLSessionStatus2 } = await Promise.resolve().then(() => (init_ml_ads_browser_agent(), ml_ads_browser_agent_exports));
+    return getMLSessionStatus2(acc);
+  }),
+  /**
+   * Importa cookies de sessão ML copiados do browser do usuário.
+   */
+  uploadMLSession: protectedProcedure.input(z58.object({
+    account: z58.enum(["feminnita", "fnt"]).default("feminnita"),
+    cookies: z58.string().min(2)
+  })).mutation(async ({ input }) => {
+    let parsed;
+    try {
+      parsed = JSON.parse(input.cookies);
+      if (!Array.isArray(parsed)) throw new Error("Deve ser um array JSON");
+      if (parsed.length === 0) throw new Error("Array vazio");
+    } catch (e) {
+      throw new Error(`JSON inv\xE1lido: ${e.message}`);
+    }
+    const { importMLSession: importMLSession2 } = await Promise.resolve().then(() => (init_ml_ads_browser_agent(), ml_ads_browser_agent_exports));
+    await importMLSession2(parsed, input.account);
+    return { ok: true, count: parsed.length };
+  }),
+  /**
    * Lista mensagens de uma conversa.
    */
   getMessages: protectedProcedure.input(z58.object({ evaluationId: z58.number() })).query(async ({ ctx, input }) => {
@@ -25942,8 +25982,8 @@ NOME DO USU\xC1RIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
 // server/agents/video-generator.ts
 init_tts();
 import ffmpegLib from "fluent-ffmpeg";
-import * as fs7 from "fs/promises";
-import * as path7 from "path";
+import * as fs8 from "fs/promises";
+import * as path8 from "path";
 import * as os from "os";
 import * as crypto10 from "crypto";
 try {
@@ -25963,18 +26003,18 @@ try {
 }
 async function generateVideoFromImages(params) {
   const { imageUrls, hookText = "", ctaText = "", durationPerImage = 4, dubbing = false, voiceId } = params;
-  const tmpDir = await fs7.mkdtemp(path7.join(os.tmpdir(), "feminnita-vid-"));
+  const tmpDir = await fs8.mkdtemp(path8.join(os.tmpdir(), "feminnita-vid-"));
   try {
-    const uploadsDir = path7.resolve(process.cwd(), "uploads");
+    const uploadsDir = path8.resolve(process.cwd(), "uploads");
     const imagePaths = [];
     for (let i = 0; i < imageUrls.length; i++) {
       const url = imageUrls[i];
       let buf;
       let ext = ".jpg";
       if (url.startsWith("/uploads/")) {
-        const localPath = path7.join(uploadsDir, path7.basename(url));
-        buf = await fs7.readFile(localPath);
-        const localExt = path7.extname(url).toLowerCase();
+        const localPath = path8.join(uploadsDir, path8.basename(url));
+        buf = await fs8.readFile(localPath);
+        const localExt = path8.extname(url).toLowerCase();
         if (localExt) ext = localExt;
       } else {
         const res = await fetch(url);
@@ -25983,19 +26023,19 @@ async function generateVideoFromImages(params) {
         const ct = res.headers.get("content-type") || "image/jpeg";
         ext = ct.includes("png") ? ".png" : ct.includes("webp") ? ".webp" : ".jpg";
       }
-      const imgPath = path7.join(tmpDir, `img${i}${ext}`);
-      await fs7.writeFile(imgPath, buf);
+      const imgPath = path8.join(tmpDir, `img${i}${ext}`);
+      await fs8.writeFile(imgPath, buf);
       imagePaths.push(imgPath);
     }
-    const outputPath = path7.join(tmpDir, "output.mp4");
+    const outputPath = path8.join(tmpDir, "output.mp4");
     const totalDuration = imagePaths.length * durationPerImage;
     let audioPath;
     if (dubbing && (hookText || ctaText)) {
       try {
         const dubbingText = [hookText, ctaText].filter(Boolean).join(". ");
         const audioBuffer = await textToSpeech(dubbingText, void 0, voiceId);
-        audioPath = path7.join(tmpDir, "dubbing.mp3");
-        await fs7.writeFile(audioPath, audioBuffer);
+        audioPath = path8.join(tmpDir, "dubbing.mp3");
+        await fs8.writeFile(audioPath, audioBuffer);
       } catch (err) {
         console.warn("[VideoGenerator] Dublagem falhou, gerando sem \xE1udio:", err.message);
         audioPath = void 0;
@@ -26012,13 +26052,13 @@ async function generateVideoFromImages(params) {
     if (!rendered) {
       await renderSlideshow({ imagePaths, durationPerImage, outputPath, audioPath });
     }
-    await fs7.mkdir(uploadsDir, { recursive: true });
+    await fs8.mkdir(uploadsDir, { recursive: true });
     const filename = `${Date.now()}-${crypto10.randomBytes(8).toString("hex")}.mp4`;
-    const destPath = path7.join(uploadsDir, filename);
-    await fs7.copyFile(outputPath, destPath);
+    const destPath = path8.join(uploadsDir, filename);
+    await fs8.copyFile(outputPath, destPath);
     return `/uploads/${filename}`;
   } finally {
-    await fs7.rm(tmpDir, { recursive: true, force: true }).catch(() => {
+    await fs8.rm(tmpDir, { recursive: true, force: true }).catch(() => {
     });
   }
 }
