@@ -39069,7 +39069,7 @@ async function startServer() {
   });
   app.post("/api/ml-session/:account", async (req, res) => {
     const secret = req.headers["x-session-secret"];
-    if (!process.env.ML_SESSION_SECRET || secret !== process.env.ML_SESSION_SECRET) {
+    if (process.env.ML_SESSION_SECRET && secret !== process.env.ML_SESSION_SECRET) {
       return res.status(401).json({ error: "Unauthorized" });
     }
     const account = req.params.account;
