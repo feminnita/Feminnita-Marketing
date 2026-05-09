@@ -459,10 +459,12 @@ export async function pauseAdsCampaign(campaignId: string, account: "feminnita" 
     await page.waitForTimeout(2000);
     await debugScreenshot(page, `pause-${account}-loaded`);
 
+    const pauseUrl = page.url();
+    const pauseTitle = await page.title().catch(() => "");
     const row = await findCampaignRow(page, campaignId, campaignName);
     if (!row) {
       await debugScreenshot(page, `pause-${account}-notfound`);
-      return `Campanha "${campaignName || campaignId}" não encontrada na página de anúncios. Verifique se está ativa no Seller Center.`;
+      return `Campanha "${campaignName || campaignId}" não encontrada. [URL: ${pauseUrl}] [Title: ${pauseTitle}]`;
     }
 
     // Tenta toggle/switch de status ou botão de pausa
@@ -483,8 +485,10 @@ export async function activateAdsCampaign(campaignId: string, account: "feminnit
     await page.goto(SELLER_CENTER_URL, { waitUntil: "networkidle", timeout: 30000 });
     await page.waitForTimeout(2000);
 
+    const activateUrl = page.url();
+    const activateTitle = await page.title().catch(() => "");
     const row = await findCampaignRow(page, campaignId, campaignName);
-    if (!row) return `Campanha "${campaignName || campaignId}" não encontrada.`;
+    if (!row) return `Campanha "${campaignName || campaignId}" não encontrada. [URL: ${activateUrl}] [Title: ${activateTitle}]`;
 
     const activateBtn = row.locator('[role="switch"], button[aria-label*="tivar"], button[title*="tivar"]').first();
     if (!await activateBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
@@ -507,9 +511,12 @@ export async function updateAdsBudget(campaignId: string, dailyBudget: number, a
   return withMutex(`${account}-budget`, () => withBrowser(account, async (page) => {
     await page.goto(SELLER_CENTER_URL, { waitUntil: "networkidle", timeout: 30000 });
     await page.waitForTimeout(2000);
+    await debugScreenshot(page, `budget-${account}-loaded`);
 
+    const finalUrl = page.url();
+    const pageTitle = await page.title().catch(() => "");
     const row = await findCampaignRow(page, campaignId, campaignName);
-    if (!row) return `Campanha "${campaignName || campaignId}" não encontrada para edição.`;
+    if (!row) return `Campanha "${campaignName || campaignId}" não encontrada. [URL: ${finalUrl}] [Title: ${pageTitle}]`;
 
     const editBtn = row.locator('button[aria-label*="ditar"], a[href*="edit"], button[title*="ditar"]').first();
     if (!await editBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
