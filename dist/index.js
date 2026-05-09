@@ -4056,7 +4056,7 @@ async function withBrowser(account, fn) {
   const proxyUser = process.env.WEBSHARE_USER;
   const proxyPass = process.env.WEBSHARE_PASS;
   const proxyConfig = proxyHost && proxyPort ? {
-    server: `http://${proxyHost}:${proxyPort}`,
+    server: `socks5://${proxyHost}:${proxyPort}`,
     username: proxyUser,
     password: proxyPass
   } : void 0;
@@ -4188,8 +4188,8 @@ var init_ml_ads_browser_agent = __esm({
   "server/agents/ml-ads-browser-agent.ts"() {
     "use strict";
     SESSIONS_DIR = path8.join(process.cwd(), ".ml-sessions");
-    SELLER_CENTER_URL = "https://www.mercadolivre.com.br/advertising/product-ads";
-    LOGIN_URL = "https://www.mercadolivre.com.br/login";
+    SELLER_CENTER_URL = "https://ads.mercadolivre.com.br/productAds";
+    LOGIN_URL = "https://www.mercadolivre.com/jms/mlb/lgz/login";
     TWOCAPTCHA_KEY = process.env.TWOCAPTCHA_API_KEY || "";
     if (!fs8.existsSync(SESSIONS_DIR)) fs8.mkdirSync(SESSIONS_DIR, { recursive: true });
     runningInstances = /* @__PURE__ */ new Map();
