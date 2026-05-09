@@ -54,18 +54,14 @@ export function registerDeployWebhook(app: any) {
 
     res.json({ ok: true, msg: "Deploy iniciado" });
 
-    // Fase 1: git pull + npm install + build + restart (crítico — deve sempre rodar)
-    const deployCmd = "cd /var/www/feminnita-marketing && git pull && npm install --legacy-peer-deps && npm run build && pm2 restart feminnita-marketing";
+    // dist/index.js já foi buildado no GitHub Actions — só precisa de git pull + restart
+    const deployCmd = "cd /var/www/feminnita-marketing && git pull && (pm2 startOrRestart ecosystem.config.cjs --env production 2>/dev/null || pm2 restart feminnita-marketing 2>/dev/null || pm2 restart all 2>/dev/null)";
     exec(deployCmd, (err, stdout, stderr) => {
       if (err) {
-        console.error("[Deploy] Erro na fase 1:", err.message);
+        console.error("[Deploy] Erro:", err.message);
         console.error("[Deploy] stderr:", stderr.slice(-500));
       } else {
-        console.log("[Deploy] Fase 1 concluída:", stdout.slice(-300));
-        // Fase 2: Playwright install em background, desacoplado do restart
-        exec("nohup npx playwright install chromium --with-deps > /tmp/playwright-install.log 2>&1 &", () => {
-          console.log("[Deploy] Playwright install rodando em background (/tmp/playwright-install.log)");
-        });
+        console.log("[Deploy] Concluído:", stdout.slice(-300));
       }
     });
   });
