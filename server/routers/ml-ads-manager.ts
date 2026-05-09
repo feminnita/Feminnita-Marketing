@@ -209,6 +209,39 @@ export const mlAdsManagerRouter = router({
     }),
 
   /**
+   * Retorna o status da sessão Playwright salva localmente.
+   */
+  getMLSessionStatus: protectedProcedure
+    .input(z.object({ account: z.enum(["feminnita", "fnt"]).default("feminnita") }).optional())
+    .query(async ({ input }) => {
+      const acc = input?.account ?? "feminnita";
+      const { getMLSessionStatus } = await import("../agents/ml-ads-browser-agent");
+      return getMLSessionStatus(acc);
+    }),
+
+  /**
+   * Importa cookies de sessão ML copiados do browser do usuário.
+   */
+  uploadMLSession: protectedProcedure
+    .input(z.object({
+      account: z.enum(["feminnita", "fnt"]).default("feminnita"),
+      cookies: z.string().min(2),
+    }))
+    .mutation(async ({ input }) => {
+      let parsed: any[];
+      try {
+        parsed = JSON.parse(input.cookies);
+        if (!Array.isArray(parsed)) throw new Error("Deve ser um array JSON");
+        if (parsed.length === 0) throw new Error("Array vazio");
+      } catch (e: any) {
+        throw new Error(`JSON inválido: ${e.message}`);
+      }
+      const { importMLSession } = await import("../agents/ml-ads-browser-agent");
+      await importMLSession(parsed, input.account);
+      return { ok: true, count: parsed.length };
+    }),
+
+  /**
    * Lista mensagens de uma conversa.
    */
   getMessages: protectedProcedure

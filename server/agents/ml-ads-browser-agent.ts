@@ -562,6 +562,20 @@ export async function importMLSession(cookies: any[], account: "feminnita" | "fn
   console.log(`[MLBrowser] Sessão importada para ${account}: ${cookies.length} cookies → ${file}`);
 }
 
+/** Retorna status da sessão salva (existe, quando foi salva, quantos dias atrás). */
+export function getMLSessionStatus(account: "feminnita" | "fnt" = "feminnita"): { exists: boolean; savedAt: Date | null; ageDays: number | null; cookieCount: number | null } {
+  const file = sessionFile(account);
+  if (!fs.existsSync(file)) return { exists: false, savedAt: null, ageDays: null, cookieCount: null };
+  try {
+    const stat = fs.statSync(file);
+    const cookies = JSON.parse(fs.readFileSync(file, "utf8"));
+    const ageDays = Math.floor((Date.now() - stat.mtimeMs) / (1000 * 60 * 60 * 24));
+    return { exists: true, savedAt: stat.mtime, ageDays, cookieCount: Array.isArray(cookies) ? cookies.length : null };
+  } catch {
+    return { exists: false, savedAt: null, ageDays: null, cookieCount: null };
+  }
+}
+
 export async function updateAdsBudget(campaignId: string, dailyBudget: number, account: "feminnita" | "fnt" = "feminnita", campaignName = ""): Promise<string> {
   return withMutex(`${account}-budget`, () => withBrowser(account, async (page) => {
     await page.goto(SELLER_CENTER_URL, { waitUntil: "networkidle", timeout: 30000 });

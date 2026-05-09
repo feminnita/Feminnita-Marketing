@@ -21,6 +21,8 @@ import {
   Eye,
   MousePointerClick,
   DollarSign,
+  Cookie,
+  Upload,
 } from "lucide-react";
 
 function toStr(item: any): string {
@@ -114,6 +116,8 @@ export default function MlAdsManagerPage() {
   const [isSending, setIsSending] = useState(false);
   const [showCampaigns, setShowCampaigns] = useState(false);
   const [account, setAccount] = useState<"feminnita" | "fnt">("feminnita");
+  const [showSessionPanel, setShowSessionPanel] = useState(false);
+  const [cookieInput, setCookieInput] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // ─── Queries ────────────────────────────────────────────────────────────────
@@ -148,6 +152,20 @@ export default function MlAdsManagerPage() {
     { account } as any,
     { enabled: authStatus.data?.connected && showCampaigns, retry: false }
   );
+
+  const sessionStatus = trpc.mlAdsManager.getMLSessionStatus.useQuery(
+    { account } as any,
+    { refetchInterval: showSessionPanel ? 10000 : false }
+  );
+
+  const uploadSession = trpc.mlAdsManager.uploadMLSession.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Sessão salva! ${data.count} cookies importados.`);
+      setCookieInput("");
+      sessionStatus.refetch();
+    },
+    onError: (err) => toast.error(`Erro ao salvar sessão: ${err.message}`),
+  });
 
   // ─── Mutations ───────────────────────────────────────────────────────────────
 
@@ -268,6 +286,18 @@ export default function MlAdsManagerPage() {
 
           <div className="flex items-center gap-3">
             <button
+              onClick={() => setShowSessionPanel((v) => !v)}
+              className={`flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg transition-colors ${showSessionPanel ? "bg-yellow-400 text-gray-900" : "bg-white/80 hover:bg-white text-gray-800"}`}
+            >
+              <Cookie className="w-4 h-4" />
+              Sessão ML
+              {sessionStatus.data?.exists ? (
+                <span className={`w-2 h-2 rounded-full ${(sessionStatus.data.ageDays ?? 99) > 25 ? "bg-red-400" : "bg-green-400"}`} />
+              ) : (
+                <span className="w-2 h-2 rounded-full bg-gray-400" />
+              )}
+            </button>
+            <button
               onClick={() => setShowCampaigns((v) => !v)}
               className="flex items-center gap-2 bg-white/80 hover:bg-white text-gray-800 text-sm font-medium px-4 py-2 rounded-lg transition-colors"
             >
@@ -291,6 +321,73 @@ export default function MlAdsManagerPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+        {/* Session Import Panel */}
+        {showSessionPanel && (
+          <div className="bg-[#0f172a] rounded-xl border border-yellow-500/30 shadow-sm">
+            <div className="px-6 py-4 border-b border-yellow-500/20 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Cookie className="w-4 h-4 text-yellow-400" />
+                <h2 className="font-semibold text-yellow-300 text-sm">Sessão do Browser ML</h2>
+                <span className="text-xs text-yellow-500/70">— necessária para o agente executar ações no Seller Center</span>
+              </div>
+              {sessionStatus.data && (
+                <div className="flex items-center gap-2 text-xs">
+                  {sessionStatus.data.exists ? (
+                    <>
+                      <span className={`w-2 h-2 rounded-full ${(sessionStatus.data.ageDays ?? 99) > 25 ? "bg-red-400" : "bg-green-400"}`} />
+                      <span className="text-yellow-300">
+                        {sessionStatus.data.cookieCount} cookies · salvo {sessionStatus.data.ageDays === 0 ? "hoje" : `há ${sessionStatus.data.ageDays} dia${sessionStatus.data.ageDays !== 1 ? "s" : ""}`}
+                        {(sessionStatus.data.ageDays ?? 0) > 25 && " ⚠️ renovar em breve"}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="w-2 h-2 rounded-full bg-red-400" />
+                      <span className="text-red-400">Nenhuma sessão salva — o agente não consegue fazer login</span>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="px-6 py-5 space-y-4">
+              <div className="bg-[#1e293b] rounded-lg p-4 text-xs text-yellow-200/80 space-y-1.5 border border-yellow-500/10">
+                <p className="font-semibold text-yellow-300 mb-2">Como exportar os cookies do seu browser:</p>
+                <p>1. Abra <strong>mercadolivre.com.br</strong> no Chrome/Edge e faça login normalmente</p>
+                <p>2. Pressione <strong>F12</strong> → aba <strong>Application</strong> → <strong>Cookies</strong> → <strong>https://www.mercadolivre.com.br</strong></p>
+                <p>3. Instale a extensão <strong>"EditThisCookie"</strong> ou <strong>"Cookie Editor"</strong> (Chrome Web Store)</p>
+                <p>4. Clique em <strong>Exportar como JSON</strong> na extensão</p>
+                <p>5. Cole o JSON abaixo e clique em Salvar Sessão</p>
+                <p className="text-yellow-400/60 pt-1">A sessão dura ~30 dias. O indicador verde/vermelho no botão avisa quando renovar.</p>
+              </div>
+
+              <textarea
+                value={cookieInput}
+                onChange={(e) => setCookieInput(e.target.value)}
+                placeholder='[{"name":"MLLID","value":"...","domain":".mercadolivre.com.br",...}, ...]'
+                className="w-full h-32 text-xs font-mono bg-[#1e293b] border border-yellow-500/20 rounded-lg px-4 py-3 text-yellow-100 placeholder-yellow-500/30 focus:outline-none focus:ring-1 focus:ring-yellow-500/50 resize-none"
+              />
+
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  onClick={() => setCookieInput("")}
+                  className="text-sm text-yellow-500/60 hover:text-yellow-400 transition-colors"
+                >
+                  Limpar
+                </button>
+                <button
+                  onClick={() => uploadSession.mutate({ account, cookies: cookieInput.trim() })}
+                  disabled={!cookieInput.trim() || uploadSession.isPending}
+                  className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {uploadSession.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                  Salvar Sessão
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Live Campaigns Table */}
         {showCampaigns && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200">
