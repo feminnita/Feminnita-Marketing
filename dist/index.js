@@ -4263,25 +4263,22 @@ async function updateAdsBudget(campaignId, dailyBudget, account = "feminnita", c
       const visible = await logVisibleCampaigns(page);
       return `Campanha "${campaignName || campaignId}" n\xE3o encontrada. [URL: ${page.url()}] [Rows: ${rowCount}] [Vis\xEDveis: ${visible}]`;
     }
-    const budgetCell = row.locator('td, [class*="budget"], [class*="orcamento"], [class*="daily"]').filter({ hasText: /R\$|\d+,\d+/ }).first();
-    const hasBudgetCell = await budgetCell.isVisible({ timeout: 2e3 }).catch(() => false);
-    if (hasBudgetCell) {
-      await budgetCell.click();
-      await page.waitForTimeout(1e3);
-    } else {
-      await row.hover().catch(() => {
-      });
-      await page.waitForTimeout(500);
-      const pencil = row.locator('button[aria-label*="ditar"], button[aria-label*="dit"], svg[class*="edit"], [class*="pencil"]').first();
-      if (await pencil.isVisible({ timeout: 2e3 }).catch(() => false)) {
-        await pencil.click();
+    const campaignLink = row.locator('a, [role="link"], td:nth-child(3), td:nth-child(2)').first();
+    await campaignLink.click().catch(() => row.click());
+    await page.waitForTimeout(3e3);
+    await debugScreenshot(page, `budget-${account}-detail`);
+    let budgetInput = page.locator('input[name*="budget" i], input[name*="Budget"], input[placeholder*="udget" i], input[aria-label*="udget" i], input[type="number"]').first();
+    if (!await budgetInput.isVisible({ timeout: 4e3 }).catch(() => false)) {
+      const budgetCell = page.locator("td, span, div").filter({ hasText: /^R\$\s*[\d,.]+$/ }).first();
+      if (await budgetCell.isVisible({ timeout: 2e3 }).catch(() => false)) {
+        await budgetCell.click();
         await page.waitForTimeout(1e3);
       }
+      budgetInput = page.locator('input[type="number"], input[inputmode="numeric"], input[inputmode="decimal"]').first();
     }
-    const budgetInput = page.locator('input[name*="budget"], input[name*="Budget"], input[placeholder*="udget"], input[aria-label*="udget"], input[type="number"]').first();
     if (!await budgetInput.isVisible({ timeout: 5e3 }).catch(() => false)) {
-      const rowText = await row.innerText().catch(() => "");
-      return `Campo de budget n\xE3o encontrado para "${campaignName || campaignId}". Conte\xFAdo da linha: ${rowText.slice(0, 200)}`;
+      const pageText = await page.evaluate(() => document.body?.innerText?.slice(0, 600) ?? "").catch(() => "");
+      return `Campo de budget n\xE3o encontrado para "${campaignName || campaignId}". [URL: ${page.url()}] [P\xE1gina: ${pageText.replace(/\n/g, " ").slice(0, 400)}]`;
     }
     await budgetInput.click({ clickCount: 3 });
     await budgetInput.fill(String(dailyBudget));
@@ -4289,11 +4286,10 @@ async function updateAdsBudget(campaignId, dailyBudget, account = "feminnita", c
     const saveBtn = page.locator('button[type="submit"], button:has-text("Salvar"), button:has-text("Confirmar"), button:has-text("OK"), button[aria-label*="alvar"]').first();
     if (await saveBtn.isVisible({ timeout: 3e3 }).catch(() => false)) {
       await saveBtn.click();
-      await page.waitForTimeout(1500);
     } else {
       await budgetInput.press("Enter");
-      await page.waitForTimeout(1500);
     }
+    await page.waitForTimeout(2e3);
     await debugScreenshot(page, `budget-${account}-saved`);
     return `Budget di\xE1rio da campanha "${campaignName || campaignId}" atualizado para R$${dailyBudget}.`;
   }));
