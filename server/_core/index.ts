@@ -156,6 +156,40 @@ async function startServer() {
     }
   });
 
+  // Debug: insere ação de teste no banco (remove após validar o agente)
+  app.post("/api/debug/test-action", async (_req, res) => {
+    try {
+      const { getDb } = await import("../db");
+      const { agentActions } = await import("../../drizzle/schema");
+      const db = await getDb();
+      if (!db) return res.status(503).json({ error: "Banco indisponível" });
+      const today = new Date().toISOString().slice(0, 10);
+      await db.insert(agentActions).values({
+        agentName:       "gabi",
+        date:            today,
+        title:           "TESTE — Verificar autenticação Playwright",
+        description:     "Ação de teste para validar login do agente via token OAuth",
+        actionType:      "update_ads_budget",
+        priority:        "alta",
+        estimatedImpact: "Teste de integração",
+        status:          "pending",
+        payload: {
+          account:      "feminnita",
+          action:       "update_ads_budget",
+          budget:       50,
+          campaignId:   "MLB6654249798",
+          campaignName: "Pijama Longo Thais Suede",
+          platform:     "ml",
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      return res.json({ ok: true, message: "Ação de teste criada — aguarde até 5min para execução" });
+    } catch (e: any) {
+      return res.status(500).json({ error: e.message });
+    }
+  });
+
   // Debug endpoint — últimas ações da Gabi (sem auth, VPS interno)
   app.get("/api/debug/agent-actions", async (_req, res) => {
     try {
