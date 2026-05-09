@@ -12,11 +12,23 @@ jobs:
         env:
           SHOPEE_SELLER_EMAIL: ${{ secrets.SHOPEE_SELLER_EMAIL }}
           SHOPEE_SELLER_PASSWORD: ${{ secrets.SHOPEE_SELLER_PASSWORD }}
+          SHOPEE_SELLER_EMAIL_2: ${{ secrets.SHOPEE_SELLER_EMAIL_2 }}
+          SHOPEE_SELLER_PASSWORD_2: ${{ secrets.SHOPEE_SELLER_PASSWORD_2 }}
+          ML_EMAIL_1: ${{ secrets.ML_EMAIL_1 }}
+          ML_PASSWORD_1: ${{ secrets.ML_PASSWORD_1 }}
+          ML_EMAIL_2: ${{ secrets.ML_EMAIL_2 }}
+          ML_PASSWORD_2: ${{ secrets.ML_PASSWORD_2 }}
         run: |
           BODY=$(jq -n \
-            --arg email "$SHOPEE_SELLER_EMAIL" \
-            --arg pass "$SHOPEE_SELLER_PASSWORD" \
-            '{"ref":"refs/heads/main","envVars":{"SHOPEE_SELLER_EMAIL":$email,"SHOPEE_SELLER_PASSWORD":$pass}}')
+            --arg shopee_email "$SHOPEE_SELLER_EMAIL" \
+            --arg shopee_pass "$SHOPEE_SELLER_PASSWORD" \
+            --arg shopee_email2 "$SHOPEE_SELLER_EMAIL_2" \
+            --arg shopee_pass2 "$SHOPEE_SELLER_PASSWORD_2" \
+            --arg ml_email "$ML_EMAIL_1" \
+            --arg ml_pass "$ML_PASSWORD_1" \
+            --arg ml_email2 "$ML_EMAIL_2" \
+            --arg ml_pass2 "$ML_PASSWORD_2" \
+            '{"ref":"refs/heads/main","envVars":{"SHOPEE_SELLER_EMAIL":$shopee_email,"SHOPEE_SELLER_PASSWORD":$shopee_pass,"SHOPEE_SELLER_EMAIL_2":$shopee_email2,"SHOPEE_SELLER_PASSWORD_2":$shopee_pass2,"ML_EMAIL_1":$ml_email,"ML_PASSWORD_1":$ml_pass,"ML_EMAIL_2":$ml_email2,"ML_PASSWORD_2":$ml_pass2}}')
           SIG=$(echo -n "$BODY" | openssl dgst -sha256 -hmac "${{ secrets.DEPLOY_SECRET }}" | awk '{print $2}')
           curl -sf -X POST https://marketing.feminnita.com.br/api/deploy \
             -H "Content-Type: application/json" \
