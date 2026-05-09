@@ -8,8 +8,9 @@ import fs from "fs";
 import path from "path";
 
 const SESSIONS_DIR = path.join(process.cwd(), ".ml-sessions");
-// Painel de Product Ads do Seller Center — redireciona para login se não autenticado
-const SELLER_CENTER_URL = "https://www.mercadolivre.com.br/publicidade/product-ads";
+// URL final do painel de Product Ads (depois de todos os redirects HTTP do ML)
+// www.mercadolivre.com.br/publicidade/product-ads → 302 → publicidade.ml.com.br → 301 → esta URL
+const SELLER_CENTER_URL = "https://ads.mercadolivre.com.br/productAds";
 const LOGIN_URL = "https://www.mercadolivre.com/jms/mlb/lgz/login";
 const TWOCAPTCHA_KEY = process.env.TWOCAPTCHA_API_KEY || "";
 
@@ -239,37 +240,71 @@ async function loginML(page: Page, account: "feminnita" | "fnt"): Promise<boolea
   }
 }
 
+async function waitForAuthCheck(page: Page): Promise<string> {
+  // Aguarda a SPA React completar o check de autenticação via JS.
+  // networkidle garante que chamadas de API (incluindo o check de auth) terminaram.
+  // Depois, captura a URL final — se for login page, não está autenticado.
+  try {
+    await page.waitForLoadState("networkidle", { timeout: 20000 });
+  } catch {
+    // timeout ok, verifica URL de qualquer forma
+  }
+  // Dá mais 1s para JS de redirect terminar após networkidle
+  await page.waitForTimeout(1000);
+  return page.url();
+}
+
+async function isOnSellerDashboard(url: string): Promise<boolean> {
+  // Está no seller center se: não está em página de login E está na URL do productAds
+  const onLogin = url.includes("/login") || url.includes("/jms/lgz/") || url.includes("lgz/login");
+  const onAds   = url.includes("productAds") || url.includes("ads.mercadolivre") || url.includes("publicidade");
+  return !onLogin && onAds;
+}
+
 async function ensureLoggedIn(page: Page, context: BrowserContext, account: "feminnita" | "fnt"): Promise<boolean> {
-  // 1. Tenta sessão salva em cookies (mais rápido)
+  // 1. Carrega cookies salvos e verifica se ainda são válidos
   const hasSaved = await loadSession(context, account);
   if (hasSaved) {
     try {
       await page.goto(SELLER_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 25000 });
     } catch {}
-    const url = page.url();
-    if (!url.includes("/login") && !url.includes("/jms/")) {
-      console.log(`[MLBrowser] Sessão válida via cookies salvos — ${account}`);
+    const url = await waitForAuthCheck(page);
+    if (await isOnSellerDashboard(url)) {
+      console.log(`[MLBrowser] Sessão válida via cookies salvos — ${account} — URL: ${url}`);
       return true;
     }
-    console.warn(`[MLBrowser] Cookies salvos expiraram para ${account}`);
+    console.warn(`[MLBrowser] Cookies salvos inválidos para ${account} — URL: ${url}`);
   }
 
-  // 2. Tenta converter o access_token OAuth em sessão de browser (bypass reCAPTCHA)
+  // 2. Tenta auth-from-token endpoint do ML (evita reCAPTCHA)
   const tokenOk = await tryTokenToBrowserSession(page, context, account);
   if (tokenOk) {
     try {
       await page.goto(SELLER_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 25000 });
     } catch {}
-    const url = page.url();
-    if (!url.includes("/login") && !url.includes("/jms/")) {
+    const url = await waitForAuthCheck(page);
+    if (await isOnSellerDashboard(url)) {
       console.log(`[MLBrowser] Sessão via token OK para ${account} — salvando...`);
       await saveSession(context, account);
       return true;
     }
-    console.warn(`[MLBrowser] Token injetado mas seller center ainda exige login para ${account}`);
+    console.warn(`[MLBrowser] auth-from-token não funcionou para ${account} — URL: ${url}`);
   }
 
-  // 3. Último recurso: login via formulário (esbarra em reCAPTCHA se rodando em datacenter)
+  // 3. localStorage injection já foi feita via addInitScript — testa direto
+  console.log(`[MLBrowser] Tentando acesso via localStorage token para ${account}...`);
+  try {
+    await page.goto(SELLER_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 25000 });
+  } catch {}
+  const urlAfterLs = await waitForAuthCheck(page);
+  if (await isOnSellerDashboard(urlAfterLs)) {
+    console.log(`[MLBrowser] Sessão via localStorage OK para ${account} — URL: ${urlAfterLs}`);
+    await saveSession(context, account);
+    return true;
+  }
+  console.warn(`[MLBrowser] localStorage não autenticou para ${account} — URL: ${urlAfterLs}`);
+
+  // 4. Último recurso: login via formulário
   console.log(`[MLBrowser] Tentando login via formulário para ${account}...`);
   const ok = await loginML(page, account);
   if (ok) await saveSession(context, account);
@@ -385,6 +420,20 @@ async function withBrowser<T>(
     locale: "pt-BR",
     proxy: proxyConfig,
   });
+
+  // Injeta o access_token OAuth no localStorage antes da SPA carregar.
+  // A SPA do ML lê o token de localStorage para autenticar chamadas à API.
+  const accessToken = account === "fnt" ? process.env.ML_ACCESS_TOKEN_2 : process.env.ML_ACCESS_TOKEN_1;
+  if (accessToken) {
+    await context.addInitScript((token: string) => {
+      try {
+        localStorage.setItem("access_token", token);
+        localStorage.setItem("ml:access_token", token);
+        localStorage.setItem("@api/access_token", token);
+      } catch {}
+    }, accessToken);
+  }
+
   const page = await context.newPage();
 
   try {
