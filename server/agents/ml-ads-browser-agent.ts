@@ -498,6 +498,17 @@ export async function listAdsCampaigns(account: "feminnita" | "fnt" = "feminnita
 
 // ─── Localiza linha da campanha por nome ou ID ────────────────────────────────
 
+async function scanRowsForCampaign(page: Page, lowerName: string, lowerId: string): Promise<any> {
+  const rows = await page.locator("tr").all();
+  for (const row of rows) {
+    const text = (await row.innerText().catch(() => "")).toLowerCase();
+    if ((lowerName && text.includes(lowerName)) || (lowerId && text.includes(lowerId))) {
+      return row;
+    }
+  }
+  return null;
+}
+
 async function findCampaignRow(page: Page, campaignId: string, campaignName: string): Promise<any> {
   // Tenta por data-id primeiro
   for (const attr of ["data-id", "data-campaign-id"]) {
@@ -508,23 +519,21 @@ async function findCampaignRow(page: Page, campaignId: string, campaignName: str
   const lowerName = campaignName.toLowerCase().trim();
   const lowerId   = campaignId.toLowerCase().trim();
 
-  // Tenta usar o campo de busca do dashboard (mais confiável que escanear linhas)
-  const searchBox = page.locator('input[placeholder*="uscar"], input[placeholder*="earch"], input[aria-label*="uscar"], input[aria-label*="earch"]').first();
-  if (await searchBox.isVisible({ timeout: 3000 }).catch(() => false)) {
-    const term = campaignName || campaignId;
-    console.log(`[MLBrowser] Buscando "${term}" via search box...`);
-    await searchBox.fill(term);
+  // Escaneia página atual
+  let found = await scanRowsForCampaign(page, lowerName, lowerId);
+  if (found) return found;
+
+  // Navega pelas páginas seguintes (paginação do ML Ads — até 10 páginas)
+  for (let p = 2; p <= 10; p++) {
+    const nextBtn = page.locator('button:has-text("Seguinte"), a:has-text("Seguinte"), button[aria-label*="ext"], a[aria-label*="ext"]').first();
+    if (!await nextBtn.isVisible({ timeout: 2000 }).catch(() => false)) break;
+    await nextBtn.click();
     await page.waitForTimeout(2000);
+    console.log(`[MLBrowser] Verificando página ${p} de campanhas...`);
+    found = await scanRowsForCampaign(page, lowerName, lowerId);
+    if (found) return found;
   }
 
-  // Escaneia todas as linhas (após busca ou direto)
-  const rows = await page.locator("tr").all();
-  for (const row of rows) {
-    const text = (await row.innerText().catch(() => "")).toLowerCase();
-    if ((lowerName && text.includes(lowerName)) || (lowerId && text.includes(lowerId))) {
-      return row;
-    }
-  }
   return null;
 }
 
@@ -628,28 +637,25 @@ export async function updateAdsBudget(campaignId: string, dailyBudget: number, a
       return `Campanha "${campaignName || campaignId}" não encontrada. [URL: ${page.url()}] [Rows: ${rowCount}] [Visíveis: ${visible}]`;
     }
 
-    // Clica no nome da campanha para abrir a página de detalhes/edição
-    const campaignLink = row.locator('a, [role="link"], td:nth-child(3), td:nth-child(2)').first();
-    await campaignLink.click().catch(() => row.click());
-    await page.waitForTimeout(3000);
-    await debugScreenshot(page, `budget-${account}-detail`);
-
-    // Tenta encontrar input de budget na página de detalhe ou inline
-    let budgetInput = page.locator('input[name*="budget" i], input[name*="Budget"], input[placeholder*="udget" i], input[aria-label*="udget" i], input[type="number"]').first();
-
-    if (!await budgetInput.isVisible({ timeout: 4000 }).catch(() => false)) {
-      // Inline edit: procura célula com R$ e clica nela
-      const budgetCell = page.locator('td, span, div').filter({ hasText: /^R\$\s*[\d,.]+$/ }).first();
-      if (await budgetCell.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await budgetCell.click();
-        await page.waitForTimeout(1000);
-      }
-      budgetInput = page.locator('input[type="number"], input[inputmode="numeric"], input[inputmode="decimal"]').first();
+    // Clica no ícone de lápis (✏️) dentro da célula de orçamento
+    // Screenshot confirmou: cada linha tem "R$ XX 🖊" na coluna de budget
+    const budgetTd = row.locator('td').filter({ hasText: /R\$/ }).first();
+    await budgetTd.hover().catch(() => {});
+    await page.waitForTimeout(300);
+    const pencilBtn = budgetTd.locator('button, [role="button"]').first();
+    if (await pencilBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await pencilBtn.click();
+    } else {
+      await budgetTd.click();
     }
+    await page.waitForTimeout(1000);
+    await debugScreenshot(page, `budget-${account}-pencil`);
 
+    // Aguarda input inline aparecer após clicar no lápis
+    const budgetInput = page.locator('input[type="number"], input[inputmode="numeric"], input[inputmode="decimal"], input[name*="udget" i]').first();
     if (!await budgetInput.isVisible({ timeout: 5000 }).catch(() => false)) {
       const pageText = await page.evaluate(() => document.body?.innerText?.slice(0, 600) ?? "").catch(() => "");
-      return `Campo de budget não encontrado para "${campaignName || campaignId}". [URL: ${page.url()}] [Página: ${pageText.replace(/\n/g, " ").slice(0, 400)}]`;
+      return `Input de budget não abriu após clicar lápis para "${campaignName || campaignId}". [Página: ${pageText.replace(/\n/g, " ").slice(0, 300)}]`;
     }
 
     await budgetInput.click({ clickCount: 3 });
