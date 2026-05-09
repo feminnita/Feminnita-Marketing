@@ -11,6 +11,7 @@ import { startLaunchAgent } from "./launch-agent";
 import { runAllInfluencerAgents } from "./influencer-agent";
 import { startFernandaDailyAgent } from "./fernanda-daily-agent";
 import { runMorningBriefing } from "./morning-briefing-agent";
+import { startMLActionsExecutor } from "./ml-actions-executor";
 
 // ─── Briefing matinal (roda às 7h todo dia, antes dos demais agentes) ────────
 function startMorningBriefingScheduler(): () => void {
@@ -90,6 +91,7 @@ export function startAllAgents(): () => void {
     { name: "MorningBriefing", start: startMorningBriefingScheduler },
     { name: "InfluencerDailyAgent", start: startInfluencerDailyAgent },
     { name: "FernandaDaily", start: startFernandaDailyAgent },
+    { name: "MLActionsExecutor", start: startMLActionsExecutor },
   ];
 
   for (const agent of agents) {
