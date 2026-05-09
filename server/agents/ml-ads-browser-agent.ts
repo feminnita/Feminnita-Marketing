@@ -504,9 +504,20 @@ async function findCampaignRow(page: Page, campaignId: string, campaignName: str
     const el = page.locator(`[${attr}="${campaignId}"]`).first();
     if (await el.isVisible({ timeout: 2000 }).catch(() => false)) return el;
   }
-  // Match case-insensitive em todas as linhas da tabela
+
   const lowerName = campaignName.toLowerCase().trim();
   const lowerId   = campaignId.toLowerCase().trim();
+
+  // Tenta usar o campo de busca do dashboard (mais confiável que escanear linhas)
+  const searchBox = page.locator('input[placeholder*="uscar"], input[placeholder*="earch"], input[aria-label*="uscar"], input[aria-label*="earch"]').first();
+  if (await searchBox.isVisible({ timeout: 3000 }).catch(() => false)) {
+    const term = campaignName || campaignId;
+    console.log(`[MLBrowser] Buscando "${term}" via search box...`);
+    await searchBox.fill(term);
+    await page.waitForTimeout(2000);
+  }
+
+  // Escaneia todas as linhas (após busca ou direto)
   const rows = await page.locator("tr").all();
   for (const row of rows) {
     const text = (await row.innerText().catch(() => "")).toLowerCase();
