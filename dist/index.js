@@ -4161,6 +4161,13 @@ async function findCampaignRow(page, campaignId, campaignName) {
   }
   const lowerName = campaignName.toLowerCase().trim();
   const lowerId = campaignId.toLowerCase().trim();
+  const searchBox = page.locator('input[placeholder*="uscar"], input[placeholder*="earch"], input[aria-label*="uscar"], input[aria-label*="earch"]').first();
+  if (await searchBox.isVisible({ timeout: 3e3 }).catch(() => false)) {
+    const term = campaignName || campaignId;
+    console.log(`[MLBrowser] Buscando "${term}" via search box...`);
+    await searchBox.fill(term);
+    await page.waitForTimeout(2e3);
+  }
   const rows = await page.locator("tr").all();
   for (const row of rows) {
     const text3 = (await row.innerText().catch(() => "")).toLowerCase();
@@ -39137,8 +39144,8 @@ async function startServer() {
           account: "feminnita",
           action: "update_ads_budget",
           budget: 50,
-          campaignId: "MLB6654249798",
-          campaignName: "Pijama Longo Thais Suede",
+          campaignId: "PIJAMA BERMUDA 26.09",
+          campaignName: "PIJAMA BERMUDA 26.09",
           platform: "ml"
         },
         createdAt: /* @__PURE__ */ new Date(),
