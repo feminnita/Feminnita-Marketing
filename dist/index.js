@@ -3793,14 +3793,37 @@ async function saveSession(context, account) {
   const cookies = await context.cookies();
   fs7.writeFileSync(sessionFile(account), JSON.stringify(cookies, null, 2));
 }
+function normalizeCookie(c) {
+  const sameSiteMap = {
+    no_restriction: "None",
+    unspecified: "None",
+    none: "None",
+    lax: "Lax",
+    strict: "Strict"
+  };
+  return {
+    name: c.name,
+    value: c.value,
+    domain: c.domain,
+    path: c.path || "/",
+    expires: c.expirationDate ? Math.floor(c.expirationDate) : c.expires ?? -1,
+    httpOnly: c.httpOnly ?? false,
+    secure: c.secure ?? false,
+    sameSite: sameSiteMap[(c.sameSite ?? "").toLowerCase()] ?? "None"
+  };
+}
 async function loadSession(context, account) {
   const file = sessionFile(account);
   if (!fs7.existsSync(file)) return false;
   try {
-    const cookies = JSON.parse(fs7.readFileSync(file, "utf8"));
+    const raw = JSON.parse(fs7.readFileSync(file, "utf8"));
+    const cookies = Array.isArray(raw) ? raw.map(normalizeCookie) : [];
+    if (cookies.length === 0) return false;
     await context.addCookies(cookies);
+    console.log(`[MLBrowser] ${cookies.length} cookies carregados para ${account}`);
     return true;
-  } catch {
+  } catch (e) {
+    console.warn(`[MLBrowser] Erro ao carregar cookies para ${account}:`, e.message);
     return false;
   }
 }
