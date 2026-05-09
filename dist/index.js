@@ -4051,16 +4051,9 @@ async function withBrowser(account, fn) {
     headless: true,
     args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
   });
-  const proxyHost = process.env.WEBSHARE_HOST;
-  const proxyPort = process.env.WEBSHARE_PORT;
-  const proxyUser = process.env.WEBSHARE_USER;
-  const proxyPass = process.env.WEBSHARE_PASS;
-  const proxyConfig = proxyHost && proxyPort ? {
-    server: `socks5://${proxyHost}:${proxyPort}`,
-    username: proxyUser,
-    password: proxyPass
-  } : void 0;
-  if (proxyConfig) console.log(`[MLBrowser] Usando proxy residencial Webshare (${proxyHost})`);
+  const useProxy = !!(process.env.WEBSHARE_HOST && process.env.WEBSHARE_PORT);
+  const proxyConfig = useProxy ? { server: "socks5://127.0.0.1:1080" } : void 0;
+  if (proxyConfig) console.log(`[MLBrowser] Usando relay SOCKS5 local \u2192 Webshare`);
   const context = await browser.newContext({
     userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
     locale: "pt-BR",
