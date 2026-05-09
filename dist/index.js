@@ -4159,13 +4159,24 @@ async function findCampaignRow(page, campaignId, campaignName) {
     const el = page.locator(`[${attr}="${campaignId}"]`).first();
     if (await el.isVisible({ timeout: 2e3 }).catch(() => false)) return el;
   }
-  if (campaignName) {
-    const row = page.locator(`tr:has-text("${campaignName}")`).first();
-    if (await row.isVisible({ timeout: 2e3 }).catch(() => false)) return row;
+  const lowerName = campaignName.toLowerCase().trim();
+  const lowerId = campaignId.toLowerCase().trim();
+  const rows = await page.locator("tr").all();
+  for (const row of rows) {
+    const text3 = (await row.innerText().catch(() => "")).toLowerCase();
+    if (lowerName && text3.includes(lowerName) || lowerId && text3.includes(lowerId)) {
+      return row;
+    }
   }
-  const rowById = page.locator(`tr:has-text("${campaignId}")`).first();
-  if (await rowById.isVisible({ timeout: 2e3 }).catch(() => false)) return rowById;
   return null;
+}
+async function logVisibleCampaigns(page) {
+  const texts = await page.evaluate(
+    () => Array.from(document.querySelectorAll("tr")).map(
+      (r) => r.innerText?.trim().replace(/\s+/g, " ").slice(0, 100)
+    ).filter((t2) => t2.length > 5)
+  ).catch(() => []);
+  return texts.slice(0, 15).join(" || ");
 }
 async function debugScreenshot(page, label) {
   try {
@@ -4177,17 +4188,15 @@ async function debugScreenshot(page, label) {
 }
 async function pauseAdsCampaign(campaignId, account = "feminnita", campaignName = "") {
   return withMutex(`${account}-pause`, () => withBrowser(account, async (page) => {
-    await page.goto(SELLER_CENTER_URL, { waitUntil: "networkidle", timeout: 3e4 });
+    await page.goto(CAMPAIGNS_URL, { waitUntil: "networkidle", timeout: 3e4 });
     await page.waitForTimeout(2e3);
     await debugScreenshot(page, `pause-${account}-loaded`);
-    const pauseUrl = page.url();
-    const pauseTitle = await page.title().catch(() => "");
     const row = await findCampaignRow(page, campaignId, campaignName);
     if (!row) {
       await debugScreenshot(page, `pause-${account}-notfound`);
-      const bodyText = await page.evaluate(() => document.body?.innerText?.slice(0, 400) ?? "").catch(() => "");
       const rowCount = await page.evaluate(() => document.querySelectorAll("tr").length).catch(() => 0);
-      return `Campanha "${campaignName || campaignId}" n\xE3o encontrada. [URL: ${pauseUrl}] [Title: ${pauseTitle}] [Rows: ${rowCount}] [Body: ${bodyText.replace(/\n/g, " ").slice(0, 300)}]`;
+      const visible = await logVisibleCampaigns(page);
+      return `Campanha "${campaignName || campaignId}" n\xE3o encontrada. [URL: ${page.url()}] [Rows: ${rowCount}] [Vis\xEDveis: ${visible}]`;
     }
     const pauseBtn = row.locator('[role="switch"], button[aria-label*="ause"], button[aria-label*="ausar"], button[title*="ause"]').first();
     if (!await pauseBtn.isVisible({ timeout: 3e3 }).catch(() => false)) {
@@ -4202,15 +4211,13 @@ async function pauseAdsCampaign(campaignId, account = "feminnita", campaignName 
 }
 async function activateAdsCampaign(campaignId, account = "feminnita", campaignName = "") {
   return withMutex(`${account}-activate`, () => withBrowser(account, async (page) => {
-    await page.goto(SELLER_CENTER_URL, { waitUntil: "networkidle", timeout: 3e4 });
+    await page.goto(CAMPAIGNS_URL, { waitUntil: "networkidle", timeout: 3e4 });
     await page.waitForTimeout(2e3);
-    const activateUrl = page.url();
-    const activateTitle = await page.title().catch(() => "");
     const row = await findCampaignRow(page, campaignId, campaignName);
     if (!row) {
-      const bodyText = await page.evaluate(() => document.body?.innerText?.slice(0, 400) ?? "").catch(() => "");
       const rowCount = await page.evaluate(() => document.querySelectorAll("tr").length).catch(() => 0);
-      return `Campanha "${campaignName || campaignId}" n\xE3o encontrada. [URL: ${activateUrl}] [Title: ${activateTitle}] [Rows: ${rowCount}] [Body: ${bodyText.replace(/\n/g, " ").slice(0, 300)}]`;
+      const visible = await logVisibleCampaigns(page);
+      return `Campanha "${campaignName || campaignId}" n\xE3o encontrada. [URL: ${page.url()}] [Rows: ${rowCount}] [Vis\xEDveis: ${visible}]`;
     }
     const activateBtn = row.locator('[role="switch"], button[aria-label*="tivar"], button[title*="tivar"]').first();
     if (!await activateBtn.isVisible({ timeout: 3e3 }).catch(() => false)) {
@@ -4240,16 +4247,14 @@ function getMLSessionStatus(account = "feminnita") {
 }
 async function updateAdsBudget(campaignId, dailyBudget, account = "feminnita", campaignName = "") {
   return withMutex(`${account}-budget`, () => withBrowser(account, async (page) => {
-    await page.goto(SELLER_CENTER_URL, { waitUntil: "networkidle", timeout: 3e4 });
+    await page.goto(CAMPAIGNS_URL, { waitUntil: "networkidle", timeout: 3e4 });
     await page.waitForTimeout(2e3);
     await debugScreenshot(page, `budget-${account}-loaded`);
-    const finalUrl = page.url();
-    const pageTitle = await page.title().catch(() => "");
     const row = await findCampaignRow(page, campaignId, campaignName);
     if (!row) {
-      const bodyText = await page.evaluate(() => document.body?.innerText?.slice(0, 400) ?? "").catch(() => "");
       const rowCount = await page.evaluate(() => document.querySelectorAll("tr").length).catch(() => 0);
-      return `Campanha "${campaignName || campaignId}" n\xE3o encontrada. [URL: ${finalUrl}] [Title: ${pageTitle}] [Rows: ${rowCount}] [Body: ${bodyText.replace(/\n/g, " ").slice(0, 300)}]`;
+      const visible = await logVisibleCampaigns(page);
+      return `Campanha "${campaignName || campaignId}" n\xE3o encontrada. [URL: ${page.url()}] [Rows: ${rowCount}] [Vis\xEDveis: ${visible}]`;
     }
     const editBtn = row.locator('button[aria-label*="ditar"], a[href*="edit"], button[title*="ditar"]').first();
     if (!await editBtn.isVisible({ timeout: 3e3 }).catch(() => false)) {
@@ -4269,12 +4274,13 @@ async function updateAdsBudget(campaignId, dailyBudget, account = "feminnita", c
     return `Budget di\xE1rio da campanha "${campaignId}" atualizado para R$${dailyBudget} via Seller Center.`;
   }));
 }
-var SESSIONS_DIR, SELLER_CENTER_URL, LOGIN_URL, TWOCAPTCHA_KEY, runningInstances;
+var SESSIONS_DIR, SELLER_CENTER_URL, CAMPAIGNS_URL, LOGIN_URL, TWOCAPTCHA_KEY, runningInstances;
 var init_ml_ads_browser_agent = __esm({
   "server/agents/ml-ads-browser-agent.ts"() {
     "use strict";
     SESSIONS_DIR = path7.join(process.cwd(), ".ml-sessions");
     SELLER_CENTER_URL = "https://ads.mercadolivre.com.br/productAds";
+    CAMPAIGNS_URL = "https://ads.mercadolivre.com.br/product-ads/admin/campaigns?status=A%2CP%2CD";
     LOGIN_URL = "https://www.mercadolivre.com/jms/mlb/lgz/login";
     TWOCAPTCHA_KEY = process.env.TWOCAPTCHA_API_KEY || "";
     if (!fs7.existsSync(SESSIONS_DIR)) fs7.mkdirSync(SESSIONS_DIR, { recursive: true });
