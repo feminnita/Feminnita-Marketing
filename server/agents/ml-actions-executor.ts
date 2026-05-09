@@ -56,9 +56,9 @@ export function startMLActionsExecutor(): () => void {
               res = await updateAdsBudget(campaignId, Number(payload.budget || 0), acc, campaignName);
               break;
             default:
-              console.warn(`[MLExecutor] Tipo desconhecido "${actionType}" id=${action.id} — pulando`);
+              console.warn(`[MLExecutor] Tipo desconhecido "${actionType}" id=${action.id} — marcando como done para não re-processar`);
               await db.update(agentActions)
-                .set({ status: "pending" as const })
+                .set({ status: "done" as const, executionLog: `Tipo não suportado pelo MLExecutor: ${actionType}` } as any)
                 .where(eq(agentActions.id, action.id));
               continue;
           }
