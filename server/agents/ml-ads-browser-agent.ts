@@ -254,11 +254,18 @@ async function waitForAuthCheck(page: Page): Promise<string> {
   return page.url();
 }
 
-async function isOnSellerDashboard(url: string): Promise<boolean> {
-  // Está no seller center se: não está em página de login E está na URL do productAds
+async function isOnSellerDashboard(page: Page): Promise<boolean> {
+  const url = page.url();
   const onLogin = url.includes("/login") || url.includes("/jms/lgz/") || url.includes("lgz/login");
-  const onAds   = url.includes("productAds") || url.includes("ads.mercadolivre") || url.includes("publicidade");
-  return !onLogin && onAds;
+  if (onLogin) return false;
+  const onAds = url.includes("productAds") || url.includes("ads.mercadolivre") || url.includes("publicidade");
+  if (!onAds) return false;
+  // O ML exibe a landing pública na MESMA URL /productAds quando não autenticado.
+  // Checar conteúdo da página distingue dashboard autenticado da landing pública.
+  const bodyText = await page.evaluate(() => document.body?.innerText?.slice(0, 600) ?? "");
+  const isPublicLanding = bodyText.includes("Crie a sua conta") || bodyText.includes("Outros vendedores estão");
+  console.log(`[MLBrowser] isOnSellerDashboard — URL: ${url} — publicLanding: ${isPublicLanding}`);
+  return !isPublicLanding;
 }
 
 async function ensureLoggedIn(page: Page, context: BrowserContext, account: "feminnita" | "fnt"): Promise<boolean> {
@@ -268,12 +275,12 @@ async function ensureLoggedIn(page: Page, context: BrowserContext, account: "fem
     try {
       await page.goto(SELLER_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 25000 });
     } catch {}
-    const url = await waitForAuthCheck(page);
-    if (await isOnSellerDashboard(url)) {
-      console.log(`[MLBrowser] Sessão válida via cookies salvos — ${account} — URL: ${url}`);
+    await waitForAuthCheck(page);
+    if (await isOnSellerDashboard(page)) {
+      console.log(`[MLBrowser] Sessão válida via cookies salvos — ${account}`);
       return true;
     }
-    console.warn(`[MLBrowser] Cookies salvos inválidos para ${account} — URL: ${url}`);
+    console.warn(`[MLBrowser] Cookies salvos inválidos/expirados para ${account}`);
   }
 
   // 2. Tenta auth-from-token endpoint do ML (evita reCAPTCHA)
@@ -282,29 +289,16 @@ async function ensureLoggedIn(page: Page, context: BrowserContext, account: "fem
     try {
       await page.goto(SELLER_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 25000 });
     } catch {}
-    const url = await waitForAuthCheck(page);
-    if (await isOnSellerDashboard(url)) {
+    await waitForAuthCheck(page);
+    if (await isOnSellerDashboard(page)) {
       console.log(`[MLBrowser] Sessão via token OK para ${account} — salvando...`);
       await saveSession(context, account);
       return true;
     }
-    console.warn(`[MLBrowser] auth-from-token não funcionou para ${account} — URL: ${url}`);
+    console.warn(`[MLBrowser] auth-from-token não funcionou para ${account}`);
   }
 
-  // 3. localStorage injection já foi feita via addInitScript — testa direto
-  console.log(`[MLBrowser] Tentando acesso via localStorage token para ${account}...`);
-  try {
-    await page.goto(SELLER_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 25000 });
-  } catch {}
-  const urlAfterLs = await waitForAuthCheck(page);
-  if (await isOnSellerDashboard(urlAfterLs)) {
-    console.log(`[MLBrowser] Sessão via localStorage OK para ${account} — URL: ${urlAfterLs}`);
-    await saveSession(context, account);
-    return true;
-  }
-  console.warn(`[MLBrowser] localStorage não autenticou para ${account} — URL: ${urlAfterLs}`);
-
-  // 4. Último recurso: login via formulário
+  // 3. Último recurso: login via formulário
   console.log(`[MLBrowser] Tentando login via formulário para ${account}...`);
   const ok = await loginML(page, account);
   if (ok) await saveSession(context, account);
