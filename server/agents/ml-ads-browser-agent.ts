@@ -8,8 +8,8 @@ import fs from "fs";
 import path from "path";
 
 const SESSIONS_DIR = path.join(process.cwd(), ".ml-sessions");
-const SELLER_CENTER_URL = "https://www.mercadolivre.com.br/advertising/product-ads";
-const LOGIN_URL = "https://www.mercadolivre.com.br/login";
+const SELLER_CENTER_URL = "https://ads.mercadolivre.com.br/productAds";
+const LOGIN_URL = "https://www.mercadolivre.com/jms/mlb/lgz/login";
 const TWOCAPTCHA_KEY = process.env.TWOCAPTCHA_API_KEY || "";
 
 if (!fs.existsSync(SESSIONS_DIR)) fs.mkdirSync(SESSIONS_DIR, { recursive: true });
@@ -269,7 +269,7 @@ async function withBrowser<T>(
   const proxyUser = process.env.WEBSHARE_USER;
   const proxyPass = process.env.WEBSHARE_PASS;
   const proxyConfig = proxyHost && proxyPort ? {
-    server: `http://${proxyHost}:${proxyPort}`,
+    server: `socks5://${proxyHost}:${proxyPort}`,
     username: proxyUser,
     password: proxyPass,
   } : undefined;
