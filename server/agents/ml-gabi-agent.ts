@@ -295,6 +295,20 @@ REGRA CRÍTICA: Durante análise, NUNCA execute diretamente — use sempre propo
 
 FORMATO: Texto natural, português BR. NUNCA JSON bruto. Direta e objetiva.
 
+REGRA CRÍTICA — EXECUÇÃO vs MÉTRICAS:
+→ Os dados de ml_get_ads_metrics são coletados automaticamente a cada 6 horas pelo sistema. Eles NÃO atualizam em tempo real.
+→ Após executar ações via execute_pending_actions, os dados no banco continuarão mostrando os valores antigos até a próxima coleta (próximas 6h). Isso é NORMAL.
+→ NUNCA use a ausência de mudança nos dados do banco para concluir que a execução falhou. Confie no resultado retornado pelo execute_pending_actions (✅ ou ❌).
+→ Após execute: relate ao usuário o resultado exato retornado (sucesso ou erro de cada campanha). Não chame ml_get_ads_metrics logo depois para "verificar" — é perda de tempo.
+
+FLUXO OBRIGATÓRIO PARA EXECUTAR AÇÕES:
+1. Primeiro chame ml_get_ads_metrics para obter os dados atuais
+2. Analise e chame propose_ads_actions para salvar as ações propostas
+3. Aguarde o usuário dizer "pode executar", "autorizo", "vai" ou similar
+4. Então chame execute_pending_actions — ele abre o browser e executa no painel do ML
+5. Relate o resultado ao usuário (sucesso/erro por campanha)
+Se o usuário pedir "execute" sem que haja ações propostas nesta conversa: explique que precisa analisar primeiro e proponha as ações antes de executar.
+
 ━━━ LINGUAGEM — REGRA FUNDAMENTAL ━━━
 Fale como se a pessoa não soubesse nada de marketing digital ou ads. Nunca use jargão sem explicar. Sempre que um termo técnico aparecer, traduza em seguida entre parênteses.
 → "budget" → escreva "orçamento diário"
@@ -502,14 +516,15 @@ export async function chatWithGabi(
               try {
                 const payload = action.payload as any;
                 if (!payload) { results.push(`⚠️ ${action.title}: sem payload`); continue; }
-                const campaignId = String(payload.campaignId || "");
+                const campaignId   = String(payload.campaignId   || "");
+                const campaignName = String(payload.campaignName || "");
                 const acc = (payload.account || account) as "feminnita" | "fnt";
                 await db.update(agentActionsTable).set({ status: "executing" as const }).where(eq(agentActionsTable.id, action.id));
                 let res: string;
                 switch (payload.action) {
-                  case "pause_ads_campaign":    res = await pauseAdsCampaign(campaignId, acc); break;
-                  case "activate_ads_campaign": res = await activateAdsCampaign(campaignId, acc); break;
-                  case "update_ads_budget":     res = await updateAdsBudget(campaignId, Number(payload.budget || 0), acc); break;
+                  case "pause_ads_campaign":    res = await pauseAdsCampaign(campaignId, acc, campaignName); break;
+                  case "activate_ads_campaign": res = await activateAdsCampaign(campaignId, acc, campaignName); break;
+                  case "update_ads_budget":     res = await updateAdsBudget(campaignId, Number(payload.budget || 0), acc, campaignName); break;
                   default:
                     results.push(`⚠️ ${action.title}: tipo desconhecido (${payload.action})`);
                     await db.update(agentActionsTable).set({ status: "pending" as const }).where(eq(agentActionsTable.id, action.id));

@@ -305,46 +305,86 @@ export async function listAdsCampaigns(account: "feminnita" | "fnt" = "feminnita
   }));
 }
 
-export async function pauseAdsCampaign(campaignId: string, account: "feminnita" | "fnt" = "feminnita"): Promise<string> {
+// ─── Localiza linha da campanha por nome ou ID ────────────────────────────────
+
+async function findCampaignRow(page: Page, campaignId: string, campaignName: string): Promise<any> {
+  // Tenta por data-id primeiro
+  for (const attr of ["data-id", "data-campaign-id"]) {
+    const el = page.locator(`[${attr}="${campaignId}"]`).first();
+    if (await el.isVisible({ timeout: 2000 }).catch(() => false)) return el;
+  }
+  // Tenta por linha de tabela contendo o nome ou ID
+  if (campaignName) {
+    const row = page.locator(`tr:has-text("${campaignName}")`).first();
+    if (await row.isVisible({ timeout: 2000 }).catch(() => false)) return row;
+  }
+  const rowById = page.locator(`tr:has-text("${campaignId}")`).first();
+  if (await rowById.isVisible({ timeout: 2000 }).catch(() => false)) return rowById;
+  return null;
+}
+
+async function debugScreenshot(page: Page, label: string) {
+  try {
+    const dir = "/var/www/feminnita-marketing/debug-screenshots";
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    await page.screenshot({ path: `${dir}/${label}-${Date.now()}.png`, fullPage: false });
+  } catch { /* não crítico */ }
+}
+
+export async function pauseAdsCampaign(campaignId: string, account: "feminnita" | "fnt" = "feminnita", campaignName = ""): Promise<string> {
   return withMutex(`${account}-pause`, () => withBrowser(account, async (page) => {
     await page.goto(SELLER_CENTER_URL, { waitUntil: "networkidle", timeout: 30000 });
     await page.waitForTimeout(2000);
+    await debugScreenshot(page, `pause-${account}-loaded`);
 
-    // Localiza o botão de pause da campanha pelo ID ou nome
-    const btn = await page.locator(`[data-id="${campaignId}"] button[aria-label*="ause"], [data-id="${campaignId}"] button[title*="ause"]`).first();
-    if (!await btn.isVisible().catch(() => false)) {
-      return `Campanha "${campaignId}" não encontrada ou já está pausada.`;
+    const row = await findCampaignRow(page, campaignId, campaignName);
+    if (!row) {
+      await debugScreenshot(page, `pause-${account}-notfound`);
+      return `Campanha "${campaignName || campaignId}" não encontrada na página de anúncios. Verifique se está ativa no Seller Center.`;
     }
-    await btn.click();
-    await page.waitForTimeout(1500);
-    return `Campanha "${campaignId}" pausada com sucesso via Seller Center.`;
+
+    // Tenta toggle/switch de status ou botão de pausa
+    const pauseBtn = row.locator('[role="switch"], button[aria-label*="ause"], button[aria-label*="ausar"], button[title*="ause"]').first();
+    if (!await pauseBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await debugScreenshot(page, `pause-${account}-nobtn`);
+      return `Botão de pausar não encontrado para "${campaignName || campaignId}". Acesse o Seller Center manualmente.`;
+    }
+    await pauseBtn.click();
+    await page.waitForTimeout(2000);
+    await debugScreenshot(page, `pause-${account}-done`);
+    return `Campanha "${campaignName || campaignId}" pausada com sucesso.`;
   }));
 }
 
-export async function activateAdsCampaign(campaignId: string, account: "feminnita" | "fnt" = "feminnita"): Promise<string> {
+export async function activateAdsCampaign(campaignId: string, account: "feminnita" | "fnt" = "feminnita", campaignName = ""): Promise<string> {
   return withMutex(`${account}-activate`, () => withBrowser(account, async (page) => {
     await page.goto(SELLER_CENTER_URL, { waitUntil: "networkidle", timeout: 30000 });
     await page.waitForTimeout(2000);
 
-    const btn = await page.locator(`[data-id="${campaignId}"] button[aria-label*="tivar"], [data-id="${campaignId}"] button[title*="tivar"]`).first();
-    if (!await btn.isVisible().catch(() => false)) {
-      return `Campanha "${campaignId}" não encontrada ou já está ativa.`;
+    const row = await findCampaignRow(page, campaignId, campaignName);
+    if (!row) return `Campanha "${campaignName || campaignId}" não encontrada.`;
+
+    const activateBtn = row.locator('[role="switch"], button[aria-label*="tivar"], button[title*="tivar"]').first();
+    if (!await activateBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+      return `Botão de ativar não encontrado para "${campaignName || campaignId}".`;
     }
-    await btn.click();
-    await page.waitForTimeout(1500);
-    return `Campanha "${campaignId}" reativada com sucesso via Seller Center.`;
+    await activateBtn.click();
+    await page.waitForTimeout(2000);
+    return `Campanha "${campaignName || campaignId}" reativada com sucesso.`;
   }));
 }
 
-export async function updateAdsBudget(campaignId: string, dailyBudget: number, account: "feminnita" | "fnt" = "feminnita"): Promise<string> {
+export async function updateAdsBudget(campaignId: string, dailyBudget: number, account: "feminnita" | "fnt" = "feminnita", campaignName = ""): Promise<string> {
   return withMutex(`${account}-budget`, () => withBrowser(account, async (page) => {
     await page.goto(SELLER_CENTER_URL, { waitUntil: "networkidle", timeout: 30000 });
     await page.waitForTimeout(2000);
 
-    // Clica em editar campanha
-    const editBtn = await page.locator(`[data-id="${campaignId}"] button[aria-label*="ditar"], [data-id="${campaignId}"] a[href*="edit"]`).first();
-    if (!await editBtn.isVisible().catch(() => false)) {
-      return `Campanha "${campaignId}" não encontrada para edição.`;
+    const row = await findCampaignRow(page, campaignId, campaignName);
+    if (!row) return `Campanha "${campaignName || campaignId}" não encontrada para edição.`;
+
+    const editBtn = row.locator('button[aria-label*="ditar"], a[href*="edit"], button[title*="ditar"]').first();
+    if (!await editBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+      return `Botão de editar não encontrado para "${campaignName || campaignId}".`;
     }
     await editBtn.click();
     await page.waitForTimeout(2000);
