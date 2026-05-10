@@ -4293,9 +4293,13 @@ async function updateAdsBudget(campaignId, dailyBudget, account = "feminnita", c
       return `Modal de budget n\xE3o abriu para "${campaignName || campaignId}". [P\xE1gina: ${pageText.replace(/\n/g, " ").slice(0, 300)}]`;
     }
     await debugScreenshot(page, `budget-${account}-modal`);
-    let budgetInput = page.locator("input").filter({ visible: true }).last();
+    const modalArea = modalTitle.locator("xpath=ancestor::div[6]");
+    let budgetInput = modalArea.locator('input[type="number"]').filter({ visible: true }).first();
     if (!await budgetInput.isVisible({ timeout: 3e3 }).catch(() => false)) {
-      budgetInput = modalTitle.locator("xpath=ancestor::div[6]").locator("input").first();
+      budgetInput = modalArea.locator('input:not([type="checkbox"])').filter({ visible: true }).first();
+    }
+    if (!await budgetInput.isVisible({ timeout: 3e3 }).catch(() => false)) {
+      budgetInput = page.locator('input[type="number"]').filter({ visible: true }).first();
     }
     if (!await budgetInput.isVisible({ timeout: 3e3 }).catch(() => false)) {
       await debugScreenshot(page, `budget-${account}-input-notfound`);
