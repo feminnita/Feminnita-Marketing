@@ -3771,6 +3771,7 @@ __export(ml_ads_browser_agent_exports, {
   importMLSession: () => importMLSession,
   listAdsCampaigns: () => listAdsCampaigns,
   pauseAdsCampaign: () => pauseAdsCampaign,
+  runActionsInSession: () => runActionsInSession,
   updateAdsBudget: () => updateAdsBudget
 });
 import { chromium } from "playwright";
@@ -4200,47 +4201,74 @@ async function debugScreenshot(page, label) {
   } catch {
   }
 }
-async function pauseAdsCampaign(campaignId, account = "feminnita", campaignName = "") {
-  return withMutex(`${account}-pause`, () => withBrowser(account, async (page) => {
-    await page.goto(CAMPAIGNS_URL, { waitUntil: "networkidle", timeout: 3e4 });
-    await page.waitForTimeout(2e3);
-    await debugScreenshot(page, `pause-${account}-loaded`);
-    const row = await findCampaignRow(page, campaignId, campaignName);
-    if (!row) {
-      await debugScreenshot(page, `pause-${account}-notfound`);
-      const rowCount = await page.evaluate(() => document.querySelectorAll("tr").length).catch(() => 0);
-      const visible = await logVisibleCampaigns(page);
-      return `Campanha "${campaignName || campaignId}" n\xE3o encontrada. [URL: ${page.url()}] [Rows: ${rowCount}] [Vis\xEDveis: ${visible}]`;
+async function pauseInPage(page, account, campaignId, campaignName) {
+  await page.goto(CAMPAIGNS_URL, { waitUntil: "networkidle", timeout: 3e4 });
+  await page.waitForTimeout(2e3);
+  await debugScreenshot(page, `pause-${account}-loaded`);
+  const row = await findCampaignRow(page, campaignId, campaignName);
+  if (!row) {
+    await debugScreenshot(page, `pause-${account}-notfound`);
+    const rowCount = await page.evaluate(() => document.querySelectorAll("tr").length).catch(() => 0);
+    const visible = await logVisibleCampaigns(page);
+    return `Campanha "${campaignName || campaignId}" n\xE3o encontrada. [URL: ${page.url()}] [Rows: ${rowCount}] [Vis\xEDveis: ${visible}]`;
+  }
+  const pauseBtn = row.locator('[role="switch"], button[aria-label*="ause"], button[aria-label*="ausar"], button[title*="ause"]').first();
+  if (!await pauseBtn.isVisible({ timeout: 3e3 }).catch(() => false)) {
+    await debugScreenshot(page, `pause-${account}-nobtn`);
+    return `Bot\xE3o de pausar n\xE3o encontrado para "${campaignName || campaignId}".`;
+  }
+  await pauseBtn.click();
+  await page.waitForTimeout(2e3);
+  await debugScreenshot(page, `pause-${account}-done`);
+  return `Campanha "${campaignName || campaignId}" pausada com sucesso.`;
+}
+async function activateInPage(page, account, campaignId, campaignName) {
+  await page.goto(CAMPAIGNS_URL, { waitUntil: "networkidle", timeout: 3e4 });
+  await page.waitForTimeout(2e3);
+  const row = await findCampaignRow(page, campaignId, campaignName);
+  if (!row) {
+    const rowCount = await page.evaluate(() => document.querySelectorAll("tr").length).catch(() => 0);
+    const visible = await logVisibleCampaigns(page);
+    return `Campanha "${campaignName || campaignId}" n\xE3o encontrada. [URL: ${page.url()}] [Rows: ${rowCount}] [Vis\xEDveis: ${visible}]`;
+  }
+  const activateBtn = row.locator('[role="switch"], button[aria-label*="tivar"], button[title*="tivar"]').first();
+  if (!await activateBtn.isVisible({ timeout: 3e3 }).catch(() => false)) {
+    return `Bot\xE3o de ativar n\xE3o encontrado para "${campaignName || campaignId}".`;
+  }
+  await activateBtn.click();
+  await page.waitForTimeout(2e3);
+  return `Campanha "${campaignName || campaignId}" reativada com sucesso.`;
+}
+async function runActionsInSession(account, actions) {
+  return withMutex(account, () => withBrowser(account, async (page) => {
+    const results = {};
+    for (const action of actions) {
+      try {
+        switch (action.actionType) {
+          case "pause_ads_campaign":
+            results[action.id] = await pauseInPage(page, account, action.campaignId, action.campaignName);
+            break;
+          case "activate_ads_campaign":
+            results[action.id] = await activateInPage(page, account, action.campaignId, action.campaignName);
+            break;
+          case "update_ads_budget":
+            results[action.id] = await updateBudgetInPage(page, account, action.campaignId, action.budget ?? 0, action.campaignName);
+            break;
+          default:
+            results[action.id] = `Tipo n\xE3o suportado: ${action.actionType}`;
+        }
+      } catch (e) {
+        results[action.id] = `ERRO: ${e.message}`;
+      }
     }
-    const pauseBtn = row.locator('[role="switch"], button[aria-label*="ause"], button[aria-label*="ausar"], button[title*="ause"]').first();
-    if (!await pauseBtn.isVisible({ timeout: 3e3 }).catch(() => false)) {
-      await debugScreenshot(page, `pause-${account}-nobtn`);
-      return `Bot\xE3o de pausar n\xE3o encontrado para "${campaignName || campaignId}". Acesse o Seller Center manualmente.`;
-    }
-    await pauseBtn.click();
-    await page.waitForTimeout(2e3);
-    await debugScreenshot(page, `pause-${account}-done`);
-    return `Campanha "${campaignName || campaignId}" pausada com sucesso.`;
+    return results;
   }));
 }
+async function pauseAdsCampaign(campaignId, account = "feminnita", campaignName = "") {
+  return withMutex(`${account}-pause`, () => withBrowser(account, (page) => pauseInPage(page, account, campaignId, campaignName)));
+}
 async function activateAdsCampaign(campaignId, account = "feminnita", campaignName = "") {
-  return withMutex(`${account}-activate`, () => withBrowser(account, async (page) => {
-    await page.goto(CAMPAIGNS_URL, { waitUntil: "networkidle", timeout: 3e4 });
-    await page.waitForTimeout(2e3);
-    const row = await findCampaignRow(page, campaignId, campaignName);
-    if (!row) {
-      const rowCount = await page.evaluate(() => document.querySelectorAll("tr").length).catch(() => 0);
-      const visible = await logVisibleCampaigns(page);
-      return `Campanha "${campaignName || campaignId}" n\xE3o encontrada. [URL: ${page.url()}] [Rows: ${rowCount}] [Vis\xEDveis: ${visible}]`;
-    }
-    const activateBtn = row.locator('[role="switch"], button[aria-label*="tivar"], button[title*="tivar"]').first();
-    if (!await activateBtn.isVisible({ timeout: 3e3 }).catch(() => false)) {
-      return `Bot\xE3o de ativar n\xE3o encontrado para "${campaignName || campaignId}".`;
-    }
-    await activateBtn.click();
-    await page.waitForTimeout(2e3);
-    return `Campanha "${campaignName || campaignId}" reativada com sucesso.`;
-  }));
+  return withMutex(`${account}-activate`, () => withBrowser(account, (page) => activateInPage(page, account, campaignId, campaignName)));
 }
 async function importMLSession(cookies, account = "feminnita") {
   const file = sessionFile(account);
@@ -4259,66 +4287,67 @@ function getMLSessionStatus(account = "feminnita") {
     return { exists: false, savedAt: null, ageDays: null, cookieCount: null };
   }
 }
+async function updateBudgetInPage(page, account, campaignId, dailyBudget, campaignName) {
+  await page.goto(CAMPAIGNS_URL, { waitUntil: "networkidle", timeout: 3e4 });
+  await page.waitForTimeout(2e3);
+  await debugScreenshot(page, `budget-${account}-loaded`);
+  const row = await findCampaignRow(page, campaignId, campaignName);
+  if (!row) {
+    const rowCount = await page.evaluate(() => document.querySelectorAll("tr").length).catch(() => 0);
+    const visible = await logVisibleCampaigns(page);
+    return `Campanha "${campaignName || campaignId}" n\xE3o encontrada. [URL: ${page.url()}] [Rows: ${rowCount}] [Vis\xEDveis: ${visible}]`;
+  }
+  const budgetTd = row.locator("td").filter({ hasText: /R\$/ }).first();
+  await budgetTd.hover().catch(() => {
+  });
+  await page.waitForTimeout(300);
+  const pencilBtn = budgetTd.locator('button, [role="button"]').first();
+  if (await pencilBtn.isVisible({ timeout: 2e3 }).catch(() => false)) {
+    await pencilBtn.click();
+  } else {
+    await budgetTd.click();
+  }
+  await page.waitForTimeout(500);
+  await debugScreenshot(page, `budget-${account}-pencil`);
+  const modalTitle = page.locator('text="Altere seu or\xE7amento"');
+  let modalReady = await modalTitle.waitFor({ state: "visible", timeout: 6e3 }).then(() => true).catch(() => false);
+  if (!modalReady) {
+    await budgetTd.click();
+    modalReady = await modalTitle.waitFor({ state: "visible", timeout: 5e3 }).then(() => true).catch(() => false);
+  }
+  if (!modalReady) {
+    const pageText = await page.evaluate(() => document.body?.innerText?.slice(0, 500) ?? "").catch(() => "");
+    return `Modal de budget n\xE3o abriu para "${campaignName || campaignId}". [P\xE1gina: ${pageText.replace(/\n/g, " ").slice(0, 300)}]`;
+  }
+  await debugScreenshot(page, `budget-${account}-modal`);
+  const modalArea = modalTitle.locator("xpath=ancestor::div[6]");
+  let budgetInput = modalArea.locator('input[type="number"]').filter({ visible: true }).first();
+  if (!await budgetInput.isVisible({ timeout: 3e3 }).catch(() => false)) {
+    budgetInput = modalArea.locator('input:not([type="checkbox"])').filter({ visible: true }).first();
+  }
+  if (!await budgetInput.isVisible({ timeout: 3e3 }).catch(() => false)) {
+    budgetInput = page.locator('input[type="number"]').filter({ visible: true }).first();
+  }
+  if (!await budgetInput.isVisible({ timeout: 3e3 }).catch(() => false)) {
+    await debugScreenshot(page, `budget-${account}-input-notfound`);
+    return `Input de budget n\xE3o encontrado na modal "${campaignName || campaignId}"`;
+  }
+  await budgetInput.click({ clickCount: 3 });
+  await budgetInput.fill(String(dailyBudget));
+  await page.waitForTimeout(500);
+  await debugScreenshot(page, `budget-${account}-filled`);
+  const saveBtn = page.locator('button:has-text("Salvar"), button:has-text("Confirmar"), button[type="submit"]').first();
+  if (await saveBtn.isVisible({ timeout: 3e3 }).catch(() => false)) {
+    await saveBtn.click();
+  } else {
+    await budgetInput.press("Enter");
+  }
+  await page.waitForTimeout(2e3);
+  await debugScreenshot(page, `budget-${account}-saved`);
+  return `Budget di\xE1rio da campanha "${campaignName || campaignId}" atualizado para R$${dailyBudget}.`;
+}
 async function updateAdsBudget(campaignId, dailyBudget, account = "feminnita", campaignName = "") {
-  return withMutex(`${account}-budget`, () => withBrowser(account, async (page) => {
-    await page.goto(CAMPAIGNS_URL, { waitUntil: "networkidle", timeout: 3e4 });
-    await page.waitForTimeout(2e3);
-    await debugScreenshot(page, `budget-${account}-loaded`);
-    const row = await findCampaignRow(page, campaignId, campaignName);
-    if (!row) {
-      const rowCount = await page.evaluate(() => document.querySelectorAll("tr").length).catch(() => 0);
-      const visible = await logVisibleCampaigns(page);
-      return `Campanha "${campaignName || campaignId}" n\xE3o encontrada. [URL: ${page.url()}] [Rows: ${rowCount}] [Vis\xEDveis: ${visible}]`;
-    }
-    const budgetTd = row.locator("td").filter({ hasText: /R\$/ }).first();
-    await budgetTd.hover().catch(() => {
-    });
-    await page.waitForTimeout(300);
-    const pencilBtn = budgetTd.locator('button, [role="button"]').first();
-    if (await pencilBtn.isVisible({ timeout: 2e3 }).catch(() => false)) {
-      await pencilBtn.click();
-    } else {
-      await budgetTd.click();
-    }
-    await page.waitForTimeout(500);
-    await debugScreenshot(page, `budget-${account}-pencil`);
-    const modalTitle = page.locator('text="Altere seu or\xE7amento"');
-    let modalReady = await modalTitle.waitFor({ state: "visible", timeout: 6e3 }).then(() => true).catch(() => false);
-    if (!modalReady) {
-      await budgetTd.click();
-      modalReady = await modalTitle.waitFor({ state: "visible", timeout: 5e3 }).then(() => true).catch(() => false);
-    }
-    if (!modalReady) {
-      const pageText = await page.evaluate(() => document.body?.innerText?.slice(0, 500) ?? "").catch(() => "");
-      return `Modal de budget n\xE3o abriu para "${campaignName || campaignId}". [P\xE1gina: ${pageText.replace(/\n/g, " ").slice(0, 300)}]`;
-    }
-    await debugScreenshot(page, `budget-${account}-modal`);
-    const modalArea = modalTitle.locator("xpath=ancestor::div[6]");
-    let budgetInput = modalArea.locator('input[type="number"]').filter({ visible: true }).first();
-    if (!await budgetInput.isVisible({ timeout: 3e3 }).catch(() => false)) {
-      budgetInput = modalArea.locator('input:not([type="checkbox"])').filter({ visible: true }).first();
-    }
-    if (!await budgetInput.isVisible({ timeout: 3e3 }).catch(() => false)) {
-      budgetInput = page.locator('input[type="number"]').filter({ visible: true }).first();
-    }
-    if (!await budgetInput.isVisible({ timeout: 3e3 }).catch(() => false)) {
-      await debugScreenshot(page, `budget-${account}-input-notfound`);
-      return `Input de budget n\xE3o encontrado na modal "${campaignName || campaignId}"`;
-    }
-    await budgetInput.click({ clickCount: 3 });
-    await budgetInput.fill(String(dailyBudget));
-    await page.waitForTimeout(500);
-    await debugScreenshot(page, `budget-${account}-filled`);
-    const saveBtn = page.locator('button:has-text("Salvar"), button:has-text("Confirmar"), button[type="submit"]').first();
-    if (await saveBtn.isVisible({ timeout: 3e3 }).catch(() => false)) {
-      await saveBtn.click();
-    } else {
-      await budgetInput.press("Enter");
-    }
-    await page.waitForTimeout(2e3);
-    await debugScreenshot(page, `budget-${account}-saved`);
-    return `Budget di\xE1rio da campanha "${campaignName || campaignId}" atualizado para R$${dailyBudget}.`;
-  }));
+  return withMutex(`${account}-budget`, () => withBrowser(account, (page) => updateBudgetInPage(page, account, campaignId, dailyBudget, campaignName)));
 }
 var SESSIONS_DIR, SELLER_CENTER_URL, CAMPAIGNS_URL, LOGIN_URL, TWOCAPTCHA_KEY, runningInstances;
 var init_ml_ads_browser_agent = __esm({
@@ -38929,42 +38958,42 @@ function startMLActionsExecutor() {
       if (!db) return;
       const pending = await db.select().from(agentActions).where(and81(eq103(agentActions.agentName, "gabi"), eq103(agentActions.status, "pending")));
       if (pending.length === 0) return;
-      console.log(`[MLExecutor] ${pending.length} a\xE7\xE3o(\xF5es) pendente(s) \u2014 iniciando execu\xE7\xE3o`);
-      const { pauseAdsCampaign: pauseAdsCampaign2, activateAdsCampaign: activateAdsCampaign2, updateAdsBudget: updateAdsBudget2 } = await Promise.resolve().then(() => (init_ml_ads_browser_agent(), ml_ads_browser_agent_exports));
+      console.log(`[MLExecutor] ${pending.length} a\xE7\xE3o(\xF5es) pendente(s) \u2014 agrupando por conta`);
+      const { runActionsInSession: runActionsInSession2 } = await Promise.resolve().then(() => (init_ml_ads_browser_agent(), ml_ads_browser_agent_exports));
+      const byAccount = /* @__PURE__ */ new Map();
       for (const action of pending) {
-        const payload = action.payload;
-        if (!payload) {
-          console.warn(`[MLExecutor] A\xE7\xE3o id=${action.id} sem payload \u2014 pulando`);
-          continue;
-        }
-        const campaignId = String(payload.campaignId || "");
-        const campaignName = String(payload.campaignName || "");
-        const acc = payload.account || "feminnita";
-        const actionType = String(payload.action || action.actionType || "");
-        console.log(`[MLExecutor] id=${action.id} tipo="${actionType}" campanha="${campaignName}" account="${acc}"`);
-        try {
+        const acc = String(action.payload?.account || "feminnita");
+        if (!byAccount.has(acc)) byAccount.set(acc, []);
+        byAccount.get(acc).push(action);
+      }
+      for (const [acc, actions] of byAccount) {
+        console.log(`[MLExecutor] Conta "${acc}" \u2014 ${actions.length} a\xE7\xE3o(\xF5es) em um \xFAnico browser`);
+        for (const action of actions) {
           await db.update(agentActions).set({ status: "executing" }).where(eq103(agentActions.id, action.id));
-          let res;
-          switch (actionType) {
-            case "pause_ads_campaign":
-              res = await pauseAdsCampaign2(campaignId, acc, campaignName);
-              break;
-            case "activate_ads_campaign":
-              res = await activateAdsCampaign2(campaignId, acc, campaignName);
-              break;
-            case "update_ads_budget":
-              res = await updateAdsBudget2(campaignId, Number(payload.budget || 0), acc, campaignName);
-              break;
-            default:
-              console.warn(`[MLExecutor] Tipo desconhecido "${actionType}" id=${action.id} \u2014 marcando como done para n\xE3o re-processar`);
-              await db.update(agentActions).set({ status: "done", executionLog: `Tipo n\xE3o suportado pelo MLExecutor: ${actionType}` }).where(eq103(agentActions.id, action.id));
-              continue;
+        }
+        try {
+          const batchActions = actions.map((a) => ({
+            id: a.id,
+            actionType: String(a.payload?.action || a.actionType || ""),
+            campaignId: String(a.payload?.campaignId || ""),
+            campaignName: String(a.payload?.campaignName || ""),
+            budget: Number(a.payload?.budget || 0)
+          }));
+          const results = await runActionsInSession2(acc, batchActions);
+          for (const [id, log] of Object.entries(results)) {
+            console.log(`[MLExecutor] \u2705 id=${id}: ${log}`);
+            await db.update(agentActions).set({ status: "done", executedAt: /* @__PURE__ */ new Date(), executionLog: log }).where(eq103(agentActions.id, Number(id)));
           }
-          console.log(`[MLExecutor] \u2705 id=${action.id}: ${res}`);
-          await db.update(agentActions).set({ status: "done", executedAt: /* @__PURE__ */ new Date(), executionLog: res }).where(eq103(agentActions.id, action.id));
+          for (const action of actions) {
+            if (!(action.id in results)) {
+              await db.update(agentActions).set({ status: "pending", executionLog: "Sem resultado do executor" }).where(eq103(agentActions.id, action.id));
+            }
+          }
         } catch (e) {
-          console.error(`[MLExecutor] \u274C id=${action.id} "${action.title}": ${e.message}`);
-          await db.update(agentActions).set({ status: "pending", executionLog: `ERRO: ${e.message}` }).where(eq103(agentActions.id, action.id));
+          console.error(`[MLExecutor] \u274C Erro na sess\xE3o "${acc}": ${e.message}`);
+          for (const action of actions) {
+            await db.update(agentActions).set({ status: "pending", executionLog: `ERRO sess\xE3o: ${e.message}` }).where(eq103(agentActions.id, action.id));
+          }
         }
       }
       console.log(`[MLExecutor] Ciclo conclu\xEDdo`);
