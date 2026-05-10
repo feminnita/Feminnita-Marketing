@@ -4280,13 +4280,26 @@ async function updateAdsBudget(campaignId, dailyBudget, account = "feminnita", c
     } else {
       await budgetTd.click();
     }
-    await page.waitForTimeout(1e3);
+    await page.waitForTimeout(500);
     await debugScreenshot(page, `budget-${account}-pencil`);
-    await page.waitForTimeout(1e3);
-    const budgetInput = page.locator("input").first();
-    if (!await budgetInput.isVisible({ timeout: 6e3 }).catch(() => false)) {
+    const modalTitle = page.locator('text="Altere seu or\xE7amento"');
+    let modalReady = await modalTitle.waitFor({ state: "visible", timeout: 6e3 }).then(() => true).catch(() => false);
+    if (!modalReady) {
+      await budgetTd.click();
+      modalReady = await modalTitle.waitFor({ state: "visible", timeout: 5e3 }).then(() => true).catch(() => false);
+    }
+    if (!modalReady) {
       const pageText = await page.evaluate(() => document.body?.innerText?.slice(0, 500) ?? "").catch(() => "");
       return `Modal de budget n\xE3o abriu para "${campaignName || campaignId}". [P\xE1gina: ${pageText.replace(/\n/g, " ").slice(0, 300)}]`;
+    }
+    await debugScreenshot(page, `budget-${account}-modal`);
+    let budgetInput = page.locator("input").filter({ visible: true }).last();
+    if (!await budgetInput.isVisible({ timeout: 3e3 }).catch(() => false)) {
+      budgetInput = modalTitle.locator("xpath=ancestor::div[6]").locator("input").first();
+    }
+    if (!await budgetInput.isVisible({ timeout: 3e3 }).catch(() => false)) {
+      await debugScreenshot(page, `budget-${account}-input-notfound`);
+      return `Input de budget n\xE3o encontrado na modal "${campaignName || campaignId}"`;
     }
     await budgetInput.click({ clickCount: 3 });
     await budgetInput.fill(String(dailyBudget));
