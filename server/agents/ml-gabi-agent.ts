@@ -11,6 +11,7 @@ import { getLatestKnowledge } from "./knowledge-updater";
 import { listMLItems, pauseMLItem, activateMLItem, updateMLPrice, updateMLStock, getMLItemDetails, getMLCategoryAttributes, updateMLItemAttributes, listMLAdsCampaigns, pauseMLAdsCampaign, activateMLAdsCampaign, updateMLAdsBudget, getMLAdsCampaignStats } from "./gabi-executor";
 import { getDb } from "../db";
 import { agentActions as agentActionsTable } from "../../drizzle/schema";
+import { desc, eq, and, isNotNull } from "drizzle-orm";
 
 const AGENT_NAME = "gabi";
 
@@ -235,11 +236,43 @@ function getMLToken(account = "feminnita"): string {
 }
 
 export async function buildGabiPrompt(account = "feminnita"): Promise<string> {
+  const db = await getDb();
+
   const [mlKnowledge, fashionKnowledge, memoryContext] = await Promise.all([
     getLatestKnowledge("knowledge_marketplaces"),
     getLatestKnowledge("knowledge_fashion"),
     buildMemoryContext(AGENT_NAME),
   ]);
+
+  // Histórico de execuções reais do agente Playwright (últimas 30 ações concluídas)
+  let executionHistory = "";
+  try {
+    if (db) {
+      const recent = await db
+        .select({
+          title: agentActionsTable.title,
+          executionLog: agentActionsTable.executionLog,
+          executedAt: agentActionsTable.executedAt,
+          actionType: agentActionsTable.actionType,
+        })
+        .from(agentActionsTable)
+        .where(and(
+          eq(agentActionsTable.agentName, "gabi"),
+          eq(agentActionsTable.status, "done"),
+          isNotNull(agentActionsTable.executedAt)
+        ))
+        .orderBy(desc(agentActionsTable.executedAt))
+        .limit(30);
+
+      if (recent.length > 0) {
+        const lines = recent.map(r => {
+          const when = r.executedAt ? r.executedAt.toISOString().slice(0, 16).replace("T", " ") : "?";
+          return `- [${when}] ${r.title || r.actionType}: ${r.executionLog || "sem log"}`;
+        });
+        executionHistory = `\n━━━ AÇÕES JÁ EXECUTADAS PELO AGENTE PLAYWRIGHT ━━━\nAs ações abaixo foram executadas com sucesso. NÃO as proponha novamente.\n${lines.join("\n")}`;
+      }
+    }
+  } catch { /* não crítico */ }
 
   const knowledge = [
     mlKnowledge ? `## Mercado Livre — estado atual\n${mlKnowledge.summary}\nAlertas: ${mlKnowledge.warnings?.join(" | ") || "nenhum"}` : "",
@@ -340,7 +373,8 @@ CONTA A (Feminnita — B2C): varejo, 1 peça mínima, foco em conversão individ
 CONTA B (FNT — B2B): atacado, grade fechada, foco em revendedoras
 
 ${knowledge ? `\n━━━ INTELIGÊNCIA ATUAL ━━━\n${knowledge}` : ""}
-${memoryContext ? `\n━━━ MEMÓRIA ━━━\n${memoryContext}` : ""}`;
+${memoryContext ? `\n━━━ MEMÓRIA ━━━\n${memoryContext}` : ""}
+${executionHistory}`;
 }
 
 export async function chatWithGabi(
