@@ -4283,18 +4283,16 @@ async function updateAdsBudget(campaignId, dailyBudget, account = "feminnita", c
     await page.waitForTimeout(1e3);
     await debugScreenshot(page, `budget-${account}-pencil`);
     await page.waitForTimeout(1e3);
-    const modal = page.locator('[role="dialog"], [class*="modal" i], [class*="Modal"]').first();
-    const hasModal = await modal.isVisible({ timeout: 4e3 }).catch(() => false);
-    const budgetInput = hasModal ? modal.locator("input").first() : page.locator("input").first();
-    if (!await budgetInput.isVisible({ timeout: 5e3 }).catch(() => false)) {
-      const pageText = await page.evaluate(() => document.body?.innerText?.slice(0, 600) ?? "").catch(() => "");
-      return `Modal de budget n\xE3o encontrado para "${campaignName || campaignId}". [P\xE1gina: ${pageText.replace(/\n/g, " ").slice(0, 300)}]`;
+    const budgetInput = page.locator("input").first();
+    if (!await budgetInput.isVisible({ timeout: 6e3 }).catch(() => false)) {
+      const pageText = await page.evaluate(() => document.body?.innerText?.slice(0, 500) ?? "").catch(() => "");
+      return `Modal de budget n\xE3o abriu para "${campaignName || campaignId}". [P\xE1gina: ${pageText.replace(/\n/g, " ").slice(0, 300)}]`;
     }
     await budgetInput.click({ clickCount: 3 });
     await budgetInput.fill(String(dailyBudget));
     await page.waitForTimeout(500);
     await debugScreenshot(page, `budget-${account}-filled`);
-    const saveBtn = (hasModal ? modal : page).locator('button:has-text("Salvar"), button:has-text("Confirmar"), button[type="submit"]').first();
+    const saveBtn = page.locator('button:has-text("Salvar"), button:has-text("Confirmar"), button[type="submit"]').first();
     if (await saveBtn.isVisible({ timeout: 3e3 }).catch(() => false)) {
       await saveBtn.click();
     } else {
