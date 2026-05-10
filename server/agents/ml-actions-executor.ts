@@ -21,58 +21,63 @@ export function startMLActionsExecutor(): () => void {
 
       if (pending.length === 0) return;
 
-      console.log(`[MLExecutor] ${pending.length} ação(ões) pendente(s) — iniciando execução`);
+      console.log(`[MLExecutor] ${pending.length} ação(ões) pendente(s) — agrupando por conta`);
 
-      const { pauseAdsCampaign, activateAdsCampaign, updateAdsBudget } = await import("./ml-ads-browser-agent");
+      const { runActionsInSession } = await import("./ml-ads-browser-agent");
 
+      // Agrupa por conta — abre um único browser por conta
+      const byAccount = new Map<string, typeof pending>();
       for (const action of pending) {
-        const payload = action.payload as any;
-        if (!payload) {
-          console.warn(`[MLExecutor] Ação id=${action.id} sem payload — pulando`);
-          continue;
-        }
+        const acc = String((action.payload as any)?.account || "feminnita");
+        if (!byAccount.has(acc)) byAccount.set(acc, []);
+        byAccount.get(acc)!.push(action);
+      }
 
-        const campaignId   = String(payload.campaignId   || "");
-        const campaignName = String(payload.campaignName || "");
-        const acc          = ((payload.account as string) || "feminnita") as "feminnita" | "fnt";
-        const actionType   = String(payload.action || action.actionType || "");
+      for (const [acc, actions] of byAccount) {
+        console.log(`[MLExecutor] Conta "${acc}" — ${actions.length} ação(ões) em um único browser`);
 
-        console.log(`[MLExecutor] id=${action.id} tipo="${actionType}" campanha="${campaignName}" account="${acc}"`);
-
-        try {
+        // Marca todas como "executing"
+        for (const action of actions) {
           await db.update(agentActions)
             .set({ status: "executing" as const })
             .where(eq(agentActions.id, action.id));
+        }
 
-          let res: string;
-          switch (actionType) {
-            case "pause_ads_campaign":
-              res = await pauseAdsCampaign(campaignId, acc, campaignName);
-              break;
-            case "activate_ads_campaign":
-              res = await activateAdsCampaign(campaignId, acc, campaignName);
-              break;
-            case "update_ads_budget":
-              res = await updateAdsBudget(campaignId, Number(payload.budget || 0), acc, campaignName);
-              break;
-            default:
-              console.warn(`[MLExecutor] Tipo desconhecido "${actionType}" id=${action.id} — marcando como done para não re-processar`);
-              await db.update(agentActions)
-                .set({ status: "done" as const, executionLog: `Tipo não suportado pelo MLExecutor: ${actionType}` } as any)
-                .where(eq(agentActions.id, action.id));
-              continue;
+        try {
+          const batchActions = actions.map(a => ({
+            id: a.id,
+            actionType: String((a.payload as any)?.action || a.actionType || ""),
+            campaignId: String((a.payload as any)?.campaignId || ""),
+            campaignName: String((a.payload as any)?.campaignName || ""),
+            budget: Number((a.payload as any)?.budget || 0),
+          }));
+
+          const results = await runActionsInSession(acc as "feminnita" | "fnt", batchActions);
+
+          for (const [id, log] of Object.entries(results)) {
+            console.log(`[MLExecutor] ✅ id=${id}: ${log}`);
+            await db.update(agentActions)
+              .set({ status: "done" as const, executedAt: new Date(), executionLog: log } as any)
+              .where(eq(agentActions.id, Number(id)));
           }
 
-          console.log(`[MLExecutor] ✅ id=${action.id}: ${res}`);
-          await db.update(agentActions)
-            .set({ status: "done" as const, executedAt: new Date(), executionLog: res } as any)
-            .where(eq(agentActions.id, action.id));
+          // Ações sem resultado (bug inesperado) — marca como failed
+          for (const action of actions) {
+            if (!(action.id in results)) {
+              await db.update(agentActions)
+                .set({ status: "pending" as const, executionLog: "Sem resultado do executor" } as any)
+                .where(eq(agentActions.id, action.id));
+            }
+          }
 
         } catch (e: any) {
-          console.error(`[MLExecutor] ❌ id=${action.id} "${action.title}": ${e.message}`);
-          await db.update(agentActions)
-            .set({ status: "pending" as const, executionLog: `ERRO: ${e.message}` } as any)
-            .where(eq(agentActions.id, action.id));
+          console.error(`[MLExecutor] ❌ Erro na sessão "${acc}": ${e.message}`);
+          // Reverte todas para pending para retry no próximo ciclo
+          for (const action of actions) {
+            await db.update(agentActions)
+              .set({ status: "pending" as const, executionLog: `ERRO sessão: ${e.message}` } as any)
+              .where(eq(agentActions.id, action.id));
+          }
         }
       }
 

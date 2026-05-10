@@ -554,53 +554,100 @@ async function debugScreenshot(page: Page, label: string) {
   } catch { /* não crítico */ }
 }
 
-export async function pauseAdsCampaign(campaignId: string, account: "feminnita" | "fnt" = "feminnita", campaignName = ""): Promise<string> {
-  return withMutex(`${account}-pause`, () => withBrowser(account, async (page) => {
-    await page.goto(CAMPAIGNS_URL, { waitUntil: "networkidle", timeout: 30000 });
-    await page.waitForTimeout(2000);
-    await debugScreenshot(page, `pause-${account}-loaded`);
+// ─── Funções de página (sem gerenciamento de browser) ─────────────────────────
+// Usadas tanto pelos exports individuais quanto pelo runActionsInSession (batch).
 
-    const row = await findCampaignRow(page, campaignId, campaignName);
-    if (!row) {
-      await debugScreenshot(page, `pause-${account}-notfound`);
-      const rowCount = await page.evaluate(() => document.querySelectorAll("tr").length).catch(() => 0);
-      const visible = await logVisibleCampaigns(page);
-      return `Campanha "${campaignName || campaignId}" não encontrada. [URL: ${page.url()}] [Rows: ${rowCount}] [Visíveis: ${visible}]`;
-    }
+async function pauseInPage(page: Page, account: string, campaignId: string, campaignName: string): Promise<string> {
+  await page.goto(CAMPAIGNS_URL, { waitUntil: "networkidle", timeout: 30000 });
+  await page.waitForTimeout(2000);
+  await debugScreenshot(page, `pause-${account}-loaded`);
+  const row = await findCampaignRow(page, campaignId, campaignName);
+  if (!row) {
+    await debugScreenshot(page, `pause-${account}-notfound`);
+    const rowCount = await page.evaluate(() => document.querySelectorAll("tr").length).catch(() => 0);
+    const visible = await logVisibleCampaigns(page);
+    return `Campanha "${campaignName || campaignId}" não encontrada. [URL: ${page.url()}] [Rows: ${rowCount}] [Visíveis: ${visible}]`;
+  }
+  const pauseBtn = row.locator('[role="switch"], button[aria-label*="ause"], button[aria-label*="ausar"], button[title*="ause"]').first();
+  if (!await pauseBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+    await debugScreenshot(page, `pause-${account}-nobtn`);
+    return `Botão de pausar não encontrado para "${campaignName || campaignId}".`;
+  }
+  await pauseBtn.click();
+  await page.waitForTimeout(2000);
+  await debugScreenshot(page, `pause-${account}-done`);
+  return `Campanha "${campaignName || campaignId}" pausada com sucesso.`;
+}
 
-    // Tenta toggle/switch de status ou botão de pausa
-    const pauseBtn = row.locator('[role="switch"], button[aria-label*="ause"], button[aria-label*="ausar"], button[title*="ause"]').first();
-    if (!await pauseBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await debugScreenshot(page, `pause-${account}-nobtn`);
-      return `Botão de pausar não encontrado para "${campaignName || campaignId}". Acesse o Seller Center manualmente.`;
+async function activateInPage(page: Page, account: string, campaignId: string, campaignName: string): Promise<string> {
+  await page.goto(CAMPAIGNS_URL, { waitUntil: "networkidle", timeout: 30000 });
+  await page.waitForTimeout(2000);
+  const row = await findCampaignRow(page, campaignId, campaignName);
+  if (!row) {
+    const rowCount = await page.evaluate(() => document.querySelectorAll("tr").length).catch(() => 0);
+    const visible = await logVisibleCampaigns(page);
+    return `Campanha "${campaignName || campaignId}" não encontrada. [URL: ${page.url()}] [Rows: ${rowCount}] [Visíveis: ${visible}]`;
+  }
+  const activateBtn = row.locator('[role="switch"], button[aria-label*="tivar"], button[title*="tivar"]').first();
+  if (!await activateBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+    return `Botão de ativar não encontrado para "${campaignName || campaignId}".`;
+  }
+  await activateBtn.click();
+  await page.waitForTimeout(2000);
+  return `Campanha "${campaignName || campaignId}" reativada com sucesso.`;
+}
+
+// ─── Execução em lote (um único browser por conta) ────────────────────────────
+
+export type BatchAction = {
+  id: number;
+  actionType: string;
+  campaignId: string;
+  campaignName: string;
+  budget?: number;
+};
+
+/**
+ * Abre o browser UMA VEZ para a conta e executa todas as ações em sequência.
+ * Elimina o overhead de lançar N browsers para N ações.
+ */
+export async function runActionsInSession(
+  account: "feminnita" | "fnt",
+  actions: BatchAction[]
+): Promise<Record<number, string>> {
+  return withMutex(account, () => withBrowser(account, async (page) => {
+    const results: Record<number, string> = {};
+    for (const action of actions) {
+      try {
+        switch (action.actionType) {
+          case "pause_ads_campaign":
+            results[action.id] = await pauseInPage(page, account, action.campaignId, action.campaignName);
+            break;
+          case "activate_ads_campaign":
+            results[action.id] = await activateInPage(page, account, action.campaignId, action.campaignName);
+            break;
+          case "update_ads_budget":
+            results[action.id] = await updateBudgetInPage(page, account, action.campaignId, action.budget ?? 0, action.campaignName);
+            break;
+          default:
+            results[action.id] = `Tipo não suportado: ${action.actionType}`;
+        }
+      } catch (e: any) {
+        results[action.id] = `ERRO: ${e.message}`;
+      }
     }
-    await pauseBtn.click();
-    await page.waitForTimeout(2000);
-    await debugScreenshot(page, `pause-${account}-done`);
-    return `Campanha "${campaignName || campaignId}" pausada com sucesso.`;
+    return results;
   }));
 }
 
+// ─── Exports individuais (compatibilidade) ────────────────────────────────────
+
+export async function pauseAdsCampaign(campaignId: string, account: "feminnita" | "fnt" = "feminnita", campaignName = ""): Promise<string> {
+  return withMutex(`${account}-pause`, () => withBrowser(account, (page) => pauseInPage(page, account, campaignId, campaignName)));
+}
+
 export async function activateAdsCampaign(campaignId: string, account: "feminnita" | "fnt" = "feminnita", campaignName = ""): Promise<string> {
-  return withMutex(`${account}-activate`, () => withBrowser(account, async (page) => {
-    await page.goto(CAMPAIGNS_URL, { waitUntil: "networkidle", timeout: 30000 });
-    await page.waitForTimeout(2000);
-
-    const row = await findCampaignRow(page, campaignId, campaignName);
-    if (!row) {
-      const rowCount = await page.evaluate(() => document.querySelectorAll("tr").length).catch(() => 0);
-      const visible = await logVisibleCampaigns(page);
-      return `Campanha "${campaignName || campaignId}" não encontrada. [URL: ${page.url()}] [Rows: ${rowCount}] [Visíveis: ${visible}]`;
-    }
-
-    const activateBtn = row.locator('[role="switch"], button[aria-label*="tivar"], button[title*="tivar"]').first();
-    if (!await activateBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-      return `Botão de ativar não encontrado para "${campaignName || campaignId}".`;
-    }
-    await activateBtn.click();
-    await page.waitForTimeout(2000);
-    return `Campanha "${campaignName || campaignId}" reativada com sucesso.`;
-  }));
+  return withMutex(`${account}-activate`, () => withBrowser(account, (page) => activateInPage(page, account, campaignId, campaignName)));
 }
 
 /** Importa cookies de uma sessão existente (bootstrap manual). */
@@ -624,83 +671,72 @@ export function getMLSessionStatus(account: "feminnita" | "fnt" = "feminnita"): 
   }
 }
 
+async function updateBudgetInPage(page: Page, account: string, campaignId: string, dailyBudget: number, campaignName: string): Promise<string> {
+  await page.goto(CAMPAIGNS_URL, { waitUntil: "networkidle", timeout: 30000 });
+  await page.waitForTimeout(2000);
+  await debugScreenshot(page, `budget-${account}-loaded`);
+
+  const row = await findCampaignRow(page, campaignId, campaignName);
+  if (!row) {
+    const rowCount = await page.evaluate(() => document.querySelectorAll("tr").length).catch(() => 0);
+    const visible = await logVisibleCampaigns(page);
+    return `Campanha "${campaignName || campaignId}" não encontrada. [URL: ${page.url()}] [Rows: ${rowCount}] [Visíveis: ${visible}]`;
+  }
+
+  const budgetTd = row.locator('td').filter({ hasText: /R\$/ }).first();
+  await budgetTd.hover().catch(() => {});
+  await page.waitForTimeout(300);
+  const pencilBtn = budgetTd.locator('button, [role="button"]').first();
+  if (await pencilBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await pencilBtn.click();
+  } else {
+    await budgetTd.click();
+  }
+  await page.waitForTimeout(500);
+  await debugScreenshot(page, `budget-${account}-pencil`);
+
+  const modalTitle = page.locator('text="Altere seu orçamento"');
+  let modalReady = await modalTitle.waitFor({ state: "visible", timeout: 6000 }).then(() => true).catch(() => false);
+  if (!modalReady) {
+    await budgetTd.click();
+    modalReady = await modalTitle.waitFor({ state: "visible", timeout: 5000 }).then(() => true).catch(() => false);
+  }
+  if (!modalReady) {
+    const pageText = await page.evaluate(() => document.body?.innerText?.slice(0, 500) ?? "").catch(() => "");
+    return `Modal de budget não abriu para "${campaignName || campaignId}". [Página: ${pageText.replace(/\n/g, " ").slice(0, 300)}]`;
+  }
+
+  await debugScreenshot(page, `budget-${account}-modal`);
+
+  const modalArea = modalTitle.locator("xpath=ancestor::div[6]");
+  let budgetInput = modalArea.locator('input[type="number"]').filter({ visible: true }).first();
+  if (!await budgetInput.isVisible({ timeout: 3000 }).catch(() => false)) {
+    budgetInput = modalArea.locator('input:not([type="checkbox"])').filter({ visible: true }).first();
+  }
+  if (!await budgetInput.isVisible({ timeout: 3000 }).catch(() => false)) {
+    budgetInput = page.locator('input[type="number"]').filter({ visible: true }).first();
+  }
+  if (!await budgetInput.isVisible({ timeout: 3000 }).catch(() => false)) {
+    await debugScreenshot(page, `budget-${account}-input-notfound`);
+    return `Input de budget não encontrado na modal "${campaignName || campaignId}"`;
+  }
+
+  await budgetInput.click({ clickCount: 3 });
+  await budgetInput.fill(String(dailyBudget));
+  await page.waitForTimeout(500);
+  await debugScreenshot(page, `budget-${account}-filled`);
+
+  const saveBtn = page.locator('button:has-text("Salvar"), button:has-text("Confirmar"), button[type="submit"]').first();
+  if (await saveBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+    await saveBtn.click();
+  } else {
+    await budgetInput.press("Enter");
+  }
+  await page.waitForTimeout(2000);
+  await debugScreenshot(page, `budget-${account}-saved`);
+  return `Budget diário da campanha "${campaignName || campaignId}" atualizado para R$${dailyBudget}.`;
+}
+
 export async function updateAdsBudget(campaignId: string, dailyBudget: number, account: "feminnita" | "fnt" = "feminnita", campaignName = ""): Promise<string> {
-  return withMutex(`${account}-budget`, () => withBrowser(account, async (page) => {
-    await page.goto(CAMPAIGNS_URL, { waitUntil: "networkidle", timeout: 30000 });
-    await page.waitForTimeout(2000);
-    await debugScreenshot(page, `budget-${account}-loaded`);
-
-    const row = await findCampaignRow(page, campaignId, campaignName);
-    if (!row) {
-      const rowCount = await page.evaluate(() => document.querySelectorAll("tr").length).catch(() => 0);
-      const visible = await logVisibleCampaigns(page);
-      return `Campanha "${campaignName || campaignId}" não encontrada. [URL: ${page.url()}] [Rows: ${rowCount}] [Visíveis: ${visible}]`;
-    }
-
-    // Clica no ícone de lápis (✏️) dentro da célula de orçamento
-    // Screenshot confirmou: cada linha tem "R$ XX 🖊" na coluna de budget
-    const budgetTd = row.locator('td').filter({ hasText: /R\$/ }).first();
-    await budgetTd.hover().catch(() => {});
-    await page.waitForTimeout(300);
-    const pencilBtn = budgetTd.locator('button, [role="button"]').first();
-    if (await pencilBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await pencilBtn.click();
-    } else {
-      await budgetTd.click();
-    }
-    await page.waitForTimeout(500);
-    await debugScreenshot(page, `budget-${account}-pencil`);
-
-    // Aguarda modal "Altere seu orçamento" — waitFor é mais confiável que :visible CSS (pseudo-class inválida)
-    const modalTitle = page.locator('text="Altere seu orçamento"');
-    let modalReady = await modalTitle.waitFor({ state: "visible", timeout: 6000 }).then(() => true).catch(() => false);
-
-    if (!modalReady) {
-      // Fallback: clica direto na célula de budget (sem depender do lápis)
-      await budgetTd.click();
-      modalReady = await modalTitle.waitFor({ state: "visible", timeout: 5000 }).then(() => true).catch(() => false);
-    }
-
-    if (!modalReady) {
-      const pageText = await page.evaluate(() => document.body?.innerText?.slice(0, 500) ?? "").catch(() => "");
-      return `Modal de budget não abriu para "${campaignName || campaignId}". [Página: ${pageText.replace(/\n/g, " ").slice(0, 300)}]`;
-    }
-
-    await debugScreenshot(page, `budget-${account}-modal`);
-
-    // Busca input de orçamento — type="number" exclui checkbox do toggle "Ajuste automático"
-    // Procura dentro do ancestral da modal para ser preciso
-    const modalArea = modalTitle.locator("xpath=ancestor::div[6]");
-    let budgetInput = modalArea.locator('input[type="number"]').filter({ visible: true }).first();
-
-    if (!await budgetInput.isVisible({ timeout: 3000 }).catch(() => false)) {
-      // Fallback: qualquer input não-checkbox dentro da modal
-      budgetInput = modalArea.locator('input:not([type="checkbox"])').filter({ visible: true }).first();
-    }
-
-    if (!await budgetInput.isVisible({ timeout: 3000 }).catch(() => false)) {
-      // Último recurso: primeiro input[type="number"] visível na página
-      budgetInput = page.locator('input[type="number"]').filter({ visible: true }).first();
-    }
-
-    if (!await budgetInput.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await debugScreenshot(page, `budget-${account}-input-notfound`);
-      return `Input de budget não encontrado na modal "${campaignName || campaignId}"`;
-    }
-
-    await budgetInput.click({ clickCount: 3 });
-    await budgetInput.fill(String(dailyBudget));
-    await page.waitForTimeout(500);
-    await debugScreenshot(page, `budget-${account}-filled`);
-
-    const saveBtn = page.locator('button:has-text("Salvar"), button:has-text("Confirmar"), button[type="submit"]').first();
-    if (await saveBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await saveBtn.click();
-    } else {
-      await budgetInput.press("Enter");
-    }
-    await page.waitForTimeout(2000);
-    await debugScreenshot(page, `budget-${account}-saved`);
-    return `Budget diário da campanha "${campaignName || campaignId}" atualizado para R$${dailyBudget}.`;
-  }));
+  return withMutex(`${account}-budget`, () => withBrowser(account, (page) => updateBudgetInPage(page, account, campaignId, dailyBudget, campaignName)));
 }
