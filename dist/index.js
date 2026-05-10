@@ -34366,55 +34366,43 @@ ${lines.join("\n")}`;
           call = (async () => {
             const db = await getDb();
             if (!db) return "Banco indispon\xEDvel.";
-            const { eq: eq107, and: and85 } = await import("drizzle-orm");
-            const { pauseAdsCampaign: pauseAdsCampaign2, activateAdsCampaign: activateAdsCampaign2, updateAdsBudget: updateAdsBudget2 } = await Promise.resolve().then(() => (init_ml_ads_browser_agent(), ml_ads_browser_agent_exports));
-            const pending = await db.select().from(agentActions).where(and85(eq107(agentActions.agentName, "gabi"), eq107(agentActions.status, "pending")));
-            console.log(`[GabiExecute] Iniciando execu\xE7\xE3o de ${pending.length} a\xE7\xE3o(\xF5es) pendentes`);
-            if (pending.length === 0) return "Nenhuma a\xE7\xE3o pendente encontrada. Use propose_ads_actions primeiro para criar a\xE7\xF5es, ent\xE3o pe\xE7a para executar.";
-            const results = [];
-            for (const action of pending) {
-              console.log(`[GabiExecute] Processando a\xE7\xE3o id=${action.id} tipo=${action.actionType} title="${action.title}"`);
-              try {
-                const payload = action.payload;
-                if (!payload) {
-                  console.warn(`[GabiExecute] A\xE7\xE3o id=${action.id} sem payload \u2014 pulando`);
-                  results.push(`\u26A0\uFE0F ${action.title}: sem payload`);
-                  continue;
-                }
-                const campaignId = String(payload.campaignId || "");
-                const campaignName = String(payload.campaignName || "");
-                const acc = payload.account || account;
-                console.log(`[GabiExecute] payload.action="${payload.action}" campaignId="${campaignId}" campaignName="${campaignName}" acc="${acc}"`);
-                await db.update(agentActions).set({ status: "executing" }).where(eq107(agentActions.id, action.id));
-                let res;
-                switch (payload.action) {
-                  case "pause_ads_campaign":
-                    res = await pauseAdsCampaign2(campaignId, acc, campaignName);
-                    break;
-                  case "activate_ads_campaign":
-                    res = await activateAdsCampaign2(campaignId, acc, campaignName);
-                    break;
-                  case "update_ads_budget":
-                    res = await updateAdsBudget2(campaignId, Number(payload.budget || 0), acc, campaignName);
-                    break;
-                  default:
-                    console.warn(`[GabiExecute] Tipo desconhecido: "${payload.action}" para a\xE7\xE3o id=${action.id}`);
-                    results.push(`\u26A0\uFE0F ${action.title}: tipo desconhecido (${payload.action})`);
-                    await db.update(agentActions).set({ status: "pending" }).where(eq107(agentActions.id, action.id));
-                    continue;
-                }
-                console.log(`[GabiExecute] \u2705 A\xE7\xE3o id=${action.id} conclu\xEDda: ${res}`);
-                await db.update(agentActions).set({ status: "done", executedAt: /* @__PURE__ */ new Date(), executionLog: res }).where(eq107(agentActions.id, action.id));
-                results.push(`\u2705 ${action.title}: ${res}`);
-              } catch (e) {
-                console.error(`[GabiExecute] \u274C Erro na a\xE7\xE3o id=${action.id} "${action.title}": ${e.message}`, e.stack);
-                await db.update(agentActions).set({ status: "pending", executionLog: `ERRO: ${e.message}` }).where(eq107(agentActions.id, action.id));
-                results.push(`\u274C ${action.title}: ${e.message}`);
-              }
+            const pending = await db.select().from(agentActions).where(and69(eq86(agentActions.agentName, "gabi"), eq86(agentActions.status, "pending")));
+            if (pending.length === 0) return "Nenhuma a\xE7\xE3o pendente. Use propose_ads_actions primeiro para criar a\xE7\xF5es.";
+            const { runActionsInSession: runActionsInSession2 } = await Promise.resolve().then(() => (init_ml_ads_browser_agent(), ml_ads_browser_agent_exports));
+            const byAccount = /* @__PURE__ */ new Map();
+            for (const a of pending) {
+              const acc = String(a.payload?.account || account);
+              if (!byAccount.has(acc)) byAccount.set(acc, []);
+              byAccount.get(acc).push(a);
             }
-            console.log(`[GabiExecute] Execu\xE7\xE3o finalizada. Resultados: ${results.join(" | ")}`);
-            return `Execu\xE7\xE3o conclu\xEDda (${pending.length} a\xE7\xE3o(\xF5es)):
-${results.join("\n")}`;
+            for (const [acc, actions] of byAccount) {
+              for (const a of actions) {
+                await db.update(agentActions).set({ status: "executing" }).where(eq86(agentActions.id, a.id));
+              }
+              const batch = actions.map((a) => ({
+                id: a.id,
+                actionType: String(a.payload?.action || a.actionType || ""),
+                campaignId: String(a.payload?.campaignId || ""),
+                campaignName: String(a.payload?.campaignName || ""),
+                budget: Number(a.payload?.budget || 0)
+              }));
+              runActionsInSession2(acc, batch).then(async (results) => {
+                for (const [id, log] of Object.entries(results)) {
+                  await db.update(agentActions).set({ status: "done", executedAt: /* @__PURE__ */ new Date(), executionLog: log }).where(eq86(agentActions.id, Number(id)));
+                }
+                console.log(`[GabiExecute] Batch "${acc}" conclu\xEDdo: ${Object.values(results).join(" | ")}`);
+              }).catch(async (e) => {
+                console.error(`[GabiExecute] Erro no batch "${acc}": ${e.message}`);
+                for (const a of actions) {
+                  await db.update(agentActions).set({ status: "pending", executionLog: `ERRO: ${e.message}` }).where(eq86(agentActions.id, a.id));
+                }
+              });
+            }
+            const titles = pending.map((a) => `- ${a.title}`).join("\n");
+            return `${pending.length} a\xE7\xE3o(\xF5es) disparadas para o agente Playwright:
+${titles}
+
+\u23F3 Executando em background (~2-3 min). Resultados em /acoes-agentes.`;
           })();
         } else if (toolUse.name === "propose_ads_actions") {
           call = (async () => {
