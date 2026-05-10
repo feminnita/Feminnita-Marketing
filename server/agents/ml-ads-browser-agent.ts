@@ -668,12 +668,19 @@ export async function updateAdsBudget(campaignId: string, dailyBudget: number, a
 
     await debugScreenshot(page, `budget-${account}-modal`);
 
-    // Busca input dentro da modal — .filter({ visible: true }) é o correto em Playwright (não :visible CSS)
-    // Usa .last() porque o input da overlay fica no final do DOM
-    let budgetInput = page.locator("input").filter({ visible: true }).last();
+    // Busca input de orçamento — type="number" exclui checkbox do toggle "Ajuste automático"
+    // Procura dentro do ancestral da modal para ser preciso
+    const modalArea = modalTitle.locator("xpath=ancestor::div[6]");
+    let budgetInput = modalArea.locator('input[type="number"]').filter({ visible: true }).first();
+
     if (!await budgetInput.isVisible({ timeout: 3000 }).catch(() => false)) {
-      // Fallback: busca pelo ancestral do título da modal
-      budgetInput = modalTitle.locator("xpath=ancestor::div[6]").locator("input").first();
+      // Fallback: qualquer input não-checkbox dentro da modal
+      budgetInput = modalArea.locator('input:not([type="checkbox"])').filter({ visible: true }).first();
+    }
+
+    if (!await budgetInput.isVisible({ timeout: 3000 }).catch(() => false)) {
+      // Último recurso: primeiro input[type="number"] visível na página
+      budgetInput = page.locator('input[type="number"]').filter({ visible: true }).first();
     }
 
     if (!await budgetInput.isVisible({ timeout: 3000 }).catch(() => false)) {
