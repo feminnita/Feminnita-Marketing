@@ -651,17 +651,14 @@ export async function updateAdsBudget(campaignId: string, dailyBudget: number, a
     await page.waitForTimeout(1000);
     await debugScreenshot(page, `budget-${account}-pencil`);
 
-    // Modal "Altere seu orçamento" abre após clicar lápis — busca qualquer input visível
+    // Modal "Altere seu orçamento" abre — ML não usa role=dialog
+    // Busca diretamente qualquer input visível (é o único na página quando o modal abre)
     await page.waitForTimeout(1000);
-    const modal = page.locator('[role="dialog"], [class*="modal" i], [class*="Modal"]').first();
-    const hasModal = await modal.isVisible({ timeout: 4000 }).catch(() => false);
-    const budgetInput = hasModal
-      ? modal.locator("input").first()
-      : page.locator("input").first();
+    const budgetInput = page.locator("input").first();
 
-    if (!await budgetInput.isVisible({ timeout: 5000 }).catch(() => false)) {
-      const pageText = await page.evaluate(() => document.body?.innerText?.slice(0, 600) ?? "").catch(() => "");
-      return `Modal de budget não encontrado para "${campaignName || campaignId}". [Página: ${pageText.replace(/\n/g, " ").slice(0, 300)}]`;
+    if (!await budgetInput.isVisible({ timeout: 6000 }).catch(() => false)) {
+      const pageText = await page.evaluate(() => document.body?.innerText?.slice(0, 500) ?? "").catch(() => "");
+      return `Modal de budget não abriu para "${campaignName || campaignId}". [Página: ${pageText.replace(/\n/g, " ").slice(0, 300)}]`;
     }
 
     await budgetInput.click({ clickCount: 3 });
@@ -669,8 +666,7 @@ export async function updateAdsBudget(campaignId: string, dailyBudget: number, a
     await page.waitForTimeout(500);
     await debugScreenshot(page, `budget-${account}-filled`);
 
-    // Clica "Salvar" no modal
-    const saveBtn = (hasModal ? modal : page).locator('button:has-text("Salvar"), button:has-text("Confirmar"), button[type="submit"]').first();
+    const saveBtn = page.locator('button:has-text("Salvar"), button:has-text("Confirmar"), button[type="submit"]').first();
     if (await saveBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
       await saveBtn.click();
     } else {
