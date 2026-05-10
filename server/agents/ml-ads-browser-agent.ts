@@ -648,17 +648,37 @@ export async function updateAdsBudget(campaignId: string, dailyBudget: number, a
     } else {
       await budgetTd.click();
     }
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(500);
     await debugScreenshot(page, `budget-${account}-pencil`);
 
-    // Modal "Altere seu orçamento" abre — ML não usa role=dialog
-    // Busca diretamente qualquer input visível (é o único na página quando o modal abre)
-    await page.waitForTimeout(1000);
-    const budgetInput = page.locator("input").first();
+    // Aguarda modal "Altere seu orçamento" — waitFor é mais confiável que :visible CSS (pseudo-class inválida)
+    const modalTitle = page.locator('text="Altere seu orçamento"');
+    let modalReady = await modalTitle.waitFor({ state: "visible", timeout: 6000 }).then(() => true).catch(() => false);
 
-    if (!await budgetInput.isVisible({ timeout: 6000 }).catch(() => false)) {
+    if (!modalReady) {
+      // Fallback: clica direto na célula de budget (sem depender do lápis)
+      await budgetTd.click();
+      modalReady = await modalTitle.waitFor({ state: "visible", timeout: 5000 }).then(() => true).catch(() => false);
+    }
+
+    if (!modalReady) {
       const pageText = await page.evaluate(() => document.body?.innerText?.slice(0, 500) ?? "").catch(() => "");
       return `Modal de budget não abriu para "${campaignName || campaignId}". [Página: ${pageText.replace(/\n/g, " ").slice(0, 300)}]`;
+    }
+
+    await debugScreenshot(page, `budget-${account}-modal`);
+
+    // Busca input dentro da modal — .filter({ visible: true }) é o correto em Playwright (não :visible CSS)
+    // Usa .last() porque o input da overlay fica no final do DOM
+    let budgetInput = page.locator("input").filter({ visible: true }).last();
+    if (!await budgetInput.isVisible({ timeout: 3000 }).catch(() => false)) {
+      // Fallback: busca pelo ancestral do título da modal
+      budgetInput = modalTitle.locator("xpath=ancestor::div[6]").locator("input").first();
+    }
+
+    if (!await budgetInput.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await debugScreenshot(page, `budget-${account}-input-notfound`);
+      return `Input de budget não encontrado na modal "${campaignName || campaignId}"`;
     }
 
     await budgetInput.click({ clickCount: 3 });
