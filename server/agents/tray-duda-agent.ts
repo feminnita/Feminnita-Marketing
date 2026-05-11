@@ -1,10 +1,12 @@
 /**
  * Duda — Especialista em SEO e Otimização do Site Tray (Feminnita)
  * Referências: Neil Patel (NP Digital), Brian Dean (Backlinko), Fábio Ricotta (Agência Mestre)
- * Faz fetch das páginas do site no servidor antes de chamar invokeLLM — sem depender de ANTHROPIC_API_KEY
+ * Faz fetch das páginas do site no servidor antes de chamar o LLM.
+ * Propõe mudanças de SEO via tool use → salva no agentActions → executor aplica via Playwright.
  */
 
-import { invokeLLM } from "../_core/llm";
+import Anthropic from "@anthropic-ai/sdk";
+import { getDb } from "../db";
 import axios from "axios";
 
 const TRAY_STORE_URL = process.env.TRAY_STORE_URL || "https://feminnita.com.br";
@@ -441,17 +443,69 @@ REGRAS DE COMUNICAÇÃO
 
 Responda em português do Brasil. Entregue conteúdo pronto para copiar e colar.`;
 
+// ─── Tools disponíveis para a Duda ───────────────────────────────────────────
+
+const DUDA_TOOLS: Anthropic.Tool[] = [
+  {
+    name: "propose_seo_changes",
+    description: "Propõe mudanças de SEO para serem aplicadas automaticamente no painel da Tray via browser. Use quando o usuário pedir para 'aplicar', 'atualizar no site', 'salvar' ou 'implementar' as otimizações.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        changes: {
+          type: "array",
+          description: "Lista de mudanças de SEO a aplicar",
+          items: {
+            type: "object",
+            properties: {
+              type: {
+                type: "string",
+                enum: ["tray_update_seo_title", "tray_update_seo_description", "tray_update_product_description", "tray_update_page_seo"],
+                description: "Tipo de mudança",
+              },
+              title: { type: "string", description: "Título descritivo da ação (ex: 'Atualizar SEO title — Pijama Suede')" },
+              productId: { type: "string", description: "ID do produto no painel Tray (necessário para ações de produto)" },
+              pageSlug: { type: "string", description: "Slug da página (para tray_update_page_seo)" },
+              seoTitle: { type: "string", description: "Novo SEO title" },
+              seoDescription: { type: "string", description: "Nova meta description" },
+              description: { type: "string", description: "Nova descrição completa do produto (para tray_update_product_description)" },
+            },
+            required: ["type", "title"],
+          },
+        },
+      },
+      required: ["changes"],
+    },
+  },
+  {
+    name: "execute_pending_actions",
+    description: "Lista as mudanças de SEO pendentes enfileiradas para execução no painel da Tray.",
+    input_schema: { type: "object" as const, properties: {}, required: [] },
+  },
+];
+
+const TOOLS_SYSTEM = `
+
+━━━ APLICAR MUDANÇAS NO SITE ━━━
+Você pode aplicar as otimizações de SEO diretamente no painel da Tray, sem o usuário precisar copiar e colar.
+
+Quando o usuário disser algo como "aplique isso", "atualize no site", "salva no Tray", "implementa" — use a tool propose_seo_changes para enfileirar as mudanças. Um executor em background vai abrir o painel da Tray e aplicar cada alteração automaticamente nos próximos 5 minutos.
+
+Para usar propose_seo_changes você precisa do ID do produto no painel da Tray (ex: 12345). Se o usuário não souber, peça que acesse o produto no admin e copie o número da URL (/admin/products/edit/12345).
+
+Use execute_pending_actions para verificar o que está na fila de execução.`;
+
+// ─── Chat principal ───────────────────────────────────────────────────────────
+
 export async function chatWithDuda(
   messages: Array<{ role: "user" | "assistant"; content: string }>,
   userName?: string
 ): Promise<string> {
   const nameCtx = userName ? `\nNOME DO USUÁRIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
 
-  // Detecta URLs a buscar na última mensagem do usuário
   const lastUserMsg = [...messages].reverse().find(m => m.role === "user")?.content ?? "";
   const urlsToFetch = extractUrlsToFetch(lastUserMsg);
 
-  // Busca as páginas em paralelo antes de chamar o LLM
   let fetchedContext = "";
   if (urlsToFetch.length > 0) {
     console.log(`[Duda] Buscando ${urlsToFetch.length} páginas:`, urlsToFetch);
@@ -461,16 +515,93 @@ export async function chatWithDuda(
     }
   }
 
-  const systemWithFetch = SYSTEM_PROMPT + nameCtx + fetchedContext;
+  const systemContent = SYSTEM_PROMPT + TOOLS_SYSTEM + nameCtx + fetchedContext;
 
-  const result = await invokeLLM({
-    messages: [
-      { role: "system", content: systemWithFetch },
-      ...messages,
-    ],
-    maxTokens: 2500,
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+  let response = await client.messages.create({
+    model:      "claude-haiku-4-5-20251001",
+    max_tokens: 2500,
+    system:     systemContent,
+    tools:      DUDA_TOOLS,
+    messages:   messages as Anthropic.MessageParam[],
   });
 
-  const content = result.choices[0]?.message?.content;
-  return typeof content === "string" ? content : "Não consegui processar a solicitação.";
+  let iterations = 0;
+  while (response.stop_reason === "tool_use" && iterations < 5) {
+    iterations++;
+    const toolUses = response.content.filter((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
+
+    const toolResults: Anthropic.ToolResultBlockParam[] = [];
+    for (const toolUse of toolUses) {
+      let result: string;
+      try {
+        const inp = toolUse.input as Record<string, any>;
+
+        if (toolUse.name === "propose_seo_changes") {
+          result = await (async () => {
+            const db = await getDb();
+            if (!db) return "Banco indisponível.";
+            const { agentActions: tbl } = await import("../../drizzle/schema");
+            const changes: any[] = inp.changes || [];
+            if (changes.length === 0) return "Nenhuma mudança fornecida.";
+
+            for (const c of changes) {
+              await db.insert(tbl).values({
+                agentName:  "duda",
+                actionType: c.type,
+                title:      c.title,
+                status:     "pending",
+                payload: {
+                  productId:      c.productId      || "",
+                  pageSlug:       c.pageSlug       || "",
+                  seoTitle:       c.seoTitle        || "",
+                  seoDescription: c.seoDescription  || "",
+                  description:    c.description     || "",
+                },
+              } as any);
+            }
+
+            const lines = changes.map(c => `- ${c.title}`);
+            return `${changes.length} mudança(s) enfileirada(s) para o Tray (próximos ~5 min):\n${lines.join("\n")}`;
+          })();
+
+        } else if (toolUse.name === "execute_pending_actions") {
+          result = await (async () => {
+            const db = await getDb();
+            if (!db) return "Banco indisponível.";
+            const { agentActions: tbl } = await import("../../drizzle/schema");
+            const { eq, and } = await import("drizzle-orm");
+            const pending = await db.select().from(tbl)
+              .where(and(eq(tbl.agentName, "duda"), eq(tbl.status, "pending")));
+            if (pending.length === 0) return "Nenhuma ação pendente no momento.";
+            const lines = pending.map(a => `- ${a.title || a.actionType} [id=${a.id}]`);
+            return `${pending.length} ação(ões) na fila de execução:\n${lines.join("\n")}`;
+          })();
+
+        } else {
+          result = `Tool desconhecida: ${toolUse.name}`;
+        }
+      } catch (e: any) {
+        result = `Erro: ${e.message}`;
+      }
+
+      toolResults.push({ type: "tool_result", tool_use_id: toolUse.id, content: result });
+    }
+
+    response = await client.messages.create({
+      model:      "claude-haiku-4-5-20251001",
+      max_tokens: 2500,
+      system:     systemContent,
+      tools:      DUDA_TOOLS,
+      messages: [
+        ...(messages as Anthropic.MessageParam[]),
+        { role: "assistant", content: response.content },
+        { role: "user",      content: toolResults },
+      ],
+    });
+  }
+
+  const textBlock = response.content.find((b): b is Anthropic.TextBlock => b.type === "text");
+  return textBlock?.text ?? "Não consegui processar a solicitação.";
 }
