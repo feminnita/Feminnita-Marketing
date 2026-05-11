@@ -1,7 +1,7 @@
 import { getDb } from "../db";
 import { agentActions } from "../../drizzle/schema";
 import { eq, and } from "drizzle-orm";
-import { apiPauseMLCampaign, apiActivateMLCampaign, apiUpdateMLBudget } from "./ml-ads-api";
+import { runActionsInSession } from "./ml-ads-browser-agent";
 
 const INTERVAL_MS = 5 * 60 * 1000;
 
@@ -22,44 +22,56 @@ export function startMLActionsExecutor(): () => void {
 
       if (pending.length === 0) return;
 
-      console.log(`[MLExecutor] ${pending.length} ação(ões) pendente(s) — executando via API REST`);
+      console.log(`[MLExecutor] ${pending.length} ação(ões) pendente(s) — abrindo browser`);
 
+      // Marca tudo como "executing"
       for (const action of pending) {
         await db.update(agentActions)
           .set({ status: "executing" as const })
           .where(eq(agentActions.id, action.id));
+      }
 
-        const payload      = action.payload as any;
-        const account      = String(payload?.account      || "feminnita") as "feminnita" | "fnt";
-        const actionType   = String(payload?.action       || action.actionType || "");
-        const campaignId   = String(payload?.campaignId   || "");
-        const campaignName = String(payload?.campaignName || "");
-        const budget       = Number(payload?.budget       || 0);
+      // Agrupa por conta para abrir UMA sessão de browser por conta
+      const byAccount = new Map<string, typeof pending>();
+      for (const action of pending) {
+        const account = String((action.payload as any)?.account || "feminnita") as "feminnita" | "fnt";
+        if (!byAccount.has(account)) byAccount.set(account, []);
+        byAccount.get(account)!.push(action);
+      }
 
-        let log = "";
+      for (const [account, accountActions] of byAccount) {
+        const batchActions = accountActions.map(a => ({
+          id:           a.id,
+          actionType:   String((a.payload as any)?.action || a.actionType || ""),
+          campaignId:   String((a.payload as any)?.campaignId   || ""),
+          campaignName: String((a.payload as any)?.campaignName || ""),
+          budget:       Number((a.payload as any)?.budget       || 0),
+        }));
+
+        let results: Record<number, string>;
         try {
-          switch (actionType) {
-            case "pause_ads_campaign":
-              log = await apiPauseMLCampaign(account, campaignId, campaignName);
-              break;
-            case "activate_ads_campaign":
-              log = await apiActivateMLCampaign(account, campaignId, campaignName);
-              break;
-            case "update_ads_budget":
-              log = await apiUpdateMLBudget(account, campaignId, budget, campaignName);
-              break;
-            default:
-              log = `Tipo não suportado: ${actionType}`;
-          }
-          console.log(`[MLExecutor] ✅ id=${action.id}: ${log}`);
-          await db.update(agentActions)
-            .set({ status: "done" as const, executedAt: new Date(), executionLog: log } as any)
-            .where(eq(agentActions.id, action.id));
+          results = await runActionsInSession(account as "feminnita" | "fnt", batchActions);
         } catch (e: any) {
-          log = `ERRO: ${e.message}`;
-          console.error(`[MLExecutor] ❌ id=${action.id}: ${log}`);
+          // Browser falhou completamente — reverte todas para pending
+          console.error(`[MLExecutor] Browser falhou para ${account}:`, e.message);
+          for (const action of accountActions) {
+            await db.update(agentActions)
+              .set({ status: "pending" as const, executionLog: `ERRO browser: ${e.message}` } as any)
+              .where(eq(agentActions.id, action.id));
+          }
+          continue;
+        }
+
+        for (const action of accountActions) {
+          const log = results[action.id] ?? "Sem resultado";
+          const isError = log.startsWith("ERRO:") || log.includes("não encontrada") || log.includes("não encontrado");
+          console.log(`[MLExecutor] ${isError ? "❌" : "✅"} id=${action.id}: ${log}`);
           await db.update(agentActions)
-            .set({ status: "pending" as const, executionLog: log } as any)
+            .set({
+              status:       (isError ? "pending" : "done") as const,
+              executedAt:   isError ? undefined : new Date(),
+              executionLog: log,
+            } as any)
             .where(eq(agentActions.id, action.id));
         }
       }
@@ -72,11 +84,9 @@ export function startMLActionsExecutor(): () => void {
     }
   }
 
-  // Roda 15s após o startup (dá tempo do banco conectar)
   setTimeout(run, 15_000);
-
   const interval = setInterval(run, INTERVAL_MS);
-  console.log(`[MLExecutor] Iniciado — ciclos a cada ${INTERVAL_MS / 60000} min (API REST — sem browser)`);
+  console.log(`[MLExecutor] Iniciado — ciclos a cada ${INTERVAL_MS / 60000} min (Playwright browser)`);
 
   return () => clearInterval(interval);
 }

@@ -544,40 +544,13 @@ export async function chatWithGabi(
               .where(and(eq(agentActionsTable.agentName, "gabi"), eq(agentActionsTable.status, "pending")));
             if (pending.length === 0) return "Nenhuma ação pendente. Use propose_ads_actions primeiro para criar ações.";
 
-            const { apiPauseMLCampaign, apiActivateMLCampaign, apiUpdateMLBudget } = await import("./ml-ads-api");
-            const resultLines: string[] = [];
-
-            for (const a of pending) {
-              await db.update(agentActionsTable).set({ status: "executing" as const }).where(eq(agentActionsTable.id, a.id));
-              const payload      = a.payload as any;
-              const acc          = String(payload?.account      || account) as "feminnita" | "fnt";
-              const actionType   = String(payload?.action       || a.actionType || "");
-              const campaignId   = String(payload?.campaignId   || "");
-              const campaignName = String(payload?.campaignName || "");
-              const budget       = Number(payload?.budget || 0);
-
-              let log = "";
-              try {
-                switch (actionType) {
-                  case "pause_ads_campaign":    log = await apiPauseMLCampaign(acc, campaignId, campaignName);      break;
-                  case "activate_ads_campaign": log = await apiActivateMLCampaign(acc, campaignId, campaignName);   break;
-                  case "update_ads_budget":     log = await apiUpdateMLBudget(acc, campaignId, budget, campaignName); break;
-                  default: log = `Tipo não suportado: ${actionType}`;
-                }
-                await db.update(agentActionsTable)
-                  .set({ status: "done" as const, executedAt: new Date(), executionLog: log } as any)
-                  .where(eq(agentActionsTable.id, a.id));
-              } catch (e: any) {
-                log = `❌ ERRO: ${e.message}`;
-                await db.update(agentActionsTable)
-                  .set({ status: "pending" as const, executionLog: log } as any)
-                  .where(eq(agentActionsTable.id, a.id));
-              }
-              console.log(`[GabiExecute] id=${a.id}: ${log}`);
-              resultLines.push(`- ${a.title}: ${log}`);
-            }
-
-            return `${pending.length} ação(ões) executadas via API ML:\n${resultLines.join("\n")}`;
+            // Ações ficam no banco como "pending" e o MLActionsExecutor (background, a cada 5min)
+            // abre o browser ML e executa em lote. Não executamos aqui para evitar timeout.
+            const lines = pending.map(a => {
+              const p = a.payload as any;
+              return `- ${a.title || a.actionType} [id=${a.id}]`;
+            });
+            return `${pending.length} ação(ões) enfileirada(s) para execução via browser ML (próximos ~5 min):\n${lines.join("\n")}\n\nO executor em background abrirá o Seller Center, executará cada ação e atualizará o status no banco.`;
           })();
         } else if (toolUse.name === "propose_ads_actions") {
           call = (async (): Promise<string> => {
