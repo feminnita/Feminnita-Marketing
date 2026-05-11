@@ -12,6 +12,7 @@ import { runAllInfluencerAgents } from "./influencer-agent";
 import { startFernandaDailyAgent } from "./fernanda-daily-agent";
 import { runMorningBriefing } from "./morning-briefing-agent";
 import { startMLActionsExecutor } from "./ml-actions-executor";
+import { startShopeeActionsExecutor } from "./shopee-actions-executor";
 import { apiScrapeMLMetrics } from "./ml-ads-api";
 
 // ─── Briefing matinal (roda às 7h todo dia, antes dos demais agentes) ────────
@@ -115,6 +116,7 @@ export function startAllAgents(): () => void {
     { name: "InfluencerDailyAgent", start: startInfluencerDailyAgent },
     { name: "FernandaDaily", start: startFernandaDailyAgent },
     { name: "MLActionsExecutor", start: startMLActionsExecutor },
+    { name: "ShopeeActionsExecutor", start: startShopeeActionsExecutor },
     { name: "MLMetricsCollector", start: startMLMetricsCollector },
   ];
 

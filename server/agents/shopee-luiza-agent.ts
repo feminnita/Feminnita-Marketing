@@ -324,55 +324,17 @@ export async function chatWithLuizaShopee(
         if (toolUse.name === "execute_pending_actions") {
           call = (async (): Promise<string> => {
             const db = await getDb();
-            if (!db) return "Banco indisponível — não foi possível executar as ações.";
+            if (!db) return "Banco indisponível — não foi possível verificar as ações.";
             const { eq, and } = await import("drizzle-orm");
             const { agentActions: agentActionsTable2 } = await import("../../drizzle/schema");
-            const { pauseShopeeCampaign, activateShopeeCampaign, updateShopeeBudget, updateShopeeRoas } = await import("./shopee-ads-browser-agent");
 
             const pending = await db.select().from(agentActionsTable2)
               .where(and(eq(agentActionsTable2.agentName, "luiza"), eq(agentActionsTable2.status, "pending")));
 
             if (pending.length === 0) return "Nenhuma ação pendente encontrada para executar.";
 
-            const results: string[] = [];
-            for (const action of pending) {
-              try {
-                const payload = action.payload as any;
-                if (!payload?.campaignId) {
-                  results.push(`❌ ${action.title}: payload sem campaignId`);
-                  continue;
-                }
-                const campaignId = String(payload.campaignId);
-                const acc = (payload.account || account) as "feminnita" | "fnt";
-                const proposed = String(payload.proposedValue ?? "");
-                await db.update(agentActionsTable2).set({ status: "executing" as const }).where(eq(agentActionsTable2.id, action.id));
-                let res: string;
-                switch (action.actionType) {
-                  case "shopee_pause_campaign":
-                    res = await pauseShopeeCampaign(campaignId, acc);
-                    break;
-                  case "shopee_activate_campaign":
-                    res = await activateShopeeCampaign(campaignId, acc);
-                    break;
-                  case "shopee_update_budget":
-                    res = await updateShopeeBudget(campaignId, Number(proposed), acc);
-                    break;
-                  case "shopee_update_roas":
-                    res = await updateShopeeRoas(campaignId, Number(proposed), acc);
-                    break;
-                  default:
-                    results.push(`⚠️ ${action.title}: tipo de ação desconhecido (${action.actionType})`);
-                    await db.update(agentActionsTable2).set({ status: "pending" as const }).where(eq(agentActionsTable2.id, action.id));
-                    continue;
-                }
-                await db.update(agentActionsTable2).set({ status: "done" as const, executedAt: new Date() } as any).where(eq(agentActionsTable2.id, action.id));
-                results.push(`✅ ${action.title}: ${res}`);
-              } catch (e: any) {
-                await db.update(agentActionsTable2).set({ status: "pending" as const }).where(eq(agentActionsTable2.id, action.id));
-                results.push(`❌ ${action.title}: ${e.message}`);
-              }
-            }
-            return `Execução concluída (${pending.length} ações):\n${results.join("\n")}`;
+            const lines = pending.map(a => `- ${a.title || a.actionType} [id=${a.id}]`);
+            return `${pending.length} ação(ões) enfileirada(s) para execução via browser Shopee (próximos ~5 min):\n${lines.join("\n")}\n\nO executor em background abrirá o Seller Center, executará cada ação e atualizará o status no banco.`;
           })();
         } else if (toolUse.name === "get_shopee_campaigns") {
           call = withTimeout((async (): Promise<string> => {
