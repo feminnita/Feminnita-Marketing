@@ -8,7 +8,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { invokeLLM } from "../_core/llm";
 import { buildMemoryContext, saveMemory } from "../services/agentMemory";
 import { getLatestKnowledge } from "./knowledge-updater";
-import { listMLItems, pauseMLItem, activateMLItem, updateMLPrice, updateMLStock, getMLItemDetails, getMLCategoryAttributes, updateMLItemAttributes, listMLAdsCampaigns, pauseMLAdsCampaign, activateMLAdsCampaign, updateMLAdsBudget, getMLAdsCampaignStats } from "./gabi-executor";
+import { listMLItems, pauseMLItem, activateMLItem, updateMLPrice, updateMLStock, getMLItemDetails, getMLCategoryAttributes, updateMLItemAttributes, listMLAdsCampaigns, getMLAdsCampaignStats } from "./gabi-executor";
 import { getDb } from "../db";
 import { agentActions as agentActionsTable } from "../../drizzle/schema";
 import { desc, eq, and, isNotNull } from "drizzle-orm";
@@ -458,17 +458,11 @@ export async function chatWithGabi(
         } else if (toolUse.name === "ml_ads_list_campaigns") {
           call = listMLAdsCampaigns(account);
         } else if (toolUse.name === "ml_ads_pause_campaign") {
-          call = pauseMLAdsCampaign(inp.campaignId, account).catch(() =>
-            queueAction("pause_ads_campaign", `Pausar campanha ${inp.campaignName || inp.campaignId}`, { campaignId: inp.campaignId, campaignName: inp.campaignName || "" })
-          );
+          call = queueAction("pause_ads_campaign", `Pausar campanha ${inp.campaignName || inp.campaignId}`, { campaignId: inp.campaignId, campaignName: inp.campaignName || "" });
         } else if (toolUse.name === "ml_ads_activate_campaign") {
-          call = activateMLAdsCampaign(inp.campaignId, account).catch(() =>
-            queueAction("activate_ads_campaign", `Ativar campanha ${inp.campaignName || inp.campaignId}`, { campaignId: inp.campaignId, campaignName: inp.campaignName || "" })
-          );
+          call = queueAction("activate_ads_campaign", `Ativar campanha ${inp.campaignName || inp.campaignId}`, { campaignId: inp.campaignId, campaignName: inp.campaignName || "" });
         } else if (toolUse.name === "ml_ads_update_budget") {
-          call = updateMLAdsBudget(inp.campaignId, inp.dailyBudget, account).catch(() =>
-            queueAction("update_ads_budget", `Atualizar orçamento campanha ${inp.campaignId} para R$${inp.dailyBudget}/dia`, { campaignId: inp.campaignId, budget: inp.dailyBudget })
-          );
+          call = queueAction("update_ads_budget", `Atualizar orçamento campanha ${inp.campaignId} para R$${inp.dailyBudget}/dia`, { campaignId: inp.campaignId, budget: inp.dailyBudget });
         } else if (toolUse.name === "ml_ads_campaign_stats") {
           call = getMLAdsCampaignStats(inp.campaignId, inp.dateFrom, inp.dateTo, account);
         } else if (toolUse.name === "ml_get_ads_metrics") {
