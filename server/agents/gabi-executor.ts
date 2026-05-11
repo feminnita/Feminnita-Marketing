@@ -1,7 +1,13 @@
 /**
  * Gabi Executor — Execução de ações na API Mercado Livre
  * Suporta Conta A (Feminnita) e Conta B (FNT Confecções)
+ *
+ * NOTA: Operações de escrita em ML Ads (pause/activate/budget) NÃO funcionam via REST API
+ * sem parceria oficial — retornam HTTP 404. Essas operações são delegadas ao Playwright
+ * browser agent (ml-ads-browser-agent.ts) que executa via interface web do ML.
  */
+
+import { pauseAdsCampaign, activateAdsCampaign, updateAdsBudget } from "./ml-ads-browser-agent";
 
 const ML_BASE = "https://api.mercadolibre.com";
 
@@ -225,67 +231,23 @@ export async function listMLAdsCampaigns(account = "feminnita"): Promise<string>
   }
 }
 
-export async function pauseMLAdsCampaign(campaignId: string, account = "feminnita"): Promise<string> {
-  const token = getMLToken(account);
-  const userId = getUserId(account);
-  const label = account === "fnt" ? "Conta B (FNT)" : "Conta A (Feminnita)";
-  if (!token || !userId) return "Token ML não configurado.";
-  try {
-    const advertiserId = await getAdvertiserId(userId, token);
-    if (!advertiserId) return "Sem perfil de anunciante.";
-    const res = await fetch(`${ML_BASE}/advertising/advertisers/${advertiserId}/product_ads/campaigns/${campaignId}`, {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "paused" }),
-    });
-    const data = await res.json() as any;
-    if (!res.ok || data.error) {
-      return `Erro ao pausar campanha ${campaignId} (${label}): ${data.message || data.error || `HTTP ${res.status}`}. Verifique em https://www.mercadolivre.com.br/advertising/product-ads`;
-    }
-    return `Campanha ${campaignId} pausada com sucesso.`;
-  } catch (e: any) { return `Erro: ${e.message}`; }
+// ─── ML Ads Writes — SOMENTE VIA PLAYWRIGHT ──────────────────────────────────
+// A API REST do ML retorna HTTP 404 para operações de escrita em Product Ads
+// sem parceria oficial. Todas as operações de escrita delegam ao browser agent.
+
+export async function pauseMLAdsCampaign(campaignId: string, account = "feminnita", campaignName = ""): Promise<string> {
+  console.log(`[GabiML] pauseMLAdsCampaign via Playwright — ${campaignId} (${account})`);
+  return pauseAdsCampaign(campaignId, account as "feminnita" | "fnt", campaignName);
 }
 
-export async function activateMLAdsCampaign(campaignId: string, account = "feminnita"): Promise<string> {
-  const token = getMLToken(account);
-  const userId = getUserId(account);
-  const label = account === "fnt" ? "Conta B (FNT)" : "Conta A (Feminnita)";
-  if (!token || !userId) return "Token ML não configurado.";
-  try {
-    const advertiserId = await getAdvertiserId(userId, token);
-    if (!advertiserId) return "Sem perfil de anunciante.";
-    const res = await fetch(`${ML_BASE}/advertising/advertisers/${advertiserId}/product_ads/campaigns/${campaignId}`, {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "active" }),
-    });
-    const data = await res.json() as any;
-    if (!res.ok || data.error) {
-      return `Erro ao reativar campanha ${campaignId} (${label}): ${data.message || data.error || `HTTP ${res.status}`}. Verifique em https://www.mercadolivre.com.br/advertising/product-ads`;
-    }
-    return `Campanha ${campaignId} reativada com sucesso.`;
-  } catch (e: any) { return `Erro: ${e.message}`; }
+export async function activateMLAdsCampaign(campaignId: string, account = "feminnita", campaignName = ""): Promise<string> {
+  console.log(`[GabiML] activateMLAdsCampaign via Playwright — ${campaignId} (${account})`);
+  return activateAdsCampaign(campaignId, account as "feminnita" | "fnt", campaignName);
 }
 
-export async function updateMLAdsBudget(campaignId: string, dailyBudget: number, account = "feminnita"): Promise<string> {
-  const token = getMLToken(account);
-  const userId = getUserId(account);
-  const label = account === "fnt" ? "Conta B (FNT)" : "Conta A (Feminnita)";
-  if (!token || !userId) return "Token ML não configurado.";
-  try {
-    const advertiserId = await getAdvertiserId(userId, token);
-    if (!advertiserId) return "Sem perfil de anunciante.";
-    const res = await fetch(`${ML_BASE}/advertising/advertisers/${advertiserId}/product_ads/campaigns/${campaignId}`, {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ daily_budget: dailyBudget }),
-    });
-    const data = await res.json() as any;
-    if (!res.ok || data.error) {
-      return `Erro ao atualizar budget da campanha ${campaignId} (${label}): ${data.message || data.error || `HTTP ${res.status}`}. Verifique em https://www.mercadolivre.com.br/advertising/product-ads`;
-    }
-    return `Budget da campanha ${campaignId} atualizado para R$${dailyBudget}.`;
-  } catch (e: any) { return `Erro: ${e.message}`; }
+export async function updateMLAdsBudget(campaignId: string, dailyBudget: number, account = "feminnita", campaignName = ""): Promise<string> {
+  console.log(`[GabiML] updateMLAdsBudget via Playwright — ${campaignId} R$${dailyBudget} (${account})`);
+  return updateAdsBudget(campaignId, dailyBudget, account as "feminnita" | "fnt", campaignName);
 }
 
 export async function getMLAdsCampaignStats(campaignId: string, dateFrom: string, dateTo: string, account = "feminnita"): Promise<string> {
