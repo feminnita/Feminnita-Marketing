@@ -3323,7 +3323,7 @@ Retorne APENAS JSON v\xE1lido:
 async function requestCreativeVariants(userId, brief) {
   const db = await getDb();
   if (!db) return;
-  const { eq: eq108 } = await import("drizzle-orm");
+  const { eq: eq109 } = await import("drizzle-orm");
   const variants = ["demografico", "transformacao", "golias"];
   const variantLabel = {
     demografico: "P\xFAblico-Alvo",
@@ -3431,7 +3431,7 @@ async function requestCreative(userId, brief) {
   });
   const creativeId = insertResult[0].insertId;
   if (brief.imageBase64Input) {
-    const { eq: eq109 } = await import("drizzle-orm");
+    const { eq: eq110 } = await import("drizzle-orm");
     let productDescription = brief.description;
     try {
       const visionResult = await invokeLLM({
@@ -3490,7 +3490,7 @@ Analise esta foto e retorne APENAS JSON v\xE1lido:
       generatedBody: copy2.body,
       status: finalStatus2,
       updatedAt: /* @__PURE__ */ new Date()
-    }).where(eq109(adCreatives.id, creativeId));
+    }).where(eq110(adCreatives.id, creativeId));
     console.log(`[CreativeAgent] Criativo #${creativeId} (foto produto \u2192 ${generatedImage ? "banner Imagen" : "foto original"}) \u2192 pending_approval`);
     return {
       id: creativeId,
@@ -3524,14 +3524,14 @@ Analise esta foto e retorne APENAS JSON v\xE1lido:
   const imageBase64 = await generateImageWithImagen(imagenPrompt);
   const finalStatus = imageBase64 ? "pending_approval" : "generated";
   const message = imageBase64 ? "Banner gerado com sucesso! Aguardando sua aprova\xE7\xE3o." : "Copy gerado. Imagem requer configura\xE7\xE3o do Gemini Imagen (adicione LLM_API_KEY ao .env).";
-  const { eq: eq108 } = await import("drizzle-orm");
+  const { eq: eq109 } = await import("drizzle-orm");
   await db.update(adCreatives).set({
     imageBase64: imageBase64 || void 0,
     generatedHeadline: copy.headline,
     generatedBody: copy.body,
     status: finalStatus,
     updatedAt: /* @__PURE__ */ new Date()
-  }).where(eq108(adCreatives.id, creativeId));
+  }).where(eq109(adCreatives.id, creativeId));
   console.log(`[CreativeAgent] Criativo #${creativeId} \u2192 ${finalStatus}`);
   return {
     id: creativeId,
@@ -3867,10 +3867,10 @@ async function tryTokenToBrowserSession(page, context, account) {
       if (rawCookies.length > 0 && !isLoginRedirect) {
         const parsed = rawCookies.map((c) => {
           const main = c.split(";")[0];
-          const eq108 = main.indexOf("=");
+          const eq109 = main.indexOf("=");
           return {
-            name: main.slice(0, eq108).trim(),
-            value: main.slice(eq108 + 1).trim(),
+            name: main.slice(0, eq109).trim(),
+            value: main.slice(eq109 + 1).trim(),
             domain: ".mercadolivre.com.br",
             path: "/",
             httpOnly: false,
@@ -4539,6 +4539,186 @@ var init_webPush = __esm({
   }
 });
 
+// server/agents/ml-ads-api.ts
+var ml_ads_api_exports = {};
+__export(ml_ads_api_exports, {
+  apiActivateMLCampaign: () => apiActivateMLCampaign,
+  apiListMLCampaigns: () => apiListMLCampaigns,
+  apiPauseMLCampaign: () => apiPauseMLCampaign,
+  apiScrapeMLMetrics: () => apiScrapeMLMetrics,
+  apiUpdateMLBudget: () => apiUpdateMLBudget
+});
+import { eq as eq87, and as and70 } from "drizzle-orm";
+function getToken2(account) {
+  return account === "fnt" ? process.env.ML_ACCESS_TOKEN_2 || "" : process.env.ML_ACCESS_TOKEN_1 || "";
+}
+function getUserId3(account) {
+  return account === "fnt" ? process.env.ML_USER_ID_2 || "" : process.env.ML_USER_ID_1 || "";
+}
+async function mlFetch(method, path14, account, body) {
+  const token = getToken2(account);
+  if (!token) throw new Error(`Token ML n\xE3o configurado para ${account}`);
+  const res = await fetch(`${ML_BASE3}${path14}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      Accept: "application/json"
+    },
+    body: body ? JSON.stringify(body) : void 0
+  });
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    data = {};
+  }
+  if (!res.ok) {
+    const msg = data?.message || data?.error || JSON.stringify(data).slice(0, 200);
+    throw new Error(`ML API ${method} ${path14} \u2192 HTTP ${res.status}: ${msg}`);
+  }
+  return data;
+}
+async function apiListMLCampaigns(account = "feminnita") {
+  const userId = getUserId3(account);
+  if (!userId) return [];
+  const all = [];
+  let offset = 0;
+  const limit = 50;
+  while (true) {
+    try {
+      const data = await mlFetch(
+        "GET",
+        `/advertising/product_ads/v1/accounts/${userId}/product_ads/campaigns?status=A%2CP&limit=${limit}&offset=${offset}`,
+        account
+      );
+      const batch = data.product_ads_campaigns || data.results || data.campaigns || [];
+      all.push(...batch);
+      if (batch.length < limit) break;
+      offset += limit;
+    } catch (e) {
+      console.error(`[MLAdsAPI] Erro ao listar campanhas (${account}):`, e.message);
+      break;
+    }
+  }
+  return all;
+}
+async function apiPauseMLCampaign(account, campaignId, campaignName) {
+  const userId = getUserId3(account);
+  if (!userId) return `User ID n\xE3o configurado para ${account}`;
+  try {
+    await mlFetch(
+      "PATCH",
+      `/advertising/product_ads/v1/accounts/${userId}/product_ads/campaigns/${campaignId}`,
+      account,
+      { status: "paused" }
+    );
+    return `\u2705 Campanha "${campaignName || campaignId}" pausada via API.`;
+  } catch (e) {
+    return `\u274C Erro ao pausar "${campaignName || campaignId}": ${e.message}`;
+  }
+}
+async function apiActivateMLCampaign(account, campaignId, campaignName) {
+  const userId = getUserId3(account);
+  if (!userId) return `User ID n\xE3o configurado para ${account}`;
+  try {
+    await mlFetch(
+      "PATCH",
+      `/advertising/product_ads/v1/accounts/${userId}/product_ads/campaigns/${campaignId}`,
+      account,
+      { status: "active" }
+    );
+    return `\u2705 Campanha "${campaignName || campaignId}" reativada via API.`;
+  } catch (e) {
+    return `\u274C Erro ao ativar "${campaignName || campaignId}": ${e.message}`;
+  }
+}
+async function apiUpdateMLBudget(account, campaignId, budget, campaignName) {
+  const userId = getUserId3(account);
+  if (!userId) return `User ID n\xE3o configurado para ${account}`;
+  try {
+    await mlFetch(
+      "PATCH",
+      `/advertising/product_ads/v1/accounts/${userId}/product_ads/campaigns/${campaignId}`,
+      account,
+      { daily_budget: budget }
+    );
+    return `\u2705 Budget de "${campaignName || campaignId}" atualizado para R$${budget} via API.`;
+  } catch (e) {
+    return `\u274C Erro ao atualizar budget de "${campaignName || campaignId}": ${e.message}`;
+  }
+}
+async function apiScrapeMLMetrics(account = "feminnita") {
+  const userId = getUserId3(account);
+  if (!userId) {
+    console.error(`[MLMetrics] User ID n\xE3o configurado para ${account}`);
+    return 0;
+  }
+  try {
+    const campaigns3 = await apiListMLCampaigns(account);
+    if (campaigns3.length === 0) {
+      console.warn(`[MLMetrics] Nenhuma campanha para ${account}`);
+      return 0;
+    }
+    const dateTo = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+    const dateFrom = new Date(Date.now() - 30 * 24 * 60 * 60 * 1e3).toISOString().slice(0, 10);
+    const metricsById = /* @__PURE__ */ new Map();
+    try {
+      const md = await mlFetch(
+        "GET",
+        `/advertising/product_ads/v1/accounts/${userId}/product_ads/metrics?date_from=${dateFrom}&date_to=${dateTo}`,
+        account
+      );
+      for (const m of md.results || md.campaign_metrics || []) {
+        metricsById.set(String(m.campaign_id || m.id), m);
+      }
+    } catch (e) {
+      console.warn(`[MLMetrics] Endpoint de m\xE9tricas indispon\xEDvel (${account}): ${e.message}`);
+    }
+    const db = await getDb();
+    if (!db) {
+      console.error("[MLMetrics] Banco indispon\xEDvel");
+      return 0;
+    }
+    await db.delete(marketplaceAdsMetrics).where(and70(eq87(marketplaceAdsMetrics.platform, "ml"), eq87(marketplaceAdsMetrics.account, account)));
+    const now = /* @__PURE__ */ new Date();
+    const rows = campaigns3.map((c) => {
+      const m = metricsById.get(String(c.id || c.campaign_id)) || {};
+      const roas = Number(m.roas || 0);
+      return {
+        platform: "ml",
+        account,
+        campaignId: String(c.id || c.campaign_id || "").slice(0, 100),
+        campaignName: String(c.name || c.campaign_name || ""),
+        impressions: Math.round(Number(m.impressions || 0)),
+        clicks: Math.round(Number(m.clicks || 0)),
+        ctr: String(Number(m.ctr || 0).toFixed(3)),
+        spend: String(Number(m.spend || 0).toFixed(2)),
+        roas: String(roas.toFixed(2)),
+        revenue: String(Number(m.revenue || m.sales || 0).toFixed(2)),
+        acos: String(roas > 0 ? (100 / roas).toFixed(2) : "0"),
+        conversions: Math.round(Number(m.conversions || m.orders || 0)),
+        scrapedAt: now
+      };
+    });
+    if (rows.length > 0) await db.insert(marketplaceAdsMetrics).values(rows);
+    console.log(`[MLMetrics] ${rows.length} campanhas salvas para ${account}`);
+    return rows.length;
+  } catch (e) {
+    console.error(`[MLMetrics] Erro (${account}):`, e.message);
+    return 0;
+  }
+}
+var ML_BASE3;
+var init_ml_ads_api = __esm({
+  "server/agents/ml-ads-api.ts"() {
+    "use strict";
+    init_db();
+    init_schema();
+    ML_BASE3 = "https://api.mercadolibre.com";
+  }
+});
+
 // server/agents/shopee-ads-browser-agent.ts
 var shopee_ads_browser_agent_exports = {};
 __export(shopee_ads_browser_agent_exports, {
@@ -4858,7 +5038,7 @@ __export(websocket_notifications_exports, {
   notifyPerformanceUpdate: () => notifyPerformanceUpdate
 });
 import { Server as SocketIOServer } from "socket.io";
-import { eq as eq89 } from "drizzle-orm";
+import { eq as eq90 } from "drizzle-orm";
 function broadcastChatUsers() {
   if (!io) return;
   const users2 = [...chatUsers.values()].map((u) => ({ name: u.name, color: u.color }));
@@ -4886,7 +5066,7 @@ async function sendChatPushToOfflineUsers(msg) {
       );
     } catch (err) {
       if (err.expired) {
-        await db.delete(pushSubscriptions).where(eq89(pushSubscriptions.id, sub.id));
+        await db.delete(pushSubscriptions).where(eq90(pushSubscriptions.id, sub.id));
       }
     }
   }
@@ -4968,7 +5148,7 @@ function initializeWebSocket(httpServer) {
       });
       getDb().then((db) => {
         if (!db) return;
-        db.select().from(pushSubscriptions).where(eq89(pushSubscriptions.userId, toUserIdNum)).then((subs) => {
+        db.select().from(pushSubscriptions).where(eq90(pushSubscriptions.userId, toUserIdNum)).then((subs) => {
           for (const sub of subs) {
             sendPush(
               { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
@@ -5118,7 +5298,7 @@ var init_websocket_notifications = __esm({
 });
 
 // server/services/ga4.ts
-import { eq as eq91, and as and73 } from "drizzle-orm";
+import { eq as eq92, and as and74 } from "drizzle-orm";
 function getGA4AuthUrl(redirectUri, state) {
   const params = new URLSearchParams({
     client_id: process.env.GOOGLE_GA4_CLIENT_ID,
@@ -5171,17 +5351,17 @@ async function refreshGA4Token(userId, tokenId, refreshToken) {
   const expiresAt = new Date(Date.now() + expiresIn * 1e3);
   const db = await getDb();
   if (db) {
-    await db.update(oauthTokens).set({ accessToken, expiresAt }).where(eq91(oauthTokens.id, tokenId));
+    await db.update(oauthTokens).set({ accessToken, expiresAt }).where(eq92(oauthTokens.id, tokenId));
   }
   return accessToken;
 }
 async function getValidGA4Token(userId) {
   const db = await getDb();
   if (!db) return null;
-  const rows = await db.select().from(oauthTokens).where(and73(
-    eq91(oauthTokens.userId, userId),
-    eq91(oauthTokens.plataforma, "google_analytics"),
-    eq91(oauthTokens.isActive, true)
+  const rows = await db.select().from(oauthTokens).where(and74(
+    eq92(oauthTokens.userId, userId),
+    eq92(oauthTokens.plataforma, "google_analytics"),
+    eq92(oauthTokens.isActive, true)
   )).limit(1);
   if (rows.length === 0) return null;
   const token = rows[0];
@@ -5242,7 +5422,7 @@ var ga4_oauth_exports = {};
 __export(ga4_oauth_exports, {
   registerGA4OAuthRoutes: () => registerGA4OAuthRoutes
 });
-import { eq as eq106, and as and84 } from "drizzle-orm";
+import { eq as eq107, and as and85 } from "drizzle-orm";
 function registerGA4OAuthRoutes(app) {
   app.get("/api/ga4/start", async (req, res) => {
     try {
@@ -5267,7 +5447,7 @@ function registerGA4OAuthRoutes(app) {
       if (!tokens) return res.redirect("/ga4?error=exchange_failed");
       const db = await getDb();
       if (!db) return res.redirect("/ga4?error=db_unavailable");
-      const existing = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and84(eq106(oauthTokens.userId, userId), eq106(oauthTokens.plataforma, "google_analytics"))).limit(1);
+      const existing = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and85(eq107(oauthTokens.userId, userId), eq107(oauthTokens.plataforma, "google_analytics"))).limit(1);
       const expiresAt = new Date(Date.now() + tokens.expiresIn * 1e3);
       if (existing.length > 0) {
         await db.update(oauthTokens).set({
@@ -5275,7 +5455,7 @@ function registerGA4OAuthRoutes(app) {
           ...tokens.refreshToken ? { refreshToken: tokens.refreshToken } : {},
           expiresAt,
           isActive: true
-        }).where(eq106(oauthTokens.id, existing[0].id));
+        }).where(eq107(oauthTokens.id, existing[0].id));
       } else {
         if (!tokens.refreshToken) {
           console.error("[GA4 OAuth] No refresh token received");
@@ -5318,7 +5498,7 @@ var meta_oauth_exports = {};
 __export(meta_oauth_exports, {
   registerMetaOAuthRoutes: () => registerMetaOAuthRoutes
 });
-import { eq as eq107, and as and85 } from "drizzle-orm";
+import { eq as eq108, and as and86 } from "drizzle-orm";
 function getAuthUrl(state) {
   const params = new URLSearchParams({
     client_id: APP_ID,
@@ -5380,7 +5560,7 @@ function registerMetaOAuthRoutes(app) {
     const db = await getDb();
     if (!db) return res.redirect("/gestor-trafego?error=db_unavailable");
     const expiresAt = new Date(Date.now() + long.expiresIn * 1e3);
-    const existing = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and85(eq107(oauthTokens.userId, userId), eq107(oauthTokens.plataforma, "meta"))).limit(1);
+    const existing = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and86(eq108(oauthTokens.userId, userId), eq108(oauthTokens.plataforma, "meta"))).limit(1);
     if (existing.length > 0) {
       const prevInfo = existing[0].accountInfo ? JSON.parse(existing[0].accountInfo) : {};
       await db.update(oauthTokens).set({
@@ -5388,7 +5568,7 @@ function registerMetaOAuthRoutes(app) {
         expiresAt,
         isActive: true,
         accountInfo: JSON.stringify(prevInfo)
-      }).where(eq107(oauthTokens.id, existing[0].id));
+      }).where(eq108(oauthTokens.id, existing[0].id));
     } else {
       await db.insert(oauthTokens).values({
         userId,
@@ -7915,8 +8095,8 @@ var blingOAuthRouter = router({
     const db = await (await Promise.resolve().then(() => (init_db(), db_exports))).getDb();
     if (!db) throw new Error("Database not available");
     const { oauthTokens: oauthTokens3 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
-    const { eq: eq108, and: and86 } = await import("drizzle-orm");
-    await db.update(oauthTokens3).set({ isActive: false }).where(and86(eq108(oauthTokens3.userId, ctx.user.id), eq108(oauthTokens3.plataforma, "bling")));
+    const { eq: eq109, and: and87 } = await import("drizzle-orm");
+    await db.update(oauthTokens3).set({ isActive: false }).where(and87(eq109(oauthTokens3.userId, ctx.user.id), eq109(oauthTokens3.plataforma, "bling")));
     return { sucesso: true };
   })
 });
@@ -29557,8 +29737,8 @@ async function proposeActions(analysis, today) {
   try {
     const db = await getDb();
     if (!db) return;
-    const { eq: eq108, and: and86 } = await import("drizzle-orm");
-    const existing = await db.select({ title: agentActions.title }).from(agentActions).where(and86(eq108(agentActions.agentName, "fernanda"), eq108(agentActions.date, today)));
+    const { eq: eq109, and: and87 } = await import("drizzle-orm");
+    const existing = await db.select({ title: agentActions.title }).from(agentActions).where(and87(eq109(agentActions.agentName, "fernanda"), eq109(agentActions.date, today)));
     const existingTitles = new Set(existing.map((r) => r.title));
     const toInsert = [];
     for (const rec of analysis.recommendations) {
@@ -33930,7 +34110,7 @@ init_agentMemory();
 import Anthropic6 from "@anthropic-ai/sdk";
 init_db();
 init_schema();
-import { desc as desc45, eq as eq87, and as and70, isNotNull } from "drizzle-orm";
+import { desc as desc45, eq as eq88, and as and71, isNotNull } from "drizzle-orm";
 var AGENT_NAME7 = "gabi";
 var anthropic4 = new Anthropic6({ apiKey: process.env.ANTHROPIC_API_KEY || "" });
 function withTimeout2(promise, ms, label) {
@@ -34161,9 +34341,9 @@ async function buildGabiPrompt(account = "feminnita") {
         executionLog: agentActions.executionLog,
         executedAt: agentActions.executedAt,
         actionType: agentActions.actionType
-      }).from(agentActions).where(and70(
-        eq87(agentActions.agentName, "gabi"),
-        eq87(agentActions.status, "done"),
+      }).from(agentActions).where(and71(
+        eq88(agentActions.agentName, "gabi"),
+        eq88(agentActions.status, "done"),
         isNotNull(agentActions.executedAt)
       )).orderBy(desc45(agentActions.executedAt)).limit(30);
       if (recent.length > 0) {
@@ -34371,22 +34551,22 @@ NOME DO USU\xC1RIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
           call = (async () => {
             const db = await getDb();
             if (!db) throw new Error("DB indispon\xEDvel");
-            const { eq: eq108, and: and86, desc: desc52 } = await import("drizzle-orm");
+            const { eq: eq109, and: and87, desc: desc52 } = await import("drizzle-orm");
             const { marketplaceAdsMetrics: marketplaceAdsMetrics2 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
             const targetPlatform = inp.platform || "ml";
             const targetAccount = inp.account || account;
-            const rows = await db.select().from(marketplaceAdsMetrics2).where(and86(
-              eq108(marketplaceAdsMetrics2.platform, targetPlatform),
-              eq108(marketplaceAdsMetrics2.account, targetAccount)
+            const rows = await db.select().from(marketplaceAdsMetrics2).where(and87(
+              eq109(marketplaceAdsMetrics2.platform, targetPlatform),
+              eq109(marketplaceAdsMetrics2.account, targetAccount)
             )).orderBy(desc52(marketplaceAdsMetrics2.scrapedAt)).limit(200);
             if (!rows.length) {
               const { or: or6 } = await import("drizzle-orm");
-              const pending = await db.select({ id: agentActions.id }).from(agentActions).where(and86(
-                eq108(agentActions.actionType, "scrape_ads_metrics"),
+              const pending = await db.select({ id: agentActions.id }).from(agentActions).where(and87(
+                eq109(agentActions.actionType, "scrape_ads_metrics"),
                 or6(
-                  eq108(agentActions.status, "approved"),
-                  eq108(agentActions.status, "executing"),
-                  eq108(agentActions.status, "pending")
+                  eq109(agentActions.status, "approved"),
+                  eq109(agentActions.status, "executing"),
+                  eq109(agentActions.status, "pending")
                 )
               )).limit(1);
               if (!pending.length) {
@@ -34426,43 +34606,43 @@ ${lines.join("\n")}`;
           call = (async () => {
             const db = await getDb();
             if (!db) return "Banco indispon\xEDvel.";
-            const pending = await db.select().from(agentActions).where(and70(eq87(agentActions.agentName, "gabi"), eq87(agentActions.status, "pending")));
+            const pending = await db.select().from(agentActions).where(and71(eq88(agentActions.agentName, "gabi"), eq88(agentActions.status, "pending")));
             if (pending.length === 0) return "Nenhuma a\xE7\xE3o pendente. Use propose_ads_actions primeiro para criar a\xE7\xF5es.";
-            const { runActionsInSession: runActionsInSession2 } = await Promise.resolve().then(() => (init_ml_ads_browser_agent(), ml_ads_browser_agent_exports));
-            const byAccount = /* @__PURE__ */ new Map();
+            const { apiPauseMLCampaign: apiPauseMLCampaign2, apiActivateMLCampaign: apiActivateMLCampaign2, apiUpdateMLBudget: apiUpdateMLBudget2 } = await Promise.resolve().then(() => (init_ml_ads_api(), ml_ads_api_exports));
+            const resultLines = [];
             for (const a of pending) {
-              const acc = String(a.payload?.account || account);
-              if (!byAccount.has(acc)) byAccount.set(acc, []);
-              byAccount.get(acc).push(a);
-            }
-            for (const [acc, actions] of byAccount) {
-              for (const a of actions) {
-                await db.update(agentActions).set({ status: "executing" }).where(eq87(agentActions.id, a.id));
+              await db.update(agentActions).set({ status: "executing" }).where(eq88(agentActions.id, a.id));
+              const payload = a.payload;
+              const acc = String(payload?.account || account);
+              const actionType = String(payload?.action || a.actionType || "");
+              const campaignId = String(payload?.campaignId || "");
+              const campaignName = String(payload?.campaignName || "");
+              const budget = Number(payload?.budget || 0);
+              let log = "";
+              try {
+                switch (actionType) {
+                  case "pause_ads_campaign":
+                    log = await apiPauseMLCampaign2(acc, campaignId, campaignName);
+                    break;
+                  case "activate_ads_campaign":
+                    log = await apiActivateMLCampaign2(acc, campaignId, campaignName);
+                    break;
+                  case "update_ads_budget":
+                    log = await apiUpdateMLBudget2(acc, campaignId, budget, campaignName);
+                    break;
+                  default:
+                    log = `Tipo n\xE3o suportado: ${actionType}`;
+                }
+                await db.update(agentActions).set({ status: "done", executedAt: /* @__PURE__ */ new Date(), executionLog: log }).where(eq88(agentActions.id, a.id));
+              } catch (e) {
+                log = `\u274C ERRO: ${e.message}`;
+                await db.update(agentActions).set({ status: "pending", executionLog: log }).where(eq88(agentActions.id, a.id));
               }
-              const batch = actions.map((a) => ({
-                id: a.id,
-                actionType: String(a.payload?.action || a.actionType || ""),
-                campaignId: String(a.payload?.campaignId || ""),
-                campaignName: String(a.payload?.campaignName || ""),
-                budget: Number(a.payload?.budget || 0)
-              }));
-              runActionsInSession2(acc, batch).then(async (results) => {
-                for (const [id, log] of Object.entries(results)) {
-                  await db.update(agentActions).set({ status: "done", executedAt: /* @__PURE__ */ new Date(), executionLog: log }).where(eq87(agentActions.id, Number(id)));
-                }
-                console.log(`[GabiExecute] Batch "${acc}" conclu\xEDdo: ${Object.values(results).join(" | ")}`);
-              }).catch(async (e) => {
-                console.error(`[GabiExecute] Erro no batch "${acc}": ${e.message}`);
-                for (const a of actions) {
-                  await db.update(agentActions).set({ status: "pending", executionLog: `ERRO: ${e.message}` }).where(eq87(agentActions.id, a.id));
-                }
-              });
+              console.log(`[GabiExecute] id=${a.id}: ${log}`);
+              resultLines.push(`- ${a.title}: ${log}`);
             }
-            const titles = pending.map((a) => `- ${a.title}`).join("\n");
-            return `${pending.length} a\xE7\xE3o(\xF5es) disparadas para o agente Playwright:
-${titles}
-
-\u23F3 Executando em background (~2-3 min). Resultados em /acoes-agentes.`;
+            return `${pending.length} a\xE7\xE3o(\xF5es) executadas via API ML:
+${resultLines.join("\n")}`;
           })();
         } else if (toolUse.name === "propose_ads_actions") {
           call = (async () => {
@@ -34880,10 +35060,10 @@ NOME DO USU\xC1RIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
           call = (async () => {
             const db = await getDb();
             if (!db) return "Banco indispon\xEDvel \u2014 n\xE3o foi poss\xEDvel executar as a\xE7\xF5es.";
-            const { eq: eq108, and: and86 } = await import("drizzle-orm");
+            const { eq: eq109, and: and87 } = await import("drizzle-orm");
             const { agentActions: agentActionsTable2 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
             const { pauseShopeeCampaign: pauseShopeeCampaign2, activateShopeeCampaign: activateShopeeCampaign2, updateShopeeBudget: updateShopeeBudget2, updateShopeeRoas: updateShopeeRoas2 } = await Promise.resolve().then(() => (init_shopee_ads_browser_agent(), shopee_ads_browser_agent_exports));
-            const pending = await db.select().from(agentActionsTable2).where(and86(eq108(agentActionsTable2.agentName, "luiza"), eq108(agentActionsTable2.status, "pending")));
+            const pending = await db.select().from(agentActionsTable2).where(and87(eq109(agentActionsTable2.agentName, "luiza"), eq109(agentActionsTable2.status, "pending")));
             if (pending.length === 0) return "Nenhuma a\xE7\xE3o pendente encontrada para executar.";
             const results = [];
             for (const action of pending) {
@@ -34896,7 +35076,7 @@ NOME DO USU\xC1RIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
                 const campaignId = String(payload.campaignId);
                 const acc = payload.account || account;
                 const proposed = String(payload.proposedValue ?? "");
-                await db.update(agentActionsTable2).set({ status: "executing" }).where(eq108(agentActionsTable2.id, action.id));
+                await db.update(agentActionsTable2).set({ status: "executing" }).where(eq109(agentActionsTable2.id, action.id));
                 let res;
                 switch (action.actionType) {
                   case "shopee_pause_campaign":
@@ -34913,13 +35093,13 @@ NOME DO USU\xC1RIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
                     break;
                   default:
                     results.push(`\u26A0\uFE0F ${action.title}: tipo de a\xE7\xE3o desconhecido (${action.actionType})`);
-                    await db.update(agentActionsTable2).set({ status: "pending" }).where(eq108(agentActionsTable2.id, action.id));
+                    await db.update(agentActionsTable2).set({ status: "pending" }).where(eq109(agentActionsTable2.id, action.id));
                     continue;
                 }
-                await db.update(agentActionsTable2).set({ status: "done", executedAt: /* @__PURE__ */ new Date() }).where(eq108(agentActionsTable2.id, action.id));
+                await db.update(agentActionsTable2).set({ status: "done", executedAt: /* @__PURE__ */ new Date() }).where(eq109(agentActionsTable2.id, action.id));
                 results.push(`\u2705 ${action.title}: ${res}`);
               } catch (e) {
-                await db.update(agentActionsTable2).set({ status: "pending" }).where(eq108(agentActionsTable2.id, action.id));
+                await db.update(agentActionsTable2).set({ status: "pending" }).where(eq109(agentActionsTable2.id, action.id));
                 results.push(`\u274C ${action.title}: ${e.message}`);
               }
             }
@@ -35030,7 +35210,7 @@ async function updateLuizaShopeeKnowledge() {
 // server/routers/shopee-luiza.ts
 init_db();
 init_schema();
-import { eq as eq88, and as and71, desc as desc46 } from "drizzle-orm";
+import { eq as eq89, and as and72, desc as desc46 } from "drizzle-orm";
 var shopeeLuizaRouter = router({
   chat: protectedProcedure.input(z76.object({
     messages: z76.array(z76.object({
@@ -35053,12 +35233,12 @@ var shopeeLuizaRouter = router({
           agentName,
           title
         });
-        const [created] = await db.select().from(specialistConversations).where(and71(eq88(specialistConversations.userId, ctx.user.id), eq88(specialistConversations.agentName, agentName))).orderBy(desc46(specialistConversations.createdAt)).limit(1);
+        const [created] = await db.select().from(specialistConversations).where(and72(eq89(specialistConversations.userId, ctx.user.id), eq89(specialistConversations.agentName, agentName))).orderBy(desc46(specialistConversations.createdAt)).limit(1);
         convId = created.id;
       }
       await db.insert(specialistMessages).values({ conversationId: convId, role: "user", content: userMessage.content });
       await db.insert(specialistMessages).values({ conversationId: convId, role: "assistant", content: reply });
-      if (convId) await db.update(specialistConversations).set({ updatedAt: /* @__PURE__ */ new Date() }).where(eq88(specialistConversations.id, convId));
+      if (convId) await db.update(specialistConversations).set({ updatedAt: /* @__PURE__ */ new Date() }).where(eq89(specialistConversations.id, convId));
       return { reply, conversationId: convId };
     }
     return { reply, conversationId: null };
@@ -35633,7 +35813,7 @@ import { TRPCError as TRPCError14 } from "@trpc/server";
 // server/agents/agent-task-runner.ts
 init_db();
 init_schema();
-import { eq as eq90, and as and72, desc as desc47 } from "drizzle-orm";
+import { eq as eq91, and as and73, desc as desc47 } from "drizzle-orm";
 init_websocket_notifications();
 init_webPush();
 var AGENT_DISPLAY = {
@@ -35646,25 +35826,25 @@ async function runAgentTask(taskId, userId, agentName, message) {
   const db = await getDb();
   if (!db) return;
   try {
-    await db.update(agentTasks).set({ status: "processing", startedAt: /* @__PURE__ */ new Date() }).where(eq90(agentTasks.id, taskId));
+    await db.update(agentTasks).set({ status: "processing", startedAt: /* @__PURE__ */ new Date() }).where(eq91(agentTasks.id, taskId));
     const response = await chatWithSpecialist(agentName, message, []);
     await db.update(agentTasks).set({
       status: "done",
       result: response.message,
       finishedAt: /* @__PURE__ */ new Date()
-    }).where(eq90(agentTasks.id, taskId));
+    }).where(eq91(agentTasks.id, taskId));
     try {
-      const [existingConv] = await db.select().from(specialistConversations).where(and72(
-        eq90(specialistConversations.userId, userId),
-        eq90(specialistConversations.agentName, agentName)
+      const [existingConv] = await db.select().from(specialistConversations).where(and73(
+        eq91(specialistConversations.userId, userId),
+        eq91(specialistConversations.agentName, agentName)
       )).orderBy(desc47(specialistConversations.updatedAt)).limit(1);
       let convId;
       if (existingConv) {
         convId = existingConv.id;
-        await db.update(specialistConversations).set({ updatedAt: /* @__PURE__ */ new Date() }).where(eq90(specialistConversations.id, convId));
+        await db.update(specialistConversations).set({ updatedAt: /* @__PURE__ */ new Date() }).where(eq91(specialistConversations.id, convId));
       } else {
         await db.insert(specialistConversations).values({ userId, agentName, title: message.slice(0, 60) });
-        const [created] = await db.select().from(specialistConversations).where(and72(eq90(specialistConversations.userId, userId), eq90(specialistConversations.agentName, agentName))).orderBy(desc47(specialistConversations.createdAt)).limit(1);
+        const [created] = await db.select().from(specialistConversations).where(and73(eq91(specialistConversations.userId, userId), eq91(specialistConversations.agentName, agentName))).orderBy(desc47(specialistConversations.createdAt)).limit(1);
         convId = created.id;
       }
       await db.insert(specialistMessages).values({ conversationId: convId, role: "user", content: `\u23F3 Tarefa: ${message}` });
@@ -35684,7 +35864,7 @@ async function runAgentTask(taskId, userId, agentName, message) {
         ts: Date.now()
       });
     } else if (db) {
-      const subs = await db.select().from(pushSubscriptions).where(eq90(pushSubscriptions.userId, userId));
+      const subs = await db.select().from(pushSubscriptions).where(eq91(pushSubscriptions.userId, userId));
       for (const sub of subs) {
         try {
           await sendPush(
@@ -35697,13 +35877,13 @@ async function runAgentTask(taskId, userId, agentName, message) {
           );
         } catch (err) {
           if (err.expired) {
-            await db.delete(pushSubscriptions).where(eq90(pushSubscriptions.id, sub.id));
+            await db.delete(pushSubscriptions).where(eq91(pushSubscriptions.id, sub.id));
           }
         }
       }
     }
   } catch (err) {
-    await db.update(agentTasks).set({ status: "error", result: err.message, finishedAt: /* @__PURE__ */ new Date() }).where(eq90(agentTasks.id, taskId));
+    await db.update(agentTasks).set({ status: "error", result: err.message, finishedAt: /* @__PURE__ */ new Date() }).where(eq91(agentTasks.id, taskId));
   }
 }
 
@@ -35734,10 +35914,10 @@ var agentTasksRouter = router({
   })).query(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) return [];
-    const { and: and86, eq: eq108, desc: desc52 } = await import("drizzle-orm");
-    const conditions = [eq108(agentTasks.userId, ctx.user.id)];
-    if (input.agentName) conditions.push(eq108(agentTasks.agentName, input.agentName));
-    return db.select().from(agentTasks).where(and86(...conditions)).orderBy(desc52(agentTasks.createdAt)).limit(input.limit);
+    const { and: and87, eq: eq109, desc: desc52 } = await import("drizzle-orm");
+    const conditions = [eq109(agentTasks.userId, ctx.user.id)];
+    if (input.agentName) conditions.push(eq109(agentTasks.agentName, input.agentName));
+    return db.select().from(agentTasks).where(and87(...conditions)).orderBy(desc52(agentTasks.createdAt)).limit(input.limit);
   })
 });
 
@@ -35822,14 +36002,14 @@ import { z as z82 } from "zod";
 init_ga4();
 init_db();
 init_schema();
-import { eq as eq92, and as and74 } from "drizzle-orm";
+import { eq as eq93, and as and75 } from "drizzle-orm";
 async function getPropertyId(userId) {
   const db = await getDb();
   if (!db) return null;
-  const rows = await db.select({ accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and74(
-    eq92(oauthTokens.userId, userId),
-    eq92(oauthTokens.plataforma, "google_analytics"),
-    eq92(oauthTokens.isActive, true)
+  const rows = await db.select({ accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and75(
+    eq93(oauthTokens.userId, userId),
+    eq93(oauthTokens.plataforma, "google_analytics"),
+    eq93(oauthTokens.isActive, true)
   )).limit(1);
   if (rows.length === 0) return null;
   const info = rows[0].accountInfo ? JSON.parse(rows[0].accountInfo) : {};
@@ -35839,7 +36019,7 @@ var ga4Router = router({
   status: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return { connected: false, propertyId: null };
-    const rows = await db.select({ isActive: oauthTokens.isActive, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and74(eq92(oauthTokens.userId, ctx.user.id), eq92(oauthTokens.plataforma, "google_analytics"))).limit(1);
+    const rows = await db.select({ isActive: oauthTokens.isActive, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and75(eq93(oauthTokens.userId, ctx.user.id), eq93(oauthTokens.plataforma, "google_analytics"))).limit(1);
     if (rows.length === 0) return { connected: false, propertyId: null };
     const info = rows[0].accountInfo ? JSON.parse(rows[0].accountInfo) : {};
     return { connected: Boolean(rows[0].isActive), propertyId: info.propertyId ?? null };
@@ -35847,17 +36027,17 @@ var ga4Router = router({
   setPropertyId: protectedProcedure.input(z82.object({ propertyId: z82.string().min(1) })).mutation(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new Error("DB indispon\xEDvel");
-    const rows = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and74(eq92(oauthTokens.userId, ctx.user.id), eq92(oauthTokens.plataforma, "google_analytics"))).limit(1);
+    const rows = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and75(eq93(oauthTokens.userId, ctx.user.id), eq93(oauthTokens.plataforma, "google_analytics"))).limit(1);
     if (rows.length === 0) throw new Error("GA4 n\xE3o conectado");
     const info = rows[0].accountInfo ? JSON.parse(rows[0].accountInfo) : {};
     info.propertyId = input.propertyId;
-    await db.update(oauthTokens).set({ accountInfo: JSON.stringify(info) }).where(eq92(oauthTokens.id, rows[0].id));
+    await db.update(oauthTokens).set({ accountInfo: JSON.stringify(info) }).where(eq93(oauthTokens.id, rows[0].id));
     return { success: true };
   }),
   disconnect: protectedProcedure.mutation(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("DB indispon\xEDvel");
-    await db.update(oauthTokens).set({ isActive: false }).where(and74(eq92(oauthTokens.userId, ctx.user.id), eq92(oauthTokens.plataforma, "google_analytics")));
+    await db.update(oauthTokens).set({ isActive: false }).where(and75(eq93(oauthTokens.userId, ctx.user.id), eq93(oauthTokens.plataforma, "google_analytics")));
     return { success: true };
   }),
   overview: protectedProcedure.input(z82.object({ days: z82.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
@@ -36336,8 +36516,8 @@ var appRouter = router({
       const dbConn = await getDb();
       if (!dbConn) throw new Error("DB indispon\xEDvel");
       const { users: users2 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
-      const { eq: eq108 } = await import("drizzle-orm");
-      await dbConn.update(users2).set({ name: input.name }).where(eq108(users2.id, ctx.user.id));
+      const { eq: eq109 } = await import("drizzle-orm");
+      await dbConn.update(users2).set({ name: input.name }).where(eq109(users2.id, ctx.user.id));
       return { success: true };
     })
   }),
@@ -36434,8 +36614,8 @@ var appRouter = router({
       try {
         const db = await getDb();
         if (!db) return [];
-        const { eq: eq108 } = await import("drizzle-orm");
-        const allInfluencers = await db.select().from(influencers).where(eq108(influencers.userId, ctx.user.id));
+        const { eq: eq109 } = await import("drizzle-orm");
+        const allInfluencers = await db.select().from(influencers).where(eq109(influencers.userId, ctx.user.id));
         return allInfluencers;
       } catch (error) {
         console.error("[Influencers] Erro ao listar:", error);
@@ -36455,7 +36635,7 @@ var appRouter = router({
     })).mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const { eq: eq108 } = await import("drizzle-orm");
+      const { eq: eq109 } = await import("drizzle-orm");
       const result = await db.insert(influencers).values({
         userId: ctx.user.id,
         name: input.name,
@@ -36466,7 +36646,7 @@ var appRouter = router({
         tiktokHandle: input.tiktokHandle,
         isActive: true
       });
-      const created = await db.select().from(influencers).where(eq108(influencers.id, result[0].insertId)).limit(1);
+      const created = await db.select().from(influencers).where(eq109(influencers.id, result[0].insertId)).limit(1);
       return created[0];
     }),
     update: protectedProcedure.input(z84.object({
@@ -36481,18 +36661,18 @@ var appRouter = router({
     })).mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const { eq: eq108, and: and86 } = await import("drizzle-orm");
-      const owned = await db.select({ id: influencers.id }).from(influencers).where(and86(eq108(influencers.id, input.id), eq108(influencers.userId, ctx.user.id))).limit(1);
+      const { eq: eq109, and: and87 } = await import("drizzle-orm");
+      const owned = await db.select({ id: influencers.id }).from(influencers).where(and87(eq109(influencers.id, input.id), eq109(influencers.userId, ctx.user.id))).limit(1);
       if (owned.length === 0) throw new Error("Influencer n\xE3o encontrado");
       const { id, ...updates } = input;
-      await db.update(influencers).set(updates).where(eq108(influencers.id, id));
-      const updated = await db.select().from(influencers).where(eq108(influencers.id, id)).limit(1);
+      await db.update(influencers).set(updates).where(eq109(influencers.id, id));
+      const updated = await db.select().from(influencers).where(eq109(influencers.id, id)).limit(1);
       return updated[0];
     }),
     upsertDefaults: protectedProcedure.mutation(async ({ ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const { eq: eq108 } = await import("drizzle-orm");
+      const { eq: eq109 } = await import("drizzle-orm");
       const defaults = [
         {
           name: "Carol",
@@ -36527,7 +36707,7 @@ var appRouter = router({
           tiktokHandle: "@luizafeminnita"
         }
       ];
-      const existing = await db.select({ name: influencers.name }).from(influencers).where(eq108(influencers.userId, ctx.user.id));
+      const existing = await db.select({ name: influencers.name }).from(influencers).where(eq109(influencers.userId, ctx.user.id));
       const existingNames = existing.map((i) => i.name);
       let created = 0;
       for (const inf of defaults) {
@@ -36545,31 +36725,31 @@ var appRouter = router({
     })).query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
-      const { eq: eq108, and: and86, desc: desc52 } = await import("drizzle-orm");
-      const owned = await db.select({ id: influencers.id }).from(influencers).where(and86(eq108(influencers.id, input.influencerId), eq108(influencers.userId, ctx.user.id))).limit(1);
+      const { eq: eq109, and: and87, desc: desc52 } = await import("drizzle-orm");
+      const owned = await db.select({ id: influencers.id }).from(influencers).where(and87(eq109(influencers.id, input.influencerId), eq109(influencers.userId, ctx.user.id))).limit(1);
       if (owned.length === 0) return [];
-      const conditions = [eq108(influencerPosts.influencerId, input.influencerId)];
+      const conditions = [eq109(influencerPosts.influencerId, input.influencerId)];
       if (input.status) {
-        conditions.push(eq108(influencerPosts.status, input.status));
+        conditions.push(eq109(influencerPosts.status, input.status));
       }
-      return db.select().from(influencerPosts).where(and86(...conditions)).orderBy(desc52(influencerPosts.createdAt)).limit(input.limit);
+      return db.select().from(influencerPosts).where(and87(...conditions)).orderBy(desc52(influencerPosts.createdAt)).limit(input.limit);
     }),
     deletePost: protectedProcedure.input(z84.object({ postId: z84.number() })).mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const { eq: eq108, and: and86 } = await import("drizzle-orm");
-      const post = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq108(influencerPosts.id, input.postId)).limit(1);
+      const { eq: eq109, and: and87 } = await import("drizzle-orm");
+      const post = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq109(influencerPosts.id, input.postId)).limit(1);
       if (post.length === 0) throw new Error("Post n\xE3o encontrado");
-      const owned = await db.select({ id: influencers.id }).from(influencers).where(and86(eq108(influencers.id, post[0].influencerId ?? 0), eq108(influencers.userId, ctx.user.id))).limit(1);
+      const owned = await db.select({ id: influencers.id }).from(influencers).where(and87(eq109(influencers.id, post[0].influencerId ?? 0), eq109(influencers.userId, ctx.user.id))).limit(1);
       if (owned.length === 0) throw new Error("Acesso negado");
-      await db.delete(influencerPosts).where(eq108(influencerPosts.id, input.postId));
+      await db.delete(influencerPosts).where(eq109(influencerPosts.id, input.postId));
       return { success: true };
     }),
     getAllPosts: protectedProcedure.input(z84.object({ limit: z84.number().default(200) })).query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
-      const { eq: eq108, desc: desc52, inArray: inArray10 } = await import("drizzle-orm");
-      const myInfluencers = await db.select({ id: influencers.id, name: influencers.name }).from(influencers).where(eq108(influencers.userId, ctx.user.id));
+      const { eq: eq109, desc: desc52, inArray: inArray10 } = await import("drizzle-orm");
+      const myInfluencers = await db.select({ id: influencers.id, name: influencers.name }).from(influencers).where(eq109(influencers.userId, ctx.user.id));
       if (myInfluencers.length === 0) return [];
       const ids = myInfluencers.map((i) => i.id);
       const posts = await db.select().from(influencerPosts).where(inArray10(influencerPosts.influencerId, ids)).orderBy(desc52(influencerPosts.createdAt)).limit(input.limit);
@@ -36597,12 +36777,12 @@ var appRouter = router({
       try {
         const dbConn = await getDb();
         if (!dbConn) return [];
-        const { or: or6, and: and86, eq: eq108, desc: desc52 } = await import("drizzle-orm");
+        const { or: or6, and: and87, eq: eq109, desc: desc52 } = await import("drizzle-orm");
         const { directMessages: directMessages2 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
         const msgs = await dbConn.select().from(directMessages2).where(
           or6(
-            and86(eq108(directMessages2.fromUserId, ctx.user.id), eq108(directMessages2.toUserId, input.withUserId)),
-            and86(eq108(directMessages2.fromUserId, input.withUserId), eq108(directMessages2.toUserId, ctx.user.id))
+            and87(eq109(directMessages2.fromUserId, ctx.user.id), eq109(directMessages2.toUserId, input.withUserId)),
+            and87(eq109(directMessages2.fromUserId, input.withUserId), eq109(directMessages2.toUserId, ctx.user.id))
           )
         ).orderBy(desc52(directMessages2.createdAt)).limit(50);
         return msgs.reverse();
@@ -36735,7 +36915,7 @@ function serveStatic(app) {
 init_db();
 init_schema();
 import crypto12 from "crypto";
-import { eq as eq93, and as and75 } from "drizzle-orm";
+import { eq as eq94, and as and76 } from "drizzle-orm";
 async function fireMetaCAPIPurchase(opts) {
   try {
     const pixelId = process.env.META_PIXEL_ID;
@@ -36825,7 +37005,7 @@ async function handleEstoqueCreated(data) {
       quantidadeDisponivel,
       dataAtualizacao: /* @__PURE__ */ new Date()
     });
-    await db.update(blingProdutos).set({ estoque: quantidade, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and75(eq93(blingProdutos.id, produtoId), eq93(blingProdutos.userId, userId)));
+    await db.update(blingProdutos).set({ estoque: quantidade, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and76(eq94(blingProdutos.id, produtoId), eq94(blingProdutos.userId, userId)));
     console.log(`[Bling Webhook] Estoque criado \u2014 produto ${produtoId} (SKU: ${produtoSku}), saldo: ${quantidade}`);
   } catch (error) {
     console.error("[Bling Webhook] Erro ao processar cria\xE7\xE3o de estoque:", error);
@@ -36848,9 +37028,9 @@ async function handleEstoqueUpdated(data) {
       return;
     }
     const userId = "system";
-    const existing = await db.select({ id: blingEstoque.id }).from(blingEstoque).where(and75(eq93(blingEstoque.produtoId, produtoId), eq93(blingEstoque.userId, userId))).limit(1);
+    const existing = await db.select({ id: blingEstoque.id }).from(blingEstoque).where(and76(eq94(blingEstoque.produtoId, produtoId), eq94(blingEstoque.userId, userId))).limit(1);
     if (existing.length > 0) {
-      await db.update(blingEstoque).set({ quantidade, quantidadeReservada, quantidadeDisponivel, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and75(eq93(blingEstoque.produtoId, produtoId), eq93(blingEstoque.userId, userId)));
+      await db.update(blingEstoque).set({ quantidade, quantidadeReservada, quantidadeDisponivel, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and76(eq94(blingEstoque.produtoId, produtoId), eq94(blingEstoque.userId, userId)));
     } else {
       await db.insert(blingEstoque).values({
         userId,
@@ -36862,7 +37042,7 @@ async function handleEstoqueUpdated(data) {
         dataAtualizacao: /* @__PURE__ */ new Date()
       });
     }
-    await db.update(blingProdutos).set({ estoque: quantidade, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and75(eq93(blingProdutos.id, produtoId), eq93(blingProdutos.userId, userId)));
+    await db.update(blingProdutos).set({ estoque: quantidade, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and76(eq94(blingProdutos.id, produtoId), eq94(blingProdutos.userId, userId)));
     console.log(`[Bling Webhook] Estoque atualizado \u2014 produto ${produtoId} (SKU: ${produtoSku}), novo saldo: ${quantidade}`);
   } catch (error) {
     console.error("[Bling Webhook] Erro ao processar atualiza\xE7\xE3o de estoque:", error);
@@ -36881,8 +37061,8 @@ async function handleEstoqueDeleted(data) {
       return;
     }
     const userId = "system";
-    await db.update(blingEstoque).set({ quantidade: 0, quantidadeReservada: 0, quantidadeDisponivel: 0, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and75(eq93(blingEstoque.produtoId, produtoId), eq93(blingEstoque.userId, userId)));
-    await db.update(blingProdutos).set({ estoque: 0, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and75(eq93(blingProdutos.id, produtoId), eq93(blingProdutos.userId, userId)));
+    await db.update(blingEstoque).set({ quantidade: 0, quantidadeReservada: 0, quantidadeDisponivel: 0, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and76(eq94(blingEstoque.produtoId, produtoId), eq94(blingEstoque.userId, userId)));
+    await db.update(blingProdutos).set({ estoque: 0, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and76(eq94(blingProdutos.id, produtoId), eq94(blingProdutos.userId, userId)));
     console.log(`[Bling Webhook] Estoque deletado \u2014 produto ${produtoId} zerado`);
   } catch (error) {
     console.error("[Bling Webhook] Erro ao processar exclus\xE3o de estoque:", error);
@@ -37198,7 +37378,7 @@ init_websocket_notifications();
 // server/agents/sync-agent.ts
 init_db();
 init_schema();
-import { eq as eq94, and as and76, isNotNull as isNotNull2 } from "drizzle-orm";
+import { eq as eq95, and as and77, isNotNull as isNotNull2 } from "drizzle-orm";
 var BLING_SYNC_INTERVAL_MS = 60 * 60 * 1e3;
 var META_SYNC_INTERVAL_MS = 30 * 60 * 1e3;
 async function syncBlingForUser(userId, accessToken) {
@@ -37293,7 +37473,7 @@ async function runBlingSync() {
     return;
   }
   try {
-    const tokens = await db.select().from(oauthTokens).where(and76(eq94(oauthTokens.plataforma, "bling"), eq94(oauthTokens.isActive, true), isNotNull2(oauthTokens.accessToken)));
+    const tokens = await db.select().from(oauthTokens).where(and77(eq95(oauthTokens.plataforma, "bling"), eq95(oauthTokens.isActive, true), isNotNull2(oauthTokens.accessToken)));
     console.log(`[SyncAgent] Bling \u2014 ${tokens.length} usu\xE1rio(s) para sincronizar`);
     for (const token of tokens) {
       try {
@@ -37315,7 +37495,7 @@ async function runMetaSync() {
     return;
   }
   try {
-    const tokens = await db.select().from(oauthTokens).where(and76(eq94(oauthTokens.plataforma, "meta"), eq94(oauthTokens.isActive, true), isNotNull2(oauthTokens.accessToken)));
+    const tokens = await db.select().from(oauthTokens).where(and77(eq95(oauthTokens.plataforma, "meta"), eq95(oauthTokens.isActive, true), isNotNull2(oauthTokens.accessToken)));
     console.log(`[SyncAgent] Meta \u2014 ${tokens.length} usu\xE1rio(s) para sincronizar`);
     for (const token of tokens) {
       try {
@@ -37349,7 +37529,7 @@ function startSyncAgent() {
 // server/agents/token-refresh-agent.ts
 init_db();
 init_schema();
-import { eq as eq95, and as and77, lte as lte3, isNotNull as isNotNull3 } from "drizzle-orm";
+import { eq as eq96, and as and78, lte as lte3, isNotNull as isNotNull3 } from "drizzle-orm";
 var REFRESH_INTERVAL_MS = 2 * 60 * 60 * 1e3;
 var EXPIRY_THRESHOLD_MS = 24 * 60 * 60 * 1e3;
 var MAX_RETRY_FAILURES = 3;
@@ -37453,8 +37633,8 @@ async function runTokenRefresh() {
   const threshold = new Date(Date.now() + EXPIRY_THRESHOLD_MS);
   try {
     const tokens = await db.select().from(oauthTokens).where(
-      and77(
-        eq95(oauthTokens.isActive, true),
+      and78(
+        eq96(oauthTokens.isActive, true),
         isNotNull3(oauthTokens.expiresAt),
         lte3(oauthTokens.expiresAt, threshold)
       )
@@ -37468,7 +37648,7 @@ async function runTokenRefresh() {
           accessToken: result.accessToken,
           expiresAt: result.expiresAt,
           updatedAt: /* @__PURE__ */ new Date()
-        }).where(eq95(oauthTokens.id, token.id));
+        }).where(eq96(oauthTokens.id, token.id));
         failureCount.delete(token.id);
         console.log(`[TokenRefresh] Token id=${token.id} renovado com sucesso \u2014 expira em ${result.expiresAt.toISOString()}`);
       } catch (err) {
@@ -37476,7 +37656,7 @@ async function runTokenRefresh() {
         failureCount.set(token.id, failures);
         console.error(`[TokenRefresh] Token id=${token.id} falhou (tentativa ${failures}/${MAX_RETRY_FAILURES}):`, err);
         if (failures >= MAX_RETRY_FAILURES) {
-          await db.update(oauthTokens).set({ isActive: false, updatedAt: /* @__PURE__ */ new Date() }).where(eq95(oauthTokens.id, token.id));
+          await db.update(oauthTokens).set({ isActive: false, updatedAt: /* @__PURE__ */ new Date() }).where(eq96(oauthTokens.id, token.id));
           failureCount.delete(token.id);
           console.warn(`[TokenRefresh] Token id=${token.id} desativado ap\xF3s ${MAX_RETRY_FAILURES} falhas consecutivas`);
         }
@@ -37516,7 +37696,7 @@ function startTokenRefreshAgent() {
 init_db();
 init_schema();
 init_llm();
-import { eq as eq96 } from "drizzle-orm";
+import { eq as eq97 } from "drizzle-orm";
 var lastRunDate2 = null;
 async function runContentGeneration() {
   const db = await getDb();
@@ -37527,7 +37707,7 @@ async function runContentGeneration() {
   console.log("[ContentAgent] Iniciando gera\xE7\xE3o de conte\xFAdo...");
   let activeInfluencers = [];
   try {
-    activeInfluencers = await db.select().from(influencers).where(eq96(influencers.isActive, true));
+    activeInfluencers = await db.select().from(influencers).where(eq97(influencers.isActive, true));
   } catch (err) {
     console.error("[ContentAgent] Erro ao buscar influencers:", err);
     return;
@@ -37617,7 +37797,7 @@ function startContentAgent() {
 // server/agents/alert-agent.ts
 init_db();
 init_schema();
-import { eq as eq97, and as and78 } from "drizzle-orm";
+import { eq as eq98, and as and79 } from "drizzle-orm";
 var notifyNewAlert2;
 try {
   notifyNewAlert2 = (init_websocket_notifications(), __toCommonJS(websocket_notifications_exports)).notifyNewAlert;
@@ -37698,7 +37878,7 @@ async function runAlertCheck() {
   }
   let tokens = [];
   try {
-    tokens = await db.select().from(oauthTokens).where(and78(eq97(oauthTokens.plataforma, "meta"), eq97(oauthTokens.isActive, true)));
+    tokens = await db.select().from(oauthTokens).where(and79(eq98(oauthTokens.plataforma, "meta"), eq98(oauthTokens.isActive, true)));
   } catch (err) {
     console.error("[AlertAgent] Erro ao buscar tokens:", err);
     return;
@@ -37715,10 +37895,10 @@ async function runAlertCheck() {
         for (const alertDef of thresholdAlerts) {
           try {
             const existing = await db.select().from(metaCampaignAlerts).where(
-              and78(
-                eq97(metaCampaignAlerts.campaignId, campaign.id),
-                eq97(metaCampaignAlerts.alertType, alertDef.alertType),
-                eq97(metaCampaignAlerts.isResolved, false)
+              and79(
+                eq98(metaCampaignAlerts.campaignId, campaign.id),
+                eq98(metaCampaignAlerts.alertType, alertDef.alertType),
+                eq98(metaCampaignAlerts.isResolved, false)
               )
             ).limit(1);
             if (existing.length > 0) continue;
@@ -37767,7 +37947,7 @@ function startAlertAgent() {
 // server/agents/performance-agent.ts
 init_db();
 init_schema();
-import { eq as eq98 } from "drizzle-orm";
+import { eq as eq99 } from "drizzle-orm";
 var CHECK_INTERVAL_MS = 5 * 60 * 1e3;
 var RUN_HOUR2 = 0;
 var lastRunDate3 = null;
@@ -37818,7 +37998,7 @@ async function runPerformanceCollection() {
     return;
   }
   try {
-    const activeInfluencers = await db.select().from(influencers).where(eq98(influencers.isActive, true));
+    const activeInfluencers = await db.select().from(influencers).where(eq99(influencers.isActive, true));
     console.log(`[PerformanceAgent] ${activeInfluencers.length} influencer(s) ativo(s)`);
     for (const influencer of activeInfluencers) {
       try {
@@ -37865,7 +38045,7 @@ function startPerformanceAgent() {
 // server/agents/publication-worker.ts
 init_db();
 init_schema();
-import { eq as eq99, and as and80, or as or5, lte as lte4 } from "drizzle-orm";
+import { eq as eq100, and as and81, or as or5, lte as lte4 } from "drizzle-orm";
 var MAX_JOBS_PER_CYCLE = 5;
 async function publishToInstagram2(instagramId, accessToken, caption, mediaUrls) {
   if (mediaUrls.length === 0) {
@@ -37924,9 +38104,9 @@ async function processJobs() {
   try {
     jobs = await db.select().from(publicationQueueJobs).where(
       or5(
-        eq99(publicationQueueJobs.status, "ready"),
-        and80(
-          eq99(publicationQueueJobs.status, "waiting"),
+        eq100(publicationQueueJobs.status, "ready"),
+        and81(
+          eq100(publicationQueueJobs.status, "waiting"),
           lte4(publicationQueueJobs.nextRetryTime, now)
         )
       )
@@ -37939,10 +38119,10 @@ async function processJobs() {
   console.log(`[PublicationWorker] Processando ${jobs.length} job(s)...`);
   for (const job of jobs) {
     try {
-      await db.update(publicationQueueJobs).set({ status: "processing" }).where(eq99(publicationQueueJobs.id, job.id));
-      const [post] = await db.select().from(influencerPosts).where(eq99(influencerPosts.id, job.postId)).limit(1);
+      await db.update(publicationQueueJobs).set({ status: "processing" }).where(eq100(publicationQueueJobs.id, job.id));
+      const [post] = await db.select().from(influencerPosts).where(eq100(influencerPosts.id, job.postId)).limit(1);
       if (!post) throw new Error(`Post id=${job.postId} n\xE3o encontrado.`);
-      const [account] = await db.select().from(instagramAccounts).where(eq99(instagramAccounts.id, job.accountId)).limit(1);
+      const [account] = await db.select().from(instagramAccounts).where(eq100(instagramAccounts.id, job.accountId)).limit(1);
       if (!account) throw new Error(`InstagramAccount id=${job.accountId} n\xE3o encontrada.`);
       const caption = post.caption ?? post.content ?? "";
       const mediaUrls = Array.isArray(post.mediaUrls) ? post.mediaUrls : [];
@@ -37952,19 +38132,19 @@ async function processJobs() {
         caption,
         mediaUrls
       );
-      await db.update(publicationQueueJobs).set({ status: "done" }).where(eq99(publicationQueueJobs.id, job.id));
-      await db.update(influencerPosts).set({ status: "published", publishedAt: now, postId: igPostId }).where(eq99(influencerPosts.id, job.postId));
+      await db.update(publicationQueueJobs).set({ status: "done" }).where(eq100(publicationQueueJobs.id, job.id));
+      await db.update(influencerPosts).set({ status: "published", publishedAt: now, postId: igPostId }).where(eq100(influencerPosts.id, job.postId));
       console.log(`[PublicationWorker] Job ${job.id} publicado. IG postId=${igPostId}`);
     } catch (err) {
       console.error(`[PublicationWorker] Erro no job ${job.id}:`, err);
       const newRetryCount = job.retryCount + 1;
       if (newRetryCount >= job.maxRetries) {
-        await db.update(publicationQueueJobs).set({ status: "failed", retryCount: newRetryCount, lastError: String(err) }).where(eq99(publicationQueueJobs.id, job.id));
+        await db.update(publicationQueueJobs).set({ status: "failed", retryCount: newRetryCount, lastError: String(err) }).where(eq100(publicationQueueJobs.id, job.id));
         console.log(`[PublicationWorker] Job ${job.id} marcado como failed ap\xF3s ${newRetryCount} tentativas.`);
       } else {
         const backoffMs = Math.pow(newRetryCount, 2) * 5 * 60 * 1e3;
         const nextRetryTime = new Date(Date.now() + backoffMs);
-        await db.update(publicationQueueJobs).set({ status: "waiting", retryCount: newRetryCount, lastError: String(err), nextRetryTime }).where(eq99(publicationQueueJobs.id, job.id));
+        await db.update(publicationQueueJobs).set({ status: "waiting", retryCount: newRetryCount, lastError: String(err), nextRetryTime }).where(eq100(publicationQueueJobs.id, job.id));
         console.log(`[PublicationWorker] Job ${job.id} reagendado para ${nextRetryTime.toISOString()} (tentativa ${newRetryCount}).`);
       }
     }
@@ -37985,7 +38165,7 @@ function startPublicationWorker() {
 init_db();
 init_schema();
 init_llm();
-import { eq as eq100 } from "drizzle-orm";
+import { eq as eq101 } from "drizzle-orm";
 var lastRunDate4 = null;
 var RUN_HOUR3 = 7;
 async function runMarketResearchLLM(today) {
@@ -38119,7 +38299,7 @@ async function resolveAdminUserId() {
   try {
     const db = await getDb();
     if (!db) return 1;
-    const adminUsers = await db.select({ id: users.id }).from(users).where(eq100(users.role, "admin")).limit(1);
+    const adminUsers = await db.select({ id: users.id }).from(users).where(eq101(users.role, "admin")).limit(1);
     return adminUsers[0]?.id ?? 1;
   } catch {
     return 1;
@@ -38223,7 +38403,7 @@ function startMarketResearchAgent() {
 init_db();
 init_schema();
 init_llm();
-import { eq as eq101, desc as desc49 } from "drizzle-orm";
+import { eq as eq102, desc as desc49 } from "drizzle-orm";
 var CHECK_INTERVAL_MS2 = 30 * 60 * 1e3;
 async function processPendingBriefs() {
   const db = await getDb();
@@ -38234,7 +38414,7 @@ async function processPendingBriefs() {
   console.log("[Copywriter] Buscando briefs pendentes...");
   let pendingBriefs = [];
   try {
-    pendingBriefs = await db.select().from(contentBriefs).where(eq101(contentBriefs.status, "pending")).limit(10);
+    pendingBriefs = await db.select().from(contentBriefs).where(eq102(contentBriefs.status, "pending")).limit(10);
   } catch (err) {
     console.error("[Copywriter] Erro ao buscar briefs:", err);
     return;
@@ -38256,7 +38436,7 @@ async function processPendingBriefs() {
       let influencer = null;
       if (brief.influencerId) {
         try {
-          const rows = await db.select().from(influencers).where(eq101(influencers.id, brief.influencerId)).limit(1);
+          const rows = await db.select().from(influencers).where(eq102(influencers.id, brief.influencerId)).limit(1);
           influencer = rows[0] ?? null;
         } catch (err) {
           console.error(`[Copywriter] Erro ao buscar influencer id=${brief.influencerId}:`, err);
@@ -38416,7 +38596,7 @@ async function processPendingBriefs() {
         const raw = response.choices[0].message.content;
         generatedContent = JSON.parse(typeof raw === "string" ? raw : JSON.stringify(raw));
       }
-      await db.update(contentBriefs).set({ generatedContent, status: "generated" }).where(eq101(contentBriefs.id, brief.id));
+      await db.update(contentBriefs).set({ generatedContent, status: "generated" }).where(eq102(contentBriefs.id, brief.id));
       console.log(`[Copywriter] Brief id=${brief.id} (${brief.briefType}) gerado para ${influencerName}.`);
     } catch (err) {
       console.error(`[Copywriter] Erro ao processar brief id=${brief.id}:`, err);
@@ -38441,7 +38621,7 @@ function startCopywriterAgent() {
 init_db();
 init_schema();
 init_llm();
-import { eq as eq102, desc as desc50 } from "drizzle-orm";
+import { eq as eq103, desc as desc50 } from "drizzle-orm";
 var CHECK_INTERVAL_MS3 = 60 * 60 * 1e3;
 var RUN_DAY = 1;
 var RUN_HOUR4 = 8;
@@ -38481,7 +38661,7 @@ async function generateWeeklyContentPlan() {
   }
   let activeInfluencers = [];
   try {
-    activeInfluencers = await db.select().from(influencers).where(eq102(influencers.isActive, true));
+    activeInfluencers = await db.select().from(influencers).where(eq103(influencers.isActive, true));
   } catch (err) {
     console.error("[CreativeTeam] Erro ao buscar influencers:", err);
     return;
@@ -38602,7 +38782,7 @@ function startCreativeTeamAgent() {
 init_db();
 init_schema();
 init_llm();
-import { eq as eq103, and as and82, inArray as inArray9 } from "drizzle-orm";
+import { eq as eq104, and as and83, inArray as inArray9 } from "drizzle-orm";
 var CHECK_INTERVAL_MS4 = 5 * 60 * 1e3;
 async function processNewCollections() {
   const db = await getDb();
@@ -38614,9 +38794,9 @@ async function processNewCollections() {
   let pendingCollections = [];
   try {
     pendingCollections = await db.select().from(productCollections).where(
-      and82(
-        eq103(productCollections.status, "ativo"),
-        eq103(productCollections.briefsGenerated, false)
+      and83(
+        eq104(productCollections.status, "ativo"),
+        eq104(productCollections.briefsGenerated, false)
       )
     );
   } catch (err) {
@@ -38668,7 +38848,7 @@ async function processNewCollections() {
       }
       if (collectionAnalysis) {
         try {
-          await db.update(productCollections).set({ contentPlan: { llmAnalysis: collectionAnalysis } }).where(eq103(productCollections.id, collection.id));
+          await db.update(productCollections).set({ contentPlan: { llmAnalysis: collectionAnalysis } }).where(eq104(productCollections.id, collection.id));
         } catch (err) {
           console.error(`[LaunchAgent] Erro ao salvar content_plan id=${collection.id}:`, err);
         }
@@ -38717,7 +38897,7 @@ async function processNewCollections() {
           );
         }
       }
-      await db.update(productCollections).set({ briefsGenerated: true }).where(eq103(productCollections.id, collection.id));
+      await db.update(productCollections).set({ briefsGenerated: true }).where(eq104(productCollections.id, collection.id));
       console.log(
         `[LaunchAgent] Cole\xE7\xE3o id=${collection.id} processada \u2014 ${briefsInserted} brief(s) criados.`
       );
@@ -38747,7 +38927,7 @@ init_llm();
 init_agentMemory();
 init_db();
 init_schema();
-import { eq as eq104, desc as desc51 } from "drizzle-orm";
+import { eq as eq105, desc as desc51 } from "drizzle-orm";
 var INFLUENCER_PROFILES2 = {
   carol: {
     agentName: "carol",
@@ -38830,7 +39010,7 @@ async function loadPerformanceHistory(influencerDbId) {
   try {
     const db = await getDb();
     if (!db) return "Sem hist\xF3rico de performance dispon\xEDvel.";
-    const recentPosts = await db.select().from(influencerPosts).where(eq104(influencerPosts.influencerId, influencerDbId)).orderBy(desc51(influencerPosts.publishedAt)).limit(10);
+    const recentPosts = await db.select().from(influencerPosts).where(eq105(influencerPosts.influencerId, influencerDbId)).orderBy(desc51(influencerPosts.publishedAt)).limit(10);
     if (recentPosts.length === 0) return "Primeiros posts ainda ser\xE3o criados \u2014 sem hist\xF3rico.";
     const summary = recentPosts.map((p) => {
       const metrics = p.engagementMetrics;
@@ -38983,7 +39163,7 @@ async function runInfluencerAgent(agentName) {
   try {
     const db = await getDb();
     if (!db) throw new Error("DB indispon\xEDvel");
-    const dbRecord = await db.select({ id: influencers.id }).from(influencers).where(eq104(influencers.instagramHandle, profile.instagramHandle)).limit(1);
+    const dbRecord = await db.select({ id: influencers.id }).from(influencers).where(eq105(influencers.instagramHandle, profile.instagramHandle)).limit(1);
     const influencerDbId = dbRecord[0]?.id ?? 0;
     const [memoryContext, performanceHistory, trendData] = await Promise.all([
       buildMemoryContext(agentName),
@@ -39023,7 +39203,8 @@ async function runAllInfluencerAgents() {
 // server/agents/ml-actions-executor.ts
 init_db();
 init_schema();
-import { eq as eq105, and as and83 } from "drizzle-orm";
+init_ml_ads_api();
+import { eq as eq106, and as and84 } from "drizzle-orm";
 var INTERVAL_MS = 5 * 60 * 1e3;
 function startMLActionsExecutor() {
   let running = false;
@@ -39033,44 +39214,38 @@ function startMLActionsExecutor() {
     try {
       const db = await getDb();
       if (!db) return;
-      const pending = await db.select().from(agentActions).where(and83(eq105(agentActions.agentName, "gabi"), eq105(agentActions.status, "pending")));
+      const pending = await db.select().from(agentActions).where(and84(eq106(agentActions.agentName, "gabi"), eq106(agentActions.status, "pending")));
       if (pending.length === 0) return;
-      console.log(`[MLExecutor] ${pending.length} a\xE7\xE3o(\xF5es) pendente(s) \u2014 agrupando por conta`);
-      const { runActionsInSession: runActionsInSession2 } = await Promise.resolve().then(() => (init_ml_ads_browser_agent(), ml_ads_browser_agent_exports));
-      const byAccount = /* @__PURE__ */ new Map();
+      console.log(`[MLExecutor] ${pending.length} a\xE7\xE3o(\xF5es) pendente(s) \u2014 executando via API REST`);
       for (const action of pending) {
-        const acc = String(action.payload?.account || "feminnita");
-        if (!byAccount.has(acc)) byAccount.set(acc, []);
-        byAccount.get(acc).push(action);
-      }
-      for (const [acc, actions] of byAccount) {
-        console.log(`[MLExecutor] Conta "${acc}" \u2014 ${actions.length} a\xE7\xE3o(\xF5es) em um \xFAnico browser`);
-        for (const action of actions) {
-          await db.update(agentActions).set({ status: "executing" }).where(eq105(agentActions.id, action.id));
-        }
+        await db.update(agentActions).set({ status: "executing" }).where(eq106(agentActions.id, action.id));
+        const payload = action.payload;
+        const account = String(payload?.account || "feminnita");
+        const actionType = String(payload?.action || action.actionType || "");
+        const campaignId = String(payload?.campaignId || "");
+        const campaignName = String(payload?.campaignName || "");
+        const budget = Number(payload?.budget || 0);
+        let log = "";
         try {
-          const batchActions = actions.map((a) => ({
-            id: a.id,
-            actionType: String(a.payload?.action || a.actionType || ""),
-            campaignId: String(a.payload?.campaignId || ""),
-            campaignName: String(a.payload?.campaignName || ""),
-            budget: Number(a.payload?.budget || 0)
-          }));
-          const results = await runActionsInSession2(acc, batchActions);
-          for (const [id, log] of Object.entries(results)) {
-            console.log(`[MLExecutor] \u2705 id=${id}: ${log}`);
-            await db.update(agentActions).set({ status: "done", executedAt: /* @__PURE__ */ new Date(), executionLog: log }).where(eq105(agentActions.id, Number(id)));
+          switch (actionType) {
+            case "pause_ads_campaign":
+              log = await apiPauseMLCampaign(account, campaignId, campaignName);
+              break;
+            case "activate_ads_campaign":
+              log = await apiActivateMLCampaign(account, campaignId, campaignName);
+              break;
+            case "update_ads_budget":
+              log = await apiUpdateMLBudget(account, campaignId, budget, campaignName);
+              break;
+            default:
+              log = `Tipo n\xE3o suportado: ${actionType}`;
           }
-          for (const action of actions) {
-            if (!(action.id in results)) {
-              await db.update(agentActions).set({ status: "pending", executionLog: "Sem resultado do executor" }).where(eq105(agentActions.id, action.id));
-            }
-          }
+          console.log(`[MLExecutor] \u2705 id=${action.id}: ${log}`);
+          await db.update(agentActions).set({ status: "done", executedAt: /* @__PURE__ */ new Date(), executionLog: log }).where(eq106(agentActions.id, action.id));
         } catch (e) {
-          console.error(`[MLExecutor] \u274C Erro na sess\xE3o "${acc}": ${e.message}`);
-          for (const action of actions) {
-            await db.update(agentActions).set({ status: "pending", executionLog: `ERRO sess\xE3o: ${e.message}` }).where(eq105(agentActions.id, action.id));
-          }
+          log = `ERRO: ${e.message}`;
+          console.error(`[MLExecutor] \u274C id=${action.id}: ${log}`);
+          await db.update(agentActions).set({ status: "pending", executionLog: log }).where(eq106(agentActions.id, action.id));
         }
       }
       console.log(`[MLExecutor] Ciclo conclu\xEDdo`);
@@ -39082,12 +39257,12 @@ function startMLActionsExecutor() {
   }
   setTimeout(run, 15e3);
   const interval = setInterval(run, INTERVAL_MS);
-  console.log(`[MLExecutor] Iniciado \u2014 ciclos a cada ${INTERVAL_MS / 6e4} min`);
+  console.log(`[MLExecutor] Iniciado \u2014 ciclos a cada ${INTERVAL_MS / 6e4} min (API REST \u2014 sem browser)`);
   return () => clearInterval(interval);
 }
 
 // server/agents/index.ts
-init_ml_ads_browser_agent();
+init_ml_ads_api();
 function startMorningBriefingScheduler() {
   const HOUR = 7;
   let timeout;
@@ -39140,7 +39315,7 @@ function startMLMetricsCollector() {
   async function run() {
     for (const account of ["feminnita", "fnt"]) {
       try {
-        const count = await scrapeAdsCampaignMetrics(account);
+        const count = await apiScrapeMLMetrics(account);
         console.log(`[MLMetrics] ${account}: ${count} m\xE9tricas atualizadas`);
       } catch (e) {
         console.error(`[MLMetrics] Erro ao coletar m\xE9tricas (${account}):`, e.message);
@@ -39323,11 +39498,11 @@ async function startServer() {
   app.get("/api/debug/agent-actions", async (_req, res) => {
     try {
       const { getDb: getDb2 } = await Promise.resolve().then(() => (init_db(), db_exports));
-      const { desc: desc52, eq: eq108 } = await import("drizzle-orm");
+      const { desc: desc52, eq: eq109 } = await import("drizzle-orm");
       const { agentActions: agentActions2 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
       const db = await getDb2();
       if (!db) return res.status(503).json({ error: "Banco indispon\xEDvel" });
-      const rows = await db.select().from(agentActions2).where(eq108(agentActions2.agentName, "gabi")).orderBy(desc52(agentActions2.createdAt)).limit(20);
+      const rows = await db.select().from(agentActions2).where(eq109(agentActions2.agentName, "gabi")).orderBy(desc52(agentActions2.createdAt)).limit(20);
       return res.json({
         count: rows.length,
         actions: rows.map((r) => ({
