@@ -232,7 +232,7 @@ export function registerMLOAuthRoutes(app: Express) {
       `&state=${encodeURIComponent(state)}` +
       `&code_challenge=${challenge}` +
       `&code_challenge_method=S256` +
-      `&scope=offline_access%20read%20write%20advertising_reports`;
+      `&scope=offline_access%20read%20write%20advertising_reports%20write_advertising`;
 
     console.log(`[MLOAuth] Iniciando OAuth PKCE — account: ${account}`);
     return res.redirect(authUrl);
