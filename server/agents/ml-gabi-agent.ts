@@ -544,48 +544,40 @@ export async function chatWithGabi(
               .where(and(eq(agentActionsTable.agentName, "gabi"), eq(agentActionsTable.status, "pending")));
             if (pending.length === 0) return "Nenhuma ação pendente. Use propose_ads_actions primeiro para criar ações.";
 
-            // Agrupa por conta — um browser por conta
-            const { runActionsInSession } = await import("./ml-ads-browser-agent");
-            const byAccount = new Map<string, typeof pending>();
+            const { apiPauseMLCampaign, apiActivateMLCampaign, apiUpdateMLBudget } = await import("./ml-ads-api");
+            const resultLines: string[] = [];
+
             for (const a of pending) {
-              const acc = String((a.payload as any)?.account || account);
-              if (!byAccount.has(acc)) byAccount.set(acc, []);
-              byAccount.get(acc)!.push(a);
-            }
+              await db.update(agentActionsTable).set({ status: "executing" as const }).where(eq(agentActionsTable.id, a.id));
+              const payload      = a.payload as any;
+              const acc          = String(payload?.account      || account) as "feminnita" | "fnt";
+              const actionType   = String(payload?.action       || a.actionType || "");
+              const campaignId   = String(payload?.campaignId   || "");
+              const campaignName = String(payload?.campaignName || "");
+              const budget       = Number(payload?.budget || 0);
 
-            // Marca como "executing" e dispara em background (sem await — evita timeout de 45s)
-            for (const [acc, actions] of byAccount) {
-              for (const a of actions) {
-                await db.update(agentActionsTable).set({ status: "executing" as const }).where(eq(agentActionsTable.id, a.id));
+              let log = "";
+              try {
+                switch (actionType) {
+                  case "pause_ads_campaign":    log = await apiPauseMLCampaign(acc, campaignId, campaignName);      break;
+                  case "activate_ads_campaign": log = await apiActivateMLCampaign(acc, campaignId, campaignName);   break;
+                  case "update_ads_budget":     log = await apiUpdateMLBudget(acc, campaignId, budget, campaignName); break;
+                  default: log = `Tipo não suportado: ${actionType}`;
+                }
+                await db.update(agentActionsTable)
+                  .set({ status: "done" as const, executedAt: new Date(), executionLog: log } as any)
+                  .where(eq(agentActionsTable.id, a.id));
+              } catch (e: any) {
+                log = `❌ ERRO: ${e.message}`;
+                await db.update(agentActionsTable)
+                  .set({ status: "pending" as const, executionLog: log } as any)
+                  .where(eq(agentActionsTable.id, a.id));
               }
-              const batch = actions.map(a => ({
-                id: a.id,
-                actionType: String((a.payload as any)?.action || a.actionType || ""),
-                campaignId:   String((a.payload as any)?.campaignId   || ""),
-                campaignName: String((a.payload as any)?.campaignName || ""),
-                budget: Number((a.payload as any)?.budget || 0),
-              }));
-              runActionsInSession(acc as "feminnita" | "fnt", batch)
-                .then(async results => {
-                  for (const [id, log] of Object.entries(results)) {
-                    await db.update(agentActionsTable)
-                      .set({ status: "done" as const, executedAt: new Date(), executionLog: log } as any)
-                      .where(eq(agentActionsTable.id, Number(id)));
-                  }
-                  console.log(`[GabiExecute] Batch "${acc}" concluído: ${Object.values(results).join(" | ")}`);
-                })
-                .catch(async e => {
-                  console.error(`[GabiExecute] Erro no batch "${acc}": ${e.message}`);
-                  for (const a of actions) {
-                    await db.update(agentActionsTable)
-                      .set({ status: "pending" as const, executionLog: `ERRO: ${e.message}` } as any)
-                      .where(eq(agentActionsTable.id, a.id));
-                  }
-                });
+              console.log(`[GabiExecute] id=${a.id}: ${log}`);
+              resultLines.push(`- ${a.title}: ${log}`);
             }
 
-            const titles = pending.map(a => `- ${a.title}`).join("\n");
-            return `${pending.length} ação(ões) disparadas para o agente Playwright:\n${titles}\n\n⏳ Executando em background (~2-3 min). Resultados em /acoes-agentes.`;
+            return `${pending.length} ação(ões) executadas via API ML:\n${resultLines.join("\n")}`;
           })();
         } else if (toolUse.name === "propose_ads_actions") {
           call = (async (): Promise<string> => {

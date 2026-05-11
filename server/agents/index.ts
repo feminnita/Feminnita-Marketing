@@ -12,7 +12,7 @@ import { runAllInfluencerAgents } from "./influencer-agent";
 import { startFernandaDailyAgent } from "./fernanda-daily-agent";
 import { runMorningBriefing } from "./morning-briefing-agent";
 import { startMLActionsExecutor } from "./ml-actions-executor";
-import { scrapeAdsCampaignMetrics } from "./ml-ads-browser-agent";
+import { apiScrapeMLMetrics } from "./ml-ads-api";
 
 // ─── Briefing matinal (roda às 7h todo dia, antes dos demais agentes) ────────
 function startMorningBriefingScheduler(): () => void {
@@ -80,7 +80,7 @@ function startMLMetricsCollector(): () => void {
   async function run() {
     for (const account of ["feminnita", "fnt"] as const) {
       try {
-        const count = await scrapeAdsCampaignMetrics(account);
+        const count = await apiScrapeMLMetrics(account);
         console.log(`[MLMetrics] ${account}: ${count} métricas atualizadas`);
       } catch (e: any) {
         console.error(`[MLMetrics] Erro ao coletar métricas (${account}):`, e.message);
