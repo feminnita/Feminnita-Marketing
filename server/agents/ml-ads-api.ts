@@ -79,55 +79,6 @@ export async function apiListMLCampaigns(account = "feminnita"): Promise<any[]> 
   return all;
 }
 
-// ─── Ações de campanha ────────────────────────────────────────────────────────
-
-export async function apiPauseMLCampaign(account: string, campaignId: string, campaignName: string): Promise<string> {
-  const advertiserId = getAdvertiserId(account);
-  if (!advertiserId) return `ML_ADVERTISER_ID não configurado para ${account}`;
-  try {
-    await mlFetch(
-      "PUT",
-      `/advertising/advertisers/${advertiserId}/product_ads/campaigns/${campaignId}`,
-      account,
-      { status: "paused" }
-    );
-    return `✅ Campanha "${campaignName || campaignId}" pausada.`;
-  } catch (e: any) {
-    return `❌ Erro ao pausar "${campaignName || campaignId}": ${e.message}`;
-  }
-}
-
-export async function apiActivateMLCampaign(account: string, campaignId: string, campaignName: string): Promise<string> {
-  const advertiserId = getAdvertiserId(account);
-  if (!advertiserId) return `ML_ADVERTISER_ID não configurado para ${account}`;
-  try {
-    await mlFetch(
-      "PUT",
-      `/advertising/advertisers/${advertiserId}/product_ads/campaigns/${campaignId}`,
-      account,
-      { status: "active" }
-    );
-    return `✅ Campanha "${campaignName || campaignId}" reativada.`;
-  } catch (e: any) {
-    return `❌ Erro ao ativar "${campaignName || campaignId}": ${e.message}`;
-  }
-}
-
-export async function apiUpdateMLBudget(account: string, campaignId: string, budget: number, campaignName: string): Promise<string> {
-  const advertiserId = getAdvertiserId(account);
-  if (!advertiserId) return `ML_ADVERTISER_ID não configurado para ${account}`;
-  try {
-    await mlFetch(
-      "PUT",
-      `/advertising/advertisers/${advertiserId}/product_ads/campaigns/${campaignId}`,
-      account,
-      { budget }
-    );
-    return `✅ Budget de "${campaignName || campaignId}" atualizado para R$${budget}.`;
-  } catch (e: any) {
-    return `❌ Erro ao atualizar budget de "${campaignName || campaignId}": ${e.message}`;
-  }
-}
 
 // ─── Coleta de métricas → marketplace_ads_metrics ────────────────────────────
 
