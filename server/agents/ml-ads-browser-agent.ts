@@ -6,6 +6,9 @@
 import { chromium, type Browser, type Page, type BrowserContext } from "playwright";
 import fs from "fs";
 import path from "path";
+import { getDb } from "../db";
+import { marketplaceAdsMetrics } from "../../drizzle/schema";
+import { eq, and } from "drizzle-orm";
 
 const SESSIONS_DIR = path.join(process.cwd(), ".ml-sessions");
 // URL final do painel de Product Ads (depois de todos os redirects HTTP do ML)
@@ -417,6 +420,71 @@ async function parseCampaigns(page: Page): Promise<Campaign[]> {
   });
 }
 
+// ─── Métricas: parse de números no formato ML (pt-BR) ────────────────────────
+
+function parseMLNumber(s: string): number {
+  if (!s) return 0;
+  const clean = s
+    .replace(/R\$\s*/g, "")
+    .replace(/x$/i, "")
+    .replace(/%$/, "")
+    .replace(/\s/g, "")
+    .replace(/\./g, "")   // ponto é separador de milhar em pt-BR
+    .replace(",", ".");
+  return parseFloat(clean) || 0;
+}
+
+// Navega todas as páginas de campanhas, coleta métricas e salva na tabela marketplace_ads_metrics.
+async function scrapeAndSaveMetricsInPage(page: Page, account: string): Promise<number> {
+  await page.goto(CAMPAIGNS_URL, { waitUntil: "networkidle", timeout: 30000 });
+  await page.waitForTimeout(2000);
+
+  const allCampaigns: Campaign[] = [];
+
+  for (let p = 1; p <= 20; p++) {
+    const campaigns = await parseCampaigns(page);
+    allCampaigns.push(...campaigns);
+    console.log(`[MLMetrics] Página ${p}: ${campaigns.length} campanhas`);
+
+    const nextBtn = page.locator('button:has-text("Seguinte"), a:has-text("Seguinte"), button[aria-label*="ext"], a[aria-label*="ext"]').first();
+    if (!await nextBtn.isVisible({ timeout: 2000 }).catch(() => false)) break;
+    await nextBtn.click();
+    await page.waitForTimeout(2000);
+  }
+
+  if (allCampaigns.length === 0) {
+    console.warn(`[MLMetrics] Nenhuma campanha encontrada para ${account}`);
+    return 0;
+  }
+
+  const db = await getDb();
+  if (!db) { console.error("[MLMetrics] Banco indisponível"); return 0; }
+
+  await db.delete(marketplaceAdsMetrics)
+    .where(and(eq(marketplaceAdsMetrics.platform, "ml"), eq(marketplaceAdsMetrics.account, account)));
+
+  const now = new Date();
+  const rows = allCampaigns.map(c => ({
+    platform: "ml",
+    account,
+    campaignId: (c.id || c.name).slice(0, 100),
+    campaignName: c.name,
+    impressions: Math.round(parseMLNumber(c.impressions)),
+    clicks:      Math.round(parseMLNumber(c.clicks)),
+    ctr:         String(parseMLNumber(c.ctr).toFixed(3)),
+    spend:       String(parseMLNumber(c.spent).toFixed(2)),
+    roas:        String(parseMLNumber(c.roas).toFixed(2)),
+    revenue:     String(parseMLNumber(c.sales).toFixed(2)),
+    acos:        "0",
+    conversions: 0,
+    scrapedAt:   now,
+  }));
+
+  await db.insert(marketplaceAdsMetrics).values(rows);
+  console.log(`[MLMetrics] ${rows.length} métricas salvas para ${account}`);
+  return rows.length;
+}
+
 // ─── Ações principais ─────────────────────────────────────────────────────────
 
 async function withBrowser<T>(
@@ -629,6 +697,11 @@ export async function runActionsInSession(
           case "update_ads_budget":
             results[action.id] = await updateBudgetInPage(page, account, action.campaignId, action.budget ?? 0, action.campaignName);
             break;
+          case "scrape_ads_metrics": {
+            const n = await scrapeAndSaveMetricsInPage(page, account);
+            results[action.id] = `${n} métricas de campanhas salvas para ${account}`;
+            break;
+          }
           default:
             results[action.id] = `Tipo não suportado: ${action.actionType}`;
         }
@@ -739,4 +812,9 @@ async function updateBudgetInPage(page: Page, account: string, campaignId: strin
 
 export async function updateAdsBudget(campaignId: string, dailyBudget: number, account: "feminnita" | "fnt" = "feminnita", campaignName = ""): Promise<string> {
   return withMutex(`${account}-budget`, () => withBrowser(account, (page) => updateBudgetInPage(page, account, campaignId, dailyBudget, campaignName)));
+}
+
+/** Abre o browser, coleta todas as métricas de campanhas ML e salva na tabela marketplace_ads_metrics. */
+export async function scrapeAdsCampaignMetrics(account: "feminnita" | "fnt" = "feminnita"): Promise<number> {
+  return withMutex(account, () => withBrowser(account, page => scrapeAndSaveMetricsInPage(page, account)));
 }

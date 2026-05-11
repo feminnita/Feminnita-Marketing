@@ -12,6 +12,7 @@ import { runAllInfluencerAgents } from "./influencer-agent";
 import { startFernandaDailyAgent } from "./fernanda-daily-agent";
 import { runMorningBriefing } from "./morning-briefing-agent";
 import { startMLActionsExecutor } from "./ml-actions-executor";
+import { scrapeAdsCampaignMetrics } from "./ml-ads-browser-agent";
 
 // ─── Briefing matinal (roda às 7h todo dia, antes dos demais agentes) ────────
 function startMorningBriefingScheduler(): () => void {
@@ -72,6 +73,28 @@ function startInfluencerDailyAgent(): () => void {
   return () => clearTimeout(timeout);
 }
 
+// ─── Coletor de métricas ML Ads (a cada 6h) ───────────────────────────────────
+function startMLMetricsCollector(): () => void {
+  const INTERVAL_MS = 6 * 60 * 60 * 1000;
+
+  async function run() {
+    for (const account of ["feminnita", "fnt"] as const) {
+      try {
+        const count = await scrapeAdsCampaignMetrics(account);
+        console.log(`[MLMetrics] ${account}: ${count} métricas atualizadas`);
+      } catch (e: any) {
+        console.error(`[MLMetrics] Erro ao coletar métricas (${account}):`, e.message);
+      }
+    }
+  }
+
+  // Roda 30s após startup — dá tempo do banco conectar e do executor iniciar
+  setTimeout(run, 30_000);
+  const interval = setInterval(run, INTERVAL_MS);
+  console.log(`[MLMetrics] Coletor iniciado — ciclos a cada ${INTERVAL_MS / 3600000}h`);
+  return () => clearInterval(interval);
+}
+
 export function startAllAgents(): () => void {
   console.log("[Agents] Iniciando todos os agentes de automação...");
   const cleanups: Array<() => void> = [];
@@ -92,6 +115,7 @@ export function startAllAgents(): () => void {
     { name: "InfluencerDailyAgent", start: startInfluencerDailyAgent },
     { name: "FernandaDaily", start: startFernandaDailyAgent },
     { name: "MLActionsExecutor", start: startMLActionsExecutor },
+    { name: "MLMetricsCollector", start: startMLMetricsCollector },
   ];
 
   for (const agent of agents) {
