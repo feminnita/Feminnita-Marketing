@@ -222,21 +222,55 @@ async function solve2captcha(sitekey: string, pageUrl: string, enterprise = fals
 async function loginML(page: Page, account: "feminnita" | "fnt"): Promise<boolean> {
   const email    = account === "fnt" ? process.env.ML_EMAIL_2    : process.env.ML_EMAIL_1;
   const password = account === "fnt" ? process.env.ML_PASSWORD_2 : process.env.ML_PASSWORD_1;
-  if (!email || !password) return false;
+  if (!email || !password) {
+    console.error(`[MLBrowser] Credenciais não configuradas para ${account} (ML_EMAIL_1/ML_PASSWORD_1)`);
+    return false;
+  }
 
   try {
+    console.log(`[MLBrowser] Iniciando login — ${account} — ${email}`);
     await page.goto(LOGIN_URL, { waitUntil: "domcontentloaded", timeout: 30000 });
-    await page.waitForSelector('input[name="user_id"], input[type="email"], input[id="user_id"]', { timeout: 15000 });
-    await page.fill('input[name="user_id"], input[type="email"], input[id="user_id"]', email);
+    await debugScreenshot(page, `login-${account}-start`);
+
+    // Passo 1: preenche e-mail
+    const emailSel = 'input[name="user_id"], input[type="email"], input[id="user_id"]';
+    await page.waitForSelector(emailSel, { timeout: 15000 });
+    await page.fill(emailSel, email);
+    console.log(`[MLBrowser] Email preenchido — clicando Continuar...`);
     await page.click('button[type="submit"]');
-    await page.waitForTimeout(6000);
 
-    // ML exige reCAPTCHA invisible v2 antes de aceitar o email
-    if (page.url().includes("/msl/") || page.url().includes("user-recaptcha")) {
-      console.log(`[MLBrowser] reCAPTCHA detectado — ${page.url().split("/").pop()}`);
+    // Passo 2: aguarda até 35s para uma das condições aparecer:
+    //   (a) campo de senha já visível (ML às vezes pula captcha)
+    //   (b) redirecionou para página de captcha (/msl/ ou user-recaptcha)
+    //   (c) já saiu do /login (raro, mas acontece com cookies parciais)
+    const afterEmail = await Promise.race([
+      page.waitForSelector('input[name="password"], input[type="password"]', { timeout: 35000 })
+        .then(() => "password" as const)
+        .catch(() => null),
+      page.waitForFunction(
+        () => window.location.href.includes("/msl/") || window.location.href.includes("user-recaptcha"),
+        { timeout: 35000 }
+      ).then(() => "captcha" as const).catch(() => null),
+      page.waitForFunction(
+        () => !window.location.href.includes("/login") && !window.location.href.includes("/jms/lgz/"),
+        { timeout: 35000 }
+      ).then(() => "loggedin" as const).catch(() => null),
+    ]);
 
-      // Aguarda o iframe do reCAPTCHA carregar (até 10s)
-      const iframeEl = await page.waitForSelector('iframe[src*="recaptcha"]', { timeout: 10000 }).catch(() => null);
+    console.log(`[MLBrowser] Pós-email: estado="${afterEmail}" url=${page.url()}`);
+    await debugScreenshot(page, `login-${account}-after-email`);
+
+    if (afterEmail === "loggedin") {
+      console.log(`[MLBrowser] Login OK (sem senha) — ${account} — URL: ${page.url()}`);
+      return true;
+    }
+
+    // Passo 3: resolve captcha se necessário
+    if (afterEmail === "captcha" || (!afterEmail && (page.url().includes("/msl/") || page.url().includes("user-recaptcha")))) {
+      console.log(`[MLBrowser] reCAPTCHA detectado — ${page.url()}`);
+
+      // Aguarda o iframe do reCAPTCHA carregar (até 12s)
+      const iframeEl = await page.waitForSelector('iframe[src*="recaptcha"]', { timeout: 12000 }).catch(() => null);
       let sitekey = "";
       if (iframeEl) {
         const src = await iframeEl.getAttribute("src") || "";
@@ -253,18 +287,20 @@ async function loginML(page: Page, account: "feminnita" | "fnt"): Promise<boolea
         });
       }
 
+      console.log(`[MLBrowser] Sitekey captcha: "${sitekey}"`);
       let token: string | null = null;
       if (sitekey) {
         console.log(`[MLBrowser] reCAPTCHA invisible v2 sitekey=${sitekey} — resolvendo via 2captcha...`);
         token = await solve2captcha(sitekey, page.url(), false, true);
       } else {
-        console.warn("[MLBrowser] Sitekey não encontrado");
+        console.warn("[MLBrowser] Sitekey não encontrado — tentando sem captcha");
       }
 
       if (token) {
+        // Injeta o token no DOM e dispara todos os callbacks possíveis
         await page.evaluate((t) => {
           const resp = document.getElementById("g-recaptcha-response") as HTMLTextAreaElement | null;
-          if (resp) { resp.value = t; resp.dispatchEvent(new Event("change")); }
+          if (resp) { resp.value = t; resp.dispatchEvent(new Event("change")); resp.dispatchEvent(new Event("input")); }
           const gctkn = document.querySelector('input[name="gctkn"]') as HTMLInputElement | null;
           if (gctkn) { gctkn.value = t; gctkn.dispatchEvent(new Event("change")); }
           // Dispara callback interno do grecaptcha invisible
@@ -272,34 +308,99 @@ async function loginML(page: Page, account: "feminnita" | "fnt"): Promise<boolea
           try {
             const cfg = w.___grecaptcha_cfg?.clients;
             if (cfg) Object.values(cfg).forEach((c: any) => {
-              const cb = c?.[""]?.[""]?.callback || c?.V?.callback;
-              if (typeof cb === "function") cb(t);
+              // Tenta todas as variantes de callback conhecidas
+              const cb = c?.[""]?.[""]?.callback
+                      || c?.V?.callback
+                      || c?.l?.callback
+                      || c?.U?.callback;
+              if (typeof cb === "function") { console.log("grecaptcha cb found, calling..."); cb(t); }
             });
-          } catch {}
+          } catch(e) { console.warn("grecaptcha cb error:", String(e)); }
         }, token);
-        console.log("[MLBrowser] Token captcha injetado");
-      } else {
-        console.warn("[MLBrowser] Token não obtido — tentando continuar mesmo assim...");
-      }
+        console.log("[MLBrowser] Token captcha injetado — aguardando navegação...");
 
-      await page.waitForTimeout(1000);
-      await page.click('button[type="submit"], button:has-text("Continuar"), button:has-text("Continue")');
-      await page.waitForTimeout(6000);
+        // Aguarda até 12s para a página avançar automaticamente após captcha
+        const afterCaptcha = await Promise.race([
+          page.waitForSelector('input[name="password"], input[type="password"]', { timeout: 12000 })
+            .then(() => "password" as const).catch(() => null),
+          page.waitForNavigation({ timeout: 12000, waitUntil: "domcontentloaded" })
+            .then(() => "navigated" as const).catch(() => null),
+        ]);
+        console.log(`[MLBrowser] Pós-captcha: estado="${afterCaptcha}" url=${page.url()}`);
+        await debugScreenshot(page, `login-${account}-after-captcha`);
+
+        // Se navegou mas não caiu na senha, clica submit
+        if (afterCaptcha !== "password") {
+          // Verifica se já está logado
+          if (!page.url().includes("/login") && !page.url().includes("/jms/lgz/")) {
+            console.log(`[MLBrowser] Login OK após captcha (sem senha) — URL: ${page.url()}`);
+            return true;
+          }
+          // Tenta clicar submit se ainda em página de captcha/login
+          console.log(`[MLBrowser] Clicando submit pós-captcha...`);
+          await page.click('button[type="submit"], button:has-text("Continuar"), button:has-text("Continue")').catch(() => {});
+          // Aguarda senha ou navegação
+          const afterSubmit = await Promise.race([
+            page.waitForSelector('input[name="password"], input[type="password"]', { timeout: 20000 })
+              .then(() => "password" as const).catch(() => null),
+            page.waitForFunction(
+              () => !window.location.href.includes("/login") && !window.location.href.includes("/jms/lgz/"),
+              { timeout: 20000 }
+            ).then(() => "loggedin" as const).catch(() => null),
+          ]);
+          console.log(`[MLBrowser] Pós-submit-captcha: estado="${afterSubmit}" url=${page.url()}`);
+          await debugScreenshot(page, `login-${account}-after-captcha-submit`);
+          if (afterSubmit === "loggedin") {
+            console.log(`[MLBrowser] Login OK — URL: ${page.url()}`);
+            return true;
+          }
+          if (!afterSubmit) {
+            console.error(`[MLBrowser] Captcha submit não avançou — URL: ${page.url()}`);
+            return false;
+          }
+        }
+      } else {
+        // Sem token — tenta avançar via submit direto
+        console.warn("[MLBrowser] Token captcha nulo — tentando submit direto...");
+        await page.click('button[type="submit"], button:has-text("Continuar")').catch(() => {});
+        await page.waitForTimeout(8000);
+        await debugScreenshot(page, `login-${account}-notokensubmit`);
+      }
     }
 
-    // Aguarda campo de senha
-    await page.waitForSelector('input[name="password"], input[type="password"]', { timeout: 25000 });
+    // Passo 4: campo de senha
+    console.log(`[MLBrowser] Aguardando campo senha — url=${page.url()}`);
+    const pwdVisible = await page.waitForSelector('input[name="password"], input[type="password"]', { timeout: 25000 })
+      .then(() => true).catch(() => false);
+
+    if (!pwdVisible) {
+      console.error(`[MLBrowser] Campo senha não apareceu — url=${page.url()}`);
+      await debugScreenshot(page, `login-${account}-nopassword`);
+      return false;
+    }
+
+    console.log(`[MLBrowser] Preenchendo senha — url=${page.url()}`);
     await page.fill('input[name="password"], input[type="password"]', password);
+    await debugScreenshot(page, `login-${account}-password-filled`);
     await page.click('button[type="submit"]');
 
-    await page.waitForFunction(
-      () => !window.location.href.includes('/login') && !window.location.href.includes('/jms/'),
-      { timeout: 30000 }
-    );
-    console.log(`[MLBrowser] Login OK — ${account} — URL: ${page.url()}`);
-    return true;
+    // Passo 5: aguarda sair das URLs de login
+    const loginDone = await page.waitForFunction(
+      () => !window.location.href.includes('/login') && !window.location.href.includes('/jms/lgz/'),
+      { timeout: 35000 }
+    ).then(() => true).catch(() => false);
+
+    await debugScreenshot(page, `login-${account}-final`);
+    if (loginDone) {
+      console.log(`[MLBrowser] Login OK — ${account} — URL: ${page.url()}`);
+      return true;
+    } else {
+      console.error(`[MLBrowser] Login falhou após senha — URL: ${page.url()}`);
+      return false;
+    }
   } catch (e: any) {
     console.error(`[MLBrowser] Falha no login (${account}):`, e.message);
+    await debugScreenshot(page, `login-${account}-error`);
     return false;
   }
 }
@@ -309,27 +410,35 @@ async function waitForAuthCheck(page: Page): Promise<string> {
   // networkidle garante que chamadas de API (incluindo o check de auth) terminaram.
   // Depois, captura a URL final — se for login page, não está autenticado.
   try {
-    await page.waitForLoadState("networkidle", { timeout: 20000 });
+    await page.waitForLoadState("networkidle", { timeout: 25000 });
   } catch {
     // timeout ok, verifica URL de qualquer forma
   }
-  // Dá mais 1s para JS de redirect terminar após networkidle
-  await page.waitForTimeout(1000);
+  // Dá 3s para o React e redirects JS terminarem após networkidle
+  await page.waitForTimeout(3000);
   return page.url();
 }
 
 async function isOnSellerDashboard(page: Page): Promise<boolean> {
   const url = page.url();
   const onLogin = url.includes("/login") || url.includes("/jms/lgz/") || url.includes("lgz/login");
-  if (onLogin) return false;
-  const onAds = url.includes("productAds") || url.includes("ads.mercadolivre") || url.includes("publicidade");
-  if (!onAds) return false;
+  if (onLogin) {
+    console.log(`[MLBrowser] isOnSellerDashboard — em página de login: ${url}`);
+    return false;
+  }
+  const onAds = url.includes("productAds") || url.includes("ads.mercadolivre") || url.includes("publicidade") || url.includes("product-ads");
+  if (!onAds) {
+    console.log(`[MLBrowser] isOnSellerDashboard — URL não é de ads: ${url}`);
+    return false;
+  }
   // O ML exibe a landing pública na MESMA URL /productAds quando não autenticado.
   // Checar conteúdo da página distingue dashboard autenticado da landing pública.
-  const bodyText = await page.evaluate(() => document.body?.innerText?.slice(0, 600) ?? "");
-  const isPublicLanding = bodyText.includes("Crie a sua conta") || bodyText.includes("Outros vendedores estão");
-  console.log(`[MLBrowser] isOnSellerDashboard — URL: ${url} — publicLanding: ${isPublicLanding}`);
-  return !isPublicLanding;
+  const bodyText = await page.evaluate(() => document.body?.innerText?.slice(0, 800) ?? "");
+  const isPublicLanding = bodyText.includes("Crie a sua conta") || bodyText.includes("Outros vendedores estão") || bodyText.includes("Anuncie seus produtos");
+  // Se há conteúdo de campanha (tabela, dashboard, etc) — está logado
+  const hasDashboard = bodyText.includes("Campanhas") || bodyText.includes("Campanha") || bodyText.includes("Orçamento") || bodyText.includes("dashboard") || bodyText.includes("criar campanha");
+  console.log(`[MLBrowser] isOnSellerDashboard — URL: ${url} — publicLanding: ${isPublicLanding} — hasDashboard: ${hasDashboard} — bodySnippet: "${bodyText.slice(0, 100).replace(/\n/g," ")}"`);
+  return !isPublicLanding && (hasDashboard || onAds);
 }
 
 async function ensureLoggedIn(page: Page, context: BrowserContext, account: "feminnita" | "fnt"): Promise<boolean> {
@@ -352,9 +461,15 @@ async function ensureLoggedIn(page: Page, context: BrowserContext, account: "fem
   // 2. Tenta auth-from-token endpoint do ML (evita reCAPTCHA)
   const tokenOk = await tryTokenToBrowserSession(page, context, account);
   if (tokenOk) {
-    try {
-      await page.goto(SELLER_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 25000 });
-    } catch {}
+    // Não navega de novo — tryTokenToBrowserSession já navegou até a página correta
+    const finalUrl = page.url();
+    const onAds = finalUrl.includes("ads.mercadolivre") || finalUrl.includes("productAds") || finalUrl.includes("product-ads");
+    if (!onAds) {
+      // Se não estiver na página de ads ainda, navega diretamente para campaigns
+      try {
+        await page.goto(CAMPAIGNS_URL, { waitUntil: "domcontentloaded", timeout: 25000 });
+      } catch {}
+    }
     await waitForAuthCheck(page);
     if (await isOnSellerDashboard(page)) {
       console.log(`[MLBrowser] Sessão via token OK para ${account} — salvando...`);
