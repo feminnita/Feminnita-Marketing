@@ -515,17 +515,10 @@ async function withBrowser<T>(
     args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
   });
 
-  // Usa relay SOCKS5 local (localhost:1080) que autentica com Webshare transparentemente.
-  // Playwright não suporta SOCKS5 com usuário/senha direto — relay resolve isso.
-  const useProxy = !!(process.env.WEBSHARE_HOST && process.env.WEBSHARE_PORT);
-  const proxyConfig = useProxy ? { server: "socks5://127.0.0.1:1080" } : undefined;
-
-  if (proxyConfig) console.log(`[MLBrowser] Usando relay SOCKS5 local → Webshare`);
-
+  // ML Ads funciona direto do IP do Vultr SP — sem proxy.
   const context = await browser.newContext({
     userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
     locale: "pt-BR",
-    proxy: proxyConfig,
   });
 
   // Injeta o access_token OAuth no localStorage antes da SPA carregar.
