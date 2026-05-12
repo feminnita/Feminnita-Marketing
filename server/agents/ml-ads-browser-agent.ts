@@ -969,14 +969,35 @@ async function updateBudgetInPage(page: Page, account: string, campaignId: strin
     return `Input de budget não encontrado na modal "${campaignName || campaignId}"`;
   }
 
+  // Triple-click selects all, then type character-by-character to trigger React onChange
   await budgetInput.click({ clickCount: 3 });
-  await budgetInput.fill(String(dailyBudget));
-  await page.waitForTimeout(500);
+  await page.keyboard.press("Control+a");
+  await page.keyboard.type(String(dailyBudget));
+  // Dispatch native input/change events as backup for React synthetic events
+  await page.evaluate((val) => {
+    const inputs = Array.from(document.querySelectorAll('input[type="number"]')) as HTMLInputElement[];
+    const visible = inputs.find(i => i.offsetParent !== null);
+    if (!visible) return;
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
+    if (setter) setter.call(visible, val);
+    visible.dispatchEvent(new Event("input", { bubbles: true }));
+    visible.dispatchEvent(new Event("change", { bubbles: true }));
+  }, String(dailyBudget));
+  await page.waitForTimeout(800);
   await debugScreenshot(page, `budget-${account}-filled`);
 
   const saveBtn = page.locator('button:has-text("Salvar"), button:has-text("Confirmar"), button[type="submit"]').first();
-  if (await saveBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-    await saveBtn.click();
+  // Wait up to 5s for React to enable the button
+  await page.waitForFunction(
+    () => {
+      const btn = document.querySelector('[data-andes-button][data-andes-state="disabled"]');
+      return !btn;
+    },
+    { timeout: 5000 }
+  ).catch(() => {});
+  await debugScreenshot(page, `budget-${account}-before-save`);
+  if (await saveBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await saveBtn.click({ force: true });
   } else {
     await budgetInput.press("Enter");
   }
