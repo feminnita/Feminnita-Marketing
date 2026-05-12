@@ -156,6 +156,22 @@ async function tryTokenToBrowserSession(page: Page, context: BrowserContext, acc
     }
   }
 
+  // Abordagem 3: Navegar direto para CAMPAIGNS_URL com token já no localStorage
+  // O withBrowser injeta o token no localStorage via addInitScript — tenta navegar direto
+  try {
+    console.log(`[MLBrowser] Abordagem 3 — navegando direto para campaigns com token no localStorage...`);
+    await page.goto(CAMPAIGNS_URL, { waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthCheck(page);
+    if (await isOnSellerDashboard(page)) {
+      console.log(`[MLBrowser] Abordagem 3 OK — autenticado via localStorage token para ${account}`);
+      await saveSession(context, account);
+      return true;
+    }
+    console.warn(`[MLBrowser] Abordagem 3 falhou — ainda na página de login`);
+  } catch (e: any) {
+    console.warn(`[MLBrowser] Abordagem 3 exceção:`, e.message);
+  }
+
   return false;
 }
 
@@ -317,6 +333,8 @@ async function isOnSellerDashboard(page: Page): Promise<boolean> {
 }
 
 async function ensureLoggedIn(page: Page, context: BrowserContext, account: "feminnita" | "fnt"): Promise<boolean> {
+  const tokenInEnv = (account === "fnt" ? process.env.ML_ACCESS_TOKEN_2 : process.env.ML_ACCESS_TOKEN_1) || "";
+  console.log(`[MLBrowser] ensureLoggedIn — account=${account} tokenLen=${tokenInEnv.length} tokenPrefix=${tokenInEnv.slice(0, 15)}...`);
   // 1. Carrega cookies salvos e verifica se ainda são válidos
   const hasSaved = await loadSession(context, account);
   if (hasSaved) {
@@ -525,11 +543,15 @@ async function withBrowser<T>(
   // A SPA do ML lê o token de localStorage para autenticar chamadas à API.
   const accessToken = account === "fnt" ? process.env.ML_ACCESS_TOKEN_2 : process.env.ML_ACCESS_TOKEN_1;
   if (accessToken) {
+    console.log(`[MLBrowser] Injetando access_token no localStorage — account=${account} prefix=${accessToken.slice(0, 15)}...`);
     await context.addInitScript((token: string) => {
       try {
         localStorage.setItem("access_token", token);
         localStorage.setItem("ml:access_token", token);
         localStorage.setItem("@api/access_token", token);
+        // Chaves adicionais usadas pela SPA do ML Ads
+        localStorage.setItem("AUTH.ACCESS_TOKEN", token);
+        localStorage.setItem("ml_access_token", token);
       } catch {}
     }, accessToken);
   }
@@ -695,6 +717,7 @@ export async function runActionsInSession(
   account: "feminnita" | "fnt",
   actions: BatchAction[]
 ): Promise<Record<number, string>> {
+  console.log(`[MLBrowser] runActionsInSession iniciado — account=${account} actions=${JSON.stringify(actions.map(a => ({ id: a.id, type: a.actionType, campaign: a.campaignName || a.campaignId })))}`);
   return withMutex(account, () => withBrowser(account, async (page) => {
     const results: Record<number, string> = {};
     for (const action of actions) {
