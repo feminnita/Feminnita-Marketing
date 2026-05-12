@@ -95,6 +95,27 @@ export async function refreshMLToken(account: "feminnita" | "fnt" = "feminnita")
 
 export function registerMLOAuthRoutes(app: Express) {
   /**
+   * POST /api/ml/import-cookies?account=feminnita|fnt
+   * Importa cookies exportados pelo Cookie Editor para autenticar o browser agent.
+   * Body: JSON array de cookies (formato Cookie Editor ou Playwright).
+   */
+  app.post("/api/ml/import-cookies", async (req, res) => {
+    const account = (req.query.account as string) === "fnt" ? "fnt" : "feminnita";
+    const cookies = req.body;
+    if (!Array.isArray(cookies) || cookies.length === 0) {
+      return res.status(400).json({ error: "Body deve ser um array de cookies" });
+    }
+    try {
+      const { importMLSession } = await import("../agents/ml-ads-browser-agent");
+      await importMLSession(cookies, account);
+      console.log(`[MLOAuth] ${cookies.length} cookies importados para ${account}`);
+      return res.json({ ok: true, account, cookieCount: cookies.length });
+    } catch (e: any) {
+      return res.status(500).json({ error: e.message });
+    }
+  });
+
+  /**
    * GET /api/ml/debug-items
    * Diagnóstico: mostra itens reais da conta ML (sem filtro de status).
    */

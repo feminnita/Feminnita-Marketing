@@ -161,7 +161,7 @@ async function tryTokenToBrowserSession(page: Page, context: BrowserContext, acc
 
 // ─── 2captcha ─────────────────────────────────────────────────────────────────
 
-async function solve2captcha(sitekey: string, pageUrl: string, enterprise = false): Promise<string | null> {
+async function solve2captcha(sitekey: string, pageUrl: string, enterprise = false, invisible = false): Promise<string | null> {
   if (!TWOCAPTCHA_KEY) return null;
   try {
     const params: Record<string, string> = {
@@ -172,6 +172,7 @@ async function solve2captcha(sitekey: string, pageUrl: string, enterprise = fals
       json: "1",
     };
     if (enterprise) params.enterprise = "1";
+    if (invisible) params.invisible = "1";
 
     const submitRes = await fetch("https://2captcha.com/in.php", {
       method: "POST",
@@ -212,44 +213,62 @@ async function loginML(page: Page, account: "feminnita" | "fnt"): Promise<boolea
     await page.waitForSelector('input[name="user_id"], input[type="email"], input[id="user_id"]', { timeout: 15000 });
     await page.fill('input[name="user_id"], input[type="email"], input[id="user_id"]', email);
     await page.click('button[type="submit"]');
-    await page.waitForTimeout(4000);
+    await page.waitForTimeout(6000);
 
-    // ML tem passo intermediário com reCAPTCHA Enterprise antes da senha
-    // URL contém /msl/ ou user-recaptcha-social nesse caso
+    // ML exige reCAPTCHA invisible v2 antes de aceitar o email
     if (page.url().includes("/msl/") || page.url().includes("user-recaptcha")) {
-      console.log(`[MLBrowser] Passo intermediário reCAPTCHA detectado...`);
+      console.log(`[MLBrowser] reCAPTCHA detectado — ${page.url().split("/").pop()}`);
 
-      // Extrai sitekey do iframe do reCAPTCHA
-      const captchaIframeSrc = await page.evaluate(() => {
-        const iframe = document.querySelector('iframe[src*="recaptcha"]') as HTMLIFrameElement | null;
-        return iframe ? iframe.src : null;
-      });
+      // Aguarda o iframe do reCAPTCHA carregar (até 10s)
+      const iframeEl = await page.waitForSelector('iframe[src*="recaptcha"]', { timeout: 10000 }).catch(() => null);
+      let sitekey = "";
+      if (iframeEl) {
+        const src = await iframeEl.getAttribute("src") || "";
+        const skMatch = src.match(/[?&]k=([^&]+)/);
+        sitekey = skMatch ? skMatch[1] : "";
+      }
+
+      if (!sitekey) {
+        sitekey = await page.evaluate(() => {
+          const el = document.querySelector("[data-sitekey]");
+          if (el) return el.getAttribute("data-sitekey") || "";
+          const m = document.body.innerHTML.match(/["'](?:sitekey|googlekey)["']\s*:\s*["']([0-9A-Za-z_-]{20,})["']/);
+          return m ? m[1] : "";
+        });
+      }
 
       let token: string | null = null;
-      if (captchaIframeSrc) {
-        const skMatch = captchaIframeSrc.match(/[?&]k=([^&]+)/);
-        const sitekey = skMatch ? skMatch[1] : "";
-        if (sitekey) {
-          console.log(`[MLBrowser] reCAPTCHA Enterprise sitekey=${sitekey} — resolvendo via 2captcha...`);
-          token = await solve2captcha(sitekey, page.url(), true);
-        }
+      if (sitekey) {
+        console.log(`[MLBrowser] reCAPTCHA invisible v2 sitekey=${sitekey} — resolvendo via 2captcha...`);
+        token = await solve2captcha(sitekey, page.url(), false, true);
+      } else {
+        console.warn("[MLBrowser] Sitekey não encontrado");
       }
 
       if (token) {
-        // Injeta em todos os campos possíveis (gctkn e g-recaptcha-response)
         await page.evaluate((t) => {
-          const gctkn = document.querySelector('input[name="gctkn"]') as HTMLInputElement | null;
-          if (gctkn) gctkn.value = t;
           const resp = document.getElementById("g-recaptcha-response") as HTMLTextAreaElement | null;
-          if (resp) resp.value = t;
+          if (resp) { resp.value = t; resp.dispatchEvent(new Event("change")); }
+          const gctkn = document.querySelector('input[name="gctkn"]') as HTMLInputElement | null;
+          if (gctkn) { gctkn.value = t; gctkn.dispatchEvent(new Event("change")); }
+          // Dispara callback interno do grecaptcha invisible
+          const w = window as any;
+          try {
+            const cfg = w.___grecaptcha_cfg?.clients;
+            if (cfg) Object.values(cfg).forEach((c: any) => {
+              const cb = c?.[""]?.[""]?.callback || c?.V?.callback;
+              if (typeof cb === "function") cb(t);
+            });
+          } catch {}
         }, token);
-        console.log("[MLBrowser] Token injetado — clicando Continuar...");
+        console.log("[MLBrowser] Token captcha injetado");
       } else {
-        console.warn("[MLBrowser] Não foi possível resolver reCAPTCHA — tentando continuar mesmo assim...");
+        console.warn("[MLBrowser] Token não obtido — tentando continuar mesmo assim...");
       }
 
+      await page.waitForTimeout(1000);
       await page.click('button[type="submit"], button:has-text("Continuar"), button:has-text("Continue")');
-      await page.waitForTimeout(5000);
+      await page.waitForTimeout(6000);
     }
 
     // Aguarda campo de senha
