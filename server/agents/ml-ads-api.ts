@@ -46,6 +46,95 @@ async function mlFetch(method: string, path: string, account: string, body?: obj
   return data;
 }
 
+// ─── Mutações de campanha (pause/activate/budget) ─────────────────────────────
+// IMPORTANTE: endpoint individual usa /advertising/product_ads/campaigns/{id}?advertiser_id={adv}
+// (e NÃO /advertising/advertisers/{adv}/product_ads/campaigns/{id})
+
+function isPermissionWriteError(msg: string): boolean {
+  return /does not have permission to write|UnauthorizedException|invalid_scope|insufficient_scope/i.test(msg);
+}
+
+function reauthMessage(account: string): string {
+  return `Token OAuth do ML (${account}) sem permissão de escrita. Reautentique em /api/ml/oauth/start?account=${account} marcando o scope "advertising-write" para liberar pausar/ativar/budget via API.`;
+}
+
+async function mutateCampaign(
+  account: string,
+  campaignId: string,
+  body: object,
+): Promise<{ ok: boolean; data?: any; error?: string }> {
+  const advertiserId = getAdvertiserId(account);
+  if (!advertiserId) return { ok: false, error: `ML_ADVERTISER_ID não configurado para ${account}` };
+  if (!campaignId) return { ok: false, error: "campaignId obrigatório" };
+
+  const token = getToken(account);
+  if (!token) return { ok: false, error: `Token ML não configurado para ${account}` };
+
+  const url = `${ML_BASE}/advertising/product_ads/campaigns/${encodeURIComponent(campaignId)}?advertiser_id=${advertiserId}`;
+  try {
+    const res = await fetch(url, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "api-version": "2",
+      },
+      body: JSON.stringify(body),
+    });
+    let data: any = {};
+    try { data = await res.json(); } catch {}
+    if (!res.ok) {
+      const msg = data?.message || data?.error || `HTTP ${res.status}`;
+      if (res.status === 401 || res.status === 403 || isPermissionWriteError(msg)) {
+        return { ok: false, error: reauthMessage(account) };
+      }
+      return { ok: false, error: `ML API PUT ${campaignId} → HTTP ${res.status}: ${msg}` };
+    }
+    return { ok: true, data };
+  } catch (e: any) {
+    return { ok: false, error: `ML API exception: ${e?.message || String(e)}` };
+  }
+}
+
+export async function apiPauseCampaign(campaignId: string, account = "feminnita"): Promise<string> {
+  const r = await mutateCampaign(account, campaignId, { status: "paused" });
+  if (!r.ok) throw new Error(r.error || "Falha ao pausar");
+  return `Campanha ${campaignId} pausada via API.`;
+}
+
+export async function apiActivateCampaign(campaignId: string, account = "feminnita"): Promise<string> {
+  const r = await mutateCampaign(account, campaignId, { status: "active" });
+  if (!r.ok) throw new Error(r.error || "Falha ao ativar");
+  return `Campanha ${campaignId} ativada via API.`;
+}
+
+export async function apiUpdateCampaignBudget(
+  campaignId: string,
+  dailyBudget: number,
+  account = "feminnita",
+): Promise<string> {
+  if (!(dailyBudget > 0)) throw new Error(`Budget inválido: ${dailyBudget}`);
+  const r = await mutateCampaign(account, campaignId, { budget: dailyBudget });
+  if (!r.ok) throw new Error(r.error || "Falha ao atualizar budget");
+  return `Budget da campanha ${campaignId} atualizado para R$${dailyBudget.toFixed(2)}/dia via API.`;
+}
+
+/** Resolve campaign id pelo nome quando o usuário só passou o nome. */
+export async function apiResolveCampaignByName(
+  name: string,
+  account = "feminnita",
+): Promise<{ id: string; name: string } | null> {
+  if (!name) return null;
+  const all = await apiListMLCampaigns(account);
+  const needle = name.toLowerCase().trim();
+  const exact = all.find((c: any) => String(c.name || "").toLowerCase().trim() === needle);
+  if (exact) return { id: String(exact.id), name: String(exact.name) };
+  const partial = all.find((c: any) => String(c.name || "").toLowerCase().includes(needle));
+  if (partial) return { id: String(partial.id), name: String(partial.name) };
+  return null;
+}
+
 // ─── Listagem de campanhas ────────────────────────────────────────────────────
 
 export async function apiListMLCampaigns(account = "feminnita"): Promise<any[]> {

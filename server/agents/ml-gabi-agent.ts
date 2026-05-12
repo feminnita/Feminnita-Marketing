@@ -10,6 +10,73 @@ import { buildMemoryContext, saveMemory } from "../services/agentMemory";
 import { getLatestKnowledge } from "./knowledge-updater";
 import { listMLItems, pauseMLItem, activateMLItem, updateMLPrice, updateMLStock, getMLItemDetails, getMLCategoryAttributes, updateMLItemAttributes, listMLAdsCampaigns, getMLAdsCampaignStats } from "./gabi-executor";
 import { runActionsInSession } from "./ml-ads-browser-agent";
+import { apiPauseCampaign, apiActivateCampaign, apiUpdateCampaignBudget, apiResolveCampaignByName } from "./ml-ads-api";
+
+/**
+ * Executa mutação em campanha ML Ads.
+ * Estratégia: API REST primeiro (rápido, confiável, sem captcha) → fallback Playwright se falhar.
+ * Retorna a mensagem final que vai pro DB executionLog.
+ */
+async function runAdsMutation(
+  account: string,
+  actionType: "pause_ads_campaign" | "activate_ads_campaign" | "update_ads_budget",
+  campaignId: string,
+  campaignName: string,
+  budget: number,
+): Promise<string> {
+  const acc = account as "feminnita" | "fnt";
+
+  // 1) Resolve ID se só veio nome
+  let resolvedId = campaignId;
+  if (!resolvedId && campaignName) {
+    try {
+      const found = await apiResolveCampaignByName(campaignName, acc);
+      if (found) resolvedId = found.id;
+    } catch (e: any) {
+      console.warn(`[Gabi/Ads] resolveByName falhou: ${e.message}`);
+    }
+  }
+
+  if (!resolvedId) {
+    return `ERRO: campanha "${campaignName}" não encontrada via API REST. Verifique o nome ou forneça o ID.`;
+  }
+
+  // 2) Tenta via API REST
+  try {
+    if (actionType === "pause_ads_campaign") {
+      return await apiPauseCampaign(resolvedId, acc);
+    }
+    if (actionType === "activate_ads_campaign") {
+      return await apiActivateCampaign(resolvedId, acc);
+    }
+    if (actionType === "update_ads_budget") {
+      return await apiUpdateCampaignBudget(resolvedId, budget, acc);
+    }
+  } catch (e: any) {
+    const apiErr = e?.message || String(e);
+    console.warn(`[Gabi/Ads] API REST falhou para ${actionType} ${resolvedId}: ${apiErr}`);
+
+    // Se for erro de permissão write/scope → mensagem clara para o usuário (sem fallback)
+    if (/permission to write|invalid_scope|insufficient_scope|advertising-write/i.test(apiErr)) {
+      return `ERRO: ${apiErr}`;
+    }
+
+    // 3) Fallback Playwright (só para erros não-auth)
+    console.log(`[Gabi/Ads] Tentando fallback Playwright para ${actionType}...`);
+    try {
+      const tempId = Date.now();
+      const results = await runActionsInSession(acc, [{
+        id: tempId, actionType, campaignId: resolvedId, campaignName, budget,
+      }]);
+      const log = results[tempId] ?? "Sem resultado";
+      return `${log} (via Playwright — API REST retornou: ${apiErr.slice(0, 80)})`;
+    } catch (eb: any) {
+      return `ERRO: ${apiErr}. Fallback Playwright também falhou: ${eb?.message || String(eb)}`;
+    }
+  }
+
+  return `ERRO: actionType desconhecido: ${actionType}`;
+}
 import { getDb } from "../db";
 import { agentActions as agentActionsTable } from "../../drizzle/schema";
 import { desc, eq, and, isNotNull } from "drizzle-orm";
@@ -477,12 +544,8 @@ export async function chatWithGabi(
           call = listMLAdsCampaigns(account);
         } else if (toolUse.name === "ml_ads_pause_campaign") {
           call = (async (): Promise<string> => {
-            const tempId = Date.now();
-            const results = await runActionsInSession(account as "feminnita" | "fnt", [{
-              id: tempId, actionType: "pause_ads_campaign",
-              campaignId: String(inp.campaignId || ""), campaignName: String(inp.campaignName || ""), budget: 0,
-            }]);
-            const log = results[tempId] ?? "Sem resultado";
+            const log = await runAdsMutation(account, "pause_ads_campaign",
+              String(inp.campaignId || ""), String(inp.campaignName || ""), 0);
             const isError = log.startsWith("ERRO:") || log.includes("não encontrada") || log.includes("não encontrado");
             const db = await getDb();
             if (db) await db.insert(agentActionsTable).values({
@@ -498,12 +561,8 @@ export async function chatWithGabi(
           })();
         } else if (toolUse.name === "ml_ads_activate_campaign") {
           call = (async (): Promise<string> => {
-            const tempId = Date.now();
-            const results = await runActionsInSession(account as "feminnita" | "fnt", [{
-              id: tempId, actionType: "activate_ads_campaign",
-              campaignId: String(inp.campaignId || ""), campaignName: String(inp.campaignName || ""), budget: 0,
-            }]);
-            const log = results[tempId] ?? "Sem resultado";
+            const log = await runAdsMutation(account, "activate_ads_campaign",
+              String(inp.campaignId || ""), String(inp.campaignName || ""), 0);
             const isError = log.startsWith("ERRO:") || log.includes("não encontrada") || log.includes("não encontrado");
             const db = await getDb();
             if (db) await db.insert(agentActionsTable).values({
@@ -519,12 +578,8 @@ export async function chatWithGabi(
           })();
         } else if (toolUse.name === "ml_ads_update_budget") {
           call = (async (): Promise<string> => {
-            const tempId = Date.now();
-            const results = await runActionsInSession(account as "feminnita" | "fnt", [{
-              id: tempId, actionType: "update_ads_budget",
-              campaignId: String(inp.campaignId || ""), campaignName: String(inp.campaignName || ""), budget: Number(inp.dailyBudget || 0),
-            }]);
-            const log = results[tempId] ?? "Sem resultado";
+            const log = await runAdsMutation(account, "update_ads_budget",
+              String(inp.campaignId || ""), String(inp.campaignName || ""), Number(inp.dailyBudget || 0));
             const isError = log.startsWith("ERRO:") || log.includes("não encontrada") || log.includes("não encontrado");
             const db = await getDb();
             if (db) await db.insert(agentActionsTable).values({
