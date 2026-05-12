@@ -413,6 +413,23 @@ export async function chatWithGabi(
         const TOOL_TIMEOUT = 45000;
         let call: Promise<string>;
         // Helper: salva ação na fila do Playwright quando a API falha
+        // Ações de Ads ML executam automaticamente via Playwright (sem aprovação manual)
+        const queueAdsAction = async (actionType: string, title: string, payload: Record<string, any>): Promise<string> => {
+          const db = await getDb();
+          if (!db) throw new Error("DB indisponível");
+          await db.insert(agentActionsTable).values({
+            agentName: "gabi",
+            date: new Date().toISOString().slice(0, 10),
+            title,
+            description: title,
+            actionType,
+            priority: "media",
+            status: "approved" as const,
+            payload: { platform: "ml", account, action: actionType, ...payload },
+          });
+          return `Executando "${title}" via browser automation no painel ML Ads — será concluído em até 5 minutos.`;
+        };
+
         const queueAction = async (actionType: string, title: string, payload: Record<string, any>): Promise<string> => {
           const db = await getDb();
           if (!db) throw new Error("DB indisponível");
@@ -458,11 +475,11 @@ export async function chatWithGabi(
         } else if (toolUse.name === "ml_ads_list_campaigns") {
           call = listMLAdsCampaigns(account);
         } else if (toolUse.name === "ml_ads_pause_campaign") {
-          call = queueAction("pause_ads_campaign", `Pausar campanha ${inp.campaignName || inp.campaignId}`, { campaignId: inp.campaignId, campaignName: inp.campaignName || "" });
+          call = queueAdsAction("pause_ads_campaign", `Pausar campanha ${inp.campaignName || inp.campaignId}`, { campaignId: inp.campaignId, campaignName: inp.campaignName || "" });
         } else if (toolUse.name === "ml_ads_activate_campaign") {
-          call = queueAction("activate_ads_campaign", `Ativar campanha ${inp.campaignName || inp.campaignId}`, { campaignId: inp.campaignId, campaignName: inp.campaignName || "" });
+          call = queueAdsAction("activate_ads_campaign", `Ativar campanha ${inp.campaignName || inp.campaignId}`, { campaignId: inp.campaignId, campaignName: inp.campaignName || "" });
         } else if (toolUse.name === "ml_ads_update_budget") {
-          call = queueAction("update_ads_budget", `Atualizar orçamento campanha ${inp.campaignId} para R$${inp.dailyBudget}/dia`, { campaignId: inp.campaignId, budget: inp.dailyBudget });
+          call = queueAdsAction("update_ads_budget", `Atualizar orçamento campanha ${inp.campaignId} para R$${inp.dailyBudget}/dia`, { campaignId: inp.campaignId, budget: inp.dailyBudget });
         } else if (toolUse.name === "ml_ads_campaign_stats") {
           call = getMLAdsCampaignStats(inp.campaignId, inp.dateFrom, inp.dateTo, account);
         } else if (toolUse.name === "ml_get_ads_metrics") {
