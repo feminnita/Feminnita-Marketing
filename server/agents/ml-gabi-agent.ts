@@ -410,7 +410,7 @@ export async function chatWithGabi(
       let result: string;
       try {
         const inp = toolUse.input as Record<string, any>;
-        const TOOL_TIMEOUT = 45000;
+        const TOOL_TIMEOUT = 90000;
         let call: Promise<string>;
         // Helper: salva ação na fila do Playwright quando a API falha
         // Ações de Ads ML executam automaticamente via Playwright (sem aprovação manual)
@@ -548,20 +548,71 @@ export async function chatWithGabi(
             return `Métricas ${targetPlatform.toUpperCase()} — conta=${targetAccount} (coletadas em ${scrapedAt})\n\nTotal: ${latest.length} campanhas | Gasto total=R$${totalSpend.toFixed(2)} | Receita total=R$${totalRev.toFixed(2)}\n\n${lines.join("\n")}`;
           })();
         } else if (toolUse.name === "execute_pending_actions") {
+          const ADS_ACTION_TYPES = ["pause_ads_campaign", "activate_ads_campaign", "update_ads_budget"];
           call = (async (): Promise<string> => {
             const db = await getDb();
             if (!db) return "Banco indisponível.";
-            const pending = await db.select().from(agentActionsTable)
-              .where(and(eq(agentActionsTable.agentName, "gabi"), eq(agentActionsTable.status, "pending")));
-            if (pending.length === 0) return "Nenhuma ação pendente. Use propose_ads_actions primeiro para criar ações.";
+            const { or } = await import("drizzle-orm");
+            const allPending = await db.select().from(agentActionsTable)
+              .where(and(
+                eq(agentActionsTable.agentName, "gabi"),
+                or(
+                  eq(agentActionsTable.status, "pending"),
+                  eq(agentActionsTable.status, "approved"),
+                ),
+              ));
+            const adsActions = allPending.filter(a =>
+              ADS_ACTION_TYPES.includes(String((a.payload as any)?.action || a.actionType))
+            );
+            if (adsActions.length === 0) return "Nenhuma ação de Ads ML pendente. Use propose_ads_actions para criar as ações antes de executar.";
 
-            // Ações ficam no banco como "pending" e o MLActionsExecutor (background, a cada 5min)
-            // abre o browser ML e executa em lote. Não executamos aqui para evitar timeout.
-            const lines = pending.map(a => {
-              const p = a.payload as any;
-              return `- ${a.title || a.actionType} [id=${a.id}]`;
-            });
-            return `${pending.length} ação(ões) enfileirada(s) para execução via browser ML (próximos ~5 min):\n${lines.join("\n")}\n\nO executor em background abrirá o Seller Center, executará cada ação e atualizará o status no banco.`;
+            for (const a of adsActions) {
+              await db.update(agentActionsTable).set({ status: "executing" as const }).where(eq(agentActionsTable.id, a.id));
+            }
+
+            const byAccount = new Map<string, typeof adsActions>();
+            for (const a of adsActions) {
+              const acc = String((a.payload as any)?.account || "feminnita");
+              if (!byAccount.has(acc)) byAccount.set(acc, []);
+              byAccount.get(acc)!.push(a);
+            }
+
+            const { runActionsInSession } = await import("./ml-ads-browser-agent");
+            const resultLines: string[] = [];
+
+            for (const [acc, accActions] of byAccount) {
+              const batch = accActions.map(a => ({
+                id:           a.id,
+                actionType:   String((a.payload as any)?.action || a.actionType || ""),
+                campaignId:   String((a.payload as any)?.campaignId   || ""),
+                campaignName: String((a.payload as any)?.campaignName || ""),
+                budget:       Number((a.payload as any)?.budget       || 0),
+              }));
+              let results: Record<number, string>;
+              try {
+                results = await runActionsInSession(acc as "feminnita" | "fnt", batch);
+              } catch (e: any) {
+                for (const a of accActions) {
+                  await db.update(agentActionsTable)
+                    .set({ status: "pending" as const, executionLog: `ERRO: ${e.message}` } as any)
+                    .where(eq(agentActionsTable.id, a.id));
+                  resultLines.push(`❌ ${a.title || a.actionType} — ERRO browser: ${e.message}`);
+                }
+                continue;
+              }
+              for (const a of accActions) {
+                const log = results[a.id] ?? "Sem resultado";
+                const isError = log.startsWith("ERRO:") || log.includes("não encontrada") || log.includes("não encontrado");
+                await db.update(agentActionsTable).set({
+                  status:       (isError ? "pending" : "done") as const,
+                  executedAt:   isError ? undefined : new Date(),
+                  executionLog: log,
+                } as any).where(eq(agentActionsTable.id, a.id));
+                resultLines.push(`${isError ? "❌" : "✅"} ${a.title || a.actionType} — ${log}`);
+              }
+            }
+
+            return `Execução no painel ML Ads concluída:\n${resultLines.join("\n")}`;
           })();
         } else if (toolUse.name === "propose_ads_actions") {
           call = (async (): Promise<string> => {
