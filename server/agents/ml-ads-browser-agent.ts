@@ -441,17 +441,28 @@ async function isOnSellerDashboard(page: Page): Promise<boolean> {
   return !isPublicLanding && (hasDashboard || onAds);
 }
 
+function isCampaignPageUrl(url: string): boolean {
+  // CAMPAIGNS_URL é uma rota protegida — se ML redirecionar para /login, não está autenticado
+  const isLogin = url.includes("/login") || url.includes("/jms/lgz/");
+  const isCampaigns = url.includes("product-ads/admin") || url.includes("ads.mercadolivre.com.br");
+  return !isLogin && isCampaigns;
+}
+
 async function ensureLoggedIn(page: Page, context: BrowserContext, account: "feminnita" | "fnt"): Promise<boolean> {
   const tokenInEnv = (account === "fnt" ? process.env.ML_ACCESS_TOKEN_2 : process.env.ML_ACCESS_TOKEN_1) || "";
   console.log(`[MLBrowser] ensureLoggedIn — account=${account} tokenLen=${tokenInEnv.length} tokenPrefix=${tokenInEnv.slice(0, 15)}...`);
-  // 1. Carrega cookies salvos e verifica se ainda são válidos
+
+  // 1. Carrega cookies salvos — navega direto para CAMPAIGNS_URL (rota protegida)
+  //    Se ML redirecionar para /login = cookies inválidos. Se permanecer = autenticado.
   const hasSaved = await loadSession(context, account);
   if (hasSaved) {
     try {
-      await page.goto(SELLER_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 25000 });
+      await page.goto(CAMPAIGNS_URL, { waitUntil: "domcontentloaded", timeout: 25000 });
+      await page.waitForTimeout(2000);
     } catch {}
-    await waitForAuthCheck(page);
-    if (await isOnSellerDashboard(page)) {
+    const url = page.url();
+    console.log(`[MLBrowser] Pós-cookies: URL=${url}`);
+    if (isCampaignPageUrl(url)) {
       console.log(`[MLBrowser] Sessão válida via cookies salvos — ${account}`);
       return true;
     }
@@ -461,17 +472,14 @@ async function ensureLoggedIn(page: Page, context: BrowserContext, account: "fem
   // 2. Tenta auth-from-token endpoint do ML (evita reCAPTCHA)
   const tokenOk = await tryTokenToBrowserSession(page, context, account);
   if (tokenOk) {
-    // Não navega de novo — tryTokenToBrowserSession já navegou até a página correta
-    const finalUrl = page.url();
-    const onAds = finalUrl.includes("ads.mercadolivre") || finalUrl.includes("productAds") || finalUrl.includes("product-ads");
-    if (!onAds) {
-      // Se não estiver na página de ads ainda, navega diretamente para campaigns
-      try {
-        await page.goto(CAMPAIGNS_URL, { waitUntil: "domcontentloaded", timeout: 25000 });
-      } catch {}
-    }
-    await waitForAuthCheck(page);
-    if (await isOnSellerDashboard(page)) {
+    // Sempre navega para CAMPAIGNS_URL (rota protegida) — /productAds é landing pública
+    try {
+      await page.goto(CAMPAIGNS_URL, { waitUntil: "domcontentloaded", timeout: 25000 });
+      await page.waitForTimeout(2000);
+    } catch {}
+    const url = page.url();
+    console.log(`[MLBrowser] Pós-token: URL=${url}`);
+    if (isCampaignPageUrl(url)) {
       console.log(`[MLBrowser] Sessão via token OK para ${account} — salvando...`);
       await saveSession(context, account);
       return true;
@@ -482,7 +490,13 @@ async function ensureLoggedIn(page: Page, context: BrowserContext, account: "fem
   // 3. Último recurso: login via formulário
   console.log(`[MLBrowser] Tentando login via formulário para ${account}...`);
   const ok = await loginML(page, account);
-  if (ok) await saveSession(context, account);
+  if (ok) {
+    await saveSession(context, account);
+    // Após login, garante que está na página certa
+    try {
+      await page.goto(CAMPAIGNS_URL, { waitUntil: "domcontentloaded", timeout: 25000 });
+    } catch {}
+  }
   return ok;
 }
 
