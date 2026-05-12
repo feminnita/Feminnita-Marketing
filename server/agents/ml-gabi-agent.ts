@@ -9,6 +9,7 @@ import { invokeLLM } from "../_core/llm";
 import { buildMemoryContext, saveMemory } from "../services/agentMemory";
 import { getLatestKnowledge } from "./knowledge-updater";
 import { listMLItems, pauseMLItem, activateMLItem, updateMLPrice, updateMLStock, getMLItemDetails, getMLCategoryAttributes, updateMLItemAttributes, listMLAdsCampaigns, getMLAdsCampaignStats } from "./gabi-executor";
+import { runActionsInSession } from "./ml-ads-browser-agent";
 import { getDb } from "../db";
 import { agentActions as agentActionsTable } from "../../drizzle/schema";
 import { desc, eq, and, isNotNull } from "drizzle-orm";
@@ -475,11 +476,68 @@ export async function chatWithGabi(
         } else if (toolUse.name === "ml_ads_list_campaigns") {
           call = listMLAdsCampaigns(account);
         } else if (toolUse.name === "ml_ads_pause_campaign") {
-          call = queueAdsAction("pause_ads_campaign", `Pausar campanha ${inp.campaignName || inp.campaignId}`, { campaignId: inp.campaignId, campaignName: inp.campaignName || "" });
+          call = (async (): Promise<string> => {
+            const tempId = Date.now();
+            const results = await runActionsInSession(account as "feminnita" | "fnt", [{
+              id: tempId, actionType: "pause_ads_campaign",
+              campaignId: String(inp.campaignId || ""), campaignName: String(inp.campaignName || ""), budget: 0,
+            }]);
+            const log = results[tempId] ?? "Sem resultado";
+            const isError = log.startsWith("ERRO:") || log.includes("não encontrada") || log.includes("não encontrado");
+            const db = await getDb();
+            if (db) await db.insert(agentActionsTable).values({
+              agentName: "gabi", date: new Date().toISOString().slice(0, 10),
+              title: `Pausar campanha ${inp.campaignName || inp.campaignId}`,
+              description: `Pausar campanha ${inp.campaignName || inp.campaignId}`,
+              actionType: "pause_ads_campaign", priority: "media",
+              status: (isError ? "pending" : "done") as const,
+              payload: { platform: "ml", account, action: "pause_ads_campaign", campaignId: String(inp.campaignId || ""), campaignName: String(inp.campaignName || "") },
+              executionLog: log, ...(isError ? {} : { executedAt: new Date() }),
+            });
+            return `${isError ? "❌" : "✅"} ${inp.campaignName || inp.campaignId}: ${log}`;
+          })();
         } else if (toolUse.name === "ml_ads_activate_campaign") {
-          call = queueAdsAction("activate_ads_campaign", `Ativar campanha ${inp.campaignName || inp.campaignId}`, { campaignId: inp.campaignId, campaignName: inp.campaignName || "" });
+          call = (async (): Promise<string> => {
+            const tempId = Date.now();
+            const results = await runActionsInSession(account as "feminnita" | "fnt", [{
+              id: tempId, actionType: "activate_ads_campaign",
+              campaignId: String(inp.campaignId || ""), campaignName: String(inp.campaignName || ""), budget: 0,
+            }]);
+            const log = results[tempId] ?? "Sem resultado";
+            const isError = log.startsWith("ERRO:") || log.includes("não encontrada") || log.includes("não encontrado");
+            const db = await getDb();
+            if (db) await db.insert(agentActionsTable).values({
+              agentName: "gabi", date: new Date().toISOString().slice(0, 10),
+              title: `Ativar campanha ${inp.campaignName || inp.campaignId}`,
+              description: `Ativar campanha ${inp.campaignName || inp.campaignId}`,
+              actionType: "activate_ads_campaign", priority: "media",
+              status: (isError ? "pending" : "done") as const,
+              payload: { platform: "ml", account, action: "activate_ads_campaign", campaignId: String(inp.campaignId || ""), campaignName: String(inp.campaignName || "") },
+              executionLog: log, ...(isError ? {} : { executedAt: new Date() }),
+            });
+            return `${isError ? "❌" : "✅"} ${inp.campaignName || inp.campaignId}: ${log}`;
+          })();
         } else if (toolUse.name === "ml_ads_update_budget") {
-          call = queueAdsAction("update_ads_budget", `Atualizar orçamento campanha ${inp.campaignId} para R$${inp.dailyBudget}/dia`, { campaignId: inp.campaignId, budget: inp.dailyBudget });
+          call = (async (): Promise<string> => {
+            const tempId = Date.now();
+            const results = await runActionsInSession(account as "feminnita" | "fnt", [{
+              id: tempId, actionType: "update_ads_budget",
+              campaignId: String(inp.campaignId || ""), campaignName: String(inp.campaignName || ""), budget: Number(inp.dailyBudget || 0),
+            }]);
+            const log = results[tempId] ?? "Sem resultado";
+            const isError = log.startsWith("ERRO:") || log.includes("não encontrada") || log.includes("não encontrado");
+            const db = await getDb();
+            if (db) await db.insert(agentActionsTable).values({
+              agentName: "gabi", date: new Date().toISOString().slice(0, 10),
+              title: `Atualizar orçamento ${inp.campaignName || inp.campaignId} → R$${inp.dailyBudget}/dia`,
+              description: `Atualizar orçamento ${inp.campaignName || inp.campaignId} → R$${inp.dailyBudget}/dia`,
+              actionType: "update_ads_budget", priority: "media",
+              status: (isError ? "pending" : "done") as const,
+              payload: { platform: "ml", account, action: "update_ads_budget", campaignId: String(inp.campaignId || ""), campaignName: String(inp.campaignName || ""), budget: Number(inp.dailyBudget || 0) },
+              executionLog: log, ...(isError ? {} : { executedAt: new Date() }),
+            });
+            return `${isError ? "❌" : "✅"} ${inp.campaignName || inp.campaignId}: ${log}`;
+          })();
         } else if (toolUse.name === "ml_ads_campaign_stats") {
           call = getMLAdsCampaignStats(inp.campaignId, inp.dateFrom, inp.dateTo, account);
         } else if (toolUse.name === "ml_get_ads_metrics") {
