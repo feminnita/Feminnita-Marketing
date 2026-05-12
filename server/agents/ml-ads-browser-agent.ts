@@ -660,6 +660,17 @@ async function withBrowser<T>(
   const browser: Browser = await chromium.launch({
     headless: true,
     args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--no-proxy-server"],
+    env: {
+      ...process.env,
+      http_proxy: "",
+      https_proxy: "",
+      HTTP_PROXY: "",
+      HTTPS_PROXY: "",
+      ALL_PROXY: "",
+      all_proxy: "",
+      no_proxy: "*",
+      NO_PROXY: "*",
+    },
   });
 
   // ML Ads funciona direto do IP do Vultr SP — sem proxy.
