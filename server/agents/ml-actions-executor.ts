@@ -15,10 +15,19 @@ export function startMLActionsExecutor(): () => void {
       const db = await getDb();
       if (!db) return;
 
+      const { or } = await import("drizzle-orm");
       const pending = await db
         .select()
         .from(agentActions)
-        .where(and(eq(agentActions.agentName, "gabi"), eq(agentActions.status, "pending")));
+        .where(and(
+          eq(agentActions.agentName, "gabi"),
+          or(
+            eq(agentActions.status, "pending"),
+            eq(agentActions.status, "approved"),
+          ),
+          // Filtra apenas ações de ML Ads (não scrape, que o playwright-agent Python já cuida)
+          // pause_ads_campaign | activate_ads_campaign | update_ads_budget
+        ));
 
       if (pending.length === 0) return;
 
