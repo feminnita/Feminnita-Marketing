@@ -10,12 +10,10 @@ import { buildMemoryContext, saveMemory } from "../services/agentMemory";
 import { getLatestKnowledge } from "./knowledge-updater";
 import { listMLItems, pauseMLItem, activateMLItem, updateMLPrice, updateMLStock, getMLItemDetails, getMLCategoryAttributes, updateMLItemAttributes, listMLAdsCampaigns, getMLAdsCampaignStats } from "./gabi-executor";
 import { runActionsInSession } from "./ml-ads-browser-agent";
-import { apiPauseCampaign, apiActivateCampaign, apiUpdateCampaignBudget, apiResolveCampaignByName } from "./ml-ads-api";
 
 /**
- * Executa mutação em campanha ML Ads.
- * Estratégia: API REST primeiro (rápido, confiável, sem captcha) → fallback Playwright se falhar.
- * Retorna a mensagem final que vai pro DB executionLog.
+ * Executa mutação em campanha ML Ads via Playwright (browser).
+ * API REST do ML bloqueia writes para contas não-parceiras, então usamos Playwright direto.
  */
 async function runAdsMutation(
   account: string,
@@ -25,57 +23,15 @@ async function runAdsMutation(
   budget: number,
 ): Promise<string> {
   const acc = account as "feminnita" | "fnt";
-
-  // 1) Resolve ID se só veio nome
-  let resolvedId = campaignId;
-  if (!resolvedId && campaignName) {
-    try {
-      const found = await apiResolveCampaignByName(campaignName, acc);
-      if (found) resolvedId = found.id;
-    } catch (e: any) {
-      console.warn(`[Gabi/Ads] resolveByName falhou: ${e.message}`);
-    }
-  }
-
-  if (!resolvedId) {
-    return `ERRO: campanha "${campaignName}" não encontrada via API REST. Verifique o nome ou forneça o ID.`;
-  }
-
-  // 2) Tenta via API REST
   try {
-    if (actionType === "pause_ads_campaign") {
-      return await apiPauseCampaign(resolvedId, acc);
-    }
-    if (actionType === "activate_ads_campaign") {
-      return await apiActivateCampaign(resolvedId, acc);
-    }
-    if (actionType === "update_ads_budget") {
-      return await apiUpdateCampaignBudget(resolvedId, budget, acc);
-    }
+    const tempId = Date.now();
+    const results = await runActionsInSession(acc, [{
+      id: tempId, actionType, campaignId, campaignName, budget,
+    }]);
+    return results[tempId] ?? "Sem resultado";
   } catch (e: any) {
-    const apiErr = e?.message || String(e);
-    console.warn(`[Gabi/Ads] API REST falhou para ${actionType} ${resolvedId}: ${apiErr}`);
-
-    // Se for erro de permissão write/scope → mensagem clara para o usuário (sem fallback)
-    if (/permission to write|invalid_scope|insufficient_scope|advertising-write/i.test(apiErr)) {
-      return `ERRO: ${apiErr}`;
-    }
-
-    // 3) Fallback Playwright (só para erros não-auth)
-    console.log(`[Gabi/Ads] Tentando fallback Playwright para ${actionType}...`);
-    try {
-      const tempId = Date.now();
-      const results = await runActionsInSession(acc, [{
-        id: tempId, actionType, campaignId: resolvedId, campaignName, budget,
-      }]);
-      const log = results[tempId] ?? "Sem resultado";
-      return `${log} (via Playwright — API REST retornou: ${apiErr.slice(0, 80)})`;
-    } catch (eb: any) {
-      return `ERRO: ${apiErr}. Fallback Playwright também falhou: ${eb?.message || String(eb)}`;
-    }
+    return `ERRO: ${e?.message || String(e)}`;
   }
-
-  return `ERRO: actionType desconhecido: ${actionType}`;
 }
 import { getDb } from "../db";
 import { agentActions as agentActionsTable } from "../../drizzle/schema";
