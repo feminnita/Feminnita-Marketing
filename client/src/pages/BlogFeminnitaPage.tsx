@@ -26,6 +26,7 @@ interface BlogPost {
   status: PostStatus;
   seoTitle: string | null;
   seoDescription: string | null;
+  coverImageUrl: string | null;
   generatedByAI: boolean;
   publishedAt: Date | string | null;
   updatedAt: Date | string;
@@ -100,6 +101,7 @@ export default function BlogFeminnitaPage() {
   const [editSeoDesc, setEditSeoDesc] = useState("");
   const [editCategory, setEditCategory] = useState("");
   const [editTags, setEditTags] = useState("");
+  const [editCoverImageUrl, setEditCoverImageUrl] = useState("");
   const [improveInstructions, setImproveInstructions] = useState("");
 
   // tRPC
@@ -148,6 +150,7 @@ export default function BlogFeminnitaPage() {
     setEditSeoDesc(post.seoDescription ?? "");
     setEditCategory(post.category ?? "");
     setEditTags(post.tags ? JSON.parse(post.tags).join(", ") : "");
+    setEditCoverImageUrl(post.coverImageUrl ?? "");
     setDraft(null);
     setView("editor");
   }
@@ -170,6 +173,7 @@ export default function BlogFeminnitaPage() {
         status,
         seoTitle: editSeoTitle,
         seoDescription: editSeoDesc,
+        coverImageUrl: editCoverImageUrl || undefined,
         generatedByAI: !!draft,
       });
       toast.success(status === "published" ? "Post publicado!" : "Post salvo!");
@@ -240,7 +244,7 @@ export default function BlogFeminnitaPage() {
           <Button variant="outline" onClick={() => setView("ideas")} className="gap-2">
             <Lightbulb className="w-4 h-4" /> Ideias IA
           </Button>
-          <Button onClick={() => { setView("editor"); setEditingPost(null); setDraft(null); setEditTitle(""); setEditContent(""); setEditExcerpt(""); setEditSeoTitle(""); setEditSeoDesc(""); setEditCategory(""); setEditTags(""); }} className="gap-2 bg-rose-600 hover:bg-rose-700">
+          <Button onClick={() => { setView("editor"); setEditingPost(null); setDraft(null); setEditTitle(""); setEditContent(""); setEditExcerpt(""); setEditSeoTitle(""); setEditSeoDesc(""); setEditCategory(""); setEditTags(""); setEditCoverImageUrl(""); }} className="gap-2 bg-rose-600 hover:bg-rose-700">
             <Plus className="w-4 h-4" /> Novo Post
           </Button>
         </div>
@@ -294,6 +298,9 @@ export default function BlogFeminnitaPage() {
           </div>
         ) : filteredPosts.map((post: BlogPost) => (
           <div key={post.id} className="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-4 hover:border-rose-200 transition-colors">
+            {post.coverImageUrl && (
+              <img src={post.coverImageUrl} alt="" className="w-16 h-16 object-cover rounded-lg flex-shrink-0" />
+            )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusConfig[post.status as PostStatus]?.color ?? ""}`}>
@@ -374,6 +381,32 @@ export default function BlogFeminnitaPage() {
         </div>
 
         <Textarea placeholder="Resumo / excerpt" value={editExcerpt} onChange={e => setEditExcerpt(e.target.value)} rows={2} />
+
+        {/* Imagem de capa */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-slate-700">Imagem de capa (URL)</label>
+          <Input
+            placeholder="https://exemplo.com/imagem.jpg"
+            value={editCoverImageUrl}
+            onChange={e => setEditCoverImageUrl(e.target.value)}
+          />
+          {editCoverImageUrl && (
+            <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
+              <img
+                src={editCoverImageUrl}
+                alt="Capa"
+                className="w-full h-48 object-cover"
+                onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
+              />
+              <button
+                onClick={() => setEditCoverImageUrl("")}
+                className="absolute top-2 right-2 bg-white/80 hover:bg-white rounded-full p-1 text-slate-600 hover:text-red-500 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+        </div>
 
         {previewMode ? (
           <div className="bg-white border border-slate-200 rounded-xl p-6 min-h-64">
