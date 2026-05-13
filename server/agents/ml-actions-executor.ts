@@ -73,14 +73,20 @@ export function startMLActionsExecutor(): () => void {
 
         for (const action of accountActions) {
           const log = results[action.id] ?? "Sem resultado";
+          const isNotFound = log.includes("não encontrada") || log.includes("não encontrado");
           const isError = log.startsWith("ERRO:") || log.startsWith("❌") ||
-            log.includes("não encontrada") || log.includes("não encontrado") ||
+            isNotFound ||
             log.includes("Erro ao") || log.includes("ML API") || log.includes("não abriu") ||
             log.includes("Timeout") || log.includes("timeout");
+          // Campanha inexistente → cancelled (não vai se resolver sozinha)
+          // Erro de browser/rede → pending (vale tentar novamente)
+          const nextStatus = isError
+            ? (isNotFound ? "cancelled" : "pending")
+            : "done";
           console.log(`[MLExecutor] ${isError ? "❌" : "✅"} id=${action.id}: ${log}`);
           await db.update(agentActions)
             .set({
-              status:       (isError ? "pending" : "done") as const,
+              status:       nextStatus as const,
               executedAt:   isError ? undefined : new Date(),
               executionLog: log,
             } as any)

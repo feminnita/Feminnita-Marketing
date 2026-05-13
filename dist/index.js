@@ -2043,6 +2043,1083 @@ var init_sdk = __esm({
   }
 });
 
+// server/agents/ml-ads-browser-agent.ts
+var ml_ads_browser_agent_exports = {};
+__export(ml_ads_browser_agent_exports, {
+  activateAdsCampaign: () => activateAdsCampaign,
+  createAdsCampaign: () => createAdsCampaign,
+  getMLSessionStatus: () => getMLSessionStatus,
+  importMLSession: () => importMLSession,
+  listAdsCampaigns: () => listAdsCampaigns,
+  pauseAdsCampaign: () => pauseAdsCampaign,
+  runActionsInSession: () => runActionsInSession,
+  scrapeAdsCampaignMetrics: () => scrapeAdsCampaignMetrics,
+  updateAdsBudget: () => updateAdsBudget
+});
+import { chromium } from "playwright";
+import fs from "fs";
+import path from "path";
+import { eq as eq3, and as and2 } from "drizzle-orm";
+function getCampaignsUrl(account) {
+  if (account === "fnt") {
+    const advId = process.env.ML_ADVERTISER_ID_2 || "1117634";
+    const accountId = process.env.ML_ACCOUNT_ID_2 || "1155286";
+    return `https://ads.mercadolivre.com.br/product-ads/admin/campaigns?advertiser_id=${advId}&account_id=${accountId}&navigate_to=mercado_ads&status=A%2CP%2CD`;
+  }
+  return CAMPAIGNS_URL;
+}
+function withMutex(account, fn) {
+  const existing = runningInstances.get(account);
+  if (existing) {
+    console.log(`[MLBrowser] Inst\xE2ncia j\xE1 em execu\xE7\xE3o para ${account} \u2014 aguardando...`);
+    return existing.then(() => fn());
+  }
+  const promise = fn().finally(() => runningInstances.delete(account));
+  runningInstances.set(account, promise);
+  return promise;
+}
+function sessionFile(account) {
+  return path.join(SESSIONS_DIR, `ml-session-${account}.json`);
+}
+async function saveSession(context, account) {
+  const cookies = await context.cookies();
+  fs.writeFileSync(sessionFile(account), JSON.stringify(cookies, null, 2));
+}
+function normalizeCookie(c) {
+  const sameSiteMap = {
+    no_restriction: "None",
+    unspecified: "None",
+    none: "None",
+    lax: "Lax",
+    strict: "Strict"
+  };
+  return {
+    name: c.name,
+    value: c.value,
+    domain: c.domain,
+    path: c.path || "/",
+    expires: c.expirationDate ? Math.floor(c.expirationDate) : c.expires ?? -1,
+    httpOnly: c.httpOnly ?? false,
+    secure: c.secure ?? false,
+    sameSite: sameSiteMap[(c.sameSite ?? "").toLowerCase()] ?? "None"
+  };
+}
+async function loadSession(context, account) {
+  const file = sessionFile(account);
+  if (!fs.existsSync(file)) return false;
+  try {
+    const raw = JSON.parse(fs.readFileSync(file, "utf8"));
+    const cookies = Array.isArray(raw) ? raw.map(normalizeCookie) : [];
+    if (cookies.length === 0) return false;
+    await context.addCookies(cookies);
+    console.log(`[MLBrowser] ${cookies.length} cookies carregados para ${account}`);
+    return true;
+  } catch (e) {
+    console.warn(`[MLBrowser] Erro ao carregar cookies para ${account}:`, e.message);
+    return false;
+  }
+}
+async function tryTokenToBrowserSession(page, context, account) {
+  const token = account === "fnt" ? process.env.ML_ACCESS_TOKEN_2 : process.env.ML_ACCESS_TOKEN_1;
+  if (!token) return false;
+  const authFromTokenUrl = `https://www.mercadolivre.com.br/jms/mlb/lgz/auth-from-token?access_token=${token}&platform_id=ML&go=${encodeURIComponent(SELLER_CENTER_URL)}`;
+  try {
+    console.log(`[MLBrowser] Tentando auth-from-token para ${account}...`);
+    await page.goto(authFromTokenUrl, { waitUntil: "domcontentloaded", timeout: 2e4 });
+    await debugScreenshot(page, `token-auth-${account}-1`);
+    const url = page.url();
+    if (!url.includes("/login") && !url.includes("/jms/lgz/")) {
+      console.log(`[MLBrowser] auth-from-token OK \u2014 URL: ${url}`);
+      return true;
+    }
+  } catch (e) {
+    console.warn(`[MLBrowser] auth-from-token falhou:`, e.message);
+  }
+  const candidates = [
+    `https://www.mercadolivre.com.br/jms/mlb/lgz/auth-from-token?access_token=${token}&platform_id=ML&go=%2F`,
+    `https://auth.mercadolibre.com/authorization?response_type=token&access_token=${token}&platform_id=MP`
+  ];
+  for (const url of candidates) {
+    try {
+      const res = await fetch(url, {
+        method: "GET",
+        redirect: "manual",
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
+          "Accept-Language": "pt-BR,pt;q=0.9",
+          "Accept": "text/html,application/xhtml+xml"
+        }
+      });
+      const location = res.headers.get("location") || "";
+      const rawCookies = typeof res.headers.getSetCookie === "function" ? res.headers.getSetCookie() : res.headers.get("set-cookie") ? [res.headers.get("set-cookie")] : [];
+      const isLoginRedirect = location.includes("/login") || location.includes("/jms/lgz/login");
+      if (rawCookies.length > 0 && !isLoginRedirect) {
+        const parsed = rawCookies.map((c) => {
+          const main = c.split(";")[0];
+          const eq111 = main.indexOf("=");
+          return {
+            name: main.slice(0, eq111).trim(),
+            value: main.slice(eq111 + 1).trim(),
+            domain: ".mercadolivre.com.br",
+            path: "/",
+            httpOnly: false,
+            secure: true
+          };
+        }).filter((c) => c.name && c.value);
+        if (parsed.length > 0) {
+          await context.addCookies(parsed);
+          console.log(`[MLBrowser] ${parsed.length} cookies de sess\xE3o injetados via fetch para ${account}`);
+          return true;
+        }
+      }
+    } catch (e) {
+      console.warn(`[MLBrowser] fetch candidate falhou:`, e.message);
+    }
+  }
+  try {
+    console.log(`[MLBrowser] Abordagem 3 \u2014 navegando direto para campaigns com token no localStorage...`);
+    await page.goto(CAMPAIGNS_URL, { waitUntil: "domcontentloaded", timeout: 25e3 });
+    await waitForAuthCheck(page);
+    if (await isOnSellerDashboard(page)) {
+      console.log(`[MLBrowser] Abordagem 3 OK \u2014 autenticado via localStorage token para ${account}`);
+      await saveSession(context, account);
+      return true;
+    }
+    console.warn(`[MLBrowser] Abordagem 3 falhou \u2014 ainda na p\xE1gina de login`);
+  } catch (e) {
+    console.warn(`[MLBrowser] Abordagem 3 exce\xE7\xE3o:`, e.message);
+  }
+  return false;
+}
+async function solve2captcha(sitekey, pageUrl, enterprise = false, invisible = false) {
+  if (!TWOCAPTCHA_KEY) return null;
+  try {
+    const params = {
+      key: TWOCAPTCHA_KEY,
+      method: "userrecaptcha",
+      googlekey: sitekey,
+      pageurl: pageUrl,
+      json: "1"
+    };
+    if (enterprise) params.enterprise = "1";
+    if (invisible) params.invisible = "1";
+    const submitRes = await fetch("https://2captcha.com/in.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams(params).toString()
+    });
+    const submit = await submitRes.json();
+    if (submit.status !== 1) {
+      console.warn("[MLBrowser] 2captcha submit falhou:", submit.request);
+      return null;
+    }
+    const captchaId = submit.request;
+    console.log(`[MLBrowser] 2captcha id=${captchaId}, aguardando resolu\xE7\xE3o...`);
+    for (let i = 0; i < 30; i++) {
+      await new Promise((r) => setTimeout(r, 5e3));
+      const resRes = await fetch(`https://2captcha.com/res.php?key=${TWOCAPTCHA_KEY}&action=get&id=${captchaId}&json=1`);
+      const result = await resRes.json();
+      if (result.status === 1) {
+        console.log("[MLBrowser] 2captcha resolvido");
+        return result.request;
+      }
+      if (result.request !== "CAPCHA_NOT_READY") {
+        console.warn("[MLBrowser] 2captcha erro:", result.request);
+        return null;
+      }
+    }
+    return null;
+  } catch (e) {
+    console.error("[MLBrowser] 2captcha exception:", e.message);
+    return null;
+  }
+}
+async function loginML(page, account) {
+  const email = account === "fnt" ? process.env.ML_EMAIL_2 : process.env.ML_EMAIL_1;
+  const password = account === "fnt" ? process.env.ML_PASSWORD_2 : process.env.ML_PASSWORD_1;
+  if (!email || !password) {
+    console.error(`[MLBrowser] Credenciais n\xE3o configuradas para ${account} (ML_EMAIL_1/ML_PASSWORD_1)`);
+    return false;
+  }
+  try {
+    console.log(`[MLBrowser] Iniciando login \u2014 ${account} \u2014 ${email}`);
+    await page.goto(LOGIN_URL, { waitUntil: "domcontentloaded", timeout: 3e4 });
+    await debugScreenshot(page, `login-${account}-start`);
+    const emailSel = 'input[name="user_id"], input[type="email"], input[id="user_id"]';
+    await page.waitForSelector(emailSel, { timeout: 15e3 });
+    await page.fill(emailSel, email);
+    console.log(`[MLBrowser] Email preenchido \u2014 clicando Continuar...`);
+    await page.click('button[type="submit"]');
+    const afterEmail = await Promise.race([
+      page.waitForSelector('input[name="password"], input[type="password"]', { timeout: 35e3 }).then(() => "password").catch(() => null),
+      page.waitForFunction(
+        () => window.location.href.includes("/msl/") || window.location.href.includes("user-recaptcha"),
+        { timeout: 35e3 }
+      ).then(() => "captcha").catch(() => null),
+      page.waitForFunction(
+        () => !window.location.href.includes("/login") && !window.location.href.includes("/jms/lgz/"),
+        { timeout: 35e3 }
+      ).then(() => "loggedin").catch(() => null)
+    ]);
+    console.log(`[MLBrowser] P\xF3s-email: estado="${afterEmail}" url=${page.url()}`);
+    await debugScreenshot(page, `login-${account}-after-email`);
+    if (afterEmail === "loggedin") {
+      console.log(`[MLBrowser] Login OK (sem senha) \u2014 ${account} \u2014 URL: ${page.url()}`);
+      return true;
+    }
+    if (afterEmail === "captcha" || !afterEmail && (page.url().includes("/msl/") || page.url().includes("user-recaptcha"))) {
+      console.log(`[MLBrowser] reCAPTCHA detectado \u2014 ${page.url()}`);
+      const iframeEl = await page.waitForSelector('iframe[src*="recaptcha"]', { timeout: 12e3 }).catch(() => null);
+      let sitekey = "";
+      if (iframeEl) {
+        const src = await iframeEl.getAttribute("src") || "";
+        const skMatch = src.match(/[?&]k=([^&]+)/);
+        sitekey = skMatch ? skMatch[1] : "";
+      }
+      if (!sitekey) {
+        sitekey = await page.evaluate(() => {
+          const el = document.querySelector("[data-sitekey]");
+          if (el) return el.getAttribute("data-sitekey") || "";
+          const m = document.body.innerHTML.match(/["'](?:sitekey|googlekey)["']\s*:\s*["']([0-9A-Za-z_-]{20,})["']/);
+          return m ? m[1] : "";
+        });
+      }
+      console.log(`[MLBrowser] Sitekey captcha: "${sitekey}"`);
+      let token = null;
+      if (sitekey) {
+        const isInvisible = !page.url().includes("user-recaptcha-social");
+        console.log(`[MLBrowser] reCAPTCHA sitekey=${sitekey} invisible=${isInvisible} \u2014 resolvendo via 2captcha...`);
+        token = await solve2captcha(sitekey, page.url(), false, isInvisible);
+      } else {
+        console.warn("[MLBrowser] Sitekey n\xE3o encontrado \u2014 tentando sem captcha");
+      }
+      if (token) {
+        await page.evaluate((t2) => {
+          ["g-recaptcha-response", "g-recaptcha-response-100000", "g-recaptcha-response-100001"].forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) {
+              el.innerHTML = t2;
+              el.value = t2;
+              el.dispatchEvent(new Event("change", { bubbles: true }));
+            }
+          });
+          const gctkn = document.querySelector('input[name="gctkn"]');
+          if (gctkn) {
+            gctkn.value = t2;
+            gctkn.dispatchEvent(new Event("change", { bubbles: true }));
+          }
+          function callCallbacks(obj, depth = 0) {
+            if (!obj || typeof obj !== "object" || depth > 8) return;
+            for (const key of Object.keys(obj)) {
+              try {
+                const v = obj[key];
+                if ((key === "callback" || key === "successCallback") && typeof v === "function") {
+                  v(t2);
+                } else {
+                  callCallbacks(v, depth + 1);
+                }
+              } catch (_) {
+              }
+            }
+          }
+          const w = window;
+          if (w.___grecaptcha_cfg?.clients) callCallbacks(w.___grecaptcha_cfg.clients);
+          if (w.___grecaptcha_cfg?.enterprise?.clients) callCallbacks(w.___grecaptcha_cfg.enterprise.clients);
+          const dataCallbackEl = document.querySelector("[data-callback]");
+          const cbName = dataCallbackEl?.getAttribute("data-callback");
+          if (cbName && typeof w[cbName] === "function") {
+            try {
+              w[cbName](t2);
+            } catch (_) {
+            }
+          }
+          setTimeout(() => {
+            const btn = document.querySelector('button[type="submit"]');
+            if (btn) btn.click();
+          }, 1200);
+        }, token);
+        console.log("[MLBrowser] Token captcha injetado + callbacks disparados \u2014 aguardando navega\xE7\xE3o do AJAX...");
+        const afterCaptcha = await Promise.race([
+          page.waitForSelector('input[name="password"], input[type="password"]', { timeout: 35e3 }).then(() => "password").catch(() => null),
+          page.waitForFunction(
+            () => !window.location.href.includes("/msl/") && !window.location.href.includes("/lgz/login") && !window.location.href.includes("user-recaptcha"),
+            { timeout: 35e3 }
+          ).then(() => "navigated").catch(() => null)
+        ]);
+        console.log(`[MLBrowser] P\xF3s-captcha: estado="${afterCaptcha}" url=${page.url()}`);
+        await debugScreenshot(page, `login-${account}-after-captcha`);
+        if (afterCaptcha !== "password") {
+          if (!page.url().includes("/login") && !page.url().includes("/jms/lgz/")) {
+            console.log(`[MLBrowser] Login OK ap\xF3s captcha (sem senha) \u2014 URL: ${page.url()}`);
+            return true;
+          }
+          console.log(`[MLBrowser] Clicando submit p\xF3s-captcha...`);
+          await page.click('button[type="submit"], button:has-text("Continuar"), button:has-text("Continue")').catch(() => {
+          });
+          const afterSubmit = await Promise.race([
+            page.waitForSelector('input[name="password"], input[type="password"]', { timeout: 25e3 }).then(() => "password").catch(() => null),
+            page.waitForFunction(
+              () => !window.location.href.includes("/login") && !window.location.href.includes("/jms/lgz/"),
+              { timeout: 25e3 }
+            ).then(() => "loggedin").catch(() => null)
+          ]);
+          console.log(`[MLBrowser] P\xF3s-submit-captcha: estado="${afterSubmit}" url=${page.url()}`);
+          await debugScreenshot(page, `login-${account}-after-captcha-submit`);
+          if (afterSubmit === "loggedin") {
+            console.log(`[MLBrowser] Login OK \u2014 URL: ${page.url()}`);
+            return true;
+          }
+          if (!afterSubmit) {
+            console.error(`[MLBrowser] Captcha submit n\xE3o avan\xE7ou \u2014 URL: ${page.url()}`);
+            return false;
+          }
+        }
+      } else {
+        console.warn("[MLBrowser] Token captcha nulo \u2014 tentando submit direto...");
+        await page.click('button[type="submit"], button:has-text("Continuar")').catch(() => {
+        });
+        await page.waitForTimeout(8e3);
+        await debugScreenshot(page, `login-${account}-notokensubmit`);
+      }
+    }
+    console.log(`[MLBrowser] Aguardando campo senha \u2014 url=${page.url()}`);
+    const pwdVisible = await page.waitForSelector('input[name="password"], input[type="password"]', { timeout: 25e3 }).then(() => true).catch(() => false);
+    if (!pwdVisible) {
+      console.error(`[MLBrowser] Campo senha n\xE3o apareceu \u2014 url=${page.url()}`);
+      await debugScreenshot(page, `login-${account}-nopassword`);
+      return false;
+    }
+    console.log(`[MLBrowser] Preenchendo senha \u2014 url=${page.url()}`);
+    await page.fill('input[name="password"], input[type="password"]', password);
+    await debugScreenshot(page, `login-${account}-password-filled`);
+    await page.click('button[type="submit"]');
+    const loginDone = await page.waitForFunction(
+      () => !window.location.href.includes("/login") && !window.location.href.includes("/jms/lgz/"),
+      { timeout: 35e3 }
+    ).then(() => true).catch(() => false);
+    await debugScreenshot(page, `login-${account}-final`);
+    if (loginDone) {
+      console.log(`[MLBrowser] Login OK \u2014 ${account} \u2014 URL: ${page.url()}`);
+      return true;
+    } else {
+      console.error(`[MLBrowser] Login falhou ap\xF3s senha \u2014 URL: ${page.url()}`);
+      return false;
+    }
+  } catch (e) {
+    console.error(`[MLBrowser] Falha no login (${account}):`, e.message);
+    await debugScreenshot(page, `login-${account}-error`);
+    return false;
+  }
+}
+async function waitForAuthCheck(page) {
+  try {
+    await page.waitForLoadState("networkidle", { timeout: 25e3 });
+  } catch {
+  }
+  await page.waitForTimeout(3e3);
+  return page.url();
+}
+async function isOnSellerDashboard(page) {
+  const url = page.url();
+  const onLogin = url.includes("/login") || url.includes("/jms/lgz/") || url.includes("lgz/login");
+  if (onLogin) {
+    console.log(`[MLBrowser] isOnSellerDashboard \u2014 em p\xE1gina de login: ${url}`);
+    return false;
+  }
+  const onAds = url.includes("productAds") || url.includes("ads.mercadolivre") || url.includes("publicidade") || url.includes("product-ads");
+  if (!onAds) {
+    console.log(`[MLBrowser] isOnSellerDashboard \u2014 URL n\xE3o \xE9 de ads: ${url}`);
+    return false;
+  }
+  const bodyText = await page.evaluate(() => document.body?.innerText?.slice(0, 800) ?? "");
+  const isPublicLanding = bodyText.includes("Crie a sua conta") || bodyText.includes("Outros vendedores est\xE3o") || bodyText.includes("Anuncie seus produtos");
+  const hasDashboard = bodyText.includes("Campanhas") || bodyText.includes("Campanha") || bodyText.includes("Or\xE7amento") || bodyText.includes("dashboard") || bodyText.includes("criar campanha");
+  console.log(`[MLBrowser] isOnSellerDashboard \u2014 URL: ${url} \u2014 publicLanding: ${isPublicLanding} \u2014 hasDashboard: ${hasDashboard} \u2014 bodySnippet: "${bodyText.slice(0, 100).replace(/\n/g, " ")}"`);
+  return !isPublicLanding && (hasDashboard || onAds);
+}
+function isCampaignPageUrl(url) {
+  const isLogin = url.includes("/login") || url.includes("/jms/lgz/");
+  const isCampaigns = url.includes("product-ads/admin") || url.includes("ads.mercadolivre.com.br");
+  return !isLogin && isCampaigns;
+}
+async function ensureLoggedIn(page, context, account) {
+  const tokenInEnv = (account === "fnt" ? process.env.ML_ACCESS_TOKEN_2 : process.env.ML_ACCESS_TOKEN_1) || "";
+  console.log(`[MLBrowser] ensureLoggedIn \u2014 account=${account} tokenLen=${tokenInEnv.length} tokenPrefix=${tokenInEnv.slice(0, 15)}...`);
+  const campaignsUrl = getCampaignsUrl(account);
+  const hasSaved = await loadSession(context, account);
+  if (hasSaved) {
+    try {
+      await page.goto(campaignsUrl, { waitUntil: "domcontentloaded", timeout: 25e3 });
+      await page.waitForTimeout(2e3);
+    } catch {
+    }
+    const url = page.url();
+    console.log(`[MLBrowser] P\xF3s-cookies: URL=${url}`);
+    if (isCampaignPageUrl(url)) {
+      console.log(`[MLBrowser] Sess\xE3o v\xE1lida via cookies salvos \u2014 ${account}`);
+      return true;
+    }
+    console.warn(`[MLBrowser] Cookies salvos inv\xE1lidos/expirados para ${account}`);
+  }
+  const tokenOk = await tryTokenToBrowserSession(page, context, account);
+  if (tokenOk) {
+    try {
+      await page.goto(campaignsUrl, { waitUntil: "domcontentloaded", timeout: 25e3 });
+      await page.waitForTimeout(3e3);
+    } catch {
+    }
+    const url = page.url();
+    const bodySnippet = await page.evaluate(() => document.body?.innerText?.slice(0, 200) ?? "").catch(() => "");
+    console.log(`[MLBrowser] P\xF3s-token: URL=${url} body="${bodySnippet.replace(/\n/g, " ").slice(0, 150)}"`);
+    if (isCampaignPageUrl(url)) {
+      console.log(`[MLBrowser] Sess\xE3o via token OK para ${account} \u2014 salvando...`);
+      await saveSession(context, account);
+      return true;
+    }
+    if (!url.includes("/login") && !url.includes("/jms/lgz/") && !url.includes("user-recaptcha")) {
+      await page.waitForTimeout(2e3);
+      try {
+        await page.goto(campaignsUrl, { waitUntil: "domcontentloaded", timeout: 2e4 });
+        await page.waitForTimeout(2e3);
+      } catch {
+      }
+      const url2 = page.url();
+      console.log(`[MLBrowser] Segunda tentativa campaigns: URL=${url2}`);
+      if (isCampaignPageUrl(url2)) {
+        console.log(`[MLBrowser] Sess\xE3o via token OK (2\xAA tentativa) para ${account} \u2014 salvando...`);
+        await saveSession(context, account);
+        return true;
+      }
+    }
+    console.warn(`[MLBrowser] auth-from-token n\xE3o resultou em sess\xE3o de campaigns para ${account} \u2014 URL final: ${url}`);
+  }
+  console.log(`[MLBrowser] auth-from-token falhou para ${account} \u2014 tentando login email/senha...`);
+  const loginOk = await loginML(page, account);
+  if (loginOk) {
+    try {
+      await page.goto(campaignsUrl, { waitUntil: "domcontentloaded", timeout: 25e3 });
+      await page.waitForTimeout(3e3);
+    } catch {
+    }
+    const url = page.url();
+    console.log(`[MLBrowser] P\xF3s-login email/senha: URL=${url}`);
+    if (isCampaignPageUrl(url)) {
+      console.log(`[MLBrowser] Login email/senha OK para ${account} \u2014 salvando sess\xE3o...`);
+      await saveSession(context, account);
+      return true;
+    }
+    console.warn(`[MLBrowser] Login email/senha n\xE3o chegou \xE0 tela de campaigns para ${account}`);
+  }
+  console.error(`[MLBrowser] Sess\xE3o ML expirada para ${account}. Reautentique via OAuth em /api/ml/oauth/start?account=${account} com scope advertising.`);
+  return false;
+}
+async function parseCampaigns(page) {
+  return page.evaluate(() => {
+    const rows = Array.from(document.querySelectorAll('[data-testid*="campaign-row"], .campaign-row, tr[class*="campaign"]'));
+    if (rows.length > 0) {
+      return rows.map((row) => {
+        const text3 = (sel) => row.querySelector(sel)?.innerText?.trim() || "";
+        return {
+          id: (row.getAttribute("data-id") || row.querySelector("[data-id]")?.getAttribute("data-id") || "").trim(),
+          name: text3('[class*="name"], [data-testid*="name"]'),
+          status: text3('[class*="status"], [data-testid*="status"]'),
+          budget: text3('[class*="budget"], [data-testid*="budget"]'),
+          spent: text3('[class*="spent"], [data-testid*="spent"]'),
+          impressions: text3('[class*="impression"], [data-testid*="impression"]'),
+          clicks: text3('[class*="click"], [data-testid*="click"]'),
+          ctr: text3('[class*="ctr"], [data-testid*="ctr"]'),
+          roas: text3('[class*="roas"], [data-testid*="roas"]'),
+          sales: text3('[class*="sale"], [data-testid*="sale"]')
+        };
+      }).filter((c) => c.name);
+    }
+    const table = document.querySelector("table");
+    if (!table) return [];
+    const headers = Array.from(table.querySelectorAll("thead th")).map(
+      (th) => th.innerText.trim().toLowerCase()
+    );
+    const idx = (terms) => {
+      for (const t2 of terms) {
+        const i = headers.findIndex((h) => h.includes(t2));
+        if (i >= 0) return i;
+      }
+      return -1;
+    };
+    const col = {
+      name: idx(["campanha", "nome", "name"]),
+      status: idx(["status", "estado"]),
+      budget: idx(["or\xE7amento", "budget"]),
+      spent: idx(["gasto", "spent", "investimento"]),
+      impressions: idx(["impre", "impression"]),
+      clicks: idx(["clique", "click"]),
+      ctr: idx(["ctr"]),
+      roas: idx(["roas"]),
+      sales: idx(["venda", "sale", "receita"])
+    };
+    return Array.from(table.querySelectorAll("tbody tr")).map((tr) => {
+      const cells = Array.from(tr.querySelectorAll("td")).map((td) => td.innerText.trim());
+      const get = (i) => (i >= 0 ? cells[i] : "") || "";
+      return {
+        id: "",
+        name: get(col.name),
+        status: get(col.status),
+        budget: get(col.budget),
+        spent: get(col.spent),
+        impressions: get(col.impressions),
+        clicks: get(col.clicks),
+        ctr: get(col.ctr),
+        roas: get(col.roas),
+        sales: get(col.sales)
+      };
+    }).filter((c) => c.name);
+  });
+}
+function parseMLNumber(s) {
+  if (!s) return 0;
+  const clean = s.replace(/R\$\s*/g, "").replace(/x$/i, "").replace(/%$/, "").replace(/\s/g, "").replace(/\./g, "").replace(",", ".");
+  return parseFloat(clean) || 0;
+}
+async function scrapeAndSaveMetricsInPage(page, account) {
+  await page.goto(getCampaignsUrl(account), { waitUntil: "domcontentloaded", timeout: 3e4 });
+  await page.waitForTimeout(2e3);
+  const allCampaigns = [];
+  for (let p = 1; p <= 20; p++) {
+    const campaigns3 = await parseCampaigns(page);
+    allCampaigns.push(...campaigns3);
+    console.log(`[MLMetrics] P\xE1gina ${p}: ${campaigns3.length} campanhas`);
+    const nextBtn = page.locator('button:has-text("Seguinte"), a:has-text("Seguinte"), button[aria-label*="ext"], a[aria-label*="ext"]').first();
+    if (!await nextBtn.isVisible({ timeout: 2e3 }).catch(() => false)) break;
+    await nextBtn.click({ force: true, timeout: 5e3 });
+    await page.waitForTimeout(2e3);
+  }
+  if (allCampaigns.length === 0) {
+    console.warn(`[MLMetrics] Nenhuma campanha encontrada para ${account}`);
+    return 0;
+  }
+  const db = await getDb();
+  if (!db) {
+    console.error("[MLMetrics] Banco indispon\xEDvel");
+    return 0;
+  }
+  await db.delete(marketplaceAdsMetrics).where(and2(eq3(marketplaceAdsMetrics.platform, "ml"), eq3(marketplaceAdsMetrics.account, account)));
+  const now = /* @__PURE__ */ new Date();
+  const rows = allCampaigns.map((c) => ({
+    platform: "ml",
+    account,
+    campaignId: (c.id || c.name).slice(0, 100),
+    campaignName: c.name,
+    impressions: Math.round(parseMLNumber(c.impressions)),
+    clicks: Math.round(parseMLNumber(c.clicks)),
+    ctr: String(parseMLNumber(c.ctr).toFixed(3)),
+    spend: String(parseMLNumber(c.spent).toFixed(2)),
+    roas: String(parseMLNumber(c.roas).toFixed(2)),
+    revenue: String(parseMLNumber(c.sales).toFixed(2)),
+    acos: "0",
+    conversions: 0,
+    scrapedAt: now
+  }));
+  await db.insert(marketplaceAdsMetrics).values(rows);
+  console.log(`[MLMetrics] ${rows.length} m\xE9tricas salvas para ${account}`);
+  return rows.length;
+}
+async function withBrowser(account, fn) {
+  const browser = await chromium.launch({
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--no-proxy-server"],
+    env: {
+      ...process.env,
+      http_proxy: "",
+      https_proxy: "",
+      HTTP_PROXY: "",
+      HTTPS_PROXY: "",
+      ALL_PROXY: "",
+      all_proxy: "",
+      no_proxy: "*",
+      NO_PROXY: "*"
+    }
+  });
+  const context = await browser.newContext({
+    userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
+    locale: "pt-BR"
+  });
+  const accessToken = account === "fnt" ? process.env.ML_ACCESS_TOKEN_2 : process.env.ML_ACCESS_TOKEN_1;
+  if (accessToken) {
+    console.log(`[MLBrowser] Injetando access_token no localStorage \u2014 account=${account} prefix=${accessToken.slice(0, 15)}...`);
+    await context.addInitScript((token) => {
+      try {
+        localStorage.setItem("access_token", token);
+        localStorage.setItem("ml:access_token", token);
+        localStorage.setItem("@api/access_token", token);
+        localStorage.setItem("AUTH.ACCESS_TOKEN", token);
+        localStorage.setItem("ml_access_token", token);
+      } catch {
+      }
+    }, accessToken);
+  }
+  const page = await context.newPage();
+  page.setDefaultTimeout(8e3);
+  page.setDefaultNavigationTimeout(8e3);
+  try {
+    const loggedIn = await ensureLoggedIn(page, context, account);
+    if (!loggedIn) throw new Error("N\xE3o foi poss\xEDvel fazer login no Mercado Livre");
+    return await fn(page, context);
+  } finally {
+    await browser.close();
+  }
+}
+async function listAdsCampaigns(account = "feminnita") {
+  return withMutex(account, () => withBrowser(account, async (page) => {
+    await page.goto(SELLER_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 3e4 });
+    await page.waitForTimeout(2e3);
+    const campaigns3 = await parseCampaigns(page);
+    if (campaigns3.length === 0) {
+      const pageText = await page.textContent("body") || "";
+      if (pageText.includes("N\xE3o h\xE1 campanhas") || pageText.includes("Crie sua primeira")) {
+        return "Nenhuma campanha de Product Ads encontrada. Acesse o Seller Center para criar a primeira.";
+      }
+      return "N\xE3o foi poss\xEDvel listar as campanhas. Tente novamente ou acesse o Seller Center diretamente.";
+    }
+    const lines = campaigns3.map((c) => {
+      const metrics = [];
+      if (c.impressions) metrics.push(`Impress\xF5es: ${c.impressions}`);
+      if (c.clicks) metrics.push(`Cliques: ${c.clicks}`);
+      if (c.ctr) metrics.push(`CTR: ${c.ctr}`);
+      if (c.spent) metrics.push(`Gasto: ${c.spent}`);
+      if (c.roas) metrics.push(`ROAS: ${c.roas}`);
+      if (c.sales) metrics.push(`Vendas: ${c.sales}`);
+      const metricsStr = metrics.length > 0 ? ` | ${metrics.join(" | ")}` : "";
+      return `\u2022 [${c.id || "\u2014"}] "${c.name}" | ${c.status} | Budget: ${c.budget}${metricsStr}`;
+    });
+    return `CAMPANHAS DE PRODUCT ADS (${account === "fnt" ? "Conta B" : "Conta A"}):
+${lines.join("\n")}`;
+  }));
+}
+async function scanRowsForCampaign(page, lowerName, lowerId) {
+  const rowSelectors = [
+    "tr",
+    "[data-testid*='campaign-row']",
+    "[class*='campaign-row']",
+    "[class*='CampaignRow']",
+    "[class*='campaign-item']",
+    "li[class*='campaign']",
+    "div[class*='campaign'][role='row']"
+  ];
+  for (const sel of rowSelectors) {
+    const rows = await page.locator(sel).all();
+    for (const row of rows) {
+      const text3 = (await row.innerText({ timeout: 5e3 }).catch(() => "")).toLowerCase();
+      if (lowerName && text3.includes(lowerName) || lowerId && text3.includes(lowerId)) {
+        return row;
+      }
+    }
+  }
+  return null;
+}
+async function findCampaignRow(page, campaignId, campaignName) {
+  for (const attr of ["data-id", "data-campaign-id"]) {
+    const el = page.locator(`[${attr}="${campaignId}"]`).first();
+    if (await el.isVisible({ timeout: 2e3 }).catch(() => false)) return el;
+  }
+  const lowerName = campaignName.toLowerCase().trim();
+  const lowerId = campaignId.toLowerCase().trim();
+  let found = await scanRowsForCampaign(page, lowerName, lowerId);
+  if (found) return found;
+  for (let p = 2; p <= 10; p++) {
+    const nextBtn = page.locator('button:has-text("Seguinte"), a:has-text("Seguinte"), button[aria-label*="ext"], a[aria-label*="ext"]').first();
+    if (!await nextBtn.isVisible({ timeout: 2e3 }).catch(() => false)) break;
+    await nextBtn.click({ force: true, timeout: 5e3, noWaitAfter: true });
+    await page.waitForTimeout(2e3);
+    console.log(`[MLBrowser] Verificando p\xE1gina ${p} de campanhas...`);
+    found = await scanRowsForCampaign(page, lowerName, lowerId);
+    if (found) return found;
+  }
+  return null;
+}
+async function logVisibleCampaigns(page) {
+  const texts = await page.evaluate(
+    () => Array.from(document.querySelectorAll("tr")).map(
+      (r) => r.innerText?.trim().replace(/\s+/g, " ").slice(0, 100)
+    ).filter((t2) => t2.length > 5)
+  ).catch(() => []);
+  return texts.slice(0, 15).join(" || ");
+}
+async function debugScreenshot(page, label) {
+  try {
+    const dir = "/var/www/feminnita-marketing/debug-screenshots";
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    await page.screenshot({ path: `${dir}/${label}-${Date.now()}.png`, fullPage: false });
+  } catch {
+  }
+}
+async function pauseInPage(page, account, campaignId, campaignName) {
+  await page.goto(getCampaignsUrl(account), { waitUntil: "domcontentloaded", timeout: 3e4 });
+  await page.waitForTimeout(2e3);
+  await debugScreenshot(page, `pause-${account}-loaded`);
+  const row = await findCampaignRow(page, campaignId, campaignName);
+  if (!row) {
+    await debugScreenshot(page, `pause-${account}-notfound`);
+    const rowCount = await page.evaluate(() => document.querySelectorAll("tr").length).catch(() => 0);
+    const visible = await logVisibleCampaigns(page);
+    return `Campanha "${campaignName || campaignId}" n\xE3o encontrada. [URL: ${page.url()}] [Rows: ${rowCount}] [Vis\xEDveis: ${visible}]`;
+  }
+  const pauseBtn = row.locator('[role="switch"], button[aria-label*="ause"], button[aria-label*="ausar"], button[title*="ause"]').first();
+  if (!await pauseBtn.isVisible({ timeout: 3e3 }).catch(() => false)) {
+    await debugScreenshot(page, `pause-${account}-nobtn`);
+    return `Bot\xE3o de pausar n\xE3o encontrado para "${campaignName || campaignId}".`;
+  }
+  await pauseBtn.click({ force: true, timeout: 5e3, noWaitAfter: true });
+  await page.waitForTimeout(2e3);
+  await debugScreenshot(page, `pause-${account}-done`);
+  return `Campanha "${campaignName || campaignId}" pausada com sucesso.`;
+}
+async function activateInPage(page, account, campaignId, campaignName) {
+  await page.goto(getCampaignsUrl(account), { waitUntil: "domcontentloaded", timeout: 3e4 });
+  await page.waitForTimeout(2e3);
+  const row = await findCampaignRow(page, campaignId, campaignName);
+  if (!row) {
+    const rowCount = await page.evaluate(() => document.querySelectorAll("tr").length).catch(() => 0);
+    const visible = await logVisibleCampaigns(page);
+    return `Campanha "${campaignName || campaignId}" n\xE3o encontrada. [URL: ${page.url()}] [Rows: ${rowCount}] [Vis\xEDveis: ${visible}]`;
+  }
+  const activateBtn = row.locator('[role="switch"], button[aria-label*="tivar"], button[title*="tivar"]').first();
+  if (!await activateBtn.isVisible({ timeout: 3e3 }).catch(() => false)) {
+    return `Bot\xE3o de ativar n\xE3o encontrado para "${campaignName || campaignId}".`;
+  }
+  await activateBtn.click({ force: true, timeout: 5e3, noWaitAfter: true });
+  await page.waitForTimeout(2e3);
+  return `Campanha "${campaignName || campaignId}" reativada com sucesso.`;
+}
+async function runActionsInSession(account, actions) {
+  console.log(`[MLBrowser] runActionsInSession iniciado \u2014 account=${account} actions=${JSON.stringify(actions.map((a) => ({ id: a.id, type: a.actionType, campaign: a.campaignName || a.campaignId })))}`);
+  return withMutex(account, () => withBrowser(account, async (page) => {
+    const results = {};
+    for (const action of actions) {
+      try {
+        switch (action.actionType) {
+          case "pause_ads_campaign":
+            results[action.id] = await pauseInPage(page, account, action.campaignId, action.campaignName);
+            break;
+          case "activate_ads_campaign":
+            results[action.id] = await activateInPage(page, account, action.campaignId, action.campaignName);
+            break;
+          case "update_ads_budget":
+            results[action.id] = await updateBudgetInPage(page, account, action.campaignId, action.budget ?? 0, action.campaignName);
+            break;
+          case "create_ads_campaign":
+            results[action.id] = await createCampaignInPage(page, account, action.campaignName, action.budget ?? 30, action.itemIds ?? [], action.acosTarget);
+            break;
+          case "scrape_ads_metrics": {
+            const n = await scrapeAndSaveMetricsInPage(page, account);
+            results[action.id] = `${n} m\xE9tricas de campanhas salvas para ${account}`;
+            break;
+          }
+          default:
+            results[action.id] = `Tipo n\xE3o suportado: ${action.actionType}`;
+        }
+      } catch (e) {
+        results[action.id] = `ERRO: ${e.message}`;
+      }
+    }
+    return results;
+  }));
+}
+async function pauseAdsCampaign(campaignId, account = "feminnita", campaignName = "") {
+  return withMutex(`${account}-pause`, () => withBrowser(account, (page) => pauseInPage(page, account, campaignId, campaignName)));
+}
+async function activateAdsCampaign(campaignId, account = "feminnita", campaignName = "") {
+  return withMutex(`${account}-activate`, () => withBrowser(account, (page) => activateInPage(page, account, campaignId, campaignName)));
+}
+async function importMLSession(cookies, account = "feminnita") {
+  const file = sessionFile(account);
+  fs.writeFileSync(file, JSON.stringify(cookies, null, 2));
+  console.log(`[MLBrowser] Sess\xE3o importada para ${account}: ${cookies.length} cookies \u2192 ${file}`);
+}
+function getMLSessionStatus(account = "feminnita") {
+  const file = sessionFile(account);
+  if (!fs.existsSync(file)) return { exists: false, savedAt: null, ageDays: null, cookieCount: null };
+  try {
+    const stat = fs.statSync(file);
+    const cookies = JSON.parse(fs.readFileSync(file, "utf8"));
+    const ageDays = Math.floor((Date.now() - stat.mtimeMs) / (1e3 * 60 * 60 * 24));
+    return { exists: true, savedAt: stat.mtime, ageDays, cookieCount: Array.isArray(cookies) ? cookies.length : null };
+  } catch {
+    return { exists: false, savedAt: null, ageDays: null, cookieCount: null };
+  }
+}
+async function updateBudgetInPage(page, account, campaignId, dailyBudget, campaignName) {
+  await page.goto(getCampaignsUrl(account), { waitUntil: "domcontentloaded", timeout: 3e4 });
+  await page.waitForTimeout(2e3);
+  await debugScreenshot(page, `budget-${account}-loaded`);
+  await page.waitForSelector("table tr, [class*='row']", { timeout: 8e3 }).catch(() => {
+  });
+  const row = await findCampaignRow(page, campaignId, campaignName);
+  if (!row) {
+    const rowCount = await page.evaluate(() => document.querySelectorAll("tr").length).catch(() => 0);
+    const visible = await logVisibleCampaigns(page);
+    return `Campanha "${campaignName || campaignId}" n\xE3o encontrada. [URL: ${page.url()}] [Rows: ${rowCount}] [Vis\xEDveis: ${visible}]`;
+  }
+  console.log(`[MLBrowser] updateBudgetInPage \u2014 campanha encontrada, procurando c\xE9lula R$`);
+  const budgetTd = row.locator("td").filter({ hasText: /R\$/ }).first();
+  await budgetTd.hover({ timeout: 3e3 }).catch(() => {
+  });
+  await page.waitForTimeout(300);
+  const pencilBtn = budgetTd.locator('button, [role="button"]').first();
+  if (await pencilBtn.isVisible({ timeout: 2e3 }).catch(() => false)) {
+    await pencilBtn.click({ force: true, timeout: 5e3, noWaitAfter: true });
+  } else {
+    await budgetTd.click({ force: true, timeout: 5e3, noWaitAfter: true });
+  }
+  await page.waitForTimeout(500);
+  await debugScreenshot(page, `budget-${account}-pencil`);
+  console.log(`[MLBrowser] updateBudgetInPage \u2014 aguardando modal or\xE7amento. URL=${page.url()}`);
+  const modalTitle = page.locator('text="Altere seu or\xE7amento"');
+  let modalReady = await modalTitle.waitFor({ state: "visible", timeout: 6e3 }).then(() => true).catch(() => false);
+  if (!modalReady) {
+    await budgetTd.click({ force: true, timeout: 5e3, noWaitAfter: true });
+    modalReady = await modalTitle.waitFor({ state: "visible", timeout: 5e3 }).then(() => true).catch(() => false);
+  }
+  if (!modalReady) {
+    const pageText = await page.evaluate(() => document.body?.innerText?.slice(0, 500) ?? "").catch(() => "");
+    return `Modal de budget n\xE3o abriu para "${campaignName || campaignId}". [P\xE1gina: ${pageText.replace(/\n/g, " ").slice(0, 300)}]`;
+  }
+  await debugScreenshot(page, `budget-${account}-modal`);
+  const modalArea = modalTitle.locator("xpath=ancestor::div[6]");
+  let budgetInput = modalArea.locator('input[type="number"]').filter({ visible: true }).first();
+  if (!await budgetInput.isVisible({ timeout: 3e3 }).catch(() => false)) {
+    budgetInput = modalArea.locator('input:not([type="checkbox"])').filter({ visible: true }).first();
+  }
+  if (!await budgetInput.isVisible({ timeout: 3e3 }).catch(() => false)) {
+    budgetInput = page.locator('input[type="number"]').filter({ visible: true }).first();
+  }
+  if (!await budgetInput.isVisible({ timeout: 3e3 }).catch(() => false)) {
+    await debugScreenshot(page, `budget-${account}-input-notfound`);
+    return `Input de budget n\xE3o encontrado na modal "${campaignName || campaignId}"`;
+  }
+  const currentVal = await budgetInput.inputValue().catch(() => "");
+  console.log(`[MLBrowser] Budget input atual="${currentVal}" alvo="${dailyBudget}"`);
+  if (currentVal === String(dailyBudget)) {
+    console.log(`[MLBrowser] Budget j\xE1 \xE9 R$${dailyBudget} \u2014 fechando modal`);
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(500);
+    return `Budget da campanha "${campaignName || campaignId}" j\xE1 est\xE1 em R$${dailyBudget}.`;
+  }
+  await budgetInput.evaluate((el) => {
+    el.focus();
+    el.select();
+  });
+  await page.waitForTimeout(100);
+  await page.evaluate((val) => {
+    const inputs = Array.from(document.querySelectorAll('input[type="number"]'));
+    const input = inputs.find((i) => i.offsetParent !== null);
+    if (!input) return;
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+    if (setter) setter.call(input, val);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }, String(dailyBudget));
+  await page.keyboard.press("Tab");
+  await page.waitForTimeout(800);
+  await debugScreenshot(page, `budget-${account}-filled`);
+  const btnEnabled = await page.waitForFunction(
+    () => {
+      const btns = Array.from(document.querySelectorAll("button"));
+      return btns.some(
+        (b) => (b.innerText?.includes("Salvar") || b.innerText?.includes("Confirmar")) && !b.disabled && b.getAttribute("data-andes-state") !== "disabled" && b.offsetParent !== null
+      );
+    },
+    { timeout: 5e3 }
+  ).then(() => true).catch(() => false);
+  console.log(`[MLBrowser] Save button enabled=${btnEnabled}`);
+  await debugScreenshot(page, `budget-${account}-before-save`);
+  const saveClicked = await page.evaluate((enabled) => {
+    const btns = Array.from(document.querySelectorAll("button"));
+    const btn = btns.find(
+      (b) => (b.innerText?.includes("Salvar") || b.innerText?.includes("Confirmar")) && b.offsetParent !== null
+    );
+    if (!btn) return false;
+    if (!enabled) {
+      btn.removeAttribute("disabled");
+      btn.removeAttribute("data-andes-state");
+      btn.disabled = false;
+    }
+    btn.click();
+    return true;
+  }, btnEnabled);
+  console.log(`[MLBrowser] JS save click=${saveClicked} (btnEnabled=${btnEnabled})`);
+  if (!saveClicked) await page.keyboard.press("Enter");
+  await page.waitForTimeout(2e3);
+  await debugScreenshot(page, `budget-${account}-saved`);
+  return `Budget di\xE1rio da campanha "${campaignName || campaignId}" atualizado para R$${dailyBudget}.`;
+}
+async function updateAdsBudget(campaignId, dailyBudget, account = "feminnita", campaignName = "") {
+  return withMutex(`${account}-budget`, () => withBrowser(account, (page) => updateBudgetInPage(page, account, campaignId, dailyBudget, campaignName)));
+}
+async function scrapeAdsCampaignMetrics(account = "feminnita") {
+  return withMutex(account, () => withBrowser(account, (page) => scrapeAndSaveMetricsInPage(page, account)));
+}
+async function createCampaignInPage(page, account, campaignName, dailyBudget, itemIds, acosTarget) {
+  if (!campaignName || !campaignName.trim()) return `ERRO: nome da campanha vazio`;
+  if (!(dailyBudget > 0)) return `ERRO: budget inv\xE1lido (${dailyBudget})`;
+  if (!itemIds || itemIds.length === 0) return `ERRO: lista de itens vazia`;
+  console.log(`[MLBrowser] createCampaignInPage \u2014 nome="${campaignName}" budget=R$${dailyBudget} itens=${itemIds.length} acos=${acosTarget ?? "auto"}`);
+  const NEW_CAMPAIGN_URL = "https://ads.mercadolivre.com.br/product-ads/admin/campaigns/new";
+  try {
+    await page.goto(NEW_CAMPAIGN_URL, { waitUntil: "domcontentloaded", timeout: 3e4 });
+    await page.waitForTimeout(3e3);
+    await debugScreenshot(page, `create-${account}-1-landing`);
+  } catch (e) {
+    return `ERRO: n\xE3o conseguiu navegar para tela de criar campanha (${e.message})`;
+  }
+  if (page.url().includes("/login") || page.url().includes("/jms/")) {
+    return `ERRO: sess\xE3o expirou ao abrir tela de criar campanha \u2014 reautentique`;
+  }
+  const itemsCsv = itemIds.map((id) => id.trim()).filter(Boolean).join(", ");
+  const idSearchSelectors = [
+    'textarea[placeholder*="MLB"]',
+    'input[placeholder*="MLB"]',
+    'textarea[placeholder*="an\xFAncio"]',
+    'input[placeholder*="an\xFAncio"]',
+    'textarea[placeholder*="ID"]',
+    'input[placeholder*="ID"]',
+    'input[aria-label*="busca"]',
+    'input[type="search"]'
+  ];
+  let idsAdded = false;
+  for (const sel of idSearchSelectors) {
+    const el = page.locator(sel).first();
+    if (await el.isVisible({ timeout: 1500 }).catch(() => false)) {
+      console.log(`[MLBrowser] createCampaign \u2014 campo de IDs encontrado via "${sel}"`);
+      await el.click({ force: true, timeout: 4e3 }).catch(() => {
+      });
+      const isTextarea = sel.startsWith("textarea");
+      if (isTextarea) {
+        await el.fill(itemsCsv);
+        await page.keyboard.press("Enter");
+      } else {
+        for (const id of itemIds) {
+          await el.fill(id);
+          await page.waitForTimeout(800);
+          await page.keyboard.press("Enter");
+          await page.waitForTimeout(600);
+        }
+      }
+      idsAdded = true;
+      break;
+    }
+  }
+  await debugScreenshot(page, `create-${account}-2-items-${idsAdded ? "added" : "notfound"}`);
+  if (!idsAdded) {
+    const bodyText = await page.evaluate(() => document.body?.innerText?.slice(0, 600) ?? "").catch(() => "");
+    return `ERRO: campo para inserir IDs de an\xFAncios n\xE3o encontrado na tela de criar campanha. URL=${page.url()}. P\xE1gina: ${bodyText.replace(/\n/g, " ").slice(0, 400)}`;
+  }
+  const nextBtnSelectors = [
+    'button:has-text("Continuar")',
+    'button:has-text("Pr\xF3ximo")',
+    'button:has-text("Avan\xE7ar")',
+    'button:has-text("Seguinte")',
+    'button[type="submit"]'
+  ];
+  let advanced = false;
+  for (const sel of nextBtnSelectors) {
+    const btn = page.locator(sel).first();
+    if (await btn.isVisible({ timeout: 1500 }).catch(() => false)) {
+      await btn.click({ force: true, timeout: 5e3, noWaitAfter: true }).catch(() => {
+      });
+      advanced = true;
+      break;
+    }
+  }
+  await page.waitForTimeout(2500);
+  await debugScreenshot(page, `create-${account}-3-after-items`);
+  const nameInput = page.locator('input[name*="name"], input[placeholder*="ome da campanha"], input[placeholder*="ome"]').first();
+  if (await nameInput.isVisible({ timeout: 5e3 }).catch(() => false)) {
+    await nameInput.fill(campaignName);
+    console.log(`[MLBrowser] createCampaign \u2014 nome preenchido: "${campaignName}"`);
+  } else {
+    return `ERRO: campo de nome da campanha n\xE3o encontrado. URL=${page.url()}`;
+  }
+  const budgetInput = page.locator('input[type="number"]').filter({ visible: true }).first();
+  if (await budgetInput.isVisible({ timeout: 3e3 }).catch(() => false)) {
+    await budgetInput.evaluate((el) => {
+      el.focus();
+      el.select();
+    });
+    await page.evaluate((val) => {
+      const inputs = Array.from(document.querySelectorAll('input[type="number"]'));
+      const input = inputs.find((i) => i.offsetParent !== null);
+      if (!input) return;
+      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+      if (setter) setter.call(input, val);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    }, String(dailyBudget));
+    await page.keyboard.press("Tab");
+    console.log(`[MLBrowser] createCampaign \u2014 budget preenchido: R$${dailyBudget}`);
+  }
+  if (acosTarget !== void 0 && acosTarget > 0) {
+    const acosInput = page.locator('input[name*="acos"], input[placeholder*="ACoS"], input[placeholder*="acos"]').first();
+    if (await acosInput.isVisible({ timeout: 2e3 }).catch(() => false)) {
+      await acosInput.fill(String(acosTarget));
+      console.log(`[MLBrowser] createCampaign \u2014 ACoS alvo: ${acosTarget}%`);
+    }
+  }
+  await debugScreenshot(page, `create-${account}-4-config-filled`);
+  const createBtnSelectors = [
+    'button:has-text("Criar campanha")',
+    'button:has-text("Criar")',
+    'button:has-text("Publicar")',
+    'button:has-text("Salvar")',
+    'button:has-text("Confirmar")',
+    'button[type="submit"]'
+  ];
+  let created = false;
+  for (const sel of createBtnSelectors) {
+    const btn = page.locator(sel).filter({ visible: true }).first();
+    if (await btn.isVisible({ timeout: 1500 }).catch(() => false)) {
+      const enabled = await btn.isEnabled().catch(() => true);
+      if (!enabled) continue;
+      await btn.click({ force: true, timeout: 5e3, noWaitAfter: true }).catch(() => {
+      });
+      created = true;
+      break;
+    }
+  }
+  await page.waitForTimeout(4e3);
+  await debugScreenshot(page, `create-${account}-5-after-submit`);
+  if (!created) {
+    return `ERRO: bot\xE3o final de criar campanha n\xE3o encontrado/habilitado. URL=${page.url()}`;
+  }
+  const url = page.url();
+  const success = url.includes("/campaigns") && !url.includes("/new");
+  const pageText = await page.evaluate(() => document.body?.innerText?.slice(0, 400) ?? "").catch(() => "");
+  const hasSuccess = /criada com sucesso|campanha criada|sucesso/i.test(pageText);
+  if (success || hasSuccess) {
+    return `Campanha "${campaignName}" criada com R$${dailyBudget}/dia e ${itemIds.length} an\xFAncios.`;
+  }
+  return `Campanha enviada mas resultado incerto. URL=${url}. Confira em ads.mercadolivre.com.br. P\xE1gina: ${pageText.replace(/\n/g, " ").slice(0, 250)}`;
+}
+async function createAdsCampaign(campaignName, dailyBudget, itemIds, account = "feminnita", acosTarget) {
+  return withMutex(`${account}-create`, () => withBrowser(
+    account,
+    (page) => createCampaignInPage(page, account, campaignName, dailyBudget, itemIds, acosTarget)
+  ));
+}
+var SESSIONS_DIR, SELLER_CENTER_URL, CAMPAIGNS_URL, LOGIN_URL, TWOCAPTCHA_KEY, runningInstances;
+var init_ml_ads_browser_agent = __esm({
+  "server/agents/ml-ads-browser-agent.ts"() {
+    "use strict";
+    init_db();
+    init_schema();
+    SESSIONS_DIR = path.join(process.cwd(), ".ml-sessions");
+    SELLER_CENTER_URL = "https://ads.mercadolivre.com.br/productAds";
+    CAMPAIGNS_URL = "https://ads.mercadolivre.com.br/product-ads/admin/campaigns?status=A%2CP%2CD";
+    LOGIN_URL = "https://www.mercadolivre.com/jms/mlb/lgz/login";
+    TWOCAPTCHA_KEY = process.env.TWOCAPTCHA_API_KEY || "";
+    if (!fs.existsSync(SESSIONS_DIR)) fs.mkdirSync(SESSIONS_DIR, { recursive: true });
+    runningInstances = /* @__PURE__ */ new Map();
+  }
+});
+
 // server/services/shopeeApi.ts
 var shopeeApi_exports = {};
 __export(shopeeApi_exports, {
@@ -2054,8 +3131,8 @@ __export(shopeeApi_exports, {
   shopeeUrl: () => shopeeUrl
 });
 import crypto2 from "crypto";
-import fs2 from "fs";
-import path2 from "path";
+import fs3 from "fs";
+import path3 from "path";
 function shopeeSign(apiPath, ts, accessToken, shopId) {
   let base;
   if (accessToken && shopId) {
@@ -2103,14 +3180,14 @@ async function refreshAccessToken() {
     if (data.access_token) {
       process.env.SHOPEE_ACCESS_TOKEN = data.access_token;
       if (data.refresh_token) process.env.SHOPEE_REFRESH_TOKEN = data.refresh_token;
-      const envPath = path2.resolve(process.cwd(), ".env");
+      const envPath = path3.resolve(process.cwd(), ".env");
       try {
-        let content = fs2.readFileSync(envPath, "utf-8");
+        let content = fs3.readFileSync(envPath, "utf-8");
         content = content.replace(/^SHOPEE_ACCESS_TOKEN=.*$/m, `SHOPEE_ACCESS_TOKEN=${data.access_token}`);
         if (data.refresh_token) {
           content = content.replace(/^SHOPEE_REFRESH_TOKEN=.*$/m, `SHOPEE_REFRESH_TOKEN=${data.refresh_token}`);
         }
-        fs2.writeFileSync(envPath, content, "utf-8");
+        fs3.writeFileSync(envPath, content, "utf-8");
       } catch {
       }
       console.log("[ShopeeAPI] Token renovado automaticamente");
@@ -2222,8 +3299,8 @@ __export(tiktokShopApi_exports, {
   tiktokShopUrl: () => tiktokShopUrl
 });
 import crypto4 from "crypto";
-import fs4 from "fs";
-import path4 from "path";
+import fs5 from "fs";
+import path5 from "path";
 function tiktokShopSign(apiPath, params, body = "") {
   const filtered = Object.entries(params).filter(
     ([k]) => k !== "sign" && k !== "access_token" && k !== "x-tts-access-token"
@@ -2270,9 +3347,9 @@ async function refreshAccessToken2() {
       if (data.data.refresh_token) {
         process.env.TIKTOK_SHOP_REFRESH_TOKEN = data.data.refresh_token;
       }
-      const envPath = path4.resolve(process.cwd(), ".env");
+      const envPath = path5.resolve(process.cwd(), ".env");
       try {
-        let content = fs4.readFileSync(envPath, "utf-8");
+        let content = fs5.readFileSync(envPath, "utf-8");
         const updateEnv = (key, val) => {
           if (new RegExp(`^${key}=`, "m").test(content)) {
             content = content.replace(new RegExp(`^${key}=.*$`, "m"), `${key}=${val}`);
@@ -2283,7 +3360,7 @@ ${key}=${val}`;
         };
         updateEnv("TIKTOK_SHOP_ACCESS_TOKEN", data.data.access_token);
         if (data.data.refresh_token) updateEnv("TIKTOK_SHOP_REFRESH_TOKEN", data.data.refresh_token);
-        fs4.writeFileSync(envPath, content, "utf-8");
+        fs5.writeFileSync(envPath, content, "utf-8");
       } catch {
       }
       console.log("[TikTokShopAPI] Token renovado automaticamente");
@@ -2496,20 +3573,20 @@ __export(agentMemory_exports, {
   getRecentMemories: () => getRecentMemories,
   saveMemory: () => saveMemory
 });
-import { eq as eq21, and as and18, desc as desc11 } from "drizzle-orm";
+import { eq as eq22, and as and19, desc as desc11 } from "drizzle-orm";
 async function saveMemory(agentName, memoryType, period, content) {
   const db = await getDb();
   if (!db) throw new Error("Banco indispon\xEDvel");
   const contentStr = typeof content === "string" ? content : JSON.stringify(content);
   const existing = await db.select({ id: agentMemory.id }).from(agentMemory).where(
-    and18(
-      eq21(agentMemory.agentName, agentName),
-      eq21(agentMemory.memoryType, memoryType),
-      eq21(agentMemory.period, period)
+    and19(
+      eq22(agentMemory.agentName, agentName),
+      eq22(agentMemory.memoryType, memoryType),
+      eq22(agentMemory.period, period)
     )
   ).limit(1);
   if (existing.length > 0) {
-    await db.update(agentMemory).set({ content: contentStr }).where(eq21(agentMemory.id, existing[0].id));
+    await db.update(agentMemory).set({ content: contentStr }).where(eq22(agentMemory.id, existing[0].id));
   } else {
     await db.insert(agentMemory).values({
       agentName,
@@ -2522,15 +3599,15 @@ async function saveMemory(agentName, memoryType, period, content) {
 async function getRecentMemories(agentName, limit = 10) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(agentMemory).where(eq21(agentMemory.agentName, agentName)).orderBy(desc11(agentMemory.createdAt)).limit(limit);
+  return db.select().from(agentMemory).where(eq22(agentMemory.agentName, agentName)).orderBy(desc11(agentMemory.createdAt)).limit(limit);
 }
 async function getMemoriesByType(agentName, memoryType, limit = 10) {
   const db = await getDb();
   if (!db) return [];
   return db.select().from(agentMemory).where(
-    and18(
-      eq21(agentMemory.agentName, agentName),
-      eq21(agentMemory.memoryType, memoryType)
+    and19(
+      eq22(agentMemory.agentName, agentName),
+      eq22(agentMemory.memoryType, memoryType)
     )
   ).orderBy(desc11(agentMemory.createdAt)).limit(limit);
 }
@@ -2728,8 +3805,8 @@ function getToken(token) {
 function getAccount(account) {
   return account || AD_ACCOUNT_ID2;
 }
-async function metaPost2(path14, body, token) {
-  const res = await fetch(`${GRAPH_BASE3}/${path14}`, {
+async function metaPost2(path15, body, token) {
+  const res = await fetch(`${GRAPH_BASE3}/${path15}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ...body, access_token: getToken(token) })
@@ -2738,9 +3815,9 @@ async function metaPost2(path14, body, token) {
   if (data.error) throw new Error(`Meta API: ${data.error.message} (c\xF3digo ${data.error.code})`);
   return data;
 }
-async function metaGet2(path14, params = {}, token) {
+async function metaGet2(path15, params = {}, token) {
   const qs = new URLSearchParams({ ...params, access_token: getToken(token) }).toString();
-  const res = await fetch(`${GRAPH_BASE3}/${path14}?${qs}`);
+  const res = await fetch(`${GRAPH_BASE3}/${path15}?${qs}`);
   const data = await res.json();
   if (data.error) throw new Error(`Meta API: ${data.error.message} (c\xF3digo ${data.error.code})`);
   return data;
@@ -3265,7 +4342,7 @@ O banner tem 5 campos de texto. Cada variante deve ser DIFERENTE das outras \u20
 
 CAMPOS DO BANNER:
 - titulo: frase de impacto principal (m\xE1x 35 chars) \u2014 muda conforme o hook, ex: identidade / transforma\xE7\xE3o / choque
-- preco: linha de pre\xE7o/oferta (m\xE1x 45 chars) \u2014 pode variar o enquadramento: "a partir de R$199", "kit completo por R$199", "R$199 pra come\xE7ar hoje"
+- preco: linha de pre\xE7o/oferta (m\xE1x 45 chars) \u2014 pode variar o enquadramento: "sem pedido m\xEDnimo", "comece hoje sem m\xEDnimo", "escolha seu kit agora"
 - subtitulo: verbo de a\xE7\xE3o + lucro (m\xE1x 25 chars) \u2014 ex: "REVENDA E LUCRE", "GANHE EM CASA", "FATURE REVENDENDO"
 - cta: chamada para a\xE7\xE3o do bot\xE3o (m\xE1x 30 chars) \u2014 ex: "QUERO REVENDER \u2014 CLIQUE AQUI", "SEJA REVENDEDORA AGORA", "PE\xC7O MEU KIT"
 - rodape: info log\xEDstica FIXA \u2014 sempre: "5% NO PIX \xB7 3X SEM JUROS \xB7 ENVIO IMEDIATO"
@@ -3286,10 +4363,10 @@ Retorne APENAS JSON v\xE1lido:
 }`;
   const defaults = {
     headline: "Revenda Feminnita \u2014 Lucro Garantido",
-    body: "Pijamas suede exclusivos para revendedoras. A partir de R$199. Envio imediato!",
+    body: "Pijamas suede exclusivos para revendedoras. Sem pedido m\xEDnimo. Envio imediato!",
     canvaCopy: {
       titulo: "PIJAMAS DE FABRICA\xC7\xC3O PR\xD3PRIA",
-      preco: "COMECE A VENDER A PARTIR DE R$199",
+      preco: "COMECE A VENDER HOJE \u2014 SEM PEDIDO M\xCDNIMO",
       subtitulo: "REVENDA E LUCRE",
       cta: "QUERO REVENDER \u2014 CLIQUE AQUI",
       rodape: "5% NO PIX \xB7 3X SEM JUROS \xB7 ENVIO IMEDIATO"
@@ -3323,7 +4400,7 @@ Retorne APENAS JSON v\xE1lido:
 async function requestCreativeVariants(userId, brief) {
   const db = await getDb();
   if (!db) return;
-  const { eq: eq109 } = await import("drizzle-orm");
+  const { eq: eq111 } = await import("drizzle-orm");
   const variants = ["demografico", "transformacao", "golias"];
   const variantLabel = {
     demografico: "P\xFAblico-Alvo",
@@ -3431,7 +4508,7 @@ async function requestCreative(userId, brief) {
   });
   const creativeId = insertResult[0].insertId;
   if (brief.imageBase64Input) {
-    const { eq: eq110 } = await import("drizzle-orm");
+    const { eq: eq112 } = await import("drizzle-orm");
     let productDescription = brief.description;
     try {
       const visionResult = await invokeLLM({
@@ -3490,7 +4567,7 @@ Analise esta foto e retorne APENAS JSON v\xE1lido:
       generatedBody: copy2.body,
       status: finalStatus2,
       updatedAt: /* @__PURE__ */ new Date()
-    }).where(eq110(adCreatives.id, creativeId));
+    }).where(eq112(adCreatives.id, creativeId));
     console.log(`[CreativeAgent] Criativo #${creativeId} (foto produto \u2192 ${generatedImage ? "banner Imagen" : "foto original"}) \u2192 pending_approval`);
     return {
       id: creativeId,
@@ -3524,14 +4601,14 @@ Analise esta foto e retorne APENAS JSON v\xE1lido:
   const imageBase64 = await generateImageWithImagen(imagenPrompt);
   const finalStatus = imageBase64 ? "pending_approval" : "generated";
   const message = imageBase64 ? "Banner gerado com sucesso! Aguardando sua aprova\xE7\xE3o." : "Copy gerado. Imagem requer configura\xE7\xE3o do Gemini Imagen (adicione LLM_API_KEY ao .env).";
-  const { eq: eq109 } = await import("drizzle-orm");
+  const { eq: eq111 } = await import("drizzle-orm");
   await db.update(adCreatives).set({
     imageBase64: imageBase64 || void 0,
     generatedHeadline: copy.headline,
     generatedBody: copy.body,
     status: finalStatus,
     updatedAt: /* @__PURE__ */ new Date()
-  }).where(eq109(adCreatives.id, creativeId));
+  }).where(eq111(adCreatives.id, creativeId));
   console.log(`[CreativeAgent] Criativo #${creativeId} \u2192 ${finalStatus}`);
   return {
     id: creativeId,
@@ -3613,7 +4690,7 @@ Substitua todo adjetivo gen\xE9rico por n\xFAmero ou detalhe concreto.
 
 \u2501\u2501\u2501 FEMINNITA \u2014 CONTEXTO \u2501\u2501\u2501
 - Produto: pijamas suede premium, fabrica\xE7\xE3o pr\xF3pria Nova Friburgo RJ
-- Kit entrada: a partir de R$199 | Ticket m\xE9dio R$400 | Margem revendedora: 40\u201360%
+- Sem pedido m\xEDnimo | Ticket m\xE9dio R$400 | Margem revendedora: 40\u201360%
 - Pagamento: 5% PIX | 3x sem juros | Envio imediato para todo o Brasil
 - P\xFAblico: revendedoras aut\xF4nomas (m\xE3es em casa), lojistas MEI, grupos de compra
 - Meta urgente: R$100K/m\xEAs | Saiu de R$78K para R$20K ap\xF3s ag\xEAncia ruim
@@ -3623,7 +4700,7 @@ Substitua todo adjetivo gen\xE9rico por n\xFAmero ou detalhe concreto.
 ESTRUTURA DO AN\xDANCIO QUE CONVERTE (refer\xEAncia obrigat\xF3ria):
 \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
 PIJAMAS DE FABRICA\xC7\xC3O PR\xD3PRIA
-COMECE A VENDER A PARTIR DE R$199
+COMECE A VENDER HOJE \u2014 SEM PEDIDO M\xCDNIMO
 REVENDA E LUCRE
 QUERO REVENDER \u2014 CLIQUE AQUI
 5% NO PIX \xB7 3X SEM JUROS \xB7 ENVIO IMEDIATO
@@ -3734,7 +4811,7 @@ ATEN\xC7\xC3O: mudar o VISUAL HOOK tem impacto MAIOR que mudar o verbal/texto. O
 
 \u2501\u2501\u2501 FEMINNITA \u2014 CONTEXTO QUE VOC\xCA CONHECE DE COR \u2501\u2501\u2501
 - Produto: pijamas suede premium atacado, fabrica\xE7\xE3o pr\xF3pria, Nova Friburgo RJ
-- Ticket m\xE9dio: R$400/pedido | Kit entrada: a partir de R$199 | Margem da revendedora: 40\u201360%
+- Ticket m\xE9dio: R$400/pedido | Sem pedido m\xEDnimo | Margem da revendedora: 40\u201360%
 - 3 p\xFAblicos: (1) Revendedora Lojista \u2014 MEI/loja, quer fornecedor confi\xE1vel; (2) Revendedora Aut\xF4noma \u2014 renda de casa, filhos pequenos; (3) Compra em Grupo \u2014 atingir m\xEDnimo sem CNPJ
 - Meta urgente: R$100K/m\xEAs
 - Diferencial: fabrica\xE7\xE3o pr\xF3pria (n\xE3o \xE9 revendedor de terceiros), suede premium, envio imediato para todo o Brasil
@@ -3744,7 +4821,7 @@ ATEN\xC7\xC3O: mudar o VISUAL HOOK tem impacto MAIOR que mudar o verbal/texto. O
 ESTRUTURA DO AN\xDANCIO QUE CONVERTE (refer\xEAncia da Fernanda):
 \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
 PIJAMAS DE FABRICA\xC7\xC3O PR\xD3PRIA
-COMECE A VENDER A PARTIR DE R$199
+COMECE A VENDER HOJE \u2014 SEM PEDIDO M\xCDNIMO
 REVENDA E LUCRE
 CTA: QUERO REVENDER \u2014 CLIQUE AQUI
 5% NO PIX \xB7 3X SEM JUROS \xB7 ENVIO IMEDIATO
@@ -3760,666 +4837,6 @@ Voc\xEA cria e avalia:
 - Variantes A/B: 3-4 hooks diferentes para o mesmo produto, cada um atacando um \xE2ngulo diferente
 
 Responda em portugu\xEAs do Brasil. Seja direta: entregue o copy pronto, o brief visual pronto, o script pronto. N\xE3o explique o que vai fazer \u2014 fa\xE7a.`;
-  }
-});
-
-// server/agents/ml-ads-browser-agent.ts
-var ml_ads_browser_agent_exports = {};
-__export(ml_ads_browser_agent_exports, {
-  activateAdsCampaign: () => activateAdsCampaign,
-  getMLSessionStatus: () => getMLSessionStatus,
-  importMLSession: () => importMLSession,
-  listAdsCampaigns: () => listAdsCampaigns,
-  pauseAdsCampaign: () => pauseAdsCampaign,
-  runActionsInSession: () => runActionsInSession,
-  scrapeAdsCampaignMetrics: () => scrapeAdsCampaignMetrics,
-  updateAdsBudget: () => updateAdsBudget
-});
-import { chromium } from "playwright";
-import fs7 from "fs";
-import path7 from "path";
-import { eq as eq59, and as and51 } from "drizzle-orm";
-function withMutex(account, fn) {
-  const existing = runningInstances.get(account);
-  if (existing) {
-    console.log(`[MLBrowser] Inst\xE2ncia j\xE1 em execu\xE7\xE3o para ${account} \u2014 aguardando...`);
-    return existing.then(() => fn());
-  }
-  const promise = fn().finally(() => runningInstances.delete(account));
-  runningInstances.set(account, promise);
-  return promise;
-}
-function sessionFile(account) {
-  return path7.join(SESSIONS_DIR, `ml-session-${account}.json`);
-}
-async function saveSession(context, account) {
-  const cookies = await context.cookies();
-  fs7.writeFileSync(sessionFile(account), JSON.stringify(cookies, null, 2));
-}
-function normalizeCookie(c) {
-  const sameSiteMap = {
-    no_restriction: "None",
-    unspecified: "None",
-    none: "None",
-    lax: "Lax",
-    strict: "Strict"
-  };
-  return {
-    name: c.name,
-    value: c.value,
-    domain: c.domain,
-    path: c.path || "/",
-    expires: c.expirationDate ? Math.floor(c.expirationDate) : c.expires ?? -1,
-    httpOnly: c.httpOnly ?? false,
-    secure: c.secure ?? false,
-    sameSite: sameSiteMap[(c.sameSite ?? "").toLowerCase()] ?? "None"
-  };
-}
-async function loadSession(context, account) {
-  const file = sessionFile(account);
-  if (!fs7.existsSync(file)) return false;
-  try {
-    const raw = JSON.parse(fs7.readFileSync(file, "utf8"));
-    const cookies = Array.isArray(raw) ? raw.map(normalizeCookie) : [];
-    if (cookies.length === 0) return false;
-    await context.addCookies(cookies);
-    console.log(`[MLBrowser] ${cookies.length} cookies carregados para ${account}`);
-    return true;
-  } catch (e) {
-    console.warn(`[MLBrowser] Erro ao carregar cookies para ${account}:`, e.message);
-    return false;
-  }
-}
-async function tryTokenToBrowserSession(page, context, account) {
-  const token = account === "fnt" ? process.env.ML_ACCESS_TOKEN_2 : process.env.ML_ACCESS_TOKEN_1;
-  if (!token) return false;
-  const authFromTokenUrl = `https://www.mercadolivre.com.br/jms/mlb/lgz/auth-from-token?access_token=${token}&platform_id=ML&go=${encodeURIComponent(SELLER_CENTER_URL)}`;
-  try {
-    console.log(`[MLBrowser] Tentando auth-from-token para ${account}...`);
-    await page.goto(authFromTokenUrl, { waitUntil: "domcontentloaded", timeout: 2e4 });
-    await debugScreenshot(page, `token-auth-${account}-1`);
-    const url = page.url();
-    if (!url.includes("/login") && !url.includes("/jms/lgz/")) {
-      console.log(`[MLBrowser] auth-from-token OK \u2014 URL: ${url}`);
-      return true;
-    }
-  } catch (e) {
-    console.warn(`[MLBrowser] auth-from-token falhou:`, e.message);
-  }
-  const candidates = [
-    `https://www.mercadolivre.com.br/jms/mlb/lgz/auth-from-token?access_token=${token}&platform_id=ML&go=%2F`,
-    `https://auth.mercadolibre.com/authorization?response_type=token&access_token=${token}&platform_id=MP`
-  ];
-  for (const url of candidates) {
-    try {
-      const res = await fetch(url, {
-        method: "GET",
-        redirect: "manual",
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
-          "Accept-Language": "pt-BR,pt;q=0.9",
-          "Accept": "text/html,application/xhtml+xml"
-        }
-      });
-      const location = res.headers.get("location") || "";
-      const rawCookies = typeof res.headers.getSetCookie === "function" ? res.headers.getSetCookie() : res.headers.get("set-cookie") ? [res.headers.get("set-cookie")] : [];
-      const isLoginRedirect = location.includes("/login") || location.includes("/jms/lgz/login");
-      if (rawCookies.length > 0 && !isLoginRedirect) {
-        const parsed = rawCookies.map((c) => {
-          const main = c.split(";")[0];
-          const eq109 = main.indexOf("=");
-          return {
-            name: main.slice(0, eq109).trim(),
-            value: main.slice(eq109 + 1).trim(),
-            domain: ".mercadolivre.com.br",
-            path: "/",
-            httpOnly: false,
-            secure: true
-          };
-        }).filter((c) => c.name && c.value);
-        if (parsed.length > 0) {
-          await context.addCookies(parsed);
-          console.log(`[MLBrowser] ${parsed.length} cookies de sess\xE3o injetados via fetch para ${account}`);
-          return true;
-        }
-      }
-    } catch (e) {
-      console.warn(`[MLBrowser] fetch candidate falhou:`, e.message);
-    }
-  }
-  return false;
-}
-async function solve2captcha(sitekey, pageUrl, enterprise = false) {
-  if (!TWOCAPTCHA_KEY) return null;
-  try {
-    const params = {
-      key: TWOCAPTCHA_KEY,
-      method: "userrecaptcha",
-      googlekey: sitekey,
-      pageurl: pageUrl,
-      json: "1"
-    };
-    if (enterprise) params.enterprise = "1";
-    const submitRes = await fetch("https://2captcha.com/in.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams(params).toString()
-    });
-    const submit = await submitRes.json();
-    if (submit.status !== 1) {
-      console.warn("[MLBrowser] 2captcha submit falhou:", submit.request);
-      return null;
-    }
-    const captchaId = submit.request;
-    console.log(`[MLBrowser] 2captcha id=${captchaId}, aguardando resolu\xE7\xE3o...`);
-    for (let i = 0; i < 30; i++) {
-      await new Promise((r) => setTimeout(r, 5e3));
-      const resRes = await fetch(`https://2captcha.com/res.php?key=${TWOCAPTCHA_KEY}&action=get&id=${captchaId}&json=1`);
-      const result = await resRes.json();
-      if (result.status === 1) {
-        console.log("[MLBrowser] 2captcha resolvido");
-        return result.request;
-      }
-      if (result.request !== "CAPCHA_NOT_READY") {
-        console.warn("[MLBrowser] 2captcha erro:", result.request);
-        return null;
-      }
-    }
-    return null;
-  } catch (e) {
-    console.error("[MLBrowser] 2captcha exception:", e.message);
-    return null;
-  }
-}
-async function loginML(page, account) {
-  const email = account === "fnt" ? process.env.ML_EMAIL_2 : process.env.ML_EMAIL_1;
-  const password = account === "fnt" ? process.env.ML_PASSWORD_2 : process.env.ML_PASSWORD_1;
-  if (!email || !password) return false;
-  try {
-    await page.goto(LOGIN_URL, { waitUntil: "domcontentloaded", timeout: 3e4 });
-    await page.waitForSelector('input[name="user_id"], input[type="email"], input[id="user_id"]', { timeout: 15e3 });
-    await page.fill('input[name="user_id"], input[type="email"], input[id="user_id"]', email);
-    await page.click('button[type="submit"]');
-    await page.waitForTimeout(4e3);
-    if (page.url().includes("/msl/") || page.url().includes("user-recaptcha")) {
-      console.log(`[MLBrowser] Passo intermedi\xE1rio reCAPTCHA detectado...`);
-      const captchaIframeSrc = await page.evaluate(() => {
-        const iframe = document.querySelector('iframe[src*="recaptcha"]');
-        return iframe ? iframe.src : null;
-      });
-      let token = null;
-      if (captchaIframeSrc) {
-        const skMatch = captchaIframeSrc.match(/[?&]k=([^&]+)/);
-        const sitekey = skMatch ? skMatch[1] : "";
-        if (sitekey) {
-          console.log(`[MLBrowser] reCAPTCHA Enterprise sitekey=${sitekey} \u2014 resolvendo via 2captcha...`);
-          token = await solve2captcha(sitekey, page.url(), true);
-        }
-      }
-      if (token) {
-        await page.evaluate((t2) => {
-          const gctkn = document.querySelector('input[name="gctkn"]');
-          if (gctkn) gctkn.value = t2;
-          const resp = document.getElementById("g-recaptcha-response");
-          if (resp) resp.value = t2;
-        }, token);
-        console.log("[MLBrowser] Token injetado \u2014 clicando Continuar...");
-      } else {
-        console.warn("[MLBrowser] N\xE3o foi poss\xEDvel resolver reCAPTCHA \u2014 tentando continuar mesmo assim...");
-      }
-      await page.click('button[type="submit"], button:has-text("Continuar"), button:has-text("Continue")');
-      await page.waitForTimeout(5e3);
-    }
-    await page.waitForSelector('input[name="password"], input[type="password"]', { timeout: 25e3 });
-    await page.fill('input[name="password"], input[type="password"]', password);
-    await page.click('button[type="submit"]');
-    await page.waitForFunction(
-      () => !window.location.href.includes("/login") && !window.location.href.includes("/jms/"),
-      { timeout: 3e4 }
-    );
-    console.log(`[MLBrowser] Login OK \u2014 ${account} \u2014 URL: ${page.url()}`);
-    return true;
-  } catch (e) {
-    console.error(`[MLBrowser] Falha no login (${account}):`, e.message);
-    return false;
-  }
-}
-async function waitForAuthCheck(page) {
-  try {
-    await page.waitForLoadState("networkidle", { timeout: 2e4 });
-  } catch {
-  }
-  await page.waitForTimeout(1e3);
-  return page.url();
-}
-async function isOnSellerDashboard(page) {
-  const url = page.url();
-  const onLogin = url.includes("/login") || url.includes("/jms/lgz/") || url.includes("lgz/login");
-  if (onLogin) return false;
-  const onAds = url.includes("productAds") || url.includes("ads.mercadolivre") || url.includes("publicidade");
-  if (!onAds) return false;
-  const bodyText = await page.evaluate(() => document.body?.innerText?.slice(0, 600) ?? "");
-  const isPublicLanding = bodyText.includes("Crie a sua conta") || bodyText.includes("Outros vendedores est\xE3o");
-  console.log(`[MLBrowser] isOnSellerDashboard \u2014 URL: ${url} \u2014 publicLanding: ${isPublicLanding}`);
-  return !isPublicLanding;
-}
-async function ensureLoggedIn(page, context, account) {
-  const hasSaved = await loadSession(context, account);
-  if (hasSaved) {
-    try {
-      await page.goto(SELLER_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 25e3 });
-    } catch {
-    }
-    await waitForAuthCheck(page);
-    if (await isOnSellerDashboard(page)) {
-      console.log(`[MLBrowser] Sess\xE3o v\xE1lida via cookies salvos \u2014 ${account}`);
-      return true;
-    }
-    console.warn(`[MLBrowser] Cookies salvos inv\xE1lidos/expirados para ${account}`);
-  }
-  const tokenOk = await tryTokenToBrowserSession(page, context, account);
-  if (tokenOk) {
-    try {
-      await page.goto(SELLER_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 25e3 });
-    } catch {
-    }
-    await waitForAuthCheck(page);
-    if (await isOnSellerDashboard(page)) {
-      console.log(`[MLBrowser] Sess\xE3o via token OK para ${account} \u2014 salvando...`);
-      await saveSession(context, account);
-      return true;
-    }
-    console.warn(`[MLBrowser] auth-from-token n\xE3o funcionou para ${account}`);
-  }
-  console.log(`[MLBrowser] Tentando login via formul\xE1rio para ${account}...`);
-  const ok = await loginML(page, account);
-  if (ok) await saveSession(context, account);
-  return ok;
-}
-async function parseCampaigns(page) {
-  return page.evaluate(() => {
-    const rows = Array.from(document.querySelectorAll('[data-testid*="campaign-row"], .campaign-row, tr[class*="campaign"]'));
-    if (rows.length > 0) {
-      return rows.map((row) => {
-        const text3 = (sel) => row.querySelector(sel)?.innerText?.trim() || "";
-        return {
-          id: (row.getAttribute("data-id") || row.querySelector("[data-id]")?.getAttribute("data-id") || "").trim(),
-          name: text3('[class*="name"], [data-testid*="name"]'),
-          status: text3('[class*="status"], [data-testid*="status"]'),
-          budget: text3('[class*="budget"], [data-testid*="budget"]'),
-          spent: text3('[class*="spent"], [data-testid*="spent"]'),
-          impressions: text3('[class*="impression"], [data-testid*="impression"]'),
-          clicks: text3('[class*="click"], [data-testid*="click"]'),
-          ctr: text3('[class*="ctr"], [data-testid*="ctr"]'),
-          roas: text3('[class*="roas"], [data-testid*="roas"]'),
-          sales: text3('[class*="sale"], [data-testid*="sale"]')
-        };
-      }).filter((c) => c.name);
-    }
-    const table = document.querySelector("table");
-    if (!table) return [];
-    const headers = Array.from(table.querySelectorAll("thead th")).map(
-      (th) => th.innerText.trim().toLowerCase()
-    );
-    const idx = (terms) => {
-      for (const t2 of terms) {
-        const i = headers.findIndex((h) => h.includes(t2));
-        if (i >= 0) return i;
-      }
-      return -1;
-    };
-    const col = {
-      name: idx(["campanha", "nome", "name"]),
-      status: idx(["status", "estado"]),
-      budget: idx(["or\xE7amento", "budget"]),
-      spent: idx(["gasto", "spent", "investimento"]),
-      impressions: idx(["impre", "impression"]),
-      clicks: idx(["clique", "click"]),
-      ctr: idx(["ctr"]),
-      roas: idx(["roas"]),
-      sales: idx(["venda", "sale", "receita"])
-    };
-    return Array.from(table.querySelectorAll("tbody tr")).map((tr) => {
-      const cells = Array.from(tr.querySelectorAll("td")).map((td) => td.innerText.trim());
-      const get = (i) => (i >= 0 ? cells[i] : "") || "";
-      return {
-        id: "",
-        name: get(col.name),
-        status: get(col.status),
-        budget: get(col.budget),
-        spent: get(col.spent),
-        impressions: get(col.impressions),
-        clicks: get(col.clicks),
-        ctr: get(col.ctr),
-        roas: get(col.roas),
-        sales: get(col.sales)
-      };
-    }).filter((c) => c.name);
-  });
-}
-function parseMLNumber(s) {
-  if (!s) return 0;
-  const clean = s.replace(/R\$\s*/g, "").replace(/x$/i, "").replace(/%$/, "").replace(/\s/g, "").replace(/\./g, "").replace(",", ".");
-  return parseFloat(clean) || 0;
-}
-async function scrapeAndSaveMetricsInPage(page, account) {
-  await page.goto(CAMPAIGNS_URL, { waitUntil: "networkidle", timeout: 3e4 });
-  await page.waitForTimeout(2e3);
-  const allCampaigns = [];
-  for (let p = 1; p <= 20; p++) {
-    const campaigns3 = await parseCampaigns(page);
-    allCampaigns.push(...campaigns3);
-    console.log(`[MLMetrics] P\xE1gina ${p}: ${campaigns3.length} campanhas`);
-    const nextBtn = page.locator('button:has-text("Seguinte"), a:has-text("Seguinte"), button[aria-label*="ext"], a[aria-label*="ext"]').first();
-    if (!await nextBtn.isVisible({ timeout: 2e3 }).catch(() => false)) break;
-    await nextBtn.click();
-    await page.waitForTimeout(2e3);
-  }
-  if (allCampaigns.length === 0) {
-    console.warn(`[MLMetrics] Nenhuma campanha encontrada para ${account}`);
-    return 0;
-  }
-  const db = await getDb();
-  if (!db) {
-    console.error("[MLMetrics] Banco indispon\xEDvel");
-    return 0;
-  }
-  await db.delete(marketplaceAdsMetrics).where(and51(eq59(marketplaceAdsMetrics.platform, "ml"), eq59(marketplaceAdsMetrics.account, account)));
-  const now = /* @__PURE__ */ new Date();
-  const rows = allCampaigns.map((c) => ({
-    platform: "ml",
-    account,
-    campaignId: (c.id || c.name).slice(0, 100),
-    campaignName: c.name,
-    impressions: Math.round(parseMLNumber(c.impressions)),
-    clicks: Math.round(parseMLNumber(c.clicks)),
-    ctr: String(parseMLNumber(c.ctr).toFixed(3)),
-    spend: String(parseMLNumber(c.spent).toFixed(2)),
-    roas: String(parseMLNumber(c.roas).toFixed(2)),
-    revenue: String(parseMLNumber(c.sales).toFixed(2)),
-    acos: "0",
-    conversions: 0,
-    scrapedAt: now
-  }));
-  await db.insert(marketplaceAdsMetrics).values(rows);
-  console.log(`[MLMetrics] ${rows.length} m\xE9tricas salvas para ${account}`);
-  return rows.length;
-}
-async function withBrowser(account, fn) {
-  const browser = await chromium.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
-  });
-  const useProxy = !!(process.env.WEBSHARE_HOST && process.env.WEBSHARE_PORT);
-  const proxyConfig = useProxy ? { server: "socks5://127.0.0.1:1080" } : void 0;
-  if (proxyConfig) console.log(`[MLBrowser] Usando relay SOCKS5 local \u2192 Webshare`);
-  const context = await browser.newContext({
-    userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
-    locale: "pt-BR",
-    proxy: proxyConfig
-  });
-  const accessToken = account === "fnt" ? process.env.ML_ACCESS_TOKEN_2 : process.env.ML_ACCESS_TOKEN_1;
-  if (accessToken) {
-    await context.addInitScript((token) => {
-      try {
-        localStorage.setItem("access_token", token);
-        localStorage.setItem("ml:access_token", token);
-        localStorage.setItem("@api/access_token", token);
-      } catch {
-      }
-    }, accessToken);
-  }
-  const page = await context.newPage();
-  try {
-    const loggedIn = await ensureLoggedIn(page, context, account);
-    if (!loggedIn) throw new Error("N\xE3o foi poss\xEDvel fazer login no Mercado Livre");
-    return await fn(page, context);
-  } finally {
-    await browser.close();
-  }
-}
-async function listAdsCampaigns(account = "feminnita") {
-  return withMutex(account, () => withBrowser(account, async (page) => {
-    await page.goto(SELLER_CENTER_URL, { waitUntil: "networkidle", timeout: 3e4 });
-    await page.waitForTimeout(2e3);
-    const campaigns3 = await parseCampaigns(page);
-    if (campaigns3.length === 0) {
-      const pageText = await page.textContent("body") || "";
-      if (pageText.includes("N\xE3o h\xE1 campanhas") || pageText.includes("Crie sua primeira")) {
-        return "Nenhuma campanha de Product Ads encontrada. Acesse o Seller Center para criar a primeira.";
-      }
-      return "N\xE3o foi poss\xEDvel listar as campanhas. Tente novamente ou acesse o Seller Center diretamente.";
-    }
-    const lines = campaigns3.map((c) => {
-      const metrics = [];
-      if (c.impressions) metrics.push(`Impress\xF5es: ${c.impressions}`);
-      if (c.clicks) metrics.push(`Cliques: ${c.clicks}`);
-      if (c.ctr) metrics.push(`CTR: ${c.ctr}`);
-      if (c.spent) metrics.push(`Gasto: ${c.spent}`);
-      if (c.roas) metrics.push(`ROAS: ${c.roas}`);
-      if (c.sales) metrics.push(`Vendas: ${c.sales}`);
-      const metricsStr = metrics.length > 0 ? ` | ${metrics.join(" | ")}` : "";
-      return `\u2022 [${c.id || "\u2014"}] "${c.name}" | ${c.status} | Budget: ${c.budget}${metricsStr}`;
-    });
-    return `CAMPANHAS DE PRODUCT ADS (${account === "fnt" ? "Conta B" : "Conta A"}):
-${lines.join("\n")}`;
-  }));
-}
-async function scanRowsForCampaign(page, lowerName, lowerId) {
-  const rows = await page.locator("tr").all();
-  for (const row of rows) {
-    const text3 = (await row.innerText().catch(() => "")).toLowerCase();
-    if (lowerName && text3.includes(lowerName) || lowerId && text3.includes(lowerId)) {
-      return row;
-    }
-  }
-  return null;
-}
-async function findCampaignRow(page, campaignId, campaignName) {
-  for (const attr of ["data-id", "data-campaign-id"]) {
-    const el = page.locator(`[${attr}="${campaignId}"]`).first();
-    if (await el.isVisible({ timeout: 2e3 }).catch(() => false)) return el;
-  }
-  const lowerName = campaignName.toLowerCase().trim();
-  const lowerId = campaignId.toLowerCase().trim();
-  let found = await scanRowsForCampaign(page, lowerName, lowerId);
-  if (found) return found;
-  for (let p = 2; p <= 10; p++) {
-    const nextBtn = page.locator('button:has-text("Seguinte"), a:has-text("Seguinte"), button[aria-label*="ext"], a[aria-label*="ext"]').first();
-    if (!await nextBtn.isVisible({ timeout: 2e3 }).catch(() => false)) break;
-    await nextBtn.click();
-    await page.waitForTimeout(2e3);
-    console.log(`[MLBrowser] Verificando p\xE1gina ${p} de campanhas...`);
-    found = await scanRowsForCampaign(page, lowerName, lowerId);
-    if (found) return found;
-  }
-  return null;
-}
-async function logVisibleCampaigns(page) {
-  const texts = await page.evaluate(
-    () => Array.from(document.querySelectorAll("tr")).map(
-      (r) => r.innerText?.trim().replace(/\s+/g, " ").slice(0, 100)
-    ).filter((t2) => t2.length > 5)
-  ).catch(() => []);
-  return texts.slice(0, 15).join(" || ");
-}
-async function debugScreenshot(page, label) {
-  try {
-    const dir = "/var/www/feminnita-marketing/debug-screenshots";
-    if (!fs7.existsSync(dir)) fs7.mkdirSync(dir, { recursive: true });
-    await page.screenshot({ path: `${dir}/${label}-${Date.now()}.png`, fullPage: false });
-  } catch {
-  }
-}
-async function pauseInPage(page, account, campaignId, campaignName) {
-  await page.goto(CAMPAIGNS_URL, { waitUntil: "networkidle", timeout: 3e4 });
-  await page.waitForTimeout(2e3);
-  await debugScreenshot(page, `pause-${account}-loaded`);
-  const row = await findCampaignRow(page, campaignId, campaignName);
-  if (!row) {
-    await debugScreenshot(page, `pause-${account}-notfound`);
-    const rowCount = await page.evaluate(() => document.querySelectorAll("tr").length).catch(() => 0);
-    const visible = await logVisibleCampaigns(page);
-    return `Campanha "${campaignName || campaignId}" n\xE3o encontrada. [URL: ${page.url()}] [Rows: ${rowCount}] [Vis\xEDveis: ${visible}]`;
-  }
-  const pauseBtn = row.locator('[role="switch"], button[aria-label*="ause"], button[aria-label*="ausar"], button[title*="ause"]').first();
-  if (!await pauseBtn.isVisible({ timeout: 3e3 }).catch(() => false)) {
-    await debugScreenshot(page, `pause-${account}-nobtn`);
-    return `Bot\xE3o de pausar n\xE3o encontrado para "${campaignName || campaignId}".`;
-  }
-  await pauseBtn.click();
-  await page.waitForTimeout(2e3);
-  await debugScreenshot(page, `pause-${account}-done`);
-  return `Campanha "${campaignName || campaignId}" pausada com sucesso.`;
-}
-async function activateInPage(page, account, campaignId, campaignName) {
-  await page.goto(CAMPAIGNS_URL, { waitUntil: "networkidle", timeout: 3e4 });
-  await page.waitForTimeout(2e3);
-  const row = await findCampaignRow(page, campaignId, campaignName);
-  if (!row) {
-    const rowCount = await page.evaluate(() => document.querySelectorAll("tr").length).catch(() => 0);
-    const visible = await logVisibleCampaigns(page);
-    return `Campanha "${campaignName || campaignId}" n\xE3o encontrada. [URL: ${page.url()}] [Rows: ${rowCount}] [Vis\xEDveis: ${visible}]`;
-  }
-  const activateBtn = row.locator('[role="switch"], button[aria-label*="tivar"], button[title*="tivar"]').first();
-  if (!await activateBtn.isVisible({ timeout: 3e3 }).catch(() => false)) {
-    return `Bot\xE3o de ativar n\xE3o encontrado para "${campaignName || campaignId}".`;
-  }
-  await activateBtn.click();
-  await page.waitForTimeout(2e3);
-  return `Campanha "${campaignName || campaignId}" reativada com sucesso.`;
-}
-async function runActionsInSession(account, actions) {
-  return withMutex(account, () => withBrowser(account, async (page) => {
-    const results = {};
-    for (const action of actions) {
-      try {
-        switch (action.actionType) {
-          case "pause_ads_campaign":
-            results[action.id] = await pauseInPage(page, account, action.campaignId, action.campaignName);
-            break;
-          case "activate_ads_campaign":
-            results[action.id] = await activateInPage(page, account, action.campaignId, action.campaignName);
-            break;
-          case "update_ads_budget":
-            results[action.id] = await updateBudgetInPage(page, account, action.campaignId, action.budget ?? 0, action.campaignName);
-            break;
-          case "scrape_ads_metrics": {
-            const n = await scrapeAndSaveMetricsInPage(page, account);
-            results[action.id] = `${n} m\xE9tricas de campanhas salvas para ${account}`;
-            break;
-          }
-          default:
-            results[action.id] = `Tipo n\xE3o suportado: ${action.actionType}`;
-        }
-      } catch (e) {
-        results[action.id] = `ERRO: ${e.message}`;
-      }
-    }
-    return results;
-  }));
-}
-async function pauseAdsCampaign(campaignId, account = "feminnita", campaignName = "") {
-  return withMutex(`${account}-pause`, () => withBrowser(account, (page) => pauseInPage(page, account, campaignId, campaignName)));
-}
-async function activateAdsCampaign(campaignId, account = "feminnita", campaignName = "") {
-  return withMutex(`${account}-activate`, () => withBrowser(account, (page) => activateInPage(page, account, campaignId, campaignName)));
-}
-async function importMLSession(cookies, account = "feminnita") {
-  const file = sessionFile(account);
-  fs7.writeFileSync(file, JSON.stringify(cookies, null, 2));
-  console.log(`[MLBrowser] Sess\xE3o importada para ${account}: ${cookies.length} cookies \u2192 ${file}`);
-}
-function getMLSessionStatus(account = "feminnita") {
-  const file = sessionFile(account);
-  if (!fs7.existsSync(file)) return { exists: false, savedAt: null, ageDays: null, cookieCount: null };
-  try {
-    const stat = fs7.statSync(file);
-    const cookies = JSON.parse(fs7.readFileSync(file, "utf8"));
-    const ageDays = Math.floor((Date.now() - stat.mtimeMs) / (1e3 * 60 * 60 * 24));
-    return { exists: true, savedAt: stat.mtime, ageDays, cookieCount: Array.isArray(cookies) ? cookies.length : null };
-  } catch {
-    return { exists: false, savedAt: null, ageDays: null, cookieCount: null };
-  }
-}
-async function updateBudgetInPage(page, account, campaignId, dailyBudget, campaignName) {
-  await page.goto(CAMPAIGNS_URL, { waitUntil: "networkidle", timeout: 3e4 });
-  await page.waitForTimeout(2e3);
-  await debugScreenshot(page, `budget-${account}-loaded`);
-  const row = await findCampaignRow(page, campaignId, campaignName);
-  if (!row) {
-    const rowCount = await page.evaluate(() => document.querySelectorAll("tr").length).catch(() => 0);
-    const visible = await logVisibleCampaigns(page);
-    return `Campanha "${campaignName || campaignId}" n\xE3o encontrada. [URL: ${page.url()}] [Rows: ${rowCount}] [Vis\xEDveis: ${visible}]`;
-  }
-  const budgetTd = row.locator("td").filter({ hasText: /R\$/ }).first();
-  await budgetTd.hover().catch(() => {
-  });
-  await page.waitForTimeout(300);
-  const pencilBtn = budgetTd.locator('button, [role="button"]').first();
-  if (await pencilBtn.isVisible({ timeout: 2e3 }).catch(() => false)) {
-    await pencilBtn.click();
-  } else {
-    await budgetTd.click();
-  }
-  await page.waitForTimeout(500);
-  await debugScreenshot(page, `budget-${account}-pencil`);
-  const modalTitle = page.locator('text="Altere seu or\xE7amento"');
-  let modalReady = await modalTitle.waitFor({ state: "visible", timeout: 6e3 }).then(() => true).catch(() => false);
-  if (!modalReady) {
-    await budgetTd.click();
-    modalReady = await modalTitle.waitFor({ state: "visible", timeout: 5e3 }).then(() => true).catch(() => false);
-  }
-  if (!modalReady) {
-    const pageText = await page.evaluate(() => document.body?.innerText?.slice(0, 500) ?? "").catch(() => "");
-    return `Modal de budget n\xE3o abriu para "${campaignName || campaignId}". [P\xE1gina: ${pageText.replace(/\n/g, " ").slice(0, 300)}]`;
-  }
-  await debugScreenshot(page, `budget-${account}-modal`);
-  const modalArea = modalTitle.locator("xpath=ancestor::div[6]");
-  let budgetInput = modalArea.locator('input[type="number"]').filter({ visible: true }).first();
-  if (!await budgetInput.isVisible({ timeout: 3e3 }).catch(() => false)) {
-    budgetInput = modalArea.locator('input:not([type="checkbox"])').filter({ visible: true }).first();
-  }
-  if (!await budgetInput.isVisible({ timeout: 3e3 }).catch(() => false)) {
-    budgetInput = page.locator('input[type="number"]').filter({ visible: true }).first();
-  }
-  if (!await budgetInput.isVisible({ timeout: 3e3 }).catch(() => false)) {
-    await debugScreenshot(page, `budget-${account}-input-notfound`);
-    return `Input de budget n\xE3o encontrado na modal "${campaignName || campaignId}"`;
-  }
-  await budgetInput.click({ clickCount: 3 });
-  await budgetInput.fill(String(dailyBudget));
-  await page.waitForTimeout(500);
-  await debugScreenshot(page, `budget-${account}-filled`);
-  const saveBtn = page.locator('button:has-text("Salvar"), button:has-text("Confirmar"), button[type="submit"]').first();
-  if (await saveBtn.isVisible({ timeout: 3e3 }).catch(() => false)) {
-    await saveBtn.click();
-  } else {
-    await budgetInput.press("Enter");
-  }
-  await page.waitForTimeout(2e3);
-  await debugScreenshot(page, `budget-${account}-saved`);
-  return `Budget di\xE1rio da campanha "${campaignName || campaignId}" atualizado para R$${dailyBudget}.`;
-}
-async function updateAdsBudget(campaignId, dailyBudget, account = "feminnita", campaignName = "") {
-  return withMutex(`${account}-budget`, () => withBrowser(account, (page) => updateBudgetInPage(page, account, campaignId, dailyBudget, campaignName)));
-}
-async function scrapeAdsCampaignMetrics(account = "feminnita") {
-  return withMutex(account, () => withBrowser(account, (page) => scrapeAndSaveMetricsInPage(page, account)));
-}
-var SESSIONS_DIR, SELLER_CENTER_URL, CAMPAIGNS_URL, LOGIN_URL, TWOCAPTCHA_KEY, runningInstances;
-var init_ml_ads_browser_agent = __esm({
-  "server/agents/ml-ads-browser-agent.ts"() {
-    "use strict";
-    init_db();
-    init_schema();
-    SESSIONS_DIR = path7.join(process.cwd(), ".ml-sessions");
-    SELLER_CENTER_URL = "https://ads.mercadolivre.com.br/productAds";
-    CAMPAIGNS_URL = "https://ads.mercadolivre.com.br/product-ads/admin/campaigns?status=A%2CP%2CD";
-    LOGIN_URL = "https://www.mercadolivre.com/jms/mlb/lgz/login";
-    TWOCAPTCHA_KEY = process.env.TWOCAPTCHA_API_KEY || "";
-    if (!fs7.existsSync(SESSIONS_DIR)) fs7.mkdirSync(SESSIONS_DIR, { recursive: true });
-    runningInstances = /* @__PURE__ */ new Map();
   }
 });
 
@@ -4539,490 +4956,6 @@ var init_webPush = __esm({
   }
 });
 
-// server/agents/ml-ads-api.ts
-var ml_ads_api_exports = {};
-__export(ml_ads_api_exports, {
-  apiActivateMLCampaign: () => apiActivateMLCampaign,
-  apiListMLCampaigns: () => apiListMLCampaigns,
-  apiPauseMLCampaign: () => apiPauseMLCampaign,
-  apiScrapeMLMetrics: () => apiScrapeMLMetrics,
-  apiUpdateMLBudget: () => apiUpdateMLBudget
-});
-import { eq as eq87, and as and70 } from "drizzle-orm";
-function getToken2(account) {
-  return account === "fnt" ? process.env.ML_ACCESS_TOKEN_2 || "" : process.env.ML_ACCESS_TOKEN_1 || "";
-}
-function getUserId3(account) {
-  return account === "fnt" ? process.env.ML_USER_ID_2 || "" : process.env.ML_USER_ID_1 || "";
-}
-async function mlFetch(method, path14, account, body) {
-  const token = getToken2(account);
-  if (!token) throw new Error(`Token ML n\xE3o configurado para ${account}`);
-  const res = await fetch(`${ML_BASE3}${path14}`, {
-    method,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-      Accept: "application/json"
-    },
-    body: body ? JSON.stringify(body) : void 0
-  });
-  let data;
-  try {
-    data = await res.json();
-  } catch {
-    data = {};
-  }
-  if (!res.ok) {
-    const msg = data?.message || data?.error || JSON.stringify(data).slice(0, 200);
-    throw new Error(`ML API ${method} ${path14} \u2192 HTTP ${res.status}: ${msg}`);
-  }
-  return data;
-}
-async function apiListMLCampaigns(account = "feminnita") {
-  const userId = getUserId3(account);
-  if (!userId) return [];
-  const all = [];
-  let offset = 0;
-  const limit = 50;
-  while (true) {
-    try {
-      const data = await mlFetch(
-        "GET",
-        `/advertising/product_ads/v1/accounts/${userId}/product_ads/campaigns?status=A%2CP&limit=${limit}&offset=${offset}`,
-        account
-      );
-      const batch = data.product_ads_campaigns || data.results || data.campaigns || [];
-      all.push(...batch);
-      if (batch.length < limit) break;
-      offset += limit;
-    } catch (e) {
-      console.error(`[MLAdsAPI] Erro ao listar campanhas (${account}):`, e.message);
-      break;
-    }
-  }
-  return all;
-}
-async function apiPauseMLCampaign(account, campaignId, campaignName) {
-  const userId = getUserId3(account);
-  if (!userId) return `User ID n\xE3o configurado para ${account}`;
-  try {
-    await mlFetch(
-      "PATCH",
-      `/advertising/product_ads/v1/accounts/${userId}/product_ads/campaigns/${campaignId}`,
-      account,
-      { status: "paused" }
-    );
-    return `\u2705 Campanha "${campaignName || campaignId}" pausada via API.`;
-  } catch (e) {
-    return `\u274C Erro ao pausar "${campaignName || campaignId}": ${e.message}`;
-  }
-}
-async function apiActivateMLCampaign(account, campaignId, campaignName) {
-  const userId = getUserId3(account);
-  if (!userId) return `User ID n\xE3o configurado para ${account}`;
-  try {
-    await mlFetch(
-      "PATCH",
-      `/advertising/product_ads/v1/accounts/${userId}/product_ads/campaigns/${campaignId}`,
-      account,
-      { status: "active" }
-    );
-    return `\u2705 Campanha "${campaignName || campaignId}" reativada via API.`;
-  } catch (e) {
-    return `\u274C Erro ao ativar "${campaignName || campaignId}": ${e.message}`;
-  }
-}
-async function apiUpdateMLBudget(account, campaignId, budget, campaignName) {
-  const userId = getUserId3(account);
-  if (!userId) return `User ID n\xE3o configurado para ${account}`;
-  try {
-    await mlFetch(
-      "PATCH",
-      `/advertising/product_ads/v1/accounts/${userId}/product_ads/campaigns/${campaignId}`,
-      account,
-      { daily_budget: budget }
-    );
-    return `\u2705 Budget de "${campaignName || campaignId}" atualizado para R$${budget} via API.`;
-  } catch (e) {
-    return `\u274C Erro ao atualizar budget de "${campaignName || campaignId}": ${e.message}`;
-  }
-}
-async function apiScrapeMLMetrics(account = "feminnita") {
-  const userId = getUserId3(account);
-  if (!userId) {
-    console.error(`[MLMetrics] User ID n\xE3o configurado para ${account}`);
-    return 0;
-  }
-  try {
-    const campaigns3 = await apiListMLCampaigns(account);
-    if (campaigns3.length === 0) {
-      console.warn(`[MLMetrics] Nenhuma campanha para ${account}`);
-      return 0;
-    }
-    const dateTo = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
-    const dateFrom = new Date(Date.now() - 30 * 24 * 60 * 60 * 1e3).toISOString().slice(0, 10);
-    const metricsById = /* @__PURE__ */ new Map();
-    try {
-      const md = await mlFetch(
-        "GET",
-        `/advertising/product_ads/v1/accounts/${userId}/product_ads/metrics?date_from=${dateFrom}&date_to=${dateTo}`,
-        account
-      );
-      for (const m of md.results || md.campaign_metrics || []) {
-        metricsById.set(String(m.campaign_id || m.id), m);
-      }
-    } catch (e) {
-      console.warn(`[MLMetrics] Endpoint de m\xE9tricas indispon\xEDvel (${account}): ${e.message}`);
-    }
-    const db = await getDb();
-    if (!db) {
-      console.error("[MLMetrics] Banco indispon\xEDvel");
-      return 0;
-    }
-    await db.delete(marketplaceAdsMetrics).where(and70(eq87(marketplaceAdsMetrics.platform, "ml"), eq87(marketplaceAdsMetrics.account, account)));
-    const now = /* @__PURE__ */ new Date();
-    const rows = campaigns3.map((c) => {
-      const m = metricsById.get(String(c.id || c.campaign_id)) || {};
-      const roas = Number(m.roas || 0);
-      return {
-        platform: "ml",
-        account,
-        campaignId: String(c.id || c.campaign_id || "").slice(0, 100),
-        campaignName: String(c.name || c.campaign_name || ""),
-        impressions: Math.round(Number(m.impressions || 0)),
-        clicks: Math.round(Number(m.clicks || 0)),
-        ctr: String(Number(m.ctr || 0).toFixed(3)),
-        spend: String(Number(m.spend || 0).toFixed(2)),
-        roas: String(roas.toFixed(2)),
-        revenue: String(Number(m.revenue || m.sales || 0).toFixed(2)),
-        acos: String(roas > 0 ? (100 / roas).toFixed(2) : "0"),
-        conversions: Math.round(Number(m.conversions || m.orders || 0)),
-        scrapedAt: now
-      };
-    });
-    if (rows.length > 0) await db.insert(marketplaceAdsMetrics).values(rows);
-    console.log(`[MLMetrics] ${rows.length} campanhas salvas para ${account}`);
-    return rows.length;
-  } catch (e) {
-    console.error(`[MLMetrics] Erro (${account}):`, e.message);
-    return 0;
-  }
-}
-var ML_BASE3;
-var init_ml_ads_api = __esm({
-  "server/agents/ml-ads-api.ts"() {
-    "use strict";
-    init_db();
-    init_schema();
-    ML_BASE3 = "https://api.mercadolibre.com";
-  }
-});
-
-// server/agents/shopee-ads-browser-agent.ts
-var shopee_ads_browser_agent_exports = {};
-__export(shopee_ads_browser_agent_exports, {
-  activateShopeeCampaign: () => activateShopeeCampaign,
-  pauseShopeeCampaign: () => pauseShopeeCampaign,
-  updateShopeeBudget: () => updateShopeeBudget,
-  updateShopeeRoas: () => updateShopeeRoas
-});
-import { chromium as chromium2 } from "playwright";
-import fs9 from "fs";
-import path9 from "path";
-function withMutex2(key, fn) {
-  const existing = runningInstances2.get(key);
-  if (existing) {
-    console.log(`[ShopeeBrowser] Inst\xE2ncia j\xE1 em execu\xE7\xE3o para ${key} \u2014 aguardando...`);
-    return existing.then(() => fn());
-  }
-  const promise = fn().finally(() => runningInstances2.delete(key));
-  runningInstances2.set(key, promise);
-  return promise;
-}
-function sessionFile2(account) {
-  return path9.join(SESSIONS_DIR2, `shopee-session-${account}.json`);
-}
-async function saveSession2(context, account) {
-  const cookies = await context.cookies();
-  fs9.writeFileSync(sessionFile2(account), JSON.stringify(cookies, null, 2));
-}
-async function loadSession2(context, account) {
-  const file = sessionFile2(account);
-  if (!fs9.existsSync(file)) return false;
-  try {
-    const cookies = JSON.parse(fs9.readFileSync(file, "utf8"));
-    await context.addCookies(cookies);
-    return true;
-  } catch {
-    return false;
-  }
-}
-async function loginShopee(page, account) {
-  const email = account === "fnt" ? process.env.SHOPEE_SELLER_EMAIL_2 : process.env.SHOPEE_SELLER_EMAIL;
-  const password = account === "fnt" ? process.env.SHOPEE_SELLER_PASSWORD_2 : process.env.SHOPEE_SELLER_PASSWORD;
-  if (!email || !password) {
-    console.error(`[ShopeeBrowser] Credenciais n\xE3o configuradas: SHOPEE_SELLER_EMAIL / SHOPEE_SELLER_PASSWORD`);
-    return false;
-  }
-  try {
-    await page.goto(LOGIN_URL2, { waitUntil: "domcontentloaded", timeout: 3e4 });
-    await page.waitForTimeout(2e3);
-    const loginBtn = page.locator('a[href*="login"], button:has-text("Entrar"), button:has-text("Login")').first();
-    if (await loginBtn.isVisible().catch(() => false)) {
-      await loginBtn.click();
-      await page.waitForTimeout(1500);
-    }
-    const emailInput = page.locator('input[type="text"], input[name="loginKey"], input[placeholder*="mail"], input[placeholder*="elefone"]').first();
-    await emailInput.waitFor({ state: "visible", timeout: 15e3 });
-    await emailInput.fill(email);
-    await page.waitForTimeout(500);
-    const nextBtn = page.locator('button:has-text("Pr\xF3ximo"), button:has-text("Next"), button[type="submit"]').first();
-    if (await nextBtn.isVisible().catch(() => false)) {
-      await nextBtn.click();
-      await page.waitForTimeout(1500);
-    }
-    const passInput = page.locator('input[type="password"]').first();
-    await passInput.waitFor({ state: "visible", timeout: 15e3 });
-    await passInput.fill(password);
-    await page.waitForTimeout(500);
-    await page.locator('button[type="submit"], button:has-text("Entrar"), button:has-text("Login")').first().click();
-    await page.waitForURL(/seller\.shopee\.com\.br\/(portal|account|home)/, { timeout: 25e3 });
-    console.log(`[ShopeeBrowser] Login OK \u2014 ${account}`);
-    return true;
-  } catch (e) {
-    console.error(`[ShopeeBrowser] Falha no login (${account}):`, e.message);
-    return false;
-  }
-}
-async function ensureLoggedIn2(page, context, account) {
-  try {
-    await page.goto("https://seller.shopee.com.br/portal/dashboard", { waitUntil: "domcontentloaded", timeout: 2e4 });
-    const url = page.url();
-    if (!url.includes("login") && url.includes("seller.shopee.com.br/portal")) return true;
-  } catch {
-  }
-  const loaded = await loadSession2(context, account);
-  if (loaded) {
-    await page.goto("https://seller.shopee.com.br/portal/dashboard", { waitUntil: "domcontentloaded", timeout: 2e4 }).catch(() => {
-    });
-    const url = page.url();
-    if (!url.includes("login") && url.includes("seller.shopee.com.br/portal")) return true;
-  }
-  const ok = await loginShopee(page, account);
-  if (ok) await saveSession2(context, account);
-  return ok;
-}
-async function withBrowser2(account, fn) {
-  const browser = await chromium2.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
-  });
-  const proxyHost = process.env.WEBSHARE_HOST;
-  const proxyPort = process.env.WEBSHARE_PORT;
-  const proxyUser = process.env.WEBSHARE_USER;
-  const proxyPass = process.env.WEBSHARE_PASS;
-  const proxyConfig = proxyHost && proxyPort ? {
-    server: `http://${proxyHost}:${proxyPort}`,
-    username: proxyUser,
-    password: proxyPass
-  } : void 0;
-  const context = await browser.newContext({
-    userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
-    locale: "pt-BR",
-    proxy: proxyConfig
-  });
-  const page = await context.newPage();
-  try {
-    const loggedIn = await ensureLoggedIn2(page, context, account);
-    if (!loggedIn) throw new Error("N\xE3o foi poss\xEDvel fazer login no Shopee Seller Center");
-    return await fn(page, context);
-  } finally {
-    await browser.close();
-  }
-}
-async function navigateToAds(page) {
-  await page.goto(SELLER_CENTER_URL2, { waitUntil: "networkidle", timeout: 4e4 });
-  await page.waitForTimeout(3e3);
-  await page.locator('button:has-text("Entendido"), button:has-text("OK"), button:has-text("Fechar"), [aria-label="Close"]').first().click().catch(() => {
-  });
-  await page.waitForTimeout(1e3);
-}
-async function findCampaignRow2(page, campaignId) {
-  const selectors = [
-    `[data-id="${campaignId}"]`,
-    `tr:has-text("${campaignId}")`,
-    `[data-campaign-id="${campaignId}"]`,
-    `[id*="${campaignId}"]`
-  ];
-  for (const sel of selectors) {
-    try {
-      const el = page.locator(sel).first();
-      if (await el.isVisible({ timeout: 3e3 })) return true;
-    } catch {
-    }
-  }
-  return false;
-}
-async function pauseShopeeCampaign(campaignId, account = "feminnita") {
-  return withMutex2(`${account}-pause-${campaignId}`, () => withBrowser2(account, async (page) => {
-    await navigateToAds(page);
-    const found = await findCampaignRow2(page, campaignId);
-    if (!found) {
-      return `Campanha ID ${campaignId} n\xE3o encontrada na p\xE1gina de Ads. Verifique se est\xE1 ativa.`;
-    }
-    const pauseSelectors = [
-      `[data-id="${campaignId}"] [role="switch"]`,
-      `tr:has-text("${campaignId}") [role="switch"]`,
-      `[data-id="${campaignId}"] button[aria-label*="ause"]`,
-      `tr:has-text("${campaignId}") button[aria-label*="ause"]`,
-      `[data-id="${campaignId}"] button[aria-label*="ausar"]`
-    ];
-    for (const sel of pauseSelectors) {
-      try {
-        const btn = page.locator(sel).first();
-        if (await btn.isVisible({ timeout: 3e3 })) {
-          const checked = await btn.getAttribute("aria-checked") || await btn.getAttribute("data-checked") || "";
-          if (checked === "false" || checked === "") {
-            return `Campanha ID ${campaignId} j\xE1 est\xE1 pausada.`;
-          }
-          await btn.click();
-          await page.waitForTimeout(2e3);
-          return `Campanha ID ${campaignId} pausada com sucesso via Seller Center.`;
-        }
-      } catch {
-      }
-    }
-    return `Bot\xE3o de pausa n\xE3o encontrado para campanha ${campaignId}. Acesse o Seller Center manualmente.`;
-  }));
-}
-async function activateShopeeCampaign(campaignId, account = "feminnita") {
-  return withMutex2(`${account}-activate-${campaignId}`, () => withBrowser2(account, async (page) => {
-    await navigateToAds(page);
-    const found = await findCampaignRow2(page, campaignId);
-    if (!found) {
-      return `Campanha ID ${campaignId} n\xE3o encontrada na p\xE1gina de Ads.`;
-    }
-    const activateSelectors = [
-      `[data-id="${campaignId}"] [role="switch"]`,
-      `tr:has-text("${campaignId}") [role="switch"]`,
-      `[data-id="${campaignId}"] button[aria-label*="tivar"]`,
-      `tr:has-text("${campaignId}") button[aria-label*="tivar"]`
-    ];
-    for (const sel of activateSelectors) {
-      try {
-        const btn = page.locator(sel).first();
-        if (await btn.isVisible({ timeout: 3e3 })) {
-          const checked = await btn.getAttribute("aria-checked") || "";
-          if (checked === "true") {
-            return `Campanha ID ${campaignId} j\xE1 est\xE1 ativa.`;
-          }
-          await btn.click();
-          await page.waitForTimeout(2e3);
-          return `Campanha ID ${campaignId} ativada com sucesso via Seller Center.`;
-        }
-      } catch {
-      }
-    }
-    return `Bot\xE3o de ativa\xE7\xE3o n\xE3o encontrado para campanha ${campaignId}. Acesse o Seller Center manualmente.`;
-  }));
-}
-async function updateShopeeBudget(campaignId, newBudget, account = "feminnita") {
-  return withMutex2(`${account}-budget-${campaignId}`, () => withBrowser2(account, async (page) => {
-    await navigateToAds(page);
-    const found = await findCampaignRow2(page, campaignId);
-    if (!found) {
-      return `Campanha ID ${campaignId} n\xE3o encontrada na p\xE1gina de Ads.`;
-    }
-    const editSelectors = [
-      `[data-id="${campaignId}"] button[aria-label*="ditar"]`,
-      `tr:has-text("${campaignId}") button[aria-label*="ditar"]`,
-      `[data-id="${campaignId}"] a[href*="edit"]`,
-      `tr:has-text("${campaignId}") a[href*="edit"]`,
-      `[data-id="${campaignId}"] [data-testid*="edit"]`
-    ];
-    let edited = false;
-    for (const sel of editSelectors) {
-      try {
-        const btn = page.locator(sel).first();
-        if (await btn.isVisible({ timeout: 3e3 })) {
-          await btn.click();
-          edited = true;
-          break;
-        }
-      } catch {
-      }
-    }
-    if (!edited) {
-      return `Bot\xE3o de edi\xE7\xE3o n\xE3o encontrado para campanha ${campaignId}. Acesse o Seller Center manualmente.`;
-    }
-    await page.waitForTimeout(2e3);
-    const budgetInput = page.locator('input[name*="budget"], input[placeholder*="or\xE7amento"], input[placeholder*="Budget"], input[type="number"]').first();
-    if (!await budgetInput.isVisible({ timeout: 8e3 }).catch(() => false)) {
-      return `Campo de or\xE7amento n\xE3o encontrado na tela de edi\xE7\xE3o da campanha ${campaignId}.`;
-    }
-    await budgetInput.fill(String(newBudget));
-    await page.waitForTimeout(500);
-    const saveBtn = page.locator('button:has-text("Salvar"), button:has-text("Confirmar"), button[type="submit"]').first();
-    if (await saveBtn.isVisible({ timeout: 5e3 }).catch(() => false)) {
-      await saveBtn.click();
-      await page.waitForTimeout(2e3);
-      return `Or\xE7amento da campanha ${campaignId} atualizado para R$${newBudget}/dia via Seller Center.`;
-    }
-    return `Budget preenchido mas bot\xE3o de salvar n\xE3o encontrado para campanha ${campaignId}.`;
-  }));
-}
-async function updateShopeeRoas(campaignId, targetRoas, account = "feminnita") {
-  return withMutex2(`${account}-roas-${campaignId}`, () => withBrowser2(account, async (page) => {
-    await navigateToAds(page);
-    const found = await findCampaignRow2(page, campaignId);
-    if (!found) return `Campanha ID ${campaignId} n\xE3o encontrada.`;
-    const editSelectors = [
-      `[data-id="${campaignId}"] button[aria-label*="ditar"]`,
-      `tr:has-text("${campaignId}") button[aria-label*="ditar"]`,
-      `[data-id="${campaignId}"] a[href*="edit"]`
-    ];
-    let edited = false;
-    for (const sel of editSelectors) {
-      try {
-        const btn = page.locator(sel).first();
-        if (await btn.isVisible({ timeout: 3e3 })) {
-          await btn.click();
-          edited = true;
-          break;
-        }
-      } catch {
-      }
-    }
-    if (!edited) return `Bot\xE3o de edi\xE7\xE3o n\xE3o encontrado para campanha ${campaignId}.`;
-    await page.waitForTimeout(2e3);
-    const roasInput = page.locator('input[name*="roas"], input[placeholder*="ROAS"], input[placeholder*="roas"]').first();
-    if (!await roasInput.isVisible({ timeout: 8e3 }).catch(() => false)) {
-      return `Campo de ROAS n\xE3o encontrado para campanha ${campaignId}.`;
-    }
-    await roasInput.fill(String(targetRoas));
-    await page.waitForTimeout(500);
-    const saveBtn = page.locator('button:has-text("Salvar"), button:has-text("Confirmar"), button[type="submit"]').first();
-    if (await saveBtn.isVisible({ timeout: 5e3 }).catch(() => false)) {
-      await saveBtn.click();
-      await page.waitForTimeout(2e3);
-      return `ROAS alvo da campanha ${campaignId} atualizado para ${targetRoas}x via Seller Center.`;
-    }
-    return `ROAS preenchido mas bot\xE3o de salvar n\xE3o encontrado para campanha ${campaignId}.`;
-  }));
-}
-var SESSIONS_DIR2, SELLER_CENTER_URL2, LOGIN_URL2, runningInstances2;
-var init_shopee_ads_browser_agent = __esm({
-  "server/agents/shopee-ads-browser-agent.ts"() {
-    "use strict";
-    SESSIONS_DIR2 = path9.join(process.cwd(), ".shopee-sessions");
-    SELLER_CENTER_URL2 = "https://seller.shopee.com.br/portal/ads-management/";
-    LOGIN_URL2 = "https://seller.shopee.com.br/";
-    if (!fs9.existsSync(SESSIONS_DIR2)) fs9.mkdirSync(SESSIONS_DIR2, { recursive: true });
-    runningInstances2 = /* @__PURE__ */ new Map();
-  }
-});
-
 // server/_core/websocket-notifications.ts
 var websocket_notifications_exports = {};
 __export(websocket_notifications_exports, {
@@ -5038,7 +4971,7 @@ __export(websocket_notifications_exports, {
   notifyPerformanceUpdate: () => notifyPerformanceUpdate
 });
 import { Server as SocketIOServer } from "socket.io";
-import { eq as eq90 } from "drizzle-orm";
+import { eq as eq89 } from "drizzle-orm";
 function broadcastChatUsers() {
   if (!io) return;
   const users2 = [...chatUsers.values()].map((u) => ({ name: u.name, color: u.color }));
@@ -5066,7 +4999,7 @@ async function sendChatPushToOfflineUsers(msg) {
       );
     } catch (err) {
       if (err.expired) {
-        await db.delete(pushSubscriptions).where(eq90(pushSubscriptions.id, sub.id));
+        await db.delete(pushSubscriptions).where(eq89(pushSubscriptions.id, sub.id));
       }
     }
   }
@@ -5148,7 +5081,7 @@ function initializeWebSocket(httpServer) {
       });
       getDb().then((db) => {
         if (!db) return;
-        db.select().from(pushSubscriptions).where(eq90(pushSubscriptions.userId, toUserIdNum)).then((subs) => {
+        db.select().from(pushSubscriptions).where(eq89(pushSubscriptions.userId, toUserIdNum)).then((subs) => {
           for (const sub of subs) {
             sendPush(
               { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
@@ -5298,7 +5231,7 @@ var init_websocket_notifications = __esm({
 });
 
 // server/services/ga4.ts
-import { eq as eq92, and as and74 } from "drizzle-orm";
+import { eq as eq91, and as and73 } from "drizzle-orm";
 function getGA4AuthUrl(redirectUri, state) {
   const params = new URLSearchParams({
     client_id: process.env.GOOGLE_GA4_CLIENT_ID,
@@ -5351,17 +5284,17 @@ async function refreshGA4Token(userId, tokenId, refreshToken) {
   const expiresAt = new Date(Date.now() + expiresIn * 1e3);
   const db = await getDb();
   if (db) {
-    await db.update(oauthTokens).set({ accessToken, expiresAt }).where(eq92(oauthTokens.id, tokenId));
+    await db.update(oauthTokens).set({ accessToken, expiresAt }).where(eq91(oauthTokens.id, tokenId));
   }
   return accessToken;
 }
 async function getValidGA4Token(userId) {
   const db = await getDb();
   if (!db) return null;
-  const rows = await db.select().from(oauthTokens).where(and74(
-    eq92(oauthTokens.userId, userId),
-    eq92(oauthTokens.plataforma, "google_analytics"),
-    eq92(oauthTokens.isActive, true)
+  const rows = await db.select().from(oauthTokens).where(and73(
+    eq91(oauthTokens.userId, userId),
+    eq91(oauthTokens.plataforma, "google_analytics"),
+    eq91(oauthTokens.isActive, true)
   )).limit(1);
   if (rows.length === 0) return null;
   const token = rows[0];
@@ -5422,7 +5355,7 @@ var ga4_oauth_exports = {};
 __export(ga4_oauth_exports, {
   registerGA4OAuthRoutes: () => registerGA4OAuthRoutes
 });
-import { eq as eq107, and as and85 } from "drizzle-orm";
+import { eq as eq109, and as and87 } from "drizzle-orm";
 function registerGA4OAuthRoutes(app) {
   app.get("/api/ga4/start", async (req, res) => {
     try {
@@ -5447,7 +5380,7 @@ function registerGA4OAuthRoutes(app) {
       if (!tokens) return res.redirect("/ga4?error=exchange_failed");
       const db = await getDb();
       if (!db) return res.redirect("/ga4?error=db_unavailable");
-      const existing = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and85(eq107(oauthTokens.userId, userId), eq107(oauthTokens.plataforma, "google_analytics"))).limit(1);
+      const existing = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and87(eq109(oauthTokens.userId, userId), eq109(oauthTokens.plataforma, "google_analytics"))).limit(1);
       const expiresAt = new Date(Date.now() + tokens.expiresIn * 1e3);
       if (existing.length > 0) {
         await db.update(oauthTokens).set({
@@ -5455,7 +5388,7 @@ function registerGA4OAuthRoutes(app) {
           ...tokens.refreshToken ? { refreshToken: tokens.refreshToken } : {},
           expiresAt,
           isActive: true
-        }).where(eq107(oauthTokens.id, existing[0].id));
+        }).where(eq109(oauthTokens.id, existing[0].id));
       } else {
         if (!tokens.refreshToken) {
           console.error("[GA4 OAuth] No refresh token received");
@@ -5498,7 +5431,7 @@ var meta_oauth_exports = {};
 __export(meta_oauth_exports, {
   registerMetaOAuthRoutes: () => registerMetaOAuthRoutes
 });
-import { eq as eq108, and as and86 } from "drizzle-orm";
+import { eq as eq110, and as and88 } from "drizzle-orm";
 function getAuthUrl(state) {
   const params = new URLSearchParams({
     client_id: APP_ID,
@@ -5560,7 +5493,7 @@ function registerMetaOAuthRoutes(app) {
     const db = await getDb();
     if (!db) return res.redirect("/gestor-trafego?error=db_unavailable");
     const expiresAt = new Date(Date.now() + long.expiresIn * 1e3);
-    const existing = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and86(eq108(oauthTokens.userId, userId), eq108(oauthTokens.plataforma, "meta"))).limit(1);
+    const existing = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and88(eq110(oauthTokens.userId, userId), eq110(oauthTokens.plataforma, "meta"))).limit(1);
     if (existing.length > 0) {
       const prevInfo = existing[0].accountInfo ? JSON.parse(existing[0].accountInfo) : {};
       await db.update(oauthTokens).set({
@@ -5568,7 +5501,7 @@ function registerMetaOAuthRoutes(app) {
         expiresAt,
         isActive: true,
         accountInfo: JSON.stringify(prevInfo)
-      }).where(eq108(oauthTokens.id, existing[0].id));
+      }).where(eq110(oauthTokens.id, existing[0].id));
     } else {
       await db.insert(oauthTokens).values({
         userId,
@@ -6099,8 +6032,8 @@ function registerOAuthRoutes(app) {
 }
 
 // server/routers/ml-oauth.ts
-import fs from "fs";
-import path from "path";
+import fs2 from "fs";
+import path2 from "path";
 import crypto from "crypto";
 var ML_CLIENT_ID = process.env.ML_CLIENT_ID_1 || "";
 var ML_CLIENT_SECRET = process.env.ML_CLIENT_SECRET_1 || "";
@@ -6115,10 +6048,10 @@ function generatePKCE() {
   return { verifier, challenge };
 }
 function updateEnvFile(updates) {
-  const envPath = path.resolve(process.cwd(), ".env");
+  const envPath = path2.resolve(process.cwd(), ".env");
   let content = "";
   try {
-    content = fs.readFileSync(envPath, "utf-8");
+    content = fs2.readFileSync(envPath, "utf-8");
   } catch {
   }
   for (const [key, value] of Object.entries(updates)) {
@@ -6131,7 +6064,7 @@ ${key}=${value}`;
     }
     process.env[key] = value;
   }
-  fs.writeFileSync(envPath, content, "utf-8");
+  fs2.writeFileSync(envPath, content, "utf-8");
 }
 async function refreshMLToken(account = "feminnita") {
   const isFnt = account === "fnt";
@@ -6172,6 +6105,21 @@ async function refreshMLToken(account = "feminnita") {
   }
 }
 function registerMLOAuthRoutes(app) {
+  app.post("/api/ml/import-cookies", async (req, res) => {
+    const account = req.query.account === "fnt" ? "fnt" : "feminnita";
+    const cookies = req.body;
+    if (!Array.isArray(cookies) || cookies.length === 0) {
+      return res.status(400).json({ error: "Body deve ser um array de cookies" });
+    }
+    try {
+      const { importMLSession: importMLSession2 } = await Promise.resolve().then(() => (init_ml_ads_browser_agent(), ml_ads_browser_agent_exports));
+      await importMLSession2(cookies, account);
+      console.log(`[MLOAuth] ${cookies.length} cookies importados para ${account}`);
+      return res.json({ ok: true, account, cookieCount: cookies.length });
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  });
   app.get("/api/ml/debug-items", async (_req, res) => {
     const token = process.env.ML_ACCESS_TOKEN_1 || "";
     const userId = process.env.ML_USER_ID_1 || "";
@@ -6263,7 +6211,7 @@ function registerMLOAuthRoutes(app) {
     setTimeout(() => pkceStore.delete(state), 10 * 60 * 1e3);
     updateEnvFile({ ML_PKCE_PENDING: `${account}:${verifier}` });
     const clientId = account === "fnt" ? process.env.ML_CLIENT_ID_2 || ML_CLIENT_ID : ML_CLIENT_ID;
-    const authUrl = `https://auth.mercadolivre.com.br/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(ML_REDIRECT_URL)}&state=${encodeURIComponent(state)}&code_challenge=${challenge}&code_challenge_method=S256&scope=offline_access%20read%20write%20advertising_reports`;
+    const authUrl = `https://auth.mercadolivre.com.br/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(ML_REDIRECT_URL)}&state=${encodeURIComponent(state)}&code_challenge=${challenge}&code_challenge_method=S256&scope=offline_access%20read%20write%20advertising_reports%20write_advertising`;
     console.log(`[MLOAuth] Iniciando OAuth PKCE \u2014 account: ${account}`);
     return res.redirect(authUrl);
   });
@@ -6351,16 +6299,16 @@ function registerMLOAuthRoutes(app) {
 // server/routers/shopee-oauth.ts
 init_shopeeApi();
 import crypto3 from "crypto";
-import fs3 from "fs";
-import path3 from "path";
+import fs4 from "fs";
+import path4 from "path";
 var PARTNER_ID2 = parseInt(process.env.SHOPEE_PARTNER_ID || "0");
 var PARTNER_KEY2 = process.env.SHOPEE_PARTNER_KEY || "";
 var BASE_URL2 = "https://partner.shopeemobile.com";
 function updateEnvFile2(updates) {
-  const envPath = path3.resolve(process.cwd(), ".env");
+  const envPath = path4.resolve(process.cwd(), ".env");
   let content = "";
   try {
-    content = fs3.readFileSync(envPath, "utf-8");
+    content = fs4.readFileSync(envPath, "utf-8");
   } catch {
   }
   for (const [key, value] of Object.entries(updates)) {
@@ -6373,7 +6321,7 @@ ${key}=${value}`;
     }
     process.env[key] = value;
   }
-  fs3.writeFileSync(envPath, content, "utf-8");
+  fs4.writeFileSync(envPath, content, "utf-8");
 }
 async function refreshShopeeToken() {
   const refreshToken = process.env.SHOPEE_REFRESH_TOKEN || "";
@@ -6540,16 +6488,16 @@ function registerShopeeOAuthRoutes(app) {
 
 // server/routers/tiktok-shop-oauth.ts
 init_tiktokShopApi();
-import fs5 from "fs";
-import path5 from "path";
+import fs6 from "fs";
+import path6 from "path";
 var APP_KEY2 = process.env.TIKTOK_SHOP_APP_KEY || process.env.TIKTOK_ADS_APP_ID || "";
 var APP_SECRET2 = process.env.TIKTOK_SHOP_APP_SECRET || process.env.TIKTOK_ADS_SECRET || "";
 var AUTH_BASE2 = "https://auth.tiktok-shops.com";
 function updateEnvFile3(updates) {
-  const envPath = path5.resolve(process.cwd(), ".env");
+  const envPath = path6.resolve(process.cwd(), ".env");
   let content = "";
   try {
-    content = fs5.readFileSync(envPath, "utf-8");
+    content = fs6.readFileSync(envPath, "utf-8");
   } catch {
   }
   for (const [key, value] of Object.entries(updates)) {
@@ -6562,7 +6510,7 @@ ${key}=${value}`;
     }
     process.env[key] = value;
   }
-  fs5.writeFileSync(envPath, content, "utf-8");
+  fs6.writeFileSync(envPath, content, "utf-8");
 }
 function registerTiktokShopOAuthRoutes(app) {
   app.get("/api/tiktok-shop/start", (_req, res) => {
@@ -6664,7 +6612,7 @@ function registerTiktokShopOAuthRoutes(app) {
 init_db();
 init_schema();
 import { createHmac } from "crypto";
-import { eq as eq3, and as and2 } from "drizzle-orm";
+import { eq as eq4, and as and3 } from "drizzle-orm";
 var CLIENT_KEY = () => process.env.TIKTOK_CLIENT_KEY || "";
 var CLIENT_SECRET = () => process.env.TIKTOK_CLIENT_SECRET || "";
 var AUTH_URL = "https://www.tiktok.com/v2/auth/authorize/";
@@ -6750,9 +6698,9 @@ function registerTiktokOAuthRoutes(app) {
       const db = await getDb();
       if (!db) throw new Error("Banco indispon\xEDvel");
       const expiresAt = expires_in ? new Date(Date.now() + expires_in * 1e3) : void 0;
-      const existing = await db.select({ id: tiktokConnectedAccounts.id }).from(tiktokConnectedAccounts).where(and2(
-        eq3(tiktokConnectedAccounts.userId, decoded.userId),
-        eq3(tiktokConnectedAccounts.tiktokOpenId, open_id)
+      const existing = await db.select({ id: tiktokConnectedAccounts.id }).from(tiktokConnectedAccounts).where(and3(
+        eq4(tiktokConnectedAccounts.userId, decoded.userId),
+        eq4(tiktokConnectedAccounts.tiktokOpenId, open_id)
       ));
       if (existing.length > 0) {
         await db.update(tiktokConnectedAccounts).set({
@@ -6763,7 +6711,7 @@ function registerTiktokOAuthRoutes(app) {
           displayName: displayName || null,
           avatarUrl: avatarUrl || null,
           updatedAt: /* @__PURE__ */ new Date()
-        }).where(eq3(tiktokConnectedAccounts.id, existing[0].id));
+        }).where(eq4(tiktokConnectedAccounts.id, existing[0].id));
       } else {
         await db.insert(tiktokConnectedAccounts).values({
           userId: decoded.userId,
@@ -6839,13 +6787,13 @@ var adminProcedure = t.procedure.use(
 init_db();
 init_schema();
 import { z } from "zod";
-import { eq as eq5, desc as desc2 } from "drizzle-orm";
+import { eq as eq6, desc as desc2 } from "drizzle-orm";
 
 // server/agents/sofia-comments-agent.ts
 init_llm();
 init_db();
 init_schema();
-import { eq as eq4 } from "drizzle-orm";
+import { eq as eq5 } from "drizzle-orm";
 var META_TOKEN = process.env.META_ACCESS_TOKEN || "";
 var META_PAGE_TOKEN = process.env.META_PAGE_ACCESS_TOKEN || META_TOKEN;
 var GRAPH_BASE = "https://graph.facebook.com/v20.0";
@@ -6949,7 +6897,7 @@ async function processMessengerMessage(event) {
 async function processInstagramComment(event) {
   const db = await getDb();
   if (!db) return;
-  const existing = await db.select({ id: instagramCommentReplies.id }).from(instagramCommentReplies).where(eq4(instagramCommentReplies.commentId, event.commentId)).limit(1);
+  const existing = await db.select({ id: instagramCommentReplies.id }).from(instagramCommentReplies).where(eq5(instagramCommentReplies.commentId, event.commentId)).limit(1);
   if (existing.length > 0) return;
   await db.insert(instagramCommentReplies).values({
     commentId: event.commentId,
@@ -6966,11 +6914,11 @@ async function processInstagramComment(event) {
     classification = await classifyAndGenerateReply(event.commentText, event.authorName);
   } catch (err) {
     console.error("[SofiaComments] Erro na classifica\xE7\xE3o:", err.message);
-    await db.update(instagramCommentReplies).set({ status: "queued_review", category: "other", updatedAt: /* @__PURE__ */ new Date() }).where(eq4(instagramCommentReplies.commentId, event.commentId));
+    await db.update(instagramCommentReplies).set({ status: "queued_review", category: "other", updatedAt: /* @__PURE__ */ new Date() }).where(eq5(instagramCommentReplies.commentId, event.commentId));
     return;
   }
   if (classification.category === "spam") {
-    await db.update(instagramCommentReplies).set({ status: "ignored", category: "spam", updatedAt: /* @__PURE__ */ new Date() }).where(eq4(instagramCommentReplies.commentId, event.commentId));
+    await db.update(instagramCommentReplies).set({ status: "ignored", category: "spam", updatedAt: /* @__PURE__ */ new Date() }).where(eq5(instagramCommentReplies.commentId, event.commentId));
     console.log(`[SofiaComments] Spam ignorado: "${event.commentText.slice(0, 50)}"`);
     return;
   }
@@ -6980,7 +6928,7 @@ async function processInstagramComment(event) {
       category: classification.category,
       replyText: classification.reply || null,
       updatedAt: /* @__PURE__ */ new Date()
-    }).where(eq4(instagramCommentReplies.commentId, event.commentId));
+    }).where(eq5(instagramCommentReplies.commentId, event.commentId));
     console.log(`[SofiaComments] Coment\xE1rio na fila de revis\xE3o: "${event.commentText.slice(0, 50)}"`);
     return;
   }
@@ -6995,7 +6943,7 @@ async function processInstagramComment(event) {
         replyText: classification.reply,
         repliedAt: /* @__PURE__ */ new Date(),
         updatedAt: /* @__PURE__ */ new Date()
-      }).where(eq4(instagramCommentReplies.commentId, event.commentId));
+      }).where(eq5(instagramCommentReplies.commentId, event.commentId));
       console.log(`[SofiaComments] \u2713 Respondido: "${classification.reply}"`);
     } catch (err) {
       await db.update(instagramCommentReplies).set({
@@ -7004,7 +6952,7 @@ async function processInstagramComment(event) {
         replyText: classification.reply,
         errorMessage: err.message?.slice(0, 499),
         updatedAt: /* @__PURE__ */ new Date()
-      }).where(eq4(instagramCommentReplies.commentId, event.commentId));
+      }).where(eq5(instagramCommentReplies.commentId, event.commentId));
       console.error("[SofiaComments] Erro ao responder:", err.message);
     }
   }, delayMs);
@@ -7180,7 +7128,7 @@ var instagramCommentsRouter = router({
   listPending: protectedProcedure.query(async () => {
     const db = await getDb();
     if (!db) return [];
-    return db.select().from(instagramCommentReplies).where(eq5(instagramCommentReplies.status, "queued_review")).orderBy(desc2(instagramCommentReplies.createdAt)).limit(50);
+    return db.select().from(instagramCommentReplies).where(eq6(instagramCommentReplies.status, "queued_review")).orderBy(desc2(instagramCommentReplies.createdAt)).limit(50);
   }),
   /**
    * Lista todos os comentários recentes
@@ -7199,7 +7147,7 @@ var instagramCommentsRouter = router({
   })).mutation(async ({ input }) => {
     const db = await getDb();
     if (!db) throw new Error("Banco indispon\xEDvel");
-    const [comment] = await db.select().from(instagramCommentReplies).where(eq5(instagramCommentReplies.id, input.id)).limit(1);
+    const [comment] = await db.select().from(instagramCommentReplies).where(eq6(instagramCommentReplies.id, input.id)).limit(1);
     if (!comment) throw new Error("Coment\xE1rio n\xE3o encontrado");
     await postCommentReply(comment.commentId, input.replyText);
     await db.update(instagramCommentReplies).set({
@@ -7207,7 +7155,7 @@ var instagramCommentsRouter = router({
       replyText: input.replyText,
       repliedAt: /* @__PURE__ */ new Date(),
       updatedAt: /* @__PURE__ */ new Date()
-    }).where(eq5(instagramCommentReplies.id, input.id));
+    }).where(eq6(instagramCommentReplies.id, input.id));
     return { ok: true };
   }),
   /**
@@ -7216,7 +7164,7 @@ var instagramCommentsRouter = router({
   rejectReply: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
     const db = await getDb();
     if (!db) throw new Error("Banco indispon\xEDvel");
-    await db.update(instagramCommentReplies).set({ status: "rejected", updatedAt: /* @__PURE__ */ new Date() }).where(eq5(instagramCommentReplies.id, input.id));
+    await db.update(instagramCommentReplies).set({ status: "rejected", updatedAt: /* @__PURE__ */ new Date() }).where(eq6(instagramCommentReplies.id, input.id));
     return { ok: true };
   }),
   /**
@@ -7240,12 +7188,12 @@ var instagramCommentsRouter = router({
 init_db();
 init_schema();
 import Anthropic2 from "@anthropic-ai/sdk";
-import { eq as eq7, and as and4, desc as desc3 } from "drizzle-orm";
+import { eq as eq8, and as and5, desc as desc3 } from "drizzle-orm";
 
 // server/routers/whatsapp-cart-recovery.ts
 init_db();
 init_schema();
-import { eq as eq6, and as and3, lt } from "drizzle-orm";
+import { eq as eq7, and as and4, lt } from "drizzle-orm";
 var WA_API = "https://graph.facebook.com/v19.0";
 var cartContextStore = /* @__PURE__ */ new Map();
 async function sendWhatsAppMessage(phone, text3) {
@@ -7349,7 +7297,7 @@ function registerCartRecoveryWebhook(app) {
       console.log(`[CartRecovery] Etapa 1 \u2192 ${phone} (${name}) | B2B=${isB2B} | enviado=${sent}`);
       const db = await getDb();
       if (db) {
-        const [seq] = await db.select().from(abandonamentoSequencias).where(eq6(abandonamentoSequencias.userId, 1)).limit(1);
+        const [seq] = await db.select().from(abandonamentoSequencias).where(eq7(abandonamentoSequencias.userId, 1)).limit(1);
         await db.insert(abandonamentoLogs).values({
           userId: 1,
           sequenciaId: seq?.id ?? null,
@@ -7372,12 +7320,12 @@ function scheduleCartFollowUps() {
       const db = await getDb();
       if (!db) return;
       const now = /* @__PURE__ */ new Date();
-      const logs = await db.select().from(abandonamentoLogs).where(and3(
-        eq6(abandonamentoLogs.status, "ativo"),
+      const logs = await db.select().from(abandonamentoLogs).where(and4(
+        eq7(abandonamentoLogs.status, "ativo"),
         lt(abandonamentoLogs.etapaAtual, 3)
       )).limit(50);
       for (const log of logs) {
-        const seq = log.sequenciaId ? (await db.select().from(abandonamentoSequencias).where(eq6(abandonamentoSequencias.id, log.sequenciaId)).limit(1))[0] : null;
+        const seq = log.sequenciaId ? (await db.select().from(abandonamentoSequencias).where(eq7(abandonamentoSequencias.id, log.sequenciaId)).limit(1))[0] : null;
         const etapa = log.etapaAtual || 1;
         const nextEtapa = etapa + 1;
         const horasAguardar = etapa === 1 ? seq?.etapa2Horas ?? 2 : seq?.etapa3Horas ?? 24;
@@ -7396,7 +7344,7 @@ function scheduleCartFollowUps() {
           etapaAtual: nextEtapa,
           updatedAt: now,
           ...nextEtapa === 3 ? { status: "finalizado" } : {}
-        }).where(eq6(abandonamentoLogs.id, log.id));
+        }).where(eq7(abandonamentoLogs.id, log.id));
       }
     } catch (e) {
       console.error("[CartRecovery] Erro no follow-up scheduler:", e.message);
@@ -7685,9 +7633,9 @@ async function runWhatsAppFunnelAgent(phoneNumber, contactName, incomingMessage,
     console.log(`[WA Lia] Escala\xE7\xE3o: ${phoneNumber} \u2014 "${incomingMessage.slice(0, 60)}"`);
     return msg;
   }
-  const history = db ? await db.select().from(conversationHistory).where(and4(
-    eq7(conversationHistory.userId, userId),
-    eq7(conversationHistory.whatsappPhoneNumber, phoneNumber)
+  const history = db ? await db.select().from(conversationHistory).where(and5(
+    eq8(conversationHistory.userId, userId),
+    eq8(conversationHistory.whatsappPhoneNumber, phoneNumber)
   )).orderBy(desc3(conversationHistory.id)).limit(8) : [];
   const messages = history.reverse().flatMap((h) => [
     { role: "user", content: h.userMessage },
@@ -8095,8 +8043,8 @@ var blingOAuthRouter = router({
     const db = await (await Promise.resolve().then(() => (init_db(), db_exports))).getDb();
     if (!db) throw new Error("Database not available");
     const { oauthTokens: oauthTokens3 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
-    const { eq: eq109, and: and87 } = await import("drizzle-orm");
-    await db.update(oauthTokens3).set({ isActive: false }).where(and87(eq109(oauthTokens3.userId, ctx.user.id), eq109(oauthTokens3.plataforma, "bling")));
+    const { eq: eq111, and: and89 } = await import("drizzle-orm");
+    await db.update(oauthTokens3).set({ isActive: false }).where(and89(eq111(oauthTokens3.userId, ctx.user.id), eq111(oauthTokens3.plataforma, "bling")));
     return { sucesso: true };
   })
 });
@@ -9469,7 +9417,7 @@ var whatsappRouter = router({
 init_db();
 init_schema();
 import { z as z8 } from "zod";
-import { eq as eq8, and as and5, desc as desc4 } from "drizzle-orm";
+import { eq as eq9, and as and6, desc as desc4 } from "drizzle-orm";
 var automationsRouter = router({
   // Criar automação
   criar: protectedProcedure.input(
@@ -9492,7 +9440,7 @@ var automationsRouter = router({
       agendamento: input.agendamento,
       status: "agendado"
     });
-    const inserted = await db.select().from(automations).where(eq8(automations.userId, ctx.user.id)).orderBy(desc4(automations.createdAt)).limit(1);
+    const inserted = await db.select().from(automations).where(eq9(automations.userId, ctx.user.id)).orderBy(desc4(automations.createdAt)).limit(1);
     const a = inserted[0];
     return {
       id: String(a.id),
@@ -9515,14 +9463,14 @@ var automationsRouter = router({
   ).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    await db.update(automations).set({ ultimaExecucao: /* @__PURE__ */ new Date() }).where(and5(eq8(automations.id, parseInt(input.id)), eq8(automations.userId, ctx.user.id)));
+    await db.update(automations).set({ ultimaExecucao: /* @__PURE__ */ new Date() }).where(and6(eq9(automations.id, parseInt(input.id)), eq9(automations.userId, ctx.user.id)));
     return { sucesso: true, mensagem: `Automa\xE7\xE3o executada na plataforma ${input.plataforma}` };
   }),
   // Listar automações
   listar: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return [];
-    const rows = await db.select().from(automations).where(eq8(automations.userId, ctx.user.id)).orderBy(desc4(automations.createdAt));
+    const rows = await db.select().from(automations).where(eq9(automations.userId, ctx.user.id)).orderBy(desc4(automations.createdAt));
     return rows.map((a) => ({
       id: String(a.id),
       nome: a.nome,
@@ -9552,14 +9500,14 @@ var automationsRouter = router({
     if (input.conteudo !== void 0) updateData.conteudo = input.conteudo;
     if (input.agendamento !== void 0) updateData.agendamento = input.agendamento;
     if (input.status) updateData.status = input.status;
-    await db.update(automations).set(updateData).where(and5(eq8(automations.id, parseInt(input.id)), eq8(automations.userId, ctx.user.id)));
+    await db.update(automations).set(updateData).where(and6(eq9(automations.id, parseInt(input.id)), eq9(automations.userId, ctx.user.id)));
     return { sucesso: true, mensagem: "Automa\xE7\xE3o atualizada com sucesso!" };
   }),
   // Deletar automação
   deletar: protectedProcedure.input(z8.object({ id: z8.string() })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    await db.delete(automations).where(and5(eq8(automations.id, parseInt(input.id)), eq8(automations.userId, ctx.user.id)));
+    await db.delete(automations).where(and6(eq9(automations.id, parseInt(input.id)), eq9(automations.userId, ctx.user.id)));
     return { sucesso: true, mensagem: "Automa\xE7\xE3o deletada com sucesso!" };
   }),
   // Testar publicação (sem persistência real, apenas validação)
@@ -9580,7 +9528,7 @@ var automationsRouter = router({
 init_db();
 init_schema();
 import { z as z9 } from "zod";
-import { eq as eq9, and as and6, desc as desc5 } from "drizzle-orm";
+import { eq as eq10, and as and7, desc as desc5 } from "drizzle-orm";
 var campaignsRouter = router({
   // Criar campanha
   criar: protectedProcedure.input(
@@ -9607,7 +9555,7 @@ var campaignsRouter = router({
       dataFim: input.data_fim,
       status: "rascunho"
     });
-    const inserted = await db.select().from(campaigns).where(eq9(campaigns.userId, ctx.user.id)).orderBy(desc5(campaigns.createdAt)).limit(1);
+    const inserted = await db.select().from(campaigns).where(eq10(campaigns.userId, ctx.user.id)).orderBy(desc5(campaigns.createdAt)).limit(1);
     const c = inserted[0];
     return {
       id: String(c.id),
@@ -9627,7 +9575,7 @@ var campaignsRouter = router({
   listar: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return [];
-    const rows = await db.select().from(campaigns).where(eq9(campaigns.userId, ctx.user.id)).orderBy(desc5(campaigns.createdAt));
+    const rows = await db.select().from(campaigns).where(eq10(campaigns.userId, ctx.user.id)).orderBy(desc5(campaigns.createdAt));
     return rows.map((c) => ({
       id: String(c.id),
       nome: c.nome,
@@ -9651,7 +9599,7 @@ var campaignsRouter = router({
   obter: protectedProcedure.input(z9.object({ id: z9.string() })).query(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    const rows = await db.select().from(campaigns).where(and6(eq9(campaigns.id, parseInt(input.id)), eq9(campaigns.userId, ctx.user.id))).limit(1);
+    const rows = await db.select().from(campaigns).where(and7(eq10(campaigns.id, parseInt(input.id)), eq10(campaigns.userId, ctx.user.id))).limit(1);
     if (!rows.length) throw new Error("Campanha n\xE3o encontrada");
     const c = rows[0];
     return {
@@ -9696,35 +9644,35 @@ var campaignsRouter = router({
     if (input.data_inicio !== void 0) updateData.dataInicio = input.data_inicio;
     if (input.data_fim !== void 0) updateData.dataFim = input.data_fim;
     if (input.status) updateData.status = input.status;
-    await db.update(campaigns).set(updateData).where(and6(eq9(campaigns.id, parseInt(input.id)), eq9(campaigns.userId, ctx.user.id)));
+    await db.update(campaigns).set(updateData).where(and7(eq10(campaigns.id, parseInt(input.id)), eq10(campaigns.userId, ctx.user.id)));
     return { sucesso: true, mensagem: "Campanha atualizada com sucesso!" };
   }),
   // Deletar campanha
   deletar: protectedProcedure.input(z9.object({ id: z9.string() })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    await db.delete(campaigns).where(and6(eq9(campaigns.id, parseInt(input.id)), eq9(campaigns.userId, ctx.user.id)));
+    await db.delete(campaigns).where(and7(eq10(campaigns.id, parseInt(input.id)), eq10(campaigns.userId, ctx.user.id)));
     return { sucesso: true, mensagem: "Campanha deletada com sucesso!" };
   }),
   // Publicar campanha (muda status para ativa)
   publicar: protectedProcedure.input(z9.object({ id: z9.string() })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    await db.update(campaigns).set({ status: "ativa" }).where(and6(eq9(campaigns.id, parseInt(input.id)), eq9(campaigns.userId, ctx.user.id)));
+    await db.update(campaigns).set({ status: "ativa" }).where(and7(eq10(campaigns.id, parseInt(input.id)), eq10(campaigns.userId, ctx.user.id)));
     return { sucesso: true, mensagem: "Campanha publicada com sucesso!" };
   }),
   // Pausar campanha
   pausar: protectedProcedure.input(z9.object({ id: z9.string() })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    await db.update(campaigns).set({ status: "pausada" }).where(and6(eq9(campaigns.id, parseInt(input.id)), eq9(campaigns.userId, ctx.user.id)));
+    await db.update(campaigns).set({ status: "pausada" }).where(and7(eq10(campaigns.id, parseInt(input.id)), eq10(campaigns.userId, ctx.user.id)));
     return { sucesso: true, mensagem: "Campanha pausada com sucesso!" };
   }),
   // Retomar campanha
   retomar: protectedProcedure.input(z9.object({ id: z9.string() })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    await db.update(campaigns).set({ status: "ativa" }).where(and6(eq9(campaigns.id, parseInt(input.id)), eq9(campaigns.userId, ctx.user.id)));
+    await db.update(campaigns).set({ status: "ativa" }).where(and7(eq10(campaigns.id, parseInt(input.id)), eq10(campaigns.userId, ctx.user.id)));
     return { sucesso: true, mensagem: "Campanha retomada com sucesso!" };
   })
 });
@@ -9733,13 +9681,13 @@ var campaignsRouter = router({
 init_db();
 init_schema();
 import { z as z10 } from "zod";
-import { eq as eq10, and as and7 } from "drizzle-orm";
+import { eq as eq11, and as and8 } from "drizzle-orm";
 var integrationsRouter = router({
   // Get status of all integrations
   getStatus: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    const credentials = await db.select().from(oauthCredentials).where(eq10(oauthCredentials.userId, ctx.user.id));
+    const credentials = await db.select().from(oauthCredentials).where(eq11(oauthCredentials.userId, ctx.user.id));
     const status = {
       bling: { connected: false },
       canva: { connected: false },
@@ -9818,9 +9766,9 @@ var integrationsRouter = router({
         }
       }
       await db.delete(oauthCredentials).where(
-        and7(
-          eq10(oauthCredentials.userId, ctx.user.id),
-          eq10(oauthCredentials.platform, "bling")
+        and8(
+          eq11(oauthCredentials.userId, ctx.user.id),
+          eq11(oauthCredentials.platform, "bling")
         )
       );
       await db.insert(oauthCredentials).values({
@@ -9883,9 +9831,9 @@ var integrationsRouter = router({
         throw new Error("Credenciais do Canva inv\xE1lidas ou Canva indispon\xEDvel");
       }
       await db.delete(oauthCredentials).where(
-        and7(
-          eq10(oauthCredentials.userId, ctx.user.id),
-          eq10(oauthCredentials.platform, "canva")
+        and8(
+          eq11(oauthCredentials.userId, ctx.user.id),
+          eq11(oauthCredentials.platform, "canva")
         )
       );
       await db.insert(oauthCredentials).values({
@@ -9940,9 +9888,9 @@ var integrationsRouter = router({
         throw new Error("App ID/Secret inv\xE1lidos ou Meta indispon\xEDvel");
       }
       await db.delete(oauthCredentials).where(
-        and7(
-          eq10(oauthCredentials.userId, ctx.user.id),
-          eq10(oauthCredentials.platform, "meta")
+        and8(
+          eq11(oauthCredentials.userId, ctx.user.id),
+          eq11(oauthCredentials.platform, "meta")
         )
       );
       await db.insert(oauthCredentials).values({
@@ -9967,9 +9915,9 @@ var integrationsRouter = router({
     const db = await getDb();
     if (!db) throw new Error("Database not available");
     await db.delete(oauthCredentials).where(
-      and7(
-        eq10(oauthCredentials.userId, ctx.user.id),
-        eq10(oauthCredentials.platform, input.platform)
+      and8(
+        eq11(oauthCredentials.userId, ctx.user.id),
+        eq11(oauthCredentials.platform, input.platform)
       )
     );
     return { success: true, message: `${input.platform} desconectado com sucesso` };
@@ -9979,9 +9927,9 @@ var integrationsRouter = router({
     const db = await getDb();
     if (!db) throw new Error("Database not available");
     const credential = await db.select().from(oauthCredentials).where(
-      and7(
-        eq10(oauthCredentials.userId, ctx.user.id),
-        eq10(oauthCredentials.platform, "bling")
+      and8(
+        eq11(oauthCredentials.userId, ctx.user.id),
+        eq11(oauthCredentials.platform, "bling")
       )
     ).limit(1);
     if (!credential.length) {
@@ -10007,9 +9955,9 @@ var integrationsRouter = router({
     const db = await getDb();
     if (!db) throw new Error("Database not available");
     const credential = await db.select().from(oauthCredentials).where(
-      and7(
-        eq10(oauthCredentials.userId, ctx.user.id),
-        eq10(oauthCredentials.platform, "bling")
+      and8(
+        eq11(oauthCredentials.userId, ctx.user.id),
+        eq11(oauthCredentials.platform, "bling")
       )
     ).limit(1);
     if (!credential.length) {
@@ -10036,7 +9984,7 @@ var integrationsRouter = router({
 import { z as z11 } from "zod";
 init_schema();
 init_db();
-import { eq as eq11, and as and8 } from "drizzle-orm";
+import { eq as eq12, and as and9 } from "drizzle-orm";
 import crypto6 from "crypto";
 var webhooksRouter = router({
   // Registrar um novo webhook
@@ -10077,7 +10025,7 @@ var webhooksRouter = router({
   listar: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return [];
-    const result = await db.select().from(webhooks).where(eq11(webhooks.userId, ctx.user.id));
+    const result = await db.select().from(webhooks).where(eq12(webhooks.userId, ctx.user.id));
     return result.map((w) => ({
       id: w.id,
       plataforma: w.plataforma,
@@ -10092,9 +10040,9 @@ var webhooksRouter = router({
     const db = await getDb();
     if (!db) throw new Error("Database not available");
     await db.update(webhooks).set({ isActive: false }).where(
-      and8(
-        eq11(webhooks.id, input.webhookId),
-        eq11(webhooks.userId, ctx.user.id)
+      and9(
+        eq12(webhooks.id, input.webhookId),
+        eq12(webhooks.userId, ctx.user.id)
       )
     );
     return { sucesso: true, mensagem: "Webhook desativado com sucesso" };
@@ -10104,9 +10052,9 @@ var webhooksRouter = router({
     const db = await getDb();
     if (!db) throw new Error("Database not available");
     await db.delete(webhooks).where(
-      and8(
-        eq11(webhooks.id, input.webhookId),
-        eq11(webhooks.userId, ctx.user.id)
+      and9(
+        eq12(webhooks.id, input.webhookId),
+        eq12(webhooks.userId, ctx.user.id)
       )
     );
     return { sucesso: true, mensagem: "Webhook deletado com sucesso" };
@@ -10115,7 +10063,7 @@ var webhooksRouter = router({
   listarEventos: protectedProcedure.input(z11.object({ webhookId: z11.number().optional() })).query(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) return [];
-    const rows = await db.select().from(webhookEvents).where(eq11(webhookEvents.userId, ctx.user.id));
+    const rows = await db.select().from(webhookEvents).where(eq12(webhookEvents.userId, ctx.user.id));
     const filtered = input.webhookId ? rows.filter((e) => e.webhookId === input.webhookId) : rows;
     return filtered.map((e) => ({
       id: e.id,
@@ -10133,16 +10081,16 @@ var webhooksRouter = router({
   listarNotificacoes: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return [];
-    return db.select().from(notifications).where(eq11(notifications.userId, ctx.user.id));
+    return db.select().from(notifications).where(eq12(notifications.userId, ctx.user.id));
   }),
   // Marcar notificação como lida (com persistência real)
   marcarComoLida: protectedProcedure.input(z11.object({ notificationId: z11.number() })).mutation(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
     await db.update(notifications).set({ isRead: true }).where(
-      and8(
-        eq11(notifications.id, input.notificationId),
-        eq11(notifications.userId, ctx.user.id)
+      and9(
+        eq12(notifications.id, input.notificationId),
+        eq12(notifications.userId, ctx.user.id)
       )
     );
     return { sucesso: true, mensagem: "Notifica\xE7\xE3o marcada como lida" };
@@ -10158,7 +10106,7 @@ var webhooksRouter = router({
   ).mutation(async ({ input }) => {
     const db = await getDb();
     if (!db) return { sucesso: false, mensagem: "Database not available" };
-    const webhook = await db.select().from(webhooks).where(eq11(webhooks.webhookSecret, input.webhookSecret)).limit(1);
+    const webhook = await db.select().from(webhooks).where(eq12(webhooks.webhookSecret, input.webhookSecret)).limit(1);
     if (!webhook || webhook.length === 0) {
       return { sucesso: false, mensagem: "Webhook secret inv\xE1lido" };
     }
@@ -10192,7 +10140,7 @@ var webhooksRouter = router({
       mensagem: `${titulo} em ${input.plataforma}: ${input.eventData.nome || input.eventData.id || ""}`,
       tipo
     });
-    await db.update(webhooks).set({ lastTriggered: /* @__PURE__ */ new Date() }).where(eq11(webhooks.id, w.id));
+    await db.update(webhooks).set({ lastTriggered: /* @__PURE__ */ new Date() }).where(eq12(webhooks.id, w.id));
     return { sucesso: true, mensagem: "Evento processado com sucesso" };
   }),
   // Verificar assinatura HMAC de um webhook recebido
@@ -10222,7 +10170,7 @@ var webhooksRouter = router({
   })).mutation(async ({ input }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    const webhook = await db.select().from(webhooks).where(and8(eq11(webhooks.id, input.webhookId), eq11(webhooks.isActive, true))).limit(1);
+    const webhook = await db.select().from(webhooks).where(and9(eq12(webhooks.id, input.webhookId), eq12(webhooks.isActive, true))).limit(1);
     if (!webhook.length) throw new Error("Webhook n\xE3o encontrado");
     const secret = webhook[0].webhookSecret;
     const expectedSig = "sha256=" + crypto6.createHmac("sha256", secret).update(input.payload).digest("hex");
@@ -10238,7 +10186,7 @@ var webhooksRouter = router({
       eventData: input.payload,
       status: "pending"
     });
-    await db.update(webhooks).set({ lastTriggered: /* @__PURE__ */ new Date() }).where(eq11(webhooks.id, input.webhookId));
+    await db.update(webhooks).set({ lastTriggered: /* @__PURE__ */ new Date() }).where(eq12(webhooks.id, input.webhookId));
     return { success: true, message: "Evento registrado com sucesso" };
   })
 });
@@ -10247,7 +10195,7 @@ var webhooksRouter = router({
 import { z as z12 } from "zod";
 init_db();
 init_schema();
-import { eq as eq12, and as and9 } from "drizzle-orm";
+import { eq as eq13, and as and10 } from "drizzle-orm";
 var oauthIntegrationsRouter = router({
   // ============ Save Credentials (requer autenticação + persiste no banco) ============
   saveCredentials: protectedProcedure.input(z12.object({
@@ -10258,9 +10206,9 @@ var oauthIntegrationsRouter = router({
   })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    const existing = await db.select().from(oauthCredentials).where(and9(eq12(oauthCredentials.userId, ctx.user.id), eq12(oauthCredentials.platform, input.platform))).limit(1);
+    const existing = await db.select().from(oauthCredentials).where(and10(eq13(oauthCredentials.userId, ctx.user.id), eq13(oauthCredentials.platform, input.platform))).limit(1);
     if (existing.length > 0) {
-      await db.update(oauthCredentials).set({ clientId: input.clientId, clientSecret: input.clientSecret, updatedAt: /* @__PURE__ */ new Date() }).where(and9(eq12(oauthCredentials.userId, ctx.user.id), eq12(oauthCredentials.platform, input.platform)));
+      await db.update(oauthCredentials).set({ clientId: input.clientId, clientSecret: input.clientSecret, updatedAt: /* @__PURE__ */ new Date() }).where(and10(eq13(oauthCredentials.userId, ctx.user.id), eq13(oauthCredentials.platform, input.platform)));
     } else {
       await db.insert(oauthCredentials).values({
         userId: ctx.user.id,
@@ -10657,7 +10605,7 @@ import { z as z14 } from "zod";
 init_db();
 init_schema();
 import { TRPCError as TRPCError3 } from "@trpc/server";
-import { eq as eq13, and as and10, desc as desc6 } from "drizzle-orm";
+import { eq as eq14, and as and11, desc as desc6 } from "drizzle-orm";
 var whatsappBusinessRouter = router({
   /**
    * Send payment confirmation message
@@ -10945,9 +10893,9 @@ Feminnita Pijamas
   ).query(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    const messages = await db.select().from(conversationHistory).where(and10(
-      eq13(conversationHistory.userId, ctx.user.id),
-      eq13(conversationHistory.whatsappPhoneNumber, input.phoneNumber)
+    const messages = await db.select().from(conversationHistory).where(and11(
+      eq14(conversationHistory.userId, ctx.user.id),
+      eq14(conversationHistory.whatsappPhoneNumber, input.phoneNumber)
     )).orderBy(desc6(conversationHistory.createdAt)).limit(input.limit);
     return {
       phoneNumber: input.phoneNumber,
@@ -10994,7 +10942,7 @@ init_schema();
 init_llm();
 import { z as z15 } from "zod";
 import { TRPCError as TRPCError4 } from "@trpc/server";
-import { eq as eq14, desc as desc7, and as and11 } from "drizzle-orm";
+import { eq as eq15, desc as desc7, and as and12 } from "drizzle-orm";
 var autonomousInfluencersRouter = router({
   /**
    * Generate content using AI for an influencer
@@ -11011,7 +10959,7 @@ var autonomousInfluencersRouter = router({
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const influencerResult = await db.select().from(influencers).where(and11(eq14(influencers.id, input.influencerId), eq14(influencers.userId, ctx.user.id))).limit(1);
+      const influencerResult = await db.select().from(influencers).where(and12(eq15(influencers.id, input.influencerId), eq15(influencers.userId, ctx.user.id))).limit(1);
       const influencer = influencerResult.length > 0 ? influencerResult[0] : null;
       if (!influencer) {
         throw new TRPCError4({
@@ -11079,7 +11027,7 @@ Retorne um JSON com caption, hashtags, contentIdeas, bestTimeToPost e estimatedR
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const owned = await db.select({ id: influencers.id }).from(influencers).where(and11(eq14(influencers.id, input.influencerId), eq14(influencers.userId, ctx.user.id))).limit(1);
+      const owned = await db.select({ id: influencers.id }).from(influencers).where(and12(eq15(influencers.id, input.influencerId), eq15(influencers.userId, ctx.user.id))).limit(1);
       if (owned.length === 0) throw new TRPCError4({ code: "NOT_FOUND", message: "Influencer n\xE3o encontrado" });
       const prompt = `
 Analise as tend\xEAncias atuais do ${input.platform} para conte\xFAdo de moda/pijamas.
@@ -11138,14 +11086,14 @@ Retorne um JSON com um array de trends contendo: name, category, relevanceScore,
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const post = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq14(influencerPosts.id, input.postId)).limit(1);
+      const post = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq15(influencerPosts.id, input.postId)).limit(1);
       if (post.length === 0) throw new TRPCError4({ code: "NOT_FOUND", message: "Post n\xE3o encontrado" });
-      const owned = await db.select({ id: influencers.id }).from(influencers).where(and11(eq14(influencers.id, post[0].influencerId ?? 0), eq14(influencers.userId, ctx.user.id))).limit(1);
+      const owned = await db.select({ id: influencers.id }).from(influencers).where(and12(eq15(influencers.id, post[0].influencerId ?? 0), eq15(influencers.userId, ctx.user.id))).limit(1);
       if (owned.length === 0) throw new TRPCError4({ code: "FORBIDDEN", message: "Acesso negado" });
       await db.update(influencerPosts).set({
         scheduledAt: input.scheduledAt,
         status: "scheduled"
-      }).where(eq14(influencerPosts.id, input.postId));
+      }).where(eq15(influencerPosts.id, input.postId));
       await notifyOwner({
         title: "Post agendado com sucesso",
         content: `Post #${input.postId} agendado para ${input.scheduledAt.toLocaleString("pt-BR")}`
@@ -11175,9 +11123,9 @@ Retorne um JSON com um array de trends contendo: name, category, relevanceScore,
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const owned = await db.select({ id: influencers.id }).from(influencers).where(and11(eq14(influencers.id, input.influencerId), eq14(influencers.userId, ctx.user.id))).limit(1);
+      const owned = await db.select({ id: influencers.id }).from(influencers).where(and12(eq15(influencers.id, input.influencerId), eq15(influencers.userId, ctx.user.id))).limit(1);
       if (owned.length === 0) throw new TRPCError4({ code: "NOT_FOUND", message: "Influencer n\xE3o encontrado" });
-      const metrics = await db.select().from(influencerPerformance).where(eq14(influencerPerformance.influencerId, input.influencerId)).orderBy(desc7(influencerPerformance.date)).limit(input.days);
+      const metrics = await db.select().from(influencerPerformance).where(eq15(influencerPerformance.influencerId, input.influencerId)).orderBy(desc7(influencerPerformance.date)).limit(input.days);
       const totalEngagement = metrics.reduce((sum, m) => sum + (m.totalEngagement || 0), 0);
       const avgEngagementRate = metrics.length > 0 ? metrics.reduce((sum, m) => sum + parseFloat(m.engagementRate?.toString() || "0"), 0) / metrics.length : 0;
       const latestFollowers = metrics[0]?.totalFollowers || 0;
@@ -11209,7 +11157,7 @@ Retorne um JSON com um array de trends contendo: name, category, relevanceScore,
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const allInfluencers = await db.select().from(influencers).where(eq14(influencers.userId, ctx.user.id));
+      const allInfluencers = await db.select().from(influencers).where(eq15(influencers.userId, ctx.user.id));
       return {
         success: true,
         influencers: allInfluencers,
@@ -11271,9 +11219,9 @@ Retorne um JSON com um array de trends contendo: name, category, relevanceScore,
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const owned = await db.select({ id: influencers.id }).from(influencers).where(and11(eq14(influencers.id, input.influencerId), eq14(influencers.userId, ctx.user.id))).limit(1);
+      const owned = await db.select({ id: influencers.id }).from(influencers).where(and12(eq15(influencers.id, input.influencerId), eq15(influencers.userId, ctx.user.id))).limit(1);
       if (owned.length === 0) throw new TRPCError4({ code: "NOT_FOUND", message: "Influencer n\xE3o encontrado" });
-      const posts = await db.select().from(influencerPosts).where(eq14(influencerPosts.influencerId, input.influencerId)).orderBy(desc7(influencerPosts.scheduledAt));
+      const posts = await db.select().from(influencerPosts).where(eq15(influencerPosts.influencerId, input.influencerId)).orderBy(desc7(influencerPosts.scheduledAt));
       const scheduled = posts.filter((p) => p.status === "scheduled");
       const published = posts.filter((p) => p.status === "published");
       const drafts = posts.filter((p) => p.status === "draft");
@@ -11519,7 +11467,7 @@ Feminnita Pijamas
 import { z as z17 } from "zod";
 init_db();
 init_schema();
-import { eq as eq15, sql as sql2, inArray, and as and12 } from "drizzle-orm";
+import { eq as eq16, sql as sql2, inArray, and as and13 } from "drizzle-orm";
 var influencerAccountsRouter = router({
   saveAccounts: protectedProcedure.input(
     z17.object({
@@ -11538,7 +11486,7 @@ var influencerAccountsRouter = router({
       throw new Error("Database not available");
     }
     try {
-      const owned = await db.select({ id: influencers.id }).from(influencers).where(and12(eq15(influencers.id, input.influencerId), eq15(influencers.userId, ctx.user.id))).limit(1);
+      const owned = await db.select({ id: influencers.id }).from(influencers).where(and13(eq16(influencers.id, input.influencerId), eq16(influencers.userId, ctx.user.id))).limit(1);
       if (owned.length === 0) throw new Error("Influencer n\xE3o encontrado ou acesso negado");
       const { influencerId, email, instagram, tiktok, facebook, whatsapp, youtube } = input;
       await db.execute(sql2`
@@ -11579,9 +11527,9 @@ var influencerAccountsRouter = router({
     const db = await getDb();
     if (!db) return null;
     try {
-      const owned = await db.select({ id: influencers.id }).from(influencers).where(and12(eq15(influencers.id, input.influencerId), eq15(influencers.userId, ctx.user.id))).limit(1);
+      const owned = await db.select({ id: influencers.id }).from(influencers).where(and13(eq16(influencers.id, input.influencerId), eq16(influencers.userId, ctx.user.id))).limit(1);
       if (owned.length === 0) return null;
-      const result = await db.select().from(influencerAccounts).where(eq15(influencerAccounts.influencerId, input.influencerId)).limit(1);
+      const result = await db.select().from(influencerAccounts).where(eq16(influencerAccounts.influencerId, input.influencerId)).limit(1);
       console.log("[getAccounts] Resultado:", result);
       return result.length > 0 ? result[0] : null;
     } catch (error) {
@@ -11596,9 +11544,9 @@ var influencerAccountsRouter = router({
       throw new Error("Database not available");
     }
     try {
-      const owned = await db.select({ id: influencers.id }).from(influencers).where(and12(eq15(influencers.id, input.influencerId), eq15(influencers.userId, ctx.user.id))).limit(1);
+      const owned = await db.select({ id: influencers.id }).from(influencers).where(and13(eq16(influencers.id, input.influencerId), eq16(influencers.userId, ctx.user.id))).limit(1);
       if (owned.length === 0) return { success: false, message: "Acesso negado" };
-      await db.delete(influencerAccounts).where(eq15(influencerAccounts.influencerId, input.influencerId));
+      await db.delete(influencerAccounts).where(eq16(influencerAccounts.influencerId, input.influencerId));
       console.log("[deleteAccounts] Sucesso!");
       return {
         success: true,
@@ -11615,7 +11563,7 @@ var influencerAccountsRouter = router({
     const db = await getDb();
     if (!db) return [];
     try {
-      const userInfluencers = await db.select({ id: influencers.id }).from(influencers).where(eq15(influencers.userId, ctx.user.id));
+      const userInfluencers = await db.select({ id: influencers.id }).from(influencers).where(eq16(influencers.userId, ctx.user.id));
       const ids = userInfluencers.map((i) => i.id);
       if (ids.length === 0) return [];
       return await db.select().from(influencerAccounts).where(inArray(influencerAccounts.influencerId, ids));
@@ -11631,7 +11579,7 @@ import { z as z18 } from "zod";
 import { TRPCError as TRPCError6 } from "@trpc/server";
 init_db();
 init_schema();
-import { eq as eq16, and as and13, desc as desc8 } from "drizzle-orm";
+import { eq as eq17, and as and14, desc as desc8 } from "drizzle-orm";
 var postSchedulerRouter = router({
   /**
    * Schedule posts for Tuesday and Friday
@@ -11829,12 +11777,12 @@ ${input.description}`
       if (!db) {
         return { success: true, posts: [], totalScheduled: 0, nextPosting: getNextPostingDay() };
       }
-      const owned = await db.select({ id: influencers.id }).from(influencers).where(and13(eq16(influencers.id, input.influencerId), eq16(influencers.userId, ctx.user.id))).limit(1);
+      const owned = await db.select({ id: influencers.id }).from(influencers).where(and14(eq17(influencers.id, input.influencerId), eq17(influencers.userId, ctx.user.id))).limit(1);
       if (owned.length === 0) return { success: true, posts: [], totalScheduled: 0, nextPosting: getNextPostingDay() };
       const rows = await db.select().from(influencerPosts).where(
-        and13(
-          eq16(influencerPosts.influencerId, input.influencerId),
-          eq16(influencerPosts.status, "scheduled")
+        and14(
+          eq17(influencerPosts.influencerId, input.influencerId),
+          eq17(influencerPosts.status, "scheduled")
         )
       ).orderBy(desc8(influencerPosts.scheduledAt)).limit(20);
       const posts = rows.map((p) => ({
@@ -11955,7 +11903,7 @@ function getNextPostingDays(count) {
 init_db();
 init_schema();
 import { z as z19 } from "zod";
-import { eq as eq17, and as and14, desc as desc9, gte as gte2 } from "drizzle-orm";
+import { eq as eq18, and as and15, desc as desc9, gte as gte2 } from "drizzle-orm";
 async function fetchMetaCampaignInsights(accessToken, adAccountId, campaignIds) {
   const ids = campaignIds?.join(",");
   const filterParam = ids ? `&filtering=[{"field":"id","operator":"IN","value":[${ids.split(",").map((id) => `"${id}"`).join(",")}]}]` : "";
@@ -11984,7 +11932,7 @@ var campaignMetricsSyncRouter = router({
   })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    const token = await db.select().from(oauthTokens).where(and14(eq17(oauthTokens.userId, ctx.user.id), eq17(oauthTokens.plataforma, "meta"), eq17(oauthTokens.isActive, true))).limit(1);
+    const token = await db.select().from(oauthTokens).where(and15(eq18(oauthTokens.userId, ctx.user.id), eq18(oauthTokens.plataforma, "meta"), eq18(oauthTokens.isActive, true))).limit(1);
     if (!token.length) {
       return { campaignsSynced: 0, metricsUpdated: 0, lastSync: /* @__PURE__ */ new Date(), nextSync: new Date(Date.now() + input.interval * 6e4), status: "no_token" };
     }
@@ -12023,7 +11971,7 @@ var campaignMetricsSyncRouter = router({
     const db = await getDb();
     if (!db) throw new Error("Database not available");
     const since = new Date(Date.now() - input.days * 24 * 60 * 60 * 1e3);
-    const syncRows = await db.select().from(metaSyncHistory).where(and14(eq17(metaSyncHistory.userId, ctx.user.id), gte2(metaSyncHistory.createdAt, since))).orderBy(metaSyncHistory.createdAt).limit(input.days * 2);
+    const syncRows = await db.select().from(metaSyncHistory).where(and15(eq18(metaSyncHistory.userId, ctx.user.id), gte2(metaSyncHistory.createdAt, since))).orderBy(metaSyncHistory.createdAt).limit(input.days * 2);
     const history = syncRows.map((row) => ({
       date: row.createdAt.toISOString().split("T")[0],
       impressions: row.totalCampaigns ?? 0,
@@ -12037,7 +11985,7 @@ var campaignMetricsSyncRouter = router({
   comparePerformance: protectedProcedure.input(z19.object({ campaignIds: z19.array(z19.string()).min(2).max(5) })).query(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    const token = await db.select().from(oauthTokens).where(and14(eq17(oauthTokens.userId, ctx.user.id), eq17(oauthTokens.plataforma, "meta"), eq17(oauthTokens.isActive, true))).limit(1);
+    const token = await db.select().from(oauthTokens).where(and15(eq18(oauthTokens.userId, ctx.user.id), eq18(oauthTokens.plataforma, "meta"), eq18(oauthTokens.isActive, true))).limit(1);
     if (!token.length) return { campaigns: [], bestPerformer: "", totalSpend: 0, totalROI: 0 };
     const accountInfo = token[0].accountInfo ? JSON.parse(token[0].accountInfo) : {};
     const adAccountId = accountInfo.adAccountId ?? accountInfo.id ?? "";
@@ -12064,7 +12012,7 @@ var campaignMetricsSyncRouter = router({
   })).query(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    const alertRows = await db.select().from(metaCampaignAlerts).where(and14(eq17(metaCampaignAlerts.userId, ctx.user.id), eq17(metaCampaignAlerts.isResolved, false))).orderBy(desc9(metaCampaignAlerts.createdAt)).limit(50);
+    const alertRows = await db.select().from(metaCampaignAlerts).where(and15(eq18(metaCampaignAlerts.userId, ctx.user.id), eq18(metaCampaignAlerts.isResolved, false))).orderBy(desc9(metaCampaignAlerts.createdAt)).limit(50);
     const filtered = input.campaignIds?.length ? alertRows.filter((a) => input.campaignIds.includes(a.campaignId)) : alertRows;
     const alerts = filtered.map((a) => ({
       type: a.alertType,
@@ -12087,7 +12035,7 @@ var campaignMetricsSyncRouter = router({
 init_db();
 init_schema();
 import { z as z20 } from "zod";
-import { eq as eq18, and as and15, desc as desc10 } from "drizzle-orm";
+import { eq as eq19, and as and16, desc as desc10 } from "drizzle-orm";
 var smartAlertsRouter = router({
   /**
    * Criar alerta inteligente para campanha
@@ -12142,9 +12090,9 @@ var smartAlertsRouter = router({
     const db = await getDb();
     if (!db) return { alerts: [], totalAlerts: 0, criticalCount: 0, warningCount: 0, infoCount: 0 };
     const rows = await db.select().from(metaCampaignAlerts).where(
-      and15(
-        eq18(metaCampaignAlerts.userId, ctx.user.id),
-        eq18(metaCampaignAlerts.isResolved, false)
+      and16(
+        eq19(metaCampaignAlerts.userId, ctx.user.id),
+        eq19(metaCampaignAlerts.isResolved, false)
       )
     ).orderBy(desc10(metaCampaignAlerts.createdAt)).limit(50);
     let alerts = rows.map((a) => ({
@@ -12187,9 +12135,9 @@ var smartAlertsRouter = router({
     const db = await getDb();
     if (!db) throw new Error("Database not available");
     await db.update(metaCampaignAlerts).set({ isResolved: true, resolvedAt: /* @__PURE__ */ new Date() }).where(
-      and15(
-        eq18(metaCampaignAlerts.id, parseInt(input.alertId)),
-        eq18(metaCampaignAlerts.userId, ctx.user.id)
+      and16(
+        eq19(metaCampaignAlerts.id, parseInt(input.alertId)),
+        eq19(metaCampaignAlerts.userId, ctx.user.id)
       )
     );
     const actionMessages = {
@@ -12235,10 +12183,10 @@ var smartAlertsRouter = router({
     const db = await getDb();
     if (!db) return { campaignId: input.campaignId, recommendations: [], totalRecommendations: 0, highPriority: 0 };
     const alerts = await db.select().from(metaCampaignAlerts).where(
-      and15(
-        eq18(metaCampaignAlerts.userId, ctx.user.id),
-        eq18(metaCampaignAlerts.campaignId, input.campaignId),
-        eq18(metaCampaignAlerts.isResolved, false)
+      and16(
+        eq19(metaCampaignAlerts.userId, ctx.user.id),
+        eq19(metaCampaignAlerts.campaignId, input.campaignId),
+        eq19(metaCampaignAlerts.isResolved, false)
       )
     );
     const recommendations = alerts.filter((a) => a.recommendation).map((a, idx) => ({
@@ -12268,9 +12216,9 @@ var smartAlertsRouter = router({
     const db = await getDb();
     if (!db) throw new Error("Database not available");
     await db.update(metaCampaignAlerts).set({ isRead: true, isResolved: true, resolvedAt: /* @__PURE__ */ new Date() }).where(
-      and15(
-        eq18(metaCampaignAlerts.id, parseInt(input.alertId)),
-        eq18(metaCampaignAlerts.userId, ctx.user.id)
+      and16(
+        eq19(metaCampaignAlerts.id, parseInt(input.alertId)),
+        eq19(metaCampaignAlerts.userId, ctx.user.id)
       )
     );
     return {
@@ -12286,7 +12234,7 @@ var smartAlertsRouter = router({
 init_schema();
 init_db();
 import { z as z21 } from "zod";
-import { eq as eq19, and as and16 } from "drizzle-orm";
+import { eq as eq20, and as and17 } from "drizzle-orm";
 import * as crypto7 from "crypto";
 var loginAttempts = /* @__PURE__ */ new Map();
 function checkRateLimit(key, maxAttempts = 5, windowMs = 15 * 60 * 1e3) {
@@ -12327,7 +12275,7 @@ var collaboratorsRouter = router({
   ).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    const existing = await db.select().from(collaborators).where(eq19(collaborators.email, input.email)).limit(1);
+    const existing = await db.select().from(collaborators).where(eq20(collaborators.email, input.email)).limit(1);
     if (existing.length > 0) {
       throw new Error("Email j\xE1 cadastrado");
     }
@@ -12340,7 +12288,7 @@ var collaboratorsRouter = router({
       role: input.role,
       isActive: true
     });
-    const result = await db.select().from(collaborators).where(eq19(collaborators.email, input.email)).limit(1);
+    const result = await db.select().from(collaborators).where(eq20(collaborators.email, input.email)).limit(1);
     return {
       success: true,
       collaborator: result[0]
@@ -12358,7 +12306,7 @@ var collaboratorsRouter = router({
     if (!checkRateLimit(input.email)) {
       throw new Error("Muitas tentativas de login. Tente novamente em 15 minutos.");
     }
-    const result = await db.select().from(collaborators).where(eq19(collaborators.email, input.email)).limit(1);
+    const result = await db.select().from(collaborators).where(eq20(collaborators.email, input.email)).limit(1);
     if (result.length === 0) {
       throw new Error("Colaborador n\xE3o encontrado");
     }
@@ -12369,7 +12317,7 @@ var collaboratorsRouter = router({
     if (!collaborator.isActive) {
       throw new Error("Colaborador inativo");
     }
-    await db.update(collaborators).set({ lastLogin: /* @__PURE__ */ new Date() }).where(eq19(collaborators.id, collaborator.id));
+    await db.update(collaborators).set({ lastLogin: /* @__PURE__ */ new Date() }).where(eq20(collaborators.id, collaborator.id));
     return {
       success: true,
       collaborator: {
@@ -12393,8 +12341,8 @@ var collaboratorsRouter = router({
     await db.update(collaborators).set({
       githubId: input.githubId,
       githubUsername: input.githubUsername
-    }).where(and16(eq19(collaborators.id, input.collaboratorId), eq19(collaborators.userId, ctx.user.id)));
-    const result = await db.select().from(collaborators).where(and16(eq19(collaborators.id, input.collaboratorId), eq19(collaborators.userId, ctx.user.id))).limit(1);
+    }).where(and17(eq20(collaborators.id, input.collaboratorId), eq20(collaborators.userId, ctx.user.id)));
+    const result = await db.select().from(collaborators).where(and17(eq20(collaborators.id, input.collaboratorId), eq20(collaborators.userId, ctx.user.id))).limit(1);
     return {
       success: true,
       collaborator: result[0]
@@ -12404,7 +12352,7 @@ var collaboratorsRouter = router({
   listCollaborators: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    const result = await db.select().from(collaborators).where(eq19(collaborators.userId, ctx.user.id));
+    const result = await db.select().from(collaborators).where(eq20(collaborators.userId, ctx.user.id));
     return result.map((c) => ({
       id: c.id,
       name: c.name,
@@ -12431,8 +12379,8 @@ var collaboratorsRouter = router({
     if (input.name) updates.name = input.name;
     if (input.role) updates.role = input.role;
     if (input.isActive !== void 0) updates.isActive = input.isActive;
-    await db.update(collaborators).set(updates).where(and16(eq19(collaborators.id, input.collaboratorId), eq19(collaborators.userId, ctx.user.id)));
-    const result = await db.select().from(collaborators).where(and16(eq19(collaborators.id, input.collaboratorId), eq19(collaborators.userId, ctx.user.id))).limit(1);
+    await db.update(collaborators).set(updates).where(and17(eq20(collaborators.id, input.collaboratorId), eq20(collaborators.userId, ctx.user.id)));
+    const result = await db.select().from(collaborators).where(and17(eq20(collaborators.id, input.collaboratorId), eq20(collaborators.userId, ctx.user.id))).limit(1);
     return {
       success: true,
       collaborator: result[0]
@@ -12442,7 +12390,7 @@ var collaboratorsRouter = router({
   deleteCollaborator: protectedProcedure.input(z21.object({ collaboratorId: z21.number() })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    await db.delete(collaborators).where(and16(eq19(collaborators.id, input.collaboratorId), eq19(collaborators.userId, ctx.user.id)));
+    await db.delete(collaborators).where(and17(eq20(collaborators.id, input.collaboratorId), eq20(collaborators.userId, ctx.user.id)));
     return { success: true };
   }),
   // Resetar senha
@@ -12455,8 +12403,8 @@ var collaboratorsRouter = router({
     const db = await getDb();
     if (!db) throw new Error("Database not available");
     const passwordHash = hashPassword(input.newPassword);
-    await db.update(collaborators).set({ passwordHash }).where(and16(eq19(collaborators.id, input.collaboratorId), eq19(collaborators.userId, ctx.user.id)));
-    const result = await db.select().from(collaborators).where(and16(eq19(collaborators.id, input.collaboratorId), eq19(collaborators.userId, ctx.user.id))).limit(1);
+    await db.update(collaborators).set({ passwordHash }).where(and17(eq20(collaborators.id, input.collaboratorId), eq20(collaborators.userId, ctx.user.id)));
+    const result = await db.select().from(collaborators).where(and17(eq20(collaborators.id, input.collaboratorId), eq20(collaborators.userId, ctx.user.id))).limit(1);
     return {
       success: true,
       collaborator: result[0]
@@ -12468,7 +12416,7 @@ var collaboratorsRouter = router({
 import { z as z22 } from "zod";
 init_db();
 init_schema();
-import { eq as eq20, and as and17 } from "drizzle-orm";
+import { eq as eq21, and as and18 } from "drizzle-orm";
 var oauthCredentialsRouter = router({
   // Salvar credenciais OAuth
   saveCredentials: protectedProcedure.input(
@@ -12484,9 +12432,9 @@ var oauthCredentialsRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       const existing = await db.select().from(oauthCredentials).where(
-        and17(
-          eq20(oauthCredentials.userId, ctx.user.id),
-          eq20(oauthCredentials.platform, input.platform)
+        and18(
+          eq21(oauthCredentials.userId, ctx.user.id),
+          eq21(oauthCredentials.platform, input.platform)
         )
       ).limit(1);
       if (existing.length > 0) {
@@ -12499,7 +12447,7 @@ var oauthCredentialsRouter = router({
           isConnected: !!(input.clientId || input.accessToken),
           lastValidated: /* @__PURE__ */ new Date(),
           updatedAt: /* @__PURE__ */ new Date()
-        }).where(eq20(oauthCredentials.id, existingCred.id));
+        }).where(eq21(oauthCredentials.id, existingCred.id));
       } else {
         await db.insert(oauthCredentials).values({
           userId: ctx.user.id,
@@ -12531,9 +12479,9 @@ var oauthCredentialsRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       const credentials = await db.select().from(oauthCredentials).where(
-        and17(
-          eq20(oauthCredentials.userId, ctx.user.id),
-          eq20(oauthCredentials.platform, input.platform)
+        and18(
+          eq21(oauthCredentials.userId, ctx.user.id),
+          eq21(oauthCredentials.platform, input.platform)
         )
       ).limit(1);
       if (credentials.length === 0) {
@@ -12558,7 +12506,7 @@ var oauthCredentialsRouter = router({
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const credentials = await db.select().from(oauthCredentials).where(eq20(oauthCredentials.userId, ctx.user.id));
+      const credentials = await db.select().from(oauthCredentials).where(eq21(oauthCredentials.userId, ctx.user.id));
       return credentials.map((cred) => ({
         id: cred.id,
         platform: cred.platform,
@@ -12582,9 +12530,9 @@ var oauthCredentialsRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       await db.delete(oauthCredentials).where(
-        and17(
-          eq20(oauthCredentials.userId, ctx.user.id),
-          eq20(oauthCredentials.platform, input.platform)
+        and18(
+          eq21(oauthCredentials.userId, ctx.user.id),
+          eq21(oauthCredentials.platform, input.platform)
         )
       );
       return {
@@ -12606,9 +12554,9 @@ var oauthCredentialsRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       const credentials = await db.select().from(oauthCredentials).where(
-        and17(
-          eq20(oauthCredentials.userId, ctx.user.id),
-          eq20(oauthCredentials.platform, input.platform)
+        and18(
+          eq21(oauthCredentials.userId, ctx.user.id),
+          eq21(oauthCredentials.platform, input.platform)
         )
       ).limit(1);
       if (credentials.length === 0) {
@@ -12626,7 +12574,7 @@ var oauthCredentialsRouter = router({
       }
       await db.update(oauthCredentials).set({
         lastValidated: /* @__PURE__ */ new Date()
-      }).where(eq20(oauthCredentials.id, cred.id));
+      }).where(eq21(oauthCredentials.id, cred.id));
       return {
         success: true,
         message: `Credenciais de ${input.platform} validadas com sucesso!`
@@ -12642,7 +12590,7 @@ var oauthCredentialsRouter = router({
 init_db();
 init_schema();
 import { z as z23 } from "zod";
-import { eq as eq23, and as and20, desc as desc12 } from "drizzle-orm";
+import { eq as eq24, and as and21, desc as desc12 } from "drizzle-orm";
 
 // server/agents/beatriz-agent.ts
 init_llm();
@@ -12750,7 +12698,7 @@ Secund\xE1rio: Consumidoras finais interessadas em qualidade de sono, tecidos e 
 \u2550\u2550\u2550 PILARES DE CONTE\xDADO \u2550\u2550\u2550
 
 1. HIST\xD3RIAS DA COMUNIDADE (categoria: Comunidade)
-   - Hist\xF3rias reais de revendedoras bem-sucedidas (estilo: "Comecei com R$199 e hoje tenho 120 clientes")
+   - Hist\xF3rias reais de revendedoras bem-sucedidas (estilo: "Comecei sem pedido m\xEDnimo e hoje tenho 120 clientes")
    - Casos de sucesso detalhados: quanto investiram, quanto faturam, como conquistaram clientes
    - Perfis de mulheres de diferentes regi\xF5es, idades e situa\xE7\xF5es de vida
    - Tom: inspiracional, detalhado, com n\xFAmeros reais, come\xE7a pela hist\xF3ria pessoal
@@ -12906,7 +12854,7 @@ Retorne APENAS o conte\xFAdo melhorado em markdown, sem explica\xE7\xF5es adicio
 }
 
 // server/agents/beatriz-agent.ts
-import { eq as eq22, and as and19 } from "drizzle-orm";
+import { eq as eq23, and as and20 } from "drizzle-orm";
 async function generateAdCopy(context) {
   const result = await invokeLLM({
     messages: [
@@ -12981,7 +12929,7 @@ var CANVA_API = "https://api.canva.com/rest/v1";
 async function getCanvaToken(userId) {
   const db = await getDb();
   if (!db) throw new Error("Database unavailable");
-  const rows = await db.select().from(oauthCredentials).where(and20(eq23(oauthCredentials.platform, "canva"), eq23(oauthCredentials.userId, userId)));
+  const rows = await db.select().from(oauthCredentials).where(and21(eq24(oauthCredentials.platform, "canva"), eq24(oauthCredentials.userId, userId)));
   if (!rows.length || !rows[0].accessToken) throw new Error("Canva n\xE3o conectado. Acesse /canva-oauth para autorizar.");
   return rows[0].accessToken;
 }
@@ -13004,7 +12952,7 @@ var canvaIntegrationRouter = {
     try {
       const db = await getDb();
       if (!db) throw new Error("Database connection failed");
-      const credentials = await db.select().from(oauthCredentials).where(and20(eq23(oauthCredentials.platform, "canva"), eq23(oauthCredentials.userId, ctx.user.id)));
+      const credentials = await db.select().from(oauthCredentials).where(and21(eq24(oauthCredentials.platform, "canva"), eq24(oauthCredentials.userId, ctx.user.id)));
       if (!credentials || credentials.length === 0) {
         throw new Error("Credenciais do Canva n\xE3o configuradas");
       }
@@ -13198,7 +13146,7 @@ var canvaIntegrationRouter = {
     try {
       const db = await getDb();
       if (!db) return { success: true, designs: [], total: 0 };
-      const rows = await db.select().from(designHistory).where(eq23(designHistory.userId, ctx.user.id)).orderBy(desc12(designHistory.createdAt)).limit(input?.limit ?? 50);
+      const rows = await db.select().from(designHistory).where(eq24(designHistory.userId, ctx.user.id)).orderBy(desc12(designHistory.createdAt)).limit(input?.limit ?? 50);
       return {
         success: true,
         designs: rows,
@@ -13316,7 +13264,7 @@ var canvaIntegrationRouter = {
     try {
       const db = await getDb();
       if (!db) throw new Error("Database connection failed");
-      await db.update(designHistory).set({ status: input.status }).where(and20(eq23(designHistory.id, input.id), eq23(designHistory.userId, ctx.user.id)));
+      await db.update(designHistory).set({ status: input.status }).where(and21(eq24(designHistory.id, input.id), eq24(designHistory.userId, ctx.user.id)));
       return { success: true };
     } catch (error) {
       throw new Error(`Erro ao atualizar status: ${error.message}`);
@@ -13336,7 +13284,7 @@ var canvaIntegrationRouter = {
     try {
       const db = await getDb();
       if (!db) throw new Error("Database connection failed");
-      const credentials = await db.select().from(oauthCredentials).where(and20(eq23(oauthCredentials.platform, "canva"), eq23(oauthCredentials.userId, ctx.user.id)));
+      const credentials = await db.select().from(oauthCredentials).where(and21(eq24(oauthCredentials.platform, "canva"), eq24(oauthCredentials.userId, ctx.user.id)));
       if (!credentials || credentials.length === 0) {
         throw new Error("Credenciais do Canva n\xE3o configuradas");
       }
@@ -13400,7 +13348,7 @@ var canvaIntegrationRouter = {
 init_db();
 init_schema();
 import { z as z24 } from "zod";
-import { eq as eq24, and as and21 } from "drizzle-orm";
+import { eq as eq25, and as and22 } from "drizzle-orm";
 var BLING_API_BASE = "https://api.bling.com.br/Api/v3";
 var blingRealRouter = {
   /**
@@ -13465,7 +13413,7 @@ var blingRealRouter = {
     try {
       const db = await getDb();
       if (!db) throw new Error("Database connection failed");
-      const credentials = await db.select().from(oauthCredentials).where(and21(eq24(oauthCredentials.platform, "bling"), eq24(oauthCredentials.userId, ctx.user.id)));
+      const credentials = await db.select().from(oauthCredentials).where(and22(eq25(oauthCredentials.platform, "bling"), eq25(oauthCredentials.userId, ctx.user.id)));
       if (!credentials || credentials.length === 0) {
         throw new Error("Credenciais do Bling n\xE3o configuradas");
       }
@@ -13497,7 +13445,7 @@ var blingRealRouter = {
     try {
       const db = await getDb();
       if (!db) throw new Error("Database connection failed");
-      const credentials = await db.select().from(oauthCredentials).where(and21(eq24(oauthCredentials.platform, "bling"), eq24(oauthCredentials.userId, ctx.user.id)));
+      const credentials = await db.select().from(oauthCredentials).where(and22(eq25(oauthCredentials.platform, "bling"), eq25(oauthCredentials.userId, ctx.user.id)));
       if (!credentials || credentials.length === 0) {
         throw new Error("Credenciais do Bling n\xE3o configuradas");
       }
@@ -13529,7 +13477,7 @@ var blingRealRouter = {
     try {
       const db = await getDb();
       if (!db) throw new Error("Database connection failed");
-      const credentials = await db.select().from(oauthCredentials).where(and21(eq24(oauthCredentials.platform, "bling"), eq24(oauthCredentials.userId, ctx.user.id)));
+      const credentials = await db.select().from(oauthCredentials).where(and22(eq25(oauthCredentials.platform, "bling"), eq25(oauthCredentials.userId, ctx.user.id)));
       if (!credentials || credentials.length === 0) {
         throw new Error("Credenciais do Bling n\xE3o configuradas");
       }
@@ -13563,7 +13511,7 @@ var blingRealRouter = {
     try {
       const db = await getDb();
       if (!db) throw new Error("Database connection failed");
-      const credentials = await db.select().from(oauthCredentials).where(and21(eq24(oauthCredentials.platform, "bling"), eq24(oauthCredentials.userId, ctx.user.id)));
+      const credentials = await db.select().from(oauthCredentials).where(and22(eq25(oauthCredentials.platform, "bling"), eq25(oauthCredentials.userId, ctx.user.id)));
       if (!credentials || credentials.length === 0) {
         throw new Error("Credenciais do Bling n\xE3o configuradas");
       }
@@ -13596,7 +13544,7 @@ var blingRealRouter = {
     try {
       const db = await getDb();
       if (!db) throw new Error("Database connection failed");
-      const credentials = await db.select().from(oauthCredentials).where(and21(eq24(oauthCredentials.platform, "bling"), eq24(oauthCredentials.userId, ctx.user.id)));
+      const credentials = await db.select().from(oauthCredentials).where(and22(eq25(oauthCredentials.platform, "bling"), eq25(oauthCredentials.userId, ctx.user.id)));
       if (!credentials || credentials.length === 0) {
         throw new Error("Credenciais do Bling n\xE3o configuradas");
       }
@@ -13633,7 +13581,7 @@ var blingRealRouter = {
         isConnected: false,
         accessToken: null,
         refreshToken: null
-      }).where(and21(eq24(oauthCredentials.platform, "bling"), eq24(oauthCredentials.userId, ctx.user.id)));
+      }).where(and22(eq25(oauthCredentials.platform, "bling"), eq25(oauthCredentials.userId, ctx.user.id)));
       return {
         success: true,
         message: "Conta Bling desconectada com sucesso"
@@ -13648,7 +13596,7 @@ var blingRealRouter = {
 init_db();
 init_schema();
 import { z as z25 } from "zod";
-import { eq as eq25, and as and22 } from "drizzle-orm";
+import { eq as eq26, and as and23 } from "drizzle-orm";
 import crypto8 from "crypto";
 function generateCodeChallenge() {
   const codeVerifier = crypto8.randomBytes(32).toString("base64url");
@@ -13708,9 +13656,9 @@ var canvaOAuthRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       await db.delete(oauthCredentials).where(
-        and22(
-          eq25(oauthCredentials.userId, parseInt(input.userId)),
-          eq25(oauthCredentials.platform, "canva")
+        and23(
+          eq26(oauthCredentials.userId, parseInt(input.userId)),
+          eq26(oauthCredentials.platform, "canva")
         )
       );
       await db.insert(oauthCredentials).values({
@@ -13735,9 +13683,9 @@ var canvaOAuthRouter = router({
     const db = await getDb();
     if (!db) throw new Error("Database not available");
     const credential = await db.select().from(oauthCredentials).where(
-      and22(
-        eq25(oauthCredentials.userId, ctx.user.id),
-        eq25(oauthCredentials.platform, "canva")
+      and23(
+        eq26(oauthCredentials.userId, ctx.user.id),
+        eq26(oauthCredentials.platform, "canva")
       )
     ).limit(1);
     if (!credential.length || !credential[0].refreshToken) {
@@ -13768,9 +13716,9 @@ var canvaOAuthRouter = router({
         expiresAt: tokenData.expires_in ? new Date(Date.now() + tokenData.expires_in * 1e3) : null,
         lastValidated: /* @__PURE__ */ new Date()
       }).where(
-        and22(
-          eq25(oauthCredentials.userId, ctx.user.id),
-          eq25(oauthCredentials.platform, "canva")
+        and23(
+          eq26(oauthCredentials.userId, ctx.user.id),
+          eq26(oauthCredentials.platform, "canva")
         )
       );
       return { success: true, message: "Token renovado com sucesso" };
@@ -13785,7 +13733,7 @@ init_db();
 init_schema();
 import { z as z26 } from "zod";
 import crypto9 from "crypto";
-import { eq as eq26, and as and23 } from "drizzle-orm";
+import { eq as eq27, and as and24 } from "drizzle-orm";
 
 // server/_core/rateLimiter.ts
 var store = /* @__PURE__ */ new Map();
@@ -13850,9 +13798,9 @@ var metaCapiRouter = router({
         throw new Error("Database not available");
       }
       const credsResult = await dbInstance.select().from(oauthCredentials).where(
-        and23(
-          eq26(oauthCredentials.userId, ctx.user.id),
-          eq26(oauthCredentials.platform, "meta")
+        and24(
+          eq27(oauthCredentials.userId, ctx.user.id),
+          eq27(oauthCredentials.platform, "meta")
         )
       ).limit(1);
       if (!credsResult || credsResult.length === 0 || !credsResult[0].clientId || !credsResult[0].clientSecret) {
@@ -13959,9 +13907,9 @@ var metaCapiRouter = router({
         throw new Error("Database not available");
       }
       const credsResult = await dbInstance.select().from(oauthCredentials).where(
-        and23(
-          eq26(oauthCredentials.userId, ctx.user.id),
-          eq26(oauthCredentials.platform, "meta")
+        and24(
+          eq27(oauthCredentials.userId, ctx.user.id),
+          eq27(oauthCredentials.platform, "meta")
         )
       ).limit(1);
       if (!credsResult || credsResult.length === 0 || !credsResult[0].clientId || !credsResult[0].clientSecret) {
@@ -14067,9 +14015,9 @@ var metaCapiRouter = router({
         throw new Error("Database not available");
       }
       const credsResult = await dbInstance.select().from(oauthCredentials).where(
-        and23(
-          eq26(oauthCredentials.userId, ctx.user.id),
-          eq26(oauthCredentials.platform, "meta")
+        and24(
+          eq27(oauthCredentials.userId, ctx.user.id),
+          eq27(oauthCredentials.platform, "meta")
         )
       ).limit(1);
       if (!credsResult || credsResult.length === 0 || !credsResult[0].clientId || !credsResult[0].clientSecret) {
@@ -14201,9 +14149,9 @@ var metaCapiRouter = router({
         throw new Error("Database not available");
       }
       const credsResult = await dbInstance.select().from(oauthCredentials).where(
-        and23(
-          eq26(oauthCredentials.userId, ctx.user.id),
-          eq26(oauthCredentials.platform, "meta")
+        and24(
+          eq27(oauthCredentials.userId, ctx.user.id),
+          eq27(oauthCredentials.platform, "meta")
         )
       ).limit(1);
       if (!credsResult || credsResult.length === 0) {
@@ -14230,7 +14178,7 @@ var metaCapiRouter = router({
 init_db();
 init_schema();
 import { z as z27 } from "zod";
-import { eq as eq27, and as and24, desc as desc13 } from "drizzle-orm";
+import { eq as eq28, and as and25, desc as desc13 } from "drizzle-orm";
 var postsRouter = router({
   create: protectedProcedure.input(
     z27.object({
@@ -14246,7 +14194,7 @@ var postsRouter = router({
   ).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    const [influencer] = await db.select().from(influencers).where(and24(eq27(influencers.id, input.influencerId), eq27(influencers.userId, ctx.user.id))).limit(1);
+    const [influencer] = await db.select().from(influencers).where(and25(eq28(influencers.id, input.influencerId), eq28(influencers.userId, ctx.user.id))).limit(1);
     if (!influencer) throw new Error("Influenciadora n\xE3o encontrada");
     await db.insert(influencerPosts).values({
       influencerId: input.influencerId,
@@ -14259,7 +14207,7 @@ var postsRouter = router({
       aiGenerated: false,
       scheduledAt: input.scheduledAt ? new Date(input.scheduledAt) : null
     });
-    const [created] = await db.select().from(influencerPosts).where(eq27(influencerPosts.influencerId, input.influencerId)).orderBy(desc13(influencerPosts.createdAt)).limit(1);
+    const [created] = await db.select().from(influencerPosts).where(eq28(influencerPosts.influencerId, input.influencerId)).orderBy(desc13(influencerPosts.createdAt)).limit(1);
     return { success: true, post: created };
   }),
   schedule: protectedProcedure.input(
@@ -14271,12 +14219,12 @@ var postsRouter = router({
   ).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    const [post] = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq27(influencerPosts.id, input.postId)).limit(1);
+    const [post] = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq28(influencerPosts.id, input.postId)).limit(1);
     if (!post) throw new Error("Post n\xE3o encontrado");
-    const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and24(eq27(influencers.id, post.influencerId), eq27(influencers.userId, ctx.user.id))).limit(1);
+    const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and25(eq28(influencers.id, post.influencerId), eq28(influencers.userId, ctx.user.id))).limit(1);
     if (!owned) throw new Error("Acesso negado");
     const scheduledDate = new Date(input.scheduledAt);
-    await db.update(influencerPosts).set({ status: "scheduled", scheduledAt: scheduledDate }).where(eq27(influencerPosts.id, input.postId));
+    await db.update(influencerPosts).set({ status: "scheduled", scheduledAt: scheduledDate }).where(eq28(influencerPosts.id, input.postId));
     for (const platform of input.platforms) {
       await db.insert(publicationQueueJobs).values({
         postId: input.postId,
@@ -14301,12 +14249,12 @@ var postsRouter = router({
   ).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    const [post] = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq27(influencerPosts.id, input.postId)).limit(1);
+    const [post] = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq28(influencerPosts.id, input.postId)).limit(1);
     if (!post) throw new Error("Post n\xE3o encontrado");
-    const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and24(eq27(influencers.id, post.influencerId), eq27(influencers.userId, ctx.user.id))).limit(1);
+    const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and25(eq28(influencers.id, post.influencerId), eq28(influencers.userId, ctx.user.id))).limit(1);
     if (!owned) throw new Error("Acesso negado");
     const now = /* @__PURE__ */ new Date();
-    await db.update(influencerPosts).set({ status: "scheduled", scheduledAt: now }).where(eq27(influencerPosts.id, input.postId));
+    await db.update(influencerPosts).set({ status: "scheduled", scheduledAt: now }).where(eq28(influencerPosts.id, input.postId));
     await db.insert(publicationQueueJobs).values({
       postId: input.postId,
       accountId: 1,
@@ -14324,9 +14272,9 @@ var postsRouter = router({
   getById: protectedProcedure.input(z27.object({ postId: z27.number() })).query(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    const [post] = await db.select().from(influencerPosts).where(eq27(influencerPosts.id, input.postId)).limit(1);
+    const [post] = await db.select().from(influencerPosts).where(eq28(influencerPosts.id, input.postId)).limit(1);
     if (!post) throw new Error("Post n\xE3o encontrado");
-    const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and24(eq27(influencers.id, post.influencerId), eq27(influencers.userId, ctx.user.id))).limit(1);
+    const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and25(eq28(influencers.id, post.influencerId), eq28(influencers.userId, ctx.user.id))).limit(1);
     if (!owned) throw new Error("Acesso negado");
     return post;
   }),
@@ -14340,24 +14288,24 @@ var postsRouter = router({
   ).query(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    const userInfluencers = await db.select({ id: influencers.id }).from(influencers).where(eq27(influencers.userId, ctx.user.id));
+    const userInfluencers = await db.select({ id: influencers.id }).from(influencers).where(eq28(influencers.userId, ctx.user.id));
     if (userInfluencers.length === 0) return { posts: [], total: 0 };
     const influencerIds = userInfluencers.map((i) => i.id);
     const targetId = input.influencerId && influencerIds.includes(input.influencerId) ? input.influencerId : null;
-    const conditions = targetId ? [eq27(influencerPosts.influencerId, targetId), ...input.status ? [eq27(influencerPosts.status, input.status)] : []] : input.status ? [eq27(influencerPosts.status, input.status)] : [];
+    const conditions = targetId ? [eq28(influencerPosts.influencerId, targetId), ...input.status ? [eq28(influencerPosts.status, input.status)] : []] : input.status ? [eq28(influencerPosts.status, input.status)] : [];
     const query = db.select().from(influencerPosts).orderBy(desc13(influencerPosts.createdAt)).limit(input.limit).offset(input.offset);
-    const posts = conditions.length > 0 ? await query.where(conditions.length === 1 ? conditions[0] : and24(...conditions)) : await query;
+    const posts = conditions.length > 0 ? await query.where(conditions.length === 1 ? conditions[0] : and25(...conditions)) : await query;
     const filtered = targetId ? posts : posts.filter((p) => influencerIds.includes(p.influencerId));
     return { posts: filtered, total: filtered.length };
   }),
   delete: protectedProcedure.input(z27.object({ postId: z27.number() })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    const [post] = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq27(influencerPosts.id, input.postId)).limit(1);
+    const [post] = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq28(influencerPosts.id, input.postId)).limit(1);
     if (!post) return { success: true };
-    const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and24(eq27(influencers.id, post.influencerId), eq27(influencers.userId, ctx.user.id))).limit(1);
+    const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and25(eq28(influencers.id, post.influencerId), eq28(influencers.userId, ctx.user.id))).limit(1);
     if (!owned) throw new Error("Acesso negado");
-    await db.delete(influencerPosts).where(eq27(influencerPosts.id, input.postId));
+    await db.delete(influencerPosts).where(eq28(influencerPosts.id, input.postId));
     return { success: true };
   }),
   uploadMedia: protectedProcedure.input(
@@ -14371,22 +14319,22 @@ var postsRouter = router({
   ).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    const [post] = await db.select().from(influencerPosts).where(eq27(influencerPosts.id, input.postId)).limit(1);
+    const [post] = await db.select().from(influencerPosts).where(eq28(influencerPosts.id, input.postId)).limit(1);
     if (!post) throw new Error("Post n\xE3o encontrado");
-    const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and24(eq27(influencers.id, post.influencerId), eq27(influencers.userId, ctx.user.id))).limit(1);
+    const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and25(eq28(influencers.id, post.influencerId), eq28(influencers.userId, ctx.user.id))).limit(1);
     if (!owned) throw new Error("Acesso negado");
     const existing = Array.isArray(post.mediaUrls) ? post.mediaUrls : [];
-    await db.update(influencerPosts).set({ mediaUrls: [...existing, input.mediaUrl] }).where(eq27(influencerPosts.id, input.postId));
+    await db.update(influencerPosts).set({ mediaUrls: [...existing, input.mediaUrl] }).where(eq28(influencerPosts.id, input.postId));
     return { success: true, mediaUrl: input.mediaUrl };
   }),
   getHistory: protectedProcedure.input(z27.object({ influencerId: z27.number() })).query(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and24(eq27(influencers.id, input.influencerId), eq27(influencers.userId, ctx.user.id))).limit(1);
+    const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and25(eq28(influencers.id, input.influencerId), eq28(influencers.userId, ctx.user.id))).limit(1);
     if (!owned) return { influencerId: input.influencerId, posts: [] };
-    const posts = await db.select().from(influencerPosts).where(and24(
-      eq27(influencerPosts.influencerId, input.influencerId),
-      eq27(influencerPosts.status, "published")
+    const posts = await db.select().from(influencerPosts).where(and25(
+      eq28(influencerPosts.influencerId, input.influencerId),
+      eq28(influencerPosts.status, "published")
     )).orderBy(desc13(influencerPosts.publishedAt)).limit(50);
     return { influencerId: input.influencerId, posts };
   })
@@ -14397,7 +14345,7 @@ init_db();
 init_schema();
 import { z as z28 } from "zod";
 import axios from "axios";
-import { eq as eq28 } from "drizzle-orm";
+import { eq as eq29 } from "drizzle-orm";
 var INSTAGRAM_GRAPH_API_BASE = "https://graph.instagram.com/v19.0";
 var instagramApiRouter = router({
   /**
@@ -14665,7 +14613,7 @@ var instagramApiRouter = router({
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const accounts = await db.select().from(instagramAccounts).where(eq28(instagramAccounts.isActive, true)).limit(1);
+      const accounts = await db.select().from(instagramAccounts).where(eq29(instagramAccounts.isActive, true)).limit(1);
       if (accounts.length > 0) {
         return {
           success: true,
@@ -14884,7 +14832,7 @@ var instagramRouter = router({
 init_db();
 init_schema();
 import { z as z30 } from "zod";
-import { eq as eq29, desc as desc14, and as and25 } from "drizzle-orm";
+import { eq as eq30, desc as desc14, and as and26 } from "drizzle-orm";
 var influencerBlogRouter = router({
   /**
    * Obter posts de uma influencer
@@ -14897,9 +14845,9 @@ var influencerBlogRouter = router({
     try {
       const db = await getDb();
       if (!db) return [];
-      const owned = await db.select({ id: influencers.id }).from(influencers).where(and25(eq29(influencers.id, input.influencerId), eq29(influencers.userId, ctx.user.id))).limit(1);
+      const owned = await db.select({ id: influencers.id }).from(influencers).where(and26(eq30(influencers.id, input.influencerId), eq30(influencers.userId, ctx.user.id))).limit(1);
       if (owned.length === 0) return [];
-      const posts = await db.select().from(influencerPosts).where(eq29(influencerPosts.influencerId, input.influencerId)).orderBy(desc14(influencerPosts.createdAt));
+      const posts = await db.select().from(influencerPosts).where(eq30(influencerPosts.influencerId, input.influencerId)).orderBy(desc14(influencerPosts.createdAt));
       return posts;
     } catch (error) {
       console.error("[Influencer Blog] Erro ao buscar posts:", error);
@@ -14931,7 +14879,7 @@ var influencerBlogRouter = router({
           scheduledAt: input.scheduledAt,
           platform: input.platform,
           updatedAt: /* @__PURE__ */ new Date()
-        }).where(eq29(influencerPosts.id, input.id));
+        }).where(eq30(influencerPosts.id, input.id));
         return { success: true, id: input.id };
       } else {
         const status = input.scheduledAt ? "scheduled" : "draft";
@@ -14965,7 +14913,7 @@ var influencerBlogRouter = router({
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      await db.delete(influencerPosts).where(eq29(influencerPosts.id, input.postId));
+      await db.delete(influencerPosts).where(eq30(influencerPosts.id, input.postId));
       return { success: true };
     } catch (error) {
       console.error("[Influencer Blog] Erro ao deletar post:", error);
@@ -14983,7 +14931,7 @@ var influencerBlogRouter = router({
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const posts = await db.select().from(influencerPosts).where(eq29(influencerPosts.id, input.postId)).limit(1);
+      const posts = await db.select().from(influencerPosts).where(eq30(influencerPosts.id, input.postId)).limit(1);
       if (posts.length === 0) {
         throw new Error("Post n\xE3o encontrado");
       }
@@ -14991,10 +14939,10 @@ var influencerBlogRouter = router({
         status: "published",
         publishedAt: /* @__PURE__ */ new Date(),
         updatedAt: /* @__PURE__ */ new Date()
-      }).where(eq29(influencerPosts.id, input.postId));
+      }).where(eq30(influencerPosts.id, input.postId));
       const post = posts[0];
       const { instagramAccounts: instagramAccounts3 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
-      const igAccounts = await db.select().from(instagramAccounts3).where(eq29(instagramAccounts3.influencerId, post.influencerId ?? 0)).limit(1);
+      const igAccounts = await db.select().from(instagramAccounts3).where(eq30(instagramAccounts3.influencerId, post.influencerId ?? 0)).limit(1);
       if (igAccounts.length > 0) {
         await db.insert(publicationQueueJobs).values({
           postId: input.postId,
@@ -15017,7 +14965,7 @@ var influencerBlogRouter = router({
     try {
       const db = await getDb();
       if (!db) return [];
-      const allInfluencers = await db.select().from(influencers).where(eq29(influencers.userId, ctx.user.id));
+      const allInfluencers = await db.select().from(influencers).where(eq30(influencers.userId, ctx.user.id));
       return allInfluencers;
     } catch (error) {
       console.error("[Influencer Blog] Erro ao listar influencers:", error);
@@ -15030,7 +14978,7 @@ var influencerBlogRouter = router({
 import { z as z31 } from "zod";
 init_db();
 init_schema();
-import { sql as sql3, and as and26, eq as eq30 } from "drizzle-orm";
+import { sql as sql3, and as and27, eq as eq31 } from "drizzle-orm";
 var scheduledPostsRouter = router({
   // Criar post agendado
   create: protectedProcedure.input(
@@ -15083,11 +15031,11 @@ var scheduledPostsRouter = router({
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const conditions = [eq30(scheduledPosts.userId, ctx.user.id)];
+      const conditions = [eq31(scheduledPosts.userId, ctx.user.id)];
       if (input.status) {
-        conditions.push(eq30(scheduledPosts.status, input.status));
+        conditions.push(eq31(scheduledPosts.status, input.status));
       }
-      const posts = await db.select().from(scheduledPosts).where(and26(...conditions)).orderBy(sql3`${scheduledPosts.scheduledAt} DESC`);
+      const posts = await db.select().from(scheduledPosts).where(and27(...conditions)).orderBy(sql3`${scheduledPosts.scheduledAt} DESC`);
       return {
         success: true,
         data: posts.map((post) => ({
@@ -15117,7 +15065,7 @@ var scheduledPostsRouter = router({
         platforms: input.platforms ? JSON.stringify(input.platforms) : void 0,
         status: input.status,
         updatedAt: /* @__PURE__ */ new Date()
-      }).where(and26(eq30(scheduledPosts.id, input.id), eq30(scheduledPosts.userId, ctx.user.id)));
+      }).where(and27(eq31(scheduledPosts.id, input.id), eq31(scheduledPosts.userId, ctx.user.id)));
       return {
         success: true,
         message: "Post atualizado com sucesso",
@@ -15133,7 +15081,7 @@ var scheduledPostsRouter = router({
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const result = await db.delete(scheduledPosts).where(and26(eq30(scheduledPosts.id, input.id), eq30(scheduledPosts.userId, ctx.user.id)));
+      const result = await db.delete(scheduledPosts).where(and27(eq31(scheduledPosts.id, input.id), eq31(scheduledPosts.userId, ctx.user.id)));
       return {
         success: true,
         message: "Post deletado com sucesso",
@@ -15154,7 +15102,7 @@ var scheduledPostsRouter = router({
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      await db.update(scheduledPosts).set({ status: "processing", updatedAt: /* @__PURE__ */ new Date() }).where(and26(eq30(scheduledPosts.id, input.id), eq30(scheduledPosts.userId, ctx.user.id)));
+      await db.update(scheduledPosts).set({ status: "processing", updatedAt: /* @__PURE__ */ new Date() }).where(and27(eq31(scheduledPosts.id, input.id), eq31(scheduledPosts.userId, ctx.user.id)));
       const results = await Promise.all(
         input.platforms.map(async (platform) => {
           try {
@@ -15175,7 +15123,7 @@ var scheduledPostsRouter = router({
       );
       const db2 = await getDb();
       if (db2) {
-        await db2.update(scheduledPosts).set({ status: "published", updatedAt: /* @__PURE__ */ new Date() }).where(eq30(scheduledPosts.id, input.id));
+        await db2.update(scheduledPosts).set({ status: "published", updatedAt: /* @__PURE__ */ new Date() }).where(eq31(scheduledPosts.id, input.id));
       }
       return {
         success: true,
@@ -15186,7 +15134,7 @@ var scheduledPostsRouter = router({
       console.error("Erro ao publicar post:", error);
       const db2 = await getDb();
       if (db2) {
-        await db2.update(scheduledPosts).set({ status: "failed", updatedAt: /* @__PURE__ */ new Date() }).where(eq30(scheduledPosts.id, input.id));
+        await db2.update(scheduledPosts).set({ status: "failed", updatedAt: /* @__PURE__ */ new Date() }).where(eq31(scheduledPosts.id, input.id));
       }
       throw new Error("Erro ao publicar post");
     }
@@ -15203,9 +15151,9 @@ var scheduledPostsRouter = router({
       const now = /* @__PURE__ */ new Date();
       const futureDate = new Date(now.getTime() + input.hours * 60 * 60 * 1e3);
       const posts = await db.select().from(scheduledPosts).where(
-        and26(
-          eq30(scheduledPosts.userId, ctx.user.id),
-          eq30(scheduledPosts.status, "pending"),
+        and27(
+          eq31(scheduledPosts.userId, ctx.user.id),
+          eq31(scheduledPosts.status, "pending"),
           sql3`${scheduledPosts.scheduledAt} BETWEEN ${now} AND ${futureDate}`
         )
       ).orderBy(sql3`${scheduledPosts.scheduledAt} ASC`);
@@ -15228,7 +15176,7 @@ import { z as z32 } from "zod";
 init_llm();
 init_db();
 init_schema();
-import { eq as eq31, and as and27 } from "drizzle-orm";
+import { eq as eq32, and as and28 } from "drizzle-orm";
 var INFLUENCER_PROFILES = {
   carol: {
     name: "Carol",
@@ -15278,7 +15226,7 @@ var aiContentGeneratorRouter = router({
     try {
       const db = await getDb();
       if (db) {
-        const owned = await db.select({ id: influencers.id }).from(influencers).where(and27(eq31(influencers.id, input.influencerId), eq31(influencers.userId, ctx.user.id))).limit(1);
+        const owned = await db.select({ id: influencers.id }).from(influencers).where(and28(eq32(influencers.id, input.influencerId), eq32(influencers.userId, ctx.user.id))).limit(1);
         if (owned.length === 0) throw new Error("Influencer n\xE3o encontrado ou acesso negado");
       }
       const nameKey = input.influencerName.toLowerCase();
@@ -15334,7 +15282,7 @@ var aiContentGeneratorRouter = router({
     try {
       const db = await getDb();
       if (db) {
-        const owned = await db.select({ id: influencers.id }).from(influencers).where(and27(eq31(influencers.id, input.influencerId), eq31(influencers.userId, ctx.user.id))).limit(1);
+        const owned = await db.select({ id: influencers.id }).from(influencers).where(and28(eq32(influencers.id, input.influencerId), eq32(influencers.userId, ctx.user.id))).limit(1);
         if (owned.length === 0) throw new Error("Influencer n\xE3o encontrado ou acesso negado");
       }
       const nameKey = input.influencerName.toLowerCase();
@@ -15395,7 +15343,7 @@ Retorne apenas as hashtags separadas por espa\xE7o, come\xE7ando com #.`;
     try {
       const db = await getDb();
       if (db) {
-        const owned = await db.select({ id: influencers.id }).from(influencers).where(and27(eq31(influencers.id, input.influencerId), eq31(influencers.userId, ctx.user.id))).limit(1);
+        const owned = await db.select({ id: influencers.id }).from(influencers).where(and28(eq32(influencers.id, input.influencerId), eq32(influencers.userId, ctx.user.id))).limit(1);
         if (owned.length === 0) throw new Error("Influencer n\xE3o encontrado ou acesso negado");
       }
       const nameKey = input.influencerName.toLowerCase();
@@ -15655,7 +15603,7 @@ Crie uma caption que seja:
 import { z as z33 } from "zod";
 init_db();
 init_schema();
-import { eq as eq32, and as and28, lte, desc as desc15 } from "drizzle-orm";
+import { eq as eq33, and as and29, lte, desc as desc15 } from "drizzle-orm";
 var activeJobs = /* @__PURE__ */ new Map();
 var publicationAutomationRouter = router({
   // Iniciar automação de publicação
@@ -15702,9 +15650,9 @@ var publicationAutomationRouter = router({
       if (!db) throw new Error("Database not available");
       const now = /* @__PURE__ */ new Date();
       const pendingPosts = await db.select().from(scheduledPosts).where(
-        and28(
-          eq32(scheduledPosts.status, "pending"),
-          eq32(scheduledPosts.userId, ctx.user.id),
+        and29(
+          eq33(scheduledPosts.status, "pending"),
+          eq33(scheduledPosts.userId, ctx.user.id),
           lte(scheduledPosts.scheduledAt, now)
         )
       );
@@ -15730,12 +15678,12 @@ var publicationAutomationRouter = router({
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const post = await db.select().from(scheduledPosts).where(and28(eq32(scheduledPosts.id, input.postId), eq32(scheduledPosts.userId, ctx.user.id)));
+      const post = await db.select().from(scheduledPosts).where(and29(eq33(scheduledPosts.id, input.postId), eq33(scheduledPosts.userId, ctx.user.id)));
       if (!post || post.length === 0) {
         throw new Error("Post not found");
       }
       const scheduledPost = post[0];
-      await db.update(scheduledPosts).set({ status: "processing", updatedAt: /* @__PURE__ */ new Date() }).where(eq32(scheduledPosts.id, input.postId));
+      await db.update(scheduledPosts).set({ status: "processing", updatedAt: /* @__PURE__ */ new Date() }).where(eq33(scheduledPosts.id, input.postId));
       const platforms = JSON.parse(
         typeof scheduledPost.platforms === "string" ? scheduledPost.platforms : JSON.stringify(scheduledPost.platforms)
       );
@@ -15753,7 +15701,7 @@ var publicationAutomationRouter = router({
       }
       const allSuccess = Object.values(results).every((r) => r);
       const newStatus = allSuccess ? "published" : "failed";
-      await db.update(scheduledPosts).set({ status: newStatus, updatedAt: /* @__PURE__ */ new Date() }).where(eq32(scheduledPosts.id, input.postId));
+      await db.update(scheduledPosts).set({ status: newStatus, updatedAt: /* @__PURE__ */ new Date() }).where(eq33(scheduledPosts.id, input.postId));
       return {
         success: allSuccess,
         data: {
@@ -15777,11 +15725,11 @@ var publicationAutomationRouter = router({
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const conditions = [eq32(scheduledPosts.userId, ctx.user.id)];
+      const conditions = [eq33(scheduledPosts.userId, ctx.user.id)];
       if (input.status) {
-        conditions.push(eq32(scheduledPosts.status, input.status));
+        conditions.push(eq33(scheduledPosts.status, input.status));
       }
-      const history = await db.select().from(scheduledPosts).where(and28(...conditions)).orderBy(scheduledPosts.updatedAt).limit(input.limit);
+      const history = await db.select().from(scheduledPosts).where(and29(...conditions)).orderBy(scheduledPosts.updatedAt).limit(input.limit);
       return {
         success: true,
         data: history.map((post) => ({
@@ -15803,8 +15751,8 @@ var publicationAutomationRouter = router({
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const conditions = [eq32(scheduledPosts.userId, ctx.user.id)];
-      const allPosts = await db.select().from(scheduledPosts).where(and28(...conditions));
+      const conditions = [eq33(scheduledPosts.userId, ctx.user.id)];
+      const allPosts = await db.select().from(scheduledPosts).where(and29(...conditions));
       const stats = {
         total: allPosts.length,
         published: allPosts.filter((p) => p.status === "published").length,
@@ -15828,14 +15776,14 @@ async function checkAndPublishScheduledPosts() {
     if (!db) return;
     const now = /* @__PURE__ */ new Date();
     const pendingPosts = await db.select().from(scheduledPosts).where(
-      and28(
-        eq32(scheduledPosts.status, "pending"),
+      and29(
+        eq33(scheduledPosts.status, "pending"),
         lte(scheduledPosts.scheduledAt, now)
       )
     );
     for (const post of pendingPosts) {
       try {
-        await db.update(scheduledPosts).set({ status: "processing", updatedAt: /* @__PURE__ */ new Date() }).where(eq32(scheduledPosts.id, post.id));
+        await db.update(scheduledPosts).set({ status: "processing", updatedAt: /* @__PURE__ */ new Date() }).where(eq33(scheduledPosts.id, post.id));
         const platforms = JSON.parse(
           typeof post.platforms === "string" ? post.platforms : JSON.stringify(post.platforms)
         );
@@ -15849,13 +15797,13 @@ async function checkAndPublishScheduledPosts() {
           }
         }
         const newStatus = successCount === platforms.length ? "published" : "failed";
-        await db.update(scheduledPosts).set({ status: newStatus, updatedAt: /* @__PURE__ */ new Date() }).where(eq32(scheduledPosts.id, post.id));
+        await db.update(scheduledPosts).set({ status: newStatus, updatedAt: /* @__PURE__ */ new Date() }).where(eq33(scheduledPosts.id, post.id));
         console.log(
           `Post ${post.id} publicado com status: ${newStatus}`
         );
       } catch (error) {
         console.error(`Erro ao processar post ${post.id}:`, error);
-        await db.update(scheduledPosts).set({ status: "failed", updatedAt: /* @__PURE__ */ new Date() }).where(eq32(scheduledPosts.id, post.id));
+        await db.update(scheduledPosts).set({ status: "failed", updatedAt: /* @__PURE__ */ new Date() }).where(eq33(scheduledPosts.id, post.id));
       }
     }
   } catch (error) {
@@ -15885,9 +15833,9 @@ async function publishToInstagram(post) {
   try {
     const db = await getDb();
     if (!db) return false;
-    const contentItemRows = await db.select().from(contentItems).where(eq32(contentItems.id, post.contentId)).limit(1);
+    const contentItemRows = await db.select().from(contentItems).where(eq33(contentItems.id, post.contentId)).limit(1);
     const contentItem = contentItemRows[0] ?? null;
-    const accountRows = await db.select().from(instagramAccounts).where(eq32(instagramAccounts.isActive, true)).limit(1);
+    const accountRows = await db.select().from(instagramAccounts).where(eq33(instagramAccounts.isActive, true)).limit(1);
     const account = accountRows[0] ?? null;
     if (!account) {
       console.warn(`[Instagram] Nenhuma conta Instagram ativa configurada para post ${post.id}`);
@@ -15977,12 +15925,12 @@ async function publishToTikTok(post) {
   try {
     const db = await getDb();
     if (!db) return false;
-    const contentItemRows = await db.select().from(contentItems).where(eq32(contentItems.id, post.contentId)).limit(1);
+    const contentItemRows = await db.select().from(contentItems).where(eq33(contentItems.id, post.contentId)).limit(1);
     const contentItem = contentItemRows[0] ?? null;
     const tokenRows = await db.select().from(oauthTokens).where(
-      and28(
-        eq32(oauthTokens.plataforma, "tiktok"),
-        eq32(oauthTokens.isActive, true)
+      and29(
+        eq33(oauthTokens.plataforma, "tiktok"),
+        eq33(oauthTokens.isActive, true)
       )
     ).orderBy(desc15(oauthTokens.updatedAt)).limit(1);
     const token = tokenRows[0] ?? null;
@@ -16034,10 +15982,10 @@ async function publishToBlog(post) {
   try {
     const db = await getDb();
     if (!db) return false;
-    const contentItemRows = await db.select().from(contentItems).where(eq32(contentItems.id, post.contentId)).limit(1);
+    const contentItemRows = await db.select().from(contentItems).where(eq33(contentItems.id, post.contentId)).limit(1);
     const contentItem = contentItemRows[0] ?? null;
     const blogContent = contentItem?.content ?? contentItem?.title ?? "";
-    const [blogInfluencer] = await db.select().from(influencers).where(and28(eq32(influencers.userId, post.userId), eq32(influencers.isActive, true))).limit(1);
+    const [blogInfluencer] = await db.select().from(influencers).where(and29(eq33(influencers.userId, post.userId), eq33(influencers.isActive, true))).limit(1);
     if (!blogInfluencer) {
       console.error(`[Blog] Nenhum influencer ativo para userId=${post.userId}`);
       return false;
@@ -16063,7 +16011,7 @@ init_llm();
 init_db();
 init_schema();
 import { z as z34 } from "zod";
-import { eq as eq33, and as and29 } from "drizzle-orm";
+import { eq as eq34, and as and30 } from "drizzle-orm";
 var autoContentGeneratorRouter = router({
   // Gerar um post automático para uma influenciadora
   generatePost: protectedProcedure.input(z34.object({
@@ -16072,7 +16020,7 @@ var autoContentGeneratorRouter = router({
   })).mutation(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    const [influencer] = await db.select().from(influencers).where(and29(eq33(influencers.id, input.influencerId), eq33(influencers.userId, ctx.user.id))).limit(1);
+    const [influencer] = await db.select().from(influencers).where(and30(eq34(influencers.id, input.influencerId), eq34(influencers.userId, ctx.user.id))).limit(1);
     if (!influencer) throw new Error("Influenciadora n\xE3o encontrada");
     const name = influencer.name;
     const persona = influencer.personality || name;
@@ -16152,7 +16100,7 @@ Responda em JSON com este formato:
   })).mutation(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    const userInfluencers = await db.select().from(influencers).where(and29(eq33(influencers.userId, ctx.user.id), eq33(influencers.isActive, true)));
+    const userInfluencers = await db.select().from(influencers).where(and30(eq34(influencers.userId, ctx.user.id), eq34(influencers.isActive, true)));
     const posts = [];
     for (const inf of userInfluencers) {
       try {
@@ -16197,7 +16145,7 @@ Responda em JSON com este formato:
   listInfluencers: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return [];
-    const rows = await db.select().from(influencers).where(and29(eq33(influencers.userId, ctx.user.id), eq33(influencers.isActive, true)));
+    const rows = await db.select().from(influencers).where(and30(eq34(influencers.userId, ctx.user.id), eq34(influencers.isActive, true)));
     return rows.map((inf) => ({
       id: inf.id,
       name: inf.name,
@@ -16211,7 +16159,7 @@ Responda em JSON com este formato:
 init_db();
 init_schema();
 import { z as z35 } from "zod";
-import { eq as eq34, desc as desc16, and as and30, inArray as inArray3 } from "drizzle-orm";
+import { eq as eq35, desc as desc16, and as and31, inArray as inArray3 } from "drizzle-orm";
 var postApprovalRouter = router({
   // Listar posts pendentes de aprovação
   listPendingPosts: protectedProcedure.input(z35.object({
@@ -16221,10 +16169,10 @@ var postApprovalRouter = router({
     try {
       const db = await getDb();
       if (!db) return [];
-      const myInfluencers = await db.select({ id: influencers.id }).from(influencers).where(eq34(influencers.userId, ctx.user.id));
+      const myInfluencers = await db.select({ id: influencers.id }).from(influencers).where(eq35(influencers.userId, ctx.user.id));
       const myIds = myInfluencers.map((i) => i.id);
       if (myIds.length === 0) return [];
-      const whereClause = input.influencerId ? and30(eq34(influencerPosts.status, "draft"), eq34(influencerPosts.influencerId, input.influencerId), inArray3(influencerPosts.influencerId, myIds)) : and30(eq34(influencerPosts.status, "draft"), inArray3(influencerPosts.influencerId, myIds));
+      const whereClause = input.influencerId ? and31(eq35(influencerPosts.status, "draft"), eq35(influencerPosts.influencerId, input.influencerId), inArray3(influencerPosts.influencerId, myIds)) : and31(eq35(influencerPosts.status, "draft"), inArray3(influencerPosts.influencerId, myIds));
       const posts = await db.select().from(influencerPosts).where(whereClause).orderBy(desc16(influencerPosts.createdAt)).limit(input.limit);
       return posts.map((post) => ({
         id: post.id,
@@ -16252,9 +16200,9 @@ var postApprovalRouter = router({
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const [post] = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq34(influencerPosts.id, input.postId)).limit(1);
+      const [post] = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq35(influencerPosts.id, input.postId)).limit(1);
       if (!post) throw new Error("Post n\xE3o encontrado");
-      const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and30(eq34(influencers.id, post.influencerId ?? 0), eq34(influencers.userId, ctx.user.id))).limit(1);
+      const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and31(eq35(influencers.id, post.influencerId ?? 0), eq35(influencers.userId, ctx.user.id))).limit(1);
       if (!owned) throw new Error("Acesso negado");
       await db.update(influencerPosts).set({
         status: "scheduled",
@@ -16262,7 +16210,7 @@ var postApprovalRouter = router({
         approvedBy: ctx.user?.name || "Admin",
         approvedAt: /* @__PURE__ */ new Date(),
         updatedAt: /* @__PURE__ */ new Date()
-      }).where(eq34(influencerPosts.id, input.postId));
+      }).where(eq35(influencerPosts.id, input.postId));
       return {
         success: true,
         postId: input.postId,
@@ -16286,14 +16234,14 @@ var postApprovalRouter = router({
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const [post] = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq34(influencerPosts.id, input.postId)).limit(1);
+      const [post] = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq35(influencerPosts.id, input.postId)).limit(1);
       if (!post) throw new Error("Post n\xE3o encontrado");
-      const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and30(eq34(influencers.id, post.influencerId ?? 0), eq34(influencers.userId, ctx.user.id))).limit(1);
+      const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and31(eq35(influencers.id, post.influencerId ?? 0), eq35(influencers.userId, ctx.user.id))).limit(1);
       if (!owned) throw new Error("Acesso negado");
       await db.update(influencerPosts).set({
         status: "failed",
         updatedAt: /* @__PURE__ */ new Date()
-      }).where(eq34(influencerPosts.id, input.postId));
+      }).where(eq35(influencerPosts.id, input.postId));
       return {
         success: true,
         postId: input.postId,
@@ -16318,15 +16266,15 @@ var postApprovalRouter = router({
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const [post] = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq34(influencerPosts.id, input.postId)).limit(1);
+      const [post] = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq35(influencerPosts.id, input.postId)).limit(1);
       if (!post) throw new Error("Post n\xE3o encontrado");
-      const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and30(eq34(influencers.id, post.influencerId ?? 0), eq34(influencers.userId, ctx.user.id))).limit(1);
+      const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and31(eq35(influencers.id, post.influencerId ?? 0), eq35(influencers.userId, ctx.user.id))).limit(1);
       if (!owned) throw new Error("Acesso negado");
       await db.update(influencerPosts).set({
         caption: input.caption,
         hashtags: input.hashtags,
         updatedAt: /* @__PURE__ */ new Date()
-      }).where(eq34(influencerPosts.id, input.postId));
+      }).where(eq35(influencerPosts.id, input.postId));
       return {
         success: true,
         postId: input.postId,
@@ -16390,10 +16338,10 @@ var postApprovalRouter = router({
     try {
       const db = await getDb();
       if (!db) return [];
-      const myInfluencers = await db.select({ id: influencers.id }).from(influencers).where(eq34(influencers.userId, ctx.user.id));
+      const myInfluencers = await db.select({ id: influencers.id }).from(influencers).where(eq35(influencers.userId, ctx.user.id));
       const myIds = myInfluencers.map((i) => i.id);
       if (myIds.length === 0) return [];
-      const whereClause = input.influencerId ? and30(eq34(influencerPosts.status, "published"), eq34(influencerPosts.influencerId, input.influencerId), inArray3(influencerPosts.influencerId, myIds)) : and30(eq34(influencerPosts.status, "published"), inArray3(influencerPosts.influencerId, myIds));
+      const whereClause = input.influencerId ? and31(eq35(influencerPosts.status, "published"), eq35(influencerPosts.influencerId, input.influencerId), inArray3(influencerPosts.influencerId, myIds)) : and31(eq35(influencerPosts.status, "published"), inArray3(influencerPosts.influencerId, myIds));
       let query = db.select().from(influencerPosts).where(whereClause).orderBy(desc16(influencerPosts.publishedAt)).limit(input.limit);
       const posts = await query;
       return posts.map((post) => ({
@@ -16429,7 +16377,7 @@ var postApprovalRouter = router({
           byInfluencer: {}
         };
       }
-      const myInfluencers = await db.select().from(influencers).where(eq34(influencers.userId, ctx.user.id));
+      const myInfluencers = await db.select().from(influencers).where(eq35(influencers.userId, ctx.user.id));
       const myIds = myInfluencers.map((i) => i.id);
       const allPosts = myIds.length > 0 ? await db.select().from(influencerPosts).where(inArray3(influencerPosts.influencerId, myIds)) : [];
       const totalGenerated = allPosts.length;
@@ -16467,7 +16415,7 @@ var postApprovalRouter = router({
 init_db();
 init_schema();
 import { z as z36 } from "zod";
-import { eq as eq35, desc as desc17, and as and31, inArray as inArray4 } from "drizzle-orm";
+import { eq as eq36, desc as desc17, and as and32, inArray as inArray4 } from "drizzle-orm";
 init_llm();
 async function generatePostForInfluencer(influencer) {
   const result = await invokeLLM({
@@ -16521,14 +16469,14 @@ var postApprovalEnhancedRouter = router({
     try {
       const db = await getDb();
       if (!db) return [];
-      const myInfluencers = await db.select({ id: influencers.id }).from(influencers).where(eq35(influencers.userId, ctx.user.id));
+      const myInfluencers = await db.select({ id: influencers.id }).from(influencers).where(eq36(influencers.userId, ctx.user.id));
       const myIds = myInfluencers.map((i) => i.id);
       if (myIds.length === 0) return [];
-      const whereClause = input.influencerId ? and31(
-        eq35(influencerPosts.status, "draft"),
-        eq35(influencerPosts.influencerId, input.influencerId),
+      const whereClause = input.influencerId ? and32(
+        eq36(influencerPosts.status, "draft"),
+        eq36(influencerPosts.influencerId, input.influencerId),
         inArray4(influencerPosts.influencerId, myIds)
-      ) : and31(eq35(influencerPosts.status, "draft"), inArray4(influencerPosts.influencerId, myIds));
+      ) : and32(eq36(influencerPosts.status, "draft"), inArray4(influencerPosts.influencerId, myIds));
       const posts = await db.select().from(influencerPosts).where(whereClause).orderBy(desc17(influencerPosts.createdAt)).limit(input.limit);
       return posts.map((post) => ({
         id: post.id,
@@ -16559,7 +16507,7 @@ var postApprovalEnhancedRouter = router({
   ).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    const influencerRows = await db.select().from(influencers).where(and31(eq35(influencers.id, input.influencerId), eq35(influencers.userId, ctx.user.id))).limit(1);
+    const influencerRows = await db.select().from(influencers).where(and32(eq36(influencers.id, input.influencerId), eq36(influencers.userId, ctx.user.id))).limit(1);
     if (influencerRows.length === 0) throw new Error("Influencer n\xE3o encontrado ou acesso negado");
     const influencer = influencerRows[0] || {
       id: input.influencerId,
@@ -16578,9 +16526,9 @@ var postApprovalEnhancedRouter = router({
       createdAt: /* @__PURE__ */ new Date()
     });
     const posts = await db.select().from(influencerPosts).where(
-      and31(
-        eq35(influencerPosts.influencerId, input.influencerId),
-        eq35(influencerPosts.status, "draft")
+      and32(
+        eq36(influencerPosts.influencerId, input.influencerId),
+        eq36(influencerPosts.status, "draft")
       )
     ).orderBy(desc17(influencerPosts.createdAt)).limit(1);
     const postId = posts[0]?.id || 0;
@@ -16606,7 +16554,7 @@ var postApprovalEnhancedRouter = router({
   ).mutation(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    const influencerList = await db.select().from(influencers).where(and31(eq35(influencers.isActive, true), eq35(influencers.userId, ctx.user.id)));
+    const influencerList = await db.select().from(influencers).where(and32(eq36(influencers.isActive, true), eq36(influencers.userId, ctx.user.id)));
     const results = [];
     for (const influencer of influencerList) {
       try {
@@ -16621,9 +16569,9 @@ var postApprovalEnhancedRouter = router({
           createdAt: /* @__PURE__ */ new Date()
         });
         const posts = await db.select().from(influencerPosts).where(
-          and31(
-            eq35(influencerPosts.influencerId, influencer.id),
-            eq35(influencerPosts.status, "draft")
+          and32(
+            eq36(influencerPosts.influencerId, influencer.id),
+            eq36(influencerPosts.status, "draft")
           )
         ).orderBy(desc17(influencerPosts.createdAt)).limit(1);
         results.push({
@@ -16659,10 +16607,10 @@ var postApprovalEnhancedRouter = router({
     try {
       const db = await getDb();
       if (!db) return 0;
-      const myInfluencers = await db.select({ id: influencers.id }).from(influencers).where(eq35(influencers.userId, ctx.user.id));
+      const myInfluencers = await db.select({ id: influencers.id }).from(influencers).where(eq36(influencers.userId, ctx.user.id));
       const myIds = myInfluencers.map((i) => i.id);
       if (myIds.length === 0) return 0;
-      const posts = await db.select().from(influencerPosts).where(and31(eq35(influencerPosts.status, "draft"), inArray4(influencerPosts.influencerId, myIds)));
+      const posts = await db.select().from(influencerPosts).where(and32(eq36(influencerPosts.status, "draft"), inArray4(influencerPosts.influencerId, myIds)));
       return posts.length;
     } catch (error) {
       console.error("Erro ao obter contagem de pendentes:", error);
@@ -16674,10 +16622,10 @@ var postApprovalEnhancedRouter = router({
     try {
       const db = await getDb();
       if (!db) return {};
-      const myInfluencers = await db.select({ id: influencers.id }).from(influencers).where(eq35(influencers.userId, ctx.user.id));
+      const myInfluencers = await db.select({ id: influencers.id }).from(influencers).where(eq36(influencers.userId, ctx.user.id));
       const myIds = myInfluencers.map((i) => i.id);
       if (myIds.length === 0) return {};
-      const posts = await db.select().from(influencerPosts).where(and31(eq35(influencerPosts.status, "draft"), inArray4(influencerPosts.influencerId, myIds)));
+      const posts = await db.select().from(influencerPosts).where(and32(eq36(influencerPosts.status, "draft"), inArray4(influencerPosts.influencerId, myIds)));
       const byInfluencer = {};
       posts.forEach((post) => {
         byInfluencer[post.influencerId] = (byInfluencer[post.influencerId] || 0) + 1;
@@ -16717,7 +16665,7 @@ import { z as z37 } from "zod";
 init_db();
 init_schema();
 init_llm();
-import { eq as eq36, and as and32, desc as desc18 } from "drizzle-orm";
+import { eq as eq37, and as and33, desc as desc18 } from "drizzle-orm";
 var aiCustomerSupportRouter = router({
   // ============================================
   // PROCESSAMENTO DE MENSAGENS
@@ -16739,12 +16687,12 @@ var aiCustomerSupportRouter = router({
     const db = await getDb();
     if (!db) throw new Error("Database connection failed");
     try {
-      const settings = await db.select().from(aiSettings).where(eq36(aiSettings.userId, ctx.user.id)).limit(1);
+      const settings = await db.select().from(aiSettings).where(eq37(aiSettings.userId, ctx.user.id)).limit(1);
       const aiConfig = settings[0];
       const trainingExamples = await db.select().from(aiTrainingData).where(
-        and32(
-          eq36(aiTrainingData.userId, ctx.user.id),
-          eq36(aiTrainingData.isActive, true)
+        and33(
+          eq37(aiTrainingData.userId, ctx.user.id),
+          eq37(aiTrainingData.isActive, true)
         )
       ).limit(5);
       const relevantProducts = await searchKnowledgeBase(
@@ -16803,10 +16751,10 @@ var aiCustomerSupportRouter = router({
         status: "open"
       });
       const conversationCount = await db.select().from(conversationHistory).where(
-        and32(
-          eq36(conversationHistory.userId, ctx.user.id),
-          eq36(conversationHistory.whatsappPhoneNumber, input.whatsappPhoneNumber),
-          eq36(conversationHistory.status, "open")
+        and33(
+          eq37(conversationHistory.userId, ctx.user.id),
+          eq37(conversationHistory.whatsappPhoneNumber, input.whatsappPhoneNumber),
+          eq37(conversationHistory.status, "open")
         )
       );
       if (conversationCount.length >= (aiConfig?.autoEscalateAfterMessages || 5)) {
@@ -16890,14 +16838,14 @@ var aiCustomerSupportRouter = router({
   ).query(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) return [];
-    const conditions = [eq36(knowledgeBase.userId, ctx.user.id), eq36(knowledgeBase.isActive, true)];
+    const conditions = [eq37(knowledgeBase.userId, ctx.user.id), eq37(knowledgeBase.isActive, true)];
     if (input.category) {
-      conditions.push(eq36(knowledgeBase.category, input.category));
+      conditions.push(eq37(knowledgeBase.category, input.category));
     }
     if (input.contentType) {
-      conditions.push(eq36(knowledgeBase.contentType, input.contentType));
+      conditions.push(eq37(knowledgeBase.contentType, input.contentType));
     }
-    return db.select().from(knowledgeBase).where(and32(...conditions)).limit(input.limit);
+    return db.select().from(knowledgeBase).where(and33(...conditions)).limit(input.limit);
   }),
   // ============================================
   // GERENCIAR DADOS DE TREINAMENTO
@@ -16942,11 +16890,11 @@ var aiCustomerSupportRouter = router({
   ).query(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) return [];
-    const conditions = [eq36(aiTrainingData.userId, ctx.user.id), eq36(aiTrainingData.isActive, true)];
+    const conditions = [eq37(aiTrainingData.userId, ctx.user.id), eq37(aiTrainingData.isActive, true)];
     if (input.category) {
-      conditions.push(eq36(aiTrainingData.category, input.category));
+      conditions.push(eq37(aiTrainingData.category, input.category));
     }
-    return db.select().from(aiTrainingData).where(and32(...conditions)).limit(input.limit);
+    return db.select().from(aiTrainingData).where(and33(...conditions)).limit(input.limit);
   }),
   // ============================================
   // GERENCIAR FILA DE ESCALAÇÃO
@@ -16962,11 +16910,11 @@ var aiCustomerSupportRouter = router({
   ).query(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) return [];
-    const conditions = [eq36(escalationQueue.userId, ctx.user.id)];
+    const conditions = [eq37(escalationQueue.userId, ctx.user.id)];
     if (input.status) {
-      conditions.push(eq36(escalationQueue.status, input.status));
+      conditions.push(eq37(escalationQueue.status, input.status));
     }
-    return db.select().from(escalationQueue).where(and32(...conditions)).orderBy(desc18(escalationQueue.createdAt)).limit(input.limit);
+    return db.select().from(escalationQueue).where(and33(...conditions)).orderBy(desc18(escalationQueue.createdAt)).limit(input.limit);
   }),
   /**
    * Atualizar status de escalação
@@ -16994,9 +16942,9 @@ var aiCustomerSupportRouter = router({
       updates.assignedToAgent = input.assignedToAgent;
     }
     await db.update(escalationQueue).set(updates).where(
-      and32(
-        eq36(escalationQueue.id, input.escalationId),
-        eq36(escalationQueue.userId, ctx.user.id)
+      and33(
+        eq37(escalationQueue.id, input.escalationId),
+        eq37(escalationQueue.userId, ctx.user.id)
       )
     );
     return { success: true };
@@ -17016,9 +16964,9 @@ var aiCustomerSupportRouter = router({
     const db = await getDb();
     if (!db) return [];
     return db.select().from(conversationHistory).where(
-      and32(
-        eq36(conversationHistory.userId, ctx.user.id),
-        eq36(conversationHistory.whatsappPhoneNumber, input.whatsappPhoneNumber)
+      and33(
+        eq37(conversationHistory.userId, ctx.user.id),
+        eq37(conversationHistory.whatsappPhoneNumber, input.whatsappPhoneNumber)
       )
     ).orderBy(desc18(conversationHistory.createdAt)).limit(input.limit);
   }),
@@ -17028,16 +16976,16 @@ var aiCustomerSupportRouter = router({
   getAIStats: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return null;
-    const totalConversations = await db.select().from(conversationHistory).where(eq36(conversationHistory.userId, ctx.user.id));
+    const totalConversations = await db.select().from(conversationHistory).where(eq37(conversationHistory.userId, ctx.user.id));
     const escalatedConversations = totalConversations.filter(
       (c) => c.escalated
     );
-    const trainingExamples = await db.select().from(aiTrainingData).where(eq36(aiTrainingData.userId, ctx.user.id));
-    const knowledgeItems = await db.select().from(knowledgeBase).where(eq36(knowledgeBase.userId, ctx.user.id));
+    const trainingExamples = await db.select().from(aiTrainingData).where(eq37(aiTrainingData.userId, ctx.user.id));
+    const knowledgeItems = await db.select().from(knowledgeBase).where(eq37(knowledgeBase.userId, ctx.user.id));
     const pendingEscalations = await db.select().from(escalationQueue).where(
-      and32(
-        eq36(escalationQueue.userId, ctx.user.id),
-        eq36(escalationQueue.status, "waiting")
+      and33(
+        eq37(escalationQueue.userId, ctx.user.id),
+        eq37(escalationQueue.status, "waiting")
       )
     );
     return {
@@ -17058,7 +17006,7 @@ var aiCustomerSupportRouter = router({
   getAISettings: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return null;
-    const settings = await db.select().from(aiSettings).where(eq36(aiSettings.userId, ctx.user.id)).limit(1);
+    const settings = await db.select().from(aiSettings).where(eq37(aiSettings.userId, ctx.user.id)).limit(1);
     return settings[0] || null;
   }),
   /**
@@ -17078,7 +17026,7 @@ var aiCustomerSupportRouter = router({
   ).mutation(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new Error("Database connection failed");
-    const existing = await db.select().from(aiSettings).where(eq36(aiSettings.userId, ctx.user.id)).limit(1);
+    const existing = await db.select().from(aiSettings).where(eq37(aiSettings.userId, ctx.user.id)).limit(1);
     if (existing.length > 0) {
       const updateData = {};
       if (input.systemPrompt) updateData.systemPrompt = input.systemPrompt;
@@ -17089,7 +17037,7 @@ var aiCustomerSupportRouter = router({
       if (input.searchResultsLimit) updateData.searchResultsLimit = input.searchResultsLimit;
       if (input.minConfidenceScore !== void 0) updateData.minConfidenceScore = input.minConfidenceScore.toString();
       if (input.isEnabled !== void 0) updateData.isEnabled = input.isEnabled;
-      await db.update(aiSettings).set(updateData).where(eq36(aiSettings.userId, ctx.user.id));
+      await db.update(aiSettings).set(updateData).where(eq37(aiSettings.userId, ctx.user.id));
     } else {
       const settingsData = {
         userId: ctx.user.id
@@ -17110,9 +17058,9 @@ var aiCustomerSupportRouter = router({
 async function searchKnowledgeBase(db, userId, query, limit) {
   const keywords = query.toLowerCase().split(" ");
   let results = await db.select().from(knowledgeBase).where(
-    and32(
-      eq36(knowledgeBase.userId, userId),
-      eq36(knowledgeBase.isActive, true)
+    and33(
+      eq37(knowledgeBase.userId, userId),
+      eq37(knowledgeBase.isActive, true)
     )
   );
   results = results.filter((item) => {
@@ -17163,9 +17111,9 @@ function checkEscalationKeywords(message, keywords) {
 }
 async function createEscalation(db, userId, whatsappPhoneNumber, whatsappContactName, reason) {
   const lastConversation = await db.select().from(conversationHistory).where(
-    and32(
-      eq36(conversationHistory.userId, userId),
-      eq36(conversationHistory.whatsappPhoneNumber, whatsappPhoneNumber)
+    and33(
+      eq37(conversationHistory.userId, userId),
+      eq37(conversationHistory.whatsappPhoneNumber, whatsappPhoneNumber)
     )
   ).orderBy(desc18(conversationHistory.createdAt)).limit(1);
   if (lastConversation.length > 0) {
@@ -17189,7 +17137,7 @@ async function createEscalation(db, userId, whatsappPhoneNumber, whatsappContact
 import { z as z38 } from "zod";
 init_db();
 init_schema();
-import { eq as eq37, and as and33 } from "drizzle-orm";
+import { eq as eq38, and as and34 } from "drizzle-orm";
 var whatsappAIIntegrationRouter = router({
   // ============================================
   // WEBHOOKS DO WHATSAPP
@@ -17360,9 +17308,9 @@ var whatsappAIIntegrationRouter = router({
       status: "closed",
       updatedAt: /* @__PURE__ */ new Date()
     }).where(
-      and33(
-        eq37(conversationHistory.whatsappPhoneNumber, input.whatsappPhoneNumber),
-        eq37(conversationHistory.userId, ctx.user.id)
+      and34(
+        eq38(conversationHistory.whatsappPhoneNumber, input.whatsappPhoneNumber),
+        eq38(conversationHistory.userId, ctx.user.id)
       )
     );
     return { success: true };
@@ -17378,9 +17326,9 @@ var whatsappAIIntegrationRouter = router({
     const db = await getDb();
     if (!db) return null;
     const conversations = await db.select().from(conversationHistory).where(
-      and33(
-        eq37(conversationHistory.whatsappPhoneNumber, input.whatsappPhoneNumber),
-        eq37(conversationHistory.userId, ctx.user.id)
+      and34(
+        eq38(conversationHistory.whatsappPhoneNumber, input.whatsappPhoneNumber),
+        eq38(conversationHistory.userId, ctx.user.id)
       )
     );
     return {
@@ -17453,7 +17401,7 @@ var whatsappAIIntegrationRouter = router({
   ).query(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) return [];
-    const conversations = await db.select().from(conversationHistory).where(eq37(conversationHistory.userId, ctx.user.id));
+    const conversations = await db.select().from(conversationHistory).where(eq38(conversationHistory.userId, ctx.user.id));
     const grouped = /* @__PURE__ */ new Map();
     conversations.forEach((conv) => {
       const key = conv.whatsappPhoneNumber;
@@ -17750,20 +17698,20 @@ import { z as z40 } from "zod";
 // server/_core/baileys-service.ts
 import { DisconnectReason, useMultiFileAuthState } from "@whiskeysockets/baileys";
 import makeWASocket from "@whiskeysockets/baileys";
-import path6 from "path";
-import fs6 from "fs";
+import path7 from "path";
+import fs7 from "fs";
 import qrcode from "qrcode";
 
 // server/agents/whatsapp-ai-agent.ts
 init_db();
 init_schema();
 init_llm();
-import { eq as eq38, and as and34 } from "drizzle-orm";
+import { eq as eq39, and as and35 } from "drizzle-orm";
 async function processWhatsAppMessage(userId, phoneNumber, contactName, message) {
   const db = await getDb();
   if (!db) return null;
   try {
-    const settings = await db.select().from(aiSettings).where(and34(eq38(aiSettings.userId, userId), eq38(aiSettings.isEnabled, true))).limit(1);
+    const settings = await db.select().from(aiSettings).where(and35(eq39(aiSettings.userId, userId), eq39(aiSettings.isEnabled, true))).limit(1);
     if (!settings.length) return null;
     const config = settings[0];
     const escalationKeywords = config.escalationKeywords ?? [];
@@ -17771,11 +17719,11 @@ async function processWhatsAppMessage(userId, phoneNumber, contactName, message)
       (kw) => message.toLowerCase().includes(kw.toLowerCase())
     );
     if (shouldEscalate) return null;
-    const knowledge = await db.select().from(knowledgeBase).where(and34(eq38(knowledgeBase.userId, userId), eq38(knowledgeBase.isActive, true))).limit(config.searchResultsLimit ?? 3);
+    const knowledge = await db.select().from(knowledgeBase).where(and35(eq39(knowledgeBase.userId, userId), eq39(knowledgeBase.isActive, true))).limit(config.searchResultsLimit ?? 3);
     const knowledgeContext = knowledge.map(
       (k) => `[${k.contentType}] ${k.title}: ${k.description ?? ""}`
     ).join("\n");
-    const history = await db.select().from(conversationHistory).where(and34(eq38(conversationHistory.userId, userId), eq38(conversationHistory.whatsappPhoneNumber, phoneNumber))).limit(5);
+    const history = await db.select().from(conversationHistory).where(and35(eq39(conversationHistory.userId, userId), eq39(conversationHistory.whatsappPhoneNumber, phoneNumber))).limit(5);
     const historyContext = history.map(
       (h) => `Cliente: ${h.userMessage}
 Atendente: ${h.aiResponse}`
@@ -17818,9 +17766,9 @@ async function initializeWhatsApp(userId) {
     if (sessions.has(userId) && sessions.get(userId)?.isConnected) {
       return "J\xE1 conectado";
     }
-    const authDir = path6.join(process.cwd(), ".auth", `user_${userId}`);
-    if (!fs6.existsSync(authDir)) {
-      fs6.mkdirSync(authDir, { recursive: true });
+    const authDir = path7.join(process.cwd(), ".auth", `user_${userId}`);
+    if (!fs7.existsSync(authDir)) {
+      fs7.mkdirSync(authDir, { recursive: true });
     }
     const { state, saveCreds } = await useMultiFileAuthState(authDir);
     const socket = makeWASocket({
@@ -17943,7 +17891,7 @@ async function sendMediaMessage(userId, phoneNumber, mediaPath, caption) {
       throw new Error("WhatsApp n\xE3o conectado");
     }
     const jid = phoneNumber.includes("@") ? phoneNumber : `${phoneNumber}@s.whatsapp.net`;
-    const fileBuffer = fs6.readFileSync(mediaPath);
+    const fileBuffer = fs7.readFileSync(mediaPath);
     const mimeType = getMimeType(mediaPath);
     if (mimeType.startsWith("image/")) {
       await session.socket.sendMessage(jid, {
@@ -17964,7 +17912,7 @@ async function sendMediaMessage(userId, phoneNumber, mediaPath, caption) {
       await session.socket.sendMessage(jid, {
         document: fileBuffer,
         mimetype: mimeType,
-        fileName: path6.basename(mediaPath)
+        fileName: path7.basename(mediaPath)
       });
     }
     console.log(`[WhatsApp Send Media] Para ${phoneNumber}: ${mediaPath}`);
@@ -18001,7 +17949,7 @@ async function disconnectWhatsApp(userId) {
   }
 }
 function getMimeType(filePath) {
-  const ext = path6.extname(filePath).toLowerCase();
+  const ext = path7.extname(filePath).toLowerCase();
   const mimeTypes = {
     ".jpg": "image/jpeg",
     ".jpeg": "image/jpeg",
@@ -18141,7 +18089,7 @@ init_llm();
 init_db();
 init_schema();
 import { z as z41 } from "zod";
-import { eq as eq39, and as and35, desc as desc19 } from "drizzle-orm";
+import { eq as eq40, and as and36, desc as desc19 } from "drizzle-orm";
 var baileysAIIntegrationRouter = router({
   /**
    * Processa mensagem recebida do Baileys com IA
@@ -18164,12 +18112,12 @@ var baileysAIIntegrationRouter = router({
     }
     try {
       const previousMessages = await db.select().from(conversationHistory).where(
-        and35(
-          eq39(conversationHistory.whatsappPhoneNumber, input.whatsappPhoneNumber),
-          eq39(conversationHistory.userId, ctx.user.id)
+        and36(
+          eq40(conversationHistory.whatsappPhoneNumber, input.whatsappPhoneNumber),
+          eq40(conversationHistory.userId, ctx.user.id)
         )
       ).orderBy(desc19(conversationHistory.createdAt)).limit(10);
-      const knowledgeItems = await db.select().from(knowledgeBase).where(eq39(knowledgeBase.userId, ctx.user.id)).limit(20);
+      const knowledgeItems = await db.select().from(knowledgeBase).where(eq40(knowledgeBase.userId, ctx.user.id)).limit(20);
       const conversationContext = previousMessages.reverse().map((msg) => {
         if (msg.userMessage) return `Cliente: ${msg.userMessage}`;
         if (msg.aiResponse) return `Bot: ${msg.aiResponse}`;
@@ -18246,9 +18194,9 @@ ${conversationContext}`;
       };
     }
     const messages = await db.select().from(conversationHistory).where(
-      and35(
-        eq39(conversationHistory.whatsappPhoneNumber, input.whatsappPhoneNumber),
-        eq39(conversationHistory.userId, ctx.user.id)
+      and36(
+        eq40(conversationHistory.whatsappPhoneNumber, input.whatsappPhoneNumber),
+        eq40(conversationHistory.userId, ctx.user.id)
       )
     ).orderBy(conversationHistory.createdAt);
     return {
@@ -18278,9 +18226,9 @@ ${conversationContext}`;
     }
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1e3);
     const conversations = await db.select().from(conversationHistory).where(
-      and35(
-        eq39(conversationHistory.userId, ctx.user.id),
-        eq39(conversationHistory.status, "open")
+      and36(
+        eq40(conversationHistory.userId, ctx.user.id),
+        eq40(conversationHistory.status, "open")
       )
     ).orderBy(desc19(conversationHistory.createdAt));
     const uniqueConversations = Array.from(
@@ -18317,9 +18265,9 @@ ${conversationContext}`;
     }
     try {
       const lastMessage = await db.select().from(conversationHistory).where(
-        and35(
-          eq39(conversationHistory.whatsappPhoneNumber, input.whatsappPhoneNumber),
-          eq39(conversationHistory.userId, ctx.user.id)
+        and36(
+          eq40(conversationHistory.whatsappPhoneNumber, input.whatsappPhoneNumber),
+          eq40(conversationHistory.userId, ctx.user.id)
         )
       ).orderBy(desc19(conversationHistory.createdAt)).limit(1);
       if (lastMessage.length === 0) {
@@ -18366,7 +18314,7 @@ ${conversationContext}`;
         error: "Database not available"
       };
     }
-    const allMessages = await db.select().from(conversationHistory).where(eq39(conversationHistory.userId, ctx.user.id));
+    const allMessages = await db.select().from(conversationHistory).where(eq40(conversationHistory.userId, ctx.user.id));
     const uniquePhones = new Set(allMessages.map((msg) => msg.whatsappPhoneNumber)).size;
     const messagesWithAI = allMessages.filter((msg) => msg.aiResponse).length;
     const escalatedConversations = allMessages.filter((msg) => msg.escalated).length;
@@ -18384,7 +18332,7 @@ ${conversationContext}`;
 
 // server/routers/media-upload.ts
 import { z as z42 } from "zod";
-import { eq as eq40, and as and36 } from "drizzle-orm";
+import { eq as eq41, and as and37 } from "drizzle-orm";
 
 // server/storage.ts
 init_env();
@@ -18505,7 +18453,7 @@ var mediaUploadRouter = router({
     try {
       const db = await getDb();
       if (!db) return [];
-      const images = await db.select().from(mediaFiles).where(and36(eq40(mediaFiles.contentId, input.contentId), eq40(mediaFiles.userId, ctx.user.id)));
+      const images = await db.select().from(mediaFiles).where(and37(eq41(mediaFiles.contentId, input.contentId), eq41(mediaFiles.userId, ctx.user.id)));
       return images;
     } catch (error) {
       console.error("[Media Upload] Erro ao listar imagens:", error);
@@ -18523,7 +18471,7 @@ var mediaUploadRouter = router({
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      await db.delete(mediaFiles).where(and36(eq40(mediaFiles.id, input.fileId), eq40(mediaFiles.userId, ctx.user.id)));
+      await db.delete(mediaFiles).where(and37(eq41(mediaFiles.id, input.fileId), eq41(mediaFiles.userId, ctx.user.id)));
       return { success: true };
     } catch (error) {
       console.error("[Media Upload] Erro ao deletar imagem:", error);
@@ -18557,9 +18505,9 @@ var mediaUploadRouter = router({
 init_db();
 init_schema();
 import { z as z43 } from "zod";
-import { eq as eq41, inArray as inArray5, or as or3, and as and37 } from "drizzle-orm";
-function graphUrl(path14, token, extraFields) {
-  const base = `https://graph.facebook.com/v19.0${path14}`;
+import { eq as eq42, inArray as inArray5, or as or3, and as and38 } from "drizzle-orm";
+function graphUrl(path15, token, extraFields) {
+  const base = `https://graph.facebook.com/v19.0${path15}`;
   const params = new URLSearchParams({ access_token: token });
   if (extraFields) params.set("fields", extraFields);
   return `${base}?${params.toString()}`;
@@ -18624,7 +18572,7 @@ var instagramAccountsRouter = router({
         createdAt: /* @__PURE__ */ new Date(),
         updatedAt: /* @__PURE__ */ new Date()
       });
-      const insertedAccount = await db.select().from(instagramAccounts).where(eq41(instagramAccounts.username, input.username)).limit(1);
+      const insertedAccount = await db.select().from(instagramAccounts).where(eq42(instagramAccounts.username, input.username)).limit(1);
       return {
         success: true,
         accountId: insertedAccount[0]?.id || 0,
@@ -18642,14 +18590,14 @@ var instagramAccountsRouter = router({
     try {
       const db = await getDb();
       if (!db) return [];
-      const userInfluencers = await db.select({ id: influencers.id }).from(influencers).where(eq41(influencers.userId, ctx.user.id));
+      const userInfluencers = await db.select({ id: influencers.id }).from(influencers).where(eq42(influencers.userId, ctx.user.id));
       const influencerIds = userInfluencers.map((i) => i.id);
       const accounts = influencerIds.length > 0 ? await db.select().from(instagramAccounts).where(
         or3(
           inArray5(instagramAccounts.influencerId, influencerIds),
-          eq41(instagramAccounts.accountType, "feminnita")
+          eq42(instagramAccounts.accountType, "feminnita")
         )
-      ) : await db.select().from(instagramAccounts).where(eq41(instagramAccounts.accountType, "feminnita"));
+      ) : await db.select().from(instagramAccounts).where(eq42(instagramAccounts.accountType, "feminnita"));
       return accounts;
     } catch (error) {
       console.error("[Instagram Accounts] Erro ao listar contas:", error);
@@ -18663,7 +18611,7 @@ var instagramAccountsRouter = router({
     try {
       const db = await getDb();
       if (!db) return null;
-      const account = await db.select().from(instagramAccounts).where(eq41(instagramAccounts.accountType, "feminnita")).limit(1);
+      const account = await db.select().from(instagramAccounts).where(eq42(instagramAccounts.accountType, "feminnita")).limit(1);
       return account[0] || null;
     } catch (error) {
       console.error("[Instagram Accounts] Erro ao obter Feminnita:", error);
@@ -18681,9 +18629,9 @@ var instagramAccountsRouter = router({
     try {
       const db = await getDb();
       if (!db) return [];
-      const owned = await db.select({ id: influencers.id }).from(influencers).where(and37(eq41(influencers.id, input.influencerId), eq41(influencers.userId, ctx.user.id))).limit(1);
+      const owned = await db.select({ id: influencers.id }).from(influencers).where(and38(eq42(influencers.id, input.influencerId), eq42(influencers.userId, ctx.user.id))).limit(1);
       if (owned.length === 0) return [];
-      const accounts = await db.select().from(instagramAccounts).where(eq41(instagramAccounts.influencerId, input.influencerId));
+      const accounts = await db.select().from(instagramAccounts).where(eq42(instagramAccounts.influencerId, input.influencerId));
       return accounts;
     } catch (error) {
       console.error("[Instagram Accounts] Erro ao obter contas da influencer:", error);
@@ -18704,10 +18652,10 @@ var instagramAccountsRouter = router({
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const account = await db.select().from(instagramAccounts).where(eq41(instagramAccounts.id, input.accountId)).limit(1);
+      const account = await db.select().from(instagramAccounts).where(eq42(instagramAccounts.id, input.accountId)).limit(1);
       if (!account || account.length === 0) throw new Error("Conta n\xE3o encontrada");
       if (account[0].accountType === "influencer" && account[0].influencerId) {
-        const owned = await db.select({ id: influencers.id }).from(influencers).where(and37(eq41(influencers.id, account[0].influencerId), eq41(influencers.userId, ctx.user.id))).limit(1);
+        const owned = await db.select({ id: influencers.id }).from(influencers).where(and38(eq42(influencers.id, account[0].influencerId), eq42(influencers.userId, ctx.user.id))).limit(1);
         if (owned.length === 0) throw new Error("Acesso negado");
       }
       const expiresAt = input.expiresIn ? new Date(Date.now() + input.expiresIn * 1e3) : null;
@@ -18716,7 +18664,7 @@ var instagramAccountsRouter = router({
         accessTokenExpiresAt: expiresAt,
         lastTokenRefresh: /* @__PURE__ */ new Date(),
         updatedAt: /* @__PURE__ */ new Date()
-      }).where(eq41(instagramAccounts.id, input.accountId));
+      }).where(eq42(instagramAccounts.id, input.accountId));
       return { success: true };
     } catch (error) {
       console.error("[Instagram Accounts] Erro ao atualizar token:", error);
@@ -18734,16 +18682,16 @@ var instagramAccountsRouter = router({
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const account = await db.select().from(instagramAccounts).where(eq41(instagramAccounts.id, input.accountId)).limit(1);
+      const account = await db.select().from(instagramAccounts).where(eq42(instagramAccounts.id, input.accountId)).limit(1);
       if (!account || account.length === 0) throw new Error("Conta n\xE3o encontrada");
       if (account[0].accountType === "influencer" && account[0].influencerId) {
-        const owned = await db.select({ id: influencers.id }).from(influencers).where(and37(eq41(influencers.id, account[0].influencerId), eq41(influencers.userId, ctx.user.id))).limit(1);
+        const owned = await db.select({ id: influencers.id }).from(influencers).where(and38(eq42(influencers.id, account[0].influencerId), eq42(influencers.userId, ctx.user.id))).limit(1);
         if (owned.length === 0) throw new Error("Acesso negado");
       }
       await db.update(instagramAccounts).set({
         isActive: false,
         updatedAt: /* @__PURE__ */ new Date()
-      }).where(eq41(instagramAccounts.id, input.accountId));
+      }).where(eq42(instagramAccounts.id, input.accountId));
       return { success: true };
     } catch (error) {
       console.error("[Instagram Accounts] Erro ao desativar conta:", error);
@@ -18762,13 +18710,13 @@ var instagramAccountsRouter = router({
     try {
       const db = await getDb();
       if (!db) return [];
-      const account = await db.select().from(instagramAccounts).where(eq41(instagramAccounts.id, input.accountId)).limit(1);
+      const account = await db.select().from(instagramAccounts).where(eq42(instagramAccounts.id, input.accountId)).limit(1);
       if (!account || account.length === 0) return [];
       if (account[0].accountType === "influencer" && account[0].influencerId) {
-        const owned = await db.select({ id: influencers.id }).from(influencers).where(and37(eq41(influencers.id, account[0].influencerId), eq41(influencers.userId, ctx.user.id))).limit(1);
+        const owned = await db.select({ id: influencers.id }).from(influencers).where(and38(eq42(influencers.id, account[0].influencerId), eq42(influencers.userId, ctx.user.id))).limit(1);
         if (owned.length === 0) return [];
       }
-      const publications = await db.select().from(igPostPublications).where(eq41(igPostPublications.instagramAccountId, input.accountId)).limit(input.limit);
+      const publications = await db.select().from(igPostPublications).where(eq42(igPostPublications.instagramAccountId, input.accountId)).limit(input.limit);
       return publications;
     } catch (error) {
       console.error("[Instagram Accounts] Erro ao obter hist\xF3rico:", error);
@@ -18789,10 +18737,10 @@ var instagramAccountsRouter = router({
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const account = await db.select().from(instagramAccounts).where(eq41(instagramAccounts.id, input.accountId)).limit(1);
+      const account = await db.select().from(instagramAccounts).where(eq42(instagramAccounts.id, input.accountId)).limit(1);
       if (!account || account.length === 0) throw new Error("Conta n\xE3o encontrada");
       if (account[0].accountType === "influencer" && account[0].influencerId) {
-        const owned = await db.select({ id: influencers.id }).from(influencers).where(and37(eq41(influencers.id, account[0].influencerId), eq41(influencers.userId, ctx.user.id))).limit(1);
+        const owned = await db.select({ id: influencers.id }).from(influencers).where(and38(eq42(influencers.id, account[0].influencerId), eq42(influencers.userId, ctx.user.id))).limit(1);
         if (owned.length === 0) throw new Error("Acesso negado");
       }
       await db.update(instagramAccounts).set({
@@ -18801,7 +18749,7 @@ var instagramAccountsRouter = router({
         postsCount: input.postsCount,
         lastMetricsSync: /* @__PURE__ */ new Date(),
         updatedAt: /* @__PURE__ */ new Date()
-      }).where(eq41(instagramAccounts.id, input.accountId));
+      }).where(eq42(instagramAccounts.id, input.accountId));
       return { success: true };
     } catch (error) {
       console.error("[Instagram Accounts] Erro ao sincronizar m\xE9tricas:", error);
@@ -18940,7 +18888,7 @@ BYPASS IMEDIATO: Se souber o IG Account ID (ex: 17841459735732076), passe-o dire
     if (igData.error) throw new Error(`Instagram API: ${igData.error.message}`);
     const db = await getDb();
     if (!db) throw new Error("Database indispon\xEDvel");
-    const existing = await db.select().from(instagramAccounts).where(eq41(instagramAccounts.instagramId, igAccountId)).limit(1);
+    const existing = await db.select().from(instagramAccounts).where(eq42(instagramAccounts.instagramId, igAccountId)).limit(1);
     if (existing.length > 0) {
       await db.update(instagramAccounts).set({
         accessToken: pageToken,
@@ -18952,7 +18900,7 @@ BYPASS IMEDIATO: Se souber o IG Account ID (ex: 17841459735732076), passe-o dire
         postsCount: igData.media_count || existing[0].postsCount,
         isActive: true,
         updatedAt: /* @__PURE__ */ new Date()
-      }).where(eq41(instagramAccounts.instagramId, igAccountId));
+      }).where(eq42(instagramAccounts.instagramId, igAccountId));
     } else {
       await db.insert(instagramAccounts).values({
         accountType: "feminnita",
@@ -19070,7 +19018,7 @@ SOLU\xC7\xC3O: Acesse business.facebook.com \u2192 Configura\xE7\xF5es \u2192 Co
     if (igData.error) throw new Error(`Instagram API: ${igData.error.message}`);
     const db = await getDb();
     if (!db) throw new Error("Database indispon\xEDvel");
-    const existing = await db.select().from(instagramAccounts).where(eq41(instagramAccounts.instagramId, igAccountId)).limit(1);
+    const existing = await db.select().from(instagramAccounts).where(eq42(instagramAccounts.instagramId, igAccountId)).limit(1);
     if (existing.length > 0) {
       await db.update(instagramAccounts).set({
         accessToken: pageToken,
@@ -19082,7 +19030,7 @@ SOLU\xC7\xC3O: Acesse business.facebook.com \u2192 Configura\xE7\xF5es \u2192 Co
         postsCount: igData.media_count || existing[0].postsCount,
         isActive: true,
         updatedAt: /* @__PURE__ */ new Date()
-      }).where(eq41(instagramAccounts.instagramId, igAccountId));
+      }).where(eq42(instagramAccounts.instagramId, igAccountId));
     } else {
       await db.insert(instagramAccounts).values({
         accountType: "feminnita",
@@ -19117,14 +19065,14 @@ SOLU\xC7\xC3O: Acesse business.facebook.com \u2192 Configura\xE7\xF5es \u2192 Co
       finalToken = longLived;
       console.log("[Instagram] forceConnect: Long-Lived User Token salvo");
     }
-    const existing = await db.select().from(instagramAccounts).where(eq41(instagramAccounts.instagramId, input.instagramId)).limit(1);
+    const existing = await db.select().from(instagramAccounts).where(eq42(instagramAccounts.instagramId, input.instagramId)).limit(1);
     if (existing.length > 0) {
       await db.update(instagramAccounts).set({
         isActive: true,
         username: input.username,
         ...finalToken ? { accessToken: finalToken } : {},
         updatedAt: /* @__PURE__ */ new Date()
-      }).where(eq41(instagramAccounts.instagramId, input.instagramId));
+      }).where(eq42(instagramAccounts.instagramId, input.instagramId));
     } else {
       await db.insert(instagramAccounts).values({
         accountType: "feminnita",
@@ -19148,7 +19096,7 @@ SOLU\xC7\xC3O: Acesse business.facebook.com \u2192 Configura\xE7\xF5es \u2192 Co
 init_db();
 init_schema();
 import { z as z44 } from "zod";
-import { eq as eq42, and as and38 } from "drizzle-orm";
+import { eq as eq43, and as and39 } from "drizzle-orm";
 var META_GRAPH_API_BASE = "https://graph.facebook.com/v19.0";
 var IG_GRAPH_API_BASE = "https://graph.instagram.com/v19.0";
 function isInstagramToken(token) {
@@ -19197,13 +19145,13 @@ var metaGraphIntegrationRouter = router({
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const account = await db.select().from(instagramAccounts).where(eq42(instagramAccounts.id, input.accountId)).limit(1);
+      const account = await db.select().from(instagramAccounts).where(eq43(instagramAccounts.id, input.accountId)).limit(1);
       if (!account || account.length === 0) {
         throw new Error("Conta Instagram n\xE3o encontrada");
       }
       const igAccount = account[0];
       if (igAccount.accountType === "influencer" && igAccount.influencerId) {
-        const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and38(eq42(influencers.id, igAccount.influencerId), eq42(influencers.userId, ctx.user.id))).limit(1);
+        const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and39(eq43(influencers.id, igAccount.influencerId), eq43(influencers.userId, ctx.user.id))).limit(1);
         if (!owned) throw new Error("Acesso negado");
       }
       let fullCaption = input.caption;
@@ -19292,13 +19240,13 @@ var metaGraphIntegrationRouter = router({
     try {
       const db = await getDb();
       if (!db) return null;
-      const account = await db.select().from(instagramAccounts).where(eq42(instagramAccounts.id, input.accountId)).limit(1);
+      const account = await db.select().from(instagramAccounts).where(eq43(instagramAccounts.id, input.accountId)).limit(1);
       if (!account || account.length === 0) {
         throw new Error("Conta Instagram n\xE3o encontrada");
       }
       const igAccount = account[0];
       if (igAccount.accountType === "influencer" && igAccount.influencerId) {
-        const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and38(eq42(influencers.id, igAccount.influencerId), eq42(influencers.userId, ctx.user.id))).limit(1);
+        const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and39(eq43(influencers.id, igAccount.influencerId), eq43(influencers.userId, ctx.user.id))).limit(1);
         if (!owned) throw new Error("Acesso negado");
       }
       const token = igAccount.accessToken;
@@ -19348,7 +19296,7 @@ var metaGraphIntegrationRouter = router({
             igIdToUse = igViaMe.id;
             profile = igViaMe;
             if (igViaMe.id !== igAccount.instagramId) {
-              await db.update(instagramAccounts).set({ instagramId: igViaMe.id, updatedAt: /* @__PURE__ */ new Date() }).where(eq42(instagramAccounts.id, igAccount.id));
+              await db.update(instagramAccounts).set({ instagramId: igViaMe.id, updatedAt: /* @__PURE__ */ new Date() }).where(eq43(instagramAccounts.id, igAccount.id));
             }
           }
         } catch (eA) {
@@ -19372,7 +19320,7 @@ var metaGraphIntegrationRouter = router({
               profile = igViaPage;
               const pageToken = page.access_token || igAccount.accessToken;
               if (igViaPage.id !== igAccount.instagramId) {
-                await db.update(instagramAccounts).set({ instagramId: igViaPage.id, accessToken: pageToken, updatedAt: /* @__PURE__ */ new Date() }).where(eq42(instagramAccounts.id, igAccount.id));
+                await db.update(instagramAccounts).set({ instagramId: igViaPage.id, accessToken: pageToken, updatedAt: /* @__PURE__ */ new Date() }).where(eq43(instagramAccounts.id, igAccount.id));
               }
               break;
             }
@@ -19457,7 +19405,7 @@ var metaGraphIntegrationRouter = router({
         profilePictureUrl: profile.profile_picture_url || igAccount.profilePictureUrl,
         lastMetricsSync: /* @__PURE__ */ new Date(),
         updatedAt: /* @__PURE__ */ new Date()
-      }).where(eq42(instagramAccounts.id, input.accountId));
+      }).where(eq43(instagramAccounts.id, input.accountId));
       return {
         followers,
         impressions,
@@ -19483,16 +19431,16 @@ var metaGraphIntegrationRouter = router({
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const account = await db.select().from(instagramAccounts).where(eq42(instagramAccounts.id, input.accountId)).limit(1);
+      const account = await db.select().from(instagramAccounts).where(eq43(instagramAccounts.id, input.accountId)).limit(1);
       if (!account || account.length === 0) {
         throw new Error("Conta Instagram n\xE3o encontrada");
       }
       const igAccount = account[0];
       if (igAccount.accountType === "influencer" && igAccount.influencerId) {
-        const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and38(eq42(influencers.id, igAccount.influencerId), eq42(influencers.userId, ctx.user.id))).limit(1);
+        const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and39(eq43(influencers.id, igAccount.influencerId), eq43(influencers.userId, ctx.user.id))).limit(1);
         if (!owned) throw new Error("Acesso negado");
       }
-      const publications = await db.select().from(igPostPublications).where(eq42(igPostPublications.instagramAccountId, input.accountId));
+      const publications = await db.select().from(igPostPublications).where(eq43(igPostPublications.instagramAccountId, input.accountId));
       let syncedCount = 0;
       for (const pub of publications) {
         if (!pub.instagramPostId) continue;
@@ -19514,7 +19462,7 @@ var metaGraphIntegrationRouter = router({
             reach: metricsMap.reach || 0,
             saves: metricsMap.saved || 0,
             updatedAt: /* @__PURE__ */ new Date()
-          }).where(eq42(igPostPublications.id, pub.id));
+          }).where(eq43(igPostPublications.id, pub.id));
           syncedCount++;
         } catch (error) {
           console.error(`[Meta Graph Integration] Erro ao sincronizar post ${pub.id}:`, error);
@@ -19568,7 +19516,7 @@ var metaGraphIntegrationRouter = router({
     try {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const account = await db.select().from(instagramAccounts).where(eq42(instagramAccounts.id, input.accountId)).limit(1);
+      const account = await db.select().from(instagramAccounts).where(eq43(instagramAccounts.id, input.accountId)).limit(1);
       if (!account || account.length === 0) {
         throw new Error("Conta Instagram n\xE3o encontrada");
       }
@@ -19635,7 +19583,7 @@ var metaGraphIntegrationRouter = router({
           "META_APP_ID e META_APP_SECRET precisam estar configurados nas vari\xE1veis de ambiente"
         );
       }
-      const account = await db.select().from(instagramAccounts).where(eq42(instagramAccounts.id, input.accountId)).limit(1);
+      const account = await db.select().from(instagramAccounts).where(eq43(instagramAccounts.id, input.accountId)).limit(1);
       if (!account || account.length === 0) {
         throw new Error("Conta Instagram n\xE3o encontrada");
       }
@@ -19653,7 +19601,7 @@ var metaGraphIntegrationRouter = router({
         accessToken: newAccessToken,
         ...expiresAt ? { tokenExpiresAt: expiresAt } : {},
         updatedAt: /* @__PURE__ */ new Date()
-      }).where(eq42(instagramAccounts.id, input.accountId));
+      }).where(eq43(instagramAccounts.id, input.accountId));
       return {
         success: true,
         accessToken: newAccessToken,
@@ -19669,7 +19617,7 @@ var metaGraphIntegrationRouter = router({
   getInstagramPosts: protectedProcedure.input(z44.object({ accountId: z44.number(), limit: z44.number().default(20) })).query(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) return { posts: [], error: null };
-    const account = await db.select().from(instagramAccounts).where(eq42(instagramAccounts.id, input.accountId)).limit(1);
+    const account = await db.select().from(instagramAccounts).where(eq43(instagramAccounts.id, input.accountId)).limit(1);
     if (!account || account.length === 0) throw new Error("Conta n\xE3o encontrada");
     const igAccount = account[0];
     try {
@@ -19750,7 +19698,7 @@ var metaGraphIntegrationRouter = router({
 init_db();
 init_schema();
 import { z as z45 } from "zod";
-import { eq as eq43 } from "drizzle-orm";
+import { eq as eq44 } from "drizzle-orm";
 var publicBlogsRouter = router({
   /**
    * Obter posts de uma influencer (público)
@@ -19765,11 +19713,11 @@ var publicBlogsRouter = router({
     try {
       const db = await getDb();
       if (!db) return { influencer: null, posts: [] };
-      const influencer = await db.select().from(influencers).where(eq43(influencers.id, input.influencerId)).limit(1);
+      const influencer = await db.select().from(influencers).where(eq44(influencers.id, input.influencerId)).limit(1);
       if (!influencer || influencer.length === 0) {
         return { influencer: null, posts: [] };
       }
-      const posts = await db.select().from(influencerPosts).where(eq43(influencerPosts.influencerId, input.influencerId)).limit(input.limit).offset(input.offset);
+      const posts = await db.select().from(influencerPosts).where(eq44(influencerPosts.influencerId, input.influencerId)).limit(input.limit).offset(input.offset);
       return {
         influencer: influencer[0],
         posts: posts.filter((p) => p.status === "published")
@@ -19790,7 +19738,7 @@ var publicBlogsRouter = router({
     try {
       const db = await getDb();
       if (!db) return null;
-      const post = await db.select().from(influencerPosts).where(eq43(influencerPosts.id, input.postId)).limit(1);
+      const post = await db.select().from(influencerPosts).where(eq44(influencerPosts.id, input.postId)).limit(1);
       if (!post || post.length === 0) {
         return null;
       }
@@ -19857,12 +19805,12 @@ var publicBlogsRouter = router({
     try {
       const db = await getDb();
       if (!db) return [];
-      const post = await db.select().from(influencerPosts).where(eq43(influencerPosts.id, input.postId)).limit(1);
+      const post = await db.select().from(influencerPosts).where(eq44(influencerPosts.id, input.postId)).limit(1);
       if (!post || post.length === 0) {
         return [];
       }
       const currentPost = post[0];
-      const relatedPosts = await db.select().from(influencerPosts).where(eq43(influencerPosts.influencerId, currentPost.influencerId)).limit(input.limit + 1);
+      const relatedPosts = await db.select().from(influencerPosts).where(eq44(influencerPosts.influencerId, currentPost.influencerId)).limit(input.limit + 1);
       return relatedPosts.filter((p) => p.status === "published" && p.id !== input.postId).slice(0, input.limit);
     } catch (error) {
       console.error("[Public Blogs] Erro ao obter posts relacionados:", error);
@@ -19880,7 +19828,7 @@ var publicBlogsRouter = router({
     try {
       const db = await getDb();
       if (!db) return null;
-      const posts = await db.select().from(influencerPosts).where(eq43(influencerPosts.influencerId, input.influencerId));
+      const posts = await db.select().from(influencerPosts).where(eq44(influencerPosts.influencerId, input.influencerId));
       const publishedPosts = posts.filter((p) => p.status === "published");
       const totalLikes = publishedPosts.reduce((sum, p) => sum + (p.likes || 0), 0);
       const totalComments = publishedPosts.reduce((sum, p) => sum + (p.comments || 0), 0);
@@ -19902,7 +19850,7 @@ var publicBlogsRouter = router({
 init_db();
 init_schema();
 import { z as z46 } from "zod";
-import { eq as eq44, and as and39, lte as lte2, inArray as inArray6 } from "drizzle-orm";
+import { eq as eq45, and as and40, lte as lte2, inArray as inArray6 } from "drizzle-orm";
 function getRetryDelay(retryCount) {
   const delays = [5, 15, 45, 120, 360];
   return (delays[Math.min(retryCount, delays.length - 1)] || 360) * 60 * 1e3;
@@ -19920,14 +19868,14 @@ var publicationQueueRouter = router({
   ).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    const [post] = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq44(influencerPosts.id, input.postId)).limit(1);
+    const [post] = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq45(influencerPosts.id, input.postId)).limit(1);
     if (!post) throw new Error("Post n\xE3o encontrado");
-    const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and39(eq44(influencers.id, post.influencerId ?? 0), eq44(influencers.userId, ctx.user.id))).limit(1);
+    const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and40(eq45(influencers.id, post.influencerId ?? 0), eq45(influencers.userId, ctx.user.id))).limit(1);
     if (!owned) throw new Error("Acesso negado");
     const existing = await db.select().from(publicationQueueJobs).where(
-      and39(
-        eq44(publicationQueueJobs.postId, input.postId),
-        eq44(publicationQueueJobs.status, "ready")
+      and40(
+        eq45(publicationQueueJobs.postId, input.postId),
+        eq45(publicationQueueJobs.status, "ready")
       )
     ).limit(1);
     if (existing.length > 0) {
@@ -19941,7 +19889,7 @@ var publicationQueueRouter = router({
       nextRetryTime: /* @__PURE__ */ new Date(),
       status: "ready"
     });
-    const inserted = await db.select().from(publicationQueueJobs).where(eq44(publicationQueueJobs.postId, input.postId)).limit(1);
+    const inserted = await db.select().from(publicationQueueJobs).where(eq45(publicationQueueJobs.postId, input.postId)).limit(1);
     return {
       success: true,
       jobId: inserted[0]?.id,
@@ -19954,7 +19902,7 @@ var publicationQueueRouter = router({
   getQueueStatus: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return { totalJobs: 0, readyToPublish: 0, waiting: 0, failed: 0, jobs: [] };
-    const myInfluencers = await db.select({ id: influencers.id }).from(influencers).where(eq44(influencers.userId, ctx.user.id));
+    const myInfluencers = await db.select({ id: influencers.id }).from(influencers).where(eq45(influencers.userId, ctx.user.id));
     const myInfluencerIds = myInfluencers.map((i) => i.id);
     if (myInfluencerIds.length === 0) return { totalJobs: 0, readyToPublish: 0, waiting: 0, failed: 0, jobs: [] };
     const myPosts = await db.select({ id: influencerPosts.id }).from(influencerPosts).where(inArray6(influencerPosts.influencerId, myInfluencerIds));
@@ -19990,25 +19938,25 @@ var publicationQueueRouter = router({
     const processedJobs = [];
     const failedJobs = [];
     const readyJobs = await db.select().from(publicationQueueJobs).where(
-      and39(
-        eq44(publicationQueueJobs.status, "ready"),
+      and40(
+        eq45(publicationQueueJobs.status, "ready"),
         lte2(publicationQueueJobs.nextRetryTime, now)
       )
     ).limit(10);
     for (const job of readyJobs) {
       if (job.retryCount >= job.maxRetries) {
-        await db.update(publicationQueueJobs).set({ status: "failed" }).where(eq44(publicationQueueJobs.id, job.id));
-        await db.update(influencerPosts).set({ status: "failed", updatedAt: /* @__PURE__ */ new Date() }).where(eq44(influencerPosts.id, job.postId));
+        await db.update(publicationQueueJobs).set({ status: "failed" }).where(eq45(publicationQueueJobs.id, job.id));
+        await db.update(influencerPosts).set({ status: "failed", updatedAt: /* @__PURE__ */ new Date() }).where(eq45(influencerPosts.id, job.postId));
         failedJobs.push(job.postId);
         continue;
       }
       try {
-        const post = await db.select().from(influencerPosts).where(eq44(influencerPosts.id, job.postId)).limit(1);
+        const post = await db.select().from(influencerPosts).where(eq45(influencerPosts.id, job.postId)).limit(1);
         if (!post.length) {
-          await db.update(publicationQueueJobs).set({ status: "done" }).where(eq44(publicationQueueJobs.id, job.id));
+          await db.update(publicationQueueJobs).set({ status: "done" }).where(eq45(publicationQueueJobs.id, job.id));
           continue;
         }
-        const account = await db.select().from(instagramAccounts).where(eq44(instagramAccounts.id, job.accountId)).limit(1);
+        const account = await db.select().from(instagramAccounts).where(eq45(instagramAccounts.id, job.accountId)).limit(1);
         if (!account.length) {
           throw new Error("Conta Instagram n\xE3o encontrada");
         }
@@ -20057,8 +20005,8 @@ var publicationQueueRouter = router({
           publishError = String(apiError);
         }
         if (publishSuccess) {
-          await db.update(influencerPosts).set({ status: "published", publishedAt: /* @__PURE__ */ new Date(), updatedAt: /* @__PURE__ */ new Date() }).where(eq44(influencerPosts.id, job.postId));
-          await db.update(publicationQueueJobs).set({ status: "done" }).where(eq44(publicationQueueJobs.id, job.id));
+          await db.update(influencerPosts).set({ status: "published", publishedAt: /* @__PURE__ */ new Date(), updatedAt: /* @__PURE__ */ new Date() }).where(eq45(influencerPosts.id, job.postId));
+          await db.update(publicationQueueJobs).set({ status: "done" }).where(eq45(publicationQueueJobs.id, job.id));
           processedJobs.push(job.postId);
         } else {
           const newRetryCount = job.retryCount + 1;
@@ -20068,8 +20016,8 @@ var publicationQueueRouter = router({
             lastError: publishError,
             nextRetryTime: nextRetry,
             status: newRetryCount >= job.maxRetries ? "failed" : "waiting"
-          }).where(eq44(publicationQueueJobs.id, job.id));
-          await db.update(influencerPosts).set({ status: "scheduled", updatedAt: /* @__PURE__ */ new Date() }).where(eq44(influencerPosts.id, job.postId));
+          }).where(eq45(publicationQueueJobs.id, job.id));
+          await db.update(influencerPosts).set({ status: "scheduled", updatedAt: /* @__PURE__ */ new Date() }).where(eq45(influencerPosts.id, job.postId));
         }
       } catch (error) {
         const newRetryCount = job.retryCount + 1;
@@ -20079,10 +20027,10 @@ var publicationQueueRouter = router({
           lastError: String(error),
           nextRetryTime: nextRetry,
           status: "waiting"
-        }).where(eq44(publicationQueueJobs.id, job.id));
+        }).where(eq45(publicationQueueJobs.id, job.id));
       }
     }
-    const remaining = await db.select().from(publicationQueueJobs).where(eq44(publicationQueueJobs.status, "ready"));
+    const remaining = await db.select().from(publicationQueueJobs).where(eq45(publicationQueueJobs.status, "ready"));
     return {
       success: true,
       processed: processedJobs.length,
@@ -20098,11 +20046,11 @@ var publicationQueueRouter = router({
   removeFromQueue: protectedProcedure.input(z46.object({ postId: z46.number() })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    const [post] = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq44(influencerPosts.id, input.postId)).limit(1);
+    const [post] = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq45(influencerPosts.id, input.postId)).limit(1);
     if (!post) throw new Error("Post n\xE3o encontrado");
-    const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and39(eq44(influencers.id, post.influencerId ?? 0), eq44(influencers.userId, ctx.user.id))).limit(1);
+    const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and40(eq45(influencers.id, post.influencerId ?? 0), eq45(influencers.userId, ctx.user.id))).limit(1);
     if (!owned) throw new Error("Acesso negado");
-    await db.update(publicationQueueJobs).set({ status: "done" }).where(eq44(publicationQueueJobs.postId, input.postId));
+    await db.update(publicationQueueJobs).set({ status: "done" }).where(eq45(publicationQueueJobs.postId, input.postId));
     return { success: true, message: "Post removido da fila" };
   }),
   /**
@@ -20111,11 +20059,11 @@ var publicationQueueRouter = router({
   retryNow: protectedProcedure.input(z46.object({ postId: z46.number() })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
-    const [post] = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq44(influencerPosts.id, input.postId)).limit(1);
+    const [post] = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq45(influencerPosts.id, input.postId)).limit(1);
     if (!post) throw new Error("Post n\xE3o encontrado");
-    const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and39(eq44(influencers.id, post.influencerId ?? 0), eq44(influencers.userId, ctx.user.id))).limit(1);
+    const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and40(eq45(influencers.id, post.influencerId ?? 0), eq45(influencers.userId, ctx.user.id))).limit(1);
     if (!owned) throw new Error("Acesso negado");
-    await db.update(publicationQueueJobs).set({ nextRetryTime: /* @__PURE__ */ new Date(), status: "ready" }).where(eq44(publicationQueueJobs.postId, input.postId));
+    await db.update(publicationQueueJobs).set({ nextRetryTime: /* @__PURE__ */ new Date(), status: "ready" }).where(eq45(publicationQueueJobs.postId, input.postId));
     return { success: true, message: "Post agendado para retry imediato" };
   }),
   /**
@@ -20124,11 +20072,11 @@ var publicationQueueRouter = router({
   getJobDetails: protectedProcedure.input(z46.object({ postId: z46.number() })).query(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) return null;
-    const [post] = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq44(influencerPosts.id, input.postId)).limit(1);
+    const [post] = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq45(influencerPosts.id, input.postId)).limit(1);
     if (!post) return null;
-    const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and39(eq44(influencers.id, post.influencerId ?? 0), eq44(influencers.userId, ctx.user.id))).limit(1);
+    const [owned] = await db.select({ id: influencers.id }).from(influencers).where(and40(eq45(influencers.id, post.influencerId ?? 0), eq45(influencers.userId, ctx.user.id))).limit(1);
     if (!owned) return null;
-    const rows = await db.select().from(publicationQueueJobs).where(eq44(publicationQueueJobs.postId, input.postId)).limit(1);
+    const rows = await db.select().from(publicationQueueJobs).where(eq45(publicationQueueJobs.postId, input.postId)).limit(1);
     if (!rows.length) return null;
     const job = rows[0];
     return {
@@ -20275,7 +20223,7 @@ init_db();
 init_schema();
 init_llm();
 import { z as z47 } from "zod";
-import { eq as eq45, desc as desc20, and as and40 } from "drizzle-orm";
+import { eq as eq46, desc as desc20, and as and41 } from "drizzle-orm";
 var marketResearchRouter = router({
   /**
    * Busca o último relatório de pesquisa de mercado do usuário logado
@@ -20283,7 +20231,7 @@ var marketResearchRouter = router({
   getLatestReport: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return null;
-    const rows = await db.select().from(marketingResearchReports).where(eq45(marketingResearchReports.userId, ctx.user.id)).orderBy(desc20(marketingResearchReports.createdAt)).limit(1);
+    const rows = await db.select().from(marketingResearchReports).where(eq46(marketingResearchReports.userId, ctx.user.id)).orderBy(desc20(marketingResearchReports.createdAt)).limit(1);
     return rows[0] ?? null;
   }),
   /**
@@ -20297,7 +20245,7 @@ var marketResearchRouter = router({
       reportDate: marketingResearchReports.reportDate,
       weeklyStrategy: marketingResearchReports.weeklyStrategy,
       createdAt: marketingResearchReports.createdAt
-    }).from(marketingResearchReports).where(eq45(marketingResearchReports.userId, ctx.user.id)).orderBy(desc20(marketingResearchReports.createdAt)).limit(30);
+    }).from(marketingResearchReports).where(eq46(marketingResearchReports.userId, ctx.user.id)).orderBy(desc20(marketingResearchReports.createdAt)).limit(30);
     return rows;
   }),
   /**
@@ -20307,9 +20255,9 @@ var marketResearchRouter = router({
     const db = await getDb();
     if (!db) return null;
     const rows = await db.select().from(marketingResearchReports).where(
-      and40(
-        eq45(marketingResearchReports.id, input.id),
-        eq45(marketingResearchReports.userId, ctx.user.id)
+      and41(
+        eq46(marketingResearchReports.id, input.id),
+        eq46(marketingResearchReports.userId, ctx.user.id)
       )
     ).limit(1);
     return rows[0] ?? null;
@@ -20320,7 +20268,7 @@ var marketResearchRouter = router({
   listCompetitors: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return [];
-    const rows = await db.select().from(competitorData).where(eq45(competitorData.userId, ctx.user.id)).orderBy(desc20(competitorData.detectedAt)).limit(50);
+    const rows = await db.select().from(competitorData).where(eq46(competitorData.userId, ctx.user.id)).orderBy(desc20(competitorData.detectedAt)).limit(50);
     return rows;
   }),
   /**
@@ -20426,10 +20374,10 @@ var marketResearchRouter = router({
   ).query(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) return [];
-    const conditions = [eq45(contentBriefs.userId, ctx.user.id)];
-    if (input?.status) conditions.push(eq45(contentBriefs.status, input.status));
-    if (input?.briefType) conditions.push(eq45(contentBriefs.briefType, input.briefType));
-    const rows = await db.select().from(contentBriefs).where(and40(...conditions)).orderBy(desc20(contentBriefs.createdAt));
+    const conditions = [eq46(contentBriefs.userId, ctx.user.id)];
+    if (input?.status) conditions.push(eq46(contentBriefs.status, input.status));
+    if (input?.briefType) conditions.push(eq46(contentBriefs.briefType, input.briefType));
+    const rows = await db.select().from(contentBriefs).where(and41(...conditions)).orderBy(desc20(contentBriefs.createdAt));
     return rows;
   }),
   /**
@@ -20439,9 +20387,9 @@ var marketResearchRouter = router({
     const db = await getDb();
     if (!db) return null;
     const rows = await db.select().from(contentBriefs).where(
-      and40(
-        eq45(contentBriefs.id, input.id),
-        eq45(contentBriefs.userId, ctx.user.id)
+      and41(
+        eq46(contentBriefs.id, input.id),
+        eq46(contentBriefs.userId, ctx.user.id)
       )
     ).limit(1);
     return rows[0] ?? null;
@@ -20458,9 +20406,9 @@ var marketResearchRouter = router({
     const db = await getDb();
     if (!db) throw new Error("Database not available");
     await db.update(contentBriefs).set({ status: input.status }).where(
-      and40(
-        eq45(contentBriefs.id, input.id),
-        eq45(contentBriefs.userId, ctx.user.id)
+      and41(
+        eq46(contentBriefs.id, input.id),
+        eq46(contentBriefs.userId, ctx.user.id)
       )
     );
     return { success: true, id: input.id, status: input.status };
@@ -20499,7 +20447,7 @@ init_db();
 init_schema();
 init_llm();
 import { z as z48 } from "zod";
-import { eq as eq46, and as and41, desc as desc21, inArray as inArray7 } from "drizzle-orm";
+import { eq as eq47, and as and42, desc as desc21, inArray as inArray7 } from "drizzle-orm";
 var assetLibraryRouter = router({
   // ── Gerenciamento de Assets ───────────────────────────────────────────────
   uploadAsset: protectedProcedure.input(
@@ -20573,14 +20521,14 @@ var assetLibraryRouter = router({
     if (!allowed.includes(input.contentType)) throw new Error("Tipo n\xE3o permitido. Use JPEG, PNG, WebP ou GIF.");
     const buffer = Buffer.from(input.fileData, "base64");
     if (buffer.length > 15 * 1024 * 1024) throw new Error("Arquivo muito grande. M\xE1ximo 15MB.");
-    const fs13 = await import("fs/promises");
-    const path14 = await import("path");
+    const fs14 = await import("fs/promises");
+    const path15 = await import("path");
     const crypto15 = await import("crypto");
     const ext = input.contentType.split("/")[1]?.replace("jpeg", "jpg") || "jpg";
     const filename = `${Date.now()}-${crypto15.randomBytes(6).toString("hex")}.${ext}`;
-    const uploadsDir = path14.resolve(process.cwd(), "uploads");
-    await fs13.mkdir(uploadsDir, { recursive: true });
-    await fs13.writeFile(path14.join(uploadsDir, filename), buffer);
+    const uploadsDir = path15.resolve(process.cwd(), "uploads");
+    await fs14.mkdir(uploadsDir, { recursive: true });
+    await fs14.writeFile(path15.join(uploadsDir, filename), buffer);
     const url = `/uploads/${filename}`;
     let aiAnalysis;
     try {
@@ -20619,22 +20567,22 @@ var assetLibraryRouter = router({
     const db = await getDb();
     if (!db) throw new Error("DB indispon\xEDvel");
     const conditions = [
-      eq46(assetLibrary.userId, ctx.user.id),
-      eq46(assetLibrary.isActive, true)
+      eq47(assetLibrary.userId, ctx.user.id),
+      eq47(assetLibrary.isActive, true)
     ];
     if (input.category) {
-      conditions.push(eq46(assetLibrary.category, input.category));
+      conditions.push(eq47(assetLibrary.category, input.category));
     }
     if (input.platform) {
-      conditions.push(eq46(assetLibrary.platform, input.platform));
+      conditions.push(eq47(assetLibrary.platform, input.platform));
     }
-    return db.select().from(assetLibrary).where(and41(...conditions)).orderBy(desc21(assetLibrary.createdAt));
+    return db.select().from(assetLibrary).where(and42(...conditions)).orderBy(desc21(assetLibrary.createdAt));
   }),
   deleteAsset: protectedProcedure.input(z48.object({ id: z48.number().int() })).mutation(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new Error("DB indispon\xEDvel");
     await db.update(assetLibrary).set({ isActive: false }).where(
-      and41(eq46(assetLibrary.id, input.id), eq46(assetLibrary.userId, ctx.user.id))
+      and42(eq47(assetLibrary.id, input.id), eq47(assetLibrary.userId, ctx.user.id))
     );
     return { success: true };
   }),
@@ -20658,7 +20606,7 @@ var assetLibraryRouter = router({
     if (Object.keys(updateData).length === 0) {
       return { success: true };
     }
-    await db.update(assetLibrary).set(updateData).where(and41(eq46(assetLibrary.id, id), eq46(assetLibrary.userId, ctx.user.id)));
+    await db.update(assetLibrary).set(updateData).where(and42(eq47(assetLibrary.id, id), eq47(assetLibrary.userId, ctx.user.id)));
     return { success: true };
   }),
   // ── Gerenciamento de Coleções ─────────────────────────────────────────────
@@ -20691,14 +20639,14 @@ var assetLibraryRouter = router({
     const db = await getDb();
     if (!db) throw new Error("DB indispon\xEDvel");
     const rows = await db.select().from(productCollections).where(
-      and41(
-        eq46(productCollections.id, input.id),
-        eq46(productCollections.userId, ctx.user.id)
+      and42(
+        eq47(productCollections.id, input.id),
+        eq47(productCollections.userId, ctx.user.id)
       )
     ).limit(1);
     const collection = rows[0];
     if (!collection) throw new Error("Cole\xE7\xE3o n\xE3o encontrada");
-    await db.update(productCollections).set({ status: "ativo" }).where(eq46(productCollections.id, input.id));
+    await db.update(productCollections).set({ status: "ativo" }).where(eq47(productCollections.id, input.id));
     const assetIds = collection.assetIds ?? [];
     let assets = [];
     if (assetIds.length > 0) {
@@ -20739,21 +20687,21 @@ var assetLibraryRouter = router({
         status: "pending"
       });
     }
-    await db.update(productCollections).set({ briefsGenerated: true }).where(eq46(productCollections.id, input.id));
+    await db.update(productCollections).set({ briefsGenerated: true }).where(eq47(productCollections.id, input.id));
     return { success: true, briefsCreated: briefTemplates.length };
   }),
   listCollections: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("DB indispon\xEDvel");
-    return db.select().from(productCollections).where(eq46(productCollections.userId, ctx.user.id)).orderBy(desc21(productCollections.createdAt));
+    return db.select().from(productCollections).where(eq47(productCollections.userId, ctx.user.id)).orderBy(desc21(productCollections.createdAt));
   }),
   getCollection: protectedProcedure.input(z48.object({ id: z48.number().int() })).query(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new Error("DB indispon\xEDvel");
     const rows = await db.select().from(productCollections).where(
-      and41(
-        eq46(productCollections.id, input.id),
-        eq46(productCollections.userId, ctx.user.id)
+      and42(
+        eq47(productCollections.id, input.id),
+        eq47(productCollections.userId, ctx.user.id)
       )
     ).limit(1);
     const collection = rows[0];
@@ -20769,9 +20717,9 @@ var assetLibraryRouter = router({
     const db = await getDb();
     if (!db) throw new Error("DB indispon\xEDvel");
     await db.update(productCollections).set({ status: "arquivado" }).where(
-      and41(
-        eq46(productCollections.id, input.id),
-        eq46(productCollections.userId, ctx.user.id)
+      and42(
+        eq47(productCollections.id, input.id),
+        eq47(productCollections.userId, ctx.user.id)
       )
     );
     return { success: true };
@@ -20782,13 +20730,13 @@ var assetLibraryRouter = router({
 import { z as z49 } from "zod";
 init_db();
 init_schema();
-import { eq as eq47, and as and42, desc as desc22 } from "drizzle-orm";
+import { eq as eq48, and as and43, desc as desc22 } from "drizzle-orm";
 import { randomBytes as randomBytes2 } from "crypto";
 var afiliadasRouter = router({
   listar: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return [];
-    return db.select().from(afiliadas).where(eq47(afiliadas.userId, ctx.user.id)).orderBy(desc22(afiliadas.createdAt));
+    return db.select().from(afiliadas).where(eq48(afiliadas.userId, ctx.user.id)).orderBy(desc22(afiliadas.createdAt));
   }),
   criar: protectedProcedure.input(z49.object({
     nome: z49.string().min(2),
@@ -20829,13 +20777,13 @@ var afiliadasRouter = router({
     const db = await getDb();
     if (!db) throw new Error("Database unavailable");
     const { id, ...data } = input;
-    await db.update(afiliadas).set({ ...data, updatedAt: /* @__PURE__ */ new Date() }).where(and42(eq47(afiliadas.id, id), eq47(afiliadas.userId, ctx.user.id)));
+    await db.update(afiliadas).set({ ...data, updatedAt: /* @__PURE__ */ new Date() }).where(and43(eq48(afiliadas.id, id), eq48(afiliadas.userId, ctx.user.id)));
     return { success: true };
   }),
   deletar: protectedProcedure.input(z49.object({ id: z49.number() })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database unavailable");
-    await db.delete(afiliadas).where(and42(eq47(afiliadas.id, input.id), eq47(afiliadas.userId, ctx.user.id)));
+    await db.delete(afiliadas).where(and43(eq48(afiliadas.id, input.id), eq48(afiliadas.userId, ctx.user.id)));
     return { success: true };
   }),
   registrarVenda: protectedProcedure.input(z49.object({
@@ -20846,7 +20794,7 @@ var afiliadasRouter = router({
   })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database unavailable");
-    const [afiliada] = await db.select().from(afiliadas).where(and42(eq47(afiliadas.id, input.afiliadaId), eq47(afiliadas.userId, ctx.user.id)));
+    const [afiliada] = await db.select().from(afiliadas).where(and43(eq48(afiliadas.id, input.afiliadaId), eq48(afiliadas.userId, ctx.user.id)));
     if (!afiliada) throw new Error("Afiliada n\xE3o encontrada");
     const valorNum = parseFloat(input.valor);
     const comissaoNum = valorNum * (parseFloat(afiliada.comissaoPercent ?? "10") / 100);
@@ -20870,21 +20818,21 @@ var afiliadasRouter = router({
       nivel,
       status: "ativa",
       updatedAt: /* @__PURE__ */ new Date()
-    }).where(eq47(afiliadas.id, input.afiliadaId));
+    }).where(eq48(afiliadas.id, input.afiliadaId));
     return { success: true };
   }),
   listarVendas: protectedProcedure.input(z49.object({ afiliadaId: z49.number().optional() })).query(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) return [];
-    const rows = await db.select().from(afiliadaVendas).where(eq47(afiliadaVendas.userId, ctx.user.id)).orderBy(desc22(afiliadaVendas.createdAt)).limit(100);
+    const rows = await db.select().from(afiliadaVendas).where(eq48(afiliadaVendas.userId, ctx.user.id)).orderBy(desc22(afiliadaVendas.createdAt)).limit(100);
     if (input.afiliadaId) return rows.filter((r) => r.afiliadaId === input.afiliadaId);
     return rows;
   }),
   stats: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return { total: 0, ativas: 0, totalVendas: 0, totalComissoes: 0 };
-    const all = await db.select().from(afiliadas).where(eq47(afiliadas.userId, ctx.user.id));
-    const vendas = await db.select().from(afiliadaVendas).where(eq47(afiliadaVendas.userId, ctx.user.id));
+    const all = await db.select().from(afiliadas).where(eq48(afiliadas.userId, ctx.user.id));
+    const vendas = await db.select().from(afiliadaVendas).where(eq48(afiliadaVendas.userId, ctx.user.id));
     return {
       total: all.length,
       ativas: all.filter((a) => a.status === "ativa").length,
@@ -20898,7 +20846,7 @@ var afiliadasRouter = router({
 import { z as z50 } from "zod";
 init_db();
 init_schema();
-import { eq as eq48, and as and43, desc as desc23 } from "drizzle-orm";
+import { eq as eq49, and as and44, desc as desc23 } from "drizzle-orm";
 var DEFAULT_MESSAGES = {
   etapa1: "Oi {nome}! \u{1F44B} Vi que voc\xEA tinha interesse em nossos pijamas Feminnita. Ainda posso te ajudar? Temos modelos lindos esperando por voc\xEA! \u{1F6CD}\uFE0F",
   etapa2: "Oi {nome}! \u{1F60A} Passando para avisar que as pe\xE7as que voc\xEA viu ainda est\xE3o dispon\xEDveis \u2014 mas o estoque \xE9 limitado. Quer garantir as suas? \u{1F31F}",
@@ -20908,7 +20856,7 @@ var abandonoRecoveryRouter = router({
   listarSequencias: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return [];
-    return db.select().from(abandonamentoSequencias).where(eq48(abandonamentoSequencias.userId, ctx.user.id)).orderBy(desc23(abandonamentoSequencias.createdAt));
+    return db.select().from(abandonamentoSequencias).where(eq49(abandonamentoSequencias.userId, ctx.user.id)).orderBy(desc23(abandonamentoSequencias.createdAt));
   }),
   criarSequencia: protectedProcedure.input(z50.object({
     nome: z50.string().min(2),
@@ -20947,13 +20895,13 @@ var abandonoRecoveryRouter = router({
     const db = await getDb();
     if (!db) throw new Error("Database unavailable");
     const { id, ...data } = input;
-    await db.update(abandonamentoSequencias).set({ ...data, updatedAt: /* @__PURE__ */ new Date() }).where(and43(eq48(abandonamentoSequencias.id, id), eq48(abandonamentoSequencias.userId, ctx.user.id)));
+    await db.update(abandonamentoSequencias).set({ ...data, updatedAt: /* @__PURE__ */ new Date() }).where(and44(eq49(abandonamentoSequencias.id, id), eq49(abandonamentoSequencias.userId, ctx.user.id)));
     return { success: true };
   }),
   deletarSequencia: protectedProcedure.input(z50.object({ id: z50.number() })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database unavailable");
-    await db.delete(abandonamentoSequencias).where(and43(eq48(abandonamentoSequencias.id, input.id), eq48(abandonamentoSequencias.userId, ctx.user.id)));
+    await db.delete(abandonamentoSequencias).where(and44(eq49(abandonamentoSequencias.id, input.id), eq49(abandonamentoSequencias.userId, ctx.user.id)));
     return { success: true };
   }),
   iniciarRecuperacao: protectedProcedure.input(z50.object({
@@ -20964,7 +20912,7 @@ var abandonoRecoveryRouter = router({
   })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database unavailable");
-    const [seq] = await db.select().from(abandonamentoSequencias).where(and43(eq48(abandonamentoSequencias.id, input.sequenciaId), eq48(abandonamentoSequencias.userId, ctx.user.id)));
+    const [seq] = await db.select().from(abandonamentoSequencias).where(and44(eq49(abandonamentoSequencias.id, input.sequenciaId), eq49(abandonamentoSequencias.userId, ctx.user.id)));
     if (!seq) throw new Error("Sequ\xEAncia n\xE3o encontrada");
     await db.insert(abandonamentoLogs).values({
       userId: ctx.user.id,
@@ -20983,18 +20931,18 @@ var abandonoRecoveryRouter = router({
       status: "convertido",
       convertidoEm: /* @__PURE__ */ new Date(),
       updatedAt: /* @__PURE__ */ new Date()
-    }).where(and43(eq48(abandonamentoLogs.id, input.logId), eq48(abandonamentoLogs.userId, ctx.user.id)));
+    }).where(and44(eq49(abandonamentoLogs.id, input.logId), eq49(abandonamentoLogs.userId, ctx.user.id)));
     return { success: true };
   }),
   listarLogs: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return [];
-    return db.select().from(abandonamentoLogs).where(eq48(abandonamentoLogs.userId, ctx.user.id)).orderBy(desc23(abandonamentoLogs.createdAt)).limit(100);
+    return db.select().from(abandonamentoLogs).where(eq49(abandonamentoLogs.userId, ctx.user.id)).orderBy(desc23(abandonamentoLogs.createdAt)).limit(100);
   }),
   stats: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return { total: 0, ativos: 0, convertidos: 0, taxaConversao: "0" };
-    const logs = await db.select().from(abandonamentoLogs).where(eq48(abandonamentoLogs.userId, ctx.user.id));
+    const logs = await db.select().from(abandonamentoLogs).where(eq49(abandonamentoLogs.userId, ctx.user.id));
     const total = logs.length;
     const ativos = logs.filter((l) => l.status === "ativo").length;
     const convertidos = logs.filter((l) => l.status === "convertido").length;
@@ -21008,7 +20956,7 @@ var abandonoRecoveryRouter = router({
 import { z as z51 } from "zod";
 init_db();
 init_schema();
-import { eq as eq49 } from "drizzle-orm";
+import { eq as eq50 } from "drizzle-orm";
 var DEFAULT_BRAND_BOOK = {
   corPrimaria: "#D97706",
   corSecundaria: "#F59E0B",
@@ -21032,7 +20980,7 @@ var brandBookRouter = router({
   get: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return DEFAULT_BRAND_BOOK;
-    const [existing] = await db.select().from(brandBook).where(eq49(brandBook.userId, ctx.user.id));
+    const [existing] = await db.select().from(brandBook).where(eq50(brandBook.userId, ctx.user.id));
     return existing ?? DEFAULT_BRAND_BOOK;
   }),
   salvar: protectedProcedure.input(z51.object({
@@ -21056,9 +21004,9 @@ var brandBookRouter = router({
   })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database unavailable");
-    const [existing] = await db.select({ id: brandBook.id }).from(brandBook).where(eq49(brandBook.userId, ctx.user.id));
+    const [existing] = await db.select({ id: brandBook.id }).from(brandBook).where(eq50(brandBook.userId, ctx.user.id));
     if (existing) {
-      await db.update(brandBook).set({ ...input, updatedAt: /* @__PURE__ */ new Date() }).where(eq49(brandBook.userId, ctx.user.id));
+      await db.update(brandBook).set({ ...input, updatedAt: /* @__PURE__ */ new Date() }).where(eq50(brandBook.userId, ctx.user.id));
     } else {
       await db.insert(brandBook).values({ userId: ctx.user.id, ...input });
     }
@@ -21070,17 +21018,17 @@ var brandBookRouter = router({
 import { z as z52 } from "zod";
 init_db();
 init_schema();
-import { eq as eq50, and as and44, desc as desc24, gte as gte3 } from "drizzle-orm";
+import { eq as eq51, and as and45, desc as desc24, gte as gte3 } from "drizzle-orm";
 var dropsRouter = router({
   listar: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return [];
-    return db.select().from(drops).where(eq50(drops.userId, ctx.user.id)).orderBy(desc24(drops.dataLancamento));
+    return db.select().from(drops).where(eq51(drops.userId, ctx.user.id)).orderBy(desc24(drops.dataLancamento));
   }),
   proximos: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return [];
-    return db.select().from(drops).where(and44(eq50(drops.userId, ctx.user.id), gte3(drops.dataLancamento, /* @__PURE__ */ new Date()))).orderBy(drops.dataLancamento);
+    return db.select().from(drops).where(and45(eq51(drops.userId, ctx.user.id), gte3(drops.dataLancamento, /* @__PURE__ */ new Date()))).orderBy(drops.dataLancamento);
   }),
   criar: protectedProcedure.input(z52.object({
     nome: z52.string().min(2),
@@ -21125,13 +21073,13 @@ var dropsRouter = router({
       ...rest,
       ...dataLancamento ? { dataLancamento: new Date(dataLancamento) } : {},
       updatedAt: /* @__PURE__ */ new Date()
-    }).where(and44(eq50(drops.id, id), eq50(drops.userId, ctx.user.id)));
+    }).where(and45(eq51(drops.id, id), eq51(drops.userId, ctx.user.id)));
     return { success: true };
   }),
   deletar: protectedProcedure.input(z52.object({ id: z52.number() })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database unavailable");
-    await db.delete(drops).where(and44(eq50(drops.id, input.id), eq50(drops.userId, ctx.user.id)));
+    await db.delete(drops).where(and45(eq51(drops.id, input.id), eq51(drops.userId, ctx.user.id)));
     return { success: true };
   })
 });
@@ -21140,12 +21088,12 @@ var dropsRouter = router({
 import { z as z53 } from "zod";
 init_db();
 init_schema();
-import { eq as eq51, and as and45, desc as desc25 } from "drizzle-orm";
+import { eq as eq52, and as and46, desc as desc25 } from "drizzle-orm";
 var ugcRouter = router({
   listar: protectedProcedure.input(z53.object({ status: z53.enum(["pendente", "aprovado", "rejeitado", "republicado"]).optional() })).query(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) return [];
-    const rows = await db.select().from(ugcSubmissions).where(eq51(ugcSubmissions.userId, ctx.user.id)).orderBy(desc25(ugcSubmissions.createdAt)).limit(200);
+    const rows = await db.select().from(ugcSubmissions).where(eq52(ugcSubmissions.userId, ctx.user.id)).orderBy(desc25(ugcSubmissions.createdAt)).limit(200);
     if (input.status) return rows.filter((r) => r.status === input.status);
     return rows;
   }),
@@ -21166,37 +21114,37 @@ var ugcRouter = router({
   aprovar: protectedProcedure.input(z53.object({ id: z53.number() })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database unavailable");
-    await db.update(ugcSubmissions).set({ status: "aprovado", updatedAt: /* @__PURE__ */ new Date() }).where(and45(eq51(ugcSubmissions.id, input.id), eq51(ugcSubmissions.userId, ctx.user.id)));
+    await db.update(ugcSubmissions).set({ status: "aprovado", updatedAt: /* @__PURE__ */ new Date() }).where(and46(eq52(ugcSubmissions.id, input.id), eq52(ugcSubmissions.userId, ctx.user.id)));
     return { success: true };
   }),
   rejeitar: protectedProcedure.input(z53.object({ id: z53.number() })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database unavailable");
-    await db.update(ugcSubmissions).set({ status: "rejeitado", updatedAt: /* @__PURE__ */ new Date() }).where(and45(eq51(ugcSubmissions.id, input.id), eq51(ugcSubmissions.userId, ctx.user.id)));
+    await db.update(ugcSubmissions).set({ status: "rejeitado", updatedAt: /* @__PURE__ */ new Date() }).where(and46(eq52(ugcSubmissions.id, input.id), eq52(ugcSubmissions.userId, ctx.user.id)));
     return { success: true };
   }),
   marcarRepublicado: protectedProcedure.input(z53.object({ id: z53.number() })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database unavailable");
-    await db.update(ugcSubmissions).set({ status: "republicado", updatedAt: /* @__PURE__ */ new Date() }).where(and45(eq51(ugcSubmissions.id, input.id), eq51(ugcSubmissions.userId, ctx.user.id)));
+    await db.update(ugcSubmissions).set({ status: "republicado", updatedAt: /* @__PURE__ */ new Date() }).where(and46(eq52(ugcSubmissions.id, input.id), eq52(ugcSubmissions.userId, ctx.user.id)));
     return { success: true };
   }),
   marcarAutorizacao: protectedProcedure.input(z53.object({ id: z53.number(), autorizado: z53.boolean() })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database unavailable");
-    await db.update(ugcSubmissions).set({ autorizacaoObtida: input.autorizado, updatedAt: /* @__PURE__ */ new Date() }).where(and45(eq51(ugcSubmissions.id, input.id), eq51(ugcSubmissions.userId, ctx.user.id)));
+    await db.update(ugcSubmissions).set({ autorizacaoObtida: input.autorizado, updatedAt: /* @__PURE__ */ new Date() }).where(and46(eq52(ugcSubmissions.id, input.id), eq52(ugcSubmissions.userId, ctx.user.id)));
     return { success: true };
   }),
   deletar: protectedProcedure.input(z53.object({ id: z53.number() })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database unavailable");
-    await db.delete(ugcSubmissions).where(and45(eq51(ugcSubmissions.id, input.id), eq51(ugcSubmissions.userId, ctx.user.id)));
+    await db.delete(ugcSubmissions).where(and46(eq52(ugcSubmissions.id, input.id), eq52(ugcSubmissions.userId, ctx.user.id)));
     return { success: true };
   }),
   stats: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return { total: 0, pendentes: 0, aprovados: 0, republicados: 0 };
-    const all = await db.select().from(ugcSubmissions).where(eq51(ugcSubmissions.userId, ctx.user.id));
+    const all = await db.select().from(ugcSubmissions).where(eq52(ugcSubmissions.userId, ctx.user.id));
     return {
       total: all.length,
       pendentes: all.filter((u) => u.status === "pendente").length,
@@ -21211,12 +21159,12 @@ import { z as z54 } from "zod";
 init_db();
 init_schema();
 init_llm();
-import { eq as eq52, and as and46, desc as desc26 } from "drizzle-orm";
+import { eq as eq53, and as and47, desc as desc26 } from "drizzle-orm";
 var tiktokLiveRouter = router({
   listar: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return [];
-    return db.select().from(tiktokLives).where(eq52(tiktokLives.userId, ctx.user.id)).orderBy(desc26(tiktokLives.dataAgendada));
+    return db.select().from(tiktokLives).where(eq53(tiktokLives.userId, ctx.user.id)).orderBy(desc26(tiktokLives.dataAgendada));
   }),
   criar: protectedProcedure.input(z54.object({
     titulo: z54.string().min(2),
@@ -21261,13 +21209,13 @@ var tiktokLiveRouter = router({
       ...rest,
       ...dataAgendada ? { dataAgendada: new Date(dataAgendada) } : {},
       updatedAt: /* @__PURE__ */ new Date()
-    }).where(and46(eq52(tiktokLives.id, id), eq52(tiktokLives.userId, ctx.user.id)));
+    }).where(and47(eq53(tiktokLives.id, id), eq53(tiktokLives.userId, ctx.user.id)));
     return { success: true };
   }),
   deletar: protectedProcedure.input(z54.object({ id: z54.number() })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database unavailable");
-    await db.delete(tiktokLives).where(and46(eq52(tiktokLives.id, input.id), eq52(tiktokLives.userId, ctx.user.id)));
+    await db.delete(tiktokLives).where(and47(eq53(tiktokLives.id, input.id), eq53(tiktokLives.userId, ctx.user.id)));
     return { success: true };
   }),
   gerarRoteiro: protectedProcedure.input(z54.object({
@@ -21302,14 +21250,14 @@ Seja espec\xEDfico, use linguagem brasileira natural, inclua emojis TikTok, CTAs
     const roteiro = typeof roteiroRaw === "string" ? roteiroRaw : JSON.stringify(roteiroRaw);
     const db = await getDb();
     if (db) {
-      await db.update(tiktokLives).set({ roteiro, updatedAt: /* @__PURE__ */ new Date() }).where(and46(eq52(tiktokLives.id, input.liveId), eq52(tiktokLives.userId, ctx.user.id)));
+      await db.update(tiktokLives).set({ roteiro, updatedAt: /* @__PURE__ */ new Date() }).where(and47(eq53(tiktokLives.id, input.liveId), eq53(tiktokLives.userId, ctx.user.id)));
     }
     return { roteiro };
   }),
   stats: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return { total: 0, agendadas: 0, totalVendas: 0, totalReceita: "0" };
-    const all = await db.select().from(tiktokLives).where(eq52(tiktokLives.userId, ctx.user.id));
+    const all = await db.select().from(tiktokLives).where(eq53(tiktokLives.userId, ctx.user.id));
     return {
       total: all.length,
       agendadas: all.filter((l) => l.status === "agendada").length,
@@ -21323,12 +21271,12 @@ Seja espec\xEDfico, use linguagem brasileira natural, inclua emojis TikTok, CTAs
 import { z as z55 } from "zod";
 init_db();
 init_schema();
-import { eq as eq53, and as and47, desc as desc27 } from "drizzle-orm";
+import { eq as eq54, and as and48, desc as desc27 } from "drizzle-orm";
 var cuponsRouter = router({
   listar: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return [];
-    return db.select().from(cupons).where(eq53(cupons.userId, ctx.user.id)).orderBy(desc27(cupons.createdAt));
+    return db.select().from(cupons).where(eq54(cupons.userId, ctx.user.id)).orderBy(desc27(cupons.createdAt));
   }),
   criar: protectedProcedure.input(z55.object({
     codigo: z55.string().min(3).max(50).toUpperCase(),
@@ -21367,21 +21315,21 @@ var cuponsRouter = router({
     const db = await getDb();
     if (!db) throw new Error("Database n\xE3o dispon\xEDvel");
     const { id, ...fields } = input;
-    await db.update(cupons).set(fields).where(and47(eq53(cupons.id, id), eq53(cupons.userId, ctx.user.id)));
+    await db.update(cupons).set(fields).where(and48(eq54(cupons.id, id), eq54(cupons.userId, ctx.user.id)));
     return { success: true };
   }),
   deletar: protectedProcedure.input(z55.object({ id: z55.number() })).mutation(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new Error("Database n\xE3o dispon\xEDvel");
-    await db.delete(cupons).where(and47(eq53(cupons.id, input.id), eq53(cupons.userId, ctx.user.id)));
+    await db.delete(cupons).where(and48(eq54(cupons.id, input.id), eq54(cupons.userId, ctx.user.id)));
     return { success: true };
   }),
   incrementarUso: protectedProcedure.input(z55.object({ id: z55.number() })).mutation(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new Error("Database n\xE3o dispon\xEDvel");
-    const [cupom] = await db.select().from(cupons).where(and47(eq53(cupons.id, input.id), eq53(cupons.userId, ctx.user.id))).limit(1);
+    const [cupom] = await db.select().from(cupons).where(and48(eq54(cupons.id, input.id), eq54(cupons.userId, ctx.user.id))).limit(1);
     if (!cupom) throw new Error("Cupom n\xE3o encontrado");
-    await db.update(cupons).set({ usos: (cupom.usos ?? 0) + 1 }).where(eq53(cupons.id, input.id));
+    await db.update(cupons).set({ usos: (cupom.usos ?? 0) + 1 }).where(eq54(cupons.id, input.id));
     return { success: true };
   })
 });
@@ -21390,7 +21338,7 @@ var cuponsRouter = router({
 import { z as z56 } from "zod";
 init_db();
 init_schema();
-import { eq as eq54, and as and48, desc as desc28 } from "drizzle-orm";
+import { eq as eq55, and as and49, desc as desc28 } from "drizzle-orm";
 var contentTemplatesRouter = router({
   listar: protectedProcedure.input(z56.object({
     tipo: z56.enum(["story", "reels", "tiktok", "ads", "email", "whatsapp"]).optional(),
@@ -21398,7 +21346,7 @@ var contentTemplatesRouter = router({
   }).optional()).query(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) return [];
-    const rows = await db.select().from(contentTemplates).where(eq54(contentTemplates.userId, ctx.user.id)).orderBy(desc28(contentTemplates.updatedAt));
+    const rows = await db.select().from(contentTemplates).where(eq55(contentTemplates.userId, ctx.user.id)).orderBy(desc28(contentTemplates.updatedAt));
     let result = rows;
     if (input?.tipo) result = result.filter((t2) => t2.tipo === input.tipo);
     if (input?.favorito !== void 0) result = result.filter((t2) => t2.favorito === input.favorito);
@@ -21436,21 +21384,21 @@ var contentTemplatesRouter = router({
     const db = await getDb();
     if (!db) throw new Error("Database n\xE3o dispon\xEDvel");
     const { id, ...fields } = input;
-    await db.update(contentTemplates).set(fields).where(and48(eq54(contentTemplates.id, id), eq54(contentTemplates.userId, ctx.user.id)));
+    await db.update(contentTemplates).set(fields).where(and49(eq55(contentTemplates.id, id), eq55(contentTemplates.userId, ctx.user.id)));
     return { success: true };
   }),
   incrementarUso: protectedProcedure.input(z56.object({ id: z56.number() })).mutation(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new Error("Database n\xE3o dispon\xEDvel");
-    const [tpl] = await db.select({ usos: contentTemplates.usos }).from(contentTemplates).where(and48(eq54(contentTemplates.id, input.id), eq54(contentTemplates.userId, ctx.user.id))).limit(1);
+    const [tpl] = await db.select({ usos: contentTemplates.usos }).from(contentTemplates).where(and49(eq55(contentTemplates.id, input.id), eq55(contentTemplates.userId, ctx.user.id))).limit(1);
     if (!tpl) throw new Error("Template n\xE3o encontrado");
-    await db.update(contentTemplates).set({ usos: (tpl.usos ?? 0) + 1 }).where(eq54(contentTemplates.id, input.id));
+    await db.update(contentTemplates).set({ usos: (tpl.usos ?? 0) + 1 }).where(eq55(contentTemplates.id, input.id));
     return { success: true };
   }),
   deletar: protectedProcedure.input(z56.object({ id: z56.number() })).mutation(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new Error("Database n\xE3o dispon\xEDvel");
-    await db.delete(contentTemplates).where(and48(eq54(contentTemplates.id, input.id), eq54(contentTemplates.userId, ctx.user.id)));
+    await db.delete(contentTemplates).where(and49(eq55(contentTemplates.id, input.id), eq55(contentTemplates.userId, ctx.user.id)));
     return { success: true };
   })
 });
@@ -21460,19 +21408,19 @@ init_db();
 init_schema();
 init_tts();
 import { z as z57 } from "zod";
-import { eq as eq57, and as and50, desc as desc29 } from "drizzle-orm";
+import { eq as eq58, and as and51, desc as desc29 } from "drizzle-orm";
 
 // server/agents/ads-manager-agent.ts
 init_db();
 init_schema();
 init_llm();
-import { eq as eq56 } from "drizzle-orm";
+import { eq as eq57 } from "drizzle-orm";
 import Anthropic3 from "@anthropic-ai/sdk";
 
 // server/services/meta-ads-service.ts
 init_db();
 init_schema();
-import { eq as eq55, and as and49 } from "drizzle-orm";
+import { eq as eq56, and as and50 } from "drizzle-orm";
 var BASE_URL3 = "https://graph.facebook.com/v19.0";
 var ENV_TOKEN = process.env.META_ACCESS_TOKEN || "";
 var ENV_ACCOUNT = process.env.META_AD_ACCOUNT_ID || "";
@@ -21482,10 +21430,10 @@ async function getValidMetaCredentials(userId) {
   const rows = await db.select({
     accessToken: oauthTokens.accessToken,
     accountInfo: oauthTokens.accountInfo
-  }).from(oauthTokens).where(and49(
-    eq55(oauthTokens.userId, userId),
-    eq55(oauthTokens.plataforma, "meta"),
-    eq55(oauthTokens.isActive, true)
+  }).from(oauthTokens).where(and50(
+    eq56(oauthTokens.userId, userId),
+    eq56(oauthTokens.plataforma, "meta"),
+    eq56(oauthTokens.isActive, true)
   )).limit(1);
   if (rows.length === 0) return null;
   const info = rows[0].accountInfo ? JSON.parse(rows[0].accountInfo) : {};
@@ -21495,11 +21443,11 @@ async function getValidMetaCredentials(userId) {
 async function setMetaAdAccountId(userId, adAccountId) {
   const db = await getDb();
   if (!db) return;
-  const rows = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and49(eq55(oauthTokens.userId, userId), eq55(oauthTokens.plataforma, "meta"))).limit(1);
+  const rows = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and50(eq56(oauthTokens.userId, userId), eq56(oauthTokens.plataforma, "meta"))).limit(1);
   if (rows.length === 0) return;
   const info = rows[0].accountInfo ? JSON.parse(rows[0].accountInfo) : {};
   info.adAccountId = adAccountId;
-  await db.update(oauthTokens).set({ accountInfo: JSON.stringify(info) }).where(eq55(oauthTokens.id, rows[0].id));
+  await db.update(oauthTokens).set({ accountInfo: JSON.stringify(info) }).where(eq56(oauthTokens.id, rows[0].id));
 }
 async function getMetaConnectionStatus(userId) {
   const creds = await getValidMetaCredentials(userId);
@@ -21507,17 +21455,17 @@ async function getMetaConnectionStatus(userId) {
   if (ENV_TOKEN) return { connected: true, adAccountId: ENV_ACCOUNT || null, source: "env" };
   return { connected: false, adAccountId: null, source: "none" };
 }
-async function metaGet(path14, params = {}, creds) {
+async function metaGet(path15, params = {}, creds) {
   const token = creds?.token ?? ENV_TOKEN;
   const query = new URLSearchParams({ access_token: token, ...params });
-  const res = await fetch(`${BASE_URL3}${path14}?${query}`);
+  const res = await fetch(`${BASE_URL3}${path15}?${query}`);
   const json3 = await res.json();
   if (json3.error) throw new Error(`Meta API: ${json3.error.message}`);
   return json3;
 }
-async function metaPost(path14, body = {}, creds) {
+async function metaPost(path15, body = {}, creds) {
   const token = creds?.token ?? ENV_TOKEN;
-  const res = await fetch(`${BASE_URL3}${path14}`, {
+  const res = await fetch(`${BASE_URL3}${path15}`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({ access_token: token, ...body })
@@ -21604,9 +21552,9 @@ async function fetchMetaCampaignsList(creds) {
 }
 async function fetchMetaAdsets(campaignId, creds) {
   const account = creds?.accountId ?? ENV_ACCOUNT;
-  const path14 = campaignId ? `/${campaignId}/adsets` : `/${account}/adsets`;
+  const path15 = campaignId ? `/${campaignId}/adsets` : `/${account}/adsets`;
   const fields = "id,name,campaign_id,campaign{name},status,daily_budget,lifetime_budget";
-  const data = await metaGet(path14, { fields, limit: "30" }, creds);
+  const data = await metaGet(path15, { fields, limit: "30" }, creds);
   const insightsData = await metaGet(`/${account}/insights`, {
     level: "adset",
     date_preset: "this_month",
@@ -21644,7 +21592,7 @@ async function fetchMetaAdsets(campaignId, creds) {
 }
 async function fetchMetaInsights(level, datePreset, objectId, creds) {
   const account = creds?.accountId ?? ENV_ACCOUNT;
-  const path14 = objectId ? `/${objectId}/insights` : `/${account}/insights`;
+  const path15 = objectId ? `/${objectId}/insights` : `/${account}/insights`;
   const fields = [
     "campaign_name",
     "adset_name",
@@ -21661,16 +21609,16 @@ async function fetchMetaInsights(level, datePreset, objectId, creds) {
     "actions",
     "cost_per_action_type"
   ].join(",");
-  const data = await metaGet(path14, { level, date_preset: datePreset, fields, limit: "30" }, creds);
+  const data = await metaGet(path15, { level, date_preset: datePreset, fields, limit: "30" }, creds);
   return data.data || [];
 }
 async function fetchMetaAds(adsetId, campaignId, creds) {
   const account = creds?.accountId ?? ENV_ACCOUNT;
-  const path14 = adsetId ? `/${adsetId}/ads` : campaignId ? `/${campaignId}/ads` : `/${account}/ads`;
+  const path15 = adsetId ? `/${adsetId}/ads` : campaignId ? `/${campaignId}/ads` : `/${account}/ads`;
   const fields = "id,name,status,adset_id,adset{name,campaign{name}},creative{id,thumbnail_url,image_url,body,title,call_to_action_type,link_url,object_story_spec}";
   let ads = [];
   try {
-    const data = await metaGet(path14, { fields, limit: "30" }, creds);
+    const data = await metaGet(path15, { fields, limit: "30" }, creds);
     ads = data.data || [];
   } catch (err) {
     console.warn("[MetaAds] Erro ao buscar ads:", err.message);
@@ -21755,7 +21703,7 @@ async function resumeAd(adId, creds) {
 }
 async function fetchMetaInsightsWithBreakdown(level, datePreset, breakdowns, objectId, creds) {
   const account = creds?.accountId ?? ENV_ACCOUNT;
-  const path14 = objectId ? `/${objectId}/insights` : `/${account}/insights`;
+  const path15 = objectId ? `/${objectId}/insights` : `/${account}/insights`;
   const fields = [
     "campaign_name",
     "adset_name",
@@ -21769,7 +21717,7 @@ async function fetchMetaInsightsWithBreakdown(level, datePreset, breakdowns, obj
     "frequency",
     "actions"
   ].join(",");
-  const data = await metaGet(path14, { level, date_preset: datePreset, fields, breakdowns, limit: "50" }, creds);
+  const data = await metaGet(path15, { level, date_preset: datePreset, fields, breakdowns, limit: "50" }, creds);
   return data.data || [];
 }
 async function duplicateCampaign(campaignId, creds) {
@@ -22550,13 +22498,13 @@ async function runAdsEvaluation(evaluationId) {
   const db = await getDb();
   if (!db) throw new Error("Banco indispon\xEDvel");
   try {
-    await db.update(adsEvaluations).set({ status: "running" }).where(eq56(adsEvaluations.id, evaluationId));
+    await db.update(adsEvaluations).set({ status: "running" }).where(eq57(adsEvaluations.id, evaluationId));
     if (!META_TOKEN2) {
       await db.update(adsEvaluations).set({
         status: "error",
         errorMessage: "META_ACCESS_TOKEN n\xE3o configurado no servidor",
         completedAt: /* @__PURE__ */ new Date()
-      }).where(eq56(adsEvaluations.id, evaluationId));
+      }).where(eq57(adsEvaluations.id, evaluationId));
       return;
     }
     const timeoutPromise = new Promise(
@@ -22581,7 +22529,7 @@ async function runAdsEvaluation(evaluationId) {
       creativeBriefs: JSON.stringify(llmResult.creativeBriefs ?? []),
       summary: llmResult.summary,
       completedAt: /* @__PURE__ */ new Date()
-    }).where(eq56(adsEvaluations.id, evaluationId));
+    }).where(eq57(adsEvaluations.id, evaluationId));
     console.log(`[AdsManager] Avalia\xE7\xE3o ${evaluationId} conclu\xEDda \u2014 ${campaigns3.length} campanhas analisadas`);
   } catch (err) {
     console.error(`[AdsManager] Erro na avalia\xE7\xE3o ${evaluationId}:`, err);
@@ -22589,7 +22537,7 @@ async function runAdsEvaluation(evaluationId) {
       status: "error",
       errorMessage: err.message?.slice(0, 499) || "Erro desconhecido",
       completedAt: /* @__PURE__ */ new Date()
-    }).where(eq56(adsEvaluations.id, evaluationId));
+    }).where(eq57(adsEvaluations.id, evaluationId));
   }
 }
 
@@ -22622,7 +22570,7 @@ var adsManagerRouter = router({
   getEvaluation: protectedProcedure.input(z57.object({ id: z57.number() })).query(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new Error("Banco indispon\xEDvel");
-    const rows = await db.select().from(adsEvaluations).where(and50(eq57(adsEvaluations.id, input.id), eq57(adsEvaluations.userId, ctx.user.id)));
+    const rows = await db.select().from(adsEvaluations).where(and51(eq58(adsEvaluations.id, input.id), eq58(adsEvaluations.userId, ctx.user.id)));
     if (!rows.length) throw new Error("Avalia\xE7\xE3o n\xE3o encontrada");
     const ev = rows[0];
     return {
@@ -22645,7 +22593,7 @@ var adsManagerRouter = router({
       errorMessage: adsEvaluations.errorMessage,
       triggeredAt: adsEvaluations.triggeredAt,
       completedAt: adsEvaluations.completedAt
-    }).from(adsEvaluations).where(eq57(adsEvaluations.userId, ctx.user.id)).orderBy(desc29(adsEvaluations.triggeredAt)).limit(20);
+    }).from(adsEvaluations).where(eq58(adsEvaluations.userId, ctx.user.id)).orderBy(desc29(adsEvaluations.triggeredAt)).limit(20);
     return rows;
   }),
   /**
@@ -22662,7 +22610,7 @@ var adsManagerRouter = router({
     if (!db) throw new Error("Banco indispon\xEDvel");
     let ev;
     try {
-      ev = await db.select().from(adsEvaluations).where(and50(eq57(adsEvaluations.id, input.evaluationId), eq57(adsEvaluations.userId, ctx.user.id)));
+      ev = await db.select().from(adsEvaluations).where(and51(eq58(adsEvaluations.id, input.evaluationId), eq58(adsEvaluations.userId, ctx.user.id)));
     } catch (err) {
       console.error("[AdsManager] Erro ao buscar avalia\xE7\xE3o:", err?.message);
       throw new Error(`Erro ao buscar avalia\xE7\xE3o: ${err?.message}`);
@@ -22680,7 +22628,7 @@ var adsManagerRouter = router({
       content: userContent,
       createdAt: /* @__PURE__ */ new Date()
     });
-    const history = await db.select().from(adsEvaluationMessages).where(eq57(adsEvaluationMessages.evaluationId, input.evaluationId)).orderBy(adsEvaluationMessages.createdAt);
+    const history = await db.select().from(adsEvaluationMessages).where(eq58(adsEvaluationMessages.evaluationId, input.evaluationId)).orderBy(adsEvaluationMessages.createdAt);
     let reply;
     try {
       reply = await chatWithAgent(
@@ -22717,9 +22665,9 @@ var adsManagerRouter = router({
   getMessages: protectedProcedure.input(z57.object({ evaluationId: z57.number() })).query(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) return [];
-    const ev = await db.select({ id: adsEvaluations.id }).from(adsEvaluations).where(and50(eq57(adsEvaluations.id, input.evaluationId), eq57(adsEvaluations.userId, ctx.user.id)));
+    const ev = await db.select({ id: adsEvaluations.id }).from(adsEvaluations).where(and51(eq58(adsEvaluations.id, input.evaluationId), eq58(adsEvaluations.userId, ctx.user.id)));
     if (!ev.length) return [];
-    return db.select().from(adsEvaluationMessages).where(eq57(adsEvaluationMessages.evaluationId, input.evaluationId)).orderBy(adsEvaluationMessages.createdAt);
+    return db.select().from(adsEvaluationMessages).where(eq58(adsEvaluationMessages.evaluationId, input.evaluationId)).orderBy(adsEvaluationMessages.createdAt);
   }),
   /**
    * Converte texto em áudio MP3 via ElevenLabs (voz da Fernanda).
@@ -22766,17 +22714,17 @@ var adsManagerRouter = router({
   executeAction: protectedProcedure.input(z57.object({ actionId: z57.number() })).mutation(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new Error("Banco indispon\xEDvel");
-    const [action] = await db.select().from(agentActions).where(eq57(agentActions.id, input.actionId)).limit(1);
+    const [action] = await db.select().from(agentActions).where(eq58(agentActions.id, input.actionId)).limit(1);
     if (!action) throw new Error("A\xE7\xE3o n\xE3o encontrada");
     if (action.status !== "approved") throw new Error("A\xE7\xE3o precisa estar aprovada antes de executar");
-    await db.update(agentActions).set({ status: "executing", updatedAt: /* @__PURE__ */ new Date() }).where(eq57(agentActions.id, input.actionId));
+    await db.update(agentActions).set({ status: "executing", updatedAt: /* @__PURE__ */ new Date() }).where(eq58(agentActions.id, input.actionId));
     try {
       const payload = JSON.parse(action.description);
       const resultMsg = await executeMetaAction(action.actionType, payload);
-      await db.update(agentActions).set({ status: "done", userNote: resultMsg, updatedAt: /* @__PURE__ */ new Date() }).where(eq57(agentActions.id, input.actionId));
+      await db.update(agentActions).set({ status: "done", userNote: resultMsg, updatedAt: /* @__PURE__ */ new Date() }).where(eq58(agentActions.id, input.actionId));
       return { ok: true, message: resultMsg };
     } catch (err) {
-      await db.update(agentActions).set({ status: "pending", userNote: `Erro: ${err.message}`, updatedAt: /* @__PURE__ */ new Date() }).where(eq57(agentActions.id, input.actionId));
+      await db.update(agentActions).set({ status: "pending", userNote: `Erro: ${err.message}`, updatedAt: /* @__PURE__ */ new Date() }).where(eq58(agentActions.id, input.actionId));
       throw new Error(err.message);
     }
   }),
@@ -22786,9 +22734,9 @@ var adsManagerRouter = router({
   listFernandaActions: protectedProcedure.input(z57.object({ status: z57.string().optional() })).query(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) return [];
-    const rows = await db.select().from(agentActions).where(and50(
-      eq57(agentActions.agentName, "fernanda"),
-      input.status ? eq57(agentActions.status, input.status) : void 0
+    const rows = await db.select().from(agentActions).where(and51(
+      eq58(agentActions.agentName, "fernanda"),
+      input.status ? eq58(agentActions.status, input.status) : void 0
     )).orderBy(desc29(agentActions.createdAt)).limit(20);
     return rows.filter(Boolean);
   }),
@@ -22796,15 +22744,15 @@ var adsManagerRouter = router({
   listLibraryAssets: protectedProcedure.input(z57.object({ category: z57.string().optional() })).query(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) return [];
-    const conditions = [eq57(assetLibrary.userId, ctx.user.id), eq57(assetLibrary.isActive, true)];
-    if (input.category) conditions.push(eq57(assetLibrary.category, input.category));
+    const conditions = [eq58(assetLibrary.userId, ctx.user.id), eq58(assetLibrary.isActive, true)];
+    if (input.category) conditions.push(eq58(assetLibrary.category, input.category));
     return db.select({
       id: assetLibrary.id,
       name: assetLibrary.name,
       url: assetLibrary.url,
       category: assetLibrary.category,
       aiAnalysis: assetLibrary.aiAnalysis
-    }).from(assetLibrary).where(and50(...conditions)).orderBy(desc29(assetLibrary.createdAt)).limit(50);
+    }).from(assetLibrary).where(and51(...conditions)).orderBy(desc29(assetLibrary.createdAt)).limit(50);
   }),
   // ── Solicitar criativo a partir de ativos da biblioteca ───────────────────
   requestCreativeFromLibrary: protectedProcedure.input(z57.object({
@@ -22816,17 +22764,17 @@ var adsManagerRouter = router({
     const db = await getDb();
     if (!db) throw new Error("Banco indispon\xEDvel");
     const { inArray: inArray10 } = await import("drizzle-orm");
-    const fs13 = await import("fs/promises");
-    const path14 = await import("path");
-    const assets = await db.select().from(assetLibrary).where(and50(eq57(assetLibrary.userId, ctx.user.id), inArray10(assetLibrary.id, input.assetIds)));
+    const fs14 = await import("fs/promises");
+    const path15 = await import("path");
+    const assets = await db.select().from(assetLibrary).where(and51(eq58(assetLibrary.userId, ctx.user.id), inArray10(assetLibrary.id, input.assetIds)));
     if (!assets.length) throw new Error("Nenhum ativo encontrado");
     const { requestCreative: requestCreative2 } = await Promise.resolve().then(() => (init_creative_agent(), creative_agent_exports));
     const results = [];
     for (const asset of assets) {
-      const filePath = path14.resolve(process.cwd(), asset.url.replace(/^\//, ""));
+      const filePath = path15.resolve(process.cwd(), asset.url.replace(/^\//, ""));
       let imageBase64;
       try {
-        const buf = await fs13.readFile(filePath);
+        const buf = await fs14.readFile(filePath);
         imageBase64 = buf.toString("base64");
       } catch {
         const res = await fetch(asset.url.startsWith("http") ? asset.url : `http://localhost:${process.env.PORT || 3e3}${asset.url}`);
@@ -22871,7 +22819,7 @@ var adsManagerRouter = router({
   listPendingCreatives: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return [];
-    return db.select().from(adCreatives).where(and50(eq57(adCreatives.userId, ctx.user.id), eq57(adCreatives.status, "pending_approval"))).orderBy(desc29(adCreatives.createdAt)).limit(20);
+    return db.select().from(adCreatives).where(and51(eq58(adCreatives.userId, ctx.user.id), eq58(adCreatives.status, "pending_approval"))).orderBy(desc29(adCreatives.createdAt)).limit(20);
   }),
   // ── Aprovar criativo e subir na Meta Ads (se campaignId + adSetId fornecidos) ─
   approveCreative: protectedProcedure.input(z57.object({
@@ -22883,14 +22831,14 @@ var adsManagerRouter = router({
   })).mutation(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new Error("Banco indispon\xEDvel");
-    const [creative] = await db.select().from(adCreatives).where(and50(eq57(adCreatives.id, input.id), eq57(adCreatives.userId, ctx.user.id))).limit(1);
+    const [creative] = await db.select().from(adCreatives).where(and51(eq58(adCreatives.id, input.id), eq58(adCreatives.userId, ctx.user.id))).limit(1);
     if (!creative) throw new Error("Criativo n\xE3o encontrado");
     const headline = input.headline || creative.generatedHeadline || "";
     const body = input.body || creative.generatedBody || "";
     const campaignId = input.campaignId || creative.campaignId || "";
     const adSetId = input.adSetId || creative.adSetId || "";
     if (campaignId && adSetId && creative.imageBase64) {
-      await db.update(adCreatives).set({ status: "uploading", updatedAt: /* @__PURE__ */ new Date() }).where(eq57(adCreatives.id, input.id));
+      await db.update(adCreatives).set({ status: "uploading", updatedAt: /* @__PURE__ */ new Date() }).where(eq58(adCreatives.id, input.id));
       try {
         const { createFullAd: createFullAd2 } = await Promise.resolve().then(() => (init_fernanda_executor(), fernanda_executor_exports));
         const result = await createFullAd2({
@@ -22909,10 +22857,10 @@ var adsManagerRouter = router({
           campaignId,
           adSetId,
           updatedAt: /* @__PURE__ */ new Date()
-        }).where(eq57(adCreatives.id, input.id));
+        }).where(eq58(adCreatives.id, input.id));
         return { success: true, executed: true, adId: result.adId };
       } catch (err) {
-        await db.update(adCreatives).set({ status: "failed", errorMessage: err.message, updatedAt: /* @__PURE__ */ new Date() }).where(eq57(adCreatives.id, input.id));
+        await db.update(adCreatives).set({ status: "failed", errorMessage: err.message, updatedAt: /* @__PURE__ */ new Date() }).where(eq58(adCreatives.id, input.id));
         throw new Error("Falha ao subir na Meta Ads: " + err.message);
       }
     }
@@ -22921,14 +22869,14 @@ var adsManagerRouter = router({
       ...headline ? { generatedHeadline: headline } : {},
       ...body ? { generatedBody: body } : {},
       updatedAt: /* @__PURE__ */ new Date()
-    }).where(eq57(adCreatives.id, input.id));
+    }).where(eq58(adCreatives.id, input.id));
     return { success: true, executed: false };
   }),
   // ── Rejeitar criativo ─────────────────────────────────────────────────────
   rejectCreative: protectedProcedure.input(z57.object({ id: z57.number(), reason: z57.string().optional() })).mutation(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new Error("Banco indispon\xEDvel");
-    await db.update(adCreatives).set({ status: "rejected", rejectionReason: input.reason ?? null, updatedAt: /* @__PURE__ */ new Date() }).where(and50(eq57(adCreatives.id, input.id), eq57(adCreatives.userId, ctx.user.id)));
+    await db.update(adCreatives).set({ status: "rejected", rejectionReason: input.reason ?? null, updatedAt: /* @__PURE__ */ new Date() }).where(and51(eq58(adCreatives.id, input.id), eq58(adCreatives.userId, ctx.user.id)));
     return { success: true };
   })
 });
@@ -22943,7 +22891,7 @@ import { eq as eq60, and as and52, desc as desc30 } from "drizzle-orm";
 init_db();
 init_schema();
 init_llm();
-import { eq as eq58 } from "drizzle-orm";
+import { eq as eq59 } from "drizzle-orm";
 var ML_BASE = "https://api.mercadolibre.com";
 function getMLToken(account = "feminnita") {
   return account === "fnt" ? process.env.ML_ACCESS_TOKEN_2 || "" : process.env.ML_ACCESS_TOKEN_1 || "";
@@ -23260,13 +23208,13 @@ async function runMLAdsEvaluation(evaluationId, account = "feminnita") {
   const db = await getDb();
   if (!db) throw new Error("Banco indispon\xEDvel");
   try {
-    await db.update(mlAdsEvaluations).set({ status: "running" }).where(eq58(mlAdsEvaluations.id, evaluationId));
+    await db.update(mlAdsEvaluations).set({ status: "running" }).where(eq59(mlAdsEvaluations.id, evaluationId));
     if (!getMLToken(account)) {
       await db.update(mlAdsEvaluations).set({
         status: "error",
         errorMessage: `Token ML n\xE3o configurado para conta ${account}`,
         completedAt: /* @__PURE__ */ new Date()
-      }).where(eq58(mlAdsEvaluations.id, evaluationId));
+      }).where(eq59(mlAdsEvaluations.id, evaluationId));
       return;
     }
     const mlData = await collectMLAdsData(account);
@@ -23278,7 +23226,7 @@ async function runMLAdsEvaluation(evaluationId, account = "feminnita") {
       recommendations: JSON.stringify(llmResult.recommendations),
       summary: llmResult.summary,
       completedAt: /* @__PURE__ */ new Date()
-    }).where(eq58(mlAdsEvaluations.id, evaluationId));
+    }).where(eq59(mlAdsEvaluations.id, evaluationId));
     console.log(
       `[MLAgent] Avalia\xE7\xE3o ${evaluationId} conclu\xEDda \u2014 ${mlData.items.length} itens, ${mlData.recentOrders.length} pedidos analisados`
     );
@@ -23288,7 +23236,7 @@ async function runMLAdsEvaluation(evaluationId, account = "feminnita") {
       status: "error",
       errorMessage: err.message?.slice(0, 499) || "Erro desconhecido",
       completedAt: /* @__PURE__ */ new Date()
-    }).where(eq58(mlAdsEvaluations.id, evaluationId));
+    }).where(eq59(mlAdsEvaluations.id, evaluationId));
   }
 }
 
@@ -24672,7 +24620,7 @@ CONTA FNT (B2B / Atacado):
 - N\xE3o escalar antes de ter 50+ eventos de convers\xE3o no pixel
 
 CONTA ATUAL: ${account === "fnt" ? "FNT (conta nova)" : "FEMINNITA (conta estabelecida)"}
-${account === "fnt" ? "- Conta nova: aquecer pixel com eventos ATC, conquistar primeiros leads\n- Estrat\xE9gia: Spark Ads de conte\xFAdo org\xE2nico antes de campanhas complexas\n- N\xE3o espelhar estrutura da Feminnita \u2014 pixels em est\xE1gios diferentes" : "- Conta estabelecida: usar LAL de compradores, escalar Spark Ads vencedores\n- Produto: pijamas atacado | Pedido m\xEDnimo: R$199 | Meta: R$100K GMV/m\xEAs"}
+${account === "fnt" ? "- Conta nova: aquecer pixel com eventos ATC, conquistar primeiros leads\n- Estrat\xE9gia: Spark Ads de conte\xFAdo org\xE2nico antes de campanhas complexas\n- N\xE3o espelhar estrutura da Feminnita \u2014 pixels em est\xE1gios diferentes" : "- Conta estabelecida: usar LAL de compradores, escalar Spark Ads vencedores\n- Produto: pijamas atacado | Sem pedido m\xEDnimo | Meta: R$100K GMV/m\xEAs"}
 
 \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
 METODOLOGIA SAVANNAH SANCHEZ \u2014 CREATIVE IS THE TARGETING
@@ -25447,7 +25395,7 @@ BRIEFING DE CONTE\xDADO PARA AFILIADOS
 NUNCA dar liberdade total sem dire\xE7\xE3o. Sempre enviar:
 1. Link do produto no TikTok Shop
 2. 3 \xE2ngulos de conte\xFAdo sugeridos (n\xE3o obrigat\xF3rios)
-3. Pontos-chave a mencionar: qualidade do tecido, pedido m\xEDnimo, entrega
+3. Pontos-chave a mencionar: qualidade do tecido, sem pedido m\xEDnimo, entrega
 4. O que N\xC3O falar: pre\xE7o de concorrente, compara\xE7\xF5es
 5. Hashtags recomendadas: #pijama #feminnita #atacado #modafeminina
 
@@ -25767,7 +25715,7 @@ FUNDO: v\xEDdeos que convertem (link na bio \u2192 WhatsApp/TikTok Shop, promo\x
 
 CAPTURA DE LEAD VIA TIKTOK:
 - Link na bio: WhatsApp ou cat\xE1logo
-- Bio: "Atacado de pijamas | Pedido m\xEDn. R$199 | Link \u2193"
+- Bio: "Atacado de pijamas | Sem ped. m\xEDn. | Link \u2193"
 - CTA no v\xEDdeo: "Comenta QUERO que eu te mando o cat\xE1logo"
 - Coment\xE1rio fixado: pre\xE7o e link do produto TikTok Shop
 
@@ -26539,8 +26487,8 @@ async function getVideoDownloadUrl(fileId) {
   return data.file?.download_url;
 }
 async function generateVideoFromImage(params, onProgress) {
-  const fs13 = await import("fs/promises");
-  const path14 = await import("path");
+  const fs14 = await import("fs/promises");
+  const path15 = await import("path");
   const crypto15 = await import("crypto");
   onProgress?.("Enviando para MiniMax...");
   const taskId = await submitVideoTask(params);
@@ -26560,11 +26508,11 @@ async function generateVideoFromImage(params, onProgress) {
       const videoRes = await fetch(downloadUrl);
       if (!videoRes.ok) throw new Error(`Erro ao baixar v\xEDdeo: ${videoRes.status}`);
       const buf = Buffer.from(await videoRes.arrayBuffer());
-      const uploadsDir = path14.default.resolve(process.cwd(), "uploads");
-      await fs13.default.mkdir(uploadsDir, { recursive: true });
+      const uploadsDir = path15.default.resolve(process.cwd(), "uploads");
+      await fs14.default.mkdir(uploadsDir, { recursive: true });
       const filename = `${Date.now()}-${crypto15.default.randomBytes(8).toString("hex")}.mp4`;
-      const destPath = path14.default.join(uploadsDir, filename);
-      await fs13.default.writeFile(destPath, buf);
+      const destPath = path15.default.join(uploadsDir, filename);
+      await fs14.default.writeFile(destPath, buf);
       onProgress?.(`V\xEDdeo salvo: /uploads/${filename}`);
       return `/uploads/${filename}`;
     }
@@ -26635,8 +26583,8 @@ async function pollVeoOperation(operationName) {
   return { done: true, videoUri };
 }
 async function generateVideoFromImageVeo(params, onProgress) {
-  const fs13 = await import("fs/promises");
-  const path14 = await import("path");
+  const fs14 = await import("fs/promises");
+  const path15 = await import("path");
   const crypto15 = await import("crypto");
   onProgress?.("Enviando para Google Veo...");
   const operationName = await submitVeoTask(params);
@@ -26652,11 +26600,11 @@ async function generateVideoFromImageVeo(params, onProgress) {
       const videoRes = await fetch(result.videoUri);
       if (!videoRes.ok) throw new Error(`Erro ao baixar v\xEDdeo Veo: ${videoRes.status}`);
       const buf = Buffer.from(await videoRes.arrayBuffer());
-      const uploadsDir = path14.default.resolve(process.cwd(), "uploads");
-      await fs13.default.mkdir(uploadsDir, { recursive: true });
+      const uploadsDir = path15.default.resolve(process.cwd(), "uploads");
+      await fs14.default.mkdir(uploadsDir, { recursive: true });
       const filename = `veo-${Date.now()}-${crypto15.default.randomBytes(8).toString("hex")}.mp4`;
-      const destPath = path14.default.join(uploadsDir, filename);
-      await fs13.default.writeFile(destPath, buf);
+      const destPath = path15.default.join(uploadsDir, filename);
+      await fs14.default.writeFile(destPath, buf);
       onProgress?.(`V\xEDdeo salvo: /uploads/${filename}`);
       return `/uploads/${filename}`;
     }
@@ -26664,14 +26612,14 @@ async function generateVideoFromImageVeo(params, onProgress) {
   throw new Error("Timeout: Google Veo demorou mais de 10 minutos");
 }
 async function readImageAsBase64(imageUrl) {
-  const fs13 = await import("fs/promises");
-  const path14 = await import("path");
+  const fs14 = await import("fs/promises");
+  const path15 = await import("path");
   let buf;
   let mimeType = "image/jpeg";
   if (imageUrl.startsWith("/uploads/")) {
-    const localPath = path14.default.join(path14.default.resolve(process.cwd(), "uploads"), path14.default.basename(imageUrl));
-    buf = await fs13.default.readFile(localPath);
-    const ext = path14.default.extname(imageUrl).toLowerCase();
+    const localPath = path15.default.join(path15.default.resolve(process.cwd(), "uploads"), path15.default.basename(imageUrl));
+    buf = await fs14.default.readFile(localPath);
+    const ext = path15.default.extname(imageUrl).toLowerCase();
     if (ext === ".png") mimeType = "image/png";
     else if (ext === ".webp") mimeType = "image/webp";
   } else {
@@ -27147,7 +27095,7 @@ function getSigningKey(secretKey, dateStamp, region, service) {
   const kService = hmacSha256(kRegion, service);
   return hmacSha256(kService, "aws4_request");
 }
-function signRequest(method, path14, queryParams, headers, body, accessKeyId, secretAccessKey, region = "us-east-1", service = "execute-api") {
+function signRequest(method, path15, queryParams, headers, body, accessKeyId, secretAccessKey, region = "us-east-1", service = "execute-api") {
   const now = /* @__PURE__ */ new Date();
   const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, "").slice(0, 15) + "Z";
   const dateStamp = amzDate.slice(0, 8);
@@ -27163,7 +27111,7 @@ function signRequest(method, path14, queryParams, headers, body, accessKeyId, se
   const sortedQuery = Object.entries(queryParams).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("&");
   const canonicalRequest = [
     method,
-    path14,
+    path15,
     sortedQuery,
     canonicalHeaders,
     signedHeaders,
@@ -27183,7 +27131,7 @@ function signRequest(method, path14, queryParams, headers, body, accessKeyId, se
     Authorization: `AWS4-HMAC-SHA256 Credential=${accessKeyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`
   };
 }
-async function spApiGet(path14, queryParams = {}) {
+async function spApiGet(path15, queryParams = {}) {
   const accessKeyId = process.env.AMAZON_AWS_ACCESS_KEY || "";
   const secretAccessKey = process.env.AMAZON_AWS_SECRET_KEY || "";
   const lwaToken = await getLwaAccessToken();
@@ -27193,12 +27141,12 @@ async function spApiGet(path14, queryParams = {}) {
   };
   let finalHeaders;
   if (accessKeyId && secretAccessKey) {
-    finalHeaders = signRequest("GET", path14, queryParams, baseHeaders, "", accessKeyId, secretAccessKey);
+    finalHeaders = signRequest("GET", path15, queryParams, baseHeaders, "", accessKeyId, secretAccessKey);
   } else {
     finalHeaders = baseHeaders;
   }
   const queryString = Object.entries(queryParams).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("&");
-  const url = `${SP_API_BASE}${path14}${queryString ? "?" + queryString : ""}`;
+  const url = `${SP_API_BASE}${path15}${queryString ? "?" + queryString : ""}`;
   const res = await fetch(url, { headers: finalHeaders });
   return res.json();
 }
@@ -27666,8 +27614,8 @@ function generateArticleHtml(data) {
 </body>
 </html>`;
 }
-async function githubRequest(path14, method, body) {
-  const res = await fetch(`${API}${path14}`, {
+async function githubRequest(path15, method, body) {
+  const res = await fetch(`${API}${path15}`, {
     method,
     headers: {
       Authorization: `Bearer ${GITHUB_TOKEN}`,
@@ -27683,16 +27631,16 @@ async function githubRequest(path14, method, body) {
   }
   return res.json();
 }
-async function getFileSha(path14) {
+async function getFileSha(path15) {
   try {
-    const data = await githubRequest(`/${path14}`, "GET");
+    const data = await githubRequest(`/${path15}`, "GET");
     return data.sha ?? null;
   } catch {
     return null;
   }
 }
-async function pushFile(path14, content, message) {
-  const sha = await getFileSha(path14);
+async function pushFile(path15, content, message) {
+  const sha = await getFileSha(path15);
   const encoded = Buffer.from(content, "utf-8").toString("base64");
   const body = {
     message,
@@ -27700,7 +27648,7 @@ async function pushFile(path14, content, message) {
     branch: GITHUB_BRANCH
   };
   if (sha) body.sha = sha;
-  return githubRequest(`/${path14}`, "PUT", body);
+  return githubRequest(`/${path15}`, "PUT", body);
 }
 async function addCardToArtigosPage(article, filename) {
   const catInfo = getCategoryInfo(article.category ?? "Moda & Estilo");
@@ -28447,7 +28395,7 @@ GARY HALBERT \u2014 ESPECIFICIDADE:
 ESTRUTURA DO BANNER QUE CONVERTE:
 \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
 TITULO: hook espec\xEDfico ao \xE2ngulo (m\xE1x 35 chars)
-PRECO: "COMECE A VENDER A PARTIR DE R$199"
+PRECO: "COMECE A VENDER HOJE \u2014 SEM PEDIDO M\xCDNIMO"
 SUBTITULO: "REVENDA E LUCRE" (ou variante do hook)
 CTA: "QUERO REVENDER \u2014 CLIQUE AQUI"
 RODAPE: "5% NO PIX \xB7 3X SEM JUROS \xB7 ENVIO IMEDIATO"
@@ -28678,7 +28626,7 @@ Voc\xEA gerencia o ciclo criativo: do briefing ao an\xFAncio. Sempre UM an\xFAnc
 
 ETAPA 1 \u2014 BRIEFING: Combine o \xE2ngulo do an\xFAncio e forne\xE7a os 5 campos para a arte Canva:
   \u2022 T\xCDTULO: hook espec\xEDfico ao \xE2ngulo (m\xE1x 35 chars)
-  \u2022 PRE\xC7O: "COMECE A VENDER A PARTIR DE R$199" (ou similar)
+  \u2022 PRE\xC7O: "COMECE A VENDER HOJE \u2014 SEM PEDIDO M\xCDNIMO" (ou similar)
   \u2022 SUBT\xCDTULO: complemento do hook
   \u2022 CTA: "QUERO REVENDER \u2014 CLIQUE AQUI" (ou similar)
   \u2022 RODAP\xC9: "5% NO PIX \xB7 3X SEM JUROS \xB7 ENVIO IMEDIATO"
@@ -29528,7 +29476,7 @@ Substitua todo adjetivo gen\xE9rico por n\xFAmero ou detalhe concreto.
 ESTRUTURA DO BANNER QUE CONVERTE (refer\xEAncia obrigat\xF3ria):
 \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
 TITULO: frase de impacto com hook (m\xE1x 35 chars)
-PRECO: "COMECE A VENDER A PARTIR DE R$199"
+PRECO: "COMECE A VENDER HOJE \u2014 SEM PEDIDO M\xCDNIMO"
 SUBTITULO: "REVENDA E LUCRE" (verbo de a\xE7\xE3o + lucro)
 CTA: "QUERO REVENDER \u2014 CLIQUE AQUI"
 RODAPE: "5% NO PIX \xB7 3X SEM JUROS \xB7 ENVIO IMEDIATO"
@@ -29737,8 +29685,8 @@ async function proposeActions(analysis, today) {
   try {
     const db = await getDb();
     if (!db) return;
-    const { eq: eq109, and: and87 } = await import("drizzle-orm");
-    const existing = await db.select({ title: agentActions.title }).from(agentActions).where(and87(eq109(agentActions.agentName, "fernanda"), eq109(agentActions.date, today)));
+    const { eq: eq111, and: and89 } = await import("drizzle-orm");
+    const existing = await db.select({ title: agentActions.title }).from(agentActions).where(and89(eq111(agentActions.agentName, "fernanda"), eq111(agentActions.date, today)));
     const existingTitles = new Set(existing.map((r) => r.title));
     const toInsert = [];
     for (const rec of analysis.recommendations) {
@@ -29930,6 +29878,7 @@ import { TRPCError as TRPCError10 } from "@trpc/server";
 import { eq as eq77, and as and60, desc as desc40, inArray as inArray8, gte as gte4 } from "drizzle-orm";
 
 // server/agents/gabi-executor.ts
+init_ml_ads_browser_agent();
 var ML_BASE2 = "https://api.mercadolibre.com";
 function getMLToken2(account = "feminnita") {
   return account === "fnt" ? process.env.ML_ACCESS_TOKEN_2 || "" : process.env.ML_ACCESS_TOKEN_1 || "";
@@ -29937,16 +29886,16 @@ function getMLToken2(account = "feminnita") {
 function getUserId2(account = "feminnita") {
   return account === "fnt" ? process.env.ML_USER_ID_2 || "" : process.env.ML_USER_ID_1 || "";
 }
-async function mlGet(path14, token) {
-  const res = await fetch(`${ML_BASE2}${path14}`, {
+async function mlGet(path15, token) {
+  const res = await fetch(`${ML_BASE2}${path15}`, {
     headers: { Authorization: `Bearer ${token}` }
   });
   const data = await res.json();
   if (data.error) throw new Error(`ML API: ${data.message || data.error}`);
   return data;
 }
-async function mlPut(path14, body, token) {
-  const res = await fetch(`${ML_BASE2}${path14}`, {
+async function mlPut(path15, body, token) {
+  const res = await fetch(`${ML_BASE2}${path15}`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -30119,72 +30068,6 @@ ${lines.join("\n")}
 \u26A0\uFE0F M\xE9tricas em tempo real (impress\xF5es, cliques, gasto) n\xE3o est\xE3o dispon\xEDveis via API para esta conta. Acesse: https://www.mercadolivre.com.br/advertising/product-ads`;
   } catch (e) {
     return `Erro ao consultar ML Ads: ${e.message}`;
-  }
-}
-async function pauseMLAdsCampaign(campaignId, account = "feminnita") {
-  const token = getMLToken2(account);
-  const userId = getUserId2(account);
-  const label = account === "fnt" ? "Conta B (FNT)" : "Conta A (Feminnita)";
-  if (!token || !userId) return "Token ML n\xE3o configurado.";
-  try {
-    const advertiserId = await getAdvertiserId(userId, token);
-    if (!advertiserId) return "Sem perfil de anunciante.";
-    const res = await fetch(`${ML_BASE2}/advertising/advertisers/${advertiserId}/product_ads/campaigns/${campaignId}`, {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "paused" })
-    });
-    const data = await res.json();
-    if (!res.ok || data.error) {
-      return `Erro ao pausar campanha ${campaignId} (${label}): ${data.message || data.error || `HTTP ${res.status}`}. Verifique em https://www.mercadolivre.com.br/advertising/product-ads`;
-    }
-    return `Campanha ${campaignId} pausada com sucesso.`;
-  } catch (e) {
-    return `Erro: ${e.message}`;
-  }
-}
-async function activateMLAdsCampaign(campaignId, account = "feminnita") {
-  const token = getMLToken2(account);
-  const userId = getUserId2(account);
-  const label = account === "fnt" ? "Conta B (FNT)" : "Conta A (Feminnita)";
-  if (!token || !userId) return "Token ML n\xE3o configurado.";
-  try {
-    const advertiserId = await getAdvertiserId(userId, token);
-    if (!advertiserId) return "Sem perfil de anunciante.";
-    const res = await fetch(`${ML_BASE2}/advertising/advertisers/${advertiserId}/product_ads/campaigns/${campaignId}`, {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "active" })
-    });
-    const data = await res.json();
-    if (!res.ok || data.error) {
-      return `Erro ao reativar campanha ${campaignId} (${label}): ${data.message || data.error || `HTTP ${res.status}`}. Verifique em https://www.mercadolivre.com.br/advertising/product-ads`;
-    }
-    return `Campanha ${campaignId} reativada com sucesso.`;
-  } catch (e) {
-    return `Erro: ${e.message}`;
-  }
-}
-async function updateMLAdsBudget(campaignId, dailyBudget, account = "feminnita") {
-  const token = getMLToken2(account);
-  const userId = getUserId2(account);
-  const label = account === "fnt" ? "Conta B (FNT)" : "Conta A (Feminnita)";
-  if (!token || !userId) return "Token ML n\xE3o configurado.";
-  try {
-    const advertiserId = await getAdvertiserId(userId, token);
-    if (!advertiserId) return "Sem perfil de anunciante.";
-    const res = await fetch(`${ML_BASE2}/advertising/advertisers/${advertiserId}/product_ads/campaigns/${campaignId}`, {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ daily_budget: dailyBudget })
-    });
-    const data = await res.json();
-    if (!res.ok || data.error) {
-      return `Erro ao atualizar budget da campanha ${campaignId} (${label}): ${data.message || data.error || `HTTP ${res.status}`}. Verifique em https://www.mercadolivre.com.br/advertising/product-ads`;
-    }
-    return `Budget da campanha ${campaignId} atualizado para R$${dailyBudget}.`;
-  } catch (e) {
-    return `Erro: ${e.message}`;
   }
 }
 async function getMLAdsCampaignStats(campaignId, dateFrom, dateTo, account = "feminnita") {
@@ -31910,7 +31793,7 @@ CONCORRENTES DIRETOS:
 
 EM CADA CONCORRENTE, VOC\xCA OBSERVA:
 PRODUTO \u2192 O que lan\xE7aram? Que tecido, modelagem, estampa? Est\xE3o atacando algum nicho n\xE3o servido?
-PRE\xC7O \u2192 Pre\xE7o do kit m\xEDnimo, desconto por volume, pedido m\xEDnimo, frete, formas de pagamento
+PRE\xC7O \u2192 Pre\xE7o do kit m\xEDnimo, desconto por volume, sem pedido m\xEDnimo, frete, formas de pagamento
 COMUNICA\xC7\xC3O \u2192 Copy dos an\xFAncios, gatilhos usados, formatos, frequ\xEAncia de postagens
 CANAIS \u2192 Onde est\xE3o apostando? Est\xE3o crescendo ou perdendo for\xE7a em algum canal?
 REA\xC7\xC3O DO MERCADO \u2192 Engajamento, avalia\xE7\xF5es no ML/Shopee, coment\xE1rios de compradores
@@ -33285,7 +33168,8 @@ var specialistsRouter = router({
 import { z as z73 } from "zod";
 
 // server/agents/tray-duda-agent.ts
-init_llm();
+init_db();
+import Anthropic6 from "@anthropic-ai/sdk";
 import axios2 from "axios";
 var TRAY_STORE_URL = process.env.TRAY_STORE_URL || "https://feminnita.com.br";
 var pageCache = /* @__PURE__ */ new Map();
@@ -33370,7 +33254,7 @@ PROIBIDO dizer frases como "estou recebendo 403", "n\xE3o consegui acessar", "o 
 
 \u2501\u2501\u2501 CONTEXTO DA EMPRESA \u2501\u2501\u2501
 - Loja Tray: ${TRAY_STORE_URL}
-- Pedido m\xEDnimo: R$199 \u2014 modelo atacado, venda em kit
+- Sem pedido m\xEDnimo \u2014 modelo atacado, venda em kit
 - P\xFAblico: revendedoras em todo o Brasil
 - Objetivo: aumentar tr\xE1fego org\xE2nico e convers\xF5es, reduzir depend\xEAncia de tr\xE1fego pago
 
@@ -33383,11 +33267,11 @@ Inten\xE7\xE3o: transacional \u2014 quer volume, CNPJ, nota fiscal, prazo de ent
 
 PERFIL 2 \u2014 REVENDEDORA
 Quem \xE9: mulher que revende em casa pelo WhatsApp/Instagram para renda extra
-O que busca: "pijama atacado para revendedora", "kit pijama lucro revenda", "fornecedor pijama com baixo pedido m\xEDnimo"
+O que busca: "pijama atacado para revendedora", "kit pijama lucro revenda", "fornecedor pijama sem pedido m\xEDnimo"
 Inten\xE7\xE3o: comercial/transacional \u2014 quer margem, kit pequeno, produto que gira
 
 PERFIL 3 \u2014 AMIGAS / GRUPO FAMILIAR
-Quem \xE9: grupo de amigas ou fam\xEDlia que se junta para atingir o m\xEDnimo de R$199
+Quem \xE9: grupo de amigas ou fam\xEDlia que quer comprar junto a pre\xE7o de f\xE1brica
 O que busca: "pijama barato atacado", "pijama pre\xE7o de f\xE1brica", "comprar pijama direto da f\xE1brica"
 Inten\xE7\xE3o: transacional \u2014 quer pre\xE7o de f\xE1brica sem precisar ser empresa
 
@@ -33448,7 +33332,7 @@ REVENDEDORA (inten\xE7\xE3o comercial/transacional):
 \u2192 "pijama atacado para revendedora"
 \u2192 "kit pijama feminino para revender"
 \u2192 "pijama suede atacado para revenda whatsapp"
-\u2192 "fornecedor pijama com baixo pedido m\xEDnimo"
+\u2192 "fornecedor pijama sem pedido m\xEDnimo"
 \u2192 "pijama atacado margem de lucro"
 
 AMIGAS / GRUPO (inten\xE7\xE3o transacional de pre\xE7o):
@@ -33556,11 +33440,11 @@ T\xC9CNICO
 TITLE TAG PADR\xC3O POR TIPO DE P\xC1GINA:
 \u2192 Produto: "[Nome do Produto] Atacado | Feminnita"
 \u2192 Categoria: "[Categoria] Atacado \u2014 Kits para Revendedoras | Feminnita"
-\u2192 Homepage: "Pijama Atacado para Revendedoras | Feminnita \u2014 A partir de R$199"
+\u2192 Homepage: "Pijama Atacado para Revendedoras | Feminnita \u2014 Sem Pedido M\xEDnimo"
 
 META DESCRIPTION PADR\xC3O:
-\u2192 Produto: "[Keyword] \u2014 kit com [X] pe\xE7as a partir de R$[Y]. Entrega em [Z] dias. Pedido m\xEDnimo R$199. Ideal para revendedoras e lojistas."
-\u2192 Categoria: "Compre [categoria] atacado diretamente da f\xE1brica. Kits para revendedoras a partir de R$199. Frete para todo o Brasil."
+\u2192 Produto: "[Keyword] \u2014 kit com [X] pe\xE7as a partir de R$[Y]. Entrega em [Z] dias. Sem pedido m\xEDnimo. Ideal para revendedoras e lojistas."
+\u2192 Categoria: "Compre [categoria] atacado diretamente da f\xE1brica. Kits para revendedoras sem pedido m\xEDnimo. Frete para todo o Brasil."
 
 \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
 SCHEMA MARKUP \u2014 JSON-LD (lido pelo Google E pelos agentes de IA antes do humano)
@@ -33694,6 +33578,54 @@ REGRAS DE COMUNICA\xC7\xC3O
 \u2192 Nunca otimiza s\xF3 para Google \u2014 otimiza para GEO (agentes de IA) simultaneamente
 
 Responda em portugu\xEAs do Brasil. Entregue conte\xFAdo pronto para copiar e colar.`;
+var DUDA_TOOLS = [
+  {
+    name: "propose_seo_changes",
+    description: "Prop\xF5e mudan\xE7as de SEO para serem aplicadas automaticamente no painel da Tray via browser. Use quando o usu\xE1rio pedir para 'aplicar', 'atualizar no site', 'salvar' ou 'implementar' as otimiza\xE7\xF5es.",
+    input_schema: {
+      type: "object",
+      properties: {
+        changes: {
+          type: "array",
+          description: "Lista de mudan\xE7as de SEO a aplicar",
+          items: {
+            type: "object",
+            properties: {
+              type: {
+                type: "string",
+                enum: ["tray_update_seo_title", "tray_update_seo_description", "tray_update_product_description", "tray_update_page_seo"],
+                description: "Tipo de mudan\xE7a"
+              },
+              title: { type: "string", description: "T\xEDtulo descritivo da a\xE7\xE3o (ex: 'Atualizar SEO title \u2014 Pijama Suede')" },
+              productId: { type: "string", description: "ID do produto no painel Tray (necess\xE1rio para a\xE7\xF5es de produto)" },
+              pageSlug: { type: "string", description: "Slug da p\xE1gina (para tray_update_page_seo)" },
+              seoTitle: { type: "string", description: "Novo SEO title" },
+              seoDescription: { type: "string", description: "Nova meta description" },
+              description: { type: "string", description: "Nova descri\xE7\xE3o completa do produto (para tray_update_product_description)" }
+            },
+            required: ["type", "title"]
+          }
+        }
+      },
+      required: ["changes"]
+    }
+  },
+  {
+    name: "execute_pending_actions",
+    description: "Lista as mudan\xE7as de SEO pendentes enfileiradas para execu\xE7\xE3o no painel da Tray.",
+    input_schema: { type: "object", properties: {}, required: [] }
+  }
+];
+var TOOLS_SYSTEM = `
+
+\u2501\u2501\u2501 APLICAR MUDAN\xC7AS NO SITE \u2501\u2501\u2501
+Voc\xEA pode aplicar as otimiza\xE7\xF5es de SEO diretamente no painel da Tray, sem o usu\xE1rio precisar copiar e colar.
+
+Quando o usu\xE1rio disser algo como "aplique isso", "atualize no site", "salva no Tray", "implementa" \u2014 use a tool propose_seo_changes para enfileirar as mudan\xE7as. Um executor em background vai abrir o painel da Tray e aplicar cada altera\xE7\xE3o automaticamente nos pr\xF3ximos 5 minutos.
+
+Para usar propose_seo_changes voc\xEA precisa do ID do produto no painel da Tray (ex: 12345). Se o usu\xE1rio n\xE3o souber, pe\xE7a que acesse o produto no admin e copie o n\xFAmero da URL (/admin/products/edit/12345).
+
+Use execute_pending_actions para verificar o que est\xE1 na fila de execu\xE7\xE3o.`;
 async function chatWithDuda(messages, userName) {
   const nameCtx = userName ? `
 NOME DO USU\xC1RIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
@@ -33707,16 +33639,84 @@ NOME DO USU\xC1RIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
       fetchedContext = "\n\n\u2550\u2550\u2550 CONTE\xDADO ATUAL DO SITE (buscado agora) \u2550\u2550\u2550\n" + pages.join("\n\n---\n\n");
     }
   }
-  const systemWithFetch = SYSTEM_PROMPT11 + nameCtx + fetchedContext;
-  const result = await invokeLLM({
-    messages: [
-      { role: "system", content: systemWithFetch },
-      ...messages
-    ],
-    maxTokens: 2500
+  const systemContent = SYSTEM_PROMPT11 + TOOLS_SYSTEM + nameCtx + fetchedContext;
+  const client = new Anthropic6({ apiKey: process.env.ANTHROPIC_API_KEY });
+  let response = await client.messages.create({
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: 2500,
+    system: systemContent,
+    tools: DUDA_TOOLS,
+    messages
   });
-  const content = result.choices[0]?.message?.content;
-  return typeof content === "string" ? content : "N\xE3o consegui processar a solicita\xE7\xE3o.";
+  let iterations = 0;
+  while (response.stop_reason === "tool_use" && iterations < 5) {
+    iterations++;
+    const toolUses = response.content.filter((b) => b.type === "tool_use");
+    const toolResults = [];
+    for (const toolUse of toolUses) {
+      let result;
+      try {
+        const inp = toolUse.input;
+        if (toolUse.name === "propose_seo_changes") {
+          result = await (async () => {
+            const db = await getDb();
+            if (!db) return "Banco indispon\xEDvel.";
+            const { agentActions: tbl } = await Promise.resolve().then(() => (init_schema(), schema_exports));
+            const changes = inp.changes || [];
+            if (changes.length === 0) return "Nenhuma mudan\xE7a fornecida.";
+            for (const c of changes) {
+              await db.insert(tbl).values({
+                agentName: "duda",
+                actionType: c.type,
+                title: c.title,
+                status: "pending",
+                payload: {
+                  productId: c.productId || "",
+                  pageSlug: c.pageSlug || "",
+                  seoTitle: c.seoTitle || "",
+                  seoDescription: c.seoDescription || "",
+                  description: c.description || ""
+                }
+              });
+            }
+            const lines = changes.map((c) => `- ${c.title}`);
+            return `${changes.length} mudan\xE7a(s) enfileirada(s) para o Tray (pr\xF3ximos ~5 min):
+${lines.join("\n")}`;
+          })();
+        } else if (toolUse.name === "execute_pending_actions") {
+          result = await (async () => {
+            const db = await getDb();
+            if (!db) return "Banco indispon\xEDvel.";
+            const { agentActions: tbl } = await Promise.resolve().then(() => (init_schema(), schema_exports));
+            const { eq: eq111, and: and89 } = await import("drizzle-orm");
+            const pending = await db.select().from(tbl).where(and89(eq111(tbl.agentName, "duda"), eq111(tbl.status, "pending")));
+            if (pending.length === 0) return "Nenhuma a\xE7\xE3o pendente no momento.";
+            const lines = pending.map((a) => `- ${a.title || a.actionType} [id=${a.id}]`);
+            return `${pending.length} a\xE7\xE3o(\xF5es) na fila de execu\xE7\xE3o:
+${lines.join("\n")}`;
+          })();
+        } else {
+          result = `Tool desconhecida: ${toolUse.name}`;
+        }
+      } catch (e) {
+        result = `Erro: ${e.message}`;
+      }
+      toolResults.push({ type: "tool_result", tool_use_id: toolUse.id, content: result });
+    }
+    response = await client.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 2500,
+      system: systemContent,
+      tools: DUDA_TOOLS,
+      messages: [
+        ...messages,
+        { role: "assistant", content: response.content },
+        { role: "user", content: toolResults }
+      ]
+    });
+  }
+  const textBlock = response.content.find((b) => b.type === "text");
+  return textBlock?.text ?? "N\xE3o consegui processar a solicita\xE7\xE3o.";
 }
 
 // server/routers/tray-duda.ts
@@ -33764,7 +33764,7 @@ TIER FRAMEWORK \u2014 Status-based + progressivo; primeira comiss\xE3o \xE9 o mo
 
 \u2501\u2501\u2501 CONTEXTO DA EMPRESA \u2501\u2501\u2501
 - Plataforma: Tray Commerce (m\xF3dulo nativo de afiliadas)
-- Pedido m\xEDnimo: R$199 \u2014 modelo atacado, venda em kit
+- Sem pedido m\xEDnimo \u2014 modelo atacado, venda em kit
 - Cookie de rastreamento: 30 dias
 - Pagamento autom\xE1tico: integra\xE7\xE3o Iugu / PagSeguro
 
@@ -34107,12 +34107,29 @@ import { z as z75 } from "zod";
 // server/agents/ml-gabi-agent.ts
 init_llm();
 init_agentMemory();
-import Anthropic6 from "@anthropic-ai/sdk";
+import Anthropic7 from "@anthropic-ai/sdk";
+init_ml_ads_browser_agent();
 init_db();
 init_schema();
-import { desc as desc45, eq as eq88, and as and71, isNotNull } from "drizzle-orm";
+import { desc as desc45, eq as eq87, and as and70, isNotNull } from "drizzle-orm";
+async function runAdsMutation(account, actionType, campaignId, campaignName, budget) {
+  const acc = account;
+  try {
+    const tempId = Date.now();
+    const results = await runActionsInSession(acc, [{
+      id: tempId,
+      actionType,
+      campaignId,
+      campaignName,
+      budget
+    }]);
+    return results[tempId] ?? "Sem resultado";
+  } catch (e) {
+    return `ERRO: ${e?.message || String(e)}`;
+  }
+}
 var AGENT_NAME7 = "gabi";
-var anthropic4 = new Anthropic6({ apiKey: process.env.ANTHROPIC_API_KEY || "" });
+var anthropic4 = new Anthropic7({ apiKey: process.env.ANTHROPIC_API_KEY || "" });
 function withTimeout2(promise, ms, label) {
   return Promise.race([
     promise,
@@ -34242,6 +34259,20 @@ var GABI_ML_TOOLS = [
     }
   },
   {
+    name: "ml_ads_create_campaign",
+    description: "Cria uma campanha de Product Ads NOVA no Mercado Livre via browser automation. Use quando o usu\xE1rio pedir para criar/abrir uma nova campanha com lista de an\xFAncios. Execute somente ap\xF3s confirma\xE7\xE3o expl\xEDcita.",
+    input_schema: {
+      type: "object",
+      properties: {
+        campaignName: { type: "string", description: "Nome da nova campanha (ex: 'INVERNO 2026 - B')" },
+        dailyBudget: { type: "number", description: "Budget di\xE1rio em R$ (ex: 30)" },
+        itemIds: { type: "array", items: { type: "string" }, description: "IDs dos an\xFAncios MLB a incluir (ex: ['MLB4224885971','MLB4231584799'])" },
+        acosTarget: { type: "number", description: "ACoS alvo em % (opcional \u2014 omita para o ML decidir automaticamente)" }
+      },
+      required: ["campaignName", "dailyBudget", "itemIds"]
+    }
+  },
+  {
     name: "ml_ads_campaign_stats",
     description: "Busca m\xE9tricas de uma campanha: impress\xF5es, cliques, CTR, gasto, CPC, convers\xF5es, ROAS.",
     input_schema: {
@@ -34341,9 +34372,9 @@ async function buildGabiPrompt(account = "feminnita") {
         executionLog: agentActions.executionLog,
         executedAt: agentActions.executedAt,
         actionType: agentActions.actionType
-      }).from(agentActions).where(and71(
-        eq88(agentActions.agentName, "gabi"),
-        eq88(agentActions.status, "done"),
+      }).from(agentActions).where(and70(
+        eq87(agentActions.agentName, "gabi"),
+        eq87(agentActions.status, "done"),
         isNotNull(agentActions.executedAt)
       )).orderBy(desc45(agentActions.executedAt)).limit(30);
       if (recent.length > 0) {
@@ -34388,8 +34419,9 @@ Ferramentas deste modo: ml_list_items, ml_pause_item, ml_activate_item, ml_updat
 
 \u2501\u2501\u2501 MODO ADS / CAMPANHAS \u2501\u2501\u2501
 Ativado quando: usu\xE1rio fala de campanha, Product Ads, budget, CPC, ROAS, CTR, patrocinado, Ads, m\xE9tricas
-Ferramentas deste modo: ml_get_ads_metrics, ml_ads_list_campaigns, ml_ads_pause_campaign, ml_ads_activate_campaign, ml_ads_update_budget, ml_ads_campaign_stats
+Ferramentas deste modo: ml_get_ads_metrics, ml_ads_list_campaigns, ml_ads_pause_campaign, ml_ads_activate_campaign, ml_ads_update_budget, ml_ads_create_campaign, ml_ads_campaign_stats
 REGRA CR\xCDTICA: A API do ML bloqueia m\xE9tricas diretamente. USE SEMPRE ml_get_ads_metrics PRIMEIRO \u2014 esses dados s\xE3o reais, coletados via browser a cada 6h. Se retornar vazio, informe que o agente est\xE1 coletando e use ml_ads_list_campaigns para estrutura.
+REGRA: Voc\xEA PODE criar, pausar, ativar e ajustar budget de campanhas via browser automation. NUNCA diga "n\xE3o consigo pela API" \u2014 use as ferramentas ml_ads_*.
 \u2192 N\xC3O mencione an\xFAncios/EDS neste modo
 
 REGRA DE OURO: Responda apenas o que foi perguntado. Se a pergunta \xE9 sobre Ads, fique em Ads. Se \xE9 sobre EDS, fique em EDS. Nunca misture os dois temas na mesma resposta sem que o usu\xE1rio pe\xE7a explicitamente.
@@ -34488,8 +34520,23 @@ NOME DO USU\xC1RIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
       let result;
       try {
         const inp = toolUse.input;
-        const TOOL_TIMEOUT = 45e3;
+        const TOOL_TIMEOUT = 9e4;
         let call;
+        const queueAdsAction = async (actionType, title, payload) => {
+          const db = await getDb();
+          if (!db) throw new Error("DB indispon\xEDvel");
+          await db.insert(agentActions).values({
+            agentName: "gabi",
+            date: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10),
+            title,
+            description: title,
+            actionType,
+            priority: "media",
+            status: "approved",
+            payload: { platform: "ml", account, action: actionType, ...payload }
+          });
+          return `Executando "${title}" via browser automation no painel ML Ads \u2014 ser\xE1 conclu\xEDdo em at\xE9 5 minutos.`;
+        };
         const queueAction = async (actionType, title, payload) => {
           const db = await getDb();
           if (!db) throw new Error("DB indispon\xEDvel");
@@ -34534,39 +34581,141 @@ NOME DO USU\xC1RIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
         } else if (toolUse.name === "ml_ads_list_campaigns") {
           call = listMLAdsCampaigns(account);
         } else if (toolUse.name === "ml_ads_pause_campaign") {
-          call = pauseMLAdsCampaign(inp.campaignId, account).catch(
-            () => queueAction("pause_ads_campaign", `Pausar campanha ${inp.campaignName || inp.campaignId}`, { campaignId: inp.campaignId, campaignName: inp.campaignName || "" })
-          );
+          call = (async () => {
+            const log = await runAdsMutation(
+              account,
+              "pause_ads_campaign",
+              String(inp.campaignId || ""),
+              String(inp.campaignName || ""),
+              0
+            );
+            const isError = log.startsWith("ERRO:") || log.includes("n\xE3o encontrada") || log.includes("n\xE3o encontrado");
+            const db = await getDb();
+            if (db) await db.insert(agentActions).values({
+              agentName: "gabi",
+              date: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10),
+              title: `Pausar campanha ${inp.campaignName || inp.campaignId}`,
+              description: `Pausar campanha ${inp.campaignName || inp.campaignId}`,
+              actionType: "pause_ads_campaign",
+              priority: "media",
+              status: isError ? "pending" : "done",
+              payload: { platform: "ml", account, action: "pause_ads_campaign", campaignId: String(inp.campaignId || ""), campaignName: String(inp.campaignName || "") },
+              executionLog: log,
+              ...isError ? {} : { executedAt: /* @__PURE__ */ new Date() }
+            });
+            return `${isError ? "\u274C" : "\u2705"} ${inp.campaignName || inp.campaignId}: ${log}`;
+          })();
         } else if (toolUse.name === "ml_ads_activate_campaign") {
-          call = activateMLAdsCampaign(inp.campaignId, account).catch(
-            () => queueAction("activate_ads_campaign", `Ativar campanha ${inp.campaignName || inp.campaignId}`, { campaignId: inp.campaignId, campaignName: inp.campaignName || "" })
-          );
+          call = (async () => {
+            const log = await runAdsMutation(
+              account,
+              "activate_ads_campaign",
+              String(inp.campaignId || ""),
+              String(inp.campaignName || ""),
+              0
+            );
+            const isError = log.startsWith("ERRO:") || log.includes("n\xE3o encontrada") || log.includes("n\xE3o encontrado");
+            const db = await getDb();
+            if (db) await db.insert(agentActions).values({
+              agentName: "gabi",
+              date: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10),
+              title: `Ativar campanha ${inp.campaignName || inp.campaignId}`,
+              description: `Ativar campanha ${inp.campaignName || inp.campaignId}`,
+              actionType: "activate_ads_campaign",
+              priority: "media",
+              status: isError ? "pending" : "done",
+              payload: { platform: "ml", account, action: "activate_ads_campaign", campaignId: String(inp.campaignId || ""), campaignName: String(inp.campaignName || "") },
+              executionLog: log,
+              ...isError ? {} : { executedAt: /* @__PURE__ */ new Date() }
+            });
+            return `${isError ? "\u274C" : "\u2705"} ${inp.campaignName || inp.campaignId}: ${log}`;
+          })();
         } else if (toolUse.name === "ml_ads_update_budget") {
-          call = updateMLAdsBudget(inp.campaignId, inp.dailyBudget, account).catch(
-            () => queueAction("update_ads_budget", `Atualizar or\xE7amento campanha ${inp.campaignId} para R$${inp.dailyBudget}/dia`, { campaignId: inp.campaignId, budget: inp.dailyBudget })
-          );
+          call = (async () => {
+            const log = await runAdsMutation(
+              account,
+              "update_ads_budget",
+              String(inp.campaignId || ""),
+              String(inp.campaignName || ""),
+              Number(inp.dailyBudget || 0)
+            );
+            const isError = log.startsWith("ERRO:") || log.includes("n\xE3o encontrada") || log.includes("n\xE3o encontrado");
+            const db = await getDb();
+            if (db) await db.insert(agentActions).values({
+              agentName: "gabi",
+              date: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10),
+              title: `Atualizar or\xE7amento ${inp.campaignName || inp.campaignId} \u2192 R$${inp.dailyBudget}/dia`,
+              description: `Atualizar or\xE7amento ${inp.campaignName || inp.campaignId} \u2192 R$${inp.dailyBudget}/dia`,
+              actionType: "update_ads_budget",
+              priority: "media",
+              status: isError ? "pending" : "done",
+              payload: { platform: "ml", account, action: "update_ads_budget", campaignId: String(inp.campaignId || ""), campaignName: String(inp.campaignName || ""), budget: Number(inp.dailyBudget || 0) },
+              executionLog: log,
+              ...isError ? {} : { executedAt: /* @__PURE__ */ new Date() }
+            });
+            return `${isError ? "\u274C" : "\u2705"} ${inp.campaignName || inp.campaignId}: ${log}`;
+          })();
         } else if (toolUse.name === "ml_ads_campaign_stats") {
           call = getMLAdsCampaignStats(inp.campaignId, inp.dateFrom, inp.dateTo, account);
+        } else if (toolUse.name === "ml_ads_create_campaign") {
+          call = (async () => {
+            const acc = account;
+            const name = String(inp.campaignName || "").trim();
+            const budget = Number(inp.dailyBudget || 0);
+            const items = Array.isArray(inp.itemIds) ? inp.itemIds.map((x) => String(x).trim()).filter(Boolean) : [];
+            const acos = typeof inp.acosTarget === "number" ? Number(inp.acosTarget) : void 0;
+            let log;
+            try {
+              const tempId = Date.now();
+              const results = await runActionsInSession(acc, [{
+                id: tempId,
+                actionType: "create_ads_campaign",
+                campaignId: "",
+                campaignName: name,
+                budget,
+                itemIds: items,
+                acosTarget: acos
+              }]);
+              log = results[tempId] ?? "Sem resultado";
+            } catch (e) {
+              log = `ERRO: ${e?.message || String(e)}`;
+            }
+            const isError = log.startsWith("ERRO:") || log.startsWith("\u274C");
+            const db = await getDb();
+            if (db) await db.insert(agentActions).values({
+              agentName: "gabi",
+              date: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10),
+              title: `Criar campanha "${name}" \u2014 R$${budget}/dia, ${items.length} an\xFAncios`,
+              description: `Criar campanha "${name}" com ${items.length} an\xFAncios \u2014 R$${budget}/dia${acos ? ` \u2014 ACoS alvo ${acos}%` : ""}`,
+              actionType: "create_ads_campaign",
+              priority: "media",
+              status: isError ? "pending" : "done",
+              payload: { platform: "ml", account, action: "create_ads_campaign", campaignName: name, budget, itemIds: items, acosTarget: acos },
+              executionLog: log,
+              ...isError ? {} : { executedAt: /* @__PURE__ */ new Date() }
+            });
+            return `${isError ? "\u274C" : "\u2705"} ${name}: ${log}`;
+          })();
         } else if (toolUse.name === "ml_get_ads_metrics") {
           call = (async () => {
             const db = await getDb();
             if (!db) throw new Error("DB indispon\xEDvel");
-            const { eq: eq109, and: and87, desc: desc52 } = await import("drizzle-orm");
+            const { eq: eq111, and: and89, desc: desc52 } = await import("drizzle-orm");
             const { marketplaceAdsMetrics: marketplaceAdsMetrics2 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
             const targetPlatform = inp.platform || "ml";
             const targetAccount = inp.account || account;
-            const rows = await db.select().from(marketplaceAdsMetrics2).where(and87(
-              eq109(marketplaceAdsMetrics2.platform, targetPlatform),
-              eq109(marketplaceAdsMetrics2.account, targetAccount)
+            const rows = await db.select().from(marketplaceAdsMetrics2).where(and89(
+              eq111(marketplaceAdsMetrics2.platform, targetPlatform),
+              eq111(marketplaceAdsMetrics2.account, targetAccount)
             )).orderBy(desc52(marketplaceAdsMetrics2.scrapedAt)).limit(200);
             if (!rows.length) {
               const { or: or6 } = await import("drizzle-orm");
-              const pending = await db.select({ id: agentActions.id }).from(agentActions).where(and87(
-                eq109(agentActions.actionType, "scrape_ads_metrics"),
+              const pending = await db.select({ id: agentActions.id }).from(agentActions).where(and89(
+                eq111(agentActions.actionType, "scrape_ads_metrics"),
                 or6(
-                  eq109(agentActions.status, "approved"),
-                  eq109(agentActions.status, "executing"),
-                  eq109(agentActions.status, "pending")
+                  eq111(agentActions.status, "approved"),
+                  eq111(agentActions.status, "executing"),
+                  eq111(agentActions.status, "pending")
                 )
               )).limit(1);
               if (!pending.length) {
@@ -34603,45 +34752,63 @@ Total: ${latest.length} campanhas | Gasto total=R$${totalSpend.toFixed(2)} | Rec
 ${lines.join("\n")}`;
           })();
         } else if (toolUse.name === "execute_pending_actions") {
+          const ADS_ACTION_TYPES = ["pause_ads_campaign", "activate_ads_campaign", "update_ads_budget"];
           call = (async () => {
             const db = await getDb();
             if (!db) return "Banco indispon\xEDvel.";
-            const pending = await db.select().from(agentActions).where(and71(eq88(agentActions.agentName, "gabi"), eq88(agentActions.status, "pending")));
-            if (pending.length === 0) return "Nenhuma a\xE7\xE3o pendente. Use propose_ads_actions primeiro para criar a\xE7\xF5es.";
-            const { apiPauseMLCampaign: apiPauseMLCampaign2, apiActivateMLCampaign: apiActivateMLCampaign2, apiUpdateMLBudget: apiUpdateMLBudget2 } = await Promise.resolve().then(() => (init_ml_ads_api(), ml_ads_api_exports));
-            const resultLines = [];
-            for (const a of pending) {
-              await db.update(agentActions).set({ status: "executing" }).where(eq88(agentActions.id, a.id));
-              const payload = a.payload;
-              const acc = String(payload?.account || account);
-              const actionType = String(payload?.action || a.actionType || "");
-              const campaignId = String(payload?.campaignId || "");
-              const campaignName = String(payload?.campaignName || "");
-              const budget = Number(payload?.budget || 0);
-              let log = "";
-              try {
-                switch (actionType) {
-                  case "pause_ads_campaign":
-                    log = await apiPauseMLCampaign2(acc, campaignId, campaignName);
-                    break;
-                  case "activate_ads_campaign":
-                    log = await apiActivateMLCampaign2(acc, campaignId, campaignName);
-                    break;
-                  case "update_ads_budget":
-                    log = await apiUpdateMLBudget2(acc, campaignId, budget, campaignName);
-                    break;
-                  default:
-                    log = `Tipo n\xE3o suportado: ${actionType}`;
-                }
-                await db.update(agentActions).set({ status: "done", executedAt: /* @__PURE__ */ new Date(), executionLog: log }).where(eq88(agentActions.id, a.id));
-              } catch (e) {
-                log = `\u274C ERRO: ${e.message}`;
-                await db.update(agentActions).set({ status: "pending", executionLog: log }).where(eq88(agentActions.id, a.id));
-              }
-              console.log(`[GabiExecute] id=${a.id}: ${log}`);
-              resultLines.push(`- ${a.title}: ${log}`);
+            const { or: or6 } = await import("drizzle-orm");
+            const allPending = await db.select().from(agentActions).where(and70(
+              eq87(agentActions.agentName, "gabi"),
+              or6(
+                eq87(agentActions.status, "pending"),
+                eq87(agentActions.status, "approved")
+              )
+            ));
+            const adsActions = allPending.filter(
+              (a) => ADS_ACTION_TYPES.includes(String(a.payload?.action || a.actionType))
+            );
+            if (adsActions.length === 0) return "Nenhuma a\xE7\xE3o de Ads ML pendente. Use propose_ads_actions para criar as a\xE7\xF5es antes de executar.";
+            for (const a of adsActions) {
+              await db.update(agentActions).set({ status: "executing" }).where(eq87(agentActions.id, a.id));
             }
-            return `${pending.length} a\xE7\xE3o(\xF5es) executadas via API ML:
+            const byAccount = /* @__PURE__ */ new Map();
+            for (const a of adsActions) {
+              const acc = String(a.payload?.account || "feminnita");
+              if (!byAccount.has(acc)) byAccount.set(acc, []);
+              byAccount.get(acc).push(a);
+            }
+            const { runActionsInSession: runActionsInSession2 } = await Promise.resolve().then(() => (init_ml_ads_browser_agent(), ml_ads_browser_agent_exports));
+            const resultLines = [];
+            for (const [acc, accActions] of byAccount) {
+              const batch = accActions.map((a) => ({
+                id: a.id,
+                actionType: String(a.payload?.action || a.actionType || ""),
+                campaignId: String(a.payload?.campaignId || ""),
+                campaignName: String(a.payload?.campaignName || ""),
+                budget: Number(a.payload?.budget || 0)
+              }));
+              let results;
+              try {
+                results = await runActionsInSession2(acc, batch);
+              } catch (e) {
+                for (const a of accActions) {
+                  await db.update(agentActions).set({ status: "pending", executionLog: `ERRO: ${e.message}` }).where(eq87(agentActions.id, a.id));
+                  resultLines.push(`\u274C ${a.title || a.actionType} \u2014 ERRO browser: ${e.message}`);
+                }
+                continue;
+              }
+              for (const a of accActions) {
+                const log = results[a.id] ?? "Sem resultado";
+                const isError = log.startsWith("ERRO:") || log.startsWith("\u274C") || log.includes("n\xE3o encontrada") || log.includes("n\xE3o encontrado") || log.includes("Erro ao") || log.includes("ML API") || log.includes("n\xE3o abriu") || log.includes("Timeout") || log.includes("timeout");
+                await db.update(agentActions).set({
+                  status: isError ? "pending" : "done",
+                  executedAt: isError ? void 0 : /* @__PURE__ */ new Date(),
+                  executionLog: log
+                }).where(eq87(agentActions.id, a.id));
+                resultLines.push(`${isError ? "\u274C" : "\u2705"} ${a.title || a.actionType} \u2014 ${log}`);
+              }
+            }
+            return `Execu\xE7\xE3o no painel ML Ads conclu\xEDda:
 ${resultLines.join("\n")}`;
           })();
         } else if (toolUse.name === "propose_ads_actions") {
@@ -34753,11 +34920,11 @@ import { z as z76 } from "zod";
 // server/agents/shopee-luiza-agent.ts
 init_llm();
 init_agentMemory();
-import Anthropic7 from "@anthropic-ai/sdk";
+import Anthropic8 from "@anthropic-ai/sdk";
 init_db();
 init_schema();
 var AGENT_NAME8 = "luiza-shopee";
-var anthropic5 = new Anthropic7({ apiKey: process.env.ANTHROPIC_API_KEY || "" });
+var anthropic5 = new Anthropic8({ apiKey: process.env.ANTHROPIC_API_KEY || "" });
 function withTimeout3(promise, ms, label) {
   return Promise.race([
     promise,
@@ -35059,52 +35226,16 @@ NOME DO USU\xC1RIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
         if (toolUse.name === "execute_pending_actions") {
           call = (async () => {
             const db = await getDb();
-            if (!db) return "Banco indispon\xEDvel \u2014 n\xE3o foi poss\xEDvel executar as a\xE7\xF5es.";
-            const { eq: eq109, and: and87 } = await import("drizzle-orm");
+            if (!db) return "Banco indispon\xEDvel \u2014 n\xE3o foi poss\xEDvel verificar as a\xE7\xF5es.";
+            const { eq: eq111, and: and89 } = await import("drizzle-orm");
             const { agentActions: agentActionsTable2 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
-            const { pauseShopeeCampaign: pauseShopeeCampaign2, activateShopeeCampaign: activateShopeeCampaign2, updateShopeeBudget: updateShopeeBudget2, updateShopeeRoas: updateShopeeRoas2 } = await Promise.resolve().then(() => (init_shopee_ads_browser_agent(), shopee_ads_browser_agent_exports));
-            const pending = await db.select().from(agentActionsTable2).where(and87(eq109(agentActionsTable2.agentName, "luiza"), eq109(agentActionsTable2.status, "pending")));
+            const pending = await db.select().from(agentActionsTable2).where(and89(eq111(agentActionsTable2.agentName, "luiza"), eq111(agentActionsTable2.status, "pending")));
             if (pending.length === 0) return "Nenhuma a\xE7\xE3o pendente encontrada para executar.";
-            const results = [];
-            for (const action of pending) {
-              try {
-                const payload = action.payload;
-                if (!payload?.campaignId) {
-                  results.push(`\u274C ${action.title}: payload sem campaignId`);
-                  continue;
-                }
-                const campaignId = String(payload.campaignId);
-                const acc = payload.account || account;
-                const proposed = String(payload.proposedValue ?? "");
-                await db.update(agentActionsTable2).set({ status: "executing" }).where(eq109(agentActionsTable2.id, action.id));
-                let res;
-                switch (action.actionType) {
-                  case "shopee_pause_campaign":
-                    res = await pauseShopeeCampaign2(campaignId, acc);
-                    break;
-                  case "shopee_activate_campaign":
-                    res = await activateShopeeCampaign2(campaignId, acc);
-                    break;
-                  case "shopee_update_budget":
-                    res = await updateShopeeBudget2(campaignId, Number(proposed), acc);
-                    break;
-                  case "shopee_update_roas":
-                    res = await updateShopeeRoas2(campaignId, Number(proposed), acc);
-                    break;
-                  default:
-                    results.push(`\u26A0\uFE0F ${action.title}: tipo de a\xE7\xE3o desconhecido (${action.actionType})`);
-                    await db.update(agentActionsTable2).set({ status: "pending" }).where(eq109(agentActionsTable2.id, action.id));
-                    continue;
-                }
-                await db.update(agentActionsTable2).set({ status: "done", executedAt: /* @__PURE__ */ new Date() }).where(eq109(agentActionsTable2.id, action.id));
-                results.push(`\u2705 ${action.title}: ${res}`);
-              } catch (e) {
-                await db.update(agentActionsTable2).set({ status: "pending" }).where(eq109(agentActionsTable2.id, action.id));
-                results.push(`\u274C ${action.title}: ${e.message}`);
-              }
-            }
-            return `Execu\xE7\xE3o conclu\xEDda (${pending.length} a\xE7\xF5es):
-${results.join("\n")}`;
+            const lines = pending.map((a) => `- ${a.title || a.actionType} [id=${a.id}]`);
+            return `${pending.length} a\xE7\xE3o(\xF5es) enfileirada(s) para execu\xE7\xE3o via browser Shopee (pr\xF3ximos ~5 min):
+${lines.join("\n")}
+
+O executor em background abrir\xE1 o Seller Center, executar\xE1 cada a\xE7\xE3o e atualizar\xE1 o status no banco.`;
           })();
         } else if (toolUse.name === "get_shopee_campaigns") {
           call = withTimeout3((async () => {
@@ -35210,7 +35341,7 @@ async function updateLuizaShopeeKnowledge() {
 // server/routers/shopee-luiza.ts
 init_db();
 init_schema();
-import { eq as eq89, and as and72, desc as desc46 } from "drizzle-orm";
+import { eq as eq88, and as and71, desc as desc46 } from "drizzle-orm";
 var shopeeLuizaRouter = router({
   chat: protectedProcedure.input(z76.object({
     messages: z76.array(z76.object({
@@ -35233,12 +35364,12 @@ var shopeeLuizaRouter = router({
           agentName,
           title
         });
-        const [created] = await db.select().from(specialistConversations).where(and72(eq89(specialistConversations.userId, ctx.user.id), eq89(specialistConversations.agentName, agentName))).orderBy(desc46(specialistConversations.createdAt)).limit(1);
+        const [created] = await db.select().from(specialistConversations).where(and71(eq88(specialistConversations.userId, ctx.user.id), eq88(specialistConversations.agentName, agentName))).orderBy(desc46(specialistConversations.createdAt)).limit(1);
         convId = created.id;
       }
       await db.insert(specialistMessages).values({ conversationId: convId, role: "user", content: userMessage.content });
       await db.insert(specialistMessages).values({ conversationId: convId, role: "assistant", content: reply });
-      if (convId) await db.update(specialistConversations).set({ updatedAt: /* @__PURE__ */ new Date() }).where(eq89(specialistConversations.id, convId));
+      if (convId) await db.update(specialistConversations).set({ updatedAt: /* @__PURE__ */ new Date() }).where(eq88(specialistConversations.id, convId));
       return { reply, conversationId: convId };
     }
     return { reply, conversationId: null };
@@ -35813,7 +35944,7 @@ import { TRPCError as TRPCError14 } from "@trpc/server";
 // server/agents/agent-task-runner.ts
 init_db();
 init_schema();
-import { eq as eq91, and as and73, desc as desc47 } from "drizzle-orm";
+import { eq as eq90, and as and72, desc as desc47 } from "drizzle-orm";
 init_websocket_notifications();
 init_webPush();
 var AGENT_DISPLAY = {
@@ -35826,25 +35957,25 @@ async function runAgentTask(taskId, userId, agentName, message) {
   const db = await getDb();
   if (!db) return;
   try {
-    await db.update(agentTasks).set({ status: "processing", startedAt: /* @__PURE__ */ new Date() }).where(eq91(agentTasks.id, taskId));
+    await db.update(agentTasks).set({ status: "processing", startedAt: /* @__PURE__ */ new Date() }).where(eq90(agentTasks.id, taskId));
     const response = await chatWithSpecialist(agentName, message, []);
     await db.update(agentTasks).set({
       status: "done",
       result: response.message,
       finishedAt: /* @__PURE__ */ new Date()
-    }).where(eq91(agentTasks.id, taskId));
+    }).where(eq90(agentTasks.id, taskId));
     try {
-      const [existingConv] = await db.select().from(specialistConversations).where(and73(
-        eq91(specialistConversations.userId, userId),
-        eq91(specialistConversations.agentName, agentName)
+      const [existingConv] = await db.select().from(specialistConversations).where(and72(
+        eq90(specialistConversations.userId, userId),
+        eq90(specialistConversations.agentName, agentName)
       )).orderBy(desc47(specialistConversations.updatedAt)).limit(1);
       let convId;
       if (existingConv) {
         convId = existingConv.id;
-        await db.update(specialistConversations).set({ updatedAt: /* @__PURE__ */ new Date() }).where(eq91(specialistConversations.id, convId));
+        await db.update(specialistConversations).set({ updatedAt: /* @__PURE__ */ new Date() }).where(eq90(specialistConversations.id, convId));
       } else {
         await db.insert(specialistConversations).values({ userId, agentName, title: message.slice(0, 60) });
-        const [created] = await db.select().from(specialistConversations).where(and73(eq91(specialistConversations.userId, userId), eq91(specialistConversations.agentName, agentName))).orderBy(desc47(specialistConversations.createdAt)).limit(1);
+        const [created] = await db.select().from(specialistConversations).where(and72(eq90(specialistConversations.userId, userId), eq90(specialistConversations.agentName, agentName))).orderBy(desc47(specialistConversations.createdAt)).limit(1);
         convId = created.id;
       }
       await db.insert(specialistMessages).values({ conversationId: convId, role: "user", content: `\u23F3 Tarefa: ${message}` });
@@ -35864,7 +35995,7 @@ async function runAgentTask(taskId, userId, agentName, message) {
         ts: Date.now()
       });
     } else if (db) {
-      const subs = await db.select().from(pushSubscriptions).where(eq91(pushSubscriptions.userId, userId));
+      const subs = await db.select().from(pushSubscriptions).where(eq90(pushSubscriptions.userId, userId));
       for (const sub of subs) {
         try {
           await sendPush(
@@ -35877,13 +36008,13 @@ async function runAgentTask(taskId, userId, agentName, message) {
           );
         } catch (err) {
           if (err.expired) {
-            await db.delete(pushSubscriptions).where(eq91(pushSubscriptions.id, sub.id));
+            await db.delete(pushSubscriptions).where(eq90(pushSubscriptions.id, sub.id));
           }
         }
       }
     }
   } catch (err) {
-    await db.update(agentTasks).set({ status: "error", result: err.message, finishedAt: /* @__PURE__ */ new Date() }).where(eq91(agentTasks.id, taskId));
+    await db.update(agentTasks).set({ status: "error", result: err.message, finishedAt: /* @__PURE__ */ new Date() }).where(eq90(agentTasks.id, taskId));
   }
 }
 
@@ -35914,22 +36045,22 @@ var agentTasksRouter = router({
   })).query(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) return [];
-    const { and: and87, eq: eq109, desc: desc52 } = await import("drizzle-orm");
-    const conditions = [eq109(agentTasks.userId, ctx.user.id)];
-    if (input.agentName) conditions.push(eq109(agentTasks.agentName, input.agentName));
-    return db.select().from(agentTasks).where(and87(...conditions)).orderBy(desc52(agentTasks.createdAt)).limit(input.limit);
+    const { and: and89, eq: eq111, desc: desc52 } = await import("drizzle-orm");
+    const conditions = [eq111(agentTasks.userId, ctx.user.id)];
+    if (input.agentName) conditions.push(eq111(agentTasks.agentName, input.agentName));
+    return db.select().from(agentTasks).where(and89(...conditions)).orderBy(desc52(agentTasks.createdAt)).limit(input.limit);
   })
 });
 
 // server/routers/chat-upload.ts
 import { z as z80 } from "zod";
 import { TRPCError as TRPCError15 } from "@trpc/server";
-import path10 from "path";
-import fs10 from "fs";
-var UPLOAD_DIR = path10.join(process.cwd(), "dist", "public", "chat-files");
+import path9 from "path";
+import fs9 from "fs";
+var UPLOAD_DIR = path9.join(process.cwd(), "dist", "public", "chat-files");
 var MAX_SIZE_MB = 10;
 function ensureDir() {
-  if (!fs10.existsSync(UPLOAD_DIR)) fs10.mkdirSync(UPLOAD_DIR, { recursive: true });
+  if (!fs9.existsSync(UPLOAD_DIR)) fs9.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 var chatUploadRouter = router({
   upload: protectedProcedure.input(z80.object({
@@ -35943,10 +36074,10 @@ var chatUploadRouter = router({
       throw new TRPCError15({ code: "PAYLOAD_TOO_LARGE", message: `Arquivo muito grande (m\xE1x ${MAX_SIZE_MB}MB)` });
     }
     ensureDir();
-    const ext = path10.extname(input.fileName).toLowerCase() || "";
+    const ext = path9.extname(input.fileName).toLowerCase() || "";
     const safeName = `${Date.now()}-${ctx.user.id}-${Math.random().toString(36).slice(2)}${ext}`;
-    const filePath = path10.join(UPLOAD_DIR, safeName);
-    fs10.writeFileSync(filePath, buffer);
+    const filePath = path9.join(UPLOAD_DIR, safeName);
+    fs9.writeFileSync(filePath, buffer);
     return { url: `/chat-files/${safeName}`, fileName: input.fileName, mimeType: input.mimeType };
   })
 });
@@ -36002,14 +36133,14 @@ import { z as z82 } from "zod";
 init_ga4();
 init_db();
 init_schema();
-import { eq as eq93, and as and75 } from "drizzle-orm";
+import { eq as eq92, and as and74 } from "drizzle-orm";
 async function getPropertyId(userId) {
   const db = await getDb();
   if (!db) return null;
-  const rows = await db.select({ accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and75(
-    eq93(oauthTokens.userId, userId),
-    eq93(oauthTokens.plataforma, "google_analytics"),
-    eq93(oauthTokens.isActive, true)
+  const rows = await db.select({ accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and74(
+    eq92(oauthTokens.userId, userId),
+    eq92(oauthTokens.plataforma, "google_analytics"),
+    eq92(oauthTokens.isActive, true)
   )).limit(1);
   if (rows.length === 0) return null;
   const info = rows[0].accountInfo ? JSON.parse(rows[0].accountInfo) : {};
@@ -36019,7 +36150,7 @@ var ga4Router = router({
   status: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return { connected: false, propertyId: null };
-    const rows = await db.select({ isActive: oauthTokens.isActive, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and75(eq93(oauthTokens.userId, ctx.user.id), eq93(oauthTokens.plataforma, "google_analytics"))).limit(1);
+    const rows = await db.select({ isActive: oauthTokens.isActive, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and74(eq92(oauthTokens.userId, ctx.user.id), eq92(oauthTokens.plataforma, "google_analytics"))).limit(1);
     if (rows.length === 0) return { connected: false, propertyId: null };
     const info = rows[0].accountInfo ? JSON.parse(rows[0].accountInfo) : {};
     return { connected: Boolean(rows[0].isActive), propertyId: info.propertyId ?? null };
@@ -36027,17 +36158,17 @@ var ga4Router = router({
   setPropertyId: protectedProcedure.input(z82.object({ propertyId: z82.string().min(1) })).mutation(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new Error("DB indispon\xEDvel");
-    const rows = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and75(eq93(oauthTokens.userId, ctx.user.id), eq93(oauthTokens.plataforma, "google_analytics"))).limit(1);
+    const rows = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and74(eq92(oauthTokens.userId, ctx.user.id), eq92(oauthTokens.plataforma, "google_analytics"))).limit(1);
     if (rows.length === 0) throw new Error("GA4 n\xE3o conectado");
     const info = rows[0].accountInfo ? JSON.parse(rows[0].accountInfo) : {};
     info.propertyId = input.propertyId;
-    await db.update(oauthTokens).set({ accountInfo: JSON.stringify(info) }).where(eq93(oauthTokens.id, rows[0].id));
+    await db.update(oauthTokens).set({ accountInfo: JSON.stringify(info) }).where(eq92(oauthTokens.id, rows[0].id));
     return { success: true };
   }),
   disconnect: protectedProcedure.mutation(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("DB indispon\xEDvel");
-    await db.update(oauthTokens).set({ isActive: false }).where(and75(eq93(oauthTokens.userId, ctx.user.id), eq93(oauthTokens.plataforma, "google_analytics")));
+    await db.update(oauthTokens).set({ isActive: false }).where(and74(eq92(oauthTokens.userId, ctx.user.id), eq92(oauthTokens.plataforma, "google_analytics")));
     return { success: true };
   }),
   overview: protectedProcedure.input(z82.object({ days: z82.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
@@ -36229,8 +36360,8 @@ init_const();
 init_db();
 
 // server/agents/portal-copy-agent.ts
-import Anthropic8 from "@anthropic-ai/sdk";
-var anthropic6 = new Anthropic8({ apiKey: process.env.ANTHROPIC_API_KEY || "" });
+import Anthropic9 from "@anthropic-ai/sdk";
+var anthropic6 = new Anthropic9({ apiKey: process.env.ANTHROPIC_API_KEY || "" });
 var ANA_SYSTEM_PROMPT = `Voc\xEA \xE9 a Ana \u2014 especialista em copy de vendas da Feminnita, criada para ajudar revendedoras a venderem pijamas pelo WhatsApp, Instagram e grupos de fam\xEDlia.
 
 \u2501\u2501\u2501 QUEM \xC9 A ANA \u2501\u2501\u2501
@@ -36239,7 +36370,7 @@ Voc\xEA \xE9 como uma amiga que j\xE1 vendeu muito e quer te ajudar a vender tam
 \u2501\u2501\u2501 FEMINNITA \u2014 O PRODUTO \u2501\u2501\u2501
 \u2022 Pijamas em suede premium: conjuntos cal\xE7a + blusa, adulto e infantil
 \u2022 Diferenciais: tecido macio, modelo exclusivo, fotografia bonita
-\u2022 Pre\xE7o: atacado para revendedoras \u2014 pedido m\xEDnimo, margem boa
+\u2022 Pre\xE7o: atacado para revendedoras \u2014 sem pedido m\xEDnimo, margem boa
 \u2022 Sazonalidade: inverno \xE9 o pico (junho\u2013agosto), Dia das M\xE3es (maio) \xE9 o maior do ano
 
 \u2501\u2501\u2501 8 TIPOS DE COPY QUE VOC\xCA CRIA \u2501\u2501\u2501
@@ -36516,8 +36647,8 @@ var appRouter = router({
       const dbConn = await getDb();
       if (!dbConn) throw new Error("DB indispon\xEDvel");
       const { users: users2 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
-      const { eq: eq109 } = await import("drizzle-orm");
-      await dbConn.update(users2).set({ name: input.name }).where(eq109(users2.id, ctx.user.id));
+      const { eq: eq111 } = await import("drizzle-orm");
+      await dbConn.update(users2).set({ name: input.name }).where(eq111(users2.id, ctx.user.id));
       return { success: true };
     })
   }),
@@ -36614,8 +36745,8 @@ var appRouter = router({
       try {
         const db = await getDb();
         if (!db) return [];
-        const { eq: eq109 } = await import("drizzle-orm");
-        const allInfluencers = await db.select().from(influencers).where(eq109(influencers.userId, ctx.user.id));
+        const { eq: eq111 } = await import("drizzle-orm");
+        const allInfluencers = await db.select().from(influencers).where(eq111(influencers.userId, ctx.user.id));
         return allInfluencers;
       } catch (error) {
         console.error("[Influencers] Erro ao listar:", error);
@@ -36635,7 +36766,7 @@ var appRouter = router({
     })).mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const { eq: eq109 } = await import("drizzle-orm");
+      const { eq: eq111 } = await import("drizzle-orm");
       const result = await db.insert(influencers).values({
         userId: ctx.user.id,
         name: input.name,
@@ -36646,7 +36777,7 @@ var appRouter = router({
         tiktokHandle: input.tiktokHandle,
         isActive: true
       });
-      const created = await db.select().from(influencers).where(eq109(influencers.id, result[0].insertId)).limit(1);
+      const created = await db.select().from(influencers).where(eq111(influencers.id, result[0].insertId)).limit(1);
       return created[0];
     }),
     update: protectedProcedure.input(z84.object({
@@ -36661,18 +36792,18 @@ var appRouter = router({
     })).mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const { eq: eq109, and: and87 } = await import("drizzle-orm");
-      const owned = await db.select({ id: influencers.id }).from(influencers).where(and87(eq109(influencers.id, input.id), eq109(influencers.userId, ctx.user.id))).limit(1);
+      const { eq: eq111, and: and89 } = await import("drizzle-orm");
+      const owned = await db.select({ id: influencers.id }).from(influencers).where(and89(eq111(influencers.id, input.id), eq111(influencers.userId, ctx.user.id))).limit(1);
       if (owned.length === 0) throw new Error("Influencer n\xE3o encontrado");
       const { id, ...updates } = input;
-      await db.update(influencers).set(updates).where(eq109(influencers.id, id));
-      const updated = await db.select().from(influencers).where(eq109(influencers.id, id)).limit(1);
+      await db.update(influencers).set(updates).where(eq111(influencers.id, id));
+      const updated = await db.select().from(influencers).where(eq111(influencers.id, id)).limit(1);
       return updated[0];
     }),
     upsertDefaults: protectedProcedure.mutation(async ({ ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const { eq: eq109 } = await import("drizzle-orm");
+      const { eq: eq111 } = await import("drizzle-orm");
       const defaults = [
         {
           name: "Carol",
@@ -36707,7 +36838,7 @@ var appRouter = router({
           tiktokHandle: "@luizafeminnita"
         }
       ];
-      const existing = await db.select({ name: influencers.name }).from(influencers).where(eq109(influencers.userId, ctx.user.id));
+      const existing = await db.select({ name: influencers.name }).from(influencers).where(eq111(influencers.userId, ctx.user.id));
       const existingNames = existing.map((i) => i.name);
       let created = 0;
       for (const inf of defaults) {
@@ -36725,31 +36856,31 @@ var appRouter = router({
     })).query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
-      const { eq: eq109, and: and87, desc: desc52 } = await import("drizzle-orm");
-      const owned = await db.select({ id: influencers.id }).from(influencers).where(and87(eq109(influencers.id, input.influencerId), eq109(influencers.userId, ctx.user.id))).limit(1);
+      const { eq: eq111, and: and89, desc: desc52 } = await import("drizzle-orm");
+      const owned = await db.select({ id: influencers.id }).from(influencers).where(and89(eq111(influencers.id, input.influencerId), eq111(influencers.userId, ctx.user.id))).limit(1);
       if (owned.length === 0) return [];
-      const conditions = [eq109(influencerPosts.influencerId, input.influencerId)];
+      const conditions = [eq111(influencerPosts.influencerId, input.influencerId)];
       if (input.status) {
-        conditions.push(eq109(influencerPosts.status, input.status));
+        conditions.push(eq111(influencerPosts.status, input.status));
       }
-      return db.select().from(influencerPosts).where(and87(...conditions)).orderBy(desc52(influencerPosts.createdAt)).limit(input.limit);
+      return db.select().from(influencerPosts).where(and89(...conditions)).orderBy(desc52(influencerPosts.createdAt)).limit(input.limit);
     }),
     deletePost: protectedProcedure.input(z84.object({ postId: z84.number() })).mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const { eq: eq109, and: and87 } = await import("drizzle-orm");
-      const post = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq109(influencerPosts.id, input.postId)).limit(1);
+      const { eq: eq111, and: and89 } = await import("drizzle-orm");
+      const post = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq111(influencerPosts.id, input.postId)).limit(1);
       if (post.length === 0) throw new Error("Post n\xE3o encontrado");
-      const owned = await db.select({ id: influencers.id }).from(influencers).where(and87(eq109(influencers.id, post[0].influencerId ?? 0), eq109(influencers.userId, ctx.user.id))).limit(1);
+      const owned = await db.select({ id: influencers.id }).from(influencers).where(and89(eq111(influencers.id, post[0].influencerId ?? 0), eq111(influencers.userId, ctx.user.id))).limit(1);
       if (owned.length === 0) throw new Error("Acesso negado");
-      await db.delete(influencerPosts).where(eq109(influencerPosts.id, input.postId));
+      await db.delete(influencerPosts).where(eq111(influencerPosts.id, input.postId));
       return { success: true };
     }),
     getAllPosts: protectedProcedure.input(z84.object({ limit: z84.number().default(200) })).query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
-      const { eq: eq109, desc: desc52, inArray: inArray10 } = await import("drizzle-orm");
-      const myInfluencers = await db.select({ id: influencers.id, name: influencers.name }).from(influencers).where(eq109(influencers.userId, ctx.user.id));
+      const { eq: eq111, desc: desc52, inArray: inArray10 } = await import("drizzle-orm");
+      const myInfluencers = await db.select({ id: influencers.id, name: influencers.name }).from(influencers).where(eq111(influencers.userId, ctx.user.id));
       if (myInfluencers.length === 0) return [];
       const ids = myInfluencers.map((i) => i.id);
       const posts = await db.select().from(influencerPosts).where(inArray10(influencerPosts.influencerId, ids)).orderBy(desc52(influencerPosts.createdAt)).limit(input.limit);
@@ -36777,12 +36908,12 @@ var appRouter = router({
       try {
         const dbConn = await getDb();
         if (!dbConn) return [];
-        const { or: or6, and: and87, eq: eq109, desc: desc52 } = await import("drizzle-orm");
+        const { or: or6, and: and89, eq: eq111, desc: desc52 } = await import("drizzle-orm");
         const { directMessages: directMessages2 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
         const msgs = await dbConn.select().from(directMessages2).where(
           or6(
-            and87(eq109(directMessages2.fromUserId, ctx.user.id), eq109(directMessages2.toUserId, input.withUserId)),
-            and87(eq109(directMessages2.fromUserId, input.withUserId), eq109(directMessages2.toUserId, ctx.user.id))
+            and89(eq111(directMessages2.fromUserId, ctx.user.id), eq111(directMessages2.toUserId, input.withUserId)),
+            and89(eq111(directMessages2.fromUserId, input.withUserId), eq111(directMessages2.toUserId, ctx.user.id))
           )
         ).orderBy(desc52(directMessages2.createdAt)).limit(50);
         return msgs.reverse();
@@ -36814,30 +36945,30 @@ async function createContext(opts) {
 
 // server/_core/vite.ts
 import express from "express";
-import fs11 from "fs";
+import fs10 from "fs";
 import { nanoid } from "nanoid";
-import path12 from "path";
+import path11 from "path";
 import { createServer as createViteServer } from "vite";
 
 // vite.config.ts
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import path11 from "node:path";
+import path10 from "node:path";
 import { defineConfig } from "vite";
 var vite_config_default = defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
-      "@": path11.resolve(import.meta.dirname, "client", "src"),
-      "@shared": path11.resolve(import.meta.dirname, "shared"),
-      "@assets": path11.resolve(import.meta.dirname, "attached_assets")
+      "@": path10.resolve(import.meta.dirname, "client", "src"),
+      "@shared": path10.resolve(import.meta.dirname, "shared"),
+      "@assets": path10.resolve(import.meta.dirname, "attached_assets")
     }
   },
-  envDir: path11.resolve(import.meta.dirname),
-  root: path11.resolve(import.meta.dirname, "client"),
-  publicDir: path11.resolve(import.meta.dirname, "client", "public"),
+  envDir: path10.resolve(import.meta.dirname),
+  root: path10.resolve(import.meta.dirname, "client"),
+  publicDir: path10.resolve(import.meta.dirname, "client", "public"),
   build: {
-    outDir: path11.resolve(import.meta.dirname, "dist/public"),
+    outDir: path10.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
     rollupOptions: {
       output: {
@@ -36879,13 +37010,13 @@ async function setupVite(app, server) {
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
     try {
-      const clientTemplate = path12.resolve(
+      const clientTemplate = path11.resolve(
         import.meta.dirname,
         "../..",
         "client",
         "index.html"
       );
-      let template = await fs11.promises.readFile(clientTemplate, "utf-8");
+      let template = await fs10.promises.readFile(clientTemplate, "utf-8");
       template = template.replace(
         `src="/src/main.tsx"`,
         `src="/src/main.tsx?v=${nanoid()}"`
@@ -36899,15 +37030,15 @@ async function setupVite(app, server) {
   });
 }
 function serveStatic(app) {
-  const distPath = process.env.NODE_ENV === "development" ? path12.resolve(import.meta.dirname, "../..", "dist", "public") : path12.resolve(import.meta.dirname, "public");
-  if (!fs11.existsSync(distPath)) {
+  const distPath = process.env.NODE_ENV === "development" ? path11.resolve(import.meta.dirname, "../..", "dist", "public") : path11.resolve(import.meta.dirname, "public");
+  if (!fs10.existsSync(distPath)) {
     console.error(
       `Could not find the build directory: ${distPath}, make sure to build the client first`
     );
   }
   app.use(express.static(distPath));
   app.use("*", (_req, res) => {
-    res.sendFile(path12.resolve(distPath, "index.html"));
+    res.sendFile(path11.resolve(distPath, "index.html"));
   });
 }
 
@@ -36915,7 +37046,7 @@ function serveStatic(app) {
 init_db();
 init_schema();
 import crypto12 from "crypto";
-import { eq as eq94, and as and76 } from "drizzle-orm";
+import { eq as eq93, and as and75 } from "drizzle-orm";
 async function fireMetaCAPIPurchase(opts) {
   try {
     const pixelId = process.env.META_PIXEL_ID;
@@ -37005,7 +37136,7 @@ async function handleEstoqueCreated(data) {
       quantidadeDisponivel,
       dataAtualizacao: /* @__PURE__ */ new Date()
     });
-    await db.update(blingProdutos).set({ estoque: quantidade, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and76(eq94(blingProdutos.id, produtoId), eq94(blingProdutos.userId, userId)));
+    await db.update(blingProdutos).set({ estoque: quantidade, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and75(eq93(blingProdutos.id, produtoId), eq93(blingProdutos.userId, userId)));
     console.log(`[Bling Webhook] Estoque criado \u2014 produto ${produtoId} (SKU: ${produtoSku}), saldo: ${quantidade}`);
   } catch (error) {
     console.error("[Bling Webhook] Erro ao processar cria\xE7\xE3o de estoque:", error);
@@ -37028,9 +37159,9 @@ async function handleEstoqueUpdated(data) {
       return;
     }
     const userId = "system";
-    const existing = await db.select({ id: blingEstoque.id }).from(blingEstoque).where(and76(eq94(blingEstoque.produtoId, produtoId), eq94(blingEstoque.userId, userId))).limit(1);
+    const existing = await db.select({ id: blingEstoque.id }).from(blingEstoque).where(and75(eq93(blingEstoque.produtoId, produtoId), eq93(blingEstoque.userId, userId))).limit(1);
     if (existing.length > 0) {
-      await db.update(blingEstoque).set({ quantidade, quantidadeReservada, quantidadeDisponivel, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and76(eq94(blingEstoque.produtoId, produtoId), eq94(blingEstoque.userId, userId)));
+      await db.update(blingEstoque).set({ quantidade, quantidadeReservada, quantidadeDisponivel, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and75(eq93(blingEstoque.produtoId, produtoId), eq93(blingEstoque.userId, userId)));
     } else {
       await db.insert(blingEstoque).values({
         userId,
@@ -37042,7 +37173,7 @@ async function handleEstoqueUpdated(data) {
         dataAtualizacao: /* @__PURE__ */ new Date()
       });
     }
-    await db.update(blingProdutos).set({ estoque: quantidade, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and76(eq94(blingProdutos.id, produtoId), eq94(blingProdutos.userId, userId)));
+    await db.update(blingProdutos).set({ estoque: quantidade, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and75(eq93(blingProdutos.id, produtoId), eq93(blingProdutos.userId, userId)));
     console.log(`[Bling Webhook] Estoque atualizado \u2014 produto ${produtoId} (SKU: ${produtoSku}), novo saldo: ${quantidade}`);
   } catch (error) {
     console.error("[Bling Webhook] Erro ao processar atualiza\xE7\xE3o de estoque:", error);
@@ -37061,8 +37192,8 @@ async function handleEstoqueDeleted(data) {
       return;
     }
     const userId = "system";
-    await db.update(blingEstoque).set({ quantidade: 0, quantidadeReservada: 0, quantidadeDisponivel: 0, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and76(eq94(blingEstoque.produtoId, produtoId), eq94(blingEstoque.userId, userId)));
-    await db.update(blingProdutos).set({ estoque: 0, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and76(eq94(blingProdutos.id, produtoId), eq94(blingProdutos.userId, userId)));
+    await db.update(blingEstoque).set({ quantidade: 0, quantidadeReservada: 0, quantidadeDisponivel: 0, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and75(eq93(blingEstoque.produtoId, produtoId), eq93(blingEstoque.userId, userId)));
+    await db.update(blingProdutos).set({ estoque: 0, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and75(eq93(blingProdutos.id, produtoId), eq93(blingProdutos.userId, userId)));
     console.log(`[Bling Webhook] Estoque deletado \u2014 produto ${produtoId} zerado`);
   } catch (error) {
     console.error("[Bling Webhook] Erro ao processar exclus\xE3o de estoque:", error);
@@ -37105,8 +37236,8 @@ async function handlePedidoAtualizado(data) {
 
 // server/_core/deploy-webhook.ts
 import { exec } from "child_process";
-import * as fs12 from "fs";
-import * as path13 from "path";
+import * as fs11 from "fs";
+import * as path12 from "path";
 import * as crypto13 from "crypto";
 var DEPLOY_SECRET = process.env.DEPLOY_SECRET || "";
 function registerDeployWebhook(app) {
@@ -37128,9 +37259,9 @@ function registerDeployWebhook(app) {
     }
     const envVars = req.body?.envVars;
     if (envVars && typeof envVars === "object") {
-      const envPath = path13.join("/var/www/feminnita-marketing", ".env");
+      const envPath = path12.join("/var/www/feminnita-marketing", ".env");
       try {
-        let content = fs12.existsSync(envPath) ? fs12.readFileSync(envPath, "utf8") : "";
+        let content = fs11.existsSync(envPath) ? fs11.readFileSync(envPath, "utf8") : "";
         for (const [key, value] of Object.entries(envVars)) {
           if (!/^[A-Z_][A-Z0-9_]*$/.test(key)) continue;
           const line = `${key}=${value}`;
@@ -37141,14 +37272,14 @@ function registerDeployWebhook(app) {
             content = content.trimEnd() + "\n" + line + "\n";
           }
         }
-        fs12.writeFileSync(envPath, content, "utf8");
+        fs11.writeFileSync(envPath, content, "utf8");
         console.log("[Deploy] .env atualizado:", Object.keys(envVars).join(", "));
       } catch (e) {
         console.error("[Deploy] Erro ao atualizar .env:", e.message);
       }
     }
     res.json({ ok: true, msg: "Deploy iniciado" });
-    const deployCmd = "cd /var/www/feminnita-marketing && git pull && (pm2 startOrRestart ecosystem.config.cjs --env production 2>/dev/null || pm2 restart feminnita-marketing 2>/dev/null || pm2 restart all 2>/dev/null)";
+    const deployCmd = "cd /var/www/feminnita-marketing && git pull && npm run build:server && (pm2 startOrRestart ecosystem.config.cjs --env production 2>/dev/null || pm2 restart feminnita-marketing --update-env 2>/dev/null || pm2 restart all 2>/dev/null)";
     exec(deployCmd, (err, stdout, stderr) => {
       if (err) {
         console.error("[Deploy] Erro:", err.message);
@@ -37378,7 +37509,7 @@ init_websocket_notifications();
 // server/agents/sync-agent.ts
 init_db();
 init_schema();
-import { eq as eq95, and as and77, isNotNull as isNotNull2 } from "drizzle-orm";
+import { eq as eq94, and as and76, isNotNull as isNotNull2 } from "drizzle-orm";
 var BLING_SYNC_INTERVAL_MS = 60 * 60 * 1e3;
 var META_SYNC_INTERVAL_MS = 30 * 60 * 1e3;
 async function syncBlingForUser(userId, accessToken) {
@@ -37473,7 +37604,7 @@ async function runBlingSync() {
     return;
   }
   try {
-    const tokens = await db.select().from(oauthTokens).where(and77(eq95(oauthTokens.plataforma, "bling"), eq95(oauthTokens.isActive, true), isNotNull2(oauthTokens.accessToken)));
+    const tokens = await db.select().from(oauthTokens).where(and76(eq94(oauthTokens.plataforma, "bling"), eq94(oauthTokens.isActive, true), isNotNull2(oauthTokens.accessToken)));
     console.log(`[SyncAgent] Bling \u2014 ${tokens.length} usu\xE1rio(s) para sincronizar`);
     for (const token of tokens) {
       try {
@@ -37495,7 +37626,7 @@ async function runMetaSync() {
     return;
   }
   try {
-    const tokens = await db.select().from(oauthTokens).where(and77(eq95(oauthTokens.plataforma, "meta"), eq95(oauthTokens.isActive, true), isNotNull2(oauthTokens.accessToken)));
+    const tokens = await db.select().from(oauthTokens).where(and76(eq94(oauthTokens.plataforma, "meta"), eq94(oauthTokens.isActive, true), isNotNull2(oauthTokens.accessToken)));
     console.log(`[SyncAgent] Meta \u2014 ${tokens.length} usu\xE1rio(s) para sincronizar`);
     for (const token of tokens) {
       try {
@@ -37529,7 +37660,7 @@ function startSyncAgent() {
 // server/agents/token-refresh-agent.ts
 init_db();
 init_schema();
-import { eq as eq96, and as and78, lte as lte3, isNotNull as isNotNull3 } from "drizzle-orm";
+import { eq as eq95, and as and77, lte as lte3, isNotNull as isNotNull3 } from "drizzle-orm";
 var REFRESH_INTERVAL_MS = 2 * 60 * 60 * 1e3;
 var EXPIRY_THRESHOLD_MS = 24 * 60 * 60 * 1e3;
 var MAX_RETRY_FAILURES = 3;
@@ -37633,8 +37764,8 @@ async function runTokenRefresh() {
   const threshold = new Date(Date.now() + EXPIRY_THRESHOLD_MS);
   try {
     const tokens = await db.select().from(oauthTokens).where(
-      and78(
-        eq96(oauthTokens.isActive, true),
+      and77(
+        eq95(oauthTokens.isActive, true),
         isNotNull3(oauthTokens.expiresAt),
         lte3(oauthTokens.expiresAt, threshold)
       )
@@ -37648,7 +37779,7 @@ async function runTokenRefresh() {
           accessToken: result.accessToken,
           expiresAt: result.expiresAt,
           updatedAt: /* @__PURE__ */ new Date()
-        }).where(eq96(oauthTokens.id, token.id));
+        }).where(eq95(oauthTokens.id, token.id));
         failureCount.delete(token.id);
         console.log(`[TokenRefresh] Token id=${token.id} renovado com sucesso \u2014 expira em ${result.expiresAt.toISOString()}`);
       } catch (err) {
@@ -37656,7 +37787,7 @@ async function runTokenRefresh() {
         failureCount.set(token.id, failures);
         console.error(`[TokenRefresh] Token id=${token.id} falhou (tentativa ${failures}/${MAX_RETRY_FAILURES}):`, err);
         if (failures >= MAX_RETRY_FAILURES) {
-          await db.update(oauthTokens).set({ isActive: false, updatedAt: /* @__PURE__ */ new Date() }).where(eq96(oauthTokens.id, token.id));
+          await db.update(oauthTokens).set({ isActive: false, updatedAt: /* @__PURE__ */ new Date() }).where(eq95(oauthTokens.id, token.id));
           failureCount.delete(token.id);
           console.warn(`[TokenRefresh] Token id=${token.id} desativado ap\xF3s ${MAX_RETRY_FAILURES} falhas consecutivas`);
         }
@@ -37696,7 +37827,7 @@ function startTokenRefreshAgent() {
 init_db();
 init_schema();
 init_llm();
-import { eq as eq97 } from "drizzle-orm";
+import { eq as eq96 } from "drizzle-orm";
 var lastRunDate2 = null;
 async function runContentGeneration() {
   const db = await getDb();
@@ -37707,7 +37838,7 @@ async function runContentGeneration() {
   console.log("[ContentAgent] Iniciando gera\xE7\xE3o de conte\xFAdo...");
   let activeInfluencers = [];
   try {
-    activeInfluencers = await db.select().from(influencers).where(eq97(influencers.isActive, true));
+    activeInfluencers = await db.select().from(influencers).where(eq96(influencers.isActive, true));
   } catch (err) {
     console.error("[ContentAgent] Erro ao buscar influencers:", err);
     return;
@@ -37797,7 +37928,7 @@ function startContentAgent() {
 // server/agents/alert-agent.ts
 init_db();
 init_schema();
-import { eq as eq98, and as and79 } from "drizzle-orm";
+import { eq as eq97, and as and78 } from "drizzle-orm";
 var notifyNewAlert2;
 try {
   notifyNewAlert2 = (init_websocket_notifications(), __toCommonJS(websocket_notifications_exports)).notifyNewAlert;
@@ -37878,7 +38009,7 @@ async function runAlertCheck() {
   }
   let tokens = [];
   try {
-    tokens = await db.select().from(oauthTokens).where(and79(eq98(oauthTokens.plataforma, "meta"), eq98(oauthTokens.isActive, true)));
+    tokens = await db.select().from(oauthTokens).where(and78(eq97(oauthTokens.plataforma, "meta"), eq97(oauthTokens.isActive, true)));
   } catch (err) {
     console.error("[AlertAgent] Erro ao buscar tokens:", err);
     return;
@@ -37895,10 +38026,10 @@ async function runAlertCheck() {
         for (const alertDef of thresholdAlerts) {
           try {
             const existing = await db.select().from(metaCampaignAlerts).where(
-              and79(
-                eq98(metaCampaignAlerts.campaignId, campaign.id),
-                eq98(metaCampaignAlerts.alertType, alertDef.alertType),
-                eq98(metaCampaignAlerts.isResolved, false)
+              and78(
+                eq97(metaCampaignAlerts.campaignId, campaign.id),
+                eq97(metaCampaignAlerts.alertType, alertDef.alertType),
+                eq97(metaCampaignAlerts.isResolved, false)
               )
             ).limit(1);
             if (existing.length > 0) continue;
@@ -37947,7 +38078,7 @@ function startAlertAgent() {
 // server/agents/performance-agent.ts
 init_db();
 init_schema();
-import { eq as eq99 } from "drizzle-orm";
+import { eq as eq98 } from "drizzle-orm";
 var CHECK_INTERVAL_MS = 5 * 60 * 1e3;
 var RUN_HOUR2 = 0;
 var lastRunDate3 = null;
@@ -37998,7 +38129,7 @@ async function runPerformanceCollection() {
     return;
   }
   try {
-    const activeInfluencers = await db.select().from(influencers).where(eq99(influencers.isActive, true));
+    const activeInfluencers = await db.select().from(influencers).where(eq98(influencers.isActive, true));
     console.log(`[PerformanceAgent] ${activeInfluencers.length} influencer(s) ativo(s)`);
     for (const influencer of activeInfluencers) {
       try {
@@ -38045,7 +38176,7 @@ function startPerformanceAgent() {
 // server/agents/publication-worker.ts
 init_db();
 init_schema();
-import { eq as eq100, and as and81, or as or5, lte as lte4 } from "drizzle-orm";
+import { eq as eq99, and as and80, or as or5, lte as lte4 } from "drizzle-orm";
 var MAX_JOBS_PER_CYCLE = 5;
 async function publishToInstagram2(instagramId, accessToken, caption, mediaUrls) {
   if (mediaUrls.length === 0) {
@@ -38104,9 +38235,9 @@ async function processJobs() {
   try {
     jobs = await db.select().from(publicationQueueJobs).where(
       or5(
-        eq100(publicationQueueJobs.status, "ready"),
-        and81(
-          eq100(publicationQueueJobs.status, "waiting"),
+        eq99(publicationQueueJobs.status, "ready"),
+        and80(
+          eq99(publicationQueueJobs.status, "waiting"),
           lte4(publicationQueueJobs.nextRetryTime, now)
         )
       )
@@ -38119,10 +38250,10 @@ async function processJobs() {
   console.log(`[PublicationWorker] Processando ${jobs.length} job(s)...`);
   for (const job of jobs) {
     try {
-      await db.update(publicationQueueJobs).set({ status: "processing" }).where(eq100(publicationQueueJobs.id, job.id));
-      const [post] = await db.select().from(influencerPosts).where(eq100(influencerPosts.id, job.postId)).limit(1);
+      await db.update(publicationQueueJobs).set({ status: "processing" }).where(eq99(publicationQueueJobs.id, job.id));
+      const [post] = await db.select().from(influencerPosts).where(eq99(influencerPosts.id, job.postId)).limit(1);
       if (!post) throw new Error(`Post id=${job.postId} n\xE3o encontrado.`);
-      const [account] = await db.select().from(instagramAccounts).where(eq100(instagramAccounts.id, job.accountId)).limit(1);
+      const [account] = await db.select().from(instagramAccounts).where(eq99(instagramAccounts.id, job.accountId)).limit(1);
       if (!account) throw new Error(`InstagramAccount id=${job.accountId} n\xE3o encontrada.`);
       const caption = post.caption ?? post.content ?? "";
       const mediaUrls = Array.isArray(post.mediaUrls) ? post.mediaUrls : [];
@@ -38132,19 +38263,19 @@ async function processJobs() {
         caption,
         mediaUrls
       );
-      await db.update(publicationQueueJobs).set({ status: "done" }).where(eq100(publicationQueueJobs.id, job.id));
-      await db.update(influencerPosts).set({ status: "published", publishedAt: now, postId: igPostId }).where(eq100(influencerPosts.id, job.postId));
+      await db.update(publicationQueueJobs).set({ status: "done" }).where(eq99(publicationQueueJobs.id, job.id));
+      await db.update(influencerPosts).set({ status: "published", publishedAt: now, postId: igPostId }).where(eq99(influencerPosts.id, job.postId));
       console.log(`[PublicationWorker] Job ${job.id} publicado. IG postId=${igPostId}`);
     } catch (err) {
       console.error(`[PublicationWorker] Erro no job ${job.id}:`, err);
       const newRetryCount = job.retryCount + 1;
       if (newRetryCount >= job.maxRetries) {
-        await db.update(publicationQueueJobs).set({ status: "failed", retryCount: newRetryCount, lastError: String(err) }).where(eq100(publicationQueueJobs.id, job.id));
+        await db.update(publicationQueueJobs).set({ status: "failed", retryCount: newRetryCount, lastError: String(err) }).where(eq99(publicationQueueJobs.id, job.id));
         console.log(`[PublicationWorker] Job ${job.id} marcado como failed ap\xF3s ${newRetryCount} tentativas.`);
       } else {
         const backoffMs = Math.pow(newRetryCount, 2) * 5 * 60 * 1e3;
         const nextRetryTime = new Date(Date.now() + backoffMs);
-        await db.update(publicationQueueJobs).set({ status: "waiting", retryCount: newRetryCount, lastError: String(err), nextRetryTime }).where(eq100(publicationQueueJobs.id, job.id));
+        await db.update(publicationQueueJobs).set({ status: "waiting", retryCount: newRetryCount, lastError: String(err), nextRetryTime }).where(eq99(publicationQueueJobs.id, job.id));
         console.log(`[PublicationWorker] Job ${job.id} reagendado para ${nextRetryTime.toISOString()} (tentativa ${newRetryCount}).`);
       }
     }
@@ -38165,7 +38296,7 @@ function startPublicationWorker() {
 init_db();
 init_schema();
 init_llm();
-import { eq as eq101 } from "drizzle-orm";
+import { eq as eq100 } from "drizzle-orm";
 var lastRunDate4 = null;
 var RUN_HOUR3 = 7;
 async function runMarketResearchLLM(today) {
@@ -38299,7 +38430,7 @@ async function resolveAdminUserId() {
   try {
     const db = await getDb();
     if (!db) return 1;
-    const adminUsers = await db.select({ id: users.id }).from(users).where(eq101(users.role, "admin")).limit(1);
+    const adminUsers = await db.select({ id: users.id }).from(users).where(eq100(users.role, "admin")).limit(1);
     return adminUsers[0]?.id ?? 1;
   } catch {
     return 1;
@@ -38403,7 +38534,7 @@ function startMarketResearchAgent() {
 init_db();
 init_schema();
 init_llm();
-import { eq as eq102, desc as desc49 } from "drizzle-orm";
+import { eq as eq101, desc as desc49 } from "drizzle-orm";
 var CHECK_INTERVAL_MS2 = 30 * 60 * 1e3;
 async function processPendingBriefs() {
   const db = await getDb();
@@ -38414,7 +38545,7 @@ async function processPendingBriefs() {
   console.log("[Copywriter] Buscando briefs pendentes...");
   let pendingBriefs = [];
   try {
-    pendingBriefs = await db.select().from(contentBriefs).where(eq102(contentBriefs.status, "pending")).limit(10);
+    pendingBriefs = await db.select().from(contentBriefs).where(eq101(contentBriefs.status, "pending")).limit(10);
   } catch (err) {
     console.error("[Copywriter] Erro ao buscar briefs:", err);
     return;
@@ -38436,7 +38567,7 @@ async function processPendingBriefs() {
       let influencer = null;
       if (brief.influencerId) {
         try {
-          const rows = await db.select().from(influencers).where(eq102(influencers.id, brief.influencerId)).limit(1);
+          const rows = await db.select().from(influencers).where(eq101(influencers.id, brief.influencerId)).limit(1);
           influencer = rows[0] ?? null;
         } catch (err) {
           console.error(`[Copywriter] Erro ao buscar influencer id=${brief.influencerId}:`, err);
@@ -38596,7 +38727,7 @@ async function processPendingBriefs() {
         const raw = response.choices[0].message.content;
         generatedContent = JSON.parse(typeof raw === "string" ? raw : JSON.stringify(raw));
       }
-      await db.update(contentBriefs).set({ generatedContent, status: "generated" }).where(eq102(contentBriefs.id, brief.id));
+      await db.update(contentBriefs).set({ generatedContent, status: "generated" }).where(eq101(contentBriefs.id, brief.id));
       console.log(`[Copywriter] Brief id=${brief.id} (${brief.briefType}) gerado para ${influencerName}.`);
     } catch (err) {
       console.error(`[Copywriter] Erro ao processar brief id=${brief.id}:`, err);
@@ -38621,7 +38752,7 @@ function startCopywriterAgent() {
 init_db();
 init_schema();
 init_llm();
-import { eq as eq103, desc as desc50 } from "drizzle-orm";
+import { eq as eq102, desc as desc50 } from "drizzle-orm";
 var CHECK_INTERVAL_MS3 = 60 * 60 * 1e3;
 var RUN_DAY = 1;
 var RUN_HOUR4 = 8;
@@ -38661,7 +38792,7 @@ async function generateWeeklyContentPlan() {
   }
   let activeInfluencers = [];
   try {
-    activeInfluencers = await db.select().from(influencers).where(eq103(influencers.isActive, true));
+    activeInfluencers = await db.select().from(influencers).where(eq102(influencers.isActive, true));
   } catch (err) {
     console.error("[CreativeTeam] Erro ao buscar influencers:", err);
     return;
@@ -38782,7 +38913,7 @@ function startCreativeTeamAgent() {
 init_db();
 init_schema();
 init_llm();
-import { eq as eq104, and as and83, inArray as inArray9 } from "drizzle-orm";
+import { eq as eq103, and as and82, inArray as inArray9 } from "drizzle-orm";
 var CHECK_INTERVAL_MS4 = 5 * 60 * 1e3;
 async function processNewCollections() {
   const db = await getDb();
@@ -38794,9 +38925,9 @@ async function processNewCollections() {
   let pendingCollections = [];
   try {
     pendingCollections = await db.select().from(productCollections).where(
-      and83(
-        eq104(productCollections.status, "ativo"),
-        eq104(productCollections.briefsGenerated, false)
+      and82(
+        eq103(productCollections.status, "ativo"),
+        eq103(productCollections.briefsGenerated, false)
       )
     );
   } catch (err) {
@@ -38848,7 +38979,7 @@ async function processNewCollections() {
       }
       if (collectionAnalysis) {
         try {
-          await db.update(productCollections).set({ contentPlan: { llmAnalysis: collectionAnalysis } }).where(eq104(productCollections.id, collection.id));
+          await db.update(productCollections).set({ contentPlan: { llmAnalysis: collectionAnalysis } }).where(eq103(productCollections.id, collection.id));
         } catch (err) {
           console.error(`[LaunchAgent] Erro ao salvar content_plan id=${collection.id}:`, err);
         }
@@ -38897,7 +39028,7 @@ async function processNewCollections() {
           );
         }
       }
-      await db.update(productCollections).set({ briefsGenerated: true }).where(eq104(productCollections.id, collection.id));
+      await db.update(productCollections).set({ briefsGenerated: true }).where(eq103(productCollections.id, collection.id));
       console.log(
         `[LaunchAgent] Cole\xE7\xE3o id=${collection.id} processada \u2014 ${briefsInserted} brief(s) criados.`
       );
@@ -38927,7 +39058,7 @@ init_llm();
 init_agentMemory();
 init_db();
 init_schema();
-import { eq as eq105, desc as desc51 } from "drizzle-orm";
+import { eq as eq104, desc as desc51 } from "drizzle-orm";
 var INFLUENCER_PROFILES2 = {
   carol: {
     agentName: "carol",
@@ -39010,7 +39141,7 @@ async function loadPerformanceHistory(influencerDbId) {
   try {
     const db = await getDb();
     if (!db) return "Sem hist\xF3rico de performance dispon\xEDvel.";
-    const recentPosts = await db.select().from(influencerPosts).where(eq105(influencerPosts.influencerId, influencerDbId)).orderBy(desc51(influencerPosts.publishedAt)).limit(10);
+    const recentPosts = await db.select().from(influencerPosts).where(eq104(influencerPosts.influencerId, influencerDbId)).orderBy(desc51(influencerPosts.publishedAt)).limit(10);
     if (recentPosts.length === 0) return "Primeiros posts ainda ser\xE3o criados \u2014 sem hist\xF3rico.";
     const summary = recentPosts.map((p) => {
       const metrics = p.engagementMetrics;
@@ -39163,7 +39294,7 @@ async function runInfluencerAgent(agentName) {
   try {
     const db = await getDb();
     if (!db) throw new Error("DB indispon\xEDvel");
-    const dbRecord = await db.select({ id: influencers.id }).from(influencers).where(eq105(influencers.instagramHandle, profile.instagramHandle)).limit(1);
+    const dbRecord = await db.select({ id: influencers.id }).from(influencers).where(eq104(influencers.instagramHandle, profile.instagramHandle)).limit(1);
     const influencerDbId = dbRecord[0]?.id ?? 0;
     const [memoryContext, performanceHistory, trendData] = await Promise.all([
       buildMemoryContext(agentName),
@@ -39203,8 +39334,8 @@ async function runAllInfluencerAgents() {
 // server/agents/ml-actions-executor.ts
 init_db();
 init_schema();
-init_ml_ads_api();
-import { eq as eq106, and as and84 } from "drizzle-orm";
+init_ml_ads_browser_agent();
+import { eq as eq105, and as and83 } from "drizzle-orm";
 var INTERVAL_MS = 5 * 60 * 1e3;
 function startMLActionsExecutor() {
   let running = false;
@@ -39214,38 +39345,56 @@ function startMLActionsExecutor() {
     try {
       const db = await getDb();
       if (!db) return;
-      const pending = await db.select().from(agentActions).where(and84(eq106(agentActions.agentName, "gabi"), eq106(agentActions.status, "pending")));
+      const { or: or6 } = await import("drizzle-orm");
+      const pending = await db.select().from(agentActions).where(and83(
+        eq105(agentActions.agentName, "gabi"),
+        or6(
+          eq105(agentActions.status, "pending"),
+          eq105(agentActions.status, "approved")
+        )
+        // Filtra apenas ações de ML Ads (não scrape, que o playwright-agent Python já cuida)
+        // pause_ads_campaign | activate_ads_campaign | update_ads_budget
+      ));
       if (pending.length === 0) return;
-      console.log(`[MLExecutor] ${pending.length} a\xE7\xE3o(\xF5es) pendente(s) \u2014 executando via API REST`);
+      console.log(`[MLExecutor] ${pending.length} a\xE7\xE3o(\xF5es) pendente(s) \u2014 abrindo browser`);
       for (const action of pending) {
-        await db.update(agentActions).set({ status: "executing" }).where(eq106(agentActions.id, action.id));
-        const payload = action.payload;
-        const account = String(payload?.account || "feminnita");
-        const actionType = String(payload?.action || action.actionType || "");
-        const campaignId = String(payload?.campaignId || "");
-        const campaignName = String(payload?.campaignName || "");
-        const budget = Number(payload?.budget || 0);
-        let log = "";
+        await db.update(agentActions).set({ status: "executing" }).where(eq105(agentActions.id, action.id));
+      }
+      const byAccount = /* @__PURE__ */ new Map();
+      for (const action of pending) {
+        const account = String(action.payload?.account || "feminnita");
+        if (!byAccount.has(account)) byAccount.set(account, []);
+        byAccount.get(account).push(action);
+      }
+      for (const [account, accountActions] of byAccount) {
+        const batchActions = accountActions.map((a) => ({
+          id: a.id,
+          actionType: String(a.payload?.action || a.actionType || ""),
+          campaignId: String(a.payload?.campaignId || ""),
+          campaignName: String(a.payload?.campaignName || ""),
+          budget: Number(a.payload?.budget || 0)
+        }));
+        let results;
         try {
-          switch (actionType) {
-            case "pause_ads_campaign":
-              log = await apiPauseMLCampaign(account, campaignId, campaignName);
-              break;
-            case "activate_ads_campaign":
-              log = await apiActivateMLCampaign(account, campaignId, campaignName);
-              break;
-            case "update_ads_budget":
-              log = await apiUpdateMLBudget(account, campaignId, budget, campaignName);
-              break;
-            default:
-              log = `Tipo n\xE3o suportado: ${actionType}`;
-          }
-          console.log(`[MLExecutor] \u2705 id=${action.id}: ${log}`);
-          await db.update(agentActions).set({ status: "done", executedAt: /* @__PURE__ */ new Date(), executionLog: log }).where(eq106(agentActions.id, action.id));
+          results = await runActionsInSession(account, batchActions);
         } catch (e) {
-          log = `ERRO: ${e.message}`;
-          console.error(`[MLExecutor] \u274C id=${action.id}: ${log}`);
-          await db.update(agentActions).set({ status: "pending", executionLog: log }).where(eq106(agentActions.id, action.id));
+          console.error(`[MLExecutor] Browser falhou para ${account}:`, e.message);
+          for (const action of accountActions) {
+            await db.update(agentActions).set({ status: "pending", executionLog: `ERRO browser: ${e.message}` }).where(eq105(agentActions.id, action.id));
+          }
+          continue;
+        }
+        for (const action of accountActions) {
+          const log = results[action.id] ?? "Sem resultado";
+          const isNotFound = log.includes("n\xE3o encontrada") || log.includes("n\xE3o encontrado");
+          const isError = log.startsWith("ERRO:") || log.startsWith("\u274C") || isNotFound || log.includes("Erro ao") || log.includes("ML API") || log.includes("n\xE3o abriu") || log.includes("Timeout") || log.includes("timeout");
+          const nextStatus = isError ? isNotFound ? "cancelled" : "pending" : "done";
+          console.log(`[MLExecutor] ${isError ? "\u274C" : "\u2705"} id=${action.id}: ${log}`);
+          await db.update(agentActions).set({
+            status: nextStatus,
+            executedAt: isError ? void 0 : /* @__PURE__ */ new Date(),
+            executionLog: log
+          }).where(eq105(agentActions.id, action.id));
         }
       }
       console.log(`[MLExecutor] Ciclo conclu\xEDdo`);
@@ -39257,12 +39406,693 @@ function startMLActionsExecutor() {
   }
   setTimeout(run, 15e3);
   const interval = setInterval(run, INTERVAL_MS);
-  console.log(`[MLExecutor] Iniciado \u2014 ciclos a cada ${INTERVAL_MS / 6e4} min (API REST \u2014 sem browser)`);
+  console.log(`[MLExecutor] Iniciado \u2014 ciclos a cada ${INTERVAL_MS / 6e4} min (Playwright browser)`);
   return () => clearInterval(interval);
 }
 
+// server/agents/shopee-actions-executor.ts
+init_db();
+init_schema();
+import { eq as eq106, and as and84 } from "drizzle-orm";
+
+// server/agents/shopee-ads-browser-agent.ts
+import { chromium as chromium2 } from "playwright";
+import fs12 from "fs";
+import path13 from "path";
+var SESSIONS_DIR2 = path13.join(process.cwd(), ".shopee-sessions");
+var SELLER_CENTER_URL2 = "https://seller.shopee.com.br/portal/ads-management/";
+var LOGIN_URL2 = "https://seller.shopee.com.br/";
+if (!fs12.existsSync(SESSIONS_DIR2)) fs12.mkdirSync(SESSIONS_DIR2, { recursive: true });
+var runningInstances2 = /* @__PURE__ */ new Map();
+function withMutex2(key, fn) {
+  const existing = runningInstances2.get(key);
+  if (existing) {
+    console.log(`[ShopeeBrowser] Inst\xE2ncia j\xE1 em execu\xE7\xE3o para ${key} \u2014 aguardando...`);
+    return existing.then(() => fn());
+  }
+  const promise = fn().finally(() => runningInstances2.delete(key));
+  runningInstances2.set(key, promise);
+  return promise;
+}
+function sessionFile2(account) {
+  return path13.join(SESSIONS_DIR2, `shopee-session-${account}.json`);
+}
+async function saveSession2(context, account) {
+  const cookies = await context.cookies();
+  fs12.writeFileSync(sessionFile2(account), JSON.stringify(cookies, null, 2));
+}
+async function loadSession2(context, account) {
+  const file = sessionFile2(account);
+  if (!fs12.existsSync(file)) return false;
+  try {
+    const cookies = JSON.parse(fs12.readFileSync(file, "utf8"));
+    await context.addCookies(cookies);
+    return true;
+  } catch {
+    return false;
+  }
+}
+async function loginShopee(page, account) {
+  const email = account === "fnt" ? process.env.SHOPEE_SELLER_EMAIL_2 : process.env.SHOPEE_SELLER_EMAIL;
+  const password = account === "fnt" ? process.env.SHOPEE_SELLER_PASSWORD_2 : process.env.SHOPEE_SELLER_PASSWORD;
+  if (!email || !password) {
+    console.error(`[ShopeeBrowser] Credenciais n\xE3o configuradas: SHOPEE_SELLER_EMAIL / SHOPEE_SELLER_PASSWORD`);
+    return false;
+  }
+  try {
+    await page.goto(LOGIN_URL2, { waitUntil: "domcontentloaded", timeout: 3e4 });
+    await page.waitForTimeout(2e3);
+    const loginBtn = page.locator('a[href*="login"], button:has-text("Entrar"), button:has-text("Login")').first();
+    if (await loginBtn.isVisible().catch(() => false)) {
+      await loginBtn.click();
+      await page.waitForTimeout(1500);
+    }
+    const emailInput = page.locator('input[type="text"], input[name="loginKey"], input[placeholder*="mail"], input[placeholder*="elefone"]').first();
+    await emailInput.waitFor({ state: "visible", timeout: 15e3 });
+    await emailInput.fill(email);
+    await page.waitForTimeout(500);
+    const nextBtn = page.locator('button:has-text("Pr\xF3ximo"), button:has-text("Next"), button[type="submit"]').first();
+    if (await nextBtn.isVisible().catch(() => false)) {
+      await nextBtn.click();
+      await page.waitForTimeout(1500);
+    }
+    const passInput = page.locator('input[type="password"]').first();
+    await passInput.waitFor({ state: "visible", timeout: 15e3 });
+    await passInput.fill(password);
+    await page.waitForTimeout(500);
+    await page.locator('button[type="submit"], button:has-text("Entrar"), button:has-text("Login")').first().click();
+    await page.waitForURL(/seller\.shopee\.com\.br\/(portal|account|home)/, { timeout: 25e3 });
+    console.log(`[ShopeeBrowser] Login OK \u2014 ${account}`);
+    return true;
+  } catch (e) {
+    console.error(`[ShopeeBrowser] Falha no login (${account}):`, e.message);
+    return false;
+  }
+}
+async function ensureLoggedIn2(page, context, account) {
+  try {
+    await page.goto("https://seller.shopee.com.br/portal/dashboard", { waitUntil: "domcontentloaded", timeout: 2e4 });
+    const url = page.url();
+    if (!url.includes("login") && url.includes("seller.shopee.com.br/portal")) return true;
+  } catch {
+  }
+  const loaded = await loadSession2(context, account);
+  if (loaded) {
+    await page.goto("https://seller.shopee.com.br/portal/dashboard", { waitUntil: "domcontentloaded", timeout: 2e4 }).catch(() => {
+    });
+    const url = page.url();
+    if (!url.includes("login") && url.includes("seller.shopee.com.br/portal")) return true;
+  }
+  const ok = await loginShopee(page, account);
+  if (ok) await saveSession2(context, account);
+  return ok;
+}
+async function withBrowser2(account, fn) {
+  const browser = await chromium2.launch({
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
+  });
+  const proxyHost = process.env.WEBSHARE_HOST;
+  const proxyPort = process.env.WEBSHARE_PORT;
+  const proxyUser = process.env.WEBSHARE_USER;
+  const proxyPass = process.env.WEBSHARE_PASS;
+  const proxyConfig = proxyHost && proxyPort ? {
+    server: `http://${proxyHost}:${proxyPort}`,
+    username: proxyUser,
+    password: proxyPass
+  } : void 0;
+  const context = await browser.newContext({
+    userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
+    locale: "pt-BR",
+    proxy: proxyConfig
+  });
+  const page = await context.newPage();
+  try {
+    const loggedIn = await ensureLoggedIn2(page, context, account);
+    if (!loggedIn) throw new Error("N\xE3o foi poss\xEDvel fazer login no Shopee Seller Center");
+    return await fn(page, context);
+  } finally {
+    await browser.close();
+  }
+}
+async function navigateToAds(page) {
+  await page.goto(SELLER_CENTER_URL2, { waitUntil: "networkidle", timeout: 4e4 });
+  await page.waitForTimeout(3e3);
+  await page.locator('button:has-text("Entendido"), button:has-text("OK"), button:has-text("Fechar"), [aria-label="Close"]').first().click().catch(() => {
+  });
+  await page.waitForTimeout(1e3);
+}
+async function findCampaignRow2(page, campaignId) {
+  const selectors = [
+    `[data-id="${campaignId}"]`,
+    `tr:has-text("${campaignId}")`,
+    `[data-campaign-id="${campaignId}"]`,
+    `[id*="${campaignId}"]`
+  ];
+  for (const sel of selectors) {
+    try {
+      const el = page.locator(sel).first();
+      if (await el.isVisible({ timeout: 3e3 })) return true;
+    } catch {
+    }
+  }
+  return false;
+}
+async function pauseShopeeCampaign(campaignId, account = "feminnita") {
+  return withMutex2(`${account}-pause-${campaignId}`, () => withBrowser2(account, async (page) => {
+    await navigateToAds(page);
+    const found = await findCampaignRow2(page, campaignId);
+    if (!found) {
+      return `Campanha ID ${campaignId} n\xE3o encontrada na p\xE1gina de Ads. Verifique se est\xE1 ativa.`;
+    }
+    const pauseSelectors = [
+      `[data-id="${campaignId}"] [role="switch"]`,
+      `tr:has-text("${campaignId}") [role="switch"]`,
+      `[data-id="${campaignId}"] button[aria-label*="ause"]`,
+      `tr:has-text("${campaignId}") button[aria-label*="ause"]`,
+      `[data-id="${campaignId}"] button[aria-label*="ausar"]`
+    ];
+    for (const sel of pauseSelectors) {
+      try {
+        const btn = page.locator(sel).first();
+        if (await btn.isVisible({ timeout: 3e3 })) {
+          const checked = await btn.getAttribute("aria-checked") || await btn.getAttribute("data-checked") || "";
+          if (checked === "false" || checked === "") {
+            return `Campanha ID ${campaignId} j\xE1 est\xE1 pausada.`;
+          }
+          await btn.click();
+          await page.waitForTimeout(2e3);
+          return `Campanha ID ${campaignId} pausada com sucesso via Seller Center.`;
+        }
+      } catch {
+      }
+    }
+    return `Bot\xE3o de pausa n\xE3o encontrado para campanha ${campaignId}. Acesse o Seller Center manualmente.`;
+  }));
+}
+async function activateShopeeCampaign(campaignId, account = "feminnita") {
+  return withMutex2(`${account}-activate-${campaignId}`, () => withBrowser2(account, async (page) => {
+    await navigateToAds(page);
+    const found = await findCampaignRow2(page, campaignId);
+    if (!found) {
+      return `Campanha ID ${campaignId} n\xE3o encontrada na p\xE1gina de Ads.`;
+    }
+    const activateSelectors = [
+      `[data-id="${campaignId}"] [role="switch"]`,
+      `tr:has-text("${campaignId}") [role="switch"]`,
+      `[data-id="${campaignId}"] button[aria-label*="tivar"]`,
+      `tr:has-text("${campaignId}") button[aria-label*="tivar"]`
+    ];
+    for (const sel of activateSelectors) {
+      try {
+        const btn = page.locator(sel).first();
+        if (await btn.isVisible({ timeout: 3e3 })) {
+          const checked = await btn.getAttribute("aria-checked") || "";
+          if (checked === "true") {
+            return `Campanha ID ${campaignId} j\xE1 est\xE1 ativa.`;
+          }
+          await btn.click();
+          await page.waitForTimeout(2e3);
+          return `Campanha ID ${campaignId} ativada com sucesso via Seller Center.`;
+        }
+      } catch {
+      }
+    }
+    return `Bot\xE3o de ativa\xE7\xE3o n\xE3o encontrado para campanha ${campaignId}. Acesse o Seller Center manualmente.`;
+  }));
+}
+async function updateShopeeBudget(campaignId, newBudget, account = "feminnita") {
+  return withMutex2(`${account}-budget-${campaignId}`, () => withBrowser2(account, async (page) => {
+    await navigateToAds(page);
+    const found = await findCampaignRow2(page, campaignId);
+    if (!found) {
+      return `Campanha ID ${campaignId} n\xE3o encontrada na p\xE1gina de Ads.`;
+    }
+    const editSelectors = [
+      `[data-id="${campaignId}"] button[aria-label*="ditar"]`,
+      `tr:has-text("${campaignId}") button[aria-label*="ditar"]`,
+      `[data-id="${campaignId}"] a[href*="edit"]`,
+      `tr:has-text("${campaignId}") a[href*="edit"]`,
+      `[data-id="${campaignId}"] [data-testid*="edit"]`
+    ];
+    let edited = false;
+    for (const sel of editSelectors) {
+      try {
+        const btn = page.locator(sel).first();
+        if (await btn.isVisible({ timeout: 3e3 })) {
+          await btn.click();
+          edited = true;
+          break;
+        }
+      } catch {
+      }
+    }
+    if (!edited) {
+      return `Bot\xE3o de edi\xE7\xE3o n\xE3o encontrado para campanha ${campaignId}. Acesse o Seller Center manualmente.`;
+    }
+    await page.waitForTimeout(2e3);
+    const budgetInput = page.locator('input[name*="budget"], input[placeholder*="or\xE7amento"], input[placeholder*="Budget"], input[type="number"]').first();
+    if (!await budgetInput.isVisible({ timeout: 8e3 }).catch(() => false)) {
+      return `Campo de or\xE7amento n\xE3o encontrado na tela de edi\xE7\xE3o da campanha ${campaignId}.`;
+    }
+    await budgetInput.fill(String(newBudget));
+    await page.waitForTimeout(500);
+    const saveBtn = page.locator('button:has-text("Salvar"), button:has-text("Confirmar"), button[type="submit"]').first();
+    if (await saveBtn.isVisible({ timeout: 5e3 }).catch(() => false)) {
+      await saveBtn.click();
+      await page.waitForTimeout(2e3);
+      return `Or\xE7amento da campanha ${campaignId} atualizado para R$${newBudget}/dia via Seller Center.`;
+    }
+    return `Budget preenchido mas bot\xE3o de salvar n\xE3o encontrado para campanha ${campaignId}.`;
+  }));
+}
+async function updateShopeeRoas(campaignId, targetRoas, account = "feminnita") {
+  return withMutex2(`${account}-roas-${campaignId}`, () => withBrowser2(account, async (page) => {
+    await navigateToAds(page);
+    const found = await findCampaignRow2(page, campaignId);
+    if (!found) return `Campanha ID ${campaignId} n\xE3o encontrada.`;
+    const editSelectors = [
+      `[data-id="${campaignId}"] button[aria-label*="ditar"]`,
+      `tr:has-text("${campaignId}") button[aria-label*="ditar"]`,
+      `[data-id="${campaignId}"] a[href*="edit"]`
+    ];
+    let edited = false;
+    for (const sel of editSelectors) {
+      try {
+        const btn = page.locator(sel).first();
+        if (await btn.isVisible({ timeout: 3e3 })) {
+          await btn.click();
+          edited = true;
+          break;
+        }
+      } catch {
+      }
+    }
+    if (!edited) return `Bot\xE3o de edi\xE7\xE3o n\xE3o encontrado para campanha ${campaignId}.`;
+    await page.waitForTimeout(2e3);
+    const roasInput = page.locator('input[name*="roas"], input[placeholder*="ROAS"], input[placeholder*="roas"]').first();
+    if (!await roasInput.isVisible({ timeout: 8e3 }).catch(() => false)) {
+      return `Campo de ROAS n\xE3o encontrado para campanha ${campaignId}.`;
+    }
+    await roasInput.fill(String(targetRoas));
+    await page.waitForTimeout(500);
+    const saveBtn = page.locator('button:has-text("Salvar"), button:has-text("Confirmar"), button[type="submit"]').first();
+    if (await saveBtn.isVisible({ timeout: 5e3 }).catch(() => false)) {
+      await saveBtn.click();
+      await page.waitForTimeout(2e3);
+      return `ROAS alvo da campanha ${campaignId} atualizado para ${targetRoas}x via Seller Center.`;
+    }
+    return `ROAS preenchido mas bot\xE3o de salvar n\xE3o encontrado para campanha ${campaignId}.`;
+  }));
+}
+
+// server/agents/shopee-actions-executor.ts
+var INTERVAL_MS2 = 5 * 60 * 1e3;
+function startShopeeActionsExecutor() {
+  let running = false;
+  async function run() {
+    if (running) return;
+    running = true;
+    try {
+      const db = await getDb();
+      if (!db) return;
+      const pending = await db.select().from(agentActions).where(and84(eq106(agentActions.agentName, "luiza"), eq106(agentActions.status, "pending")));
+      if (pending.length === 0) return;
+      console.log(`[ShopeeExecutor] ${pending.length} a\xE7\xE3o(\xF5es) pendente(s) \u2014 executando via browser`);
+      for (const action of pending) {
+        await db.update(agentActions).set({ status: "executing" }).where(eq106(agentActions.id, action.id));
+        const payload = action.payload;
+        const acc = payload?.account || "feminnita";
+        const campaignId = String(payload?.campaignId || "");
+        const proposed = String(payload?.proposedValue ?? "");
+        let log = "";
+        try {
+          switch (action.actionType) {
+            case "shopee_pause_campaign":
+              log = await pauseShopeeCampaign(campaignId, acc);
+              break;
+            case "shopee_activate_campaign":
+              log = await activateShopeeCampaign(campaignId, acc);
+              break;
+            case "shopee_update_budget":
+              log = await updateShopeeBudget(campaignId, Number(proposed), acc);
+              break;
+            case "shopee_update_roas":
+              log = await updateShopeeRoas(campaignId, Number(proposed), acc);
+              break;
+            default:
+              log = `Tipo n\xE3o suportado: ${action.actionType}`;
+          }
+          console.log(`[ShopeeExecutor] \u2705 id=${action.id}: ${log}`);
+          await db.update(agentActions).set({ status: "done", executedAt: /* @__PURE__ */ new Date(), executionLog: log }).where(eq106(agentActions.id, action.id));
+        } catch (e) {
+          log = `ERRO: ${e.message}`;
+          console.error(`[ShopeeExecutor] \u274C id=${action.id}: ${log}`);
+          await db.update(agentActions).set({ status: "pending", executionLog: log }).where(eq106(agentActions.id, action.id));
+        }
+      }
+      console.log(`[ShopeeExecutor] Ciclo conclu\xEDdo`);
+    } catch (err) {
+      console.error(`[ShopeeExecutor] Erro no ciclo:`, err);
+    } finally {
+      running = false;
+    }
+  }
+  setTimeout(run, 2e4);
+  const interval = setInterval(run, INTERVAL_MS2);
+  console.log(`[ShopeeExecutor] Iniciado \u2014 ciclos a cada ${INTERVAL_MS2 / 6e4} min (Playwright browser)`);
+  return () => clearInterval(interval);
+}
+
+// server/agents/tray-actions-executor.ts
+init_db();
+init_schema();
+import { eq as eq107, and as and85 } from "drizzle-orm";
+
+// server/agents/tray-browser-agent.ts
+import { chromium as chromium3 } from "playwright";
+import fs13 from "fs";
+import path14 from "path";
+var SESSIONS_DIR3 = path14.join(process.cwd(), ".tray-sessions");
+var TRAY_STORE_URL2 = process.env.TRAY_STORE_URL || "https://feminnita.com.br";
+var ADMIN_URL = `${TRAY_STORE_URL2}/admin`;
+if (!fs13.existsSync(SESSIONS_DIR3)) fs13.mkdirSync(SESSIONS_DIR3, { recursive: true });
+var runningInstance = null;
+function withMutex3(fn) {
+  if (runningInstance) {
+    console.log(`[TrayBrowser] Inst\xE2ncia j\xE1 em execu\xE7\xE3o \u2014 aguardando...`);
+    return runningInstance.then(() => fn());
+  }
+  const promise = fn().finally(() => {
+    runningInstance = null;
+  });
+  runningInstance = promise;
+  return promise;
+}
+var SESSION_FILE = path14.join(SESSIONS_DIR3, "tray-session.json");
+async function saveSession3(context) {
+  const cookies = await context.cookies();
+  fs13.writeFileSync(SESSION_FILE, JSON.stringify(cookies, null, 2));
+}
+async function loadSession3(context) {
+  if (!fs13.existsSync(SESSION_FILE)) return false;
+  try {
+    const cookies = JSON.parse(fs13.readFileSync(SESSION_FILE, "utf8"));
+    await context.addCookies(cookies);
+    return true;
+  } catch {
+    return false;
+  }
+}
+async function loginTray(page) {
+  const email = process.env.TRAY_ADMIN_EMAIL || "";
+  const password = process.env.TRAY_ADMIN_PASSWORD || "";
+  if (!email || !password) {
+    console.error("[TrayBrowser] TRAY_ADMIN_EMAIL / TRAY_ADMIN_PASSWORD n\xE3o configurados");
+    return false;
+  }
+  console.log("[TrayBrowser] Fazendo login...");
+  await page.goto(`${ADMIN_URL}/login`, { waitUntil: "networkidle" });
+  const emailInput = page.locator("input[name='email'], input[type='email']").first();
+  await emailInput.fill(email, { timeout: 1e4 });
+  const passInput = page.locator("input[name='password'], input[type='password']").first();
+  await passInput.fill(password, { timeout: 5e3 });
+  await page.locator("button[type='submit'], button:has-text('Entrar')").first().click();
+  await page.waitForLoadState("networkidle", { timeout: 2e4 });
+  const logged = page.url().includes("/admin/dashboard") || page.url().includes("/admin/");
+  console.log(`[TrayBrowser] Login ${logged ? "OK" : "FALHOU"} \u2014 URL: ${page.url()}`);
+  return logged;
+}
+async function ensureLoggedIn3(page, context) {
+  await page.goto(`${ADMIN_URL}/dashboard`, { waitUntil: "networkidle" });
+  if (page.url().includes("/admin/login") || page.url().includes("/login")) {
+    const ok = await loginTray(page);
+    if (ok) await saveSession3(context);
+    return ok;
+  }
+  return true;
+}
+async function doUpdateSeoTitle(page, productId, seoTitle) {
+  await page.goto(`${ADMIN_URL}/products/edit/${productId}`, { waitUntil: "networkidle" });
+  const seoTab = page.locator("a:has-text('SEO'), button:has-text('SEO'), [data-tab='seo']").first();
+  await seoTab.click({ timeout: 5e3 });
+  const input = page.locator("input[name='seo_title'], input[placeholder*='T\xEDtulo SEO'], input[placeholder*='SEO']").first();
+  await input.fill(seoTitle, { timeout: 5e3 });
+  await page.locator("button:has-text('Salvar'), button[type='submit']").first().click();
+  await page.waitForTimeout(2e3);
+  return `\u2705 SEO title do produto ${productId} atualizado: "${seoTitle}"`;
+}
+async function doUpdateSeoDescription(page, productId, seoDescription) {
+  await page.goto(`${ADMIN_URL}/products/edit/${productId}`, { waitUntil: "networkidle" });
+  const seoTab = page.locator("a:has-text('SEO'), button:has-text('SEO'), [data-tab='seo']").first();
+  await seoTab.click({ timeout: 5e3 });
+  const textarea = page.locator("textarea[name='seo_description'], textarea[placeholder*='Descri\xE7\xE3o SEO']").first();
+  await textarea.fill(seoDescription, { timeout: 5e3 });
+  await page.locator("button:has-text('Salvar'), button[type='submit']").first().click();
+  await page.waitForTimeout(2e3);
+  return `\u2705 Meta description do produto ${productId} atualizada`;
+}
+async function doUpdateProductDescription(page, productId, description) {
+  await page.goto(`${ADMIN_URL}/products/edit/${productId}`, { waitUntil: "networkidle" });
+  const descArea = page.locator(".ql-editor, [contenteditable='true'], textarea[name='description']").first();
+  await descArea.fill(description, { timeout: 5e3 });
+  await page.locator("button:has-text('Salvar'), button[type='submit']").first().click();
+  await page.waitForTimeout(2e3);
+  return `\u2705 Descri\xE7\xE3o do produto ${productId} atualizada`;
+}
+async function doUpdatePageSeo(page, pageSlug, seoTitle, seoDescription) {
+  await page.goto(`${ADMIN_URL}/pages`, { waitUntil: "networkidle" });
+  if (pageSlug) {
+    await page.locator(`a:has-text('${pageSlug}'), tr:has-text('${pageSlug}') a:has-text('Editar')`).first().click({ timeout: 5e3 });
+    await page.waitForLoadState("networkidle");
+  }
+  if (seoTitle) {
+    await page.locator("input[name='seo_title']").fill(seoTitle, { timeout: 5e3 });
+  }
+  if (seoDescription) {
+    await page.locator("textarea[name='seo_description']").fill(seoDescription, { timeout: 5e3 });
+  }
+  await page.locator("button:has-text('Salvar'), button[type='submit']").first().click();
+  await page.waitForTimeout(2e3);
+  return `\u2705 SEO da p\xE1gina "${pageSlug}" atualizado`;
+}
+async function runTrayActionsInSession(actions) {
+  return withMutex3(async () => {
+    const browser = await chromium3.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
+    const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    await loadSession3(context);
+    const page = await context.newPage();
+    const results = {};
+    try {
+      const ok = await ensureLoggedIn3(page, context);
+      if (!ok) {
+        for (const a of actions) results[a.id] = "ERRO: falha no login da Tray";
+        return results;
+      }
+      for (const action of actions) {
+        try {
+          let log;
+          switch (action.actionType) {
+            case "tray_update_seo_title":
+              log = await doUpdateSeoTitle(page, action.productId, action.seoTitle);
+              break;
+            case "tray_update_seo_description":
+              log = await doUpdateSeoDescription(page, action.productId, action.seoDescription);
+              break;
+            case "tray_update_product_description":
+              log = await doUpdateProductDescription(page, action.productId, action.description);
+              break;
+            case "tray_update_page_seo":
+              log = await doUpdatePageSeo(page, action.pageSlug, action.seoTitle, action.seoDescription);
+              break;
+            default:
+              log = `ERRO: tipo desconhecido ${action.actionType}`;
+          }
+          results[action.id] = log;
+        } catch (e) {
+          results[action.id] = `ERRO: ${e.message}`;
+        }
+      }
+    } finally {
+      await saveSession3(context);
+      await browser.close();
+    }
+    return results;
+  });
+}
+
+// server/agents/tray-actions-executor.ts
+var INTERVAL_MS3 = 5 * 60 * 1e3;
+function startTrayActionsExecutor() {
+  let running = false;
+  async function run() {
+    if (running) return;
+    running = true;
+    try {
+      const db = await getDb();
+      if (!db) return;
+      const pending = await db.select().from(agentActions).where(and85(eq107(agentActions.agentName, "duda"), eq107(agentActions.status, "pending")));
+      if (pending.length === 0) return;
+      console.log(`[TrayExecutor] ${pending.length} a\xE7\xE3o(\xF5es) pendente(s) \u2014 abrindo browser`);
+      for (const action of pending) {
+        await db.update(agentActions).set({ status: "executing" }).where(eq107(agentActions.id, action.id));
+      }
+      const batchActions = pending.map((a) => {
+        const p = a.payload || {};
+        return {
+          id: a.id,
+          actionType: a.actionType,
+          productId: String(p.productId || ""),
+          pageSlug: String(p.pageSlug || ""),
+          seoTitle: String(p.seoTitle || ""),
+          seoDescription: String(p.seoDescription || ""),
+          description: String(p.description || "")
+        };
+      });
+      let results;
+      try {
+        results = await runTrayActionsInSession(batchActions);
+      } catch (e) {
+        console.error(`[TrayExecutor] Browser falhou:`, e.message);
+        for (const action of pending) {
+          await db.update(agentActions).set({ status: "pending", executionLog: `ERRO browser: ${e.message}` }).where(eq107(agentActions.id, action.id));
+        }
+        return;
+      }
+      for (const action of pending) {
+        const log = results[action.id] ?? "Sem resultado";
+        const isError = log.startsWith("ERRO:");
+        console.log(`[TrayExecutor] ${isError ? "\u274C" : "\u2705"} id=${action.id}: ${log}`);
+        await db.update(agentActions).set({
+          status: isError ? "pending" : "done",
+          executedAt: isError ? void 0 : /* @__PURE__ */ new Date(),
+          executionLog: log
+        }).where(eq107(agentActions.id, action.id));
+      }
+      console.log(`[TrayExecutor] Ciclo conclu\xEDdo`);
+    } catch (err) {
+      console.error(`[TrayExecutor] Erro no ciclo:`, err);
+    } finally {
+      running = false;
+    }
+  }
+  setTimeout(run, 25e3);
+  const interval = setInterval(run, INTERVAL_MS3);
+  console.log(`[TrayExecutor] Iniciado \u2014 ciclos a cada ${INTERVAL_MS3 / 6e4} min (Playwright browser)`);
+  return () => clearInterval(interval);
+}
+
+// server/agents/ml-ads-api.ts
+init_db();
+init_schema();
+import { eq as eq108, and as and86 } from "drizzle-orm";
+var ML_BASE3 = "https://api.mercadolibre.com";
+function getToken2(account) {
+  return account === "fnt" ? process.env.ML_ACCESS_TOKEN_2 || "" : process.env.ML_ACCESS_TOKEN_1 || "";
+}
+function getAdvertiserId2(account) {
+  return account === "fnt" ? process.env.ML_ADVERTISER_ID_2 || "" : process.env.ML_ADVERTISER_ID_1 || "";
+}
+async function mlFetch(method, path15, account, body) {
+  const token = getToken2(account);
+  if (!token) throw new Error(`Token ML n\xE3o configurado para ${account}`);
+  const res = await fetch(`${ML_BASE3}${path15}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      Accept: "application/json"
+    },
+    body: body ? JSON.stringify(body) : void 0
+  });
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    data = {};
+  }
+  if (!res.ok) {
+    const msg = data?.message || data?.error || JSON.stringify(data).slice(0, 200);
+    throw new Error(`ML API ${method} ${path15} \u2192 HTTP ${res.status}: ${msg}`);
+  }
+  return data;
+}
+async function apiListMLCampaigns(account = "feminnita") {
+  const advertiserId = getAdvertiserId2(account);
+  if (!advertiserId) {
+    console.warn(`[MLAdsAPI] ML_ADVERTISER_ID n\xE3o configurado para ${account}`);
+    return [];
+  }
+  const all = [];
+  let offset = 0;
+  const limit = 50;
+  while (true) {
+    try {
+      const data = await mlFetch(
+        "GET",
+        `/advertising/advertisers/${advertiserId}/product_ads/campaigns?limit=${limit}&offset=${offset}`,
+        account
+      );
+      const batch = data.results || data.data || data.campaigns || [];
+      all.push(...batch);
+      if (batch.length < limit) break;
+      offset += limit;
+    } catch (e) {
+      console.error(`[MLAdsAPI] Erro ao listar campanhas (${account}):`, e.message);
+      break;
+    }
+  }
+  return all;
+}
+async function apiScrapeMLMetrics(account = "feminnita") {
+  const advertiserId = getAdvertiserId2(account);
+  if (!advertiserId) {
+    console.error(`[MLMetrics] ML_ADVERTISER_ID n\xE3o configurado para ${account}`);
+    return 0;
+  }
+  try {
+    const campaigns3 = await apiListMLCampaigns(account);
+    if (campaigns3.length === 0) {
+      console.warn(`[MLMetrics] Nenhuma campanha para ${account}`);
+      return 0;
+    }
+    const db = await getDb();
+    if (!db) {
+      console.error("[MLMetrics] Banco indispon\xEDvel");
+      return 0;
+    }
+    await db.delete(marketplaceAdsMetrics).where(and86(eq108(marketplaceAdsMetrics.platform, "ml"), eq108(marketplaceAdsMetrics.account, account)));
+    const now = /* @__PURE__ */ new Date();
+    const rows = campaigns3.map((c) => {
+      const budget = Number(c.budget || 0);
+      const acos = Number(c.acos_target || 0);
+      const roas = acos > 0 ? 100 / acos : Number(c.roas_target) || 0;
+      return {
+        platform: "ml",
+        account,
+        campaignId: String(c.id || c.campaign_id || "").slice(0, 100),
+        campaignName: String(c.name || c.campaign_name || ""),
+        impressions: Math.round(Number(c.impressions || 0)),
+        clicks: Math.round(Number(c.clicks || 0)),
+        ctr: String(Number(c.ctr || 0).toFixed(3)),
+        spend: String(Number(c.spend || 0).toFixed(2)),
+        roas: String(roas.toFixed(2)),
+        revenue: String(Number(c.revenue || c.sales || 0).toFixed(2)),
+        acos: String(acos.toFixed(2)),
+        conversions: Math.round(Number(c.conversions || c.orders || 0)),
+        scrapedAt: now
+      };
+    });
+    if (rows.length > 0) await db.insert(marketplaceAdsMetrics).values(rows);
+    console.log(`[MLMetrics] ${rows.length} campanhas salvas para ${account} (budget/acos_target da listagem)`);
+    return rows.length;
+  } catch (e) {
+    console.error(`[MLMetrics] Erro (${account}):`, e.message);
+    return 0;
+  }
+}
+
 // server/agents/index.ts
-init_ml_ads_api();
 function startMorningBriefingScheduler() {
   const HOUR = 7;
   let timeout;
@@ -39311,7 +40141,7 @@ function startInfluencerDailyAgent() {
   return () => clearTimeout(timeout);
 }
 function startMLMetricsCollector() {
-  const INTERVAL_MS2 = 6 * 60 * 60 * 1e3;
+  const INTERVAL_MS4 = 6 * 60 * 60 * 1e3;
   async function run() {
     for (const account of ["feminnita", "fnt"]) {
       try {
@@ -39323,8 +40153,8 @@ function startMLMetricsCollector() {
     }
   }
   setTimeout(run, 3e4);
-  const interval = setInterval(run, INTERVAL_MS2);
-  console.log(`[MLMetrics] Coletor iniciado \u2014 ciclos a cada ${INTERVAL_MS2 / 36e5}h`);
+  const interval = setInterval(run, INTERVAL_MS4);
+  console.log(`[MLMetrics] Coletor iniciado \u2014 ciclos a cada ${INTERVAL_MS4 / 36e5}h`);
   return () => clearInterval(interval);
 }
 function startAllAgents() {
@@ -39345,6 +40175,8 @@ function startAllAgents() {
     { name: "InfluencerDailyAgent", start: startInfluencerDailyAgent },
     { name: "FernandaDaily", start: startFernandaDailyAgent },
     { name: "MLActionsExecutor", start: startMLActionsExecutor },
+    { name: "ShopeeActionsExecutor", start: startShopeeActionsExecutor },
+    { name: "TrayActionsExecutor", start: startTrayActionsExecutor },
     { name: "MLMetricsCollector", start: startMLMetricsCollector }
   ];
   for (const agent of agents) {
@@ -39498,11 +40330,11 @@ async function startServer() {
   app.get("/api/debug/agent-actions", async (_req, res) => {
     try {
       const { getDb: getDb2 } = await Promise.resolve().then(() => (init_db(), db_exports));
-      const { desc: desc52, eq: eq109 } = await import("drizzle-orm");
+      const { desc: desc52, eq: eq111 } = await import("drizzle-orm");
       const { agentActions: agentActions2 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
       const db = await getDb2();
       if (!db) return res.status(503).json({ error: "Banco indispon\xEDvel" });
-      const rows = await db.select().from(agentActions2).where(eq109(agentActions2.agentName, "gabi")).orderBy(desc52(agentActions2.createdAt)).limit(20);
+      const rows = await db.select().from(agentActions2).where(eq111(agentActions2.agentName, "gabi")).orderBy(desc52(agentActions2.createdAt)).limit(20);
       return res.json({
         count: rows.length,
         actions: rows.map((r) => ({
@@ -39575,15 +40407,15 @@ async function startServer() {
     createExpressMiddleware({
       router: appRouter,
       createContext,
-      onError({ path: path14, error }) {
-        console.error(`[tRPC Error] ${path14}:`, error.message);
+      onError({ path: path15, error }) {
+        console.error(`[tRPC Error] ${path15}:`, error.message);
       }
     })
   );
-  const { default: fs13 } = await import("fs");
+  const { default: fs14 } = await import("fs");
   const { default: pathMod } = await import("path");
   const uploadsPath = pathMod.resolve(process.cwd(), "uploads");
-  if (!fs13.existsSync(uploadsPath)) fs13.mkdirSync(uploadsPath, { recursive: true });
+  if (!fs14.existsSync(uploadsPath)) fs14.mkdirSync(uploadsPath, { recursive: true });
   app.use("/uploads", express2.static(uploadsPath));
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
