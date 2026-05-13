@@ -171,6 +171,20 @@ const GABI_ML_TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "ml_ads_create_campaign",
+    description: "Cria uma campanha de Product Ads NOVA no Mercado Livre via browser automation. Use quando o usuário pedir para criar/abrir uma nova campanha com lista de anúncios. Execute somente após confirmação explícita.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        campaignName: { type: "string", description: "Nome da nova campanha (ex: 'INVERNO 2026 - B')" },
+        dailyBudget:  { type: "number", description: "Budget diário em R$ (ex: 30)" },
+        itemIds:      { type: "array", items: { type: "string" }, description: "IDs dos anúncios MLB a incluir (ex: ['MLB4224885971','MLB4231584799'])" },
+        acosTarget:   { type: "number", description: "ACoS alvo em % (opcional — omita para o ML decidir automaticamente)" },
+      },
+      required: ["campaignName", "dailyBudget", "itemIds"],
+    },
+  },
+  {
     name: "ml_ads_campaign_stats",
     description: "Busca métricas de uma campanha: impressões, cliques, CTR, gasto, CPC, conversões, ROAS.",
     input_schema: {
@@ -329,8 +343,9 @@ Ferramentas deste modo: ml_list_items, ml_pause_item, ml_activate_item, ml_updat
 
 ━━━ MODO ADS / CAMPANHAS ━━━
 Ativado quando: usuário fala de campanha, Product Ads, budget, CPC, ROAS, CTR, patrocinado, Ads, métricas
-Ferramentas deste modo: ml_get_ads_metrics, ml_ads_list_campaigns, ml_ads_pause_campaign, ml_ads_activate_campaign, ml_ads_update_budget, ml_ads_campaign_stats
+Ferramentas deste modo: ml_get_ads_metrics, ml_ads_list_campaigns, ml_ads_pause_campaign, ml_ads_activate_campaign, ml_ads_update_budget, ml_ads_create_campaign, ml_ads_campaign_stats
 REGRA CRÍTICA: A API do ML bloqueia métricas diretamente. USE SEMPRE ml_get_ads_metrics PRIMEIRO — esses dados são reais, coletados via browser a cada 6h. Se retornar vazio, informe que o agente está coletando e use ml_ads_list_campaigns para estrutura.
+REGRA: Você PODE criar, pausar, ativar e ajustar budget de campanhas via browser automation. NUNCA diga "não consigo pela API" — use as ferramentas ml_ads_*.
 → NÃO mencione anúncios/EDS neste modo
 
 REGRA DE OURO: Responda apenas o que foi perguntado. Se a pergunta é sobre Ads, fique em Ads. Se é sobre EDS, fique em EDS. Nunca misture os dois temas na mesma resposta sem que o usuário peça explicitamente.
@@ -551,6 +566,37 @@ export async function chatWithGabi(
           })();
         } else if (toolUse.name === "ml_ads_campaign_stats") {
           call = getMLAdsCampaignStats(inp.campaignId, inp.dateFrom, inp.dateTo, account);
+        } else if (toolUse.name === "ml_ads_create_campaign") {
+          call = (async (): Promise<string> => {
+            const acc = account as "feminnita" | "fnt";
+            const name = String(inp.campaignName || "").trim();
+            const budget = Number(inp.dailyBudget || 0);
+            const items = Array.isArray(inp.itemIds) ? (inp.itemIds as any[]).map(x => String(x).trim()).filter(Boolean) : [];
+            const acos = typeof inp.acosTarget === "number" ? Number(inp.acosTarget) : undefined;
+            let log: string;
+            try {
+              const tempId = Date.now();
+              const results = await runActionsInSession(acc, [{
+                id: tempId, actionType: "create_ads_campaign", campaignId: "", campaignName: name,
+                budget, itemIds: items, acosTarget: acos,
+              }]);
+              log = results[tempId] ?? "Sem resultado";
+            } catch (e: any) {
+              log = `ERRO: ${e?.message || String(e)}`;
+            }
+            const isError = log.startsWith("ERRO:") || log.startsWith("❌");
+            const db = await getDb();
+            if (db) await db.insert(agentActionsTable).values({
+              agentName: "gabi", date: new Date().toISOString().slice(0, 10),
+              title: `Criar campanha "${name}" — R$${budget}/dia, ${items.length} anúncios`,
+              description: `Criar campanha "${name}" com ${items.length} anúncios — R$${budget}/dia${acos ? ` — ACoS alvo ${acos}%` : ""}`,
+              actionType: "create_ads_campaign", priority: "media",
+              status: (isError ? "pending" : "done") as const,
+              payload: { platform: "ml", account, action: "create_ads_campaign", campaignName: name, budget, itemIds: items, acosTarget: acos },
+              executionLog: log, ...(isError ? {} : { executedAt: new Date() }),
+            });
+            return `${isError ? "❌" : "✅"} ${name}: ${log}`;
+          })();
         } else if (toolUse.name === "ml_get_ads_metrics") {
           call = (async (): Promise<string> => {
             const db = await getDb();
@@ -635,56 +681,15 @@ export async function chatWithGabi(
             );
             if (adsActions.length === 0) return "Nenhuma ação de Ads ML pendente. Use propose_ads_actions para criar as ações antes de executar.";
 
+            // Marca como approved para o MLExecutor executar em background (evita timeout no chat)
             for (const a of adsActions) {
-              await db.update(agentActionsTable).set({ status: "executing" as const }).where(eq(agentActionsTable.id, a.id));
+              await db.update(agentActionsTable)
+                .set({ status: "approved" as const })
+                .where(eq(agentActionsTable.id, a.id));
             }
 
-            const byAccount = new Map<string, typeof adsActions>();
-            for (const a of adsActions) {
-              const acc = String((a.payload as any)?.account || "feminnita");
-              if (!byAccount.has(acc)) byAccount.set(acc, []);
-              byAccount.get(acc)!.push(a);
-            }
-
-            const { runActionsInSession } = await import("./ml-ads-browser-agent");
-            const resultLines: string[] = [];
-
-            for (const [acc, accActions] of byAccount) {
-              const batch = accActions.map(a => ({
-                id:           a.id,
-                actionType:   String((a.payload as any)?.action || a.actionType || ""),
-                campaignId:   String((a.payload as any)?.campaignId   || ""),
-                campaignName: String((a.payload as any)?.campaignName || ""),
-                budget:       Number((a.payload as any)?.budget       || 0),
-              }));
-              let results: Record<number, string>;
-              try {
-                results = await runActionsInSession(acc as "feminnita" | "fnt", batch);
-              } catch (e: any) {
-                for (const a of accActions) {
-                  await db.update(agentActionsTable)
-                    .set({ status: "pending" as const, executionLog: `ERRO: ${e.message}` } as any)
-                    .where(eq(agentActionsTable.id, a.id));
-                  resultLines.push(`❌ ${a.title || a.actionType} — ERRO browser: ${e.message}`);
-                }
-                continue;
-              }
-              for (const a of accActions) {
-                const log = results[a.id] ?? "Sem resultado";
-                const isError = log.startsWith("ERRO:") || log.startsWith("❌") ||
-                  log.includes("não encontrada") || log.includes("não encontrado") ||
-                  log.includes("Erro ao") || log.includes("ML API") || log.includes("não abriu") ||
-                  log.includes("Timeout") || log.includes("timeout");
-                await db.update(agentActionsTable).set({
-                  status:       (isError ? "pending" : "done") as const,
-                  executedAt:   isError ? undefined : new Date(),
-                  executionLog: log,
-                } as any).where(eq(agentActionsTable.id, a.id));
-                resultLines.push(`${isError ? "❌" : "✅"} ${a.title || a.actionType} — ${log}`);
-              }
-            }
-
-            return `Execução no painel ML Ads concluída:\n${resultLines.join("\n")}`;
+            const names = adsActions.map(a => a.title || a.actionType).join(", ");
+            return `${adsActions.length} ação(ões) enfileirada(s) para execução via browser automation: ${names}.\n\nO agente vai executar no painel ML Ads em até 5 minutos. Acompanhe o resultado em /acoes-agentes.`;
           })();
         } else if (toolUse.name === "propose_ads_actions") {
           call = (async (): Promise<string> => {
