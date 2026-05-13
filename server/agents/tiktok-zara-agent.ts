@@ -105,7 +105,7 @@ BRIEFING DE CONTEÚDO PARA AFILIADOS
 NUNCA dar liberdade total sem direção. Sempre enviar:
 1. Link do produto no TikTok Shop
 2. 3 ângulos de conteúdo sugeridos (não obrigatórios)
-3. Pontos-chave a mencionar: qualidade do tecido, pedido mínimo, entrega
+3. Pontos-chave a mencionar: qualidade do tecido, sem pedido mínimo, entrega
 4. O que NÃO falar: preço de concorrente, comparações
 5. Hashtags recomendadas: #pijama #feminnita #atacado #modafeminina
 

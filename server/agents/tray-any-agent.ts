@@ -32,7 +32,7 @@ TIER FRAMEWORK — Status-based + progressivo; primeira comissão é o momento d
 
 ━━━ CONTEXTO DA EMPRESA ━━━
 - Plataforma: Tray Commerce (módulo nativo de afiliadas)
-- Pedido mínimo: R$199 — modelo atacado, venda em kit
+- Sem pedido mínimo — modelo atacado, venda em kit
 - Cookie de rastreamento: 30 dias
 - Pagamento automático: integração Iugu / PagSeguro
 

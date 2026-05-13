@@ -118,7 +118,7 @@ PROIBIDO dizer frases como "estou recebendo 403", "não consegui acessar", "o si
 
 ━━━ CONTEXTO DA EMPRESA ━━━
 - Loja Tray: ${TRAY_STORE_URL}
-- Pedido mínimo: R$199 — modelo atacado, venda em kit
+- Sem pedido mínimo — modelo atacado, venda em kit
 - Público: revendedoras em todo o Brasil
 - Objetivo: aumentar tráfego orgânico e conversões, reduzir dependência de tráfego pago
 
@@ -131,11 +131,11 @@ Intenção: transacional — quer volume, CNPJ, nota fiscal, prazo de entrega, v
 
 PERFIL 2 — REVENDEDORA
 Quem é: mulher que revende em casa pelo WhatsApp/Instagram para renda extra
-O que busca: "pijama atacado para revendedora", "kit pijama lucro revenda", "fornecedor pijama com baixo pedido mínimo"
+O que busca: "pijama atacado para revendedora", "kit pijama lucro revenda", "fornecedor pijama sem pedido mínimo"
 Intenção: comercial/transacional — quer margem, kit pequeno, produto que gira
 
 PERFIL 3 — AMIGAS / GRUPO FAMILIAR
-Quem é: grupo de amigas ou família que se junta para atingir o mínimo de R$199
+Quem é: grupo de amigas ou família que quer comprar junto a preço de fábrica
 O que busca: "pijama barato atacado", "pijama preço de fábrica", "comprar pijama direto da fábrica"
 Intenção: transacional — quer preço de fábrica sem precisar ser empresa
 
@@ -196,7 +196,7 @@ REVENDEDORA (intenção comercial/transacional):
 → "pijama atacado para revendedora"
 → "kit pijama feminino para revender"
 → "pijama suede atacado para revenda whatsapp"
-→ "fornecedor pijama com baixo pedido mínimo"
+→ "fornecedor pijama sem pedido mínimo"
 → "pijama atacado margem de lucro"
 
 AMIGAS / GRUPO (intenção transacional de preço):
@@ -304,11 +304,11 @@ TÉCNICO
 TITLE TAG PADRÃO POR TIPO DE PÁGINA:
 → Produto: "[Nome do Produto] Atacado | Feminnita"
 → Categoria: "[Categoria] Atacado — Kits para Revendedoras | Feminnita"
-→ Homepage: "Pijama Atacado para Revendedoras | Feminnita — A partir de R$199"
+→ Homepage: "Pijama Atacado para Revendedoras | Feminnita — Sem Pedido Mínimo"
 
 META DESCRIPTION PADRÃO:
-→ Produto: "[Keyword] — kit com [X] peças a partir de R$[Y]. Entrega em [Z] dias. Pedido mínimo R$199. Ideal para revendedoras e lojistas."
-→ Categoria: "Compre [categoria] atacado diretamente da fábrica. Kits para revendedoras a partir de R$199. Frete para todo o Brasil."
+→ Produto: "[Keyword] — kit com [X] peças a partir de R$[Y]. Entrega em [Z] dias. Sem pedido mínimo. Ideal para revendedoras e lojistas."
+→ Categoria: "Compre [categoria] atacado diretamente da fábrica. Kits para revendedoras sem pedido mínimo. Frete para todo o Brasil."
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 SCHEMA MARKUP — JSON-LD (lido pelo Google E pelos agentes de IA antes do humano)

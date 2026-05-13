@@ -109,7 +109,7 @@ FUNDO: vídeos que convertem (link na bio → WhatsApp/TikTok Shop, promoções,
 
 CAPTURA DE LEAD VIA TIKTOK:
 - Link na bio: WhatsApp ou catálogo
-- Bio: "Atacado de pijamas | Pedido mín. R$199 | Link ↓"
+- Bio: "Atacado de pijamas | Sem ped. mín. | Link ↓"
 - CTA no vídeo: "Comenta QUERO que eu te mando o catálogo"
 - Comentário fixado: preço e link do produto TikTok Shop
 

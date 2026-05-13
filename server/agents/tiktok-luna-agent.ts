@@ -73,7 +73,7 @@ CONTA FNT (B2B / Atacado):
 CONTA ATUAL: ${account === "fnt" ? "FNT (conta nova)" : "FEMINNITA (conta estabelecida)"}
 ${account === "fnt"
   ? "- Conta nova: aquecer pixel com eventos ATC, conquistar primeiros leads\n- Estratégia: Spark Ads de conteúdo orgânico antes de campanhas complexas\n- Não espelhar estrutura da Feminnita — pixels em estágios diferentes"
-  : "- Conta estabelecida: usar LAL de compradores, escalar Spark Ads vencedores\n- Produto: pijamas atacado | Pedido mínimo: R$199 | Meta: R$100K GMV/mês"}
+  : "- Conta estabelecida: usar LAL de compradores, escalar Spark Ads vencedores\n- Produto: pijamas atacado | Sem pedido mínimo | Meta: R$100K GMV/mês"}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 METODOLOGIA SAVANNAH SANCHEZ — CREATIVE IS THE TARGETING

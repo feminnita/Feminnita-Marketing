@@ -268,7 +268,7 @@ Substitua todo adjetivo genérico por número ou detalhe concreto.
 
 ━━━ FEMINNITA — CONTEXTO ━━━
 - Produto: pijamas suede premium, fabricação própria Nova Friburgo RJ
-- Kit entrada: a partir de R$199 | Ticket médio R$400 | Margem revendedora: 40–60%
+- Sem pedido mínimo | Ticket médio R$400 | Margem revendedora: 40–60%
 - Pagamento: 5% PIX | 3x sem juros | Envio imediato para todo o Brasil
 - Público: revendedoras autônomas (mães em casa), lojistas MEI, grupos de compra
 - Meta urgente: R$100K/mês | Saiu de R$78K para R$20K após agência ruim
@@ -278,7 +278,7 @@ Substitua todo adjetivo genérico por número ou detalhe concreto.
 ESTRUTURA DO ANÚNCIO QUE CONVERTE (referência obrigatória):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PIJAMAS DE FABRICAÇÃO PRÓPRIA
-COMECE A VENDER A PARTIR DE R$199
+COMECE A VENDER HOJE — SEM PEDIDO MÍNIMO
 REVENDA E LUCRE
 QUERO REVENDER — CLIQUE AQUI
 5% NO PIX · 3X SEM JUROS · ENVIO IMEDIATO
@@ -403,7 +403,7 @@ O banner tem 5 campos de texto. Cada variante deve ser DIFERENTE das outras — 
 
 CAMPOS DO BANNER:
 - titulo: frase de impacto principal (máx 35 chars) — muda conforme o hook, ex: identidade / transformação / choque
-- preco: linha de preço/oferta (máx 45 chars) — pode variar o enquadramento: "a partir de R$199", "kit completo por R$199", "R$199 pra começar hoje"
+- preco: linha de preço/oferta (máx 45 chars) — pode variar o enquadramento: "sem pedido mínimo", "comece hoje sem mínimo", "escolha seu kit agora"
 - subtitulo: verbo de ação + lucro (máx 25 chars) — ex: "REVENDA E LUCRE", "GANHE EM CASA", "FATURE REVENDENDO"
 - cta: chamada para ação do botão (máx 30 chars) — ex: "QUERO REVENDER — CLIQUE AQUI", "SEJA REVENDEDORA AGORA", "PEÇO MEU KIT"
 - rodape: info logística FIXA — sempre: "5% NO PIX · 3X SEM JUROS · ENVIO IMEDIATO"
@@ -425,10 +425,10 @@ Retorne APENAS JSON válido:
 
   const defaults: AdCopyResult = {
     headline: "Revenda Feminnita — Lucro Garantido",
-    body: "Pijamas suede exclusivos para revendedoras. A partir de R$199. Envio imediato!",
+    body: "Pijamas suede exclusivos para revendedoras. Sem pedido mínimo. Envio imediato!",
     canvaCopy: {
       titulo: "PIJAMAS DE FABRICAÇÃO PRÓPRIA",
-      preco: "COMECE A VENDER A PARTIR DE R$199",
+      preco: "COMECE A VENDER HOJE — SEM PEDIDO MÍNIMO",
       subtitulo: "REVENDA E LUCRE",
       cta: "QUERO REVENDER — CLIQUE AQUI",
       rodape: "5% NO PIX · 3X SEM JUROS · ENVIO IMEDIATO",
@@ -832,7 +832,7 @@ ATENÇÃO: mudar o VISUAL HOOK tem impacto MAIOR que mudar o verbal/texto. Os me
 
 ━━━ FEMINNITA — CONTEXTO QUE VOCÊ CONHECE DE COR ━━━
 - Produto: pijamas suede premium atacado, fabricação própria, Nova Friburgo RJ
-- Ticket médio: R$400/pedido | Kit entrada: a partir de R$199 | Margem da revendedora: 40–60%
+- Ticket médio: R$400/pedido | Sem pedido mínimo | Margem da revendedora: 40–60%
 - 3 públicos: (1) Revendedora Lojista — MEI/loja, quer fornecedor confiável; (2) Revendedora Autônoma — renda de casa, filhos pequenos; (3) Compra em Grupo — atingir mínimo sem CNPJ
 - Meta urgente: R$100K/mês
 - Diferencial: fabricação própria (não é revendedor de terceiros), suede premium, envio imediato para todo o Brasil
@@ -842,7 +842,7 @@ ATENÇÃO: mudar o VISUAL HOOK tem impacto MAIOR que mudar o verbal/texto. Os me
 ESTRUTURA DO ANÚNCIO QUE CONVERTE (referência da Fernanda):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PIJAMAS DE FABRICAÇÃO PRÓPRIA
-COMECE A VENDER A PARTIR DE R$199
+COMECE A VENDER HOJE — SEM PEDIDO MÍNIMO
 REVENDA E LUCRE
 CTA: QUERO REVENDER — CLIQUE AQUI
 5% NO PIX · 3X SEM JUROS · ENVIO IMEDIATO

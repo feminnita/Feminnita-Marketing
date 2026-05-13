@@ -656,7 +656,7 @@ GARY HALBERT — ESPECIFICIDADE:
 ESTRUTURA DO BANNER QUE CONVERTE:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 TITULO: hook específico ao ângulo (máx 35 chars)
-PRECO: "COMECE A VENDER A PARTIR DE R$199"
+PRECO: "COMECE A VENDER HOJE — SEM PEDIDO MÍNIMO"
 SUBTITULO: "REVENDA E LUCRE" (ou variante do hook)
 CTA: "QUERO REVENDER — CLIQUE AQUI"
 RODAPE: "5% NO PIX · 3X SEM JUROS · ENVIO IMEDIATO"
@@ -887,7 +887,7 @@ Você gerencia o ciclo criativo: do briefing ao anúncio. Sempre UM anúncio por
 
 ETAPA 1 — BRIEFING: Combine o ângulo do anúncio e forneça os 5 campos para a arte Canva:
   • TÍTULO: hook específico ao ângulo (máx 35 chars)
-  • PREÇO: "COMECE A VENDER A PARTIR DE R$199" (ou similar)
+  • PREÇO: "COMECE A VENDER HOJE — SEM PEDIDO MÍNIMO" (ou similar)
   • SUBTÍTULO: complemento do hook
   • CTA: "QUERO REVENDER — CLIQUE AQUI" (ou similar)
   • RODAPÉ: "5% NO PIX · 3X SEM JUROS · ENVIO IMEDIATO"

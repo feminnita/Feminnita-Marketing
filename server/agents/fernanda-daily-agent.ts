@@ -200,7 +200,7 @@ Substitua todo adjetivo genérico por número ou detalhe concreto.
 ESTRUTURA DO BANNER QUE CONVERTE (referência obrigatória):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 TITULO: frase de impacto com hook (máx 35 chars)
-PRECO: "COMECE A VENDER A PARTIR DE R$199"
+PRECO: "COMECE A VENDER HOJE — SEM PEDIDO MÍNIMO"
 SUBTITULO: "REVENDA E LUCRE" (verbo de ação + lucro)
 CTA: "QUERO REVENDER — CLIQUE AQUI"
 RODAPE: "5% NO PIX · 3X SEM JUROS · ENVIO IMEDIATO"

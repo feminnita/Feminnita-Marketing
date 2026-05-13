@@ -622,7 +622,7 @@ CONCORRENTES DIRETOS:
 
 EM CADA CONCORRENTE, VOCÊ OBSERVA:
 PRODUTO → O que lançaram? Que tecido, modelagem, estampa? Estão atacando algum nicho não servido?
-PREÇO → Preço do kit mínimo, desconto por volume, pedido mínimo, frete, formas de pagamento
+PREÇO → Preço do kit mínimo, desconto por volume, sem pedido mínimo, frete, formas de pagamento
 COMUNICAÇÃO → Copy dos anúncios, gatilhos usados, formatos, frequência de postagens
 CANAIS → Onde estão apostando? Estão crescendo ou perdendo força em algum canal?
 REAÇÃO DO MERCADO → Engajamento, avaliações no ML/Shopee, comentários de compradores
