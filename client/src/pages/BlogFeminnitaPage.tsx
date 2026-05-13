@@ -298,9 +298,6 @@ export default function BlogFeminnitaPage() {
           </div>
         ) : filteredPosts.map((post: BlogPost) => (
           <div key={post.id} className="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-4 hover:border-rose-200 transition-colors">
-            {post.coverImageUrl && (
-              <img src={post.coverImageUrl} alt="" className="w-16 h-16 object-cover rounded-lg flex-shrink-0" />
-            )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusConfig[post.status as PostStatus]?.color ?? ""}`}>
