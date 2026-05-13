@@ -15,6 +15,15 @@ const SESSIONS_DIR = path.join(process.cwd(), ".ml-sessions");
 const SELLER_CENTER_URL = "https://ads.mercadolivre.com.br/productAds";
 // URL direta da lista de campanhas — inclui todos os status (A=ativo, P=pausado, D=desabilitado)
 const CAMPAIGNS_URL = "https://ads.mercadolivre.com.br/product-ads/admin/campaigns?status=A%2CP%2CD";
+
+// FNT usa a interface Hub do ML Ads (advertiser_id=1117634)
+function getCampaignsUrl(account: string): string {
+  if (account === "fnt") {
+    const advId = process.env.ML_ADVERTISER_ID_2 || "1117634";
+    return `https://ads.mercadolivre.com.br/hub/campaigns?advertiserId=${advId}`;
+  }
+  return CAMPAIGNS_URL;
+}
 const LOGIN_URL = "https://www.mercadolivre.com/jms/mlb/lgz/login";
 const TWOCAPTCHA_KEY = process.env.TWOCAPTCHA_API_KEY || "";
 
@@ -471,16 +480,21 @@ function isCampaignPageUrl(url: string): boolean {
   return !isLogin && isCampaigns;
 }
 
+function isHubInterface(url: string): boolean {
+  return url.includes("ads.mercadolivre.com.br/hub/");
+}
+
 async function ensureLoggedIn(page: Page, context: BrowserContext, account: "feminnita" | "fnt"): Promise<boolean> {
   const tokenInEnv = (account === "fnt" ? process.env.ML_ACCESS_TOKEN_2 : process.env.ML_ACCESS_TOKEN_1) || "";
   console.log(`[MLBrowser] ensureLoggedIn — account=${account} tokenLen=${tokenInEnv.length} tokenPrefix=${tokenInEnv.slice(0, 15)}...`);
 
   // 1. Carrega cookies salvos — navega direto para CAMPAIGNS_URL (rota protegida)
   //    Se ML redirecionar para /login = cookies inválidos. Se permanecer = autenticado.
+  const campaignsUrl = getCampaignsUrl(account);
   const hasSaved = await loadSession(context, account);
   if (hasSaved) {
     try {
-      await page.goto(CAMPAIGNS_URL, { waitUntil: "domcontentloaded", timeout: 25000 });
+      await page.goto(campaignsUrl, { waitUntil: "domcontentloaded", timeout: 25000 });
       await page.waitForTimeout(2000);
     } catch {}
     const url = page.url();
@@ -495,10 +509,9 @@ async function ensureLoggedIn(page: Page, context: BrowserContext, account: "fem
   // 2. Tenta auth-from-token endpoint do ML (evita login por formulário)
   const tokenOk = await tryTokenToBrowserSession(page, context, account);
   if (tokenOk) {
-    // Sempre navega para CAMPAIGNS_URL (rota protegida) — /productAds é landing pública
     try {
-      await page.goto(CAMPAIGNS_URL, { waitUntil: "domcontentloaded", timeout: 25000 });
-      await page.waitForTimeout(3000); // aguarda React e redirects JS terminarem
+      await page.goto(campaignsUrl, { waitUntil: "domcontentloaded", timeout: 25000 });
+      await page.waitForTimeout(3000);
     } catch {}
     const url = page.url();
     const bodySnippet = await page.evaluate(() => document.body?.innerText?.slice(0, 200) ?? "").catch(() => "");
@@ -508,12 +521,10 @@ async function ensureLoggedIn(page: Page, context: BrowserContext, account: "fem
       await saveSession(context, account);
       return true;
     }
-    // Cookies parcialmente válidos — pode estar em outra página autenticada do ML
     if (!url.includes("/login") && !url.includes("/jms/lgz/") && !url.includes("user-recaptcha")) {
-      // Tenta acessar campaigns diretamente mais uma vez após aguardar
       await page.waitForTimeout(2000);
       try {
-        await page.goto(CAMPAIGNS_URL, { waitUntil: "domcontentloaded", timeout: 20000 });
+        await page.goto(campaignsUrl, { waitUntil: "domcontentloaded", timeout: 20000 });
         await page.waitForTimeout(2000);
       } catch {}
       const url2 = page.url();
@@ -534,7 +545,7 @@ async function ensureLoggedIn(page: Page, context: BrowserContext, account: "fem
   const loginOk = await loginML(page, account);
   if (loginOk) {
     try {
-      await page.goto(CAMPAIGNS_URL, { waitUntil: "domcontentloaded", timeout: 25000 });
+      await page.goto(campaignsUrl, { waitUntil: "domcontentloaded", timeout: 25000 });
       await page.waitForTimeout(3000);
     } catch {}
     const url = page.url();
@@ -653,7 +664,7 @@ function parseMLNumber(s: string): number {
 
 // Navega todas as páginas de campanhas, coleta métricas e salva na tabela marketplace_ads_metrics.
 async function scrapeAndSaveMetricsInPage(page: Page, account: string): Promise<number> {
-  await page.goto(CAMPAIGNS_URL, { waitUntil: "domcontentloaded", timeout: 30000 });
+  await page.goto(getCampaignsUrl(account), { waitUntil: "domcontentloaded", timeout: 30000 });
   await page.waitForTimeout(2000);
 
   const allCampaigns: Campaign[] = [];
@@ -795,11 +806,23 @@ export async function listAdsCampaigns(account: "feminnita" | "fnt" = "feminnita
 // ─── Localiza linha da campanha por nome ou ID ────────────────────────────────
 
 async function scanRowsForCampaign(page: Page, lowerName: string, lowerId: string): Promise<any> {
-  const rows = await page.locator("tr").all();
-  for (const row of rows) {
-    const text = (await row.innerText({ timeout: 5000 }).catch(() => "")).toLowerCase();
-    if ((lowerName && text.includes(lowerName)) || (lowerId && text.includes(lowerId))) {
-      return row;
+  // Tenta seletores de linha da tabela clássica (product-ads) e hub interface
+  const rowSelectors = [
+    "tr",
+    "[data-testid*='campaign-row']",
+    "[class*='campaign-row']",
+    "[class*='CampaignRow']",
+    "[class*='campaign-item']",
+    "li[class*='campaign']",
+    "div[class*='campaign'][role='row']",
+  ];
+  for (const sel of rowSelectors) {
+    const rows = await page.locator(sel).all();
+    for (const row of rows) {
+      const text = (await row.innerText({ timeout: 5000 }).catch(() => "")).toLowerCase();
+      if ((lowerName && text.includes(lowerName)) || (lowerId && text.includes(lowerId))) {
+        return row;
+      }
     }
   }
   return null;
@@ -854,7 +877,7 @@ async function debugScreenshot(page: Page, label: string) {
 // Usadas tanto pelos exports individuais quanto pelo runActionsInSession (batch).
 
 async function pauseInPage(page: Page, account: string, campaignId: string, campaignName: string): Promise<string> {
-  await page.goto(CAMPAIGNS_URL, { waitUntil: "domcontentloaded", timeout: 30000 });
+  await page.goto(getCampaignsUrl(account), { waitUntil: "domcontentloaded", timeout: 30000 });
   await page.waitForTimeout(2000);
   await debugScreenshot(page, `pause-${account}-loaded`);
   const row = await findCampaignRow(page, campaignId, campaignName);
@@ -876,7 +899,7 @@ async function pauseInPage(page: Page, account: string, campaignId: string, camp
 }
 
 async function activateInPage(page: Page, account: string, campaignId: string, campaignName: string): Promise<string> {
-  await page.goto(CAMPAIGNS_URL, { waitUntil: "domcontentloaded", timeout: 30000 });
+  await page.goto(getCampaignsUrl(account), { waitUntil: "domcontentloaded", timeout: 30000 });
   await page.waitForTimeout(2000);
   const row = await findCampaignRow(page, campaignId, campaignName);
   if (!row) {
@@ -979,7 +1002,7 @@ export function getMLSessionStatus(account: "feminnita" | "fnt" = "feminnita"): 
 }
 
 async function updateBudgetInPage(page: Page, account: string, campaignId: string, dailyBudget: number, campaignName: string): Promise<string> {
-  await page.goto(CAMPAIGNS_URL, { waitUntil: "domcontentloaded", timeout: 30000 });
+  await page.goto(getCampaignsUrl(account), { waitUntil: "domcontentloaded", timeout: 30000 });
   await page.waitForTimeout(2000);
   await debugScreenshot(page, `budget-${account}-loaded`);
 
