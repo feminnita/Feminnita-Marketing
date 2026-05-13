@@ -297,55 +297,73 @@ async function loginML(page: Page, account: "feminnita" | "fnt"): Promise<boolea
       }
 
       if (token) {
-        // Injeta o token no DOM e dispara todos os callbacks possíveis
+        // Injeta token + dispara callbacks de forma recursiva + faz form.submit() como fallback
         await page.evaluate((t) => {
-          const resp = document.getElementById("g-recaptcha-response") as HTMLTextAreaElement | null;
-          if (resp) { resp.value = t; resp.dispatchEvent(new Event("change")); resp.dispatchEvent(new Event("input")); }
+          // Preenche todos os campos g-recaptcha-response possíveis
+          ["g-recaptcha-response", "g-recaptcha-response-100000", "g-recaptcha-response-100001"].forEach(id => {
+            const el = document.getElementById(id) as HTMLTextAreaElement | null;
+            if (el) { el.innerHTML = t; el.value = t; el.dispatchEvent(new Event("change", { bubbles: true })); }
+          });
           const gctkn = document.querySelector('input[name="gctkn"]') as HTMLInputElement | null;
-          if (gctkn) { gctkn.value = t; gctkn.dispatchEvent(new Event("change")); }
-          // Dispara callback interno do grecaptcha invisible
-          const w = window as any;
-          try {
-            const cfg = w.___grecaptcha_cfg?.clients;
-            if (cfg) Object.values(cfg).forEach((c: any) => {
-              // Tenta todas as variantes de callback conhecidas
-              const cb = c?.[""]?.[""]?.callback
-                      || c?.V?.callback
-                      || c?.l?.callback
-                      || c?.U?.callback;
-              if (typeof cb === "function") { console.log("grecaptcha cb found, calling..."); cb(t); }
-            });
-          } catch(e) { console.warn("grecaptcha cb error:", String(e)); }
-        }, token);
-        console.log("[MLBrowser] Token captcha injetado — aguardando navegação...");
+          if (gctkn) { gctkn.value = t; gctkn.dispatchEvent(new Event("change", { bubbles: true })); }
 
-        // Aguarda até 12s para a página avançar automaticamente após captcha
+          // Percorre recursivamente ___grecaptcha_cfg procurando callbacks (nomes de propriedade são dinâmicos)
+          function callCallbacks(obj: any, depth: number = 0): void {
+            if (!obj || typeof obj !== "object" || depth > 8) return;
+            for (const key of Object.keys(obj)) {
+              try {
+                const v = (obj as any)[key];
+                if ((key === "callback" || key === "successCallback") && typeof v === "function") {
+                  v(t);
+                } else { callCallbacks(v, depth + 1); }
+              } catch (_) { /* ignore */ }
+            }
+          }
+          const w = window as any;
+          if (w.___grecaptcha_cfg?.clients) callCallbacks(w.___grecaptcha_cfg.clients);
+          if (w.___grecaptcha_cfg?.enterprise?.clients) callCallbacks(w.___grecaptcha_cfg.enterprise.clients);
+
+          // form.submit() após 800ms para dar tempo aos callbacks processarem
+          setTimeout(() => {
+            const form = document.querySelector("form");
+            if (form) {
+              try { form.submit(); } catch (_) {
+                const btn = form.querySelector('button[type="submit"]') as HTMLElement | null;
+                if (btn) btn.click();
+              }
+            }
+          }, 800);
+        }, token);
+        console.log("[MLBrowser] Token captcha injetado + form.submit agendado — aguardando navegação...");
+
+        // Aguarda até 35s: campo de senha OU saída da página de captcha/msl
         const afterCaptcha = await Promise.race([
-          page.waitForSelector('input[name="password"], input[type="password"]', { timeout: 12000 })
+          page.waitForSelector('input[name="password"], input[type="password"]', { timeout: 35000 })
             .then(() => "password" as const).catch(() => null),
-          page.waitForNavigation({ timeout: 12000, waitUntil: "domcontentloaded" })
-            .then(() => "navigated" as const).catch(() => null),
+          page.waitForFunction(
+            () => !window.location.href.includes("/msl/") && !window.location.href.includes("/lgz/login") &&
+                  !window.location.href.includes("user-recaptcha"),
+            { timeout: 35000 }
+          ).then(() => "navigated" as const).catch(() => null),
         ]);
         console.log(`[MLBrowser] Pós-captcha: estado="${afterCaptcha}" url=${page.url()}`);
         await debugScreenshot(page, `login-${account}-after-captcha`);
 
-        // Se navegou mas não caiu na senha, clica submit
         if (afterCaptcha !== "password") {
           // Verifica se já está logado
           if (!page.url().includes("/login") && !page.url().includes("/jms/lgz/")) {
             console.log(`[MLBrowser] Login OK após captcha (sem senha) — URL: ${page.url()}`);
             return true;
           }
-          // Tenta clicar submit se ainda em página de captcha/login
+          // Fallback: clica submit manualmente caso form.submit() não funcionou
           console.log(`[MLBrowser] Clicando submit pós-captcha...`);
           await page.click('button[type="submit"], button:has-text("Continuar"), button:has-text("Continue")').catch(() => {});
-          // Aguarda senha ou navegação
           const afterSubmit = await Promise.race([
-            page.waitForSelector('input[name="password"], input[type="password"]', { timeout: 20000 })
+            page.waitForSelector('input[name="password"], input[type="password"]', { timeout: 25000 })
               .then(() => "password" as const).catch(() => null),
             page.waitForFunction(
               () => !window.location.href.includes("/login") && !window.location.href.includes("/jms/lgz/"),
-              { timeout: 20000 }
+              { timeout: 25000 }
             ).then(() => "loggedin" as const).catch(() => null),
           ]);
           console.log(`[MLBrowser] Pós-submit-captcha: estado="${afterSubmit}" url=${page.url()}`);
@@ -969,38 +987,67 @@ async function updateBudgetInPage(page: Page, account: string, campaignId: strin
     return `Input de budget não encontrado na modal "${campaignName || campaignId}"`;
   }
 
-  // Triple-click selects all, then type character-by-character to trigger React onChange
-  await budgetInput.click({ clickCount: 3 });
-  await page.keyboard.press("Control+a");
-  await page.keyboard.type(String(dailyBudget));
-  // Dispatch native input/change events as backup for React synthetic events
+  // Read current value — if already correct, skip (React won't enable Save for same value)
+  const currentVal = await budgetInput.inputValue().catch(() => "");
+  console.log(`[MLBrowser] Budget input atual="${currentVal}" alvo="${dailyBudget}"`);
+  if (currentVal === String(dailyBudget)) {
+    console.log(`[MLBrowser] Budget já é R$${dailyBudget} — fechando modal`);
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(500);
+    return `Budget da campanha "${campaignName || campaignId}" já está em R$${dailyBudget}.`;
+  }
+
+  // JS focus+select direto para evitar timeout de actionability do Playwright (input pode estar coberto por overlay)
+  await budgetInput.evaluate((el: HTMLInputElement) => { el.focus(); el.select(); });
+  await page.waitForTimeout(100);
   await page.evaluate((val) => {
     const inputs = Array.from(document.querySelectorAll('input[type="number"]')) as HTMLInputElement[];
-    const visible = inputs.find(i => i.offsetParent !== null);
-    if (!visible) return;
-    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
-    if (setter) setter.call(visible, val);
-    visible.dispatchEvent(new Event("input", { bubbles: true }));
-    visible.dispatchEvent(new Event("change", { bubbles: true }));
+    const input = inputs.find(i => i.offsetParent !== null);
+    if (!input) return;
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+    if (setter) setter.call(input, val);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
   }, String(dailyBudget));
+  // Tab dispara onBlur que valida o form React e habilita o botão Salvar
+  await page.keyboard.press("Tab");
   await page.waitForTimeout(800);
   await debugScreenshot(page, `budget-${account}-filled`);
 
-  const saveBtn = page.locator('button:has-text("Salvar"), button:has-text("Confirmar"), button[type="submit"]').first();
-  // Wait up to 5s for React to enable the button
-  await page.waitForFunction(
+  // Wait up to 5s for Save button to become enabled
+  const btnEnabled = await page.waitForFunction(
     () => {
-      const btn = document.querySelector('[data-andes-button][data-andes-state="disabled"]');
-      return !btn;
+      const btns = Array.from(document.querySelectorAll("button"));
+      return btns.some((b: any) =>
+        (b.innerText?.includes("Salvar") || b.innerText?.includes("Confirmar")) &&
+        !b.disabled &&
+        b.getAttribute("data-andes-state") !== "disabled" &&
+        b.offsetParent !== null
+      );
     },
     { timeout: 5000 }
-  ).catch(() => {});
+  ).then(() => true).catch(() => false);
+  console.log(`[MLBrowser] Save button enabled=${btnEnabled}`);
   await debugScreenshot(page, `budget-${account}-before-save`);
-  if (await saveBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await saveBtn.click({ force: true });
-  } else {
-    await budgetInput.press("Enter");
-  }
+
+  // Sempre usa JS click para evitar timeout de actionability (botão pode estar levemente coberto)
+  const saveClicked = await page.evaluate((enabled) => {
+    const btns = Array.from(document.querySelectorAll("button"));
+    const btn = btns.find((b: any) =>
+      (b.innerText?.includes("Salvar") || b.innerText?.includes("Confirmar")) &&
+      b.offsetParent !== null
+    ) as HTMLElement | undefined;
+    if (!btn) return false;
+    if (!enabled) {
+      btn.removeAttribute("disabled");
+      btn.removeAttribute("data-andes-state");
+      (btn as any).disabled = false;
+    }
+    btn.click();
+    return true;
+  }, btnEnabled);
+  console.log(`[MLBrowser] JS save click=${saveClicked} (btnEnabled=${btnEnabled})`);
+  if (!saveClicked) await page.keyboard.press("Enter");
   await page.waitForTimeout(2000);
   await debugScreenshot(page, `budget-${account}-saved`);
   return `Budget diário da campanha "${campaignName || campaignId}" atualizado para R$${dailyBudget}.`;
