@@ -73,7 +73,10 @@ export function startMLActionsExecutor(): () => void {
 
         for (const action of accountActions) {
           const log = results[action.id] ?? "Sem resultado";
-          const isError = log.startsWith("ERRO:") || log.includes("não encontrada") || log.includes("não encontrado");
+          const isError = log.startsWith("ERRO:") || log.startsWith("❌") ||
+            log.includes("não encontrada") || log.includes("não encontrado") ||
+            log.includes("Erro ao") || log.includes("ML API") || log.includes("não abriu") ||
+            log.includes("Timeout") || log.includes("timeout");
           console.log(`[MLExecutor] ${isError ? "❌" : "✅"} id=${action.id}: ${log}`);
           await db.update(agentActions)
             .set({
