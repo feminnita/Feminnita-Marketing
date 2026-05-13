@@ -732,7 +732,7 @@ async function withBrowser<T>(
   const page = await context.newPage();
   // Limita qualquer operação de locator sem timeout explícito a 8s (evita travas de 30s)
   page.setDefaultTimeout(8000);
-  page.setDefaultNavigationTimeout(30000);
+  page.setDefaultNavigationTimeout(8000);
 
   try {
     const loggedIn = await ensureLoggedIn(page, context, account);
@@ -805,7 +805,7 @@ async function findCampaignRow(page: Page, campaignId: string, campaignName: str
   for (let p = 2; p <= 10; p++) {
     const nextBtn = page.locator('button:has-text("Seguinte"), a:has-text("Seguinte"), button[aria-label*="ext"], a[aria-label*="ext"]').first();
     if (!await nextBtn.isVisible({ timeout: 2000 }).catch(() => false)) break;
-    await nextBtn.click({ force: true, timeout: 5000 });
+    await nextBtn.click({ force: true, timeout: 5000, noWaitAfter: true });
     await page.waitForTimeout(2000);
     console.log(`[MLBrowser] Verificando página ${p} de campanhas...`);
     found = await scanRowsForCampaign(page, lowerName, lowerId);
@@ -851,7 +851,7 @@ async function pauseInPage(page: Page, account: string, campaignId: string, camp
     await debugScreenshot(page, `pause-${account}-nobtn`);
     return `Botão de pausar não encontrado para "${campaignName || campaignId}".`;
   }
-  await pauseBtn.click({ force: true, timeout: 5000 });
+  await pauseBtn.click({ force: true, timeout: 5000, noWaitAfter: true });
   await page.waitForTimeout(2000);
   await debugScreenshot(page, `pause-${account}-done`);
   return `Campanha "${campaignName || campaignId}" pausada com sucesso.`;
@@ -870,7 +870,7 @@ async function activateInPage(page: Page, account: string, campaignId: string, c
   if (!await activateBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
     return `Botão de ativar não encontrado para "${campaignName || campaignId}".`;
   }
-  await activateBtn.click({ force: true, timeout: 5000 });
+  await activateBtn.click({ force: true, timeout: 5000, noWaitAfter: true });
   await page.waitForTimeout(2000);
   return `Campanha "${campaignName || campaignId}" reativada com sucesso.`;
 }
@@ -977,9 +977,9 @@ async function updateBudgetInPage(page: Page, account: string, campaignId: strin
   // force:true ignora checks de cobertura — o ML às vezes exibe overlays/tooltips ao hover que bloqueiam o click
   const pencilBtn = budgetTd.locator('button, [role="button"]').first();
   if (await pencilBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await pencilBtn.click({ force: true, timeout: 5000 });
+    await pencilBtn.click({ force: true, timeout: 5000, noWaitAfter: true });
   } else {
-    await budgetTd.click({ force: true, timeout: 5000 });
+    await budgetTd.click({ force: true, timeout: 5000, noWaitAfter: true });
   }
   await page.waitForTimeout(500);
   await debugScreenshot(page, `budget-${account}-pencil`);
@@ -988,7 +988,7 @@ async function updateBudgetInPage(page: Page, account: string, campaignId: strin
   const modalTitle = page.locator('text="Altere seu orçamento"');
   let modalReady = await modalTitle.waitFor({ state: "visible", timeout: 6000 }).then(() => true).catch(() => false);
   if (!modalReady) {
-    await budgetTd.click({ force: true, timeout: 5000 });
+    await budgetTd.click({ force: true, timeout: 5000, noWaitAfter: true });
     modalReady = await modalTitle.waitFor({ state: "visible", timeout: 5000 }).then(() => true).catch(() => false);
   }
   if (!modalReady) {
