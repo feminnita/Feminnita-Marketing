@@ -620,7 +620,7 @@ function parseMLNumber(s: string): number {
 
 // Navega todas as páginas de campanhas, coleta métricas e salva na tabela marketplace_ads_metrics.
 async function scrapeAndSaveMetricsInPage(page: Page, account: string): Promise<number> {
-  await page.goto(CAMPAIGNS_URL, { waitUntil: "networkidle", timeout: 30000 });
+  await page.goto(CAMPAIGNS_URL, { waitUntil: "domcontentloaded", timeout: 30000 });
   await page.waitForTimeout(2000);
 
   const allCampaigns: Campaign[] = [];
@@ -632,7 +632,7 @@ async function scrapeAndSaveMetricsInPage(page: Page, account: string): Promise<
 
     const nextBtn = page.locator('button:has-text("Seguinte"), a:has-text("Seguinte"), button[aria-label*="ext"], a[aria-label*="ext"]').first();
     if (!await nextBtn.isVisible({ timeout: 2000 }).catch(() => false)) break;
-    await nextBtn.click();
+    await nextBtn.click({ force: true, timeout: 5000 });
     await page.waitForTimeout(2000);
   }
 
@@ -729,7 +729,7 @@ async function withBrowser<T>(
 
 export async function listAdsCampaigns(account: "feminnita" | "fnt" = "feminnita"): Promise<string> {
   return withMutex(account, () => withBrowser(account, async (page) => {
-    await page.goto(SELLER_CENTER_URL, { waitUntil: "networkidle", timeout: 30000 });
+    await page.goto(SELLER_CENTER_URL, { waitUntil: "domcontentloaded", timeout: 30000 });
     await page.waitForTimeout(2000);
 
     const campaigns = await parseCampaigns(page);
@@ -818,7 +818,7 @@ async function debugScreenshot(page: Page, label: string) {
 // Usadas tanto pelos exports individuais quanto pelo runActionsInSession (batch).
 
 async function pauseInPage(page: Page, account: string, campaignId: string, campaignName: string): Promise<string> {
-  await page.goto(CAMPAIGNS_URL, { waitUntil: "networkidle", timeout: 30000 });
+  await page.goto(CAMPAIGNS_URL, { waitUntil: "domcontentloaded", timeout: 30000 });
   await page.waitForTimeout(2000);
   await debugScreenshot(page, `pause-${account}-loaded`);
   const row = await findCampaignRow(page, campaignId, campaignName);
@@ -840,7 +840,7 @@ async function pauseInPage(page: Page, account: string, campaignId: string, camp
 }
 
 async function activateInPage(page: Page, account: string, campaignId: string, campaignName: string): Promise<string> {
-  await page.goto(CAMPAIGNS_URL, { waitUntil: "networkidle", timeout: 30000 });
+  await page.goto(CAMPAIGNS_URL, { waitUntil: "domcontentloaded", timeout: 30000 });
   await page.waitForTimeout(2000);
   const row = await findCampaignRow(page, campaignId, campaignName);
   if (!row) {
@@ -938,7 +938,7 @@ export function getMLSessionStatus(account: "feminnita" | "fnt" = "feminnita"): 
 }
 
 async function updateBudgetInPage(page: Page, account: string, campaignId: string, dailyBudget: number, campaignName: string): Promise<string> {
-  await page.goto(CAMPAIGNS_URL, { waitUntil: "networkidle", timeout: 30000 });
+  await page.goto(CAMPAIGNS_URL, { waitUntil: "domcontentloaded", timeout: 30000 });
   await page.waitForTimeout(2000);
   await debugScreenshot(page, `budget-${account}-loaded`);
 
