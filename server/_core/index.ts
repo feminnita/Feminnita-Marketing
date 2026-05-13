@@ -22,6 +22,7 @@ import { setupBaileysDebugRoutes } from "./baileys-debug";
 import { initializeWebSocket } from "./websocket-notifications";
 import { startAllAgents } from "../agents/index";
 import { updateMarketKnowledge } from "../agents/knowledge-updater";
+import { registerBlogRoutes } from "../services/blog-server";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -284,6 +285,9 @@ async function startServer() {
       res.json({ url: `/uploads/${req.file.filename}`, name: req.file.originalname });
     });
   }
+
+  // Blog público — GET /blog, GET /blog/:slug, GET /blog/feed.xml
+  registerBlogRoutes(app);
 
   // tRPC API
   app.use(
