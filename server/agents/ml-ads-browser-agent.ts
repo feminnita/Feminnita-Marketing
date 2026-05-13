@@ -833,7 +833,7 @@ async function pauseInPage(page: Page, account: string, campaignId: string, camp
     await debugScreenshot(page, `pause-${account}-nobtn`);
     return `Botão de pausar não encontrado para "${campaignName || campaignId}".`;
   }
-  await pauseBtn.click();
+  await pauseBtn.click({ force: true, timeout: 5000 });
   await page.waitForTimeout(2000);
   await debugScreenshot(page, `pause-${account}-done`);
   return `Campanha "${campaignName || campaignId}" pausada com sucesso.`;
@@ -852,7 +852,7 @@ async function activateInPage(page: Page, account: string, campaignId: string, c
   if (!await activateBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
     return `Botão de ativar não encontrado para "${campaignName || campaignId}".`;
   }
-  await activateBtn.click();
+  await activateBtn.click({ force: true, timeout: 5000 });
   await page.waitForTimeout(2000);
   return `Campanha "${campaignName || campaignId}" reativada com sucesso.`;
 }
@@ -952,11 +952,12 @@ async function updateBudgetInPage(page: Page, account: string, campaignId: strin
   const budgetTd = row.locator('td').filter({ hasText: /R\$/ }).first();
   await budgetTd.hover().catch(() => {});
   await page.waitForTimeout(300);
+  // force:true ignora checks de cobertura — o ML às vezes exibe overlays/tooltips ao hover que bloqueiam o click
   const pencilBtn = budgetTd.locator('button, [role="button"]').first();
   if (await pencilBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await pencilBtn.click();
+    await pencilBtn.click({ force: true, timeout: 5000 });
   } else {
-    await budgetTd.click();
+    await budgetTd.click({ force: true, timeout: 5000 });
   }
   await page.waitForTimeout(500);
   await debugScreenshot(page, `budget-${account}-pencil`);
@@ -964,7 +965,7 @@ async function updateBudgetInPage(page: Page, account: string, campaignId: strin
   const modalTitle = page.locator('text="Altere seu orçamento"');
   let modalReady = await modalTitle.waitFor({ state: "visible", timeout: 6000 }).then(() => true).catch(() => false);
   if (!modalReady) {
-    await budgetTd.click();
+    await budgetTd.click({ force: true, timeout: 5000 });
     modalReady = await modalTitle.waitFor({ state: "visible", timeout: 5000 }).then(() => true).catch(() => false);
   }
   if (!modalReady) {
