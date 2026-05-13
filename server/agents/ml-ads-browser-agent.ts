@@ -492,35 +492,45 @@ async function ensureLoggedIn(page: Page, context: BrowserContext, account: "fem
     console.warn(`[MLBrowser] Cookies salvos inválidos/expirados para ${account}`);
   }
 
-  // 2. Tenta auth-from-token endpoint do ML (evita reCAPTCHA)
+  // 2. Tenta auth-from-token endpoint do ML (evita login por formulário)
   const tokenOk = await tryTokenToBrowserSession(page, context, account);
   if (tokenOk) {
     // Sempre navega para CAMPAIGNS_URL (rota protegida) — /productAds é landing pública
     try {
       await page.goto(CAMPAIGNS_URL, { waitUntil: "domcontentloaded", timeout: 25000 });
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(3000); // aguarda React e redirects JS terminarem
     } catch {}
     const url = page.url();
-    console.log(`[MLBrowser] Pós-token: URL=${url}`);
+    const bodySnippet = await page.evaluate(() => document.body?.innerText?.slice(0, 200) ?? "").catch(() => "");
+    console.log(`[MLBrowser] Pós-token: URL=${url} body="${bodySnippet.replace(/\n/g," ").slice(0,150)}"`);
     if (isCampaignPageUrl(url)) {
       console.log(`[MLBrowser] Sessão via token OK para ${account} — salvando...`);
       await saveSession(context, account);
       return true;
     }
-    console.warn(`[MLBrowser] auth-from-token não funcionou para ${account}`);
+    // Cookies parcialmente válidos — pode estar em outra página autenticada do ML
+    if (!url.includes("/login") && !url.includes("/jms/lgz/") && !url.includes("user-recaptcha")) {
+      // Tenta acessar campaigns diretamente mais uma vez após aguardar
+      await page.waitForTimeout(2000);
+      try {
+        await page.goto(CAMPAIGNS_URL, { waitUntil: "domcontentloaded", timeout: 20000 });
+        await page.waitForTimeout(2000);
+      } catch {}
+      const url2 = page.url();
+      console.log(`[MLBrowser] Segunda tentativa campaigns: URL=${url2}`);
+      if (isCampaignPageUrl(url2)) {
+        console.log(`[MLBrowser] Sessão via token OK (2ª tentativa) para ${account} — salvando...`);
+        await saveSession(context, account);
+        return true;
+      }
+    }
+    console.warn(`[MLBrowser] auth-from-token não resultou em sessão de campaigns para ${account} — URL final: ${url}`);
   }
 
-  // 3. Último recurso: login via formulário
-  console.log(`[MLBrowser] Tentando login via formulário para ${account}...`);
-  const ok = await loginML(page, account);
-  if (ok) {
-    await saveSession(context, account);
-    // Após login, garante que está na página certa
-    try {
-      await page.goto(CAMPAIGNS_URL, { waitUntil: "domcontentloaded", timeout: 25000 });
-    } catch {}
-  }
-  return ok;
+  // 3. Sem sessão válida — para SaaS não usamos 2captcha (é por tenant, não global)
+  // Falha clara para o operador reautorizar via OAuth
+  console.error(`[MLBrowser] Sessão ML expirada para ${account}. Reautentique em /api/ml/oauth/start?account=${account}`);
+  return false;
 }
 
 // ─── Parser de campanhas ──────────────────────────────────────────────────────
