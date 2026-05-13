@@ -25,6 +25,15 @@ function getCampaignsUrl(account: string): string {
   }
   return CAMPAIGNS_URL;
 }
+
+function getNewCampaignUrl(account: string): string {
+  if (account === "fnt") {
+    const advId     = process.env.ML_ADVERTISER_ID_2 || "1117634";
+    const accountId = process.env.ML_ACCOUNT_ID_2    || "1155286";
+    return `https://ads.mercadolivre.com.br/product-ads/admin/campaigns/new?advertiser_id=${advId}&account_id=${accountId}&navigate_to=mercado_ads`;
+  }
+  return "https://ads.mercadolivre.com.br/product-ads/admin/campaigns/new";
+}
 const LOGIN_URL = "https://www.mercadolivre.com/jms/mlb/lgz/login";
 const TWOCAPTCHA_KEY = process.env.TWOCAPTCHA_API_KEY || "";
 
@@ -1157,7 +1166,7 @@ async function createCampaignInPage(
 
   console.log(`[MLBrowser] createCampaignInPage — nome="${campaignName}" budget=R$${dailyBudget} itens=${itemIds.length} acos=${acosTarget ?? "auto"}`);
 
-  const NEW_CAMPAIGN_URL = "https://ads.mercadolivre.com.br/product-ads/admin/campaigns/new";
+  const NEW_CAMPAIGN_URL = getNewCampaignUrl(account);
 
   try {
     await page.goto(NEW_CAMPAIGN_URL, { waitUntil: "domcontentloaded", timeout: 30000 });
