@@ -671,7 +671,10 @@ export async function chatWithGabi(
               }
               for (const a of accActions) {
                 const log = results[a.id] ?? "Sem resultado";
-                const isError = log.startsWith("ERRO:") || log.includes("não encontrada") || log.includes("não encontrado");
+                const isError = log.startsWith("ERRO:") || log.startsWith("❌") ||
+                  log.includes("não encontrada") || log.includes("não encontrado") ||
+                  log.includes("Erro ao") || log.includes("ML API") || log.includes("não abriu") ||
+                  log.includes("Timeout") || log.includes("timeout");
                 await db.update(agentActionsTable).set({
                   status:       (isError ? "pending" : "done") as const,
                   executedAt:   isError ? undefined : new Date(),
