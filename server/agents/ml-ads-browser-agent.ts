@@ -730,6 +730,9 @@ async function withBrowser<T>(
   }
 
   const page = await context.newPage();
+  // Limita qualquer operação de locator sem timeout explícito a 8s (evita travas de 30s)
+  page.setDefaultTimeout(8000);
+  page.setDefaultNavigationTimeout(30000);
 
   try {
     const loggedIn = await ensureLoggedIn(page, context, account);
@@ -776,7 +779,7 @@ export async function listAdsCampaigns(account: "feminnita" | "fnt" = "feminnita
 async function scanRowsForCampaign(page: Page, lowerName: string, lowerId: string): Promise<any> {
   const rows = await page.locator("tr").all();
   for (const row of rows) {
-    const text = (await row.innerText().catch(() => "")).toLowerCase();
+    const text = (await row.innerText({ timeout: 5000 }).catch(() => "")).toLowerCase();
     if ((lowerName && text.includes(lowerName)) || (lowerId && text.includes(lowerId))) {
       return row;
     }
@@ -957,15 +960,19 @@ async function updateBudgetInPage(page: Page, account: string, campaignId: strin
   await page.waitForTimeout(2000);
   await debugScreenshot(page, `budget-${account}-loaded`);
 
+  // Aguarda a tabela de campanhas renderizar antes de escanear
+  await page.waitForSelector("table tr, [class*='row']", { timeout: 8000 }).catch(() => {});
+
   const row = await findCampaignRow(page, campaignId, campaignName);
   if (!row) {
     const rowCount = await page.evaluate(() => document.querySelectorAll("tr").length).catch(() => 0);
     const visible = await logVisibleCampaigns(page);
     return `Campanha "${campaignName || campaignId}" não encontrada. [URL: ${page.url()}] [Rows: ${rowCount}] [Visíveis: ${visible}]`;
   }
+  console.log(`[MLBrowser] updateBudgetInPage — campanha encontrada, procurando célula R$`);
 
   const budgetTd = row.locator('td').filter({ hasText: /R\$/ }).first();
-  await budgetTd.hover().catch(() => {});
+  await budgetTd.hover({ timeout: 3000 }).catch(() => {});
   await page.waitForTimeout(300);
   // force:true ignora checks de cobertura — o ML às vezes exibe overlays/tooltips ao hover que bloqueiam o click
   const pencilBtn = budgetTd.locator('button, [role="button"]').first();
@@ -976,6 +983,7 @@ async function updateBudgetInPage(page: Page, account: string, campaignId: strin
   }
   await page.waitForTimeout(500);
   await debugScreenshot(page, `budget-${account}-pencil`);
+  console.log(`[MLBrowser] updateBudgetInPage — aguardando modal orçamento. URL=${page.url()}`);
 
   const modalTitle = page.locator('text="Altere seu orçamento"');
   let modalReady = await modalTitle.waitFor({ state: "visible", timeout: 6000 }).then(() => true).catch(() => false);
