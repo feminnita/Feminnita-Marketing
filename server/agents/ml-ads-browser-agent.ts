@@ -839,6 +839,12 @@ async function findCampaignRow(page: Page, campaignId: string, campaignName: str
   const lowerName = campaignName.toLowerCase().trim();
   const lowerId   = campaignId.toLowerCase().trim();
 
+  // Aguarda URL estabilizar (ML Ads faz redirect client-side após carregar)
+  await page.waitForURL(u => !u.toString().endsWith("/campaigns"), { timeout: 5000 }).catch(() => {});
+  // Aguarda linhas de campanha renderizarem (React SPA pode demorar > 2s)
+  await page.waitForSelector("tr:nth-child(2)", { timeout: 10000 }).catch(() => {});
+  await page.waitForTimeout(800);
+
   // Escaneia página atual
   let found = await scanRowsForCampaign(page, lowerName, lowerId);
   if (found) return found;
