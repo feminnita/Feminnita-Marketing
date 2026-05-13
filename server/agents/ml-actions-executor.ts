@@ -102,7 +102,7 @@ export function startMLActionsExecutor(): () => void {
     }
   }
 
-  setTimeout(run, 15_000);
+  setTimeout(run, 45_000);
   const interval = setInterval(run, INTERVAL_MS);
   console.log(`[MLExecutor] Iniciado — ciclos a cada ${INTERVAL_MS / 60000} min (Playwright browser)`);
 
