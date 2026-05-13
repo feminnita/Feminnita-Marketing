@@ -290,14 +290,16 @@ async function loginML(page: Page, account: "feminnita" | "fnt"): Promise<boolea
       console.log(`[MLBrowser] Sitekey captcha: "${sitekey}"`);
       let token: string | null = null;
       if (sitekey) {
-        console.log(`[MLBrowser] reCAPTCHA invisible v2 sitekey=${sitekey} — resolvendo via 2captcha...`);
-        token = await solve2captcha(sitekey, page.url(), false, true);
+        // user-recaptcha-social é checkbox v2 visível (invisible=false); demais variantes são invisible
+        const isInvisible = !page.url().includes("user-recaptcha-social");
+        console.log(`[MLBrowser] reCAPTCHA sitekey=${sitekey} invisible=${isInvisible} — resolvendo via 2captcha...`);
+        token = await solve2captcha(sitekey, page.url(), false, isInvisible);
       } else {
         console.warn("[MLBrowser] Sitekey não encontrado — tentando sem captcha");
       }
 
       if (token) {
-        // Injeta token + dispara callbacks de forma recursiva + faz form.submit() como fallback
+        // Injeta token + dispara callbacks nativos (deixa o AJAX do ML navegar sozinho)
         await page.evaluate((t) => {
           // Preenche todos os campos g-recaptcha-response possíveis
           ["g-recaptcha-response", "g-recaptcha-response-100000", "g-recaptcha-response-100001"].forEach(id => {
@@ -323,18 +325,21 @@ async function loginML(page: Page, account: "feminnita" | "fnt"): Promise<boolea
           if (w.___grecaptcha_cfg?.clients) callCallbacks(w.___grecaptcha_cfg.clients);
           if (w.___grecaptcha_cfg?.enterprise?.clients) callCallbacks(w.___grecaptcha_cfg.enterprise.clients);
 
-          // form.submit() após 800ms para dar tempo aos callbacks processarem
+          // Também tenta data-callback global (ML às vezes define window.recaptchaCallback)
+          const dataCallbackEl = document.querySelector('[data-callback]');
+          const cbName = dataCallbackEl?.getAttribute('data-callback');
+          if (cbName && typeof (w as any)[cbName] === 'function') {
+            try { (w as any)[cbName](t); } catch (_) {}
+          }
+
+          // NÃO faz form.submit() — deixa o callback nativo submeter via AJAX
+          // Fallback: clica botão submit após 1200ms caso o callback não tenha atuado
           setTimeout(() => {
-            const form = document.querySelector("form");
-            if (form) {
-              try { form.submit(); } catch (_) {
-                const btn = form.querySelector('button[type="submit"]') as HTMLElement | null;
-                if (btn) btn.click();
-              }
-            }
-          }, 800);
+            const btn = document.querySelector('button[type="submit"]') as HTMLElement | null;
+            if (btn) btn.click();
+          }, 1200);
         }, token);
-        console.log("[MLBrowser] Token captcha injetado + form.submit agendado — aguardando navegação...");
+        console.log("[MLBrowser] Token captcha injetado + callbacks disparados — aguardando navegação do AJAX...");
 
         // Aguarda até 35s: campo de senha OU saída da página de captcha/msl
         const afterCaptcha = await Promise.race([
