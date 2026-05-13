@@ -787,7 +787,7 @@ async function findCampaignRow(page: Page, campaignId: string, campaignName: str
   for (let p = 2; p <= 10; p++) {
     const nextBtn = page.locator('button:has-text("Seguinte"), a:has-text("Seguinte"), button[aria-label*="ext"], a[aria-label*="ext"]').first();
     if (!await nextBtn.isVisible({ timeout: 2000 }).catch(() => false)) break;
-    await nextBtn.click();
+    await nextBtn.click({ force: true, timeout: 5000 });
     await page.waitForTimeout(2000);
     console.log(`[MLBrowser] Verificando página ${p} de campanhas...`);
     found = await scanRowsForCampaign(page, lowerName, lowerId);
