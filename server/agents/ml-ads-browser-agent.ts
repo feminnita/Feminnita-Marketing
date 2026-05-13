@@ -527,9 +527,27 @@ async function ensureLoggedIn(page: Page, context: BrowserContext, account: "fem
     console.warn(`[MLBrowser] auth-from-token não resultou em sessão de campaigns para ${account} — URL final: ${url}`);
   }
 
-  // 3. Sem sessão válida — para SaaS não usamos 2captcha (é por tenant, não global)
-  // Falha clara para o operador reautorizar via OAuth
-  console.error(`[MLBrowser] Sessão ML expirada para ${account}. Reautentique em /api/ml/oauth/start?account=${account}`);
+  // 3. Fallback: login email+senha (sem captcha obrigatório)
+  // Tenta login direto — se ML não exibir captcha (IP já conhecido), funciona sem 2captcha.
+  // Salva cookies de sessão ao final para as próximas execuções.
+  console.log(`[MLBrowser] auth-from-token falhou para ${account} — tentando login email/senha...`);
+  const loginOk = await loginML(page, account);
+  if (loginOk) {
+    try {
+      await page.goto(CAMPAIGNS_URL, { waitUntil: "domcontentloaded", timeout: 25000 });
+      await page.waitForTimeout(3000);
+    } catch {}
+    const url = page.url();
+    console.log(`[MLBrowser] Pós-login email/senha: URL=${url}`);
+    if (isCampaignPageUrl(url)) {
+      console.log(`[MLBrowser] Login email/senha OK para ${account} — salvando sessão...`);
+      await saveSession(context, account);
+      return true;
+    }
+    console.warn(`[MLBrowser] Login email/senha não chegou à tela de campaigns para ${account}`);
+  }
+
+  console.error(`[MLBrowser] Sessão ML expirada para ${account}. Reautentique via OAuth em /api/ml/oauth/start?account=${account} com scope advertising.`);
   return false;
 }
 
@@ -883,6 +901,8 @@ export type BatchAction = {
   campaignId: string;
   campaignName: string;
   budget?: number;
+  itemIds?: string[];
+  acosTarget?: number;
 };
 
 /**
@@ -907,6 +927,9 @@ export async function runActionsInSession(
             break;
           case "update_ads_budget":
             results[action.id] = await updateBudgetInPage(page, account, action.campaignId, action.budget ?? 0, action.campaignName);
+            break;
+          case "create_ads_campaign":
+            results[action.id] = await createCampaignInPage(page, account, action.campaignName, action.budget ?? 30, action.itemIds ?? [], action.acosTarget);
             break;
           case "scrape_ads_metrics": {
             const n = await scrapeAndSaveMetricsInPage(page, account);
@@ -1084,4 +1107,194 @@ export async function updateAdsBudget(campaignId: string, dailyBudget: number, a
 /** Abre o browser, coleta todas as métricas de campanhas ML e salva na tabela marketplace_ads_metrics. */
 export async function scrapeAdsCampaignMetrics(account: "feminnita" | "fnt" = "feminnita"): Promise<number> {
   return withMutex(account, () => withBrowser(account, page => scrapeAndSaveMetricsInPage(page, account)));
+}
+
+// ─── Criação de campanha via Playwright ───────────────────────────────────────
+// API REST do ML bloqueia criação de campanhas para contas sem parceria oficial.
+// Esta função usa o wizard do Seller Center (ads.mercadolivre.com.br).
+
+async function createCampaignInPage(
+  page: Page,
+  account: string,
+  campaignName: string,
+  dailyBudget: number,
+  itemIds: string[],
+  acosTarget: number | undefined,
+): Promise<string> {
+  if (!campaignName || !campaignName.trim()) return `ERRO: nome da campanha vazio`;
+  if (!(dailyBudget > 0)) return `ERRO: budget inválido (${dailyBudget})`;
+  if (!itemIds || itemIds.length === 0) return `ERRO: lista de itens vazia`;
+
+  console.log(`[MLBrowser] createCampaignInPage — nome="${campaignName}" budget=R$${dailyBudget} itens=${itemIds.length} acos=${acosTarget ?? "auto"}`);
+
+  const NEW_CAMPAIGN_URL = "https://ads.mercadolivre.com.br/product-ads/admin/campaigns/new";
+
+  try {
+    await page.goto(NEW_CAMPAIGN_URL, { waitUntil: "domcontentloaded", timeout: 30000 });
+    await page.waitForTimeout(3000);
+    await debugScreenshot(page, `create-${account}-1-landing`);
+  } catch (e: any) {
+    return `ERRO: não conseguiu navegar para tela de criar campanha (${e.message})`;
+  }
+
+  if (page.url().includes("/login") || page.url().includes("/jms/")) {
+    return `ERRO: sessão expirou ao abrir tela de criar campanha — reautentique`;
+  }
+
+  // Wizard ML — variações conhecidas: "Anúncios", "Itens", "Produtos". Vai pra tela de seleção de itens.
+  // Fluxo típico: 1) Selecionar anúncios → 2) Nome+budget → 3) Confirmar
+  // Estratégia: procurar input/textarea onde colar IDs separados por vírgula/quebra de linha.
+
+  const itemsCsv = itemIds.map(id => id.trim()).filter(Boolean).join(", ");
+
+  // Tentativa 1: campo de busca/colagem de IDs
+  const idSearchSelectors = [
+    'textarea[placeholder*="MLB"]',
+    'input[placeholder*="MLB"]',
+    'textarea[placeholder*="anúncio"]',
+    'input[placeholder*="anúncio"]',
+    'textarea[placeholder*="ID"]',
+    'input[placeholder*="ID"]',
+    'input[aria-label*="busca"]',
+    'input[type="search"]',
+  ];
+
+  let idsAdded = false;
+  for (const sel of idSearchSelectors) {
+    const el = page.locator(sel).first();
+    if (await el.isVisible({ timeout: 1500 }).catch(() => false)) {
+      console.log(`[MLBrowser] createCampaign — campo de IDs encontrado via "${sel}"`);
+      await el.click({ force: true, timeout: 4000 }).catch(() => {});
+      // Para textareas multi-ID, cola lista. Para input search, faz um por um.
+      const isTextarea = sel.startsWith("textarea");
+      if (isTextarea) {
+        await el.fill(itemsCsv);
+        await page.keyboard.press("Enter");
+      } else {
+        for (const id of itemIds) {
+          await el.fill(id);
+          await page.waitForTimeout(800);
+          // Clica primeiro resultado ou Enter
+          await page.keyboard.press("Enter");
+          await page.waitForTimeout(600);
+        }
+      }
+      idsAdded = true;
+      break;
+    }
+  }
+
+  await debugScreenshot(page, `create-${account}-2-items-${idsAdded ? "added" : "notfound"}`);
+
+  if (!idsAdded) {
+    const bodyText = await page.evaluate(() => document.body?.innerText?.slice(0, 600) ?? "").catch(() => "");
+    return `ERRO: campo para inserir IDs de anúncios não encontrado na tela de criar campanha. URL=${page.url()}. Página: ${bodyText.replace(/\n/g, " ").slice(0, 400)}`;
+  }
+
+  // Botão "Continuar" / "Próximo" / "Avançar"
+  const nextBtnSelectors = [
+    'button:has-text("Continuar")',
+    'button:has-text("Próximo")',
+    'button:has-text("Avançar")',
+    'button:has-text("Seguinte")',
+    'button[type="submit"]',
+  ];
+  let advanced = false;
+  for (const sel of nextBtnSelectors) {
+    const btn = page.locator(sel).first();
+    if (await btn.isVisible({ timeout: 1500 }).catch(() => false)) {
+      await btn.click({ force: true, timeout: 5000, noWaitAfter: true }).catch(() => {});
+      advanced = true;
+      break;
+    }
+  }
+  await page.waitForTimeout(2500);
+  await debugScreenshot(page, `create-${account}-3-after-items`);
+
+  // Tela de nome + budget
+  const nameInput = page.locator('input[name*="name"], input[placeholder*="ome da campanha"], input[placeholder*="ome"]').first();
+  if (await nameInput.isVisible({ timeout: 5000 }).catch(() => false)) {
+    await nameInput.fill(campaignName);
+    console.log(`[MLBrowser] createCampaign — nome preenchido: "${campaignName}"`);
+  } else {
+    return `ERRO: campo de nome da campanha não encontrado. URL=${page.url()}`;
+  }
+
+  // Budget diário
+  const budgetInput = page.locator('input[type="number"]').filter({ visible: true }).first();
+  if (await budgetInput.isVisible({ timeout: 3000 }).catch(() => false)) {
+    await budgetInput.evaluate((el: HTMLInputElement) => { el.focus(); el.select(); });
+    await page.evaluate((val) => {
+      const inputs = Array.from(document.querySelectorAll('input[type="number"]')) as HTMLInputElement[];
+      const input = inputs.find(i => i.offsetParent !== null);
+      if (!input) return;
+      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+      if (setter) setter.call(input, val);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    }, String(dailyBudget));
+    await page.keyboard.press("Tab");
+    console.log(`[MLBrowser] createCampaign — budget preenchido: R$${dailyBudget}`);
+  }
+
+  // ACoS alvo (opcional) — se acosTarget undefined, deixa o ML decidir
+  if (acosTarget !== undefined && acosTarget > 0) {
+    const acosInput = page.locator('input[name*="acos"], input[placeholder*="ACoS"], input[placeholder*="acos"]').first();
+    if (await acosInput.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await acosInput.fill(String(acosTarget));
+      console.log(`[MLBrowser] createCampaign — ACoS alvo: ${acosTarget}%`);
+    }
+  }
+
+  await debugScreenshot(page, `create-${account}-4-config-filled`);
+
+  // Botão final "Criar" / "Salvar" / "Publicar"
+  const createBtnSelectors = [
+    'button:has-text("Criar campanha")',
+    'button:has-text("Criar")',
+    'button:has-text("Publicar")',
+    'button:has-text("Salvar")',
+    'button:has-text("Confirmar")',
+    'button[type="submit"]',
+  ];
+  let created = false;
+  for (const sel of createBtnSelectors) {
+    const btn = page.locator(sel).filter({ visible: true }).first();
+    if (await btn.isVisible({ timeout: 1500 }).catch(() => false)) {
+      const enabled = await btn.isEnabled().catch(() => true);
+      if (!enabled) continue;
+      await btn.click({ force: true, timeout: 5000, noWaitAfter: true }).catch(() => {});
+      created = true;
+      break;
+    }
+  }
+  await page.waitForTimeout(4000);
+  await debugScreenshot(page, `create-${account}-5-after-submit`);
+
+  if (!created) {
+    return `ERRO: botão final de criar campanha não encontrado/habilitado. URL=${page.url()}`;
+  }
+
+  // Verifica resultado: voltou para listagem ou tela de sucesso?
+  const url = page.url();
+  const success = url.includes("/campaigns") && !url.includes("/new");
+  const pageText = await page.evaluate(() => document.body?.innerText?.slice(0, 400) ?? "").catch(() => "");
+  const hasSuccess = /criada com sucesso|campanha criada|sucesso/i.test(pageText);
+
+  if (success || hasSuccess) {
+    return `Campanha "${campaignName}" criada com R$${dailyBudget}/dia e ${itemIds.length} anúncios.`;
+  }
+  return `Campanha enviada mas resultado incerto. URL=${url}. Confira em ads.mercadolivre.com.br. Página: ${pageText.replace(/\n/g, " ").slice(0, 250)}`;
+}
+
+export async function createAdsCampaign(
+  campaignName: string,
+  dailyBudget: number,
+  itemIds: string[],
+  account: "feminnita" | "fnt" = "feminnita",
+  acosTarget?: number,
+): Promise<string> {
+  return withMutex(`${account}-create`, () => withBrowser(account, (page) =>
+    createCampaignInPage(page, account, campaignName, dailyBudget, itemIds, acosTarget)
+  ));
 }
