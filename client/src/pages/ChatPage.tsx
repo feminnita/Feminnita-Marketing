@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { ChevronLeft, Clock, FileText, Loader2, MessageCircle, Paperclip, Send, Users, X } from "lucide-react";
+import { ChevronLeft, Clock, FileText, Loader2, MessageCircle, Paperclip, RotateCcw, Send, Users, X } from "lucide-react";
 import LoginSignup from "@/pages/LoginSignup";
 
 // ─── Push helpers ──────────────────────────────────────────────────────────────
@@ -223,6 +223,12 @@ export default function ChatPage() {
   function selectContact(c: Contact) { setContact(c); setInput(""); }
   function goBack() { setContact(null); setInput(""); }
 
+  function newConversation() {
+    if (!contact || contact.kind !== "agent") return;
+    setAgentCtxs(p => ({ ...p, [contact.agentName!]: { msgs: [], convId: null } }));
+    setInput("");
+  }
+
   async function send() {
     const text = input.trim();
     if (!text || !contact) return;
@@ -405,6 +411,13 @@ export default function ChatPage() {
                 {contact.kind === "group" ? `${onlineUsers.length} online` : isAgentLoading ? "processando..." : contact.role}
               </div>
             </div>
+            {contact.kind === "agent" && (
+              <button onClick={newConversation} title="Nova conversa"
+                style={{ background: "none", border: "1px solid #334155", borderRadius: 6, color: "#94a3b8", cursor: "pointer", padding: "4px 8px", display: "flex", alignItems: "center", gap: 4, fontSize: 12 }}>
+                <RotateCcw size={12} />
+                Nova
+              </button>
+            )}
             <button onClick={goBack} style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", padding: 4, display: "flex" }}><X size={15} /></button>
           </div>
 
