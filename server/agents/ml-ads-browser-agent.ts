@@ -16,11 +16,12 @@ const SELLER_CENTER_URL = "https://ads.mercadolivre.com.br/productAds";
 // URL direta da lista de campanhas — inclui todos os status (A=ativo, P=pausado, D=desabilitado)
 const CAMPAIGNS_URL = "https://ads.mercadolivre.com.br/product-ads/admin/campaigns?status=A%2CP%2CD";
 
-// FNT usa a interface Hub do ML Ads (advertiser_id=1117634)
+// FNT usa product-ads com advertiser_id e account_id explícitos na URL
 function getCampaignsUrl(account: string): string {
   if (account === "fnt") {
-    const advId = process.env.ML_ADVERTISER_ID_2 || "1117634";
-    return `https://ads.mercadolivre.com.br/hub/campaigns?advertiserId=${advId}`;
+    const advId     = process.env.ML_ADVERTISER_ID_2 || "1117634";
+    const accountId = process.env.ML_ACCOUNT_ID_2    || "1155286";
+    return `https://ads.mercadolivre.com.br/product-ads/admin/campaigns?advertiser_id=${advId}&account_id=${accountId}&navigate_to=mercado_ads&status=A%2CP%2CD`;
   }
   return CAMPAIGNS_URL;
 }
