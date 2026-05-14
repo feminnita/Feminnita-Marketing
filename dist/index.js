@@ -6809,12 +6809,11 @@ init_schema();
 import { eq as eq5, and as and4 } from "drizzle-orm";
 var GRAPH_BASE = "https://graph.facebook.com/v20.0";
 async function getMetaToken(type) {
-  const plataforma = type === "page" ? "meta_page" : "meta";
   const envFallback = type === "page" ? process.env.META_PAGE_ACCESS_TOKEN || process.env.META_ACCESS_TOKEN || "" : process.env.META_ACCESS_TOKEN || "";
   try {
     const db = await getDb();
     if (!db) return envFallback;
-    const rows = await db.select({ accessToken: oauthTokens.accessToken }).from(oauthTokens).where(and4(eq5(oauthTokens.plataforma, plataforma), eq5(oauthTokens.isActive, true))).limit(1);
+    const rows = await db.select({ accessToken: oauthTokens.accessToken }).from(oauthTokens).where(and4(eq5(oauthTokens.plataforma, "meta"), eq5(oauthTokens.isActive, true))).limit(1);
     return rows[0]?.accessToken || envFallback;
   } catch {
     return envFallback;
@@ -37807,18 +37806,6 @@ async function seedMetaTokensIfMissing() {
       accessToken: userToken,
       refreshToken: null,
       expiresAt,
-      isActive: true,
-      createdAt: now,
-      updatedAt: now
-    }).catch(() => null);
-  }
-  if (pageToken && pageToken !== userToken) {
-    await db.insert(oauthTokens).values({
-      userId: 1,
-      plataforma: "meta_page",
-      accessToken: pageToken,
-      refreshToken: null,
-      expiresAt: null,
       isActive: true,
       createdAt: now,
       updatedAt: now
