@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { MessageCircle, X, Minus } from "lucide-react";
+import { useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
+
+// Páginas que já têm chat próprio — esconder o widget flutuante
+const CHAT_ROUTES = ["/chat", "/shopee/luiza", "/ml/gabi", "/tray/duda", "/ml/luna", "/tiktok/luna", "/tiktok/zara", "/tiktok/nina"];
 
 const PANEL_KEY = "feminnita-chat-open";
 
 export default function ChatWidget() {
   const { user } = useAuth();
+  const [location] = useLocation();
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [unread, setUnread] = useState(0);
 
@@ -55,6 +60,7 @@ export default function ChatWidget() {
   useEffect(() => { if (isOpen) setUnread(0); }, [isOpen]);
 
   if (!user) return null;
+  if (CHAT_ROUTES.some(r => location === r || location.startsWith(r + "/"))) return null;
 
   return (
     <>
