@@ -447,6 +447,20 @@ Responda em português do Brasil. Entregue conteúdo pronto para copiar e colar.
 
 const DUDA_TOOLS: Anthropic.Tool[] = [
   {
+    name: "fetch_page",
+    description: "Busca o conteúdo atual de uma página do site da Feminnita (title, H1, meta description, H2s, texto). Use SEMPRE que precisar analisar uma página antes de responder — não diga 'já volto', apenas chame esta tool e entregue a análise completa na mesma resposta.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        url: {
+          type: "string",
+          description: "URL completa da página a buscar. Ex: https://feminnita.com.br ou https://feminnita.com.br/pijama-suede",
+        },
+      },
+      required: ["url"],
+    },
+  },
+  {
     name: "propose_seo_changes",
     description: "Propõe mudanças de SEO para serem aplicadas automaticamente no painel da Tray via browser. Use quando o usuário pedir para 'aplicar', 'atualizar no site', 'salvar' ou 'implementar' as otimizações.",
     input_schema: {
@@ -485,6 +499,15 @@ const DUDA_TOOLS: Anthropic.Tool[] = [
 ];
 
 const TOOLS_SYSTEM = `
+
+━━━ REGRA DE OURO — NUNCA DIGA "JÁ VOLTO" ━━━
+PROIBIDO usar frases como "já volto", "um momento", "deixa eu verificar", "vou acessar e já te retorno", "vou lá ver" ou qualquer variação que sinalize que você vai buscar algo e responder depois.
+Você tem a tool fetch_page disponível. Use-a IMEDIATAMENTE dentro da mesma resposta e entregue a análise completa de uma vez.
+Fluxo correto: pedido do usuário → chama fetch_page → recebe o conteúdo → entrega análise completa. Tudo em uma única resposta, sem pausas.
+
+━━━ BUSCAR PÁGINAS DO SITE ━━━
+Use a tool fetch_page SEMPRE que o usuário mencionar uma URL, uma página, um produto ou pedir análise de SEO de qualquer parte do site.
+Não espere — chame a tool e entregue o diagnóstico completo na mesma resposta.
 
 ━━━ APLICAR MUDANÇAS NO SITE ━━━
 Você pode aplicar as otimizações de SEO diretamente no painel da Tray, sem o usuário precisar copiar e colar.
@@ -578,6 +601,11 @@ export async function chatWithDuda(
             const lines = pending.map(a => `- ${a.title || a.actionType} [id=${a.id}]`);
             return `${pending.length} ação(ões) na fila de execução:\n${lines.join("\n")}`;
           })();
+
+        } else if (toolUse.name === "fetch_page") {
+          const url = inp.url as string;
+          const content = await fetchPage(url);
+          result = content ?? `Não foi possível acessar ${url} — trabalhe com o conhecimento disponível.`;
 
         } else {
           result = `Tool desconhecida: ${toolUse.name}`;
