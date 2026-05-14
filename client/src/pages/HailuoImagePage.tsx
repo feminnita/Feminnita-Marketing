@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { Download, ImageIcon, Loader2, Sparkles, AlertCircle } from "lucide-react";
+import { Download, ImageIcon, Loader2, Sparkles, AlertCircle, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -20,11 +20,16 @@ const SUGGESTIONS = [
   "Embalagem de presente Feminnita com pijama dobrado, fita dourada, fundo texturizado bege, fotografia comercial",
 ];
 
+interface ReferenceImage { base64: string; mimeType: string; preview: string; }
+
 export default function HailuoImagePage() {
   const [prompt, setPrompt] = useState("");
   const [aspectRatio, setAspectRatio] = useState<string>("1:1");
   const [n, setN] = useState(1);
   const [images, setImages] = useState<string[]>([]);
+  const [referenceImage, setReferenceImage] = useState<ReferenceImage | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const keyQuery = trpc.hailuoImage.checkKey.useQuery();
 
@@ -38,10 +43,34 @@ export default function HailuoImagePage() {
     },
   });
 
+  function loadImageFile(file: File) {
+    if (!file.type.startsWith("image/")) { toast.error("Apenas imagens são aceitas."); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error("Imagem deve ter no máximo 10 MB."); return; }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      const base64 = dataUrl.split(",")[1];
+      setReferenceImage({ base64, mimeType: file.type, preview: dataUrl });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleFileDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) loadImageFile(file);
+  }
+
   function handleGenerate() {
     if (!prompt.trim()) { toast.error("Digite um prompt para gerar a imagem."); return; }
     setImages([]);
-    generateMutation.mutate({ prompt: prompt.trim(), aspectRatio: aspectRatio as any, n });
+    generateMutation.mutate({
+      prompt: prompt.trim(),
+      aspectRatio: aspectRatio as any,
+      n,
+      ...(referenceImage ? { referenceImage: { base64: referenceImage.base64, mimeType: referenceImage.mimeType } } : {}),
+    });
   }
 
   function handleDownload(url: string, idx: number) {
@@ -95,6 +124,50 @@ export default function HailuoImagePage() {
               maxLength={1500}
             />
             <p className="text-xs text-slate-400 mt-1 text-right">{prompt.length}/1500</p>
+          </div>
+
+          {/* Imagem de referência */}
+          <div>
+            <label className="text-sm font-medium text-slate-700 mb-2 block">
+              Imagem de referência <span className="text-slate-400 font-normal">(opcional)</span>
+            </label>
+            {referenceImage ? (
+              <div className="relative rounded-xl overflow-hidden border border-violet-200 bg-slate-50">
+                <img src={referenceImage.preview} alt="Referência" className="w-full h-40 object-cover" />
+                <button
+                  onClick={() => setReferenceImage(null)}
+                  className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors"
+                >
+                  <X className="w-3.5 h-3.5 text-white" />
+                </button>
+                <div className="absolute bottom-0 left-0 right-0 bg-black/40 px-3 py-1.5">
+                  <p className="text-xs text-white font-medium">Referência carregada — a IA usará como base</p>
+                </div>
+              </div>
+            ) : (
+              <div
+                onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={handleFileDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`cursor-pointer rounded-xl border-2 border-dashed p-6 flex flex-col items-center gap-2 transition-colors ${
+                  dragging ? "border-violet-400 bg-violet-50" : "border-slate-200 hover:border-violet-300 hover:bg-violet-50/50"
+                }`}
+              >
+                <Upload className="w-6 h-6 text-slate-400" />
+                <p className="text-xs text-slate-500 text-center">
+                  Arraste uma foto aqui ou <span className="text-violet-600 font-medium">clique para escolher</span>
+                </p>
+                <p className="text-xs text-slate-400">JPG, PNG, WEBP · máx. 10 MB</p>
+              </div>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) loadImageFile(f); }}
+            />
           </div>
 
           {/* Sugestões */}
