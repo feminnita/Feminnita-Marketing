@@ -87,7 +87,7 @@ export default function HailuoImagePage() {
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8B2635] to-[#6B1D28] flex items-center justify-center flex-shrink-0">
           <Sparkles className="w-5 h-5 text-white" />
         </div>
         <div>
@@ -132,7 +132,7 @@ export default function HailuoImagePage() {
               Imagem de referência <span className="text-slate-400 font-normal">(opcional)</span>
             </label>
             {referenceImage ? (
-              <div className="relative rounded-xl overflow-hidden border border-violet-200 bg-slate-50">
+              <div className="relative rounded-xl overflow-hidden border border-rose-200 bg-slate-50">
                 <img src={referenceImage.preview} alt="Referência" className="w-full h-40 object-cover" />
                 <button
                   onClick={() => setReferenceImage(null)}
@@ -151,12 +151,12 @@ export default function HailuoImagePage() {
                 onDrop={handleFileDrop}
                 onClick={() => fileInputRef.current?.click()}
                 className={`cursor-pointer rounded-xl border-2 border-dashed p-6 flex flex-col items-center gap-2 transition-colors ${
-                  dragging ? "border-violet-400 bg-violet-50" : "border-slate-200 hover:border-violet-300 hover:bg-violet-50/50"
+                  dragging ? "border-[#8B2635] bg-rose-50" : "border-slate-200 hover:border-[#8B2635] hover:bg-rose-50/50"
                 }`}
               >
                 <Upload className="w-6 h-6 text-slate-400" />
                 <p className="text-xs text-slate-500 text-center">
-                  Arraste uma foto aqui ou <span className="text-violet-600 font-medium">clique para escolher</span>
+                  Arraste uma foto aqui ou <span className="text-[#8B2635] font-medium">clique para escolher</span>
                 </p>
                 <p className="text-xs text-slate-400">JPG, PNG, WEBP · máx. 10 MB</p>
               </div>
@@ -178,7 +178,7 @@ export default function HailuoImagePage() {
                 <button
                   key={i}
                   onClick={() => setPrompt(s)}
-                  className="w-full text-left text-xs px-3 py-2 rounded-lg border border-slate-200 hover:bg-violet-50 hover:border-violet-200 text-slate-600 transition-colors line-clamp-2"
+                  className="w-full text-left text-xs px-3 py-2 rounded-lg border border-slate-200 hover:bg-rose-50 hover:border-rose-200 text-slate-600 transition-colors line-clamp-2"
                 >
                   {s}
                 </button>
@@ -196,12 +196,12 @@ export default function HailuoImagePage() {
                   onClick={() => setAspectRatio(r.value)}
                   className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${
                     aspectRatio === r.value
-                      ? "bg-violet-600 border-violet-600 text-white"
-                      : "border-slate-200 text-slate-600 hover:border-violet-300"
+                      ? "bg-[#8B2635] border-[#8B2635] text-white"
+                      : "border-slate-200 text-slate-600 hover:border-[#8B2635]"
                   }`}
                 >
                   {r.label}
-                  <span className={`ml-1 ${aspectRatio === r.value ? "text-violet-200" : "text-slate-400"}`}>
+                  <span className={`ml-1 ${aspectRatio === r.value ? "text-rose-200" : "text-slate-400"}`}>
                     {r.hint}
                   </span>
                 </button>
@@ -212,7 +212,7 @@ export default function HailuoImagePage() {
           {/* Quantidade */}
           <div>
             <label className="text-sm font-medium text-slate-700 mb-2 block">
-              Quantidade: <span className="text-violet-600">{n}</span>
+              Quantidade: <span className="text-[#8B2635]">{n}</span>
             </label>
             <input
               type="range"
@@ -220,7 +220,7 @@ export default function HailuoImagePage() {
               max={4}
               value={n}
               onChange={(e) => setN(Number(e.target.value))}
-              className="w-full accent-violet-600"
+              className="w-full accent-[#8B2635]"
             />
             <div className="flex justify-between text-xs text-slate-400 mt-0.5">
               <span>1</span><span>2</span><span>3</span><span>4</span>
@@ -231,7 +231,7 @@ export default function HailuoImagePage() {
           <Button
             onClick={handleGenerate}
             disabled={generateMutation.isPending || !prompt.trim()}
-            className="w-full bg-violet-600 hover:bg-violet-700 text-white"
+            className="w-full bg-[#8B2635] hover:bg-[#6B1D28] text-white"
           >
             {generateMutation.isPending ? (
               <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Gerando imagem...</>
@@ -288,8 +288,8 @@ export default function HailuoImagePage() {
               </div>
               {generateMutation.isPending && (
                 <div className="flex items-center gap-2 mt-2">
-                  <Loader2 className="w-5 h-5 animate-spin text-violet-500" />
-                  <span className="text-sm text-violet-600 font-medium">Gerando com Hailuo AI...</span>
+                  <Loader2 className="w-5 h-5 animate-spin text-[#8B2635]" />
+                  <span className="text-sm text-[#8B2635] font-medium">Gerando com Hailuo AI...</span>
                 </div>
               )}
             </div>
