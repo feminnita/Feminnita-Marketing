@@ -1,9 +1,22 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { Download, ImageIcon, Loader2, Sparkles, AlertCircle, Upload, X } from "lucide-react";
+import { Download, ImageIcon, Loader2, Sparkles, AlertCircle, Upload, X, FolderOpen, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+
+const STORAGE_GENERATED = "hailuo_generated_images";
+const STORAGE_REFERENCES = "hailuo_reference_images";
+
+interface SavedImage { url: string; prompt: string; date: string; }
+interface SavedReference { preview: string; date: string; name: string; }
+
+function loadFromStorage<T>(key: string): T[] {
+  try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch { return []; }
+}
+function saveToStorage<T>(key: string, items: T[]) {
+  try { localStorage.setItem(key, JSON.stringify(items.slice(0, 50))); } catch {}
+}
 
 const ASPECT_RATIOS = [
   { value: "1:1",   label: "1:1",   hint: "Quadrado" },
@@ -20,15 +33,19 @@ const SUGGESTIONS = [
   "Embalagem de presente Feminnita com pijama dobrado, fita dourada, fundo texturizado bege, fotografia comercial",
 ];
 
-interface ReferenceImage { base64: string; mimeType: string; preview: string; }
+interface ReferenceImage { base64: string; mimeType: string; preview: string; name: string; }
 
 export default function HailuoImagePage() {
   const [prompt, setPrompt] = useState("");
   const [aspectRatio, setAspectRatio] = useState<string>("1:1");
   const [n, setN] = useState(1);
   const [images, setImages] = useState<string[]>([]);
+  const [quality, setQuality] = useState<"1024" | "2048" | "4096">("1024");
   const [referenceImage, setReferenceImage] = useState<ReferenceImage | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [libraryTab, setLibraryTab] = useState<"generated" | "references">("generated");
+  const [savedImages, setSavedImages] = useState<SavedImage[]>(() => loadFromStorage(STORAGE_GENERATED));
+  const [savedRefs, setSavedRefs] = useState<SavedReference[]>(() => loadFromStorage(STORAGE_REFERENCES));
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const keyQuery = trpc.hailuoImage.checkKey.useQuery();
@@ -36,11 +53,17 @@ export default function HailuoImagePage() {
   const generateMutation = trpc.hailuoImage.generate.useMutation({
     onSuccess: (data) => {
       setImages(data.images);
-      if (data.images.length === 0) toast.error("Nenhuma imagem retornada. Tente um prompt diferente.");
+      if (data.images.length === 0) { toast.error("Nenhuma imagem retornada. Tente um prompt diferente."); return; }
+      // salva automaticamente na biblioteca
+      const date = new Date().toLocaleString("pt-BR");
+      const newEntries: SavedImage[] = data.images.map(url => ({ url, prompt: prompt.trim(), date }));
+      setSavedImages(prev => {
+        const updated = [...newEntries, ...prev];
+        saveToStorage(STORAGE_GENERATED, updated);
+        return updated;
+      });
     },
-    onError: (e) => {
-      toast.error(e.message);
-    },
+    onError: (e) => { toast.error(e.message); },
   });
 
   function loadImageFile(file: File) {
@@ -50,7 +73,15 @@ export default function HailuoImagePage() {
     reader.onload = (e) => {
       const dataUrl = e.target?.result as string;
       const base64 = dataUrl.split(",")[1];
-      setReferenceImage({ base64, mimeType: file.type, preview: dataUrl });
+      const ref: ReferenceImage = { base64, mimeType: file.type, preview: dataUrl, name: file.name };
+      setReferenceImage(ref);
+      // salva na biblioteca de referências
+      const saved: SavedReference = { preview: dataUrl, date: new Date().toLocaleString("pt-BR"), name: file.name };
+      setSavedRefs(prev => {
+        const updated = [saved, ...prev];
+        saveToStorage(STORAGE_REFERENCES, updated);
+        return updated;
+      });
     };
     reader.readAsDataURL(file);
   }
@@ -69,6 +100,7 @@ export default function HailuoImagePage() {
       prompt: prompt.trim(),
       aspectRatio: aspectRatio as any,
       n,
+      quality,
       ...(referenceImage ? { referenceImage: { base64: referenceImage.base64, mimeType: referenceImage.mimeType } } : {}),
     });
   }
@@ -79,6 +111,21 @@ export default function HailuoImagePage() {
     a.download = `feminnita-image-${Date.now()}-${idx + 1}.jpg`;
     a.target = "_blank";
     a.click();
+  }
+
+  function deleteGenerated(idx: number) {
+    setSavedImages(prev => { const u = prev.filter((_, i) => i !== idx); saveToStorage(STORAGE_GENERATED, u); return u; });
+  }
+
+  function deleteReference(idx: number) {
+    setSavedRefs(prev => { const u = prev.filter((_, i) => i !== idx); saveToStorage(STORAGE_REFERENCES, u); return u; });
+  }
+
+  function useAsReference(ref: SavedReference) {
+    const base64 = ref.preview.split(",")[1];
+    const mimeMatch = ref.preview.match(/^data:([^;]+);/);
+    setReferenceImage({ base64, mimeType: mimeMatch?.[1] || "image/jpeg", preview: ref.preview, name: ref.name });
+    toast.success("Referência selecionada da biblioteca");
   }
 
   const notConfigured = keyQuery.data && !keyQuery.data.configured;
@@ -227,6 +274,25 @@ export default function HailuoImagePage() {
             </div>
           </div>
 
+          {/* Qualidade */}
+          <div>
+            <label className="text-sm font-medium text-slate-700 mb-2 block">Qualidade</label>
+            <div className="flex gap-2">
+              {([["1024","1K","Padrão"],["2048","2K","Alta"],["4096","4K","Máxima"]] as const).map(([val, label, hint]) => (
+                <button
+                  key={val}
+                  onClick={() => setQuality(val)}
+                  className={`flex-1 px-3 py-2 rounded-lg border text-xs font-medium transition-all ${
+                    quality === val ? "bg-[#8B2635] border-[#8B2635] text-white" : "border-slate-200 text-slate-600 hover:border-[#8B2635]"
+                  }`}
+                >
+                  <span className="block font-bold">{label}</span>
+                  <span className={`block ${quality === val ? "text-rose-200" : "text-slate-400"}`}>{hint}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Botão */}
           <Button
             onClick={handleGenerate}
@@ -293,6 +359,80 @@ export default function HailuoImagePage() {
                 </div>
               )}
             </div>
+          )}
+        </div>
+      </div>
+
+      {/* Biblioteca */}
+      <div className="border border-slate-200 rounded-2xl overflow-hidden">
+        <div className="flex items-center gap-2 px-5 py-3 bg-slate-50 border-b border-slate-200">
+          <FolderOpen className="w-4 h-4 text-[#8B2635]" />
+          <span className="text-sm font-semibold text-slate-800">Biblioteca</span>
+          <div className="flex ml-auto gap-1 bg-white border border-slate-200 rounded-lg p-0.5">
+            <button
+              onClick={() => setLibraryTab("generated")}
+              className={`text-xs px-3 py-1 rounded-md font-medium transition-all ${libraryTab === "generated" ? "bg-[#8B2635] text-white" : "text-slate-500 hover:text-slate-700"}`}
+            >
+              Geradas {savedImages.length > 0 && <span className="ml-1 opacity-70">{savedImages.length}</span>}
+            </button>
+            <button
+              onClick={() => setLibraryTab("references")}
+              className={`text-xs px-3 py-1 rounded-md font-medium transition-all ${libraryTab === "references" ? "bg-[#8B2635] text-white" : "text-slate-500 hover:text-slate-700"}`}
+            >
+              Referências {savedRefs.length > 0 && <span className="ml-1 opacity-70">{savedRefs.length}</span>}
+            </button>
+          </div>
+        </div>
+
+        <div className="p-4">
+          {libraryTab === "generated" && (
+            savedImages.length === 0 ? (
+              <p className="text-xs text-slate-400 text-center py-8">Nenhuma imagem gerada ainda — elas aparecem aqui automaticamente</p>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {savedImages.map((img, idx) => (
+                  <div key={idx} className="relative group rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
+                    <img src={img.url} alt={img.prompt} className="w-full h-32 object-cover" />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-2">
+                      <button onClick={() => handleDownload(img.url, idx)} className="flex items-center gap-1 px-2 py-1 bg-white rounded text-xs font-medium text-slate-900 hover:bg-slate-100 w-full justify-center">
+                        <Download className="w-3 h-3" /> Baixar
+                      </button>
+                      <button onClick={() => deleteGenerated(idx)} className="flex items-center gap-1 px-2 py-1 bg-red-600 rounded text-xs font-medium text-white hover:bg-red-700 w-full justify-center">
+                        <Trash2 className="w-3 h-3" /> Remover
+                      </button>
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/40 px-2 py-1">
+                      <p className="text-xs text-white truncate">{img.date}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
+          )}
+
+          {libraryTab === "references" && (
+            savedRefs.length === 0 ? (
+              <p className="text-xs text-slate-400 text-center py-8">Nenhuma imagem de referência salva ainda — aparecem aqui ao fazer upload</p>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {savedRefs.map((ref, idx) => (
+                  <div key={idx} className="relative group rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
+                    <img src={ref.preview} alt={ref.name} className="w-full h-32 object-cover" />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-2">
+                      <button onClick={() => useAsReference(ref)} className="flex items-center gap-1 px-2 py-1 bg-white rounded text-xs font-medium text-slate-900 hover:bg-slate-100 w-full justify-center">
+                        <Upload className="w-3 h-3" /> Usar
+                      </button>
+                      <button onClick={() => deleteReference(idx)} className="flex items-center gap-1 px-2 py-1 bg-red-600 rounded text-xs font-medium text-white hover:bg-red-700 w-full justify-center">
+                        <Trash2 className="w-3 h-3" /> Remover
+                      </button>
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/40 px-2 py-1">
+                      <p className="text-xs text-white truncate">{ref.name}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
           )}
         </div>
       </div>

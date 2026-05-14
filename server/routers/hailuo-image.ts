@@ -36,6 +36,7 @@ export const hailuoImageRouter = router({
       prompt: z.string().min(1).max(1500),
       aspectRatio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "21:9"]).default("1:1"),
       n: z.number().min(1).max(4).default(1),
+      quality: z.enum(["1024", "2048", "4096"]).default("1024"),
       referenceImage: z.object({
         base64: z.string(),
         mimeType: z.string(),
@@ -64,6 +65,7 @@ export const hailuoImageRouter = router({
           response_format: "url",
           n: input.n,
           prompt_optimizer: true,
+          resolution: input.quality,
           ...(subjectReference ? { subject_reference: subjectReference } : {}),
         }),
         signal: AbortSignal.timeout(90000),
