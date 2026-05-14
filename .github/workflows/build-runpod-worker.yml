@@ -29,10 +29,11 @@ jobs:
         run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
       - name: Build and push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./runpod-worker
           push: true
+          no-cache: true
           tags: |
             ghcr.io/feminnita/runpod-worker:latest
             ghcr.io/feminnita/runpod-worker:${{ env.SHORT_SHA }}
