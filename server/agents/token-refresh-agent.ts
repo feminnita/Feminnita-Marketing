@@ -36,18 +36,6 @@ export async function seedMetaTokensIfMissing(): Promise<void> {
       updatedAt: now,
     } as any).catch(() => null);
   }
-  if (pageToken && pageToken !== userToken) {
-    await db.insert(oauthTokens).values({
-      userId: 1,
-      plataforma: "meta_page",
-      accessToken: pageToken,
-      refreshToken: null,
-      expiresAt: null,
-      isActive: true,
-      createdAt: now,
-      updatedAt: now,
-    } as any).catch(() => null);
-  }
   console.log("[TokenRefresh] Tokens Meta semeados no banco.");
 }
 

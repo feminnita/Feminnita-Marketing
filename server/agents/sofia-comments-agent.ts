@@ -16,7 +16,6 @@ const GRAPH_BASE = "https://graph.facebook.com/v20.0";
 
 // Lê token do banco (mantido fresco pelo refresh agent); fallback para .env
 async function getMetaToken(type: "user" | "page"): Promise<string> {
-  const plataforma = type === "page" ? "meta_page" : "meta";
   const envFallback = type === "page"
     ? (process.env.META_PAGE_ACCESS_TOKEN || process.env.META_ACCESS_TOKEN || "")
     : (process.env.META_ACCESS_TOKEN || "");
@@ -26,7 +25,7 @@ async function getMetaToken(type: "user" | "page"): Promise<string> {
     if (!db) return envFallback;
     const rows = await db.select({ accessToken: oauthTokens.accessToken })
       .from(oauthTokens)
-      .where(and(eq(oauthTokens.plataforma, plataforma), eq(oauthTokens.isActive, true)))
+      .where(and(eq(oauthTokens.plataforma, "meta"), eq(oauthTokens.isActive, true)))
       .limit(1);
     return rows[0]?.accessToken || envFallback;
   } catch {
