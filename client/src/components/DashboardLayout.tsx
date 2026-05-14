@@ -162,7 +162,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <DashboardLayoutContent setSidebarWidth={setSidebarWidth}>
         {children}
       </DashboardLayoutContent>
-      {!["/traffic-manager", "/gestor-trafego", "/chat", "/shopee/luiza", "/ml/gabi", "/tray/duda", "/any-afiliadas", "/tiktok/luna", "/tiktok/zara", "/tiktok/nina"].includes(location) && <ChatWidget />}
+      {!["/traffic-manager", "/gestor-trafego", "/chat", "/duda-seo", "/ml-gabi", "/shopee-luiza", "/any-afiliadas", "/amazon-alice", "/shein-isabela"].includes(location) && !/^\/tiktok\/(luna|maya|zara|nina|marcela)$/.test(location) && <ChatWidget />}
     </SidebarProvider>
   );
 }
