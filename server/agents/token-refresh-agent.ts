@@ -26,7 +26,7 @@ export async function seedMetaTokensIfMissing(): Promise<void> {
 
   if (userToken) {
     await db.insert(oauthTokens).values({
-      userId: 1, // admin
+      userId: 1,
       plataforma: "meta",
       accessToken: userToken,
       refreshToken: null,
@@ -34,7 +34,7 @@ export async function seedMetaTokensIfMissing(): Promise<void> {
       isActive: true,
       createdAt: now,
       updatedAt: now,
-    } as any).onDuplicateKeyUpdate?.({ set: { updatedAt: now } }).catch(() => null);
+    } as any).catch(() => null);
   }
   if (pageToken && pageToken !== userToken) {
     await db.insert(oauthTokens).values({
@@ -42,7 +42,7 @@ export async function seedMetaTokensIfMissing(): Promise<void> {
       plataforma: "meta_page",
       accessToken: pageToken,
       refreshToken: null,
-      expiresAt: null, // Page tokens do System User não expiram
+      expiresAt: null,
       isActive: true,
       createdAt: now,
       updatedAt: now,
