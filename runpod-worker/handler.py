@@ -21,6 +21,28 @@ with open("/workflow_template.json") as f:
     WORKFLOW_TEMPLATE = json.load(f)
 
 
+def setup_model_paths():
+    """Cria symlinks do Network Volume para os diretórios de modelos do ComfyUI."""
+    volume_models = "/runpod-volume/models"
+    comfy_models = f"{COMFYUI_PATH}/models"
+
+    if not os.path.exists(volume_models):
+        print("[Setup] /runpod-volume/models não encontrado. Usando caminhos locais.")
+        return
+
+    for subdir in ["checkpoints", "vae", "clip_vision", "text_encoders", "loras", "onnx"]:
+        src = os.path.join(volume_models, subdir)
+        dst = os.path.join(comfy_models, subdir)
+        if not os.path.exists(src):
+            continue
+        if os.path.islink(dst):
+            continue
+        if os.path.isdir(dst):
+            os.rmdir(dst)
+        os.symlink(src, dst)
+        print(f"[Setup] Symlink: {dst} → {src}")
+
+
 def start_comfyui():
     proc = subprocess.Popen(
         ["python", "main.py", "--listen", "0.0.0.0", "--port", "8188",
@@ -132,6 +154,8 @@ def handler(job):
 
 
 # Inicia ComfyUI antes de aceitar jobs
+print("[Startup] Configurando caminhos de modelos...")
+setup_model_paths()
 print("[Startup] Iniciando ComfyUI...")
 start_comfyui()
 print("[Startup] Pronto para receber jobs.")
