@@ -10,11 +10,11 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Python deps
+RUN pip install --no-cache-dir runpod==1.7.3 requests pillow numpy einops
+
 RUN pip install --no-cache-dir \
-    runpod==1.7.3 \
-    torch==2.3.1 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121 \
-    && pip install --no-cache-dir \
-    comfy-cli requests pillow numpy einops
+    torch==2.3.1 torchvision torchaudio \
+    --index-url https://download.pytorch.org/whl/cu121
 
 # Instala ComfyUI
 RUN git clone https://github.com/comfyanonymous/ComfyUI.git ${COMFYUI_PATH} \
