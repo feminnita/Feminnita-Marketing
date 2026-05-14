@@ -30,4 +30,6 @@ jobs:
         with:
           context: ./runpod-worker
           push: true
-          tags: ghcr.io/feminnita/runpod-worker:latest
+          tags: |
+            ghcr.io/feminnita/runpod-worker:latest
+            ghcr.io/feminnita/runpod-worker:${{ github.sha }}
