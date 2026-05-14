@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Send } from "lucide-react";
+import { ArrowLeft, Loader2, Send, RotateCcw } from "lucide-react";
 import gabiPhoto from "@/assets/gabi.jpg";
 
 interface Message {
@@ -85,6 +85,13 @@ export default function MlGabiPage() {
     setInput("");
   }
 
+  function newConversation() {
+    try { localStorage.removeItem(STORAGE_KEY(account)); } catch {}
+    setMessages([{ role: "assistant", content: WELCOME[account] }]);
+    setInput("");
+    toast.success("Nova conversa iniciada");
+  }
+
   function handleSend() {
     const text = input.trim();
     if (!text || chatMutation.isPending) return;
@@ -127,28 +134,40 @@ export default function MlGabiPage() {
           </div>
         </div>
 
-        {/* Seletor de conta */}
-        <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+        <div className="flex items-center gap-2">
+          {/* Nova conversa */}
           <button
-            onClick={() => switchAccount("feminnita")}
-            className={`text-xs px-3 py-1.5 rounded-md font-medium transition-all ${
-              account === "feminnita"
-                ? "bg-white shadow-sm text-slate-900"
-                : "text-slate-500 hover:text-slate-700"
-            }`}
+            onClick={newConversation}
+            title="Nova conversa (limpa o histórico desta tela)"
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md font-medium text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors"
           >
-            Conta A
+            <RotateCcw className="w-3.5 h-3.5" />
+            Nova conversa
           </button>
-          <button
-            onClick={() => switchAccount("fnt")}
-            className={`text-xs px-3 py-1.5 rounded-md font-medium transition-all ${
-              account === "fnt"
-                ? "bg-white shadow-sm text-slate-900"
-                : "text-slate-500 hover:text-slate-700"
-            }`}
-          >
-            Conta B
-          </button>
+
+          {/* Seletor de conta */}
+          <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+            <button
+              onClick={() => switchAccount("feminnita")}
+              className={`text-xs px-3 py-1.5 rounded-md font-medium transition-all ${
+                account === "feminnita"
+                  ? "bg-white shadow-sm text-slate-900"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              Conta A
+            </button>
+            <button
+              onClick={() => switchAccount("fnt")}
+              className={`text-xs px-3 py-1.5 rounded-md font-medium transition-all ${
+                account === "fnt"
+                  ? "bg-white shadow-sm text-slate-900"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              Conta B
+            </button>
+          </div>
         </div>
       </header>
 

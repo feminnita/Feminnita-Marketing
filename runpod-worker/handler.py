@@ -48,8 +48,8 @@ def start_comfyui():
         ["python", "main.py", "--listen", "0.0.0.0", "--port", "8188",
          "--disable-auto-launch", "--disable-metadata"],
         cwd=COMFYUI_PATH,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        stdout=None,
+        stderr=None,
     )
     # Aguarda ComfyUI ficar pronto
     for _ in range(60):
