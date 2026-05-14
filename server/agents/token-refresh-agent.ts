@@ -4,6 +4,53 @@ import { eq, and, lte, isNotNull } from "drizzle-orm";
 import { refreshMLToken } from "../routers/ml-oauth";
 import { refreshShopeeToken } from "../routers/shopee-oauth";
 
+// Garante que os tokens Meta do .env estejam no banco para o agente de refresh gerenciá-los
+export async function seedMetaTokensIfMissing(): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  const userToken = process.env.META_ACCESS_TOKEN;
+  const pageToken = process.env.META_PAGE_ACCESS_TOKEN;
+  if (!userToken && !pageToken) return;
+
+  const existing = await db.select({ id: oauthTokens.id })
+    .from(oauthTokens)
+    .where(and(eq(oauthTokens.plataforma, "meta"), eq(oauthTokens.isActive, true)))
+    .limit(1);
+
+  if (existing.length > 0) return; // já existe, não sobrescreve
+
+  const now = new Date();
+  // Long-lived token Meta dura ~60 dias; insere com expiresAt para o refresh agendá-lo
+  const expiresAt = new Date(now.getTime() + 55 * 24 * 60 * 60 * 1000); // 55 dias
+
+  if (userToken) {
+    await db.insert(oauthTokens).values({
+      userId: 1, // admin
+      plataforma: "meta",
+      accessToken: userToken,
+      refreshToken: null,
+      expiresAt,
+      isActive: true,
+      createdAt: now,
+      updatedAt: now,
+    } as any).onDuplicateKeyUpdate?.({ set: { updatedAt: now } }).catch(() => null);
+  }
+  if (pageToken && pageToken !== userToken) {
+    await db.insert(oauthTokens).values({
+      userId: 1,
+      plataforma: "meta_page",
+      accessToken: pageToken,
+      refreshToken: null,
+      expiresAt: null, // Page tokens do System User não expiram
+      isActive: true,
+      createdAt: now,
+      updatedAt: now,
+    } as any).catch(() => null);
+  }
+  console.log("[TokenRefresh] Tokens Meta semeados no banco.");
+}
+
 const REFRESH_INTERVAL_MS = 2 * 60 * 60 * 1000; // 2 horas
 const EXPIRY_THRESHOLD_MS = 24 * 60 * 60 * 1000; // 24 horas
 const MAX_RETRY_FAILURES = 3;
@@ -36,8 +83,8 @@ async function refreshBling(refreshToken: string): Promise<RefreshResult> {
 async function refreshMeta(accessToken: string): Promise<RefreshResult> {
   const url = new URL("https://graph.facebook.com/v18.0/oauth/access_token");
   url.searchParams.set("grant_type", "fb_exchange_token");
-  url.searchParams.set("client_id", process.env.META_CLIENT_ID ?? "");
-  url.searchParams.set("client_secret", process.env.META_CLIENT_SECRET ?? "");
+  url.searchParams.set("client_id", process.env.META_APP_ID ?? "");
+  url.searchParams.set("client_secret", process.env.META_APP_SECRET ?? "");
   url.searchParams.set("fb_exchange_token", accessToken);
 
   const res = await fetch(url.toString());
@@ -183,6 +230,7 @@ const MARKETPLACE_REFRESH_INTERVAL_MS = 5 * 60 * 60 * 1000; // 5 horas
 export function startTokenRefreshAgent(): () => void {
   console.log("[TokenRefresh] Agente iniciado (intervalo=2h, limiar=24h)");
 
+  seedMetaTokensIfMissing().catch((err) => console.error("[TokenRefresh] Seed Meta:", err));
   runTokenRefresh().catch((err) => console.error("[TokenRefresh] Erro na execução inicial:", err));
 
   const interval = setInterval(() => {

@@ -9,12 +9,30 @@
 
 import { invokeLLM } from "../_core/llm";
 import { getDb } from "../db";
-import { instagramCommentReplies } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { instagramCommentReplies, oauthTokens } from "../../drizzle/schema";
+import { eq, and } from "drizzle-orm";
 
-const META_TOKEN = process.env.META_ACCESS_TOKEN || "";
-const META_PAGE_TOKEN = process.env.META_PAGE_ACCESS_TOKEN || META_TOKEN;
 const GRAPH_BASE = "https://graph.facebook.com/v20.0";
+
+// Lê token do banco (mantido fresco pelo refresh agent); fallback para .env
+async function getMetaToken(type: "user" | "page"): Promise<string> {
+  const plataforma = type === "page" ? "meta_page" : "meta";
+  const envFallback = type === "page"
+    ? (process.env.META_PAGE_ACCESS_TOKEN || process.env.META_ACCESS_TOKEN || "")
+    : (process.env.META_ACCESS_TOKEN || "");
+
+  try {
+    const db = await getDb();
+    if (!db) return envFallback;
+    const rows = await db.select({ accessToken: oauthTokens.accessToken })
+      .from(oauthTokens)
+      .where(and(eq(oauthTokens.plataforma, plataforma), eq(oauthTokens.isActive, true)))
+      .limit(1);
+    return rows[0]?.accessToken || envFallback;
+  } catch {
+    return envFallback;
+  }
+}
 
 // ─── Classificação + geração de resposta ─────────────────────────────────────
 
@@ -80,16 +98,12 @@ export async function classifyAndGenerateReply(
 // ─── Postar resposta a comentário via Meta API ────────────────────────────────
 
 export async function postCommentReply(commentId: string, replyText: string): Promise<void> {
-  // Facebook comment IDs contêm underscore (ex: 853058534471901_935354972729215)
-  // Instagram comment IDs são numéricos puros
+  // Facebook comment IDs contêm underscore; Instagram são numéricos puros
   const isFacebook = commentId.includes("_");
-  const token = isFacebook ? META_PAGE_TOKEN : META_TOKEN;
-
+  const token = await getMetaToken(isFacebook ? "page" : "user");
   if (!token) throw new Error("Token Meta não configurado");
 
-  // Facebook usa /comments, Instagram usa /replies
   const endpoint = isFacebook ? "comments" : "replies";
-
   const res = await fetch(`${GRAPH_BASE}/${commentId}/${endpoint}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -103,9 +117,10 @@ export async function postCommentReply(commentId: string, replyText: string): Pr
 // ─── Postar resposta via Messenger ────────────────────────────────────────────
 
 export async function postMessengerReply(recipientId: string, replyText: string): Promise<void> {
-  if (!META_PAGE_TOKEN) throw new Error("META_PAGE_ACCESS_TOKEN não configurado");
+  const token = await getMetaToken("page");
+  if (!token) throw new Error("META_PAGE_ACCESS_TOKEN não configurado");
 
-  const res = await fetch(`${GRAPH_BASE}/me/messages?access_token=${META_PAGE_TOKEN}`, {
+  const res = await fetch(`${GRAPH_BASE}/me/messages?access_token=${token}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
