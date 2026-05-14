@@ -48,9 +48,6 @@ RUN git clone https://github.com/WASasquatch/was-node-suite-comfyui.git && \
 RUN git clone https://github.com/Fannovel16/comfyui_controlnet_aux.git && \
     pip install --no-cache-dir -r comfyui_controlnet_aux/requirements.txt 2>/dev/null || true
 
-# SeC segmentation
-RUN git clone https://github.com/HM-RunningHub/ComfyUI-SeC.git 2>/dev/null || \
-    git clone https://github.com/kijai/ComfyUI-SeC.git 2>/dev/null || true
 
 WORKDIR ${COMFYUI_PATH}
 
