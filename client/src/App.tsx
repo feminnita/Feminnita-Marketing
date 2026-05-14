@@ -47,6 +47,7 @@ const WhatsAppNotificationsPage  = lazy(() => import("./pages/WhatsAppNotificati
 const AssetLibraryPage        = lazy(() => import("@/pages/AssetLibraryPage"));
 const TrayDudaPage            = lazy(() => import("@/pages/TrayDudaPage"));
 const HailuoImagePage         = lazy(() => import("@/pages/HailuoImagePage"));
+const GerarVideoPage          = lazy(() => import("@/pages/GerarVideoPage"));
 const MlGabiPage              = lazy(() => import("@/pages/MlGabiPage"));
 const ShopeeLuizaPage         = lazy(() => import("@/pages/ShopeeLuizaPage"));
 const AmazonAlicePage         = lazy(() => import("@/pages/AmazonAlicePage"));
@@ -264,6 +265,8 @@ export default function App() {
         return <MorningBriefingPage />;
       case "/gerar-imagem":
         return <HailuoImagePage />;
+      case "/gerar-video":
+        return <GerarVideoPage />;
       case "/chat":
         return <ChatPage />;
       case "/asset-library":

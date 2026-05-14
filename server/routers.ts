@@ -105,6 +105,7 @@ import { sheinIsabelaRouter } from "./routers/shein-isabela";
 import { agentTasksRouter } from "./routers/agent-tasks";
 import { chatUploadRouter } from "./routers/chat-upload";
 import { hailuoImageRouter } from "./routers/hailuo-image";
+import { runpodVideoRouter } from "./routers/runpod-video";
 import { ga4Router } from "./routers/ga4";
 import { portalRouter } from "./routers/portal";
 import { getDb } from "./db";
@@ -449,6 +450,7 @@ export const appRouter = router({
   agentTasks: agentTasksRouter,
   chatUpload: chatUploadRouter,
   hailuoImage: hailuoImageRouter,
+  runpodVideo: runpodVideoRouter,
 
   users: router({
     list: protectedProcedure.query(async ({ ctx }) => {
