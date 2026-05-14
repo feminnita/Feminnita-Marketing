@@ -349,13 +349,27 @@ export async function chatWithAny(
   userName?: string
 ): Promise<string> {
   const nameCtx = userName ? `\nNOME DO USUÁRIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
-  const result = await invokeLLM({
-    messages: [
-      { role: "system", content: SYSTEM_PROMPT + nameCtx },
-      ...messages,
-    ],
-  });
 
-  const content = result.choices[0]?.message?.content;
-  return typeof content === "string" ? content : "";
+  // Anthropic exige que a primeira mensagem seja do usuário — remove mensagens assistente do início
+  const normalized = [...messages];
+  while (normalized.length > 0 && normalized[0].role === "assistant") {
+    normalized.shift();
+  }
+  if (normalized.length === 0) {
+    return "Olá! Como posso ajudar com o programa de afiliadas hoje?";
+  }
+
+  try {
+    const result = await invokeLLM({
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT + nameCtx },
+        ...normalized,
+      ],
+    });
+    const content = result.choices[0]?.message?.content;
+    return typeof content === "string" ? content : "";
+  } catch (e: any) {
+    console.error("[Any] Erro na chamada LLM:", e.message);
+    return "Desculpe, tive um problema técnico agora. Pode repetir sua pergunta?";
+  }
 }

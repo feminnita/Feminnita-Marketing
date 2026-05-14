@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 
 // Páginas que já têm chat próprio — esconder o widget flutuante
-const CHAT_ROUTES = ["/chat", "/shopee/luiza", "/ml/gabi", "/tray/duda", "/ml/luna", "/tiktok/luna", "/tiktok/zara", "/tiktok/nina"];
+const CHAT_ROUTES = ["/chat", "/shopee/luiza", "/ml/gabi", "/tray/duda", "/any-afiliadas", "/ml/luna", "/tiktok/luna", "/tiktok/zara", "/tiktok/nina"];
 
 const PANEL_KEY = "feminnita-chat-open";
 
