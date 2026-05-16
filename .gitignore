@@ -107,3 +107,4 @@ temp/
 *.sqlite3
 scripts/get-ga4-token.py
 scripts/update-blog-portal.js
+dist/index.js
