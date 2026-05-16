@@ -2,53 +2,85 @@ import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
 import { videoJobs } from "../../drizzle/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
-const RUNPOD_BASE = "https://api.runpod.ai/v2";
+const FAL_BASE = "https://queue.fal.run";
+const FAL_MODEL = "fal-ai/wan/v2.2/i2v";
+const FAL_UPLOAD = "https://fal.run/files/upload";
 
-function getEndpointId() {
-  const id = process.env.RUNPOD_ENDPOINT_ID;
-  if (!id) throw new Error("RUNPOD_ENDPOINT_ID não configurado no .env");
-  return id;
-}
-
-function getApiKey() {
-  const key = process.env.RUNPOD_API_KEY;
-  if (!key) throw new Error("RUNPOD_API_KEY não configurado no .env");
+function getFalKey() {
+  const key = process.env.FAL_API_KEY;
+  if (!key) throw new Error("FAL_API_KEY não configurado no .env");
   return key;
 }
 
-async function runpodRequest(path: string, body: any) {
-  const res = await fetch(`${RUNPOD_BASE}/${getEndpointId()}${path}`, {
+async function uploadToFal(base64: string, mimeType: string): Promise<string> {
+  const buffer = Buffer.from(base64, "base64");
+  const res = await fetch(FAL_UPLOAD, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${getApiKey()}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
+    headers: { Authorization: `Key ${getFalKey()}`, "Content-Type": mimeType },
+    body: buffer,
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new Error(`RunPod erro ${res.status}: ${text.slice(0, 300)}`);
+    throw new Error(`fal.ai upload ${res.status}: ${text.slice(0, 200)}`);
   }
-  return res.json() as Promise<any>;
+  const data = await res.json() as any;
+  return data.url as string;
 }
 
-async function runpodStatus(jobId: string) {
-  const res = await fetch(`${RUNPOD_BASE}/${getEndpointId()}/status/${jobId}`, {
-    headers: { Authorization: `Bearer ${getApiKey()}` },
+async function submitFalJob(imageUrl: string, prompt: string, durationSeconds: number): Promise<string> {
+  const fps = 16;
+  const numFrames = Math.max(16, Math.round(durationSeconds * fps));
+  const res = await fetch(`${FAL_BASE}/${FAL_MODEL}`, {
+    method: "POST",
+    headers: { Authorization: `Key ${getFalKey()}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      image_url: imageUrl,
+      prompt,
+      negative_prompt: "blurry, distorted, low quality, static, frozen, watermark",
+      num_frames: numFrames,
+      frames_per_second: fps,
+      guidance_scale: 5,
+    }),
   });
-  if (!res.ok) throw new Error(`RunPod status erro ${res.status}`);
-  return res.json() as Promise<any>;
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`fal.ai submit ${res.status}: ${text.slice(0, 300)}`);
+  }
+  const data = await res.json() as any;
+  return data.request_id as string;
 }
 
-function mapStatus(runpodStatus: string): "queued" | "processing" | "completed" | "failed" | "cancelled" {
-  switch (runpodStatus) {
+async function getFalStatus(requestId: string): Promise<{ status: string; videoUrl?: string; error?: string }> {
+  const res = await fetch(`${FAL_BASE}/${FAL_MODEL}/requests/${requestId}/status`, {
+    headers: { Authorization: `Key ${getFalKey()}` },
+  });
+  if (!res.ok) throw new Error(`fal.ai status ${res.status}`);
+  const data = await res.json() as any;
+
+  if (data.status === "COMPLETED") {
+    const resultRes = await fetch(`${FAL_BASE}/${FAL_MODEL}/requests/${requestId}`, {
+      headers: { Authorization: `Key ${getFalKey()}` },
+    });
+    if (resultRes.ok) {
+      const result = await resultRes.json() as any;
+      return { status: "COMPLETED", videoUrl: result.video?.url };
+    }
+  }
+
+  return {
+    status: data.status as string,
+    error: typeof data.error === "string" ? data.error : data.error?.message,
+  };
+}
+
+function mapStatus(s: string): "queued" | "processing" | "completed" | "failed" | "cancelled" {
+  switch (s) {
     case "IN_QUEUE": return "queued";
     case "IN_PROGRESS": return "processing";
     case "COMPLETED": return "completed";
     case "FAILED": return "failed";
-    case "CANCELLED": return "cancelled";
     default: return "queued";
   }
 }
@@ -57,65 +89,48 @@ export const runpodVideoRouter = router({
   generate: protectedProcedure
     .input(z.object({
       imageBase64: z.string().min(100),
-      videoBase64: z.string().min(100),
+      prompt: z.string().min(5).max(500),
       durationSeconds: z.number().int().min(3).max(30).default(15),
     }))
     .mutation(async ({ input, ctx }) => {
-      const job = await runpodRequest("/run", {
-        input: {
-          image_base64: input.imageBase64,
-          video_base64: input.videoBase64,
-          duration_seconds: input.durationSeconds,
-        },
-      });
+      const imageUrl = await uploadToFal(input.imageBase64, "image/jpeg");
+      const requestId = await submitFalJob(imageUrl, input.prompt, input.durationSeconds);
 
       const db = await getDb();
       if (db) {
         await db.insert(videoJobs).values({
           userId: ctx.user.id,
-          runpodJobId: job.id,
+          runpodJobId: requestId,
           status: "queued",
           durationSeconds: input.durationSeconds,
           createdAt: new Date(),
         }).catch(() => null);
       }
 
-      return { jobId: job.id as string };
+      return { jobId: requestId };
     }),
 
   status: protectedProcedure
     .input(z.object({ jobId: z.string() }))
     .query(async ({ input, ctx }) => {
-      const result = await runpodStatus(input.jobId);
-      const status = mapStatus(result.status);
+      const result = await getFalStatus(input.jobId);
+      const dbStatus = mapStatus(result.status);
 
       const db = await getDb();
-      if (db && (status === "completed" || status === "failed" || status === "cancelled")) {
+      if (db && (dbStatus === "completed" || dbStatus === "failed")) {
         await db.update(videoJobs)
-          .set({
-            status,
-            completedAt: new Date(),
-            errorMessage: result.output?.error?.slice(0, 499) ?? null,
-          })
-          .where(and(
-            eq(videoJobs.runpodJobId, input.jobId),
-            eq(videoJobs.userId, ctx.user.id)
-          ))
+          .set({ status: dbStatus, completedAt: new Date(), errorMessage: result.error?.slice(0, 499) ?? null })
+          .where(eq(videoJobs.runpodJobId, input.jobId))
           .catch(() => null);
-      } else if (db && status === "processing") {
-        await db.update(videoJobs)
-          .set({ status })
-          .where(and(
-            eq(videoJobs.runpodJobId, input.jobId),
-            eq(videoJobs.userId, ctx.user.id)
-          ))
-          .catch(() => null);
+      } else if (db && dbStatus === "processing") {
+        await db.update(videoJobs).set({ status: "processing" })
+          .where(eq(videoJobs.runpodJobId, input.jobId)).catch(() => null);
       }
 
       return {
-        status: result.status as string,
-        videoBase64: result.output?.video_base64 as string | undefined,
-        error: result.output?.error as string | undefined,
+        status: result.status,
+        videoUrl: result.videoUrl,
+        error: result.error,
       };
     }),
 
@@ -140,9 +155,7 @@ export const runpodVideoRouter = router({
       return { jobs };
     }),
 
-  checkConfig: protectedProcedure.query(() => {
-    return {
-      configured: !!(process.env.RUNPOD_API_KEY && process.env.RUNPOD_ENDPOINT_ID),
-    };
-  }),
+  checkConfig: protectedProcedure.query(() => ({
+    configured: !!process.env.FAL_API_KEY,
+  })),
 });
