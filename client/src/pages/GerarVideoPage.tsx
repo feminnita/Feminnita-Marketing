@@ -260,13 +260,27 @@ export default function GerarVideoPage() {
           {/* Duração */}
           <div>
             <label className="text-sm font-semibold text-slate-700 mb-2 block">
-              3. Duração do vídeo: <span style={{ color: BTN }}>{duration}s</span>
+              3. Duração do vídeo
             </label>
-            <input type="range" min={5} max={30} step={5} value={duration}
-              onChange={(e) => setDuration(Number(e.target.value))}
-              className="w-full" style={{ accentColor: BTN }} />
+            <div className="flex items-center gap-3">
+              <input type="range" min={3} max={30} step={1} value={duration}
+                onChange={(e) => setDuration(Number(e.target.value))}
+                className="flex-1" style={{ accentColor: BTN }} />
+              <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden">
+                <input
+                  type="number" min={3} max={30} value={duration}
+                  onChange={(e) => {
+                    const v = Math.min(30, Math.max(3, Number(e.target.value) || 3));
+                    setDuration(v);
+                  }}
+                  className="w-14 text-center text-sm font-semibold py-1.5 outline-none"
+                  style={{ color: BTN }}
+                />
+                <span className="pr-2 text-xs text-slate-400">s</span>
+              </div>
+            </div>
             <div className="flex justify-between text-xs text-slate-400 mt-0.5">
-              <span>5s</span><span>10s</span><span>15s</span><span>20s</span><span>25s</span><span>30s</span>
+              <span>3s</span><span>15s</span><span>30s</span>
             </div>
           </div>
 

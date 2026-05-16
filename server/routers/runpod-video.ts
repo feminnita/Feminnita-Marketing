@@ -58,7 +58,7 @@ export const runpodVideoRouter = router({
     .input(z.object({
       imageBase64: z.string().min(100),
       videoBase64: z.string().min(100),
-      durationSeconds: z.number().min(3).max(30).default(15),
+      durationSeconds: z.number().int().min(3).max(30).default(15),
     }))
     .mutation(async ({ input, ctx }) => {
       const job = await runpodRequest("/run", {
