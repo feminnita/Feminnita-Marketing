@@ -343,6 +343,11 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/gerar-video")}>
+                    <Video className="h-3 w-3" /> Gerar Vídeo IA
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
                   <SidebarMenuSubButton onClick={() => setLocation("/agendar-posts")}>
                     <Calendar className="h-3 w-3" /> Agendar Posts
                   </SidebarMenuSubButton>
