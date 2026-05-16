@@ -32,7 +32,7 @@ async function uploadToFal(base64: string, mimeType: string): Promise<string> {
     const text = await initiateRes.text().catch(() => "");
     throw new Error(`fal.ai initiate ${initiateRes.status}: ${text.slice(0, 300)}`);
   }
-  const { upload_url, access_url } = await initiateRes.json() as { upload_url: string; access_url: string };
+  const { upload_url, file_url } = await initiateRes.json() as { upload_url: string; file_url: string };
 
   // Step 2: PUT binary to presigned URL
   const putRes = await fetch(upload_url, {
@@ -45,7 +45,7 @@ async function uploadToFal(base64: string, mimeType: string): Promise<string> {
     throw new Error(`fal.ai CDN PUT ${putRes.status}: ${text.slice(0, 300)}`);
   }
 
-  return access_url;
+  return file_url;
 }
 
 async function submitFalJob(imageUrl: string, prompt: string, durationSeconds: number): Promise<string> {
