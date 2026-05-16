@@ -5255,7 +5255,7 @@ var init_websocket_notifications = __esm({
 });
 
 // server/services/ga4.ts
-import { eq as eq92, and as and75 } from "drizzle-orm";
+import { eq as eq92, and as and74 } from "drizzle-orm";
 function getGA4AuthUrl(redirectUri, state) {
   const params = new URLSearchParams({
     client_id: process.env.GOOGLE_GA4_CLIENT_ID,
@@ -5315,7 +5315,7 @@ async function refreshGA4Token(userId, tokenId, refreshToken) {
 async function getValidGA4Token(userId) {
   const db = await getDb();
   if (!db) return null;
-  const rows = await db.select().from(oauthTokens).where(and75(
+  const rows = await db.select().from(oauthTokens).where(and74(
     eq92(oauthTokens.userId, userId),
     eq92(oauthTokens.plataforma, "google_analytics"),
     eq92(oauthTokens.isActive, true)
@@ -5379,7 +5379,7 @@ var ga4_oauth_exports = {};
 __export(ga4_oauth_exports, {
   registerGA4OAuthRoutes: () => registerGA4OAuthRoutes
 });
-import { eq as eq111, and as and90 } from "drizzle-orm";
+import { eq as eq111, and as and89 } from "drizzle-orm";
 function registerGA4OAuthRoutes(app) {
   app.get("/api/ga4/start", async (req, res) => {
     try {
@@ -5404,7 +5404,7 @@ function registerGA4OAuthRoutes(app) {
       if (!tokens) return res.redirect("/ga4?error=exchange_failed");
       const db = await getDb();
       if (!db) return res.redirect("/ga4?error=db_unavailable");
-      const existing = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and90(eq111(oauthTokens.userId, userId), eq111(oauthTokens.plataforma, "google_analytics"))).limit(1);
+      const existing = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and89(eq111(oauthTokens.userId, userId), eq111(oauthTokens.plataforma, "google_analytics"))).limit(1);
       const expiresAt = new Date(Date.now() + tokens.expiresIn * 1e3);
       if (existing.length > 0) {
         await db.update(oauthTokens).set({
@@ -5455,7 +5455,7 @@ var meta_oauth_exports = {};
 __export(meta_oauth_exports, {
   registerMetaOAuthRoutes: () => registerMetaOAuthRoutes
 });
-import { eq as eq112, and as and91 } from "drizzle-orm";
+import { eq as eq112, and as and90 } from "drizzle-orm";
 function getAuthUrl(state) {
   const params = new URLSearchParams({
     client_id: APP_ID,
@@ -5517,7 +5517,7 @@ function registerMetaOAuthRoutes(app) {
     const db = await getDb();
     if (!db) return res.redirect("/gestor-trafego?error=db_unavailable");
     const expiresAt = new Date(Date.now() + long.expiresIn * 1e3);
-    const existing = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and91(eq112(oauthTokens.userId, userId), eq112(oauthTokens.plataforma, "meta"))).limit(1);
+    const existing = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and90(eq112(oauthTokens.userId, userId), eq112(oauthTokens.plataforma, "meta"))).limit(1);
     if (existing.length > 0) {
       const prevInfo = existing[0].accountInfo ? JSON.parse(existing[0].accountInfo) : {};
       await db.update(oauthTokens).set({
@@ -8077,8 +8077,8 @@ var blingOAuthRouter = router({
     const db = await (await Promise.resolve().then(() => (init_db(), db_exports))).getDb();
     if (!db) throw new Error("Database not available");
     const { oauthTokens: oauthTokens3 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
-    const { eq: eq113, and: and92 } = await import("drizzle-orm");
-    await db.update(oauthTokens3).set({ isActive: false }).where(and92(eq113(oauthTokens3.userId, ctx.user.id), eq113(oauthTokens3.plataforma, "bling")));
+    const { eq: eq113, and: and91 } = await import("drizzle-orm");
+    await db.update(oauthTokens3).set({ isActive: false }).where(and91(eq113(oauthTokens3.userId, ctx.user.id), eq113(oauthTokens3.plataforma, "bling")));
     return { sucesso: true };
   })
 });
@@ -29719,8 +29719,8 @@ async function proposeActions(analysis, today) {
   try {
     const db = await getDb();
     if (!db) return;
-    const { eq: eq113, and: and92 } = await import("drizzle-orm");
-    const existing = await db.select({ title: agentActions.title }).from(agentActions).where(and92(eq113(agentActions.agentName, "fernanda"), eq113(agentActions.date, today)));
+    const { eq: eq113, and: and91 } = await import("drizzle-orm");
+    const existing = await db.select({ title: agentActions.title }).from(agentActions).where(and91(eq113(agentActions.agentName, "fernanda"), eq113(agentActions.date, today)));
     const existingTitles = new Set(existing.map((r) => r.title));
     const toInsert = [];
     for (const rec of analysis.recommendations) {
@@ -33745,8 +33745,8 @@ ${lines.join("\n")}`;
             const db = await getDb();
             if (!db) return "[interno] banco indispon\xEDvel \u2014 continue sem mencionar este erro.";
             const { agentActions: tbl } = await Promise.resolve().then(() => (init_schema(), schema_exports));
-            const { eq: eq113, and: and92 } = await import("drizzle-orm");
-            const pending = await db.select().from(tbl).where(and92(eq113(tbl.agentName, "duda"), eq113(tbl.status, "pending")));
+            const { eq: eq113, and: and91 } = await import("drizzle-orm");
+            const pending = await db.select().from(tbl).where(and91(eq113(tbl.agentName, "duda"), eq113(tbl.status, "pending")));
             if (pending.length === 0) return "Nenhuma a\xE7\xE3o pendente no momento.";
             const lines = pending.map((a) => `- ${a.title || a.actionType} [id=${a.id}]`);
             return `${pending.length} a\xE7\xE3o(\xF5es) na fila de execu\xE7\xE3o:
@@ -34774,17 +34774,17 @@ NOME DO USU\xC1RIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
           call = (async () => {
             const db = await getDb();
             if (!db) throw new Error("DB indispon\xEDvel");
-            const { eq: eq113, and: and92, desc: desc54 } = await import("drizzle-orm");
+            const { eq: eq113, and: and91, desc: desc54 } = await import("drizzle-orm");
             const { marketplaceAdsMetrics: marketplaceAdsMetrics2 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
             const targetPlatform = inp.platform || "ml";
             const targetAccount = inp.account || account;
-            const rows = await db.select().from(marketplaceAdsMetrics2).where(and92(
+            const rows = await db.select().from(marketplaceAdsMetrics2).where(and91(
               eq113(marketplaceAdsMetrics2.platform, targetPlatform),
               eq113(marketplaceAdsMetrics2.account, targetAccount)
             )).orderBy(desc54(marketplaceAdsMetrics2.scrapedAt)).limit(200);
             if (!rows.length) {
               const { or: or6 } = await import("drizzle-orm");
-              const pending = await db.select({ id: agentActions.id }).from(agentActions).where(and92(
+              const pending = await db.select({ id: agentActions.id }).from(agentActions).where(and91(
                 eq113(agentActions.actionType, "scrape_ads_metrics"),
                 or6(
                   eq113(agentActions.status, "approved"),
@@ -35266,9 +35266,9 @@ NOME DO USU\xC1RIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
           call = (async () => {
             const db = await getDb();
             if (!db) return "Banco indispon\xEDvel \u2014 n\xE3o foi poss\xEDvel verificar as a\xE7\xF5es.";
-            const { eq: eq113, and: and92 } = await import("drizzle-orm");
+            const { eq: eq113, and: and91 } = await import("drizzle-orm");
             const { agentActions: agentActionsTable2 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
-            const pending = await db.select().from(agentActionsTable2).where(and92(eq113(agentActionsTable2.agentName, "luiza"), eq113(agentActionsTable2.status, "pending")));
+            const pending = await db.select().from(agentActionsTable2).where(and91(eq113(agentActionsTable2.agentName, "luiza"), eq113(agentActionsTable2.status, "pending")));
             if (pending.length === 0) return "Nenhuma a\xE7\xE3o pendente encontrada para executar.";
             const lines = pending.map((a) => `- ${a.title || a.actionType} [id=${a.id}]`);
             return `${pending.length} a\xE7\xE3o(\xF5es) enfileirada(s) para execu\xE7\xE3o via browser Shopee (pr\xF3ximos ~5 min):
@@ -36084,10 +36084,10 @@ var agentTasksRouter = router({
   })).query(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) return [];
-    const { and: and92, eq: eq113, desc: desc54 } = await import("drizzle-orm");
+    const { and: and91, eq: eq113, desc: desc54 } = await import("drizzle-orm");
     const conditions = [eq113(agentTasks.userId, ctx.user.id)];
     if (input.agentName) conditions.push(eq113(agentTasks.agentName, input.agentName));
-    return db.select().from(agentTasks).where(and92(...conditions)).orderBy(desc54(agentTasks.createdAt)).limit(input.limit);
+    return db.select().from(agentTasks).where(and91(...conditions)).orderBy(desc54(agentTasks.createdAt)).limit(input.limit);
   })
 });
 
@@ -36205,42 +36205,73 @@ var hailuoImageRouter = router({
 init_db();
 init_schema();
 import { z as z82 } from "zod";
-import { eq as eq91, desc as desc48, and as and74 } from "drizzle-orm";
-var RUNPOD_BASE = "https://api.runpod.ai/v2";
-function getEndpointId() {
-  const id = process.env.RUNPOD_ENDPOINT_ID;
-  if (!id) throw new Error("RUNPOD_ENDPOINT_ID n\xE3o configurado no .env");
-  return id;
-}
-function getApiKey() {
-  const key = process.env.RUNPOD_API_KEY;
-  if (!key) throw new Error("RUNPOD_API_KEY n\xE3o configurado no .env");
+import { eq as eq91, desc as desc48 } from "drizzle-orm";
+var FAL_BASE = "https://queue.fal.run";
+var FAL_MODEL = "fal-ai/wan/v2.2/i2v";
+var FAL_UPLOAD = "https://fal.run/files/upload";
+function getFalKey() {
+  const key = process.env.FAL_API_KEY;
+  if (!key) throw new Error("FAL_API_KEY n\xE3o configurado no .env");
   return key;
 }
-async function runpodRequest(path15, body) {
-  const res = await fetch(`${RUNPOD_BASE}/${getEndpointId()}${path15}`, {
+async function uploadToFal(base64, mimeType) {
+  const buffer = Buffer.from(base64, "base64");
+  const res = await fetch(FAL_UPLOAD, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${getApiKey()}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(body)
+    headers: { Authorization: `Key ${getFalKey()}`, "Content-Type": mimeType },
+    body: buffer
   });
   if (!res.ok) {
     const text3 = await res.text().catch(() => "");
-    throw new Error(`RunPod erro ${res.status}: ${text3.slice(0, 300)}`);
+    throw new Error(`fal.ai upload ${res.status}: ${text3.slice(0, 200)}`);
   }
-  return res.json();
+  const data = await res.json();
+  return data.url;
 }
-async function runpodStatus(jobId) {
-  const res = await fetch(`${RUNPOD_BASE}/${getEndpointId()}/status/${jobId}`, {
-    headers: { Authorization: `Bearer ${getApiKey()}` }
+async function submitFalJob(imageUrl, prompt, durationSeconds) {
+  const fps = 16;
+  const numFrames = Math.max(16, Math.round(durationSeconds * fps));
+  const res = await fetch(`${FAL_BASE}/${FAL_MODEL}`, {
+    method: "POST",
+    headers: { Authorization: `Key ${getFalKey()}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      image_url: imageUrl,
+      prompt,
+      negative_prompt: "blurry, distorted, low quality, static, frozen, watermark",
+      num_frames: numFrames,
+      frames_per_second: fps,
+      guidance_scale: 5
+    })
   });
-  if (!res.ok) throw new Error(`RunPod status erro ${res.status}`);
-  return res.json();
+  if (!res.ok) {
+    const text3 = await res.text().catch(() => "");
+    throw new Error(`fal.ai submit ${res.status}: ${text3.slice(0, 300)}`);
+  }
+  const data = await res.json();
+  return data.request_id;
 }
-function mapStatus(runpodStatus2) {
-  switch (runpodStatus2) {
+async function getFalStatus(requestId) {
+  const res = await fetch(`${FAL_BASE}/${FAL_MODEL}/requests/${requestId}/status`, {
+    headers: { Authorization: `Key ${getFalKey()}` }
+  });
+  if (!res.ok) throw new Error(`fal.ai status ${res.status}`);
+  const data = await res.json();
+  if (data.status === "COMPLETED") {
+    const resultRes = await fetch(`${FAL_BASE}/${FAL_MODEL}/requests/${requestId}`, {
+      headers: { Authorization: `Key ${getFalKey()}` }
+    });
+    if (resultRes.ok) {
+      const result = await resultRes.json();
+      return { status: "COMPLETED", videoUrl: result.video?.url };
+    }
+  }
+  return {
+    status: data.status,
+    error: typeof data.error === "string" ? data.error : data.error?.message
+  };
+}
+function mapStatus(s) {
+  switch (s) {
     case "IN_QUEUE":
       return "queued";
     case "IN_PROGRESS":
@@ -36249,8 +36280,6 @@ function mapStatus(runpodStatus2) {
       return "completed";
     case "FAILED":
       return "failed";
-    case "CANCELLED":
-      return "cancelled";
     default:
       return "queued";
   }
@@ -36258,51 +36287,36 @@ function mapStatus(runpodStatus2) {
 var runpodVideoRouter = router({
   generate: protectedProcedure.input(z82.object({
     imageBase64: z82.string().min(100),
-    videoBase64: z82.string().min(100),
+    prompt: z82.string().min(5).max(500),
     durationSeconds: z82.number().int().min(3).max(30).default(15)
   })).mutation(async ({ input, ctx }) => {
-    const job = await runpodRequest("/run", {
-      input: {
-        image_base64: input.imageBase64,
-        video_base64: input.videoBase64,
-        duration_seconds: input.durationSeconds
-      }
-    });
+    const imageUrl = await uploadToFal(input.imageBase64, "image/jpeg");
+    const requestId = await submitFalJob(imageUrl, input.prompt, input.durationSeconds);
     const db = await getDb();
     if (db) {
       await db.insert(videoJobs).values({
         userId: ctx.user.id,
-        runpodJobId: job.id,
+        runpodJobId: requestId,
         status: "queued",
         durationSeconds: input.durationSeconds,
         createdAt: /* @__PURE__ */ new Date()
       }).catch(() => null);
     }
-    return { jobId: job.id };
+    return { jobId: requestId };
   }),
   status: protectedProcedure.input(z82.object({ jobId: z82.string() })).query(async ({ input, ctx }) => {
-    const result = await runpodStatus(input.jobId);
-    const status = mapStatus(result.status);
+    const result = await getFalStatus(input.jobId);
+    const dbStatus = mapStatus(result.status);
     const db = await getDb();
-    if (db && (status === "completed" || status === "failed" || status === "cancelled")) {
-      await db.update(videoJobs).set({
-        status,
-        completedAt: /* @__PURE__ */ new Date(),
-        errorMessage: result.output?.error?.slice(0, 499) ?? null
-      }).where(and74(
-        eq91(videoJobs.runpodJobId, input.jobId),
-        eq91(videoJobs.userId, ctx.user.id)
-      )).catch(() => null);
-    } else if (db && status === "processing") {
-      await db.update(videoJobs).set({ status }).where(and74(
-        eq91(videoJobs.runpodJobId, input.jobId),
-        eq91(videoJobs.userId, ctx.user.id)
-      )).catch(() => null);
+    if (db && (dbStatus === "completed" || dbStatus === "failed")) {
+      await db.update(videoJobs).set({ status: dbStatus, completedAt: /* @__PURE__ */ new Date(), errorMessage: result.error?.slice(0, 499) ?? null }).where(eq91(videoJobs.runpodJobId, input.jobId)).catch(() => null);
+    } else if (db && dbStatus === "processing") {
+      await db.update(videoJobs).set({ status: "processing" }).where(eq91(videoJobs.runpodJobId, input.jobId)).catch(() => null);
     }
     return {
       status: result.status,
-      videoBase64: result.output?.video_base64,
-      error: result.output?.error
+      videoUrl: result.videoUrl,
+      error: result.error
     };
   }),
   history: protectedProcedure.input(z82.object({ limit: z82.number().min(1).max(50).default(20) })).query(async ({ input, ctx }) => {
@@ -36319,11 +36333,9 @@ var runpodVideoRouter = router({
     }).from(videoJobs).where(eq91(videoJobs.userId, ctx.user.id)).orderBy(desc48(videoJobs.createdAt)).limit(input.limit);
     return { jobs };
   }),
-  checkConfig: protectedProcedure.query(() => {
-    return {
-      configured: !!(process.env.RUNPOD_API_KEY && process.env.RUNPOD_ENDPOINT_ID)
-    };
-  })
+  checkConfig: protectedProcedure.query(() => ({
+    configured: !!process.env.FAL_API_KEY
+  }))
 });
 
 // server/routers/ga4.ts
@@ -36331,11 +36343,11 @@ import { z as z83 } from "zod";
 init_ga4();
 init_db();
 init_schema();
-import { eq as eq93, and as and76 } from "drizzle-orm";
+import { eq as eq93, and as and75 } from "drizzle-orm";
 async function getPropertyId(userId) {
   const db = await getDb();
   if (!db) return null;
-  const rows = await db.select({ accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and76(
+  const rows = await db.select({ accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and75(
     eq93(oauthTokens.userId, userId),
     eq93(oauthTokens.plataforma, "google_analytics"),
     eq93(oauthTokens.isActive, true)
@@ -36348,7 +36360,7 @@ var ga4Router = router({
   status: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return { connected: false, propertyId: null };
-    const rows = await db.select({ isActive: oauthTokens.isActive, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and76(eq93(oauthTokens.userId, ctx.user.id), eq93(oauthTokens.plataforma, "google_analytics"))).limit(1);
+    const rows = await db.select({ isActive: oauthTokens.isActive, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and75(eq93(oauthTokens.userId, ctx.user.id), eq93(oauthTokens.plataforma, "google_analytics"))).limit(1);
     if (rows.length === 0) return { connected: false, propertyId: null };
     const info = rows[0].accountInfo ? JSON.parse(rows[0].accountInfo) : {};
     return { connected: Boolean(rows[0].isActive), propertyId: info.propertyId ?? null };
@@ -36356,7 +36368,7 @@ var ga4Router = router({
   setPropertyId: protectedProcedure.input(z83.object({ propertyId: z83.string().min(1) })).mutation(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new Error("DB indispon\xEDvel");
-    const rows = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and76(eq93(oauthTokens.userId, ctx.user.id), eq93(oauthTokens.plataforma, "google_analytics"))).limit(1);
+    const rows = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and75(eq93(oauthTokens.userId, ctx.user.id), eq93(oauthTokens.plataforma, "google_analytics"))).limit(1);
     if (rows.length === 0) throw new Error("GA4 n\xE3o conectado");
     const info = rows[0].accountInfo ? JSON.parse(rows[0].accountInfo) : {};
     info.propertyId = input.propertyId;
@@ -36366,7 +36378,7 @@ var ga4Router = router({
   disconnect: protectedProcedure.mutation(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("DB indispon\xEDvel");
-    await db.update(oauthTokens).set({ isActive: false }).where(and76(eq93(oauthTokens.userId, ctx.user.id), eq93(oauthTokens.plataforma, "google_analytics")));
+    await db.update(oauthTokens).set({ isActive: false }).where(and75(eq93(oauthTokens.userId, ctx.user.id), eq93(oauthTokens.plataforma, "google_analytics")));
     return { success: true };
   }),
   overview: protectedProcedure.input(z83.object({ days: z83.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
@@ -36990,8 +37002,8 @@ var appRouter = router({
     })).mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const { eq: eq113, and: and92 } = await import("drizzle-orm");
-      const owned = await db.select({ id: influencers.id }).from(influencers).where(and92(eq113(influencers.id, input.id), eq113(influencers.userId, ctx.user.id))).limit(1);
+      const { eq: eq113, and: and91 } = await import("drizzle-orm");
+      const owned = await db.select({ id: influencers.id }).from(influencers).where(and91(eq113(influencers.id, input.id), eq113(influencers.userId, ctx.user.id))).limit(1);
       if (owned.length === 0) throw new Error("Influencer n\xE3o encontrado");
       const { id, ...updates } = input;
       await db.update(influencers).set(updates).where(eq113(influencers.id, id));
@@ -37054,22 +37066,22 @@ var appRouter = router({
     })).query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
-      const { eq: eq113, and: and92, desc: desc54 } = await import("drizzle-orm");
-      const owned = await db.select({ id: influencers.id }).from(influencers).where(and92(eq113(influencers.id, input.influencerId), eq113(influencers.userId, ctx.user.id))).limit(1);
+      const { eq: eq113, and: and91, desc: desc54 } = await import("drizzle-orm");
+      const owned = await db.select({ id: influencers.id }).from(influencers).where(and91(eq113(influencers.id, input.influencerId), eq113(influencers.userId, ctx.user.id))).limit(1);
       if (owned.length === 0) return [];
       const conditions = [eq113(influencerPosts.influencerId, input.influencerId)];
       if (input.status) {
         conditions.push(eq113(influencerPosts.status, input.status));
       }
-      return db.select().from(influencerPosts).where(and92(...conditions)).orderBy(desc54(influencerPosts.createdAt)).limit(input.limit);
+      return db.select().from(influencerPosts).where(and91(...conditions)).orderBy(desc54(influencerPosts.createdAt)).limit(input.limit);
     }),
     deletePost: protectedProcedure.input(z85.object({ postId: z85.number() })).mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const { eq: eq113, and: and92 } = await import("drizzle-orm");
+      const { eq: eq113, and: and91 } = await import("drizzle-orm");
       const post = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq113(influencerPosts.id, input.postId)).limit(1);
       if (post.length === 0) throw new Error("Post n\xE3o encontrado");
-      const owned = await db.select({ id: influencers.id }).from(influencers).where(and92(eq113(influencers.id, post[0].influencerId ?? 0), eq113(influencers.userId, ctx.user.id))).limit(1);
+      const owned = await db.select({ id: influencers.id }).from(influencers).where(and91(eq113(influencers.id, post[0].influencerId ?? 0), eq113(influencers.userId, ctx.user.id))).limit(1);
       if (owned.length === 0) throw new Error("Acesso negado");
       await db.delete(influencerPosts).where(eq113(influencerPosts.id, input.postId));
       return { success: true };
@@ -37107,12 +37119,12 @@ var appRouter = router({
       try {
         const dbConn = await getDb();
         if (!dbConn) return [];
-        const { or: or6, and: and92, eq: eq113, desc: desc54 } = await import("drizzle-orm");
+        const { or: or6, and: and91, eq: eq113, desc: desc54 } = await import("drizzle-orm");
         const { directMessages: directMessages2 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
         const msgs = await dbConn.select().from(directMessages2).where(
           or6(
-            and92(eq113(directMessages2.fromUserId, ctx.user.id), eq113(directMessages2.toUserId, input.withUserId)),
-            and92(eq113(directMessages2.fromUserId, input.withUserId), eq113(directMessages2.toUserId, ctx.user.id))
+            and91(eq113(directMessages2.fromUserId, ctx.user.id), eq113(directMessages2.toUserId, input.withUserId)),
+            and91(eq113(directMessages2.fromUserId, input.withUserId), eq113(directMessages2.toUserId, ctx.user.id))
           )
         ).orderBy(desc54(directMessages2.createdAt)).limit(50);
         return msgs.reverse();
@@ -37245,7 +37257,7 @@ function serveStatic(app) {
 init_db();
 init_schema();
 import crypto12 from "crypto";
-import { eq as eq94, and as and77 } from "drizzle-orm";
+import { eq as eq94, and as and76 } from "drizzle-orm";
 async function fireMetaCAPIPurchase(opts) {
   try {
     const pixelId = process.env.META_PIXEL_ID;
@@ -37335,7 +37347,7 @@ async function handleEstoqueCreated(data) {
       quantidadeDisponivel,
       dataAtualizacao: /* @__PURE__ */ new Date()
     });
-    await db.update(blingProdutos).set({ estoque: quantidade, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and77(eq94(blingProdutos.id, produtoId), eq94(blingProdutos.userId, userId)));
+    await db.update(blingProdutos).set({ estoque: quantidade, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and76(eq94(blingProdutos.id, produtoId), eq94(blingProdutos.userId, userId)));
     console.log(`[Bling Webhook] Estoque criado \u2014 produto ${produtoId} (SKU: ${produtoSku}), saldo: ${quantidade}`);
   } catch (error) {
     console.error("[Bling Webhook] Erro ao processar cria\xE7\xE3o de estoque:", error);
@@ -37358,9 +37370,9 @@ async function handleEstoqueUpdated(data) {
       return;
     }
     const userId = "system";
-    const existing = await db.select({ id: blingEstoque.id }).from(blingEstoque).where(and77(eq94(blingEstoque.produtoId, produtoId), eq94(blingEstoque.userId, userId))).limit(1);
+    const existing = await db.select({ id: blingEstoque.id }).from(blingEstoque).where(and76(eq94(blingEstoque.produtoId, produtoId), eq94(blingEstoque.userId, userId))).limit(1);
     if (existing.length > 0) {
-      await db.update(blingEstoque).set({ quantidade, quantidadeReservada, quantidadeDisponivel, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and77(eq94(blingEstoque.produtoId, produtoId), eq94(blingEstoque.userId, userId)));
+      await db.update(blingEstoque).set({ quantidade, quantidadeReservada, quantidadeDisponivel, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and76(eq94(blingEstoque.produtoId, produtoId), eq94(blingEstoque.userId, userId)));
     } else {
       await db.insert(blingEstoque).values({
         userId,
@@ -37372,7 +37384,7 @@ async function handleEstoqueUpdated(data) {
         dataAtualizacao: /* @__PURE__ */ new Date()
       });
     }
-    await db.update(blingProdutos).set({ estoque: quantidade, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and77(eq94(blingProdutos.id, produtoId), eq94(blingProdutos.userId, userId)));
+    await db.update(blingProdutos).set({ estoque: quantidade, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and76(eq94(blingProdutos.id, produtoId), eq94(blingProdutos.userId, userId)));
     console.log(`[Bling Webhook] Estoque atualizado \u2014 produto ${produtoId} (SKU: ${produtoSku}), novo saldo: ${quantidade}`);
   } catch (error) {
     console.error("[Bling Webhook] Erro ao processar atualiza\xE7\xE3o de estoque:", error);
@@ -37391,8 +37403,8 @@ async function handleEstoqueDeleted(data) {
       return;
     }
     const userId = "system";
-    await db.update(blingEstoque).set({ quantidade: 0, quantidadeReservada: 0, quantidadeDisponivel: 0, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and77(eq94(blingEstoque.produtoId, produtoId), eq94(blingEstoque.userId, userId)));
-    await db.update(blingProdutos).set({ estoque: 0, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and77(eq94(blingProdutos.id, produtoId), eq94(blingProdutos.userId, userId)));
+    await db.update(blingEstoque).set({ quantidade: 0, quantidadeReservada: 0, quantidadeDisponivel: 0, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and76(eq94(blingEstoque.produtoId, produtoId), eq94(blingEstoque.userId, userId)));
+    await db.update(blingProdutos).set({ estoque: 0, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and76(eq94(blingProdutos.id, produtoId), eq94(blingProdutos.userId, userId)));
     console.log(`[Bling Webhook] Estoque deletado \u2014 produto ${produtoId} zerado`);
   } catch (error) {
     console.error("[Bling Webhook] Erro ao processar exclus\xE3o de estoque:", error);
@@ -37708,7 +37720,7 @@ init_websocket_notifications();
 // server/agents/sync-agent.ts
 init_db();
 init_schema();
-import { eq as eq95, and as and78, isNotNull as isNotNull2 } from "drizzle-orm";
+import { eq as eq95, and as and77, isNotNull as isNotNull2 } from "drizzle-orm";
 var BLING_SYNC_INTERVAL_MS = 60 * 60 * 1e3;
 var META_SYNC_INTERVAL_MS = 30 * 60 * 1e3;
 async function syncBlingForUser(userId, accessToken) {
@@ -37803,7 +37815,7 @@ async function runBlingSync() {
     return;
   }
   try {
-    const tokens = await db.select().from(oauthTokens).where(and78(eq95(oauthTokens.plataforma, "bling"), eq95(oauthTokens.isActive, true), isNotNull2(oauthTokens.accessToken)));
+    const tokens = await db.select().from(oauthTokens).where(and77(eq95(oauthTokens.plataforma, "bling"), eq95(oauthTokens.isActive, true), isNotNull2(oauthTokens.accessToken)));
     console.log(`[SyncAgent] Bling \u2014 ${tokens.length} usu\xE1rio(s) para sincronizar`);
     for (const token of tokens) {
       try {
@@ -37825,7 +37837,7 @@ async function runMetaSync() {
     return;
   }
   try {
-    const tokens = await db.select().from(oauthTokens).where(and78(eq95(oauthTokens.plataforma, "meta"), eq95(oauthTokens.isActive, true), isNotNull2(oauthTokens.accessToken)));
+    const tokens = await db.select().from(oauthTokens).where(and77(eq95(oauthTokens.plataforma, "meta"), eq95(oauthTokens.isActive, true), isNotNull2(oauthTokens.accessToken)));
     console.log(`[SyncAgent] Meta \u2014 ${tokens.length} usu\xE1rio(s) para sincronizar`);
     for (const token of tokens) {
       try {
@@ -37859,14 +37871,14 @@ function startSyncAgent() {
 // server/agents/token-refresh-agent.ts
 init_db();
 init_schema();
-import { eq as eq96, and as and79, lte as lte3, isNotNull as isNotNull3 } from "drizzle-orm";
+import { eq as eq96, and as and78, lte as lte3, isNotNull as isNotNull3 } from "drizzle-orm";
 async function seedMetaTokensIfMissing() {
   const db = await getDb();
   if (!db) return;
   const userToken = process.env.META_ACCESS_TOKEN;
   const pageToken = process.env.META_PAGE_ACCESS_TOKEN;
   if (!userToken && !pageToken) return;
-  const existing = await db.select({ id: oauthTokens.id }).from(oauthTokens).where(and79(eq96(oauthTokens.plataforma, "meta"), eq96(oauthTokens.isActive, true))).limit(1);
+  const existing = await db.select({ id: oauthTokens.id }).from(oauthTokens).where(and78(eq96(oauthTokens.plataforma, "meta"), eq96(oauthTokens.isActive, true))).limit(1);
   if (existing.length > 0) return;
   const now = /* @__PURE__ */ new Date();
   const expiresAt = new Date(now.getTime() + 55 * 24 * 60 * 60 * 1e3);
@@ -37987,7 +37999,7 @@ async function runTokenRefresh() {
   const threshold = new Date(Date.now() + EXPIRY_THRESHOLD_MS);
   try {
     const tokens = await db.select().from(oauthTokens).where(
-      and79(
+      and78(
         eq96(oauthTokens.isActive, true),
         isNotNull3(oauthTokens.expiresAt),
         lte3(oauthTokens.expiresAt, threshold)
@@ -38152,7 +38164,7 @@ function startContentAgent() {
 // server/agents/alert-agent.ts
 init_db();
 init_schema();
-import { eq as eq98, and as and80 } from "drizzle-orm";
+import { eq as eq98, and as and79 } from "drizzle-orm";
 var notifyNewAlert2;
 try {
   notifyNewAlert2 = (init_websocket_notifications(), __toCommonJS(websocket_notifications_exports)).notifyNewAlert;
@@ -38233,7 +38245,7 @@ async function runAlertCheck() {
   }
   let tokens = [];
   try {
-    tokens = await db.select().from(oauthTokens).where(and80(eq98(oauthTokens.plataforma, "meta"), eq98(oauthTokens.isActive, true)));
+    tokens = await db.select().from(oauthTokens).where(and79(eq98(oauthTokens.plataforma, "meta"), eq98(oauthTokens.isActive, true)));
   } catch (err) {
     console.error("[AlertAgent] Erro ao buscar tokens:", err);
     return;
@@ -38250,7 +38262,7 @@ async function runAlertCheck() {
         for (const alertDef of thresholdAlerts) {
           try {
             const existing = await db.select().from(metaCampaignAlerts).where(
-              and80(
+              and79(
                 eq98(metaCampaignAlerts.campaignId, campaign.id),
                 eq98(metaCampaignAlerts.alertType, alertDef.alertType),
                 eq98(metaCampaignAlerts.isResolved, false)
@@ -38400,7 +38412,7 @@ function startPerformanceAgent() {
 // server/agents/publication-worker.ts
 init_db();
 init_schema();
-import { eq as eq100, and as and82, or as or5, lte as lte4 } from "drizzle-orm";
+import { eq as eq100, and as and81, or as or5, lte as lte4 } from "drizzle-orm";
 var MAX_JOBS_PER_CYCLE = 5;
 async function publishToInstagram2(instagramId, accessToken, caption, mediaUrls) {
   if (mediaUrls.length === 0) {
@@ -38460,7 +38472,7 @@ async function processJobs() {
     jobs = await db.select().from(publicationQueueJobs).where(
       or5(
         eq100(publicationQueueJobs.status, "ready"),
-        and82(
+        and81(
           eq100(publicationQueueJobs.status, "waiting"),
           lte4(publicationQueueJobs.nextRetryTime, now)
         )
@@ -39137,7 +39149,7 @@ function startCreativeTeamAgent() {
 init_db();
 init_schema();
 init_llm();
-import { eq as eq104, and as and84, inArray as inArray9 } from "drizzle-orm";
+import { eq as eq104, and as and83, inArray as inArray9 } from "drizzle-orm";
 var CHECK_INTERVAL_MS4 = 5 * 60 * 1e3;
 async function processNewCollections() {
   const db = await getDb();
@@ -39149,7 +39161,7 @@ async function processNewCollections() {
   let pendingCollections = [];
   try {
     pendingCollections = await db.select().from(productCollections).where(
-      and84(
+      and83(
         eq104(productCollections.status, "ativo"),
         eq104(productCollections.briefsGenerated, false)
       )
@@ -39559,7 +39571,7 @@ async function runAllInfluencerAgents() {
 init_db();
 init_schema();
 init_ml_ads_browser_agent();
-import { eq as eq106, and as and85 } from "drizzle-orm";
+import { eq as eq106, and as and84 } from "drizzle-orm";
 var INTERVAL_MS = 5 * 60 * 1e3;
 function startMLActionsExecutor() {
   let running = false;
@@ -39570,7 +39582,7 @@ function startMLActionsExecutor() {
       const db = await getDb();
       if (!db) return;
       const { or: or6 } = await import("drizzle-orm");
-      const pending = await db.select().from(agentActions).where(and85(
+      const pending = await db.select().from(agentActions).where(and84(
         eq106(agentActions.agentName, "gabi"),
         or6(
           eq106(agentActions.status, "pending"),
@@ -39637,7 +39649,7 @@ function startMLActionsExecutor() {
 // server/agents/shopee-actions-executor.ts
 init_db();
 init_schema();
-import { eq as eq107, and as and86 } from "drizzle-orm";
+import { eq as eq107, and as and85 } from "drizzle-orm";
 
 // server/agents/shopee-ads-browser-agent.ts
 import { chromium as chromium2 } from "playwright";
@@ -39940,7 +39952,7 @@ function startShopeeActionsExecutor() {
     try {
       const db = await getDb();
       if (!db) return;
-      const pending = await db.select().from(agentActions).where(and86(eq107(agentActions.agentName, "luiza"), eq107(agentActions.status, "pending")));
+      const pending = await db.select().from(agentActions).where(and85(eq107(agentActions.agentName, "luiza"), eq107(agentActions.status, "pending")));
       if (pending.length === 0) return;
       console.log(`[ShopeeExecutor] ${pending.length} a\xE7\xE3o(\xF5es) pendente(s) \u2014 executando via browser`);
       for (const action of pending) {
@@ -39991,7 +40003,7 @@ function startShopeeActionsExecutor() {
 // server/agents/tray-actions-executor.ts
 init_db();
 init_schema();
-import { eq as eq108, and as and87 } from "drizzle-orm";
+import { eq as eq108, and as and86 } from "drizzle-orm";
 
 // server/agents/tray-browser-agent.ts
 import { chromium as chromium3 } from "playwright";
@@ -40155,7 +40167,7 @@ function startTrayActionsExecutor() {
     try {
       const db = await getDb();
       if (!db) return;
-      const pending = await db.select().from(agentActions).where(and87(eq108(agentActions.agentName, "duda"), eq108(agentActions.status, "pending")));
+      const pending = await db.select().from(agentActions).where(and86(eq108(agentActions.agentName, "duda"), eq108(agentActions.status, "pending")));
       if (pending.length === 0) return;
       console.log(`[TrayExecutor] ${pending.length} a\xE7\xE3o(\xF5es) pendente(s) \u2014 abrindo browser`);
       for (const action of pending) {
@@ -40209,7 +40221,7 @@ function startTrayActionsExecutor() {
 // server/agents/ml-ads-api.ts
 init_db();
 init_schema();
-import { eq as eq109, and as and88 } from "drizzle-orm";
+import { eq as eq109, and as and87 } from "drizzle-orm";
 var ML_BASE3 = "https://api.mercadolibre.com";
 function getToken2(account) {
   return account === "fnt" ? process.env.ML_ACCESS_TOKEN_2 || "" : process.env.ML_ACCESS_TOKEN_1 || "";
@@ -40285,7 +40297,7 @@ async function apiScrapeMLMetrics(account = "feminnita") {
       console.error("[MLMetrics] Banco indispon\xEDvel");
       return 0;
     }
-    await db.delete(marketplaceAdsMetrics).where(and88(eq109(marketplaceAdsMetrics.platform, "ml"), eq109(marketplaceAdsMetrics.account, account)));
+    await db.delete(marketplaceAdsMetrics).where(and87(eq109(marketplaceAdsMetrics.platform, "ml"), eq109(marketplaceAdsMetrics.account, account)));
     const now = /* @__PURE__ */ new Date();
     const rows = campaigns3.map((c) => {
       const budget = Number(c.budget || 0);
@@ -40421,7 +40433,7 @@ function startAllAgents() {
 // server/services/blog-server.ts
 init_db();
 init_schema();
-import { eq as eq110, desc as desc53, and as and89 } from "drizzle-orm";
+import { eq as eq110, desc as desc53, and as and88 } from "drizzle-orm";
 function mdToHtml(md) {
   return md.replace(/^### (.+)$/gm, "<h3>$1</h3>").replace(/^## (.+)$/gm, "<h2>$1</h2>").replace(/^# (.+)$/gm, "<h1>$1</h1>").replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\*(.+?)\*/g, "<em>$1</em>").replace(/^> (.+)$/gm, "<blockquote>$1</blockquote>").replace(/^- (.+)$/gm, "<li>$1</li>").replace(/(<li>.*<\/li>\n?)+/g, (m) => `<ul>${m}</ul>`).replace(/\n\n/g, "</p><p>").replace(/^(?!<[a-z])/gm, "").replace(/^(.+)$/gm, (line) => line.match(/^<[a-z]/) ? line : `<p>${line}</p>`);
 }
@@ -40754,7 +40766,7 @@ function registerBlogRoutes(app) {
     try {
       const db = await getDb();
       if (!db) return res.status(503).send("Banco indispon\xEDvel");
-      const [post] = await db.select().from(blogPosts).where(and89(eq110(blogPosts.slug, req.params.slug), eq110(blogPosts.status, "published"))).limit(1);
+      const [post] = await db.select().from(blogPosts).where(and88(eq110(blogPosts.slug, req.params.slug), eq110(blogPosts.status, "published"))).limit(1);
       if (!post) return res.status(404).send(layout({
         title: "Artigo n\xE3o encontrado \u2014 Blog Feminnita",
         body: `<div style="margin-top:120px;text-align:center;padding:4rem 1rem;">
