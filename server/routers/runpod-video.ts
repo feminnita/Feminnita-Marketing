@@ -1,5 +1,8 @@
 import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
+import { getDb } from "../db";
+import { videoJobs } from "../../drizzle/schema";
+import { eq, desc, and } from "drizzle-orm";
 
 const RUNPOD_BASE = "https://api.runpod.ai/v2";
 
@@ -39,6 +42,17 @@ async function runpodStatus(jobId: string) {
   return res.json() as Promise<any>;
 }
 
+function mapStatus(runpodStatus: string): "queued" | "processing" | "completed" | "failed" | "cancelled" {
+  switch (runpodStatus) {
+    case "IN_QUEUE": return "queued";
+    case "IN_PROGRESS": return "processing";
+    case "COMPLETED": return "completed";
+    case "FAILED": return "failed";
+    case "CANCELLED": return "cancelled";
+    default: return "queued";
+  }
+}
+
 export const runpodVideoRouter = router({
   generate: protectedProcedure
     .input(z.object({
@@ -46,8 +60,7 @@ export const runpodVideoRouter = router({
       videoBase64: z.string().min(100),
       durationSeconds: z.number().min(3).max(30).default(15),
     }))
-    .mutation(async ({ input }) => {
-      // Enfileira o job no RunPod
+    .mutation(async ({ input, ctx }) => {
       const job = await runpodRequest("/run", {
         input: {
           image_base64: input.imageBase64,
@@ -56,19 +69,75 @@ export const runpodVideoRouter = router({
         },
       });
 
+      const db = await getDb();
+      if (db) {
+        await db.insert(videoJobs).values({
+          userId: ctx.user.id,
+          runpodJobId: job.id,
+          status: "queued",
+          durationSeconds: input.durationSeconds,
+          createdAt: new Date(),
+        }).catch(() => null);
+      }
+
       return { jobId: job.id as string };
     }),
 
   status: protectedProcedure
     .input(z.object({ jobId: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const result = await runpodStatus(input.jobId);
-      // status: IN_QUEUE | IN_PROGRESS | COMPLETED | FAILED | CANCELLED
+      const status = mapStatus(result.status);
+
+      const db = await getDb();
+      if (db && (status === "completed" || status === "failed" || status === "cancelled")) {
+        await db.update(videoJobs)
+          .set({
+            status,
+            completedAt: new Date(),
+            errorMessage: result.output?.error?.slice(0, 499) ?? null,
+          })
+          .where(and(
+            eq(videoJobs.runpodJobId, input.jobId),
+            eq(videoJobs.userId, ctx.user.id)
+          ))
+          .catch(() => null);
+      } else if (db && status === "processing") {
+        await db.update(videoJobs)
+          .set({ status })
+          .where(and(
+            eq(videoJobs.runpodJobId, input.jobId),
+            eq(videoJobs.userId, ctx.user.id)
+          ))
+          .catch(() => null);
+      }
+
       return {
         status: result.status as string,
         videoBase64: result.output?.video_base64 as string | undefined,
         error: result.output?.error as string | undefined,
       };
+    }),
+
+  history: protectedProcedure
+    .input(z.object({ limit: z.number().min(1).max(50).default(20) }))
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) return { jobs: [] };
+      const jobs = await db.select({
+        id: videoJobs.id,
+        runpodJobId: videoJobs.runpodJobId,
+        status: videoJobs.status,
+        durationSeconds: videoJobs.durationSeconds,
+        errorMessage: videoJobs.errorMessage,
+        completedAt: videoJobs.completedAt,
+        createdAt: videoJobs.createdAt,
+      })
+        .from(videoJobs)
+        .where(eq(videoJobs.userId, ctx.user.id))
+        .orderBy(desc(videoJobs.createdAt))
+        .limit(input.limit);
+      return { jobs };
     }),
 
   checkConfig: protectedProcedure.query(() => {

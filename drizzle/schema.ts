@@ -1696,3 +1696,15 @@ export const portalMaterials = mysqlTable("portal_materials", {
   createdAt:   timestamp("createdAt").defaultNow().notNull(),
 });
 export type PortalMaterial = typeof portalMaterials.$inferSelect;
+
+export const videoJobs = mysqlTable("video_jobs", {
+  id:              int("id").autoincrement().primaryKey(),
+  userId:          int("userId").notNull(),
+  runpodJobId:     varchar("runpodJobId", { length: 100 }).notNull(),
+  status:          mysqlEnum("status", ["queued", "processing", "completed", "failed", "cancelled"]).default("queued").notNull(),
+  durationSeconds: int("durationSeconds").default(15).notNull(),
+  errorMessage:    varchar("errorMessage", { length: 500 }),
+  completedAt:     timestamp("completedAt"),
+  createdAt:       timestamp("createdAt").defaultNow().notNull(),
+});
+export type VideoJob = typeof videoJobs.$inferSelect;

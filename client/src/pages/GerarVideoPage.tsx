@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { Upload, X, Play, Download, Loader2, AlertCircle, Sparkles, Film, Clock } from "lucide-react";
+import { Upload, X, Play, Download, Loader2, AlertCircle, Sparkles, Film, Clock, CheckCircle2, XCircle, Timer, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const BTN = "#8B2635";
@@ -45,6 +45,7 @@ export default function GerarVideoPage() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const configQuery = trpc.runpodVideo.checkConfig.useQuery();
+  const historyQuery = trpc.runpodVideo.history.useQuery({ limit: 20 }, { refetchInterval: 15000 });
 
   const generateMutation = trpc.runpodVideo.generate.useMutation({
     onSuccess: (data) => {
@@ -343,6 +344,52 @@ export default function GerarVideoPage() {
           )}
         </div>
       </div>
+
+      {/* Histórico de jobs */}
+      {(historyQuery.data?.jobs?.length ?? 0) > 0 && (
+        <div className="mt-8">
+          <div className="flex items-center gap-2 mb-4">
+            <History className="w-4 h-4 text-slate-500" />
+            <h2 className="text-sm font-semibold text-slate-700">Histórico de gerações</h2>
+          </div>
+          <div className="space-y-2">
+            {historyQuery.data!.jobs.map((job) => {
+              const statusIcon = {
+                completed:  <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />,
+                failed:     <XCircle className="w-4 h-4 text-red-400 flex-shrink-0" />,
+                cancelled:  <XCircle className="w-4 h-4 text-slate-400 flex-shrink-0" />,
+                processing: <Loader2 className="w-4 h-4 text-blue-400 flex-shrink-0 animate-spin" />,
+                queued:     <Timer className="w-4 h-4 text-amber-400 flex-shrink-0" />,
+              }[job.status];
+
+              const statusLabel = {
+                completed: "Concluído", failed: "Falhou", cancelled: "Cancelado",
+                processing: "Processando", queued: "Na fila",
+              }[job.status];
+
+              const date = new Date(job.createdAt).toLocaleString("pt-BR", {
+                day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+              });
+
+              return (
+                <div key={job.id} className="flex items-center gap-3 p-3 rounded-lg border border-slate-100 bg-slate-50 text-sm">
+                  {statusIcon}
+                  <span className="text-slate-500 text-xs w-28 flex-shrink-0">{date}</span>
+                  <span className={`text-xs font-medium w-24 flex-shrink-0 ${
+                    job.status === "completed" ? "text-green-600" :
+                    job.status === "failed" ? "text-red-500" : "text-slate-500"
+                  }`}>{statusLabel}</span>
+                  <span className="text-xs text-slate-400">{job.durationSeconds}s</span>
+                  {job.errorMessage && (
+                    <span className="text-xs text-red-400 truncate ml-2">{job.errorMessage}</span>
+                  )}
+                  <span className="text-xs text-slate-300 ml-auto font-mono">{job.runpodJobId.slice(0, 8)}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
