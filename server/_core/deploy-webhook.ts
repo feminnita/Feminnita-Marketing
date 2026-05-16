@@ -54,7 +54,7 @@ export function registerDeployWebhook(app: any) {
 
     res.json({ ok: true, msg: "Deploy iniciado" });
 
-    const deployCmd = "cd /var/www/feminnita-marketing && git pull && npm run build:full && (pm2 startOrRestart ecosystem.config.cjs --env production 2>/dev/null || pm2 restart feminnita-marketing --update-env 2>/dev/null || pm2 restart all 2>/dev/null)";
+    const deployCmd = "cd /var/www/feminnita-marketing && git pull && pnpm install --frozen-lockfile --prod=false && npm run build:full && (pm2 startOrRestart ecosystem.config.cjs --env production 2>/dev/null || pm2 restart feminnita-marketing --update-env 2>/dev/null || pm2 restart all 2>/dev/null)";
     exec(deployCmd, (err, stdout, stderr) => {
       if (err) {
         console.error("[Deploy] Erro:", err.message);

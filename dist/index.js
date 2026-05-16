@@ -36206,7 +36206,6 @@ init_db();
 init_schema();
 import { z as z82 } from "zod";
 import { eq as eq91, desc as desc48 } from "drizzle-orm";
-import { fal } from "@fal-ai/client";
 var FAL_BASE = "https://queue.fal.run";
 var FAL_MODEL = "fal-ai/wan/v2.2/i2v";
 function getFalKey() {
@@ -36215,10 +36214,32 @@ function getFalKey() {
   return key;
 }
 async function uploadToFal(base64, mimeType) {
-  fal.config({ credentials: getFalKey() });
   const buffer = Buffer.from(base64, "base64");
-  const blob = new Blob([buffer], { type: mimeType });
-  return await fal.storage.upload(blob);
+  const ext = mimeType.split("/")[1]?.split(";")[0] ?? "bin";
+  const fileName = `upload-${Date.now()}.${ext}`;
+  const initiateRes = await fetch(
+    "https://rest.alpha.fal.ai/storage/upload/initiate?storage_type=fal-cdn-v3",
+    {
+      method: "POST",
+      headers: { Authorization: `Key ${getFalKey()}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ file_name: fileName, content_type: mimeType })
+    }
+  );
+  if (!initiateRes.ok) {
+    const text3 = await initiateRes.text().catch(() => "");
+    throw new Error(`fal.ai initiate ${initiateRes.status}: ${text3.slice(0, 300)}`);
+  }
+  const { upload_url, access_url } = await initiateRes.json();
+  const putRes = await fetch(upload_url, {
+    method: "PUT",
+    headers: { "Content-Type": mimeType },
+    body: buffer
+  });
+  if (!putRes.ok) {
+    const text3 = await putRes.text().catch(() => "");
+    throw new Error(`fal.ai CDN PUT ${putRes.status}: ${text3.slice(0, 300)}`);
+  }
+  return access_url;
 }
 async function submitFalJob(imageUrl, prompt, durationSeconds) {
   const fps = 16;
@@ -37554,7 +37575,7 @@ function registerDeployWebhook(app) {
       }
     }
     res.json({ ok: true, msg: "Deploy iniciado" });
-    const deployCmd = "cd /var/www/feminnita-marketing && git pull && npm run build:full && (pm2 startOrRestart ecosystem.config.cjs --env production 2>/dev/null || pm2 restart feminnita-marketing --update-env 2>/dev/null || pm2 restart all 2>/dev/null)";
+    const deployCmd = "cd /var/www/feminnita-marketing && git pull && pnpm install --frozen-lockfile --prod=false && npm run build:full && (pm2 startOrRestart ecosystem.config.cjs --env production 2>/dev/null || pm2 restart feminnita-marketing --update-env 2>/dev/null || pm2 restart all 2>/dev/null)";
     exec(deployCmd, (err, stdout, stderr) => {
       if (err) {
         console.error("[Deploy] Erro:", err.message);

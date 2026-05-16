@@ -3,7 +3,6 @@ import { z } from "zod";
 import { getDb } from "../db";
 import { videoJobs } from "../../drizzle/schema";
 import { eq, desc } from "drizzle-orm";
-import { fal } from "@fal-ai/client";
 
 // ── fal.ai — Modo Livre (WanVideo I2V) ───────────────────────────────────────
 const FAL_BASE = "https://queue.fal.run";
@@ -16,10 +15,37 @@ function getFalKey() {
 }
 
 async function uploadToFal(base64: string, mimeType: string): Promise<string> {
-  fal.config({ credentials: getFalKey() });
   const buffer = Buffer.from(base64, "base64");
-  const blob = new Blob([buffer], { type: mimeType });
-  return await fal.storage.upload(blob);
+  const ext = mimeType.split("/")[1]?.split(";")[0] ?? "bin";
+  const fileName = `upload-${Date.now()}.${ext}`;
+
+  // Step 1: get presigned upload URL from fal.ai storage
+  const initiateRes = await fetch(
+    "https://rest.alpha.fal.ai/storage/upload/initiate?storage_type=fal-cdn-v3",
+    {
+      method: "POST",
+      headers: { Authorization: `Key ${getFalKey()}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ file_name: fileName, content_type: mimeType }),
+    }
+  );
+  if (!initiateRes.ok) {
+    const text = await initiateRes.text().catch(() => "");
+    throw new Error(`fal.ai initiate ${initiateRes.status}: ${text.slice(0, 300)}`);
+  }
+  const { upload_url, access_url } = await initiateRes.json() as { upload_url: string; access_url: string };
+
+  // Step 2: PUT binary to presigned URL
+  const putRes = await fetch(upload_url, {
+    method: "PUT",
+    headers: { "Content-Type": mimeType },
+    body: buffer,
+  });
+  if (!putRes.ok) {
+    const text = await putRes.text().catch(() => "");
+    throw new Error(`fal.ai CDN PUT ${putRes.status}: ${text.slice(0, 300)}`);
+  }
+
+  return access_url;
 }
 
 async function submitFalJob(imageUrl: string, prompt: string, durationSeconds: number): Promise<string> {
