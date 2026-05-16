@@ -36259,7 +36259,7 @@ var runpodVideoRouter = router({
   generate: protectedProcedure.input(z82.object({
     imageBase64: z82.string().min(100),
     videoBase64: z82.string().min(100),
-    durationSeconds: z82.number().min(3).max(30).default(15)
+    durationSeconds: z82.number().int().min(3).max(30).default(15)
   })).mutation(async ({ input, ctx }) => {
     const job = await runpodRequest("/run", {
       input: {
