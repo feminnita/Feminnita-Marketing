@@ -36229,7 +36229,7 @@ async function uploadToFal(base64, mimeType) {
     const text3 = await initiateRes.text().catch(() => "");
     throw new Error(`fal.ai initiate ${initiateRes.status}: ${text3.slice(0, 300)}`);
   }
-  const { upload_url, access_url } = await initiateRes.json();
+  const { upload_url, file_url } = await initiateRes.json();
   const putRes = await fetch(upload_url, {
     method: "PUT",
     headers: { "Content-Type": mimeType },
@@ -36239,7 +36239,7 @@ async function uploadToFal(base64, mimeType) {
     const text3 = await putRes.text().catch(() => "");
     throw new Error(`fal.ai CDN PUT ${putRes.status}: ${text3.slice(0, 300)}`);
   }
-  return access_url;
+  return file_url;
 }
 async function submitFalJob(imageUrl, prompt, durationSeconds) {
   const fps = 16;
