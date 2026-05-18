@@ -15,11 +15,11 @@ var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
 };
-var __copyProps = (to, from, except, desc54) => {
+var __copyProps = (to, from, except, desc55) => {
   if (from && typeof from === "object" || typeof from === "function") {
     for (let key of __getOwnPropNames(from))
       if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc54 = __getOwnPropDesc(from, key)) || desc54.enumerable });
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc55 = __getOwnPropDesc(from, key)) || desc55.enumerable });
   }
   return to;
 };
@@ -237,6 +237,7 @@ __export(schema_exports, {
   drops: () => drops,
   escalationQueue: () => escalationQueue,
   igPostPublications: () => igPostPublications,
+  imageJobs: () => imageJobs,
   influencerAccounts: () => influencerAccounts,
   influencerInteractions: () => influencerInteractions,
   influencerKnowledgeBase: () => influencerKnowledgeBase,
@@ -285,7 +286,9 @@ __export(schema_exports, {
   trafficMessages: () => trafficMessages,
   ugcSubmissions: () => ugcSubmissions,
   users: () => users,
+  videoCreditOrders: () => videoCreditOrders,
   videoJobs: () => videoJobs,
+  videoPlans: () => videoPlans,
   webhookEvents: () => webhookEvents,
   webhooks: () => webhooks,
   whatsappBlastContacts: () => whatsappBlastContacts,
@@ -294,7 +297,7 @@ __export(schema_exports, {
 import { int as int2, mysqlEnum, mysqlTable as mysqlTable2, text as text2, timestamp, varchar as varchar2, boolean as boolean2 } from "drizzle-orm/mysql-core";
 import { date, datetime as datetime2, decimal as decimal2, json as json2, longtext } from "drizzle-orm/mysql-core";
 import { sql } from "drizzle-orm";
-var users, integrations, webhooks, webhookEvents, notifications, oauthTokens, influencers, influencerKnowledgeBase, influencerPosts, influencerTrends, influencerPerformance, influencerInteractions, marketplaceAdsMetrics, collaborators, oauthCredentials, contentItems, mediaFiles, scheduledPosts, postHistory, influencerAccounts, metaSyncHistory, metaCampaignAlerts, instagramAccounts, igPostPublications, instagramAppCredentials, knowledgeBase, aiTrainingData, conversationHistory, escalationQueue, aiSettings, campaigns, automations, publicationQueueJobs, marketingResearchReports, contentBriefs, competitorData, assetLibrary, productCollections, afiliadas, afiliadaCliques, afiliadaVendas, abandonamentoSequencias, abandonamentoLogs, brandBook, drops, ugcSubmissions, tiktokLives, cupons, contentTemplates, designHistory, adsEvaluations, adsEvaluationMessages, mlAdsEvaluations, mlAdsEvaluationMessages, blogPosts, trafficConversations, trafficMessages, trafficActions, trafficDailyBriefings, specialistConversations, specialistMessages, agentActions, agentMemory, whatsappBlasts, whatsappBlastContacts, shopeeAdsEvaluations, shopeeAdsEvaluationMessages, tiktokShopEvaluations, tiktokShopEvaluationMessages, amazonEvaluations, amazonEvaluationMessages, instagramCommentReplies, adCreatives, tiktokTeamEvaluations, tiktokTeamMessages, tiktokVideos, tiktokConnectedAccounts, specialistPlatformEvaluations, specialistPlatformMessages, pushSubscriptions, agentTasks, directMessages, portalUsers, portalMaterials, videoJobs;
+var users, integrations, webhooks, webhookEvents, notifications, oauthTokens, influencers, influencerKnowledgeBase, influencerPosts, influencerTrends, influencerPerformance, influencerInteractions, marketplaceAdsMetrics, collaborators, oauthCredentials, contentItems, mediaFiles, scheduledPosts, postHistory, influencerAccounts, metaSyncHistory, metaCampaignAlerts, instagramAccounts, igPostPublications, instagramAppCredentials, knowledgeBase, aiTrainingData, conversationHistory, escalationQueue, aiSettings, campaigns, automations, publicationQueueJobs, marketingResearchReports, contentBriefs, competitorData, assetLibrary, productCollections, afiliadas, afiliadaCliques, afiliadaVendas, abandonamentoSequencias, abandonamentoLogs, brandBook, drops, ugcSubmissions, tiktokLives, cupons, contentTemplates, designHistory, adsEvaluations, adsEvaluationMessages, mlAdsEvaluations, mlAdsEvaluationMessages, blogPosts, trafficConversations, trafficMessages, trafficActions, trafficDailyBriefings, specialistConversations, specialistMessages, agentActions, agentMemory, whatsappBlasts, whatsappBlastContacts, shopeeAdsEvaluations, shopeeAdsEvaluationMessages, tiktokShopEvaluations, tiktokShopEvaluationMessages, amazonEvaluations, amazonEvaluationMessages, instagramCommentReplies, adCreatives, tiktokTeamEvaluations, tiktokTeamMessages, tiktokVideos, tiktokConnectedAccounts, specialistPlatformEvaluations, specialistPlatformMessages, pushSubscriptions, agentTasks, directMessages, portalUsers, portalMaterials, videoJobs, videoPlans, videoCreditOrders, imageJobs;
 var init_schema = __esm({
   "drizzle/schema.ts"() {
     "use strict";
@@ -1635,10 +1638,42 @@ var init_schema = __esm({
       id: int2("id").autoincrement().primaryKey(),
       userId: int2("userId").notNull(),
       runpodJobId: varchar2("runpodJobId", { length: 100 }).notNull(),
+      mode: mysqlEnum("mode", ["livre", "runningup"]).default("livre").notNull(),
       status: mysqlEnum("status", ["queued", "processing", "completed", "failed", "cancelled"]).default("queued").notNull(),
-      durationSeconds: int2("durationSeconds").default(15).notNull(),
+      durationSeconds: int2("durationSeconds").default(6).notNull(),
       errorMessage: varchar2("errorMessage", { length: 500 }),
       completedAt: timestamp("completedAt"),
+      createdAt: timestamp("createdAt").defaultNow().notNull()
+    });
+    videoPlans = mysqlTable2("video_plans", {
+      id: int2("id").autoincrement().primaryKey(),
+      userId: int2("userId").notNull().unique(),
+      livreMonthlyLimit: int2("livreMonthlyLimit").default(0).notNull(),
+      runningUpMonthlyLimit: int2("runningUpMonthlyLimit").default(0).notNull(),
+      livreExtraCredits: int2("livreExtraCredits").default(0).notNull(),
+      runningUpExtraCredits: int2("runningUpExtraCredits").default(0).notNull(),
+      imageMonthlyLimit: int2("imageMonthlyLimit").default(50).notNull(),
+      imageExtraCredits: int2("imageExtraCredits").default(0).notNull(),
+      videoCreditsBalance: int2("videoCreditsBalance").default(0).notNull(),
+      updatedAt: timestamp("updatedAt").defaultNow().$onUpdateFn(() => /* @__PURE__ */ new Date()).notNull()
+    });
+    videoCreditOrders = mysqlTable2("video_credit_orders", {
+      id: int2("id").autoincrement().primaryKey(),
+      userId: int2("userId").notNull(),
+      packageId: varchar2("packageId", { length: 50 }).notNull(),
+      credits: int2("credits").notNull(),
+      amountBrl: varchar2("amountBrl", { length: 20 }).notNull(),
+      asaasPaymentId: varchar2("asaasPaymentId", { length: 100 }),
+      asaasPaymentUrl: varchar2("asaasPaymentUrl", { length: 500 }),
+      status: mysqlEnum("status", ["pending", "paid", "failed"]).default("pending").notNull(),
+      createdAt: timestamp("createdAt").defaultNow().notNull(),
+      paidAt: timestamp("paidAt")
+    });
+    imageJobs = mysqlTable2("image_jobs", {
+      id: int2("id").autoincrement().primaryKey(),
+      userId: int2("userId").notNull(),
+      jobId: varchar2("jobId", { length: 100 }).notNull(),
+      status: mysqlEnum("status", ["completed", "failed"]).default("completed").notNull(),
       createdAt: timestamp("createdAt").defaultNow().notNull()
     });
   }
@@ -2175,10 +2210,10 @@ async function tryTokenToBrowserSession(page, context, account) {
       if (rawCookies.length > 0 && !isLoginRedirect) {
         const parsed = rawCookies.map((c) => {
           const main = c.split(";")[0];
-          const eq113 = main.indexOf("=");
+          const eq115 = main.indexOf("=");
           return {
-            name: main.slice(0, eq113).trim(),
-            value: main.slice(eq113 + 1).trim(),
+            name: main.slice(0, eq115).trim(),
+            value: main.slice(eq115 + 1).trim(),
             domain: ".mercadolivre.com.br",
             path: "/",
             httpOnly: false,
@@ -3829,8 +3864,8 @@ function getToken(token) {
 function getAccount(account) {
   return account || AD_ACCOUNT_ID2;
 }
-async function metaPost2(path15, body, token) {
-  const res = await fetch(`${GRAPH_BASE3}/${path15}`, {
+async function metaPost2(path16, body, token) {
+  const res = await fetch(`${GRAPH_BASE3}/${path16}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ...body, access_token: getToken(token) })
@@ -3839,9 +3874,9 @@ async function metaPost2(path15, body, token) {
   if (data.error) throw new Error(`Meta API: ${data.error.message} (c\xF3digo ${data.error.code})`);
   return data;
 }
-async function metaGet2(path15, params = {}, token) {
+async function metaGet2(path16, params = {}, token) {
   const qs = new URLSearchParams({ ...params, access_token: getToken(token) }).toString();
-  const res = await fetch(`${GRAPH_BASE3}/${path15}?${qs}`);
+  const res = await fetch(`${GRAPH_BASE3}/${path16}?${qs}`);
   const data = await res.json();
   if (data.error) throw new Error(`Meta API: ${data.error.message} (c\xF3digo ${data.error.code})`);
   return data;
@@ -4424,7 +4459,7 @@ Retorne APENAS JSON v\xE1lido:
 async function requestCreativeVariants(userId, brief) {
   const db = await getDb();
   if (!db) return;
-  const { eq: eq113 } = await import("drizzle-orm");
+  const { eq: eq115 } = await import("drizzle-orm");
   const variants = ["demografico", "transformacao", "golias"];
   const variantLabel = {
     demografico: "P\xFAblico-Alvo",
@@ -4469,9 +4504,9 @@ Analise esta foto e retorne APENAS JSON v\xE1lido:
         const m = raw.match(/\{[\s\S]*\}/);
         if (m) {
           const p = JSON.parse(m[0]);
-          const desc54 = `${p.produto} | Cores: ${p.cores} | ${p.estilo} | ${p.diferenciais}`;
-          analyzedBrief = { ...brief, description: desc54 };
-          console.log(`[CreativeAgent:Variants] Produto analisado: ${desc54.slice(0, 80)}`);
+          const desc55 = `${p.produto} | Cores: ${p.cores} | ${p.estilo} | ${p.diferenciais}`;
+          analyzedBrief = { ...brief, description: desc55 };
+          console.log(`[CreativeAgent:Variants] Produto analisado: ${desc55.slice(0, 80)}`);
         }
       }
     } catch (err) {
@@ -4532,7 +4567,7 @@ async function requestCreative(userId, brief) {
   });
   const creativeId = insertResult[0].insertId;
   if (brief.imageBase64Input) {
-    const { eq: eq114 } = await import("drizzle-orm");
+    const { eq: eq116 } = await import("drizzle-orm");
     let productDescription = brief.description;
     try {
       const visionResult = await invokeLLM({
@@ -4591,7 +4626,7 @@ Analise esta foto e retorne APENAS JSON v\xE1lido:
       generatedBody: copy2.body,
       status: finalStatus2,
       updatedAt: /* @__PURE__ */ new Date()
-    }).where(eq114(adCreatives.id, creativeId));
+    }).where(eq116(adCreatives.id, creativeId));
     console.log(`[CreativeAgent] Criativo #${creativeId} (foto produto \u2192 ${generatedImage ? "banner Imagen" : "foto original"}) \u2192 pending_approval`);
     return {
       id: creativeId,
@@ -4625,14 +4660,14 @@ Analise esta foto e retorne APENAS JSON v\xE1lido:
   const imageBase64 = await generateImageWithImagen(imagenPrompt);
   const finalStatus = imageBase64 ? "pending_approval" : "generated";
   const message = imageBase64 ? "Banner gerado com sucesso! Aguardando sua aprova\xE7\xE3o." : "Copy gerado. Imagem requer configura\xE7\xE3o do Gemini Imagen (adicione LLM_API_KEY ao .env).";
-  const { eq: eq113 } = await import("drizzle-orm");
+  const { eq: eq115 } = await import("drizzle-orm");
   await db.update(adCreatives).set({
     imageBase64: imageBase64 || void 0,
     generatedHeadline: copy.headline,
     generatedBody: copy.body,
     status: finalStatus,
     updatedAt: /* @__PURE__ */ new Date()
-  }).where(eq113(adCreatives.id, creativeId));
+  }).where(eq115(adCreatives.id, creativeId));
   console.log(`[CreativeAgent] Criativo #${creativeId} \u2192 ${finalStatus}`);
   return {
     id: creativeId,
@@ -5255,7 +5290,7 @@ var init_websocket_notifications = __esm({
 });
 
 // server/services/ga4.ts
-import { eq as eq92, and as and74 } from "drizzle-orm";
+import { eq as eq94, and as and75 } from "drizzle-orm";
 function getGA4AuthUrl(redirectUri, state) {
   const params = new URLSearchParams({
     client_id: process.env.GOOGLE_GA4_CLIENT_ID,
@@ -5308,17 +5343,17 @@ async function refreshGA4Token(userId, tokenId, refreshToken) {
   const expiresAt = new Date(Date.now() + expiresIn * 1e3);
   const db = await getDb();
   if (db) {
-    await db.update(oauthTokens).set({ accessToken, expiresAt }).where(eq92(oauthTokens.id, tokenId));
+    await db.update(oauthTokens).set({ accessToken, expiresAt }).where(eq94(oauthTokens.id, tokenId));
   }
   return accessToken;
 }
 async function getValidGA4Token(userId) {
   const db = await getDb();
   if (!db) return null;
-  const rows = await db.select().from(oauthTokens).where(and74(
-    eq92(oauthTokens.userId, userId),
-    eq92(oauthTokens.plataforma, "google_analytics"),
-    eq92(oauthTokens.isActive, true)
+  const rows = await db.select().from(oauthTokens).where(and75(
+    eq94(oauthTokens.userId, userId),
+    eq94(oauthTokens.plataforma, "google_analytics"),
+    eq94(oauthTokens.isActive, true)
   )).limit(1);
   if (rows.length === 0) return null;
   const token = rows[0];
@@ -5379,7 +5414,7 @@ var ga4_oauth_exports = {};
 __export(ga4_oauth_exports, {
   registerGA4OAuthRoutes: () => registerGA4OAuthRoutes
 });
-import { eq as eq111, and as and89 } from "drizzle-orm";
+import { eq as eq113, and as and90 } from "drizzle-orm";
 function registerGA4OAuthRoutes(app) {
   app.get("/api/ga4/start", async (req, res) => {
     try {
@@ -5404,7 +5439,7 @@ function registerGA4OAuthRoutes(app) {
       if (!tokens) return res.redirect("/ga4?error=exchange_failed");
       const db = await getDb();
       if (!db) return res.redirect("/ga4?error=db_unavailable");
-      const existing = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and89(eq111(oauthTokens.userId, userId), eq111(oauthTokens.plataforma, "google_analytics"))).limit(1);
+      const existing = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and90(eq113(oauthTokens.userId, userId), eq113(oauthTokens.plataforma, "google_analytics"))).limit(1);
       const expiresAt = new Date(Date.now() + tokens.expiresIn * 1e3);
       if (existing.length > 0) {
         await db.update(oauthTokens).set({
@@ -5412,7 +5447,7 @@ function registerGA4OAuthRoutes(app) {
           ...tokens.refreshToken ? { refreshToken: tokens.refreshToken } : {},
           expiresAt,
           isActive: true
-        }).where(eq111(oauthTokens.id, existing[0].id));
+        }).where(eq113(oauthTokens.id, existing[0].id));
       } else {
         if (!tokens.refreshToken) {
           console.error("[GA4 OAuth] No refresh token received");
@@ -5437,7 +5472,7 @@ function registerGA4OAuthRoutes(app) {
     }
   });
 }
-var APP_URL, REDIRECT_URI;
+var APP_URL2, REDIRECT_URI;
 var init_ga4_oauth = __esm({
   "server/routers/ga4-oauth.ts"() {
     "use strict";
@@ -5445,8 +5480,8 @@ var init_ga4_oauth = __esm({
     init_ga4();
     init_db();
     init_schema();
-    APP_URL = process.env.APP_URL || "http://localhost:3001";
-    REDIRECT_URI = `${APP_URL}/api/ga4/callback`;
+    APP_URL2 = process.env.APP_URL || "http://localhost:3001";
+    REDIRECT_URI = `${APP_URL2}/api/ga4/callback`;
   }
 });
 
@@ -5455,7 +5490,7 @@ var meta_oauth_exports = {};
 __export(meta_oauth_exports, {
   registerMetaOAuthRoutes: () => registerMetaOAuthRoutes
 });
-import { eq as eq112, and as and90 } from "drizzle-orm";
+import { eq as eq114, and as and91 } from "drizzle-orm";
 function getAuthUrl(state) {
   const params = new URLSearchParams({
     client_id: APP_ID,
@@ -5517,7 +5552,7 @@ function registerMetaOAuthRoutes(app) {
     const db = await getDb();
     if (!db) return res.redirect("/gestor-trafego?error=db_unavailable");
     const expiresAt = new Date(Date.now() + long.expiresIn * 1e3);
-    const existing = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and90(eq112(oauthTokens.userId, userId), eq112(oauthTokens.plataforma, "meta"))).limit(1);
+    const existing = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and91(eq114(oauthTokens.userId, userId), eq114(oauthTokens.plataforma, "meta"))).limit(1);
     if (existing.length > 0) {
       const prevInfo = existing[0].accountInfo ? JSON.parse(existing[0].accountInfo) : {};
       await db.update(oauthTokens).set({
@@ -5525,7 +5560,7 @@ function registerMetaOAuthRoutes(app) {
         expiresAt,
         isActive: true,
         accountInfo: JSON.stringify(prevInfo)
-      }).where(eq112(oauthTokens.id, existing[0].id));
+      }).where(eq114(oauthTokens.id, existing[0].id));
     } else {
       await db.insert(oauthTokens).values({
         userId,
@@ -5540,17 +5575,17 @@ function registerMetaOAuthRoutes(app) {
     res.redirect("/gestor-trafego?meta_connected=1");
   });
 }
-var APP_URL2, APP_ID, APP_SECRET3, REDIRECT_URI2, GRAPH_URL;
+var APP_URL3, APP_ID, APP_SECRET3, REDIRECT_URI2, GRAPH_URL;
 var init_meta_oauth = __esm({
   "server/routers/meta-oauth.ts"() {
     "use strict";
     init_sdk();
     init_db();
     init_schema();
-    APP_URL2 = process.env.APP_URL || "http://localhost:3001";
+    APP_URL3 = process.env.APP_URL || "http://localhost:3001";
     APP_ID = process.env.META_APP_ID || "";
     APP_SECRET3 = process.env.META_APP_SECRET || "";
-    REDIRECT_URI2 = `${APP_URL2}/api/meta/callback`;
+    REDIRECT_URI2 = `${APP_URL3}/api/meta/callback`;
     GRAPH_URL = "https://graph.facebook.com/v19.0";
   }
 });
@@ -7951,9 +7986,9 @@ var systemRouter = router({
 // server/routers.ts
 init_sdk();
 init_db();
-import { z as z85 } from "zod";
+import { z as z87 } from "zod";
 import { scrypt as scrypt2, randomBytes as randomBytes5, timingSafeEqual as timingSafeEqual3 } from "crypto";
-import { promisify as promisify2 } from "util";
+import { promisify as promisify3 } from "util";
 
 // server/routers/bling-oauth.ts
 import { z as z3 } from "zod";
@@ -8077,8 +8112,8 @@ var blingOAuthRouter = router({
     const db = await (await Promise.resolve().then(() => (init_db(), db_exports))).getDb();
     if (!db) throw new Error("Database not available");
     const { oauthTokens: oauthTokens3 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
-    const { eq: eq113, and: and91 } = await import("drizzle-orm");
-    await db.update(oauthTokens3).set({ isActive: false }).where(and91(eq113(oauthTokens3.userId, ctx.user.id), eq113(oauthTokens3.plataforma, "bling")));
+    const { eq: eq115, and: and92 } = await import("drizzle-orm");
+    await db.update(oauthTokens3).set({ isActive: false }).where(and92(eq115(oauthTokens3.userId, ctx.user.id), eq115(oauthTokens3.plataforma, "bling")));
     return { sucesso: true };
   })
 });
@@ -11923,10 +11958,10 @@ function getNextPostingDay() {
   nextPosting.setHours(14, 0, 0, 0);
   return nextPosting;
 }
-function getNextPostingDays(count) {
+function getNextPostingDays(count2) {
   const days = [];
   let current = getNextPostingDay();
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < count2; i++) {
     days.push(new Date(current));
     current.setDate(current.getDate() + 3);
   }
@@ -12833,8 +12868,8 @@ Responda APENAS com JSON v\xE1lido no seguinte formato:
   }
   return parsed;
 }
-async function generateBlogIdeas(count = 10) {
-  const prompt = `Gere ${count} ideias criativas e variadas de posts para o Blog Feminnita.
+async function generateBlogIdeas(count2 = 10) {
+  const prompt = `Gere ${count2} ideias criativas e variadas de posts para o Blog Feminnita.
 
 REGRAS PARA AS IDEIAS:
 - Distribua entre os pilares: Hist\xF3rias da Comunidade, Treinamento/Vendas, Tecidos & Produtos, Qualidade do Sono, Ferramentas Digitais, Datas Especiais
@@ -13787,9 +13822,9 @@ function rateLimit(key, maxCalls, windowMs = 6e4) {
 function assertRateLimit(key, maxCalls, windowMs = 6e4, message) {
   const { allowed, remaining, resetAt } = rateLimit(key, maxCalls, windowMs);
   if (!allowed) {
-    const { TRPCError: TRPCError16 } = __require("@trpc/server");
+    const { TRPCError: TRPCError19 } = __require("@trpc/server");
     const waitSec = Math.ceil((resetAt - Date.now()) / 1e3);
-    throw new TRPCError16({
+    throw new TRPCError19({
       code: "TOO_MANY_REQUESTS",
       message: message ?? `Limite de requisi\xE7\xF5es atingido. Tente novamente em ${waitSec}s.`
     });
@@ -17648,7 +17683,7 @@ var whatsappFaqRouter = router({
           },
           {}
         )
-      ).sort(([, a], [, b]) => b - a).slice(0, 5).map(([name, count]) => ({ name, count }))
+      ).sort(([, a], [, b]) => b - a).slice(0, 5).map(([name, count2]) => ({ name, count: count2 }))
     };
   }),
   /**
@@ -18540,8 +18575,8 @@ init_db();
 init_schema();
 import { z as z43 } from "zod";
 import { eq as eq42, inArray as inArray5, or as or3, and as and39 } from "drizzle-orm";
-function graphUrl(path15, token, extraFields) {
-  const base = `https://graph.facebook.com/v19.0${path15}`;
+function graphUrl(path16, token, extraFields) {
+  const base = `https://graph.facebook.com/v19.0${path16}`;
   const params = new URLSearchParams({ access_token: token });
   if (extraFields) params.set("fields", extraFields);
   return `${base}?${params.toString()}`;
@@ -20555,14 +20590,14 @@ var assetLibraryRouter = router({
     if (!allowed.includes(input.contentType)) throw new Error("Tipo n\xE3o permitido. Use JPEG, PNG, WebP ou GIF.");
     const buffer = Buffer.from(input.fileData, "base64");
     if (buffer.length > 15 * 1024 * 1024) throw new Error("Arquivo muito grande. M\xE1ximo 15MB.");
-    const fs14 = await import("fs/promises");
-    const path15 = await import("path");
+    const fs15 = await import("fs/promises");
+    const path16 = await import("path");
     const crypto15 = await import("crypto");
     const ext = input.contentType.split("/")[1]?.replace("jpeg", "jpg") || "jpg";
     const filename = `${Date.now()}-${crypto15.randomBytes(6).toString("hex")}.${ext}`;
-    const uploadsDir = path15.resolve(process.cwd(), "uploads");
-    await fs14.mkdir(uploadsDir, { recursive: true });
-    await fs14.writeFile(path15.join(uploadsDir, filename), buffer);
+    const uploadsDir = path16.resolve(process.cwd(), "uploads");
+    await fs15.mkdir(uploadsDir, { recursive: true });
+    await fs15.writeFile(path16.join(uploadsDir, filename), buffer);
     const url = `/uploads/${filename}`;
     let aiAnalysis;
     try {
@@ -21489,17 +21524,17 @@ async function getMetaConnectionStatus(userId) {
   if (ENV_TOKEN) return { connected: true, adAccountId: ENV_ACCOUNT || null, source: "env" };
   return { connected: false, adAccountId: null, source: "none" };
 }
-async function metaGet(path15, params = {}, creds) {
+async function metaGet(path16, params = {}, creds) {
   const token = creds?.token ?? ENV_TOKEN;
   const query = new URLSearchParams({ access_token: token, ...params });
-  const res = await fetch(`${BASE_URL3}${path15}?${query}`);
+  const res = await fetch(`${BASE_URL3}${path16}?${query}`);
   const json3 = await res.json();
   if (json3.error) throw new Error(`Meta API: ${json3.error.message}`);
   return json3;
 }
-async function metaPost(path15, body = {}, creds) {
+async function metaPost(path16, body = {}, creds) {
   const token = creds?.token ?? ENV_TOKEN;
-  const res = await fetch(`${BASE_URL3}${path15}`, {
+  const res = await fetch(`${BASE_URL3}${path16}`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({ access_token: token, ...body })
@@ -21586,9 +21621,9 @@ async function fetchMetaCampaignsList(creds) {
 }
 async function fetchMetaAdsets(campaignId, creds) {
   const account = creds?.accountId ?? ENV_ACCOUNT;
-  const path15 = campaignId ? `/${campaignId}/adsets` : `/${account}/adsets`;
+  const path16 = campaignId ? `/${campaignId}/adsets` : `/${account}/adsets`;
   const fields = "id,name,campaign_id,campaign{name},status,daily_budget,lifetime_budget";
-  const data = await metaGet(path15, { fields, limit: "30" }, creds);
+  const data = await metaGet(path16, { fields, limit: "30" }, creds);
   const insightsData = await metaGet(`/${account}/insights`, {
     level: "adset",
     date_preset: "this_month",
@@ -21626,7 +21661,7 @@ async function fetchMetaAdsets(campaignId, creds) {
 }
 async function fetchMetaInsights(level, datePreset, objectId, creds) {
   const account = creds?.accountId ?? ENV_ACCOUNT;
-  const path15 = objectId ? `/${objectId}/insights` : `/${account}/insights`;
+  const path16 = objectId ? `/${objectId}/insights` : `/${account}/insights`;
   const fields = [
     "campaign_name",
     "adset_name",
@@ -21643,16 +21678,16 @@ async function fetchMetaInsights(level, datePreset, objectId, creds) {
     "actions",
     "cost_per_action_type"
   ].join(",");
-  const data = await metaGet(path15, { level, date_preset: datePreset, fields, limit: "30" }, creds);
+  const data = await metaGet(path16, { level, date_preset: datePreset, fields, limit: "30" }, creds);
   return data.data || [];
 }
 async function fetchMetaAds(adsetId, campaignId, creds) {
   const account = creds?.accountId ?? ENV_ACCOUNT;
-  const path15 = adsetId ? `/${adsetId}/ads` : campaignId ? `/${campaignId}/ads` : `/${account}/ads`;
+  const path16 = adsetId ? `/${adsetId}/ads` : campaignId ? `/${campaignId}/ads` : `/${account}/ads`;
   const fields = "id,name,status,adset_id,adset{name,campaign{name}},creative{id,thumbnail_url,image_url,body,title,call_to_action_type,link_url,object_story_spec}";
   let ads = [];
   try {
-    const data = await metaGet(path15, { fields, limit: "30" }, creds);
+    const data = await metaGet(path16, { fields, limit: "30" }, creds);
     ads = data.data || [];
   } catch (err) {
     console.warn("[MetaAds] Erro ao buscar ads:", err.message);
@@ -21737,7 +21772,7 @@ async function resumeAd(adId, creds) {
 }
 async function fetchMetaInsightsWithBreakdown(level, datePreset, breakdowns, objectId, creds) {
   const account = creds?.accountId ?? ENV_ACCOUNT;
-  const path15 = objectId ? `/${objectId}/insights` : `/${account}/insights`;
+  const path16 = objectId ? `/${objectId}/insights` : `/${account}/insights`;
   const fields = [
     "campaign_name",
     "adset_name",
@@ -21751,7 +21786,7 @@ async function fetchMetaInsightsWithBreakdown(level, datePreset, breakdowns, obj
     "frequency",
     "actions"
   ].join(",");
-  const data = await metaGet(path15, { level, date_preset: datePreset, fields, breakdowns, limit: "50" }, creds);
+  const data = await metaGet(path16, { level, date_preset: datePreset, fields, breakdowns, limit: "50" }, creds);
   return data.data || [];
 }
 async function duplicateCampaign(campaignId, creds) {
@@ -22798,17 +22833,17 @@ var adsManagerRouter = router({
     const db = await getDb();
     if (!db) throw new Error("Banco indispon\xEDvel");
     const { inArray: inArray10 } = await import("drizzle-orm");
-    const fs14 = await import("fs/promises");
-    const path15 = await import("path");
+    const fs15 = await import("fs/promises");
+    const path16 = await import("path");
     const assets = await db.select().from(assetLibrary).where(and52(eq58(assetLibrary.userId, ctx.user.id), inArray10(assetLibrary.id, input.assetIds)));
     if (!assets.length) throw new Error("Nenhum ativo encontrado");
     const { requestCreative: requestCreative2 } = await Promise.resolve().then(() => (init_creative_agent(), creative_agent_exports));
     const results = [];
     for (const asset of assets) {
-      const filePath = path15.resolve(process.cwd(), asset.url.replace(/^\//, ""));
+      const filePath = path16.resolve(process.cwd(), asset.url.replace(/^\//, ""));
       let imageBase64;
       try {
-        const buf = await fs14.readFile(filePath);
+        const buf = await fs15.readFile(filePath);
         imageBase64 = buf.toString("base64");
       } catch {
         const res = await fetch(asset.url.startsWith("http") ? asset.url : `http://localhost:${process.env.PORT || 3e3}${asset.url}`);
@@ -26521,8 +26556,8 @@ async function getVideoDownloadUrl(fileId) {
   return data.file?.download_url;
 }
 async function generateVideoFromImage(params, onProgress) {
-  const fs14 = await import("fs/promises");
-  const path15 = await import("path");
+  const fs15 = await import("fs/promises");
+  const path16 = await import("path");
   const crypto15 = await import("crypto");
   onProgress?.("Enviando para MiniMax...");
   const taskId = await submitVideoTask(params);
@@ -26542,11 +26577,11 @@ async function generateVideoFromImage(params, onProgress) {
       const videoRes = await fetch(downloadUrl);
       if (!videoRes.ok) throw new Error(`Erro ao baixar v\xEDdeo: ${videoRes.status}`);
       const buf = Buffer.from(await videoRes.arrayBuffer());
-      const uploadsDir = path15.default.resolve(process.cwd(), "uploads");
-      await fs14.default.mkdir(uploadsDir, { recursive: true });
+      const uploadsDir = path16.default.resolve(process.cwd(), "uploads");
+      await fs15.default.mkdir(uploadsDir, { recursive: true });
       const filename = `${Date.now()}-${crypto15.default.randomBytes(8).toString("hex")}.mp4`;
-      const destPath = path15.default.join(uploadsDir, filename);
-      await fs14.default.writeFile(destPath, buf);
+      const destPath = path16.default.join(uploadsDir, filename);
+      await fs15.default.writeFile(destPath, buf);
       onProgress?.(`V\xEDdeo salvo: /uploads/${filename}`);
       return `/uploads/${filename}`;
     }
@@ -26617,8 +26652,8 @@ async function pollVeoOperation(operationName) {
   return { done: true, videoUri };
 }
 async function generateVideoFromImageVeo(params, onProgress) {
-  const fs14 = await import("fs/promises");
-  const path15 = await import("path");
+  const fs15 = await import("fs/promises");
+  const path16 = await import("path");
   const crypto15 = await import("crypto");
   onProgress?.("Enviando para Google Veo...");
   const operationName = await submitVeoTask(params);
@@ -26634,11 +26669,11 @@ async function generateVideoFromImageVeo(params, onProgress) {
       const videoRes = await fetch(result.videoUri);
       if (!videoRes.ok) throw new Error(`Erro ao baixar v\xEDdeo Veo: ${videoRes.status}`);
       const buf = Buffer.from(await videoRes.arrayBuffer());
-      const uploadsDir = path15.default.resolve(process.cwd(), "uploads");
-      await fs14.default.mkdir(uploadsDir, { recursive: true });
+      const uploadsDir = path16.default.resolve(process.cwd(), "uploads");
+      await fs15.default.mkdir(uploadsDir, { recursive: true });
       const filename = `veo-${Date.now()}-${crypto15.default.randomBytes(8).toString("hex")}.mp4`;
-      const destPath = path15.default.join(uploadsDir, filename);
-      await fs14.default.writeFile(destPath, buf);
+      const destPath = path16.default.join(uploadsDir, filename);
+      await fs15.default.writeFile(destPath, buf);
       onProgress?.(`V\xEDdeo salvo: /uploads/${filename}`);
       return `/uploads/${filename}`;
     }
@@ -26646,14 +26681,14 @@ async function generateVideoFromImageVeo(params, onProgress) {
   throw new Error("Timeout: Google Veo demorou mais de 10 minutos");
 }
 async function readImageAsBase64(imageUrl) {
-  const fs14 = await import("fs/promises");
-  const path15 = await import("path");
+  const fs15 = await import("fs/promises");
+  const path16 = await import("path");
   let buf;
   let mimeType = "image/jpeg";
   if (imageUrl.startsWith("/uploads/")) {
-    const localPath = path15.default.join(path15.default.resolve(process.cwd(), "uploads"), path15.default.basename(imageUrl));
-    buf = await fs14.default.readFile(localPath);
-    const ext = path15.default.extname(imageUrl).toLowerCase();
+    const localPath = path16.default.join(path16.default.resolve(process.cwd(), "uploads"), path16.default.basename(imageUrl));
+    buf = await fs15.default.readFile(localPath);
+    const ext = path16.default.extname(imageUrl).toLowerCase();
     if (ext === ".png") mimeType = "image/png";
     else if (ext === ".webp") mimeType = "image/webp";
   } else {
@@ -27129,7 +27164,7 @@ function getSigningKey(secretKey, dateStamp, region, service) {
   const kService = hmacSha256(kRegion, service);
   return hmacSha256(kService, "aws4_request");
 }
-function signRequest(method, path15, queryParams, headers, body, accessKeyId, secretAccessKey, region = "us-east-1", service = "execute-api") {
+function signRequest(method, path16, queryParams, headers, body, accessKeyId, secretAccessKey, region = "us-east-1", service = "execute-api") {
   const now = /* @__PURE__ */ new Date();
   const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, "").slice(0, 15) + "Z";
   const dateStamp = amzDate.slice(0, 8);
@@ -27145,7 +27180,7 @@ function signRequest(method, path15, queryParams, headers, body, accessKeyId, se
   const sortedQuery = Object.entries(queryParams).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("&");
   const canonicalRequest = [
     method,
-    path15,
+    path16,
     sortedQuery,
     canonicalHeaders,
     signedHeaders,
@@ -27165,7 +27200,7 @@ function signRequest(method, path15, queryParams, headers, body, accessKeyId, se
     Authorization: `AWS4-HMAC-SHA256 Credential=${accessKeyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`
   };
 }
-async function spApiGet(path15, queryParams = {}) {
+async function spApiGet(path16, queryParams = {}) {
   const accessKeyId = process.env.AMAZON_AWS_ACCESS_KEY || "";
   const secretAccessKey = process.env.AMAZON_AWS_SECRET_KEY || "";
   const lwaToken = await getLwaAccessToken();
@@ -27175,12 +27210,12 @@ async function spApiGet(path15, queryParams = {}) {
   };
   let finalHeaders;
   if (accessKeyId && secretAccessKey) {
-    finalHeaders = signRequest("GET", path15, queryParams, baseHeaders, "", accessKeyId, secretAccessKey);
+    finalHeaders = signRequest("GET", path16, queryParams, baseHeaders, "", accessKeyId, secretAccessKey);
   } else {
     finalHeaders = baseHeaders;
   }
   const queryString = Object.entries(queryParams).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("&");
-  const url = `${SP_API_BASE}${path15}${queryString ? "?" + queryString : ""}`;
+  const url = `${SP_API_BASE}${path16}${queryString ? "?" + queryString : ""}`;
   const res = await fetch(url, { headers: finalHeaders });
   return res.json();
 }
@@ -27648,8 +27683,8 @@ function generateArticleHtml(data) {
 </body>
 </html>`;
 }
-async function githubRequest(path15, method, body) {
-  const res = await fetch(`${API}${path15}`, {
+async function githubRequest(path16, method, body) {
+  const res = await fetch(`${API}${path16}`, {
     method,
     headers: {
       Authorization: `Bearer ${GITHUB_TOKEN}`,
@@ -27665,16 +27700,16 @@ async function githubRequest(path15, method, body) {
   }
   return res.json();
 }
-async function getFileSha(path15) {
+async function getFileSha(path16) {
   try {
-    const data = await githubRequest(`/${path15}`, "GET");
+    const data = await githubRequest(`/${path16}`, "GET");
     return data.sha ?? null;
   } catch {
     return null;
   }
 }
-async function pushFile(path15, content, message) {
-  const sha = await getFileSha(path15);
+async function pushFile(path16, content, message) {
+  const sha = await getFileSha(path16);
   const encoded = Buffer.from(content, "utf-8").toString("base64");
   const body = {
     message,
@@ -27682,7 +27717,7 @@ async function pushFile(path15, content, message) {
     branch: GITHUB_BRANCH
   };
   if (sha) body.sha = sha;
-  return githubRequest(`/${path15}`, "PUT", body);
+  return githubRequest(`/${path16}`, "PUT", body);
 }
 async function addCardToArtigosPage(article, filename) {
   const catInfo2 = getCategoryInfo(article.category ?? "Moda & Estilo");
@@ -29719,8 +29754,8 @@ async function proposeActions(analysis, today) {
   try {
     const db = await getDb();
     if (!db) return;
-    const { eq: eq113, and: and91 } = await import("drizzle-orm");
-    const existing = await db.select({ title: agentActions.title }).from(agentActions).where(and91(eq113(agentActions.agentName, "fernanda"), eq113(agentActions.date, today)));
+    const { eq: eq115, and: and92 } = await import("drizzle-orm");
+    const existing = await db.select({ title: agentActions.title }).from(agentActions).where(and92(eq115(agentActions.agentName, "fernanda"), eq115(agentActions.date, today)));
     const existingTitles = new Set(existing.map((r) => r.title));
     const toInsert = [];
     for (const rec of analysis.recommendations) {
@@ -29920,16 +29955,16 @@ function getMLToken2(account = "feminnita") {
 function getUserId2(account = "feminnita") {
   return account === "fnt" ? process.env.ML_USER_ID_2 || "" : process.env.ML_USER_ID_1 || "";
 }
-async function mlGet(path15, token) {
-  const res = await fetch(`${ML_BASE2}${path15}`, {
+async function mlGet(path16, token) {
+  const res = await fetch(`${ML_BASE2}${path16}`, {
     headers: { Authorization: `Bearer ${token}` }
   });
   const data = await res.json();
   if (data.error) throw new Error(`ML API: ${data.message || data.error}`);
   return data;
 }
-async function mlPut(path15, body, token) {
-  const res = await fetch(`${ML_BASE2}${path15}`, {
+async function mlPut(path16, body, token) {
+  const res = await fetch(`${ML_BASE2}${path16}`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -33745,8 +33780,8 @@ ${lines.join("\n")}`;
             const db = await getDb();
             if (!db) return "[interno] banco indispon\xEDvel \u2014 continue sem mencionar este erro.";
             const { agentActions: tbl } = await Promise.resolve().then(() => (init_schema(), schema_exports));
-            const { eq: eq113, and: and91 } = await import("drizzle-orm");
-            const pending = await db.select().from(tbl).where(and91(eq113(tbl.agentName, "duda"), eq113(tbl.status, "pending")));
+            const { eq: eq115, and: and92 } = await import("drizzle-orm");
+            const pending = await db.select().from(tbl).where(and92(eq115(tbl.agentName, "duda"), eq115(tbl.status, "pending")));
             if (pending.length === 0) return "Nenhuma a\xE7\xE3o pendente no momento.";
             const lines = pending.map((a) => `- ${a.title || a.actionType} [id=${a.id}]`);
             return `${pending.length} a\xE7\xE3o(\xF5es) na fila de execu\xE7\xE3o:
@@ -34774,22 +34809,22 @@ NOME DO USU\xC1RIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
           call = (async () => {
             const db = await getDb();
             if (!db) throw new Error("DB indispon\xEDvel");
-            const { eq: eq113, and: and91, desc: desc54 } = await import("drizzle-orm");
+            const { eq: eq115, and: and92, desc: desc55 } = await import("drizzle-orm");
             const { marketplaceAdsMetrics: marketplaceAdsMetrics2 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
             const targetPlatform = inp.platform || "ml";
             const targetAccount = inp.account || account;
-            const rows = await db.select().from(marketplaceAdsMetrics2).where(and91(
-              eq113(marketplaceAdsMetrics2.platform, targetPlatform),
-              eq113(marketplaceAdsMetrics2.account, targetAccount)
-            )).orderBy(desc54(marketplaceAdsMetrics2.scrapedAt)).limit(200);
+            const rows = await db.select().from(marketplaceAdsMetrics2).where(and92(
+              eq115(marketplaceAdsMetrics2.platform, targetPlatform),
+              eq115(marketplaceAdsMetrics2.account, targetAccount)
+            )).orderBy(desc55(marketplaceAdsMetrics2.scrapedAt)).limit(200);
             if (!rows.length) {
               const { or: or6 } = await import("drizzle-orm");
-              const pending = await db.select({ id: agentActions.id }).from(agentActions).where(and91(
-                eq113(agentActions.actionType, "scrape_ads_metrics"),
+              const pending = await db.select({ id: agentActions.id }).from(agentActions).where(and92(
+                eq115(agentActions.actionType, "scrape_ads_metrics"),
                 or6(
-                  eq113(agentActions.status, "approved"),
-                  eq113(agentActions.status, "executing"),
-                  eq113(agentActions.status, "pending")
+                  eq115(agentActions.status, "approved"),
+                  eq115(agentActions.status, "executing"),
+                  eq115(agentActions.status, "pending")
                 )
               )).limit(1);
               if (!pending.length) {
@@ -35266,9 +35301,9 @@ NOME DO USU\xC1RIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
           call = (async () => {
             const db = await getDb();
             if (!db) return "Banco indispon\xEDvel \u2014 n\xE3o foi poss\xEDvel verificar as a\xE7\xF5es.";
-            const { eq: eq113, and: and91 } = await import("drizzle-orm");
+            const { eq: eq115, and: and92 } = await import("drizzle-orm");
             const { agentActions: agentActionsTable2 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
-            const pending = await db.select().from(agentActionsTable2).where(and91(eq113(agentActionsTable2.agentName, "luiza"), eq113(agentActionsTable2.status, "pending")));
+            const pending = await db.select().from(agentActionsTable2).where(and92(eq115(agentActionsTable2.agentName, "luiza"), eq115(agentActionsTable2.status, "pending")));
             if (pending.length === 0) return "Nenhuma a\xE7\xE3o pendente encontrada para executar.";
             const lines = pending.map((a) => `- ${a.title || a.actionType} [id=${a.id}]`);
             return `${pending.length} a\xE7\xE3o(\xF5es) enfileirada(s) para execu\xE7\xE3o via browser Shopee (pr\xF3ximos ~5 min):
@@ -36084,10 +36119,10 @@ var agentTasksRouter = router({
   })).query(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) return [];
-    const { and: and91, eq: eq113, desc: desc54 } = await import("drizzle-orm");
-    const conditions = [eq113(agentTasks.userId, ctx.user.id)];
-    if (input.agentName) conditions.push(eq113(agentTasks.agentName, input.agentName));
-    return db.select().from(agentTasks).where(and91(...conditions)).orderBy(desc54(agentTasks.createdAt)).limit(input.limit);
+    const { and: and92, eq: eq115, desc: desc55 } = await import("drizzle-orm");
+    const conditions = [eq115(agentTasks.userId, ctx.user.id)];
+    if (input.agentName) conditions.push(eq115(agentTasks.agentName, input.agentName));
+    return db.select().from(agentTasks).where(and92(...conditions)).orderBy(desc55(agentTasks.createdAt)).limit(input.limit);
   })
 });
 
@@ -36204,132 +36239,376 @@ var hailuoImageRouter = router({
 // server/routers/runpod-video.ts
 init_db();
 init_schema();
+import { z as z83 } from "zod";
+import { TRPCError as TRPCError17 } from "@trpc/server";
+import { eq as eq92, desc as desc48, and as and74, gte as gte5, count } from "drizzle-orm";
+
+// server/routers/video-credits.ts
+init_db();
+init_schema();
 import { z as z82 } from "zod";
-import { eq as eq91, desc as desc48 } from "drizzle-orm";
-var FAL_BASE = "https://queue.fal.run";
-var FAL_MODEL = "fal-ai/wan/v2.2/i2v";
-function getFalKey() {
-  const key = process.env.FAL_API_KEY;
-  if (!key) throw new Error("FAL_API_KEY n\xE3o configurado no .env");
+import { TRPCError as TRPCError16 } from "@trpc/server";
+import { eq as eq91, sql as sql5 } from "drizzle-orm";
+var CREDIT_COSTS = {
+  livre: 10,
+  runningup: 15,
+  fala: 12
+};
+var CREDIT_PACKAGES = [
+  { id: "starter", name: "Starter", credits: 30, amountBrl: "29.00", label: "~2 Running Up" },
+  { id: "pro", name: "Pro", credits: 100, amountBrl: "79.00", label: "~6 Running Up" },
+  { id: "ultra", name: "Ultra", credits: 220, amountBrl: "149.00", label: "~14 Running Up" }
+];
+async function getOrCreatePlan(userId, db) {
+  const rows = await db.select().from(videoPlans).where(eq91(videoPlans.userId, userId)).limit(1);
+  if (rows.length > 0) return rows[0];
+  await db.insert(videoPlans).values({ userId, videoCreditsBalance: 0 });
+  const newRows = await db.select().from(videoPlans).where(eq91(videoPlans.userId, userId)).limit(1);
+  return newRows[0];
+}
+async function debitCredits(userId, mode, db) {
+  const cost = CREDIT_COSTS[mode];
+  const plan = await getOrCreatePlan(userId, db);
+  if ((plan.videoCreditsBalance ?? 0) < cost) {
+    throw new TRPCError16({
+      code: "FORBIDDEN",
+      message: `Cr\xE9ditos insuficientes. Necess\xE1rio: ${cost}, dispon\xEDvel: ${plan.videoCreditsBalance ?? 0}. Adquira mais cr\xE9ditos.`
+    });
+  }
+  await db.update(videoPlans).set({ videoCreditsBalance: sql5`${videoPlans.videoCreditsBalance} - ${cost}` }).where(eq91(videoPlans.userId, userId));
+}
+async function getOrCreateAsaasCustomer(email, name) {
+  const key = process.env.ASAAS_API_KEY;
+  if (!key) throw new Error("ASAAS_API_KEY n\xE3o configurado");
+  const baseUrl = "https://api.asaas.com/v3";
+  const searchRes = await fetch(`${baseUrl}/customers?email=${encodeURIComponent(email)}&limit=1`, {
+    headers: { access_token: key }
+  });
+  if (searchRes.ok) {
+    const data = await searchRes.json();
+    if (data.data?.length > 0) return data.data[0].id;
+  }
+  const createRes = await fetch(`${baseUrl}/customers`, {
+    method: "POST",
+    headers: { access_token: key, "Content-Type": "application/json" },
+    body: JSON.stringify({ name: name || email, email, notificationDisabled: false })
+  });
+  if (!createRes.ok) throw new Error(`Asaas customer ${createRes.status}: ${(await createRes.text()).slice(0, 200)}`);
+  const created = await createRes.json();
+  return created.id;
+}
+async function createAsaasPayment(customerId, amountBrl, description, externalRef) {
+  const key = process.env.ASAAS_API_KEY;
+  if (!key) throw new Error("ASAAS_API_KEY n\xE3o configurado");
+  const due = /* @__PURE__ */ new Date();
+  due.setDate(due.getDate() + 1);
+  const dueDate = due.toISOString().split("T")[0];
+  const res = await fetch("https://api.asaas.com/v3/payments", {
+    method: "POST",
+    headers: { access_token: key, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      customer: customerId,
+      billingType: "UNDEFINED",
+      value: parseFloat(amountBrl),
+      dueDate,
+      description,
+      externalReference: externalRef
+    })
+  });
+  if (!res.ok) throw new Error(`Asaas payment ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  const data = await res.json();
+  return {
+    paymentId: data.id,
+    paymentUrl: data.invoiceUrl,
+    pixQrCode: data.pixTransaction?.qrCode?.encodedImage
+  };
+}
+var videoCreditsRouter = router({
+  getBalance: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) return { balance: 0, costs: CREDIT_COSTS };
+    const plan = await getOrCreatePlan(ctx.user.id, db);
+    return { balance: plan.videoCreditsBalance ?? 0, costs: CREDIT_COSTS };
+  }),
+  getPackages: protectedProcedure.query(() => CREDIT_PACKAGES),
+  createOrder: protectedProcedure.input(z82.object({ packageId: z82.enum(["starter", "pro", "ultra"]) })).mutation(async ({ input, ctx }) => {
+    const pkg = CREDIT_PACKAGES.find((p) => p.id === input.packageId);
+    if (!pkg) throw new TRPCError16({ code: "BAD_REQUEST", message: "Pacote inv\xE1lido" });
+    const db = await getDb();
+    if (!db) throw new Error("DB indispon\xEDvel");
+    const insertResult = await db.insert(videoCreditOrders).values({
+      userId: ctx.user.id,
+      packageId: pkg.id,
+      credits: pkg.credits,
+      amountBrl: pkg.amountBrl,
+      status: "pending"
+    });
+    const orderId = insertResult[0].insertId;
+    const externalRef = `VIDEO_CREDITS:${ctx.user.id}:${pkg.id}:${orderId}`;
+    const customerId = await getOrCreateAsaasCustomer(
+      ctx.user.email,
+      ctx.user.name ?? ctx.user.email
+    );
+    const payment = await createAsaasPayment(
+      customerId,
+      pkg.amountBrl,
+      `${pkg.credits} Cr\xE9ditos de V\xEDdeo IA \u2014 Feminnita Marketing`,
+      externalRef
+    );
+    await db.update(videoCreditOrders).set({ asaasPaymentId: payment.paymentId, asaasPaymentUrl: payment.paymentUrl }).where(eq91(videoCreditOrders.id, orderId));
+    return {
+      orderId,
+      paymentUrl: payment.paymentUrl,
+      pixQrCode: payment.pixQrCode,
+      credits: pkg.credits,
+      amountBrl: pkg.amountBrl
+    };
+  }),
+  // Webhook Asaas — chamado pelo servidor Express diretamente (ver nota abaixo)
+  // URL configurada no Asaas: POST /api/video-credits/webhook
+  handleAsaasWebhook: publicProcedure.input(z82.object({
+    event: z82.string(),
+    payment: z82.object({
+      id: z82.string(),
+      status: z82.string(),
+      externalReference: z82.string().optional().nullable()
+    })
+  })).mutation(async ({ input }) => {
+    if (input.event !== "PAYMENT_CONFIRMED" && input.event !== "PAYMENT_RECEIVED") {
+      return { ok: true };
+    }
+    if (!input.payment.externalReference?.startsWith("VIDEO_CREDITS:")) {
+      return { ok: true };
+    }
+    const [, userIdStr, , orderIdStr] = input.payment.externalReference.split(":");
+    const userId = parseInt(userIdStr, 10);
+    const orderId = parseInt(orderIdStr, 10);
+    if (!userId || !orderId) return { ok: true };
+    const db = await getDb();
+    if (!db) return { ok: false, error: "DB indispon\xEDvel" };
+    const orders = await db.select().from(videoCreditOrders).where(eq91(videoCreditOrders.id, orderId)).limit(1);
+    if (!orders.length || orders[0].status === "paid") return { ok: true };
+    const order = orders[0];
+    await db.update(videoCreditOrders).set({ status: "paid", paidAt: /* @__PURE__ */ new Date() }).where(eq91(videoCreditOrders.id, orderId));
+    await db.update(videoPlans).set({ videoCreditsBalance: sql5`${videoPlans.videoCreditsBalance} + ${order.credits}` }).where(eq91(videoPlans.userId, userId));
+    console.log(`[VideoCredits] +${order.credits} cr\xE9ditos \u2192 userId ${userId} (order #${orderId})`);
+    return { ok: true };
+  }),
+  adminAddCredits: protectedProcedure.input(z82.object({
+    userId: z82.number().int(),
+    credits: z82.number().int().min(1).max(1e4)
+  })).mutation(async ({ input, ctx }) => {
+    if (ctx.user.role !== "admin") throw new TRPCError16({ code: "FORBIDDEN" });
+    const db = await getDb();
+    if (!db) throw new Error("DB indispon\xEDvel");
+    await getOrCreatePlan(input.userId, db);
+    await db.update(videoPlans).set({ videoCreditsBalance: sql5`${videoPlans.videoCreditsBalance} + ${input.credits}` }).where(eq91(videoPlans.userId, input.userId));
+    return { ok: true };
+  })
+});
+
+// server/routers/runpod-video.ts
+import Anthropic9 from "@anthropic-ai/sdk";
+async function optimizeVideoPrompt(userPrompt) {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return userPrompt;
+  try {
+    const client = new Anthropic9({ apiKey });
+    const msg = await client.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 300,
+      messages: [{
+        role: "user",
+        content: `You are a video generation prompt engineer for WanVideo I2V model.
+Convert the user's description into a precise, detailed English prompt optimized for realistic fashion/clothing video generation.
+
+Rules:
+- Be specific about body parts, movement direction, speed, and garment behavior
+- Use cinematic language: "smooth motion", "natural fabric movement", "realistic physics"
+- Include lighting and camera style: "studio lighting, static camera"
+- Keep it under 150 words
+- Return ONLY the optimized prompt, no explanation
+
+User request (in any language): "${userPrompt}"`
+      }]
+    });
+    const text3 = msg.content[0].text?.trim();
+    return text3 || userPrompt;
+  } catch {
+    return userPrompt;
+  }
+}
+var SF_BASE = "https://api.siliconflow.com/v1";
+function getSfKey() {
+  const key = process.env.SILICONFLOW_API_KEY;
+  if (!key) throw new Error("SILICONFLOW_API_KEY n\xE3o configurado no .env");
   return key;
 }
-async function uploadToFal(base64, mimeType) {
-  const buffer = Buffer.from(base64, "base64");
-  const ext = mimeType.split("/")[1]?.split(";")[0] ?? "bin";
-  const fileName = `upload-${Date.now()}.${ext}`;
-  const initiateRes = await fetch(
-    "https://rest.alpha.fal.ai/storage/upload/initiate?storage_type=fal-cdn-v3",
-    {
-      method: "POST",
-      headers: { Authorization: `Key ${getFalKey()}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ file_name: fileName, content_type: mimeType })
-    }
-  );
-  if (!initiateRes.ok) {
-    const text3 = await initiateRes.text().catch(() => "");
-    throw new Error(`fal.ai initiate ${initiateRes.status}: ${text3.slice(0, 300)}`);
-  }
-  const { upload_url, file_url } = await initiateRes.json();
-  const putRes = await fetch(upload_url, {
-    method: "PUT",
-    headers: { "Content-Type": mimeType },
-    body: buffer
-  });
-  if (!putRes.ok) {
-    const text3 = await putRes.text().catch(() => "");
-    throw new Error(`fal.ai CDN PUT ${putRes.status}: ${text3.slice(0, 300)}`);
-  }
-  return file_url;
-}
-async function submitFalJob(imageUrl, prompt, durationSeconds) {
-  const fps = 16;
-  const numFrames = Math.max(16, Math.round(durationSeconds * fps));
-  const res = await fetch(`${FAL_BASE}/${FAL_MODEL}`, {
+async function sfSubmit(imageBase64, mimeType, prompt) {
+  const res = await fetch(`${SF_BASE}/video/submit`, {
     method: "POST",
-    headers: { Authorization: `Key ${getFalKey()}`, "Content-Type": "application/json" },
+    headers: { Authorization: `Bearer ${getSfKey()}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      image_url: imageUrl,
+      model: "Wan-AI/Wan2.2-I2V-A14B",
       prompt,
-      negative_prompt: "blurry, distorted, low quality, static, frozen, watermark",
-      num_frames: numFrames,
-      frames_per_second: fps,
-      guidance_scale: 5
+      image: `data:${mimeType};base64,${imageBase64}`,
+      negative_prompt: "low quality, blurry, distorted, watermark",
+      seed: Math.floor(Math.random() * 9999999999)
     })
   });
   if (!res.ok) {
     const text3 = await res.text().catch(() => "");
-    throw new Error(`fal.ai submit ${res.status}: ${text3.slice(0, 300)}`);
+    throw new Error(`SiliconFlow submit ${res.status}: ${text3.slice(0, 300)}`);
   }
   const data = await res.json();
-  return data.request_id;
+  if (!data.requestId) throw new Error(`SiliconFlow: ${JSON.stringify(data).slice(0, 200)}`);
+  return data.requestId;
 }
-async function getFalStatus(requestId) {
-  const res = await fetch(`${FAL_BASE}/${FAL_MODEL}/requests/${requestId}/status`, {
-    headers: { Authorization: `Key ${getFalKey()}` }
+async function sfGetStatus(requestId) {
+  const res = await fetch(`${SF_BASE}/video/status`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${getSfKey()}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ requestId })
   });
-  if (!res.ok) throw new Error(`fal.ai status ${res.status}`);
+  if (!res.ok) throw new Error(`SiliconFlow status ${res.status}: ${(await res.text().catch(() => "")).slice(0, 200)}`);
   const data = await res.json();
-  if (data.status === "COMPLETED") {
-    const resultRes = await fetch(`${FAL_BASE}/${FAL_MODEL}/requests/${requestId}`, {
-      headers: { Authorization: `Key ${getFalKey()}` }
+  if (data.status === "Succeed") {
+    return { status: "COMPLETED", videoUrl: data.results?.videos?.[0]?.url };
+  }
+  if (data.status === "Failed") {
+    return { status: "FAILED", error: data.reason ?? "Falha na gera\xE7\xE3o SiliconFlow" };
+  }
+  return { status: "IN_PROGRESS" };
+}
+var RH_BASE = "https://www.runninghub.ai/task/openapi";
+var RH_WORKFLOW_ID = "2055765881283727362";
+function getRhKey() {
+  const key = process.env.RUNNINGHUB_API_KEY;
+  if (!key) throw new Error("RUNNINGHUB_API_KEY n\xE3o configurado no .env");
+  return key;
+}
+async function rhUpload(base64, fileName, mimeType) {
+  const apiKey = getRhKey();
+  const buffer = Buffer.from(base64, "base64");
+  const blob = new Blob([buffer], { type: mimeType });
+  const form = new FormData();
+  form.append("apiKey", apiKey);
+  form.append("fileType", "input");
+  form.append("file", blob, fileName);
+  const res = await fetch(`${RH_BASE}/upload`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}` },
+    body: form
+  });
+  if (!res.ok) throw new Error(`RunningHub upload ${res.status}: ${(await res.text().catch(() => "")).slice(0, 200)}`);
+  const data = await res.json();
+  if (data.code !== 0) throw new Error(`RunningHub upload: ${data.msg}`);
+  const uploadedName = data.data.fileName;
+  const fileUrl = `https://www.runninghub.ai/${uploadedName}`;
+  return { fileName: uploadedName, fileUrl };
+}
+async function rhCreateTask(imageFileName, videoFileName) {
+  const apiKey = getRhKey();
+  const res = await fetch(`${RH_BASE}/create`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      apiKey,
+      workflowId: RH_WORKFLOW_ID,
+      nodeInfoList: [
+        { nodeId: "391", fieldName: "image", fieldValue: imageFileName },
+        { nodeId: "392", fieldName: "video", fieldValue: videoFileName }
+      ]
+    })
+  });
+  if (!res.ok) throw new Error(`RunningHub create ${res.status}`);
+  const data = await res.json();
+  if (data.code !== 0) throw new Error(`RunningHub create: ${data.msg}`);
+  return data.data.taskId;
+}
+async function rhGetStatus(taskId) {
+  const apiKey = getRhKey();
+  const statusRes = await fetch(`${RH_BASE}/status`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ apiKey, taskId })
+  });
+  if (!statusRes.ok) throw new Error(`RunningHub status ${statusRes.status}`);
+  const statusData = await statusRes.json();
+  const taskStatus = typeof statusData.data === "string" ? statusData.data : statusData.data?.taskStatus ?? "RUNNING";
+  if (taskStatus === "SUCCESS") {
+    const outputRes = await fetch(`${RH_BASE}/outputs`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ apiKey, taskId })
     });
-    if (resultRes.ok) {
-      const result = await resultRes.json();
-      return { status: "COMPLETED", videoUrl: result.video?.url };
+    if (outputRes.ok) {
+      const outputData = await outputRes.json();
+      const outputs = outputData.data ?? [];
+      const videoOutput = outputs.find((o) => ["mp4", "webm", "mov"].includes((o.fileType ?? "").toLowerCase())) ?? outputs[0];
+      return { status: "SUCCESS", videoUrl: videoOutput?.fileUrl };
     }
   }
-  return {
-    status: data.status,
-    error: typeof data.error === "string" ? data.error : data.error?.message
-  };
-}
-function mapFalStatus(s) {
-  switch (s) {
-    case "IN_QUEUE":
-      return "queued";
-    case "IN_PROGRESS":
-      return "processing";
-    case "COMPLETED":
-      return "completed";
-    case "FAILED":
-      return "failed";
-    default:
-      return "queued";
+  if (taskStatus === "FAILED" || taskStatus === "ERROR") {
+    return { status: "FAILED", error: statusData.msg ?? "Erro no RunningHub" };
   }
+  return { status: taskStatus };
+}
+async function getOrCreatePlan2(userId, db) {
+  const rows = await db.select().from(videoPlans).where(eq92(videoPlans.userId, userId)).limit(1);
+  if (rows.length > 0) return rows[0];
+  await db.insert(videoPlans).values({
+    userId,
+    livreMonthlyLimit: 30,
+    runningUpMonthlyLimit: 30,
+    livreExtraCredits: 0,
+    runningUpExtraCredits: 0
+  });
+  const newRows = await db.select().from(videoPlans).where(eq92(videoPlans.userId, userId)).limit(1);
+  return newRows[0];
+}
+async function getMonthCount(userId, mode, db) {
+  const monthStart = new Date((/* @__PURE__ */ new Date()).getFullYear(), (/* @__PURE__ */ new Date()).getMonth(), 1);
+  const rows = await db.select({ cnt: count() }).from(videoJobs).where(
+    and74(eq92(videoJobs.userId, userId), eq92(videoJobs.mode, mode), gte5(videoJobs.createdAt, monthStart))
+  );
+  return Number(rows[0]?.cnt ?? 0);
 }
 var runpodVideoRouter = router({
-  // Modo Livre: foto + prompt → fal.ai WanVideo
-  generate: protectedProcedure.input(z82.object({
-    imageBase64: z82.string().min(100),
-    prompt: z82.string().min(5).max(500),
-    durationSeconds: z82.number().int().min(3).max(30).default(15)
+  // Modo Livre: foto + prompt → MiniMax Hailuo I2V
+  generate: protectedProcedure.input(z83.object({
+    imageBase64: z83.string().min(100),
+    imageMimeType: z83.string().default("image/jpeg"),
+    prompt: z83.string().min(5).max(2e3),
+    durationSeconds: z83.number().int().min(5).max(15).default(6)
   })).mutation(async ({ input, ctx }) => {
-    const imageUrl = await uploadToFal(input.imageBase64, "image/jpeg");
-    const requestId = await submitFalJob(imageUrl, input.prompt, input.durationSeconds);
     const db = await getDb();
+    if (db) await debitCredits(ctx.user.id, "livre", db);
+    const optimizedPrompt = await optimizeVideoPrompt(input.prompt);
+    const taskId = await sfSubmit(input.imageBase64, input.imageMimeType, optimizedPrompt);
     if (db) {
       await db.insert(videoJobs).values({
         userId: ctx.user.id,
-        runpodJobId: requestId,
+        runpodJobId: taskId,
+        mode: "livre",
         status: "queued",
         durationSeconds: input.durationSeconds,
         createdAt: /* @__PURE__ */ new Date()
       }).catch(() => null);
     }
-    return { jobId: requestId };
+    return { jobId: taskId };
   }),
-  status: protectedProcedure.input(z82.object({ jobId: z82.string() })).query(async ({ input }) => {
-    const result = await getFalStatus(input.jobId);
-    const dbStatus = mapFalStatus(result.status);
+  status: protectedProcedure.input(z83.object({ jobId: z83.string() })).query(async ({ input }) => {
+    const result = await sfGetStatus(input.jobId);
     const db = await getDb();
-    if (db && (dbStatus === "completed" || dbStatus === "failed")) {
-      await db.update(videoJobs).set({ status: dbStatus, completedAt: /* @__PURE__ */ new Date(), errorMessage: result.error?.slice(0, 499) ?? null }).where(eq91(videoJobs.runpodJobId, input.jobId)).catch(() => null);
-    } else if (db && dbStatus === "processing") {
-      await db.update(videoJobs).set({ status: "processing" }).where(eq91(videoJobs.runpodJobId, input.jobId)).catch(() => null);
+    if (db && result.status === "COMPLETED") {
+      await db.update(videoJobs).set({ status: "completed", completedAt: /* @__PURE__ */ new Date() }).where(eq92(videoJobs.runpodJobId, input.jobId)).catch(() => null);
+    } else if (db && result.status === "FAILED") {
+      await db.update(videoJobs).set({ status: "failed", completedAt: /* @__PURE__ */ new Date() }).where(eq92(videoJobs.runpodJobId, input.jobId)).catch(() => null);
     }
     return { status: result.status, videoUrl: result.videoUrl, error: result.error };
   }),
-  history: protectedProcedure.input(z82.object({ limit: z82.number().min(1).max(50).default(20) })).query(async ({ input, ctx }) => {
+  history: protectedProcedure.input(z83.object({ limit: z83.number().min(1).max(50).default(20) })).query(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) return { jobs: [] };
     const jobs = await db.select({
@@ -36340,42 +36619,63 @@ var runpodVideoRouter = router({
       errorMessage: videoJobs.errorMessage,
       completedAt: videoJobs.completedAt,
       createdAt: videoJobs.createdAt
-    }).from(videoJobs).where(eq91(videoJobs.userId, ctx.user.id)).orderBy(desc48(videoJobs.createdAt)).limit(input.limit);
+    }).from(videoJobs).where(eq92(videoJobs.userId, ctx.user.id)).orderBy(desc48(videoJobs.createdAt)).limit(input.limit);
     return { jobs };
   }),
   checkConfig: protectedProcedure.query(() => ({
-    falConfigured: !!process.env.FAL_API_KEY,
+    falConfigured: !!process.env.SILICONFLOW_API_KEY,
     rhConfigured: !!process.env.RUNNINGHUB_API_KEY
   })),
-  // Running Up: foto + vídeo referência → fal.ai Champ (pose transfer)
-  runningUpGenerate: protectedProcedure.input(z82.object({
-    imageBase64: z82.string().min(100),
-    videoBase64: z82.string().min(100),
-    imageName: z82.string().default("produto.jpg"),
-    videoName: z82.string().default("referencia.mp4"),
-    imageMimeType: z82.string().default("image/jpeg"),
-    videoMimeType: z82.string().default("video/mp4")
-  })).mutation(async ({ input, ctx }) => {
-    const [imageUrl, videoUrl] = await Promise.all([
-      uploadToFal(input.imageBase64, input.imageMimeType),
-      uploadToFal(input.videoBase64, input.videoMimeType)
-    ]);
-    const res = await fetch(`${FAL_BASE}/fal-ai/champ`, {
-      method: "POST",
-      headers: { Authorization: `Key ${getFalKey()}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ image_url: imageUrl, video_url: videoUrl })
-    });
-    if (!res.ok) {
-      const text3 = await res.text().catch(() => "");
-      throw new Error(`fal.ai champ submit ${res.status}: ${text3.slice(0, 300)}`);
-    }
-    const data = await res.json();
-    const taskId = data.request_id;
+  getQuota: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
+    if (!db) return {
+      livre: { used: 0, limit: 30, extra: 0 },
+      runningup: { used: 0, limit: 30, extra: 0 }
+    };
+    const plan = await getOrCreatePlan2(ctx.user.id, db);
+    const [livreUsed, ruUsed] = await Promise.all([
+      getMonthCount(ctx.user.id, "livre", db),
+      getMonthCount(ctx.user.id, "runningup", db)
+    ]);
+    return {
+      livre: { used: livreUsed, limit: plan.livreMonthlyLimit, extra: plan.livreExtraCredits },
+      runningup: { used: ruUsed, limit: plan.runningUpMonthlyLimit, extra: plan.runningUpExtraCredits }
+    };
+  }),
+  adminAddCredits: protectedProcedure.input(z83.object({
+    userId: z83.number().int(),
+    mode: z83.enum(["livre", "runningup"]),
+    credits: z83.number().int().min(1).max(1e3)
+  })).mutation(async ({ input, ctx }) => {
+    if (ctx.user.role !== "admin") throw new TRPCError17({ code: "FORBIDDEN" });
+    const db = await getDb();
+    if (!db) throw new Error("DB n\xE3o dispon\xEDvel");
+    const plan = await getOrCreatePlan2(input.userId, db);
+    const update = input.mode === "livre" ? { livreExtraCredits: plan.livreExtraCredits + input.credits } : { runningUpExtraCredits: plan.runningUpExtraCredits + input.credits };
+    await db.update(videoPlans).set(update).where(eq92(videoPlans.userId, input.userId));
+    return { ok: true };
+  }),
+  // Running Up: foto + vídeo referência → RunningHub WanVideo Animate + ViTPose
+  runningUpGenerate: protectedProcedure.input(z83.object({
+    imageBase64: z83.string().min(100),
+    videoBase64: z83.string().min(100),
+    imageName: z83.string().default("produto.jpg"),
+    videoName: z83.string().default("referencia.mp4"),
+    imageMimeType: z83.string().default("image/jpeg"),
+    videoMimeType: z83.string().default("video/mp4")
+  })).mutation(async ({ input, ctx }) => {
+    const db = await getDb();
+    if (db) await debitCredits(ctx.user.id, "runningup", db);
+    const [imageUp, videoUp] = await Promise.all([
+      rhUpload(input.imageBase64, input.imageName, input.imageMimeType),
+      rhUpload(input.videoBase64, input.videoName, input.videoMimeType)
+    ]);
+    const taskId = await rhCreateTask(imageUp.fileName, videoUp.fileName);
     if (db) {
       await db.insert(videoJobs).values({
         userId: ctx.user.id,
         runpodJobId: taskId,
+        mode: "runningup",
         status: "queued",
         durationSeconds: 0,
         createdAt: /* @__PURE__ */ new Date()
@@ -36383,28 +36683,16 @@ var runpodVideoRouter = router({
     }
     return { taskId };
   }),
-  runningUpStatus: protectedProcedure.input(z82.object({ taskId: z82.string() })).query(async ({ input }) => {
-    const statusRes = await fetch(`${FAL_BASE}/fal-ai/champ/requests/${input.taskId}/status`, {
-      headers: { Authorization: `Key ${getFalKey()}` }
-    });
-    if (!statusRes.ok) throw new Error(`fal.ai champ status ${statusRes.status}`);
-    const data = await statusRes.json();
-    if (data.status === "COMPLETED") {
-      const resultRes = await fetch(`${FAL_BASE}/fal-ai/champ/requests/${input.taskId}`, {
-        headers: { Authorization: `Key ${getFalKey()}` }
-      });
-      if (resultRes.ok) {
-        const result = await resultRes.json();
-        return { status: "COMPLETED", videoUrl: result.video?.url ?? result.video_url };
-      }
-    }
+  runningUpStatus: protectedProcedure.input(z83.object({ taskId: z83.string() })).query(async ({ input }) => {
+    const result = await rhGetStatus(input.taskId);
     return {
-      status: data.status,
-      error: typeof data.error === "string" ? data.error : data.error?.message
+      status: result.status,
+      videoUrl: result.videoUrl,
+      error: result.error
     };
   }),
   // Geração de voz Fernanda via ElevenLabs
-  generateVoice: protectedProcedure.input(z82.object({ text: z82.string().min(5).max(1e3) })).mutation(async ({ input }) => {
+  generateVoice: protectedProcedure.input(z83.object({ text: z83.string().min(5).max(1e3) })).mutation(async ({ input }) => {
     const voiceId = process.env.ELEVENLABS_VOICE_ID_FERNANDA || "RGymW84CSmfVugnA5tvA";
     const apiKey = process.env.ELEVENLABS_API_KEY;
     if (!apiKey) throw new Error("ELEVENLABS_API_KEY n\xE3o configurado");
@@ -36423,19 +36711,371 @@ var runpodVideoRouter = router({
   })
 });
 
+// server/routers/modo-fala.ts
+init_db();
+init_schema();
+import { z as z84 } from "zod";
+import { TRPCError as TRPCError18 } from "@trpc/server";
+import { eq as eq93, desc as desc49 } from "drizzle-orm";
+import Anthropic10 from "@anthropic-ai/sdk";
+import path10 from "path";
+import fs10 from "fs";
+import { execFile } from "child_process";
+import { promisify } from "util";
+var execFileAsync = promisify(execFile);
+var UPLOADS_DIR = path10.resolve(process.cwd(), "uploads");
+var APP_URL = process.env.APP_URL || "https://marketing.feminnita.com.br";
+var SF_BASE2 = "https://api.siliconflow.com/v1";
+var PRESET_VOICES = [
+  { id: "fernanda", name: "Fernanda", description: "Natural, feminina", voiceId: () => process.env.ELEVENLABS_VOICE_ID_FERNANDA || "RGymW84CSmfVugnA5tvA" },
+  { id: "sofia", name: "Sofia", description: "Jovem, animada", voiceId: () => "EXAVITQu4vr4xnSDxMaL" },
+  { id: "beatriz", name: "Beatriz", description: "Madura, elegante", voiceId: () => "XB0fDUnXU5powFXDhCwa" },
+  { id: "camila", name: "Camila", description: "Calorosa, simp\xE1tica", voiceId: () => "Xb7hH8MSUJpSbSDYk0k2" },
+  { id: "rafael", name: "Rafael", description: "Masculino, profissional", voiceId: () => "JBFqnCBsd6RMkjVDRZzb" }
+];
+function getElKey() {
+  const key = process.env.ELEVENLABS_API_KEY;
+  if (!key) throw new TRPCError18({ code: "PRECONDITION_FAILED", message: "ELEVENLABS_API_KEY n\xE3o configurado." });
+  return key;
+}
+function getSfKey2() {
+  const key = process.env.SILICONFLOW_API_KEY;
+  if (!key) throw new TRPCError18({ code: "PRECONDITION_FAILED", message: "SILICONFLOW_API_KEY n\xE3o configurado." });
+  return key;
+}
+function ensureUploads() {
+  if (!fs10.existsSync(UPLOADS_DIR)) fs10.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+async function extractSceneComponents(prompt) {
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key) return { speech: prompt, movementPrompt: prompt };
+  try {
+    const client = new Anthropic10({ apiKey: key });
+    const msg = await client.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 600,
+      messages: [{
+        role: "user",
+        content: `You are a video production assistant for a Brazilian pajama/fashion brand.
+Analyze the scene description and return a JSON with two fields:
+
+1. "speech": The exact dialogue the model should say in Portuguese. If no dialogue is specified, create a natural, enthusiastic short phrase (1-2 sentences) about the pajama/product.
+2. "movementPrompt": A detailed English prompt for AI video generation describing: full body shot showing the complete outfit, the model's movement (walking, turning, posing), fabric texture visible, camera angle, lighting. Style: professional fashion video, high quality.
+
+Scene description (may be in Portuguese): "${prompt}"
+
+Return ONLY valid JSON: {"speech": "...", "movementPrompt": "..."}`
+      }]
+    });
+    const text3 = msg.content[0].text?.trim() || "";
+    const jsonMatch = text3.match(/\{[\s\S]*\}/);
+    const parsed = JSON.parse(jsonMatch?.[0] || text3);
+    return {
+      speech: parsed.speech || prompt,
+      movementPrompt: parsed.movementPrompt || prompt
+    };
+  } catch {
+    return { speech: prompt, movementPrompt: prompt };
+  }
+}
+async function preprocessNumbers(text3) {
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key) return text3;
+  try {
+    const client = new Anthropic10({ apiKey: key });
+    const msg = await client.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 500,
+      messages: [{
+        role: "user",
+        content: `Voc\xEA \xE9 um pr\xE9-processador de texto para s\xEDntese de voz em portugu\xEAs brasileiro.
+Converta APENAS n\xFAmeros, valores monet\xE1rios e abrevia\xE7\xF5es para texto por extenso.
+Mantenha o restante do texto id\xEAntico.
+Retorne APENAS o texto convertido, sem explica\xE7\xF5es.
+
+Exemplos:
+"R$ 49,90" \u2192 "quarenta e nove reais e noventa centavos"
+"3x de R$20" \u2192 "tr\xEAs vezes de vinte reais"
+"15%" \u2192 "quinze por cento"
+
+Texto: "${text3}"`
+      }]
+    });
+    return msg.content[0].text?.trim() || text3;
+  } catch {
+    return text3;
+  }
+}
+async function sfSubmit2(imageBase64, mimeType, prompt) {
+  const key = getSfKey2();
+  const res = await fetch(`${SF_BASE2}/video/submit`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "Wan-AI/Wan2.2-I2V-A14B",
+      prompt,
+      image: `data:${mimeType};base64,${imageBase64}`,
+      negative_prompt: "blurry, low quality, text, watermark, cropped, face only, close up face",
+      seed: Math.floor(Math.random() * 2147483647)
+    })
+  });
+  if (!res.ok) {
+    const t2 = await res.text().catch(() => "");
+    throw new TRPCError18({ code: "INTERNAL_SERVER_ERROR", message: `SiliconFlow submit ${res.status}: ${t2.slice(0, 200)}` });
+  }
+  const data = await res.json();
+  return data.requestId;
+}
+async function sfGetStatus2(requestId) {
+  const key = getSfKey2();
+  const res = await fetch(`${SF_BASE2}/video/status`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ requestId })
+  });
+  if (!res.ok) throw new Error(`SiliconFlow status ${res.status}`);
+  const data = await res.json();
+  if (data.status === "Succeed") return { status: "COMPLETED", videoUrl: data.results?.videos?.[0]?.url };
+  if (data.status === "Failed") return { status: "FAILED" };
+  return { status: "IN_PROGRESS" };
+}
+async function elevenLabsWithTimestamps(text3, voiceId) {
+  const key = getElKey();
+  const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/with-timestamps`, {
+    method: "POST",
+    headers: { "xi-api-key": key, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text: text3,
+      model_id: "eleven_multilingual_v2",
+      voice_settings: { stability: 0.5, similarity_boost: 0.75 }
+    })
+  });
+  if (!res.ok) {
+    const t2 = await res.text().catch(() => "");
+    throw new Error(`ElevenLabs timestamps ${res.status}: ${t2.slice(0, 200)}`);
+  }
+  const data = await res.json();
+  return { audioBase64: data.audio_base64, alignment: data.alignment };
+}
+async function elevenLabsAudio(text3, voiceId) {
+  const key = getElKey();
+  const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+    method: "POST",
+    headers: { "xi-api-key": key, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text: text3,
+      model_id: "eleven_multilingual_v2",
+      voice_settings: { stability: 0.5, similarity_boost: 0.75 }
+    })
+  });
+  if (!res.ok) {
+    const t2 = await res.text().catch(() => "");
+    throw new Error(`ElevenLabs TTS ${res.status}: ${t2.slice(0, 200)}`);
+  }
+  const buffer = await res.arrayBuffer();
+  return Buffer.from(buffer).toString("base64");
+}
+function alignmentToSrt(alignment) {
+  const { characters, character_start_times_seconds: starts, character_end_times_seconds: ends } = alignment;
+  const words = [];
+  let word = "";
+  let wStart = 0;
+  for (let i = 0; i < characters.length; i++) {
+    const c = characters[i];
+    if (c === " " || c === "\n") {
+      if (word) {
+        words.push({ text: word, start: wStart, end: ends[i - 1] });
+        word = "";
+      }
+    } else {
+      if (!word) wStart = starts[i];
+      word += c;
+    }
+  }
+  if (word) words.push({ text: word, start: wStart, end: ends[ends.length - 1] });
+  const lines = [];
+  let group = [];
+  for (const w of words) {
+    group.push(w);
+    if (group.length >= 6 || w.end - group[0].start >= 3) {
+      lines.push({ text: group.map((x) => x.text).join(" "), start: group[0].start, end: w.end });
+      group = [];
+    }
+  }
+  if (group.length) lines.push({ text: group.map((x) => x.text).join(" "), start: group[0].start, end: group[group.length - 1].end });
+  function ts(s) {
+    const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), sec = Math.floor(s % 60), ms = Math.round(s % 1 * 1e3);
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")},${String(ms).padStart(3, "0")}`;
+  }
+  return lines.map((l, i) => `${i + 1}
+${ts(l.start)} --> ${ts(l.end)}
+${l.text}`).join("\n\n");
+}
+function saveAudio(audioBase64, requestId) {
+  ensureUploads();
+  const filePath = path10.join(UPLOADS_DIR, `fala-audio-${requestId}.mp3`);
+  fs10.writeFileSync(filePath, Buffer.from(audioBase64, "base64"));
+  return filePath;
+}
+function saveSrt(srtContent, requestId) {
+  ensureUploads();
+  const filePath = path10.join(UPLOADS_DIR, `fala-srt-${requestId}.srt`);
+  fs10.writeFileSync(filePath, srtContent, "utf8");
+  return filePath;
+}
+async function mergeVideoAudio(videoUrl, audioPath, srtPath, requestId) {
+  ensureUploads();
+  const rawPath = path10.join(UPLOADS_DIR, `fala-raw-${requestId}.mp4`);
+  const outPath = path10.join(UPLOADS_DIR, `fala-video-${requestId}.mp4`);
+  if (fs10.existsSync(outPath)) return `${APP_URL}/uploads/fala-video-${requestId}.mp4`;
+  const videoRes = await fetch(videoUrl);
+  if (!videoRes.ok) throw new Error(`Download v\xEDdeo falhou: ${videoRes.status}`);
+  fs10.writeFileSync(rawPath, Buffer.from(await videoRes.arrayBuffer()));
+  if (srtPath && fs10.existsSync(srtPath)) {
+    await execFileAsync("ffmpeg", [
+      "-i",
+      rawPath,
+      "-i",
+      audioPath,
+      "-vf",
+      `subtitles=${srtPath}:force_style='FontName=Arial,FontSize=20,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,Outline=2,Shadow=1,Alignment=2'`,
+      "-c:a",
+      "aac",
+      "-map",
+      "0:v:0",
+      "-map",
+      "1:a:0",
+      "-shortest",
+      "-y",
+      outPath
+    ]);
+  } else {
+    await execFileAsync("ffmpeg", [
+      "-i",
+      rawPath,
+      "-i",
+      audioPath,
+      "-c:v",
+      "copy",
+      "-c:a",
+      "aac",
+      "-map",
+      "0:v:0",
+      "-map",
+      "1:a:0",
+      "-shortest",
+      "-y",
+      outPath
+    ]);
+  }
+  fs10.unlink(rawPath, () => {
+  });
+  return `${APP_URL}/uploads/fala-video-${requestId}.mp4`;
+}
+var modoFalaRouter = router({
+  getVoices: protectedProcedure.query(
+    () => PRESET_VOICES.map((v) => ({ id: v.id, name: v.name, description: v.description }))
+  ),
+  previewVoice: protectedProcedure.input(z84.object({ voiceId: z84.string() })).mutation(async ({ input }) => {
+    const voice = PRESET_VOICES.find((v) => v.id === input.voiceId) ?? PRESET_VOICES[0];
+    const sampleText = "Ol\xE1! Confira essa novidade incr\xEDvel da nossa cole\xE7\xE3o. Voc\xEA vai se apaixonar!";
+    const audioBase64 = await elevenLabsAudio(sampleText, voice.voiceId());
+    return { audioBase64 };
+  }),
+  checkConfig: protectedProcedure.query(() => ({
+    didConfigured: !!process.env.SILICONFLOW_API_KEY,
+    elConfigured: !!process.env.ELEVENLABS_API_KEY
+  })),
+  generate: protectedProcedure.input(z84.object({
+    imageBase64: z84.string().min(100),
+    imageMimeType: z84.string().default("image/jpeg"),
+    text: z84.string().min(5).max(2e3),
+    voiceId: z84.string().default("fernanda"),
+    withSubtitles: z84.boolean().default(true)
+  })).mutation(async ({ input, ctx }) => {
+    const voice = PRESET_VOICES.find((v) => v.id === input.voiceId) ?? PRESET_VOICES[0];
+    const dbConn = await getDb();
+    if (dbConn) await debitCredits(ctx.user.id, "fala", dbConn);
+    const { speech, movementPrompt } = await extractSceneComponents(input.text);
+    const processedSpeech = await preprocessNumbers(speech);
+    const requestId = await sfSubmit2(input.imageBase64, input.imageMimeType, movementPrompt);
+    let audioBase64;
+    let srtContent = null;
+    if (input.withSubtitles) {
+      const result = await elevenLabsWithTimestamps(processedSpeech, voice.voiceId());
+      audioBase64 = result.audioBase64;
+      srtContent = alignmentToSrt(result.alignment);
+    } else {
+      audioBase64 = await elevenLabsAudio(processedSpeech, voice.voiceId());
+    }
+    saveAudio(audioBase64, requestId);
+    if (srtContent) saveSrt(srtContent, requestId);
+    const db = await getDb();
+    if (db) {
+      await db.insert(videoJobs).values({
+        userId: ctx.user.id,
+        runpodJobId: requestId,
+        mode: "livre",
+        status: "queued",
+        durationSeconds: 0,
+        createdAt: /* @__PURE__ */ new Date()
+      }).catch(() => null);
+    }
+    return { talkId: requestId };
+  }),
+  status: protectedProcedure.input(z84.object({ talkId: z84.string() })).query(async ({ input }) => {
+    const result = await sfGetStatus2(input.talkId);
+    if (result.status === "COMPLETED" && result.videoUrl) {
+      const audioPath = path10.join(UPLOADS_DIR, `fala-audio-${input.talkId}.mp3`);
+      const srtPath = path10.join(UPLOADS_DIR, `fala-srt-${input.talkId}.srt`);
+      const outPath = path10.join(UPLOADS_DIR, `fala-video-${input.talkId}.mp4`);
+      if (fs10.existsSync(outPath)) {
+        return { status: "COMPLETED", videoUrl: `${APP_URL}/uploads/fala-video-${input.talkId}.mp4` };
+      }
+      if (fs10.existsSync(audioPath)) {
+        try {
+          const finalUrl = await mergeVideoAudio(
+            result.videoUrl,
+            audioPath,
+            fs10.existsSync(srtPath) ? srtPath : null,
+            input.talkId
+          );
+          return { status: "COMPLETED", videoUrl: finalUrl };
+        } catch (e) {
+          return { status: "COMPLETED", videoUrl: result.videoUrl, error: `Merge falhou: ${e.message}` };
+        }
+      }
+      return { status: "COMPLETED", videoUrl: result.videoUrl };
+    }
+    if (result.status === "FAILED") return { status: "FAILED", error: "Gera\xE7\xE3o falhou." };
+    return { status: "IN_PROGRESS" };
+  }),
+  history: protectedProcedure.input(z84.object({ limit: z84.number().min(1).max(50).default(20) })).query(async ({ input, ctx }) => {
+    const db = await getDb();
+    if (!db) return { jobs: [] };
+    const jobs = await db.select({
+      id: videoJobs.id,
+      runpodJobId: videoJobs.runpodJobId,
+      status: videoJobs.status,
+      createdAt: videoJobs.createdAt
+    }).from(videoJobs).where(eq93(videoJobs.userId, ctx.user.id)).orderBy(desc49(videoJobs.createdAt)).limit(input.limit);
+    return { jobs };
+  })
+});
+
 // server/routers/ga4.ts
-import { z as z83 } from "zod";
+import { z as z85 } from "zod";
 init_ga4();
 init_db();
 init_schema();
-import { eq as eq93, and as and75 } from "drizzle-orm";
+import { eq as eq95, and as and76 } from "drizzle-orm";
 async function getPropertyId(userId) {
   const db = await getDb();
   if (!db) return null;
-  const rows = await db.select({ accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and75(
-    eq93(oauthTokens.userId, userId),
-    eq93(oauthTokens.plataforma, "google_analytics"),
-    eq93(oauthTokens.isActive, true)
+  const rows = await db.select({ accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and76(
+    eq95(oauthTokens.userId, userId),
+    eq95(oauthTokens.plataforma, "google_analytics"),
+    eq95(oauthTokens.isActive, true)
   )).limit(1);
   if (rows.length === 0) return null;
   const info = rows[0].accountInfo ? JSON.parse(rows[0].accountInfo) : {};
@@ -36445,28 +37085,28 @@ var ga4Router = router({
   status: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return { connected: false, propertyId: null };
-    const rows = await db.select({ isActive: oauthTokens.isActive, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and75(eq93(oauthTokens.userId, ctx.user.id), eq93(oauthTokens.plataforma, "google_analytics"))).limit(1);
+    const rows = await db.select({ isActive: oauthTokens.isActive, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and76(eq95(oauthTokens.userId, ctx.user.id), eq95(oauthTokens.plataforma, "google_analytics"))).limit(1);
     if (rows.length === 0) return { connected: false, propertyId: null };
     const info = rows[0].accountInfo ? JSON.parse(rows[0].accountInfo) : {};
     return { connected: Boolean(rows[0].isActive), propertyId: info.propertyId ?? null };
   }),
-  setPropertyId: protectedProcedure.input(z83.object({ propertyId: z83.string().min(1) })).mutation(async ({ ctx, input }) => {
+  setPropertyId: protectedProcedure.input(z85.object({ propertyId: z85.string().min(1) })).mutation(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new Error("DB indispon\xEDvel");
-    const rows = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and75(eq93(oauthTokens.userId, ctx.user.id), eq93(oauthTokens.plataforma, "google_analytics"))).limit(1);
+    const rows = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and76(eq95(oauthTokens.userId, ctx.user.id), eq95(oauthTokens.plataforma, "google_analytics"))).limit(1);
     if (rows.length === 0) throw new Error("GA4 n\xE3o conectado");
     const info = rows[0].accountInfo ? JSON.parse(rows[0].accountInfo) : {};
     info.propertyId = input.propertyId;
-    await db.update(oauthTokens).set({ accountInfo: JSON.stringify(info) }).where(eq93(oauthTokens.id, rows[0].id));
+    await db.update(oauthTokens).set({ accountInfo: JSON.stringify(info) }).where(eq95(oauthTokens.id, rows[0].id));
     return { success: true };
   }),
   disconnect: protectedProcedure.mutation(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("DB indispon\xEDvel");
-    await db.update(oauthTokens).set({ isActive: false }).where(and75(eq93(oauthTokens.userId, ctx.user.id), eq93(oauthTokens.plataforma, "google_analytics")));
+    await db.update(oauthTokens).set({ isActive: false }).where(and76(eq95(oauthTokens.userId, ctx.user.id), eq95(oauthTokens.plataforma, "google_analytics")));
     return { success: true };
   }),
-  overview: protectedProcedure.input(z83.object({ days: z83.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
+  overview: protectedProcedure.input(z85.object({ days: z85.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
     const propertyId = await getPropertyId(ctx.user.id);
     if (!propertyId) throw new Error("Property ID n\xE3o configurado");
     const token = await getValidGA4Token(ctx.user.id);
@@ -36490,7 +37130,7 @@ var ga4Router = router({
       avgSessionDuration: parseFloat(parseFloat(vals[4]?.value ?? "0").toFixed(0))
     };
   }),
-  trafficSources: protectedProcedure.input(z83.object({ days: z83.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
+  trafficSources: protectedProcedure.input(z85.object({ days: z85.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
     const propertyId = await getPropertyId(ctx.user.id);
     if (!propertyId) throw new Error("Property ID n\xE3o configurado");
     const token = await getValidGA4Token(ctx.user.id);
@@ -36508,7 +37148,7 @@ var ga4Router = router({
       users: parseInt(r.metricValues?.[1]?.value ?? "0")
     }));
   }),
-  topPages: protectedProcedure.input(z83.object({ days: z83.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
+  topPages: protectedProcedure.input(z85.object({ days: z85.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
     const propertyId = await getPropertyId(ctx.user.id);
     if (!propertyId) throw new Error("Property ID n\xE3o configurado");
     const token = await getValidGA4Token(ctx.user.id);
@@ -36534,7 +37174,7 @@ var ga4Router = router({
     const activeUsers = await getGA4Realtime(token, propertyId);
     return { activeUsers };
   }),
-  conversions: protectedProcedure.input(z83.object({ days: z83.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
+  conversions: protectedProcedure.input(z85.object({ days: z85.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
     const propertyId = await getPropertyId(ctx.user.id);
     if (!propertyId) throw new Error("Property ID n\xE3o configurado");
     const token = await getValidGA4Token(ctx.user.id);
@@ -36559,7 +37199,7 @@ var ga4Router = router({
       users: parseInt(r.metricValues?.[3]?.value ?? "0")
     }));
   }),
-  utmCampaigns: protectedProcedure.input(z83.object({ days: z83.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
+  utmCampaigns: protectedProcedure.input(z85.object({ days: z85.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
     const propertyId = await getPropertyId(ctx.user.id);
     if (!propertyId) throw new Error("Property ID n\xE3o configurado");
     const token = await getValidGA4Token(ctx.user.id);
@@ -36594,7 +37234,7 @@ var ga4Router = router({
       conversions: parseInt(r.metricValues?.[5]?.value ?? "0")
     }));
   }),
-  devices: protectedProcedure.input(z83.object({ days: z83.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
+  devices: protectedProcedure.input(z85.object({ days: z85.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
     const propertyId = await getPropertyId(ctx.user.id);
     if (!propertyId) throw new Error("Property ID n\xE3o configurado");
     const token = await getValidGA4Token(ctx.user.id);
@@ -36620,7 +37260,7 @@ var ga4Router = router({
       conversions: parseInt(r.metricValues?.[4]?.value ?? "0")
     }));
   }),
-  geo: protectedProcedure.input(z83.object({ days: z83.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
+  geo: protectedProcedure.input(z85.object({ days: z85.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
     const propertyId = await getPropertyId(ctx.user.id);
     if (!propertyId) throw new Error("Property ID n\xE3o configurado");
     const token = await getValidGA4Token(ctx.user.id);
@@ -36647,16 +37287,16 @@ var ga4Router = router({
 });
 
 // server/routers/portal.ts
-import { z as z84 } from "zod";
+import { z as z86 } from "zod";
 import { scrypt, randomBytes as randomBytes4, timingSafeEqual as timingSafeEqual2 } from "crypto";
-import { promisify } from "util";
+import { promisify as promisify2 } from "util";
 init_sdk();
 init_const();
 init_db();
 
 // server/agents/portal-copy-agent.ts
-import Anthropic9 from "@anthropic-ai/sdk";
-var anthropic6 = new Anthropic9({ apiKey: process.env.ANTHROPIC_API_KEY || "" });
+import Anthropic11 from "@anthropic-ai/sdk";
+var anthropic6 = new Anthropic11({ apiKey: process.env.ANTHROPIC_API_KEY || "" });
 var ANA_SYSTEM_PROMPT = `Voc\xEA \xE9 a Ana \u2014 especialista em copy de vendas da Feminnita, criada para ajudar revendedoras a venderem pijamas pelo WhatsApp, Instagram e grupos de fam\xEDlia.
 
 \u2501\u2501\u2501 QUEM \xC9 A ANA \u2501\u2501\u2501
@@ -36764,7 +37404,7 @@ Acesse /gestao-portal para aprovar ou recusar.`;
   } catch {
   }
 }
-var scryptAsync = promisify(scrypt);
+var scryptAsync = promisify2(scrypt);
 async function hashPassword2(password) {
   const salt = randomBytes4(16).toString("hex");
   const hash = await scryptAsync(password, salt, 64);
@@ -36782,7 +37422,7 @@ var PROFILE_TYPES = ["revendedora", "influencer"];
 var STATUSES = ["pending", "approved", "blocked"];
 var portalRouter = router({
   me: publicProcedure.query((opts) => opts.ctx.portalUser ?? null),
-  login: publicProcedure.input(z84.object({ email: z84.string().email(), password: z84.string() })).mutation(async ({ input, ctx }) => {
+  login: publicProcedure.input(z86.object({ email: z86.string().email(), password: z86.string() })).mutation(async ({ input, ctx }) => {
     const user = await getPortalUserByEmail(input.email);
     if (!user || !user.passwordHash) throw new Error("Email ou senha inv\xE1lidos");
     const valid = await verifyPassword2(input.password, user.passwordHash);
@@ -36800,13 +37440,13 @@ var portalRouter = router({
     ctx.res.clearCookie(PORTAL_COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
     return { success: true };
   }),
-  solicitarAcesso: publicProcedure.input(z84.object({
-    name: z84.string().min(2, "Nome obrigat\xF3rio"),
-    email: z84.string().email("Email inv\xE1lido"),
-    password: z84.string().min(6, "Senha m\xEDnima de 6 caracteres"),
-    profileType: z84.enum(PROFILE_TYPES),
-    instagramHandle: z84.string().optional(),
-    phone: z84.string().optional()
+  solicitarAcesso: publicProcedure.input(z86.object({
+    name: z86.string().min(2, "Nome obrigat\xF3rio"),
+    email: z86.string().email("Email inv\xE1lido"),
+    password: z86.string().min(6, "Senha m\xEDnima de 6 caracteres"),
+    profileType: z86.enum(PROFILE_TYPES),
+    instagramHandle: z86.string().optional(),
+    phone: z86.string().optional()
   })).mutation(async ({ input }) => {
     const existing = await getPortalUserByEmail(input.email);
     if (existing) throw new Error("Este email j\xE1 est\xE1 cadastrado");
@@ -36825,10 +37465,10 @@ var portalRouter = router({
   materiais: portalProtectedProcedure.query(async ({ ctx }) => {
     return listPortalMaterials(ctx.portalUser.profileType);
   }),
-  chatCopy: portalProtectedProcedure.input(z84.object({
-    messages: z84.array(z84.object({
-      role: z84.enum(["user", "assistant"]),
-      content: z84.string()
+  chatCopy: portalProtectedProcedure.input(z86.object({
+    messages: z86.array(z86.object({
+      role: z86.enum(["user", "assistant"]),
+      content: z86.string()
     })).min(1).max(50)
   })).mutation(async ({ ctx, input }) => {
     const reply = await chatWithAna(input.messages, ctx.portalUser.name ?? void 0);
@@ -36842,9 +37482,9 @@ var portalRouter = router({
         return safe;
       });
     }),
-    updateStatus: protectedProcedure.input(z84.object({
-      id: z84.number(),
-      status: z84.enum(STATUSES)
+    updateStatus: protectedProcedure.input(z86.object({
+      id: z86.number(),
+      status: z86.enum(STATUSES)
     })).mutation(async ({ input, ctx }) => {
       await updatePortalUserStatus(input.id, input.status, ctx.user.id);
       return { success: true };
@@ -36852,34 +37492,34 @@ var portalRouter = router({
     listMaterials: protectedProcedure.query(async () => {
       return listAllPortalMaterials();
     }),
-    createMaterial: protectedProcedure.input(z84.object({
-      title: z84.string().min(1),
-      description: z84.string().optional(),
-      category: z84.enum(CATEGORIES),
-      subcategory: z84.string().optional(),
-      url: z84.string().url("URL inv\xE1lida"),
-      filename: z84.string().optional(),
-      availableTo: z84.enum(AVAILABLE_TO)
+    createMaterial: protectedProcedure.input(z86.object({
+      title: z86.string().min(1),
+      description: z86.string().optional(),
+      category: z86.enum(CATEGORIES),
+      subcategory: z86.string().optional(),
+      url: z86.string().url("URL inv\xE1lida"),
+      filename: z86.string().optional(),
+      availableTo: z86.enum(AVAILABLE_TO)
     })).mutation(async ({ input, ctx }) => {
       await createPortalMaterial({ ...input, uploadedBy: ctx.user.id });
       return { success: true };
     }),
-    updateMaterial: protectedProcedure.input(z84.object({
-      id: z84.number(),
-      title: z84.string().min(1).optional(),
-      description: z84.string().optional(),
-      category: z84.enum(CATEGORIES).optional(),
-      subcategory: z84.string().optional(),
-      url: z84.string().url().optional(),
-      filename: z84.string().optional(),
-      availableTo: z84.enum(AVAILABLE_TO).optional(),
-      isActive: z84.boolean().optional()
+    updateMaterial: protectedProcedure.input(z86.object({
+      id: z86.number(),
+      title: z86.string().min(1).optional(),
+      description: z86.string().optional(),
+      category: z86.enum(CATEGORIES).optional(),
+      subcategory: z86.string().optional(),
+      url: z86.string().url().optional(),
+      filename: z86.string().optional(),
+      availableTo: z86.enum(AVAILABLE_TO).optional(),
+      isActive: z86.boolean().optional()
     })).mutation(async ({ input }) => {
       const { id, ...data } = input;
       await updatePortalMaterial(id, data);
       return { success: true };
     }),
-    deleteMaterial: protectedProcedure.input(z84.object({ id: z84.number() })).mutation(async ({ input }) => {
+    deleteMaterial: protectedProcedure.input(z86.object({ id: z86.number() })).mutation(async ({ input }) => {
       await deactivatePortalMaterial(input.id);
       return { success: true };
     })
@@ -36889,7 +37529,7 @@ var portalRouter = router({
 // server/routers.ts
 init_db();
 init_schema();
-var scryptAsync2 = promisify2(scrypt2);
+var scryptAsync2 = promisify3(scrypt2);
 async function hashPassword3(password) {
   const salt = randomBytes5(16).toString("hex");
   const hash = await scryptAsync2(password, salt, 64);
@@ -36906,10 +37546,10 @@ var appRouter = router({
   system: systemRouter,
   auth: router({
     me: publicProcedure.query((opts) => opts.ctx.user),
-    register: publicProcedure.input(z85.object({
-      email: z85.string().email(),
-      password: z85.string().min(6),
-      name: z85.string().optional()
+    register: publicProcedure.input(z87.object({
+      email: z87.string().email(),
+      password: z87.string().min(6),
+      name: z87.string().optional()
     })).mutation(async ({ input, ctx }) => {
       const existing = await getUserByEmail(input.email);
       if (existing) throw new Error("Email j\xE1 cadastrado");
@@ -36920,9 +37560,9 @@ var appRouter = router({
       ctx.res.cookie(COOKIE_NAME, token, { ...cookieOptions, maxAge: ONE_YEAR_MS });
       return { success: true, user };
     }),
-    login: publicProcedure.input(z85.object({
-      email: z85.string().email(),
-      password: z85.string()
+    login: publicProcedure.input(z87.object({
+      email: z87.string().email(),
+      password: z87.string()
     })).mutation(async ({ input, ctx }) => {
       const user = await getUserByEmail(input.email);
       if (!user || !user.passwordHash) throw new Error("Email ou senha inv\xE1lidos");
@@ -36938,12 +37578,12 @@ var appRouter = router({
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true };
     }),
-    updateProfile: protectedProcedure.input(z85.object({ name: z85.string().min(1).max(100) })).mutation(async ({ ctx, input }) => {
+    updateProfile: protectedProcedure.input(z87.object({ name: z87.string().min(1).max(100) })).mutation(async ({ ctx, input }) => {
       const dbConn = await getDb();
       if (!dbConn) throw new Error("DB indispon\xEDvel");
       const { users: users2 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
-      const { eq: eq113 } = await import("drizzle-orm");
-      await dbConn.update(users2).set({ name: input.name }).where(eq113(users2.id, ctx.user.id));
+      const { eq: eq115 } = await import("drizzle-orm");
+      await dbConn.update(users2).set({ name: input.name }).where(eq115(users2.id, ctx.user.id));
       return { success: true };
     })
   }),
@@ -37040,28 +37680,28 @@ var appRouter = router({
       try {
         const db = await getDb();
         if (!db) return [];
-        const { eq: eq113 } = await import("drizzle-orm");
-        const allInfluencers = await db.select().from(influencers).where(eq113(influencers.userId, ctx.user.id));
+        const { eq: eq115 } = await import("drizzle-orm");
+        const allInfluencers = await db.select().from(influencers).where(eq115(influencers.userId, ctx.user.id));
         return allInfluencers;
       } catch (error) {
         console.error("[Influencers] Erro ao listar:", error);
         return [];
       }
     }),
-    create: protectedProcedure.input(z85.object({
-      name: z85.string().min(1),
-      bio: z85.string().optional(),
-      personality: z85.string().optional(),
-      avatar: z85.string().optional(),
-      instagramHandle: z85.string().optional(),
-      tiktokHandle: z85.string().optional(),
-      contentStyle: z85.string().optional(),
-      targetAudience: z85.string().optional(),
-      keywords: z85.string().optional()
+    create: protectedProcedure.input(z87.object({
+      name: z87.string().min(1),
+      bio: z87.string().optional(),
+      personality: z87.string().optional(),
+      avatar: z87.string().optional(),
+      instagramHandle: z87.string().optional(),
+      tiktokHandle: z87.string().optional(),
+      contentStyle: z87.string().optional(),
+      targetAudience: z87.string().optional(),
+      keywords: z87.string().optional()
     })).mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const { eq: eq113 } = await import("drizzle-orm");
+      const { eq: eq115 } = await import("drizzle-orm");
       const result = await db.insert(influencers).values({
         userId: ctx.user.id,
         name: input.name,
@@ -37072,33 +37712,33 @@ var appRouter = router({
         tiktokHandle: input.tiktokHandle,
         isActive: true
       });
-      const created = await db.select().from(influencers).where(eq113(influencers.id, result[0].insertId)).limit(1);
+      const created = await db.select().from(influencers).where(eq115(influencers.id, result[0].insertId)).limit(1);
       return created[0];
     }),
-    update: protectedProcedure.input(z85.object({
-      id: z85.number(),
-      name: z85.string().min(1).optional(),
-      bio: z85.string().optional(),
-      personality: z85.string().optional(),
-      avatar: z85.string().optional(),
-      instagramHandle: z85.string().optional(),
-      tiktokHandle: z85.string().optional(),
-      isActive: z85.boolean().optional()
+    update: protectedProcedure.input(z87.object({
+      id: z87.number(),
+      name: z87.string().min(1).optional(),
+      bio: z87.string().optional(),
+      personality: z87.string().optional(),
+      avatar: z87.string().optional(),
+      instagramHandle: z87.string().optional(),
+      tiktokHandle: z87.string().optional(),
+      isActive: z87.boolean().optional()
     })).mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const { eq: eq113, and: and91 } = await import("drizzle-orm");
-      const owned = await db.select({ id: influencers.id }).from(influencers).where(and91(eq113(influencers.id, input.id), eq113(influencers.userId, ctx.user.id))).limit(1);
+      const { eq: eq115, and: and92 } = await import("drizzle-orm");
+      const owned = await db.select({ id: influencers.id }).from(influencers).where(and92(eq115(influencers.id, input.id), eq115(influencers.userId, ctx.user.id))).limit(1);
       if (owned.length === 0) throw new Error("Influencer n\xE3o encontrado");
       const { id, ...updates } = input;
-      await db.update(influencers).set(updates).where(eq113(influencers.id, id));
-      const updated = await db.select().from(influencers).where(eq113(influencers.id, id)).limit(1);
+      await db.update(influencers).set(updates).where(eq115(influencers.id, id));
+      const updated = await db.select().from(influencers).where(eq115(influencers.id, id)).limit(1);
       return updated[0];
     }),
     upsertDefaults: protectedProcedure.mutation(async ({ ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const { eq: eq113 } = await import("drizzle-orm");
+      const { eq: eq115 } = await import("drizzle-orm");
       const defaults = [
         {
           name: "Carol",
@@ -37133,7 +37773,7 @@ var appRouter = router({
           tiktokHandle: "@luizafeminnita"
         }
       ];
-      const existing = await db.select({ name: influencers.name }).from(influencers).where(eq113(influencers.userId, ctx.user.id));
+      const existing = await db.select({ name: influencers.name }).from(influencers).where(eq115(influencers.userId, ctx.user.id));
       const existingNames = existing.map((i) => i.name);
       let created = 0;
       for (const inf of defaults) {
@@ -37144,41 +37784,41 @@ var appRouter = router({
       }
       return { created, message: `${created} influencers criadas` };
     }),
-    getPosts: protectedProcedure.input(z85.object({
-      influencerId: z85.number(),
-      status: z85.enum(["draft", "scheduled", "published", "failed"]).optional(),
-      limit: z85.number().default(20)
+    getPosts: protectedProcedure.input(z87.object({
+      influencerId: z87.number(),
+      status: z87.enum(["draft", "scheduled", "published", "failed"]).optional(),
+      limit: z87.number().default(20)
     })).query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
-      const { eq: eq113, and: and91, desc: desc54 } = await import("drizzle-orm");
-      const owned = await db.select({ id: influencers.id }).from(influencers).where(and91(eq113(influencers.id, input.influencerId), eq113(influencers.userId, ctx.user.id))).limit(1);
+      const { eq: eq115, and: and92, desc: desc55 } = await import("drizzle-orm");
+      const owned = await db.select({ id: influencers.id }).from(influencers).where(and92(eq115(influencers.id, input.influencerId), eq115(influencers.userId, ctx.user.id))).limit(1);
       if (owned.length === 0) return [];
-      const conditions = [eq113(influencerPosts.influencerId, input.influencerId)];
+      const conditions = [eq115(influencerPosts.influencerId, input.influencerId)];
       if (input.status) {
-        conditions.push(eq113(influencerPosts.status, input.status));
+        conditions.push(eq115(influencerPosts.status, input.status));
       }
-      return db.select().from(influencerPosts).where(and91(...conditions)).orderBy(desc54(influencerPosts.createdAt)).limit(input.limit);
+      return db.select().from(influencerPosts).where(and92(...conditions)).orderBy(desc55(influencerPosts.createdAt)).limit(input.limit);
     }),
-    deletePost: protectedProcedure.input(z85.object({ postId: z85.number() })).mutation(async ({ input, ctx }) => {
+    deletePost: protectedProcedure.input(z87.object({ postId: z87.number() })).mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const { eq: eq113, and: and91 } = await import("drizzle-orm");
-      const post = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq113(influencerPosts.id, input.postId)).limit(1);
+      const { eq: eq115, and: and92 } = await import("drizzle-orm");
+      const post = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq115(influencerPosts.id, input.postId)).limit(1);
       if (post.length === 0) throw new Error("Post n\xE3o encontrado");
-      const owned = await db.select({ id: influencers.id }).from(influencers).where(and91(eq113(influencers.id, post[0].influencerId ?? 0), eq113(influencers.userId, ctx.user.id))).limit(1);
+      const owned = await db.select({ id: influencers.id }).from(influencers).where(and92(eq115(influencers.id, post[0].influencerId ?? 0), eq115(influencers.userId, ctx.user.id))).limit(1);
       if (owned.length === 0) throw new Error("Acesso negado");
-      await db.delete(influencerPosts).where(eq113(influencerPosts.id, input.postId));
+      await db.delete(influencerPosts).where(eq115(influencerPosts.id, input.postId));
       return { success: true };
     }),
-    getAllPosts: protectedProcedure.input(z85.object({ limit: z85.number().default(200) })).query(async ({ input, ctx }) => {
+    getAllPosts: protectedProcedure.input(z87.object({ limit: z87.number().default(200) })).query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
-      const { eq: eq113, desc: desc54, inArray: inArray10 } = await import("drizzle-orm");
-      const myInfluencers = await db.select({ id: influencers.id, name: influencers.name }).from(influencers).where(eq113(influencers.userId, ctx.user.id));
+      const { eq: eq115, desc: desc55, inArray: inArray10 } = await import("drizzle-orm");
+      const myInfluencers = await db.select({ id: influencers.id, name: influencers.name }).from(influencers).where(eq115(influencers.userId, ctx.user.id));
       if (myInfluencers.length === 0) return [];
       const ids = myInfluencers.map((i) => i.id);
-      const posts = await db.select().from(influencerPosts).where(inArray10(influencerPosts.influencerId, ids)).orderBy(desc54(influencerPosts.createdAt)).limit(input.limit);
+      const posts = await db.select().from(influencerPosts).where(inArray10(influencerPosts.influencerId, ids)).orderBy(desc55(influencerPosts.createdAt)).limit(input.limit);
       return posts.map((post) => ({
         ...post,
         influencerName: myInfluencers.find((i) => i.id === post.influencerId)?.name ?? ""
@@ -37190,6 +37830,8 @@ var appRouter = router({
   chatUpload: chatUploadRouter,
   hailuoImage: hailuoImageRouter,
   runpodVideo: runpodVideoRouter,
+  modoFala: modoFalaRouter,
+  videoCredits: videoCreditsRouter,
   users: router({
     list: protectedProcedure.query(async ({ ctx }) => {
       const dbConn = await getDb();
@@ -37200,18 +37842,18 @@ var appRouter = router({
     })
   }),
   dm: router({
-    history: protectedProcedure.input(z85.object({ withUserId: z85.number() })).query(async ({ ctx, input }) => {
+    history: protectedProcedure.input(z87.object({ withUserId: z87.number() })).query(async ({ ctx, input }) => {
       try {
         const dbConn = await getDb();
         if (!dbConn) return [];
-        const { or: or6, and: and91, eq: eq113, desc: desc54 } = await import("drizzle-orm");
+        const { or: or6, and: and92, eq: eq115, desc: desc55 } = await import("drizzle-orm");
         const { directMessages: directMessages2 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
         const msgs = await dbConn.select().from(directMessages2).where(
           or6(
-            and91(eq113(directMessages2.fromUserId, ctx.user.id), eq113(directMessages2.toUserId, input.withUserId)),
-            and91(eq113(directMessages2.fromUserId, input.withUserId), eq113(directMessages2.toUserId, ctx.user.id))
+            and92(eq115(directMessages2.fromUserId, ctx.user.id), eq115(directMessages2.toUserId, input.withUserId)),
+            and92(eq115(directMessages2.fromUserId, input.withUserId), eq115(directMessages2.toUserId, ctx.user.id))
           )
-        ).orderBy(desc54(directMessages2.createdAt)).limit(50);
+        ).orderBy(desc55(directMessages2.createdAt)).limit(50);
         return msgs.reverse();
       } catch (err) {
         console.error("[dm.history] Erro ao buscar mensagens:", err);
@@ -37241,30 +37883,30 @@ async function createContext(opts) {
 
 // server/_core/vite.ts
 import express from "express";
-import fs10 from "fs";
+import fs11 from "fs";
 import { nanoid } from "nanoid";
-import path11 from "path";
+import path12 from "path";
 import { createServer as createViteServer } from "vite";
 
 // vite.config.ts
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import path10 from "node:path";
+import path11 from "node:path";
 import { defineConfig } from "vite";
 var vite_config_default = defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
-      "@": path10.resolve(import.meta.dirname, "client", "src"),
-      "@shared": path10.resolve(import.meta.dirname, "shared"),
-      "@assets": path10.resolve(import.meta.dirname, "attached_assets")
+      "@": path11.resolve(import.meta.dirname, "client", "src"),
+      "@shared": path11.resolve(import.meta.dirname, "shared"),
+      "@assets": path11.resolve(import.meta.dirname, "attached_assets")
     }
   },
-  envDir: path10.resolve(import.meta.dirname),
-  root: path10.resolve(import.meta.dirname, "client"),
-  publicDir: path10.resolve(import.meta.dirname, "client", "public"),
+  envDir: path11.resolve(import.meta.dirname),
+  root: path11.resolve(import.meta.dirname, "client"),
+  publicDir: path11.resolve(import.meta.dirname, "client", "public"),
   build: {
-    outDir: path10.resolve(import.meta.dirname, "dist/public"),
+    outDir: path11.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
     rollupOptions: {
       output: {
@@ -37306,13 +37948,13 @@ async function setupVite(app, server) {
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
     try {
-      const clientTemplate = path11.resolve(
+      const clientTemplate = path12.resolve(
         import.meta.dirname,
         "../..",
         "client",
         "index.html"
       );
-      let template = await fs10.promises.readFile(clientTemplate, "utf-8");
+      let template = await fs11.promises.readFile(clientTemplate, "utf-8");
       template = template.replace(
         `src="/src/main.tsx"`,
         `src="/src/main.tsx?v=${nanoid()}"`
@@ -37326,15 +37968,15 @@ async function setupVite(app, server) {
   });
 }
 function serveStatic(app) {
-  const distPath = process.env.NODE_ENV === "development" ? path11.resolve(import.meta.dirname, "../..", "dist", "public") : path11.resolve(import.meta.dirname, "public");
-  if (!fs10.existsSync(distPath)) {
+  const distPath = process.env.NODE_ENV === "development" ? path12.resolve(import.meta.dirname, "../..", "dist", "public") : path12.resolve(import.meta.dirname, "public");
+  if (!fs11.existsSync(distPath)) {
     console.error(
       `Could not find the build directory: ${distPath}, make sure to build the client first`
     );
   }
   app.use(express.static(distPath));
   app.use("*", (_req, res) => {
-    res.sendFile(path11.resolve(distPath, "index.html"));
+    res.sendFile(path12.resolve(distPath, "index.html"));
   });
 }
 
@@ -37342,7 +37984,7 @@ function serveStatic(app) {
 init_db();
 init_schema();
 import crypto12 from "crypto";
-import { eq as eq94, and as and76 } from "drizzle-orm";
+import { eq as eq96, and as and77 } from "drizzle-orm";
 async function fireMetaCAPIPurchase(opts) {
   try {
     const pixelId = process.env.META_PIXEL_ID;
@@ -37432,7 +38074,7 @@ async function handleEstoqueCreated(data) {
       quantidadeDisponivel,
       dataAtualizacao: /* @__PURE__ */ new Date()
     });
-    await db.update(blingProdutos).set({ estoque: quantidade, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and76(eq94(blingProdutos.id, produtoId), eq94(blingProdutos.userId, userId)));
+    await db.update(blingProdutos).set({ estoque: quantidade, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and77(eq96(blingProdutos.id, produtoId), eq96(blingProdutos.userId, userId)));
     console.log(`[Bling Webhook] Estoque criado \u2014 produto ${produtoId} (SKU: ${produtoSku}), saldo: ${quantidade}`);
   } catch (error) {
     console.error("[Bling Webhook] Erro ao processar cria\xE7\xE3o de estoque:", error);
@@ -37455,9 +38097,9 @@ async function handleEstoqueUpdated(data) {
       return;
     }
     const userId = "system";
-    const existing = await db.select({ id: blingEstoque.id }).from(blingEstoque).where(and76(eq94(blingEstoque.produtoId, produtoId), eq94(blingEstoque.userId, userId))).limit(1);
+    const existing = await db.select({ id: blingEstoque.id }).from(blingEstoque).where(and77(eq96(blingEstoque.produtoId, produtoId), eq96(blingEstoque.userId, userId))).limit(1);
     if (existing.length > 0) {
-      await db.update(blingEstoque).set({ quantidade, quantidadeReservada, quantidadeDisponivel, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and76(eq94(blingEstoque.produtoId, produtoId), eq94(blingEstoque.userId, userId)));
+      await db.update(blingEstoque).set({ quantidade, quantidadeReservada, quantidadeDisponivel, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and77(eq96(blingEstoque.produtoId, produtoId), eq96(blingEstoque.userId, userId)));
     } else {
       await db.insert(blingEstoque).values({
         userId,
@@ -37469,7 +38111,7 @@ async function handleEstoqueUpdated(data) {
         dataAtualizacao: /* @__PURE__ */ new Date()
       });
     }
-    await db.update(blingProdutos).set({ estoque: quantidade, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and76(eq94(blingProdutos.id, produtoId), eq94(blingProdutos.userId, userId)));
+    await db.update(blingProdutos).set({ estoque: quantidade, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and77(eq96(blingProdutos.id, produtoId), eq96(blingProdutos.userId, userId)));
     console.log(`[Bling Webhook] Estoque atualizado \u2014 produto ${produtoId} (SKU: ${produtoSku}), novo saldo: ${quantidade}`);
   } catch (error) {
     console.error("[Bling Webhook] Erro ao processar atualiza\xE7\xE3o de estoque:", error);
@@ -37488,8 +38130,8 @@ async function handleEstoqueDeleted(data) {
       return;
     }
     const userId = "system";
-    await db.update(blingEstoque).set({ quantidade: 0, quantidadeReservada: 0, quantidadeDisponivel: 0, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and76(eq94(blingEstoque.produtoId, produtoId), eq94(blingEstoque.userId, userId)));
-    await db.update(blingProdutos).set({ estoque: 0, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and76(eq94(blingProdutos.id, produtoId), eq94(blingProdutos.userId, userId)));
+    await db.update(blingEstoque).set({ quantidade: 0, quantidadeReservada: 0, quantidadeDisponivel: 0, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and77(eq96(blingEstoque.produtoId, produtoId), eq96(blingEstoque.userId, userId)));
+    await db.update(blingProdutos).set({ estoque: 0, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and77(eq96(blingProdutos.id, produtoId), eq96(blingProdutos.userId, userId)));
     console.log(`[Bling Webhook] Estoque deletado \u2014 produto ${produtoId} zerado`);
   } catch (error) {
     console.error("[Bling Webhook] Erro ao processar exclus\xE3o de estoque:", error);
@@ -37532,8 +38174,8 @@ async function handlePedidoAtualizado(data) {
 
 // server/_core/deploy-webhook.ts
 import { exec } from "child_process";
-import * as fs11 from "fs";
-import * as path12 from "path";
+import * as fs12 from "fs";
+import * as path13 from "path";
 import * as crypto13 from "crypto";
 var DEPLOY_SECRET = process.env.DEPLOY_SECRET || "";
 function registerDeployWebhook(app) {
@@ -37555,9 +38197,9 @@ function registerDeployWebhook(app) {
     }
     const envVars = req.body?.envVars;
     if (envVars && typeof envVars === "object") {
-      const envPath = path12.join("/var/www/feminnita-marketing", ".env");
+      const envPath = path13.join("/var/www/feminnita-marketing", ".env");
       try {
-        let content = fs11.existsSync(envPath) ? fs11.readFileSync(envPath, "utf8") : "";
+        let content = fs12.existsSync(envPath) ? fs12.readFileSync(envPath, "utf8") : "";
         for (const [key, value] of Object.entries(envVars)) {
           if (!/^[A-Z_][A-Z0-9_]*$/.test(key)) continue;
           const line = `${key}=${value}`;
@@ -37568,7 +38210,7 @@ function registerDeployWebhook(app) {
             content = content.trimEnd() + "\n" + line + "\n";
           }
         }
-        fs11.writeFileSync(envPath, content, "utf8");
+        fs12.writeFileSync(envPath, content, "utf8");
         console.log("[Deploy] .env atualizado:", Object.keys(envVars).join(", "));
       } catch (e) {
         console.error("[Deploy] Erro ao atualizar .env:", e.message);
@@ -37805,7 +38447,7 @@ init_websocket_notifications();
 // server/agents/sync-agent.ts
 init_db();
 init_schema();
-import { eq as eq95, and as and77, isNotNull as isNotNull2 } from "drizzle-orm";
+import { eq as eq97, and as and78, isNotNull as isNotNull2 } from "drizzle-orm";
 var BLING_SYNC_INTERVAL_MS = 60 * 60 * 1e3;
 var META_SYNC_INTERVAL_MS = 30 * 60 * 1e3;
 async function syncBlingForUser(userId, accessToken) {
@@ -37826,8 +38468,8 @@ async function syncBlingForUser(userId, accessToken) {
         continue;
       }
       const data = await res.json();
-      const count = Array.isArray(data?.data) ? data.data.length : 0;
-      console.log(`[SyncAgent] Bling ${endpoint.name} userId=${userId} \u2014 ${count} registros`);
+      const count2 = Array.isArray(data?.data) ? data.data.length : 0;
+      console.log(`[SyncAgent] Bling ${endpoint.name} userId=${userId} \u2014 ${count2} registros`);
     } catch (err) {
       console.error(`[SyncAgent] Bling ${endpoint.name} userId=${userId} erro:`, err);
     }
@@ -37900,7 +38542,7 @@ async function runBlingSync() {
     return;
   }
   try {
-    const tokens = await db.select().from(oauthTokens).where(and77(eq95(oauthTokens.plataforma, "bling"), eq95(oauthTokens.isActive, true), isNotNull2(oauthTokens.accessToken)));
+    const tokens = await db.select().from(oauthTokens).where(and78(eq97(oauthTokens.plataforma, "bling"), eq97(oauthTokens.isActive, true), isNotNull2(oauthTokens.accessToken)));
     console.log(`[SyncAgent] Bling \u2014 ${tokens.length} usu\xE1rio(s) para sincronizar`);
     for (const token of tokens) {
       try {
@@ -37922,7 +38564,7 @@ async function runMetaSync() {
     return;
   }
   try {
-    const tokens = await db.select().from(oauthTokens).where(and77(eq95(oauthTokens.plataforma, "meta"), eq95(oauthTokens.isActive, true), isNotNull2(oauthTokens.accessToken)));
+    const tokens = await db.select().from(oauthTokens).where(and78(eq97(oauthTokens.plataforma, "meta"), eq97(oauthTokens.isActive, true), isNotNull2(oauthTokens.accessToken)));
     console.log(`[SyncAgent] Meta \u2014 ${tokens.length} usu\xE1rio(s) para sincronizar`);
     for (const token of tokens) {
       try {
@@ -37956,14 +38598,14 @@ function startSyncAgent() {
 // server/agents/token-refresh-agent.ts
 init_db();
 init_schema();
-import { eq as eq96, and as and78, lte as lte3, isNotNull as isNotNull3 } from "drizzle-orm";
+import { eq as eq98, and as and79, lte as lte3, isNotNull as isNotNull3 } from "drizzle-orm";
 async function seedMetaTokensIfMissing() {
   const db = await getDb();
   if (!db) return;
   const userToken = process.env.META_ACCESS_TOKEN;
   const pageToken = process.env.META_PAGE_ACCESS_TOKEN;
   if (!userToken && !pageToken) return;
-  const existing = await db.select({ id: oauthTokens.id }).from(oauthTokens).where(and78(eq96(oauthTokens.plataforma, "meta"), eq96(oauthTokens.isActive, true))).limit(1);
+  const existing = await db.select({ id: oauthTokens.id }).from(oauthTokens).where(and79(eq98(oauthTokens.plataforma, "meta"), eq98(oauthTokens.isActive, true))).limit(1);
   if (existing.length > 0) return;
   const now = /* @__PURE__ */ new Date();
   const expiresAt = new Date(now.getTime() + 55 * 24 * 60 * 60 * 1e3);
@@ -38084,8 +38726,8 @@ async function runTokenRefresh() {
   const threshold = new Date(Date.now() + EXPIRY_THRESHOLD_MS);
   try {
     const tokens = await db.select().from(oauthTokens).where(
-      and78(
-        eq96(oauthTokens.isActive, true),
+      and79(
+        eq98(oauthTokens.isActive, true),
         isNotNull3(oauthTokens.expiresAt),
         lte3(oauthTokens.expiresAt, threshold)
       )
@@ -38099,7 +38741,7 @@ async function runTokenRefresh() {
           accessToken: result.accessToken,
           expiresAt: result.expiresAt,
           updatedAt: /* @__PURE__ */ new Date()
-        }).where(eq96(oauthTokens.id, token.id));
+        }).where(eq98(oauthTokens.id, token.id));
         failureCount.delete(token.id);
         console.log(`[TokenRefresh] Token id=${token.id} renovado com sucesso \u2014 expira em ${result.expiresAt.toISOString()}`);
       } catch (err) {
@@ -38107,7 +38749,7 @@ async function runTokenRefresh() {
         failureCount.set(token.id, failures);
         console.error(`[TokenRefresh] Token id=${token.id} falhou (tentativa ${failures}/${MAX_RETRY_FAILURES}):`, err);
         if (failures >= MAX_RETRY_FAILURES) {
-          await db.update(oauthTokens).set({ isActive: false, updatedAt: /* @__PURE__ */ new Date() }).where(eq96(oauthTokens.id, token.id));
+          await db.update(oauthTokens).set({ isActive: false, updatedAt: /* @__PURE__ */ new Date() }).where(eq98(oauthTokens.id, token.id));
           failureCount.delete(token.id);
           console.warn(`[TokenRefresh] Token id=${token.id} desativado ap\xF3s ${MAX_RETRY_FAILURES} falhas consecutivas`);
         }
@@ -38148,7 +38790,7 @@ function startTokenRefreshAgent() {
 init_db();
 init_schema();
 init_llm();
-import { eq as eq97 } from "drizzle-orm";
+import { eq as eq99 } from "drizzle-orm";
 var lastRunDate2 = null;
 async function runContentGeneration() {
   const db = await getDb();
@@ -38159,7 +38801,7 @@ async function runContentGeneration() {
   console.log("[ContentAgent] Iniciando gera\xE7\xE3o de conte\xFAdo...");
   let activeInfluencers = [];
   try {
-    activeInfluencers = await db.select().from(influencers).where(eq97(influencers.isActive, true));
+    activeInfluencers = await db.select().from(influencers).where(eq99(influencers.isActive, true));
   } catch (err) {
     console.error("[ContentAgent] Erro ao buscar influencers:", err);
     return;
@@ -38249,7 +38891,7 @@ function startContentAgent() {
 // server/agents/alert-agent.ts
 init_db();
 init_schema();
-import { eq as eq98, and as and79 } from "drizzle-orm";
+import { eq as eq100, and as and80 } from "drizzle-orm";
 var notifyNewAlert2;
 try {
   notifyNewAlert2 = (init_websocket_notifications(), __toCommonJS(websocket_notifications_exports)).notifyNewAlert;
@@ -38330,7 +38972,7 @@ async function runAlertCheck() {
   }
   let tokens = [];
   try {
-    tokens = await db.select().from(oauthTokens).where(and79(eq98(oauthTokens.plataforma, "meta"), eq98(oauthTokens.isActive, true)));
+    tokens = await db.select().from(oauthTokens).where(and80(eq100(oauthTokens.plataforma, "meta"), eq100(oauthTokens.isActive, true)));
   } catch (err) {
     console.error("[AlertAgent] Erro ao buscar tokens:", err);
     return;
@@ -38347,10 +38989,10 @@ async function runAlertCheck() {
         for (const alertDef of thresholdAlerts) {
           try {
             const existing = await db.select().from(metaCampaignAlerts).where(
-              and79(
-                eq98(metaCampaignAlerts.campaignId, campaign.id),
-                eq98(metaCampaignAlerts.alertType, alertDef.alertType),
-                eq98(metaCampaignAlerts.isResolved, false)
+              and80(
+                eq100(metaCampaignAlerts.campaignId, campaign.id),
+                eq100(metaCampaignAlerts.alertType, alertDef.alertType),
+                eq100(metaCampaignAlerts.isResolved, false)
               )
             ).limit(1);
             if (existing.length > 0) continue;
@@ -38399,7 +39041,7 @@ function startAlertAgent() {
 // server/agents/performance-agent.ts
 init_db();
 init_schema();
-import { eq as eq99 } from "drizzle-orm";
+import { eq as eq101 } from "drizzle-orm";
 var CHECK_INTERVAL_MS = 5 * 60 * 1e3;
 var RUN_HOUR2 = 0;
 var lastRunDate3 = null;
@@ -38450,7 +39092,7 @@ async function runPerformanceCollection() {
     return;
   }
   try {
-    const activeInfluencers = await db.select().from(influencers).where(eq99(influencers.isActive, true));
+    const activeInfluencers = await db.select().from(influencers).where(eq101(influencers.isActive, true));
     console.log(`[PerformanceAgent] ${activeInfluencers.length} influencer(s) ativo(s)`);
     for (const influencer of activeInfluencers) {
       try {
@@ -38497,7 +39139,7 @@ function startPerformanceAgent() {
 // server/agents/publication-worker.ts
 init_db();
 init_schema();
-import { eq as eq100, and as and81, or as or5, lte as lte4 } from "drizzle-orm";
+import { eq as eq102, and as and82, or as or5, lte as lte4 } from "drizzle-orm";
 var MAX_JOBS_PER_CYCLE = 5;
 async function publishToInstagram2(instagramId, accessToken, caption, mediaUrls) {
   if (mediaUrls.length === 0) {
@@ -38556,9 +39198,9 @@ async function processJobs() {
   try {
     jobs = await db.select().from(publicationQueueJobs).where(
       or5(
-        eq100(publicationQueueJobs.status, "ready"),
-        and81(
-          eq100(publicationQueueJobs.status, "waiting"),
+        eq102(publicationQueueJobs.status, "ready"),
+        and82(
+          eq102(publicationQueueJobs.status, "waiting"),
           lte4(publicationQueueJobs.nextRetryTime, now)
         )
       )
@@ -38571,10 +39213,10 @@ async function processJobs() {
   console.log(`[PublicationWorker] Processando ${jobs.length} job(s)...`);
   for (const job of jobs) {
     try {
-      await db.update(publicationQueueJobs).set({ status: "processing" }).where(eq100(publicationQueueJobs.id, job.id));
-      const [post] = await db.select().from(influencerPosts).where(eq100(influencerPosts.id, job.postId)).limit(1);
+      await db.update(publicationQueueJobs).set({ status: "processing" }).where(eq102(publicationQueueJobs.id, job.id));
+      const [post] = await db.select().from(influencerPosts).where(eq102(influencerPosts.id, job.postId)).limit(1);
       if (!post) throw new Error(`Post id=${job.postId} n\xE3o encontrado.`);
-      const [account] = await db.select().from(instagramAccounts).where(eq100(instagramAccounts.id, job.accountId)).limit(1);
+      const [account] = await db.select().from(instagramAccounts).where(eq102(instagramAccounts.id, job.accountId)).limit(1);
       if (!account) throw new Error(`InstagramAccount id=${job.accountId} n\xE3o encontrada.`);
       const caption = post.caption ?? post.content ?? "";
       const mediaUrls = Array.isArray(post.mediaUrls) ? post.mediaUrls : [];
@@ -38584,19 +39226,19 @@ async function processJobs() {
         caption,
         mediaUrls
       );
-      await db.update(publicationQueueJobs).set({ status: "done" }).where(eq100(publicationQueueJobs.id, job.id));
-      await db.update(influencerPosts).set({ status: "published", publishedAt: now, postId: igPostId }).where(eq100(influencerPosts.id, job.postId));
+      await db.update(publicationQueueJobs).set({ status: "done" }).where(eq102(publicationQueueJobs.id, job.id));
+      await db.update(influencerPosts).set({ status: "published", publishedAt: now, postId: igPostId }).where(eq102(influencerPosts.id, job.postId));
       console.log(`[PublicationWorker] Job ${job.id} publicado. IG postId=${igPostId}`);
     } catch (err) {
       console.error(`[PublicationWorker] Erro no job ${job.id}:`, err);
       const newRetryCount = job.retryCount + 1;
       if (newRetryCount >= job.maxRetries) {
-        await db.update(publicationQueueJobs).set({ status: "failed", retryCount: newRetryCount, lastError: String(err) }).where(eq100(publicationQueueJobs.id, job.id));
+        await db.update(publicationQueueJobs).set({ status: "failed", retryCount: newRetryCount, lastError: String(err) }).where(eq102(publicationQueueJobs.id, job.id));
         console.log(`[PublicationWorker] Job ${job.id} marcado como failed ap\xF3s ${newRetryCount} tentativas.`);
       } else {
         const backoffMs = Math.pow(newRetryCount, 2) * 5 * 60 * 1e3;
         const nextRetryTime = new Date(Date.now() + backoffMs);
-        await db.update(publicationQueueJobs).set({ status: "waiting", retryCount: newRetryCount, lastError: String(err), nextRetryTime }).where(eq100(publicationQueueJobs.id, job.id));
+        await db.update(publicationQueueJobs).set({ status: "waiting", retryCount: newRetryCount, lastError: String(err), nextRetryTime }).where(eq102(publicationQueueJobs.id, job.id));
         console.log(`[PublicationWorker] Job ${job.id} reagendado para ${nextRetryTime.toISOString()} (tentativa ${newRetryCount}).`);
       }
     }
@@ -38617,7 +39259,7 @@ function startPublicationWorker() {
 init_db();
 init_schema();
 init_llm();
-import { eq as eq101 } from "drizzle-orm";
+import { eq as eq103 } from "drizzle-orm";
 var lastRunDate4 = null;
 var RUN_HOUR3 = 7;
 async function runMarketResearchLLM(today) {
@@ -38751,7 +39393,7 @@ async function resolveAdminUserId() {
   try {
     const db = await getDb();
     if (!db) return 1;
-    const adminUsers = await db.select({ id: users.id }).from(users).where(eq101(users.role, "admin")).limit(1);
+    const adminUsers = await db.select({ id: users.id }).from(users).where(eq103(users.role, "admin")).limit(1);
     return adminUsers[0]?.id ?? 1;
   } catch {
     return 1;
@@ -38855,7 +39497,7 @@ function startMarketResearchAgent() {
 init_db();
 init_schema();
 init_llm();
-import { eq as eq102, desc as desc50 } from "drizzle-orm";
+import { eq as eq104, desc as desc51 } from "drizzle-orm";
 var CHECK_INTERVAL_MS2 = 30 * 60 * 1e3;
 async function processPendingBriefs() {
   const db = await getDb();
@@ -38866,7 +39508,7 @@ async function processPendingBriefs() {
   console.log("[Copywriter] Buscando briefs pendentes...");
   let pendingBriefs = [];
   try {
-    pendingBriefs = await db.select().from(contentBriefs).where(eq102(contentBriefs.status, "pending")).limit(10);
+    pendingBriefs = await db.select().from(contentBriefs).where(eq104(contentBriefs.status, "pending")).limit(10);
   } catch (err) {
     console.error("[Copywriter] Erro ao buscar briefs:", err);
     return;
@@ -38878,7 +39520,7 @@ async function processPendingBriefs() {
   console.log(`[Copywriter] ${pendingBriefs.length} brief(s) para processar.`);
   let lastReport = null;
   try {
-    const reports = await db.select().from(marketingResearchReports).orderBy(desc50(marketingResearchReports.createdAt)).limit(1);
+    const reports = await db.select().from(marketingResearchReports).orderBy(desc51(marketingResearchReports.createdAt)).limit(1);
     lastReport = reports[0] ?? null;
   } catch (err) {
     console.error("[Copywriter] Erro ao buscar research report:", err);
@@ -38888,7 +39530,7 @@ async function processPendingBriefs() {
       let influencer = null;
       if (brief.influencerId) {
         try {
-          const rows = await db.select().from(influencers).where(eq102(influencers.id, brief.influencerId)).limit(1);
+          const rows = await db.select().from(influencers).where(eq104(influencers.id, brief.influencerId)).limit(1);
           influencer = rows[0] ?? null;
         } catch (err) {
           console.error(`[Copywriter] Erro ao buscar influencer id=${brief.influencerId}:`, err);
@@ -39048,7 +39690,7 @@ async function processPendingBriefs() {
         const raw = response.choices[0].message.content;
         generatedContent = JSON.parse(typeof raw === "string" ? raw : JSON.stringify(raw));
       }
-      await db.update(contentBriefs).set({ generatedContent, status: "generated" }).where(eq102(contentBriefs.id, brief.id));
+      await db.update(contentBriefs).set({ generatedContent, status: "generated" }).where(eq104(contentBriefs.id, brief.id));
       console.log(`[Copywriter] Brief id=${brief.id} (${brief.briefType}) gerado para ${influencerName}.`);
     } catch (err) {
       console.error(`[Copywriter] Erro ao processar brief id=${brief.id}:`, err);
@@ -39073,7 +39715,7 @@ function startCopywriterAgent() {
 init_db();
 init_schema();
 init_llm();
-import { eq as eq103, desc as desc51 } from "drizzle-orm";
+import { eq as eq105, desc as desc52 } from "drizzle-orm";
 var CHECK_INTERVAL_MS3 = 60 * 60 * 1e3;
 var RUN_DAY = 1;
 var RUN_HOUR4 = 8;
@@ -39095,7 +39737,7 @@ async function generateWeeklyContentPlan() {
   console.log("[CreativeTeam] Gerando plano de conte\xFAdo semanal...");
   let lastReport = null;
   try {
-    const reports = await db.select().from(marketingResearchReports).orderBy(desc51(marketingResearchReports.createdAt)).limit(1);
+    const reports = await db.select().from(marketingResearchReports).orderBy(desc52(marketingResearchReports.createdAt)).limit(1);
     lastReport = reports[0] ?? null;
   } catch (err) {
     console.error("[CreativeTeam] Erro ao buscar research report:", err);
@@ -39113,7 +39755,7 @@ async function generateWeeklyContentPlan() {
   }
   let activeInfluencers = [];
   try {
-    activeInfluencers = await db.select().from(influencers).where(eq103(influencers.isActive, true));
+    activeInfluencers = await db.select().from(influencers).where(eq105(influencers.isActive, true));
   } catch (err) {
     console.error("[CreativeTeam] Erro ao buscar influencers:", err);
     return;
@@ -39234,7 +39876,7 @@ function startCreativeTeamAgent() {
 init_db();
 init_schema();
 init_llm();
-import { eq as eq104, and as and83, inArray as inArray9 } from "drizzle-orm";
+import { eq as eq106, and as and84, inArray as inArray9 } from "drizzle-orm";
 var CHECK_INTERVAL_MS4 = 5 * 60 * 1e3;
 async function processNewCollections() {
   const db = await getDb();
@@ -39246,9 +39888,9 @@ async function processNewCollections() {
   let pendingCollections = [];
   try {
     pendingCollections = await db.select().from(productCollections).where(
-      and83(
-        eq104(productCollections.status, "ativo"),
-        eq104(productCollections.briefsGenerated, false)
+      and84(
+        eq106(productCollections.status, "ativo"),
+        eq106(productCollections.briefsGenerated, false)
       )
     );
   } catch (err) {
@@ -39300,7 +39942,7 @@ async function processNewCollections() {
       }
       if (collectionAnalysis) {
         try {
-          await db.update(productCollections).set({ contentPlan: { llmAnalysis: collectionAnalysis } }).where(eq104(productCollections.id, collection.id));
+          await db.update(productCollections).set({ contentPlan: { llmAnalysis: collectionAnalysis } }).where(eq106(productCollections.id, collection.id));
         } catch (err) {
           console.error(`[LaunchAgent] Erro ao salvar content_plan id=${collection.id}:`, err);
         }
@@ -39349,7 +39991,7 @@ async function processNewCollections() {
           );
         }
       }
-      await db.update(productCollections).set({ briefsGenerated: true }).where(eq104(productCollections.id, collection.id));
+      await db.update(productCollections).set({ briefsGenerated: true }).where(eq106(productCollections.id, collection.id));
       console.log(
         `[LaunchAgent] Cole\xE7\xE3o id=${collection.id} processada \u2014 ${briefsInserted} brief(s) criados.`
       );
@@ -39379,7 +40021,7 @@ init_llm();
 init_agentMemory();
 init_db();
 init_schema();
-import { eq as eq105, desc as desc52 } from "drizzle-orm";
+import { eq as eq107, desc as desc53 } from "drizzle-orm";
 var INFLUENCER_PROFILES2 = {
   carol: {
     agentName: "carol",
@@ -39462,7 +40104,7 @@ async function loadPerformanceHistory(influencerDbId) {
   try {
     const db = await getDb();
     if (!db) return "Sem hist\xF3rico de performance dispon\xEDvel.";
-    const recentPosts = await db.select().from(influencerPosts).where(eq105(influencerPosts.influencerId, influencerDbId)).orderBy(desc52(influencerPosts.publishedAt)).limit(10);
+    const recentPosts = await db.select().from(influencerPosts).where(eq107(influencerPosts.influencerId, influencerDbId)).orderBy(desc53(influencerPosts.publishedAt)).limit(10);
     if (recentPosts.length === 0) return "Primeiros posts ainda ser\xE3o criados \u2014 sem hist\xF3rico.";
     const summary = recentPosts.map((p) => {
       const metrics = p.engagementMetrics;
@@ -39615,7 +40257,7 @@ async function runInfluencerAgent(agentName) {
   try {
     const db = await getDb();
     if (!db) throw new Error("DB indispon\xEDvel");
-    const dbRecord = await db.select({ id: influencers.id }).from(influencers).where(eq105(influencers.instagramHandle, profile.instagramHandle)).limit(1);
+    const dbRecord = await db.select({ id: influencers.id }).from(influencers).where(eq107(influencers.instagramHandle, profile.instagramHandle)).limit(1);
     const influencerDbId = dbRecord[0]?.id ?? 0;
     const [memoryContext, performanceHistory, trendData] = await Promise.all([
       buildMemoryContext(agentName),
@@ -39656,7 +40298,7 @@ async function runAllInfluencerAgents() {
 init_db();
 init_schema();
 init_ml_ads_browser_agent();
-import { eq as eq106, and as and84 } from "drizzle-orm";
+import { eq as eq108, and as and85 } from "drizzle-orm";
 var INTERVAL_MS = 5 * 60 * 1e3;
 function startMLActionsExecutor() {
   let running = false;
@@ -39667,11 +40309,11 @@ function startMLActionsExecutor() {
       const db = await getDb();
       if (!db) return;
       const { or: or6 } = await import("drizzle-orm");
-      const pending = await db.select().from(agentActions).where(and84(
-        eq106(agentActions.agentName, "gabi"),
+      const pending = await db.select().from(agentActions).where(and85(
+        eq108(agentActions.agentName, "gabi"),
         or6(
-          eq106(agentActions.status, "pending"),
-          eq106(agentActions.status, "approved")
+          eq108(agentActions.status, "pending"),
+          eq108(agentActions.status, "approved")
         )
         // Filtra apenas ações de ML Ads (não scrape, que o playwright-agent Python já cuida)
         // pause_ads_campaign | activate_ads_campaign | update_ads_budget
@@ -39679,7 +40321,7 @@ function startMLActionsExecutor() {
       if (pending.length === 0) return;
       console.log(`[MLExecutor] ${pending.length} a\xE7\xE3o(\xF5es) pendente(s) \u2014 abrindo browser`);
       for (const action of pending) {
-        await db.update(agentActions).set({ status: "executing" }).where(eq106(agentActions.id, action.id));
+        await db.update(agentActions).set({ status: "executing" }).where(eq108(agentActions.id, action.id));
       }
       const byAccount = /* @__PURE__ */ new Map();
       for (const action of pending) {
@@ -39701,7 +40343,7 @@ function startMLActionsExecutor() {
         } catch (e) {
           console.error(`[MLExecutor] Browser falhou para ${account}:`, e.message);
           for (const action of accountActions) {
-            await db.update(agentActions).set({ status: "pending", executionLog: `ERRO browser: ${e.message}` }).where(eq106(agentActions.id, action.id));
+            await db.update(agentActions).set({ status: "pending", executionLog: `ERRO browser: ${e.message}` }).where(eq108(agentActions.id, action.id));
           }
           continue;
         }
@@ -39715,7 +40357,7 @@ function startMLActionsExecutor() {
             status: nextStatus,
             executedAt: isError ? void 0 : /* @__PURE__ */ new Date(),
             executionLog: log
-          }).where(eq106(agentActions.id, action.id));
+          }).where(eq108(agentActions.id, action.id));
         }
       }
       console.log(`[MLExecutor] Ciclo conclu\xEDdo`);
@@ -39734,16 +40376,16 @@ function startMLActionsExecutor() {
 // server/agents/shopee-actions-executor.ts
 init_db();
 init_schema();
-import { eq as eq107, and as and85 } from "drizzle-orm";
+import { eq as eq109, and as and86 } from "drizzle-orm";
 
 // server/agents/shopee-ads-browser-agent.ts
 import { chromium as chromium2 } from "playwright";
-import fs12 from "fs";
-import path13 from "path";
-var SESSIONS_DIR2 = path13.join(process.cwd(), ".shopee-sessions");
+import fs13 from "fs";
+import path14 from "path";
+var SESSIONS_DIR2 = path14.join(process.cwd(), ".shopee-sessions");
 var SELLER_CENTER_URL2 = "https://seller.shopee.com.br/portal/ads-management/";
 var LOGIN_URL2 = "https://seller.shopee.com.br/";
-if (!fs12.existsSync(SESSIONS_DIR2)) fs12.mkdirSync(SESSIONS_DIR2, { recursive: true });
+if (!fs13.existsSync(SESSIONS_DIR2)) fs13.mkdirSync(SESSIONS_DIR2, { recursive: true });
 var runningInstances2 = /* @__PURE__ */ new Map();
 function withMutex2(key, fn) {
   const existing = runningInstances2.get(key);
@@ -39756,17 +40398,17 @@ function withMutex2(key, fn) {
   return promise;
 }
 function sessionFile2(account) {
-  return path13.join(SESSIONS_DIR2, `shopee-session-${account}.json`);
+  return path14.join(SESSIONS_DIR2, `shopee-session-${account}.json`);
 }
 async function saveSession2(context, account) {
   const cookies = await context.cookies();
-  fs12.writeFileSync(sessionFile2(account), JSON.stringify(cookies, null, 2));
+  fs13.writeFileSync(sessionFile2(account), JSON.stringify(cookies, null, 2));
 }
 async function loadSession2(context, account) {
   const file = sessionFile2(account);
-  if (!fs12.existsSync(file)) return false;
+  if (!fs13.existsSync(file)) return false;
   try {
-    const cookies = JSON.parse(fs12.readFileSync(file, "utf8"));
+    const cookies = JSON.parse(fs13.readFileSync(file, "utf8"));
     await context.addCookies(cookies);
     return true;
   } catch {
@@ -40037,11 +40679,11 @@ function startShopeeActionsExecutor() {
     try {
       const db = await getDb();
       if (!db) return;
-      const pending = await db.select().from(agentActions).where(and85(eq107(agentActions.agentName, "luiza"), eq107(agentActions.status, "pending")));
+      const pending = await db.select().from(agentActions).where(and86(eq109(agentActions.agentName, "luiza"), eq109(agentActions.status, "pending")));
       if (pending.length === 0) return;
       console.log(`[ShopeeExecutor] ${pending.length} a\xE7\xE3o(\xF5es) pendente(s) \u2014 executando via browser`);
       for (const action of pending) {
-        await db.update(agentActions).set({ status: "executing" }).where(eq107(agentActions.id, action.id));
+        await db.update(agentActions).set({ status: "executing" }).where(eq109(agentActions.id, action.id));
         const payload = action.payload;
         const acc = payload?.account || "feminnita";
         const campaignId = String(payload?.campaignId || "");
@@ -40065,11 +40707,11 @@ function startShopeeActionsExecutor() {
               log = `Tipo n\xE3o suportado: ${action.actionType}`;
           }
           console.log(`[ShopeeExecutor] \u2705 id=${action.id}: ${log}`);
-          await db.update(agentActions).set({ status: "done", executedAt: /* @__PURE__ */ new Date(), executionLog: log }).where(eq107(agentActions.id, action.id));
+          await db.update(agentActions).set({ status: "done", executedAt: /* @__PURE__ */ new Date(), executionLog: log }).where(eq109(agentActions.id, action.id));
         } catch (e) {
           log = `ERRO: ${e.message}`;
           console.error(`[ShopeeExecutor] \u274C id=${action.id}: ${log}`);
-          await db.update(agentActions).set({ status: "pending", executionLog: log }).where(eq107(agentActions.id, action.id));
+          await db.update(agentActions).set({ status: "pending", executionLog: log }).where(eq109(agentActions.id, action.id));
         }
       }
       console.log(`[ShopeeExecutor] Ciclo conclu\xEDdo`);
@@ -40088,16 +40730,16 @@ function startShopeeActionsExecutor() {
 // server/agents/tray-actions-executor.ts
 init_db();
 init_schema();
-import { eq as eq108, and as and86 } from "drizzle-orm";
+import { eq as eq110, and as and87 } from "drizzle-orm";
 
 // server/agents/tray-browser-agent.ts
 import { chromium as chromium3 } from "playwright";
-import fs13 from "fs";
-import path14 from "path";
-var SESSIONS_DIR3 = path14.join(process.cwd(), ".tray-sessions");
+import fs14 from "fs";
+import path15 from "path";
+var SESSIONS_DIR3 = path15.join(process.cwd(), ".tray-sessions");
 var TRAY_STORE_URL2 = process.env.TRAY_STORE_URL || "https://feminnita.com.br";
 var ADMIN_URL = `${TRAY_STORE_URL2}/admin`;
-if (!fs13.existsSync(SESSIONS_DIR3)) fs13.mkdirSync(SESSIONS_DIR3, { recursive: true });
+if (!fs14.existsSync(SESSIONS_DIR3)) fs14.mkdirSync(SESSIONS_DIR3, { recursive: true });
 var runningInstance = null;
 function withMutex3(fn) {
   if (runningInstance) {
@@ -40110,15 +40752,15 @@ function withMutex3(fn) {
   runningInstance = promise;
   return promise;
 }
-var SESSION_FILE = path14.join(SESSIONS_DIR3, "tray-session.json");
+var SESSION_FILE = path15.join(SESSIONS_DIR3, "tray-session.json");
 async function saveSession3(context) {
   const cookies = await context.cookies();
-  fs13.writeFileSync(SESSION_FILE, JSON.stringify(cookies, null, 2));
+  fs14.writeFileSync(SESSION_FILE, JSON.stringify(cookies, null, 2));
 }
 async function loadSession3(context) {
-  if (!fs13.existsSync(SESSION_FILE)) return false;
+  if (!fs14.existsSync(SESSION_FILE)) return false;
   try {
-    const cookies = JSON.parse(fs13.readFileSync(SESSION_FILE, "utf8"));
+    const cookies = JSON.parse(fs14.readFileSync(SESSION_FILE, "utf8"));
     await context.addCookies(cookies);
     return true;
   } catch {
@@ -40252,11 +40894,11 @@ function startTrayActionsExecutor() {
     try {
       const db = await getDb();
       if (!db) return;
-      const pending = await db.select().from(agentActions).where(and86(eq108(agentActions.agentName, "duda"), eq108(agentActions.status, "pending")));
+      const pending = await db.select().from(agentActions).where(and87(eq110(agentActions.agentName, "duda"), eq110(agentActions.status, "pending")));
       if (pending.length === 0) return;
       console.log(`[TrayExecutor] ${pending.length} a\xE7\xE3o(\xF5es) pendente(s) \u2014 abrindo browser`);
       for (const action of pending) {
-        await db.update(agentActions).set({ status: "executing" }).where(eq108(agentActions.id, action.id));
+        await db.update(agentActions).set({ status: "executing" }).where(eq110(agentActions.id, action.id));
       }
       const batchActions = pending.map((a) => {
         const p = a.payload || {};
@@ -40276,7 +40918,7 @@ function startTrayActionsExecutor() {
       } catch (e) {
         console.error(`[TrayExecutor] Browser falhou:`, e.message);
         for (const action of pending) {
-          await db.update(agentActions).set({ status: "pending", executionLog: `ERRO browser: ${e.message}` }).where(eq108(agentActions.id, action.id));
+          await db.update(agentActions).set({ status: "pending", executionLog: `ERRO browser: ${e.message}` }).where(eq110(agentActions.id, action.id));
         }
         return;
       }
@@ -40288,7 +40930,7 @@ function startTrayActionsExecutor() {
           status: isError ? "pending" : "done",
           executedAt: isError ? void 0 : /* @__PURE__ */ new Date(),
           executionLog: log
-        }).where(eq108(agentActions.id, action.id));
+        }).where(eq110(agentActions.id, action.id));
       }
       console.log(`[TrayExecutor] Ciclo conclu\xEDdo`);
     } catch (err) {
@@ -40306,7 +40948,7 @@ function startTrayActionsExecutor() {
 // server/agents/ml-ads-api.ts
 init_db();
 init_schema();
-import { eq as eq109, and as and87 } from "drizzle-orm";
+import { eq as eq111, and as and88 } from "drizzle-orm";
 var ML_BASE3 = "https://api.mercadolibre.com";
 function getToken2(account) {
   return account === "fnt" ? process.env.ML_ACCESS_TOKEN_2 || "" : process.env.ML_ACCESS_TOKEN_1 || "";
@@ -40314,10 +40956,10 @@ function getToken2(account) {
 function getAdvertiserId2(account) {
   return account === "fnt" ? process.env.ML_ADVERTISER_ID_2 || "" : process.env.ML_ADVERTISER_ID_1 || "";
 }
-async function mlFetch(method, path15, account, body) {
+async function mlFetch(method, path16, account, body) {
   const token = getToken2(account);
   if (!token) throw new Error(`Token ML n\xE3o configurado para ${account}`);
-  const res = await fetch(`${ML_BASE3}${path15}`, {
+  const res = await fetch(`${ML_BASE3}${path16}`, {
     method,
     headers: {
       Authorization: `Bearer ${token}`,
@@ -40334,7 +40976,7 @@ async function mlFetch(method, path15, account, body) {
   }
   if (!res.ok) {
     const msg = data?.message || data?.error || JSON.stringify(data).slice(0, 200);
-    throw new Error(`ML API ${method} ${path15} \u2192 HTTP ${res.status}: ${msg}`);
+    throw new Error(`ML API ${method} ${path16} \u2192 HTTP ${res.status}: ${msg}`);
   }
   return data;
 }
@@ -40382,7 +41024,7 @@ async function apiScrapeMLMetrics(account = "feminnita") {
       console.error("[MLMetrics] Banco indispon\xEDvel");
       return 0;
     }
-    await db.delete(marketplaceAdsMetrics).where(and87(eq109(marketplaceAdsMetrics.platform, "ml"), eq109(marketplaceAdsMetrics.account, account)));
+    await db.delete(marketplaceAdsMetrics).where(and88(eq111(marketplaceAdsMetrics.platform, "ml"), eq111(marketplaceAdsMetrics.account, account)));
     const now = /* @__PURE__ */ new Date();
     const rows = campaigns3.map((c) => {
       const budget = Number(c.budget || 0);
@@ -40466,8 +41108,8 @@ function startMLMetricsCollector() {
   async function run() {
     for (const account of ["feminnita", "fnt"]) {
       try {
-        const count = await apiScrapeMLMetrics(account);
-        console.log(`[MLMetrics] ${account}: ${count} m\xE9tricas atualizadas`);
+        const count2 = await apiScrapeMLMetrics(account);
+        console.log(`[MLMetrics] ${account}: ${count2} m\xE9tricas atualizadas`);
       } catch (e) {
         console.error(`[MLMetrics] Erro ao coletar m\xE9tricas (${account}):`, e.message);
       }
@@ -40518,7 +41160,7 @@ function startAllAgents() {
 // server/services/blog-server.ts
 init_db();
 init_schema();
-import { eq as eq110, desc as desc53, and as and88 } from "drizzle-orm";
+import { eq as eq112, desc as desc54, and as and89 } from "drizzle-orm";
 function mdToHtml(md) {
   return md.replace(/^### (.+)$/gm, "<h3>$1</h3>").replace(/^## (.+)$/gm, "<h2>$1</h2>").replace(/^# (.+)$/gm, "<h1>$1</h1>").replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\*(.+?)\*/g, "<em>$1</em>").replace(/^> (.+)$/gm, "<blockquote>$1</blockquote>").replace(/^- (.+)$/gm, "<li>$1</li>").replace(/(<li>.*<\/li>\n?)+/g, (m) => `<ul>${m}</ul>`).replace(/\n\n/g, "</p><p>").replace(/^(?!<[a-z])/gm, "").replace(/^(.+)$/gm, (line) => line.match(/^<[a-z]/) ? line : `<p>${line}</p>`);
 }
@@ -40840,7 +41482,7 @@ function registerBlogRoutes(app) {
     try {
       const db = await getDb();
       if (!db) return res.status(503).send("Banco indispon\xEDvel");
-      const posts = await db.select().from(blogPosts).where(eq110(blogPosts.status, "published")).orderBy(desc53(blogPosts.publishedAt)).limit(20);
+      const posts = await db.select().from(blogPosts).where(eq112(blogPosts.status, "published")).orderBy(desc54(blogPosts.publishedAt)).limit(20);
       res.setHeader("Content-Type", "application/rss+xml; charset=utf-8");
       res.send(renderRss(posts));
     } catch (e) {
@@ -40851,7 +41493,7 @@ function registerBlogRoutes(app) {
     try {
       const db = await getDb();
       if (!db) return res.status(503).send("Banco indispon\xEDvel");
-      const [post] = await db.select().from(blogPosts).where(and88(eq110(blogPosts.slug, req.params.slug), eq110(blogPosts.status, "published"))).limit(1);
+      const [post] = await db.select().from(blogPosts).where(and89(eq112(blogPosts.slug, req.params.slug), eq112(blogPosts.status, "published"))).limit(1);
       if (!post) return res.status(404).send(layout({
         title: "Artigo n\xE3o encontrado \u2014 Blog Feminnita",
         body: `<div style="margin-top:120px;text-align:center;padding:4rem 1rem;">
@@ -40869,7 +41511,7 @@ function registerBlogRoutes(app) {
     try {
       const db = await getDb();
       if (!db) return res.status(503).send("Banco indispon\xEDvel");
-      const posts = await db.select().from(blogPosts).where(eq110(blogPosts.status, "published")).orderBy(desc53(blogPosts.publishedAt)).limit(50);
+      const posts = await db.select().from(blogPosts).where(eq112(blogPosts.status, "published")).orderBy(desc54(blogPosts.publishedAt)).limit(50);
       res.send(renderListPage(posts));
     } catch (e) {
       res.status(500).send("Erro ao carregar blog");
@@ -41014,11 +41656,11 @@ async function startServer() {
   app.get("/api/debug/agent-actions", async (_req, res) => {
     try {
       const { getDb: getDb2 } = await Promise.resolve().then(() => (init_db(), db_exports));
-      const { desc: desc54, eq: eq113 } = await import("drizzle-orm");
+      const { desc: desc55, eq: eq115 } = await import("drizzle-orm");
       const { agentActions: agentActions2 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
       const db = await getDb2();
       if (!db) return res.status(503).json({ error: "Banco indispon\xEDvel" });
-      const rows = await db.select().from(agentActions2).where(eq113(agentActions2.agentName, "gabi")).orderBy(desc54(agentActions2.createdAt)).limit(20);
+      const rows = await db.select().from(agentActions2).where(eq115(agentActions2.agentName, "gabi")).orderBy(desc55(agentActions2.createdAt)).limit(20);
       return res.json({
         count: rows.length,
         actions: rows.map((r) => ({
@@ -41092,15 +41734,15 @@ async function startServer() {
     createExpressMiddleware({
       router: appRouter,
       createContext,
-      onError({ path: path15, error }) {
-        console.error(`[tRPC Error] ${path15}:`, error.message);
+      onError({ path: path16, error }) {
+        console.error(`[tRPC Error] ${path16}:`, error.message);
       }
     })
   );
-  const { default: fs14 } = await import("fs");
+  const { default: fs15 } = await import("fs");
   const { default: pathMod } = await import("path");
   const uploadsPath = pathMod.resolve(process.cwd(), "uploads");
-  if (!fs14.existsSync(uploadsPath)) fs14.mkdirSync(uploadsPath, { recursive: true });
+  if (!fs15.existsSync(uploadsPath)) fs15.mkdirSync(uploadsPath, { recursive: true });
   app.use("/uploads", express2.static(uploadsPath));
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
