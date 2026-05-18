@@ -1701,10 +1701,50 @@ export const videoJobs = mysqlTable("video_jobs", {
   id:              int("id").autoincrement().primaryKey(),
   userId:          int("userId").notNull(),
   runpodJobId:     varchar("runpodJobId", { length: 100 }).notNull(),
+  mode:            mysqlEnum("mode", ["livre", "runningup"]).default("livre").notNull(),
   status:          mysqlEnum("status", ["queued", "processing", "completed", "failed", "cancelled"]).default("queued").notNull(),
-  durationSeconds: int("durationSeconds").default(15).notNull(),
+  durationSeconds: int("durationSeconds").default(6).notNull(),
   errorMessage:    varchar("errorMessage", { length: 500 }),
   completedAt:     timestamp("completedAt"),
   createdAt:       timestamp("createdAt").defaultNow().notNull(),
 });
 export type VideoJob = typeof videoJobs.$inferSelect;
+
+// Plano de vídeo por usuário — créditos pré-pagos + limites mensais legados
+export const videoPlans = mysqlTable("video_plans", {
+  id:                     int("id").autoincrement().primaryKey(),
+  userId:                 int("userId").notNull().unique(),
+  livreMonthlyLimit:      int("livreMonthlyLimit").default(0).notNull(),
+  runningUpMonthlyLimit:  int("runningUpMonthlyLimit").default(0).notNull(),
+  livreExtraCredits:      int("livreExtraCredits").default(0).notNull(),
+  runningUpExtraCredits:  int("runningUpExtraCredits").default(0).notNull(),
+  imageMonthlyLimit:      int("imageMonthlyLimit").default(50).notNull(),
+  imageExtraCredits:      int("imageExtraCredits").default(0).notNull(),
+  videoCreditsBalance:    int("videoCreditsBalance").default(0).notNull(),
+  updatedAt:              timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+export type VideoPlan = typeof videoPlans.$inferSelect;
+
+// Compras de créditos de vídeo via Asaas
+export const videoCreditOrders = mysqlTable("video_credit_orders", {
+  id:               int("id").autoincrement().primaryKey(),
+  userId:           int("userId").notNull(),
+  packageId:        varchar("packageId", { length: 50 }).notNull(),
+  credits:          int("credits").notNull(),
+  amountBrl:        varchar("amountBrl", { length: 20 }).notNull(),
+  asaasPaymentId:   varchar("asaasPaymentId", { length: 100 }),
+  asaasPaymentUrl:  varchar("asaasPaymentUrl", { length: 500 }),
+  status:           mysqlEnum("status", ["pending", "paid", "failed"]).default("pending").notNull(),
+  createdAt:        timestamp("createdAt").defaultNow().notNull(),
+  paidAt:           timestamp("paidAt"),
+});
+export type VideoCreditOrder = typeof videoCreditOrders.$inferSelect;
+
+export const imageJobs = mysqlTable("image_jobs", {
+  id:        int("id").autoincrement().primaryKey(),
+  userId:    int("userId").notNull(),
+  jobId:     varchar("jobId", { length: 100 }).notNull(),
+  status:    mysqlEnum("status", ["completed", "failed"]).default("completed").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type ImageJob = typeof imageJobs.$inferSelect;

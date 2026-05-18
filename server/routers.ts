@@ -106,6 +106,8 @@ import { agentTasksRouter } from "./routers/agent-tasks";
 import { chatUploadRouter } from "./routers/chat-upload";
 import { hailuoImageRouter } from "./routers/hailuo-image";
 import { runpodVideoRouter } from "./routers/runpod-video";
+import { modoFalaRouter } from "./routers/modo-fala";
+import { videoCreditsRouter } from "./routers/video-credits";
 import { ga4Router } from "./routers/ga4";
 import { portalRouter } from "./routers/portal";
 import { getDb } from "./db";
@@ -451,6 +453,8 @@ export const appRouter = router({
   chatUpload: chatUploadRouter,
   hailuoImage: hailuoImageRouter,
   runpodVideo: runpodVideoRouter,
+  modoFala: modoFalaRouter,
+  videoCredits: videoCreditsRouter,
 
   users: router({
     list: protectedProcedure.query(async ({ ctx }) => {

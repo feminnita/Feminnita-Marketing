@@ -1,96 +1,88 @@
 import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { getDb } from "../db";
-import { videoJobs } from "../../drizzle/schema";
-import { eq, desc } from "drizzle-orm";
+import { videoJobs, videoPlans } from "../../drizzle/schema";
+import { eq, desc, and, gte, count } from "drizzle-orm";
+import { debitCredits } from "./video-credits";
+import Anthropic from "@anthropic-ai/sdk";
 
-// ── fal.ai — Modo Livre (WanVideo I2V) ───────────────────────────────────────
-const FAL_BASE = "https://queue.fal.run";
-const FAL_MODEL = "fal-ai/wan/v2.2/i2v";
+// ── Prompt optimizer (Claude Haiku) ──────────────────────────────────────────
+async function optimizeVideoPrompt(userPrompt: string): Promise<string> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return userPrompt;
+  try {
+    const client = new Anthropic({ apiKey });
+    const msg = await client.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 300,
+      messages: [{
+        role: "user",
+        content: `You are a video generation prompt engineer for WanVideo I2V model.
+Convert the user's description into a precise, detailed English prompt optimized for realistic fashion/clothing video generation.
 
-function getFalKey() {
-  const key = process.env.FAL_API_KEY;
-  if (!key) throw new Error("FAL_API_KEY não configurado no .env");
+Rules:
+- Be specific about body parts, movement direction, speed, and garment behavior
+- Use cinematic language: "smooth motion", "natural fabric movement", "realistic physics"
+- Include lighting and camera style: "studio lighting, static camera"
+- Keep it under 150 words
+- Return ONLY the optimized prompt, no explanation
+
+User request (in any language): "${userPrompt}"`,
+      }],
+    });
+    const text = (msg.content[0] as any).text?.trim();
+    return text || userPrompt;
+  } catch {
+    return userPrompt;
+  }
+}
+
+// ── SiliconFlow — Modo Livre (WanVideo I2V) ───────────────────────────────────
+const SF_BASE = "https://api.siliconflow.com/v1";
+
+function getSfKey() {
+  const key = process.env.SILICONFLOW_API_KEY;
+  if (!key) throw new Error("SILICONFLOW_API_KEY não configurado no .env");
   return key;
 }
 
-async function uploadToFal(base64: string, mimeType: string): Promise<string> {
-  const buffer = Buffer.from(base64, "base64");
-  const ext = mimeType.split("/")[1]?.split(";")[0] ?? "bin";
-  const fileName = `upload-${Date.now()}.${ext}`;
-
-  // Step 1: get presigned upload URL from fal.ai storage
-  const initiateRes = await fetch(
-    "https://rest.alpha.fal.ai/storage/upload/initiate?storage_type=fal-cdn-v3",
-    {
-      method: "POST",
-      headers: { Authorization: `Key ${getFalKey()}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ file_name: fileName, content_type: mimeType }),
-    }
-  );
-  if (!initiateRes.ok) {
-    const text = await initiateRes.text().catch(() => "");
-    throw new Error(`fal.ai initiate ${initiateRes.status}: ${text.slice(0, 300)}`);
-  }
-  const { upload_url, file_url } = await initiateRes.json() as { upload_url: string; file_url: string };
-
-  // Step 2: PUT binary to presigned URL
-  const putRes = await fetch(upload_url, {
-    method: "PUT",
-    headers: { "Content-Type": mimeType },
-    body: buffer,
-  });
-  if (!putRes.ok) {
-    const text = await putRes.text().catch(() => "");
-    throw new Error(`fal.ai CDN PUT ${putRes.status}: ${text.slice(0, 300)}`);
-  }
-
-  return file_url;
-}
-
-async function submitFalJob(imageUrl: string, prompt: string, durationSeconds: number): Promise<string> {
-  const fps = 16;
-  const numFrames = Math.max(16, Math.round(durationSeconds * fps));
-  const res = await fetch(`${FAL_BASE}/${FAL_MODEL}`, {
+async function sfSubmit(imageBase64: string, mimeType: string, prompt: string): Promise<string> {
+  const res = await fetch(`${SF_BASE}/video/submit`, {
     method: "POST",
-    headers: { Authorization: `Key ${getFalKey()}`, "Content-Type": "application/json" },
+    headers: { Authorization: `Bearer ${getSfKey()}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      image_url: imageUrl,
+      model: "Wan-AI/Wan2.2-I2V-A14B",
       prompt,
-      negative_prompt: "blurry, distorted, low quality, static, frozen, watermark",
-      num_frames: numFrames,
-      frames_per_second: fps,
-      guidance_scale: 5,
+      image: `data:${mimeType};base64,${imageBase64}`,
+      negative_prompt: "low quality, blurry, distorted, watermark",
+      seed: Math.floor(Math.random() * 9999999999),
     }),
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new Error(`fal.ai submit ${res.status}: ${text.slice(0, 300)}`);
+    throw new Error(`SiliconFlow submit ${res.status}: ${text.slice(0, 300)}`);
   }
   const data = await res.json() as any;
-  return data.request_id as string;
+  if (!data.requestId) throw new Error(`SiliconFlow: ${JSON.stringify(data).slice(0, 200)}`);
+  return data.requestId as string;
 }
 
-async function getFalStatus(requestId: string): Promise<{ status: string; videoUrl?: string; error?: string }> {
-  const res = await fetch(`${FAL_BASE}/${FAL_MODEL}/requests/${requestId}/status`, {
-    headers: { Authorization: `Key ${getFalKey()}` },
+async function sfGetStatus(requestId: string): Promise<{ status: string; videoUrl?: string; error?: string }> {
+  const res = await fetch(`${SF_BASE}/video/status`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${getSfKey()}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ requestId }),
   });
-  if (!res.ok) throw new Error(`fal.ai status ${res.status}`);
+  if (!res.ok) throw new Error(`SiliconFlow status ${res.status}: ${(await res.text().catch(() => "")).slice(0, 200)}`);
   const data = await res.json() as any;
-
-  if (data.status === "COMPLETED") {
-    const resultRes = await fetch(`${FAL_BASE}/${FAL_MODEL}/requests/${requestId}`, {
-      headers: { Authorization: `Key ${getFalKey()}` },
-    });
-    if (resultRes.ok) {
-      const result = await resultRes.json() as any;
-      return { status: "COMPLETED", videoUrl: result.video?.url };
-    }
+  if (data.status === "Succeed") {
+    return { status: "COMPLETED", videoUrl: data.results?.videos?.[0]?.url };
   }
-  return {
-    status: data.status as string,
-    error: typeof data.error === "string" ? data.error : data.error?.message,
-  };
+  if (data.status === "Failed") {
+    return { status: "FAILED", error: data.reason ?? "Falha na geração SiliconFlow" };
+  }
+  return { status: "IN_PROGRESS" };
 }
 
 // ── RunningHub — Running Up (WanVideo Animate + ViTPose) ─────────────────────
@@ -103,7 +95,7 @@ function getRhKey() {
   return key;
 }
 
-async function rhUpload(base64: string, fileName: string, mimeType: string): Promise<string> {
+async function rhUpload(base64: string, fileName: string, mimeType: string): Promise<{ fileName: string; fileUrl: string }> {
   const apiKey = getRhKey();
   const buffer = Buffer.from(base64, "base64");
   const blob = new Blob([buffer], { type: mimeType });
@@ -121,7 +113,10 @@ async function rhUpload(base64: string, fileName: string, mimeType: string): Pro
   if (!res.ok) throw new Error(`RunningHub upload ${res.status}: ${(await res.text().catch(() => "")).slice(0, 200)}`);
   const data = await res.json() as any;
   if (data.code !== 0) throw new Error(`RunningHub upload: ${data.msg}`);
-  return data.data.fileName as string;
+  const uploadedName = data.data.fileName as string;
+  // uploadedName vem como "api/hash.jpg" — URL pública é https://www.runninghub.ai/{uploadedName}
+  const fileUrl = `https://www.runninghub.ai/${uploadedName}`;
+  return { fileName: uploadedName, fileUrl };
 }
 
 async function rhCreateTask(imageFileName: string, videoFileName: string): Promise<string> {
@@ -154,7 +149,9 @@ async function rhGetStatus(taskId: string): Promise<{ status: string; videoUrl?:
   });
   if (!statusRes.ok) throw new Error(`RunningHub status ${statusRes.status}`);
   const statusData = await statusRes.json() as any;
-  const taskStatus: string = statusData.data?.taskStatus ?? "RUNNING";
+  const taskStatus: string = typeof statusData.data === "string"
+    ? statusData.data
+    : (statusData.data?.taskStatus ?? "RUNNING");
 
   if (taskStatus === "SUCCESS") {
     const outputRes = await fetch(`${RH_BASE}/outputs`, {
@@ -177,55 +174,84 @@ async function rhGetStatus(taskId: string): Promise<{ status: string; videoUrl?:
   return { status: taskStatus };
 }
 
-function mapFalStatus(s: string): "queued" | "processing" | "completed" | "failed" | "cancelled" {
-  switch (s) {
-    case "IN_QUEUE": return "queued";
-    case "IN_PROGRESS": return "processing";
-    case "COMPLETED": return "completed";
-    case "FAILED": return "failed";
-    default: return "queued";
+// ── Quota helpers ─────────────────────────────────────────────────────────────
+async function getOrCreatePlan(userId: number, db: any) {
+  const rows = await db.select().from(videoPlans).where(eq(videoPlans.userId, userId)).limit(1);
+  if (rows.length > 0) return rows[0];
+  await db.insert(videoPlans).values({
+    userId,
+    livreMonthlyLimit: 30,
+    runningUpMonthlyLimit: 30,
+    livreExtraCredits: 0,
+    runningUpExtraCredits: 0,
+  });
+  const newRows = await db.select().from(videoPlans).where(eq(videoPlans.userId, userId)).limit(1);
+  return newRows[0];
+}
+
+async function getMonthCount(userId: number, mode: "livre" | "runningup", db: any): Promise<number> {
+  const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  const rows = await db.select({ cnt: count() }).from(videoJobs).where(
+    and(eq(videoJobs.userId, userId), eq(videoJobs.mode, mode), gte(videoJobs.createdAt, monthStart))
+  );
+  return Number(rows[0]?.cnt ?? 0);
+}
+
+async function assertQuota(userId: number, mode: "livre" | "runningup", db: any) {
+  const plan = await getOrCreatePlan(userId, db);
+  const used = await getMonthCount(userId, mode, db);
+  const limit = mode === "livre"
+    ? plan.livreMonthlyLimit + plan.livreExtraCredits
+    : plan.runningUpMonthlyLimit + plan.runningUpExtraCredits;
+  if (used >= limit) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: `Quota esgotada: ${used}/${limit} vídeos este mês. Adquira créditos adicionais.`,
+    });
   }
 }
 
 // ── Router ────────────────────────────────────────────────────────────────────
 export const runpodVideoRouter = router({
 
-  // Modo Livre: foto + prompt → fal.ai WanVideo
+  // Modo Livre: foto + prompt → MiniMax Hailuo I2V
   generate: protectedProcedure
     .input(z.object({
       imageBase64: z.string().min(100),
-      prompt: z.string().min(5).max(500),
-      durationSeconds: z.number().int().min(3).max(30).default(15),
+      imageMimeType: z.string().default("image/jpeg"),
+      prompt: z.string().min(5).max(2000),
+      durationSeconds: z.number().int().min(5).max(15).default(6),
     }))
     .mutation(async ({ input, ctx }) => {
-      const imageUrl = await uploadToFal(input.imageBase64, "image/jpeg");
-      const requestId = await submitFalJob(imageUrl, input.prompt, input.durationSeconds);
-
       const db = await getDb();
+      if (db) await debitCredits(ctx.user.id, "livre", db);
+      const optimizedPrompt = await optimizeVideoPrompt(input.prompt);
+      const taskId = await sfSubmit(input.imageBase64, input.imageMimeType, optimizedPrompt);
       if (db) {
         await db.insert(videoJobs).values({
           userId: ctx.user.id,
-          runpodJobId: requestId,
+          runpodJobId: taskId,
+          mode: "livre",
           status: "queued",
           durationSeconds: input.durationSeconds,
           createdAt: new Date(),
         }).catch(() => null);
       }
-      return { jobId: requestId };
+      return { jobId: taskId };
     }),
 
   status: protectedProcedure
     .input(z.object({ jobId: z.string() }))
     .query(async ({ input }) => {
-      const result = await getFalStatus(input.jobId);
-      const dbStatus = mapFalStatus(result.status);
+      const result = await sfGetStatus(input.jobId);
       const db = await getDb();
-      if (db && (dbStatus === "completed" || dbStatus === "failed")) {
+      if (db && result.status === "COMPLETED") {
         await db.update(videoJobs)
-          .set({ status: dbStatus, completedAt: new Date(), errorMessage: result.error?.slice(0, 499) ?? null })
+          .set({ status: "completed", completedAt: new Date() })
           .where(eq(videoJobs.runpodJobId, input.jobId)).catch(() => null);
-      } else if (db && dbStatus === "processing") {
-        await db.update(videoJobs).set({ status: "processing" })
+      } else if (db && result.status === "FAILED") {
+        await db.update(videoJobs)
+          .set({ status: "failed", completedAt: new Date() })
           .where(eq(videoJobs.runpodJobId, input.jobId)).catch(() => null);
       }
       return { status: result.status, videoUrl: result.videoUrl, error: result.error };
@@ -253,11 +279,46 @@ export const runpodVideoRouter = router({
     }),
 
   checkConfig: protectedProcedure.query(() => ({
-    falConfigured: !!process.env.FAL_API_KEY,
+    falConfigured: !!process.env.SILICONFLOW_API_KEY,
     rhConfigured: !!process.env.RUNNINGHUB_API_KEY,
   })),
 
-  // Running Up: foto + vídeo referência → fal.ai Champ (pose transfer)
+  getQuota: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) return {
+      livre:     { used: 0, limit: 30, extra: 0 },
+      runningup: { used: 0, limit: 30, extra: 0 },
+    };
+    const plan = await getOrCreatePlan(ctx.user.id, db);
+    const [livreUsed, ruUsed] = await Promise.all([
+      getMonthCount(ctx.user.id, "livre", db),
+      getMonthCount(ctx.user.id, "runningup", db),
+    ]);
+    return {
+      livre:     { used: livreUsed, limit: plan.livreMonthlyLimit,     extra: plan.livreExtraCredits },
+      runningup: { used: ruUsed,    limit: plan.runningUpMonthlyLimit,  extra: plan.runningUpExtraCredits },
+    };
+  }),
+
+  adminAddCredits: protectedProcedure
+    .input(z.object({
+      userId: z.number().int(),
+      mode: z.enum(["livre", "runningup"]),
+      credits: z.number().int().min(1).max(1000),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await getDb();
+      if (!db) throw new Error("DB não disponível");
+      const plan = await getOrCreatePlan(input.userId, db);
+      const update = input.mode === "livre"
+        ? { livreExtraCredits: plan.livreExtraCredits + input.credits }
+        : { runningUpExtraCredits: plan.runningUpExtraCredits + input.credits };
+      await db.update(videoPlans).set(update).where(eq(videoPlans.userId, input.userId));
+      return { ok: true };
+    }),
+
+  // Running Up: foto + vídeo referência → RunningHub WanVideo Animate + ViTPose
   runningUpGenerate: protectedProcedure
     .input(z.object({
       imageBase64: z.string().min(100),
@@ -268,28 +329,20 @@ export const runpodVideoRouter = router({
       videoMimeType: z.string().default("video/mp4"),
     }))
     .mutation(async ({ input, ctx }) => {
-      const [imageUrl, videoUrl] = await Promise.all([
-        uploadToFal(input.imageBase64, input.imageMimeType),
-        uploadToFal(input.videoBase64, input.videoMimeType),
+      const db = await getDb();
+      if (db) await debitCredits(ctx.user.id, "runningup", db);
+      const [imageUp, videoUp] = await Promise.all([
+        rhUpload(input.imageBase64, input.imageName, input.imageMimeType),
+        rhUpload(input.videoBase64, input.videoName, input.videoMimeType),
       ]);
 
-      const res = await fetch(`${FAL_BASE}/fal-ai/champ`, {
-        method: "POST",
-        headers: { Authorization: `Key ${getFalKey()}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ image_url: imageUrl, video_url: videoUrl }),
-      });
-      if (!res.ok) {
-        const text = await res.text().catch(() => "");
-        throw new Error(`fal.ai champ submit ${res.status}: ${text.slice(0, 300)}`);
-      }
-      const data = await res.json() as any;
-      const taskId: string = data.request_id;
+      const taskId = await rhCreateTask(imageUp.fileName, videoUp.fileName);
 
-      const db = await getDb();
       if (db) {
         await db.insert(videoJobs).values({
           userId: ctx.user.id,
           runpodJobId: taskId,
+          mode: "runningup",
           status: "queued",
           durationSeconds: 0,
           createdAt: new Date(),
@@ -301,24 +354,11 @@ export const runpodVideoRouter = router({
   runningUpStatus: protectedProcedure
     .input(z.object({ taskId: z.string() }))
     .query(async ({ input }) => {
-      const statusRes = await fetch(`${FAL_BASE}/fal-ai/champ/requests/${input.taskId}/status`, {
-        headers: { Authorization: `Key ${getFalKey()}` },
-      });
-      if (!statusRes.ok) throw new Error(`fal.ai champ status ${statusRes.status}`);
-      const data = await statusRes.json() as any;
-
-      if (data.status === "COMPLETED") {
-        const resultRes = await fetch(`${FAL_BASE}/fal-ai/champ/requests/${input.taskId}`, {
-          headers: { Authorization: `Key ${getFalKey()}` },
-        });
-        if (resultRes.ok) {
-          const result = await resultRes.json() as any;
-          return { status: "COMPLETED", videoUrl: result.video?.url ?? result.video_url };
-        }
-      }
+      const result = await rhGetStatus(input.taskId);
       return {
-        status: data.status as string,
-        error: typeof data.error === "string" ? data.error : data.error?.message,
+        status: result.status,
+        videoUrl: result.videoUrl,
+        error: result.error,
       };
     }),
 
