@@ -58,10 +58,11 @@ export function serveStatic(app: Express) {
     );
   }
 
-  app.use(express.static(distPath));
+  app.use(express.static(distPath, { maxAge: "1y", index: false }));
 
-  // fall through to index.html if the file doesn't exist
+  // index.html nunca deve ser cacheado pelo browser
   app.use("*", (_req, res) => {
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     res.sendFile(path.resolve(distPath, "index.html"));
   });
 }

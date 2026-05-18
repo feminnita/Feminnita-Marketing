@@ -1,7 +1,48 @@
 import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
+import { getDb } from "../db";
+import { videoPlans, imageJobs } from "../../drizzle/schema";
+import { eq, and, gte, count } from "drizzle-orm";
 
 const MINIMAX_BASE = "https://api.minimax.io/v1";
+
+// ── Quota helpers ─────────────────────────────────────────────────────────────
+async function getOrCreatePlan(userId: number, db: any) {
+  const rows = await db.select().from(videoPlans).where(eq(videoPlans.userId, userId)).limit(1);
+  if (rows.length > 0) return rows[0];
+  await db.insert(videoPlans).values({
+    userId,
+    livreMonthlyLimit: 30,
+    runningUpMonthlyLimit: 30,
+    imageMonthlyLimit: 50,
+    livreExtraCredits: 0,
+    runningUpExtraCredits: 0,
+    imageExtraCredits: 0,
+  });
+  const newRows = await db.select().from(videoPlans).where(eq(videoPlans.userId, userId)).limit(1);
+  return newRows[0];
+}
+
+async function getImageMonthCount(userId: number, db: any): Promise<number> {
+  const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  const rows = await db.select({ cnt: count() }).from(imageJobs).where(
+    and(eq(imageJobs.userId, userId), gte(imageJobs.createdAt, monthStart))
+  );
+  return Number(rows[0]?.cnt ?? 0);
+}
+
+async function assertImageQuota(userId: number, db: any) {
+  const plan = await getOrCreatePlan(userId, db);
+  const used = await getImageMonthCount(userId, db);
+  const limit = plan.imageMonthlyLimit + plan.imageExtraCredits;
+  if (used >= limit) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: `Quota de imagens esgotada: ${used}/${limit} este mês. Adquira créditos adicionais.`,
+    });
+  }
+}
 
 // Faz upload de uma imagem base64 para a MiniMax Files API e retorna o file_id
 async function uploadReferenceImage(apiKey: string, base64: string, mimeType: string): Promise<string> {
@@ -42,7 +83,10 @@ export const hailuoImageRouter = router({
         mimeType: z.string(),
       }).optional(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (db) await assertImageQuota(ctx.user.id, db);
+
       const apiKey = process.env.MINIMAX_API_KEY;
       if (!apiKey) throw new Error("MINIMAX_API_KEY não configurado no servidor. Adicione a chave em Configurações → Integrações.");
 
@@ -86,10 +130,48 @@ export const hailuoImageRouter = router({
       }
 
       const images: string[] = (data.data || []).map((img: any) => img.url as string).filter(Boolean);
+
+      if (db && images.length > 0) {
+        await db.insert(imageJobs).values({
+          userId: ctx.user.id,
+          jobId: `img-${Date.now()}`,
+          status: "completed",
+          createdAt: new Date(),
+        }).catch(() => null);
+      }
+
       return { images };
     }),
 
   checkKey: protectedProcedure.query(() => {
     return { configured: !!process.env.MINIMAX_API_KEY };
   }),
+
+  getQuota: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) return { used: 0, limit: 50, extra: 0 };
+    const plan = await getOrCreatePlan(ctx.user.id, db);
+    const used = await getImageMonthCount(ctx.user.id, db);
+    return {
+      used,
+      limit: plan.imageMonthlyLimit,
+      extra: plan.imageExtraCredits,
+    };
+  }),
+
+  adminAddCredits: protectedProcedure
+    .input(z.object({
+      userId: z.number().int(),
+      credits: z.number().int().min(1).max(10000),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await getDb();
+      if (!db) throw new Error("DB não disponível");
+      const plan = await getOrCreatePlan(input.userId, db);
+      await db.update(videoPlans)
+        .set({ imageExtraCredits: plan.imageExtraCredits + input.credits })
+        .where(eq(videoPlans.userId, input.userId));
+      return { ok: true };
+    }),
 });

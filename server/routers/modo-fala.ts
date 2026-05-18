@@ -112,6 +112,7 @@ async function sfSubmit(imageBase64: string, mimeType: string, prompt: string): 
       model: "Wan-AI/Wan2.2-I2V-A14B",
       prompt,
       image: `data:${mimeType};base64,${imageBase64}`,
+      image_size: "720x1280",
       negative_prompt: "blurry, low quality, text, watermark, cropped, face only, close up face",
       seed: Math.floor(Math.random() * 2147483647),
     }),

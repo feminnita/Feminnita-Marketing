@@ -40,7 +40,7 @@ import {
   BookOpen, Newspaper, CheckCircle, Brain, MessageCircle,
   Bell, Image, Briefcase, TrendingUp, ChevronDown, ChevronRight,
   Settings, Megaphone, BarChart2, Bot, ShoppingBag, Music, Video, ClipboardCheck, Globe, Pencil, Zap,
-  AlertTriangle, X, ExternalLink, Sparkles, FolderOpen,
+  AlertTriangle, X, ExternalLink, Sparkles, FolderOpen, Mic,
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -347,6 +347,7 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                     <Video className="h-3 w-3" /> Gerar Vídeo IA
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
+
                 <SidebarMenuSubItem>
                   <SidebarMenuSubButton onClick={() => setLocation("/agendar-posts")}>
                     <Calendar className="h-3 w-3" /> Agendar Posts
