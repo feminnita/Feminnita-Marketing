@@ -1594,6 +1594,33 @@ export const tiktokConnectedAccounts = mysqlTable("tiktok_connected_accounts", {
 export type TiktokConnectedAccount = typeof tiktokConnectedAccounts.$inferSelect;
 export type InsertTiktokConnectedAccount = typeof tiktokConnectedAccounts.$inferInsert;
 
+// ─── TikTok Affiliate CRM ─────────────────────────────────────────────────────
+export const tiktokAffiliateCreators = mysqlTable("tiktok_affiliate_creators", {
+  id:               int("id").autoincrement().primaryKey(),
+  userId:           int("userId").notNull(),
+  username:         varchar("username", { length: 100 }).notNull(),
+  displayName:      varchar("displayName", { length: 255 }),
+  profileUrl:       varchar("profileUrl", { length: 500 }),
+  followers:        int("followers").default(0),
+  engagementRate:   varchar("engagementRate", { length: 10 }).default("0"),
+  gmv30d:           varchar("gmv30d", { length: 20 }).default("0"),
+  niche:            varchar("niche", { length: 100 }),
+  status:           mysqlEnum("status", ["prospecto","convidado","aceito","postou","converteu","inativo"]).default("prospecto").notNull(),
+  invitedAt:        timestamp("invitedAt"),
+  acceptedAt:       timestamp("acceptedAt"),
+  lastPostAt:       timestamp("lastPostAt"),
+  gmvGenerated:     varchar("gmvGenerated", { length: 20 }).default("0"),
+  videosPosted:     int("videosPosted").default(0),
+  notes:            text("notes"),
+  creatorBriefSent: boolean("creatorBriefSent").default(false),
+  sampleSent:       boolean("sampleSent").default(false),
+  sampleProduct:    varchar("sampleProduct", { length: 255 }),
+  createdAt:        timestamp("createdAt").defaultNow().notNull(),
+  updatedAt:        timestamp("updatedAt").defaultNow().$onUpdateFn(() => new Date()).notNull(),
+});
+export type TiktokAffiliateCreator = typeof tiktokAffiliateCreators.$inferSelect;
+export type InsertTiktokAffiliateCreator = typeof tiktokAffiliateCreators.$inferInsert;
+
 // ─── Especialistas por plataforma ─────────────────────────────────────────────
 
 export const specialistPlatformEvaluations = mysqlTable("specialist_platform_evaluations", {

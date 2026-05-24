@@ -1,0 +1,23 @@
+CREATE TABLE `tiktok_affiliate_creators` (
+  `id` int AUTO_INCREMENT PRIMARY KEY,
+  `userId` int NOT NULL,
+  `username` varchar(100) NOT NULL,
+  `displayName` varchar(255),
+  `profileUrl` varchar(500),
+  `followers` int DEFAULT 0,
+  `engagementRate` varchar(10) DEFAULT '0',
+  `gmv30d` varchar(20) DEFAULT '0',
+  `niche` varchar(100),
+  `status` enum('prospecto','convidado','aceito','postou','converteu','inativo') NOT NULL DEFAULT 'prospecto',
+  `invitedAt` timestamp NULL,
+  `acceptedAt` timestamp NULL,
+  `lastPostAt` timestamp NULL,
+  `gmvGenerated` varchar(20) DEFAULT '0',
+  `videosPosted` int DEFAULT 0,
+  `notes` text,
+  `creatorBriefSent` boolean DEFAULT false,
+  `sampleSent` boolean DEFAULT false,
+  `sampleProduct` varchar(255),
+  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);

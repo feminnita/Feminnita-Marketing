@@ -83,6 +83,7 @@ import { adsManagerRouter } from "./routers/ads-manager";
 import { mlAdsManagerRouter } from "./routers/ml-ads-manager";
 import { shopeeAdsManagerRouter } from "./routers/shopee-ads-manager";
 import { tiktokShopManagerRouter } from "./routers/tiktok-shop-manager";
+import { tiktokAffiliatesRouter } from "./routers/tiktok-affiliates";
 import { tiktokTeamRouter } from "./routers/tiktok-team";
 import { amazonManagerRouter } from "./routers/amazon-manager";
 import { blogRouter } from "./routers/blog";
@@ -246,6 +247,7 @@ export const appRouter = router({
   mlAdsManager: mlAdsManagerRouter,
   shopeeAdsManager: shopeeAdsManagerRouter,
   tiktokShopManager: tiktokShopManagerRouter,
+  tiktokAffiliates: tiktokAffiliatesRouter,
   tiktokTeam: tiktokTeamRouter,
   amazonManager: amazonManagerRouter,
   blog: blogRouter,

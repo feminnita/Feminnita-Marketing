@@ -74,6 +74,7 @@ const categorias: Categoria[] = [
     abas: [
       { id: 'tiktok-shop', label: 'TikTok — Lia (Shop)', icon: '🎵', href: '/tiktok-shop' },
       { id: 'tiktok-team', label: 'Time TikTok (Agentes)', icon: '👥', href: '/tiktok-team' },
+      { id: 'tiktok-afiliados', label: 'TikTok Afiliados CRM', icon: '🤝', href: '/tiktok-afiliados' },
       { id: 'tiktok-live-page2', label: 'TikTok LIVE Commerce', icon: '🔴', href: '/tiktok-live' },
       { id: 'ml-ads', label: 'ML — Ads IA', icon: '🛒', href: '/ml-ads' },
       { id: 'shopee-ads', label: 'Shopee Ads IA', icon: '🛍️', href: '/shopee-ads' },
