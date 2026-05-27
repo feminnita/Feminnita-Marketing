@@ -286,6 +286,42 @@ async function startServer() {
     });
   }
 
+  // Transcrição de reunião/áudio via Whisper
+  {
+    const multer = (await import("multer")).default;
+    const pathMod = await import("path");
+    const fsMod = await import("fs");
+    const cryptoMod = await import("crypto");
+    const uploadsDir = pathMod.default.resolve(process.cwd(), "uploads");
+    if (!fsMod.default.existsSync(uploadsDir)) fsMod.default.mkdirSync(uploadsDir, { recursive: true });
+    const audioStorage = multer.diskStorage({
+      destination: (_req, _file, cb) => cb(null, uploadsDir),
+      filename: (_req, file, cb) => {
+        const ext = pathMod.default.extname(file.originalname) || ".mp3";
+        cb(null, `transcricao-${Date.now()}-${cryptoMod.default.randomBytes(4).toString("hex")}${ext}`);
+      },
+    });
+    const uploadAudio = multer({
+      storage: audioStorage,
+      limits: { fileSize: 100 * 1024 * 1024 },
+      fileFilter: (_req, file, cb) => {
+        const allowed = ["audio/", "video/"];
+        if (allowed.some(t => file.mimetype.startsWith(t))) cb(null, true);
+        else cb(new Error("Formato não suportado. Envie um arquivo de áudio ou vídeo."));
+      },
+    });
+    app.post("/api/transcricao/audio", uploadAudio.single("file"), async (req: any, res: any) => {
+      if (!req.file) return res.status(400).json({ error: "Nenhum arquivo enviado" });
+      const { transcribeAudio } = await import("./voiceTranscription");
+      const fileUrl = `http://localhost:${ENV.port || 3002}/uploads/${req.file.filename}`;
+      const language = req.body?.language || "pt";
+      const result = await transcribeAudio({ audioUrl: fileUrl, language });
+      fsMod.default.unlink(req.file.path, () => {});
+      if ("error" in result) return res.status(422).json(result);
+      return res.json(result);
+    });
+  }
+
   // Blog público — GET /blog, GET /blog/:slug, GET /blog/feed.xml
   registerBlogRoutes(app);
 

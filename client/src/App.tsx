@@ -70,6 +70,7 @@ const ShopeeAdsManagerPage    = lazy(() => import("@/pages/ShopeeAdsManagerPage"
 const TiktokShopPage          = lazy(() => import("@/pages/TiktokShopPage"));
 const TiktokTeamPage          = lazy(() => import("@/pages/TiktokTeamPage"));
 const TiktokAffiliateCRMPage  = lazy(() => import("@/pages/TiktokAffiliateCRMPage"));
+const TranscricaoReuniaoPage  = lazy(() => import("@/pages/TranscricaoReuniaoPage"));
 const AmazonPage              = lazy(() => import("@/pages/AmazonPage"));
 const SpecialistsPage         = lazy(() => import("@/pages/SpecialistsPage"));
 const PublicInfluencerBlog    = lazy(() => import("@/pages/PublicInfluencerBlog"));
@@ -260,6 +261,8 @@ export default function App() {
         return <TiktokTeamPage />;
       case "/tiktok-afiliados":
         return <TiktokAffiliateCRMPage />;
+      case "/transcricao-reuniao":
+        return <TranscricaoReuniaoPage />;
       case "/amazon":
         return <AmazonPage />;
       case "/especialistas":

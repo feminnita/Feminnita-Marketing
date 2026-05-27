@@ -115,6 +115,7 @@ const categorias: Categoria[] = [
     nome: 'IA & Automação',
     icon: '🤖',
     abas: [
+      { id: 'transcricao-reuniao', label: 'Transcrição de Reunião', icon: '🎙️', href: '/transcricao-reuniao' },
       { id: 'gerador-ia', label: 'Geração de Conteúdo', icon: '✨' },
       { id: 'chatbot', label: 'Chatbot IA', icon: '💬' },
       { id: 'abandono-recovery', label: 'Recuperação Abandono', icon: '💌' },
