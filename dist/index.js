@@ -1704,11 +1704,11 @@ var init_schema = __esm({
 });
 
 // server/_core/env.ts
-var ENV;
+var ENV2;
 var init_env = __esm({
   "server/_core/env.ts"() {
     "use strict";
-    ENV = {
+    ENV2 = {
       cookieSecret: process.env.JWT_SECRET ?? "",
       databaseUrl: process.env.DATABASE_URL ?? "",
       adminEmail: process.env.ADMIN_EMAIL ?? "",
@@ -1784,7 +1784,7 @@ async function getDb() {
 async function createUser(data) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const role = data.role ?? (data.email === ENV.adminEmail ? "admin" : "user");
+  const role = data.role ?? (data.email === ENV2.adminEmail ? "admin" : "user");
   await db.insert(users).values({
     email: data.email,
     passwordHash: data.passwordHash,
@@ -2035,7 +2035,7 @@ var init_sdk = __esm({
     PORTAL_COOKIE_NAME = "portal_session";
     SessionService = class {
       getSecret() {
-        return new TextEncoder().encode(ENV.cookieSecret);
+        return new TextEncoder().encode(ENV2.cookieSecret);
       }
       parseCookies(cookieHeader) {
         if (!cookieHeader) return /* @__PURE__ */ new Map();
@@ -2074,7 +2074,7 @@ var init_sdk = __esm({
     sdk = new SessionService();
     PortalSessionService = class {
       getSecret() {
-        return new TextEncoder().encode(ENV.cookieSecret + "_portal");
+        return new TextEncoder().encode(ENV2.cookieSecret + "_portal");
       }
       parseCookies(cookieHeader) {
         if (!cookieHeader) return /* @__PURE__ */ new Map();
@@ -5614,6 +5614,145 @@ var init_meta_oauth = __esm({
   }
 });
 
+// server/_core/voiceTranscription.ts
+var voiceTranscription_exports = {};
+__export(voiceTranscription_exports, {
+  transcribeAudio: () => transcribeAudio
+});
+async function transcribeAudio(options) {
+  try {
+    if (!ENV2.forgeApiUrl) {
+      return {
+        error: "Voice transcription service is not configured",
+        code: "SERVICE_ERROR",
+        details: "BUILT_IN_FORGE_API_URL is not set"
+      };
+    }
+    if (!ENV2.forgeApiKey) {
+      return {
+        error: "Voice transcription service authentication is missing",
+        code: "SERVICE_ERROR",
+        details: "BUILT_IN_FORGE_API_KEY is not set"
+      };
+    }
+    let audioBuffer;
+    let mimeType;
+    try {
+      const response2 = await fetch(options.audioUrl);
+      if (!response2.ok) {
+        return {
+          error: "Failed to download audio file",
+          code: "INVALID_FORMAT",
+          details: `HTTP ${response2.status}: ${response2.statusText}`
+        };
+      }
+      audioBuffer = Buffer.from(await response2.arrayBuffer());
+      mimeType = response2.headers.get("content-type") || "audio/mpeg";
+      const sizeMB = audioBuffer.length / (1024 * 1024);
+      if (sizeMB > 16) {
+        return {
+          error: "Audio file exceeds maximum size limit",
+          code: "FILE_TOO_LARGE",
+          details: `File size is ${sizeMB.toFixed(2)}MB, maximum allowed is 16MB`
+        };
+      }
+    } catch (error) {
+      return {
+        error: "Failed to fetch audio file",
+        code: "SERVICE_ERROR",
+        details: error instanceof Error ? error.message : "Unknown error"
+      };
+    }
+    const formData = new FormData();
+    const filename = `audio.${getFileExtension(mimeType)}`;
+    const audioBlob = new Blob([new Uint8Array(audioBuffer)], { type: mimeType });
+    formData.append("file", audioBlob, filename);
+    formData.append("model", "whisper-1");
+    formData.append("response_format", "verbose_json");
+    const prompt = options.prompt || (options.language ? `Transcribe the user's voice to text, the user's working language is ${getLanguageName(options.language)}` : "Transcribe the user's voice to text");
+    formData.append("prompt", prompt);
+    const baseUrl = ENV2.forgeApiUrl.endsWith("/") ? ENV2.forgeApiUrl : `${ENV2.forgeApiUrl}/`;
+    const fullUrl = new URL(
+      "v1/audio/transcriptions",
+      baseUrl
+    ).toString();
+    const response = await fetch(fullUrl, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${ENV2.forgeApiKey}`,
+        "Accept-Encoding": "identity"
+      },
+      body: formData
+    });
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "");
+      return {
+        error: "Transcription service request failed",
+        code: "TRANSCRIPTION_FAILED",
+        details: `${response.status} ${response.statusText}${errorText ? `: ${errorText}` : ""}`
+      };
+    }
+    const whisperResponse = await response.json();
+    if (!whisperResponse.text || typeof whisperResponse.text !== "string") {
+      return {
+        error: "Invalid transcription response",
+        code: "SERVICE_ERROR",
+        details: "Transcription service returned an invalid response format"
+      };
+    }
+    return whisperResponse;
+  } catch (error) {
+    return {
+      error: "Voice transcription failed",
+      code: "SERVICE_ERROR",
+      details: error instanceof Error ? error.message : "An unexpected error occurred"
+    };
+  }
+}
+function getFileExtension(mimeType) {
+  const mimeToExt = {
+    "audio/webm": "webm",
+    "audio/mp3": "mp3",
+    "audio/mpeg": "mp3",
+    "audio/wav": "wav",
+    "audio/wave": "wav",
+    "audio/ogg": "ogg",
+    "audio/m4a": "m4a",
+    "audio/mp4": "m4a"
+  };
+  return mimeToExt[mimeType] || "audio";
+}
+function getLanguageName(langCode) {
+  const langMap = {
+    "en": "English",
+    "es": "Spanish",
+    "fr": "French",
+    "de": "German",
+    "it": "Italian",
+    "pt": "Portuguese",
+    "ru": "Russian",
+    "ja": "Japanese",
+    "ko": "Korean",
+    "zh": "Chinese",
+    "ar": "Arabic",
+    "hi": "Hindi",
+    "nl": "Dutch",
+    "pl": "Polish",
+    "tr": "Turkish",
+    "sv": "Swedish",
+    "da": "Danish",
+    "no": "Norwegian",
+    "fi": "Finnish"
+  };
+  return langMap[langCode] || langCode;
+}
+var init_voiceTranscription = __esm({
+  "server/_core/voiceTranscription.ts"() {
+    "use strict";
+    init_env();
+  }
+});
+
 // server/_core/index.ts
 import "dotenv/config";
 import express2 from "express";
@@ -7947,25 +8086,25 @@ var validatePayload = (input) => {
 };
 async function notifyOwner(payload) {
   const { title, content } = validatePayload(payload);
-  if (!ENV.forgeApiUrl) {
+  if (!ENV2.forgeApiUrl) {
     throw new TRPCError2({
       code: "INTERNAL_SERVER_ERROR",
       message: "Notification service URL is not configured."
     });
   }
-  if (!ENV.forgeApiKey) {
+  if (!ENV2.forgeApiKey) {
     throw new TRPCError2({
       code: "INTERNAL_SERVER_ERROR",
       message: "Notification service API key is not configured."
     });
   }
-  const endpoint = buildEndpointUrl(ENV.forgeApiUrl);
+  const endpoint = buildEndpointUrl(ENV2.forgeApiUrl);
   try {
     const response = await fetch(endpoint, {
       method: "POST",
       headers: {
         accept: "application/json",
-        authorization: `Bearer ${ENV.forgeApiKey}`,
+        authorization: `Bearer ${ENV2.forgeApiKey}`,
         "content-type": "application/json",
         "connect-protocol-version": "1"
       },
@@ -18430,8 +18569,8 @@ import { eq as eq41, and as and38 } from "drizzle-orm";
 // server/storage.ts
 init_env();
 function getStorageConfig() {
-  const baseUrl = ENV.forgeApiUrl;
-  const apiKey = ENV.forgeApiKey;
+  const baseUrl = ENV2.forgeApiUrl;
+  const apiKey = ENV2.forgeApiKey;
   if (!baseUrl || !apiKey) {
     throw new Error(
       "Storage proxy credentials missing: set BUILT_IN_FORGE_API_URL and BUILT_IN_FORGE_API_KEY"
@@ -41824,6 +41963,41 @@ async function startServer() {
     app.post("/api/upload/media", upload.single("file"), (req, res) => {
       if (!req.file) return res.status(400).json({ error: "Nenhum arquivo enviado" });
       res.json({ url: `/uploads/${req.file.filename}`, name: req.file.originalname });
+    });
+  }
+  {
+    const multer = (await import("multer")).default;
+    const pathMod2 = await import("path");
+    const fsMod = await import("fs");
+    const cryptoMod = await import("crypto");
+    const uploadsDir = pathMod2.default.resolve(process.cwd(), "uploads");
+    if (!fsMod.default.existsSync(uploadsDir)) fsMod.default.mkdirSync(uploadsDir, { recursive: true });
+    const audioStorage = multer.diskStorage({
+      destination: (_req, _file, cb) => cb(null, uploadsDir),
+      filename: (_req, file, cb) => {
+        const ext = pathMod2.default.extname(file.originalname) || ".mp3";
+        cb(null, `transcricao-${Date.now()}-${cryptoMod.default.randomBytes(4).toString("hex")}${ext}`);
+      }
+    });
+    const uploadAudio = multer({
+      storage: audioStorage,
+      limits: { fileSize: 100 * 1024 * 1024 },
+      fileFilter: (_req, file, cb) => {
+        const allowed = ["audio/", "video/"];
+        if (allowed.some((t2) => file.mimetype.startsWith(t2))) cb(null, true);
+        else cb(new Error("Formato n\xE3o suportado. Envie um arquivo de \xE1udio ou v\xEDdeo."));
+      }
+    });
+    app.post("/api/transcricao/audio", uploadAudio.single("file"), async (req, res) => {
+      if (!req.file) return res.status(400).json({ error: "Nenhum arquivo enviado" });
+      const { transcribeAudio: transcribeAudio2 } = await Promise.resolve().then(() => (init_voiceTranscription(), voiceTranscription_exports));
+      const fileUrl = `http://localhost:${ENV.port || 3002}/uploads/${req.file.filename}`;
+      const language = req.body?.language || "pt";
+      const result = await transcribeAudio2({ audioUrl: fileUrl, language });
+      fsMod.default.unlink(req.file.path, () => {
+      });
+      if ("error" in result) return res.status(422).json(result);
+      return res.json(result);
     });
   }
   registerBlogRoutes(app);
