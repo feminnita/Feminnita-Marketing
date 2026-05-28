@@ -117,7 +117,15 @@ function cleanAnalysis(text: string): string {
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 
+type Account = "feminnita" | "fnt";
+
+const ACCOUNT_LABEL: Record<Account, string> = {
+  feminnita: "Conta A · Feminnita",
+  fnt: "Conta B · FNT",
+};
+
 export default function TiktokShopPage() {
+  const [account, setAccount] = useState<Account>("feminnita");
   const [activeEvalId, setActiveEvalId] = useState<number | null>(null);
   const [polling, setPolling] = useState(false);
   const [expandedRecs, setExpandedRecs] = useState<Set<number>>(new Set());
@@ -136,7 +144,7 @@ export default function TiktokShopPage() {
     onError: (e) => toast.error("Erro ao renovar: " + e.message),
   });
 
-  const listQuery = trpc.tiktokShopManager.listEvaluations.useQuery(undefined, {
+  const listQuery = trpc.tiktokShopManager.listEvaluations.useQuery({ account }, {
     refetchInterval: polling ? 3000 : false,
   });
 
@@ -158,7 +166,7 @@ export default function TiktokShopPage() {
       setActiveEvalId(data.evaluationId);
       setPolling(true);
       listQuery.refetch();
-      toast.success("Avaliação iniciada! Lia está analisando sua conta TikTok Shop…");
+      toast.success(`Avaliação iniciada! Lia está analisando ${ACCOUNT_LABEL[account]}…`);
     },
     onError: (err) => toast.error(`Erro ao iniciar: ${err.message}`),
   });
@@ -234,6 +242,21 @@ export default function TiktokShopPage() {
             <span className="text-xs text-slate-400 ml-1">· Especialista TikTok Shop</span>
           </div>
         </div>
+        <div className="ml-auto flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+          {(["feminnita", "fnt"] as Account[]).map((acc) => (
+            <button
+              key={acc}
+              onClick={() => { setAccount(acc); setActiveEvalId(null); }}
+              className={`text-xs px-3 py-1.5 rounded-md font-medium transition-all ${
+                account === acc
+                  ? "bg-white shadow-sm text-slate-900"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              {acc === "feminnita" ? "🎵 Conta A" : "🎵 Conta B"}
+            </button>
+          ))}
+        </div>
       </header>
 
       {/* Banner */}
@@ -257,6 +280,9 @@ export default function TiktokShopPage() {
           <p className="text-sm mt-1.5 leading-relaxed max-w-lg" style={{ color: "rgba(255,255,255,0.75)" }}>
             Social commerce · 11 anos em e-commerce de moda · Partner certificada TikTok Shop Academy
           </p>
+          <span className="mt-2 inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full bg-white/20 text-white">
+            {ACCOUNT_LABEL[account]}
+          </span>
           <div className="flex items-center gap-1.5 mt-3">
             <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
             <span className="text-xs text-emerald-300 font-medium">Online agora</span>
@@ -316,7 +342,7 @@ export default function TiktokShopPage() {
           )}
         </div>
         <button
-          onClick={() => triggerMut.mutate()}
+          onClick={() => triggerMut.mutate({ account })}
           disabled={triggerMut.isPending || polling}
           className="flex items-center gap-2 px-5 py-2.5 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors shrink-0"
           style={{ background: TT_PINK }}
@@ -544,7 +570,7 @@ export default function TiktokShopPage() {
             </p>
           </div>
           <button
-            onClick={() => triggerMut.mutate()}
+            onClick={() => triggerMut.mutate({ account })}
             disabled={triggerMut.isPending}
             className="inline-flex items-center gap-2 px-5 py-2.5 text-white rounded-lg font-medium disabled:opacity-50"
             style={{ background: TT_PINK }}

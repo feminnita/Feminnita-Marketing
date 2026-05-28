@@ -10,7 +10,9 @@ import {
 } from "../agents/tiktok-shop-agent";
 
 export const tiktokShopManagerRouter = router({
-  triggerEvaluation: protectedProcedure.mutation(async ({ ctx }) => {
+  triggerEvaluation: protectedProcedure
+    .input(z.object({ account: z.enum(["feminnita", "fnt"]).default("feminnita") }).optional())
+    .mutation(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new Error("Banco indisponível");
 
@@ -20,6 +22,7 @@ export const tiktokShopManagerRouter = router({
       userId: ctx.user.id,
       shopId: shopId ?? undefined,
       status: "pending",
+      account: input?.account ?? "feminnita",
       triggeredAt: new Date(),
       createdAt: new Date(),
     });
@@ -54,7 +57,9 @@ export const tiktokShopManagerRouter = router({
       };
     }),
 
-  listEvaluations: protectedProcedure.query(async ({ ctx }) => {
+  listEvaluations: protectedProcedure
+    .input(z.object({ account: z.enum(["feminnita", "fnt"]).default("feminnita") }).optional())
+    .query(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) return [];
 
@@ -68,7 +73,10 @@ export const tiktokShopManagerRouter = router({
         completedAt: tiktokShopEvaluations.completedAt,
       })
       .from(tiktokShopEvaluations)
-      .where(eq(tiktokShopEvaluations.userId, ctx.user.id))
+      .where(and(
+        eq(tiktokShopEvaluations.userId, ctx.user.id),
+        eq(tiktokShopEvaluations.account, input?.account ?? "feminnita"),
+      ))
       .orderBy(desc(tiktokShopEvaluations.triggeredAt))
       .limit(20);
   }),

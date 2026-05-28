@@ -1421,6 +1421,7 @@ export const tiktokShopEvaluations = mysqlTable("tiktok_shop_evaluations", {
   recommendations: text("recommendations"),
   summary: varchar("summary", { length: 500 }),
   errorMessage: varchar("errorMessage", { length: 500 }),
+  account: mysqlEnum("account", ["feminnita", "fnt"]).notNull().default("feminnita"),
   triggeredAt: timestamp("triggeredAt").defaultNow().notNull(),
   completedAt: timestamp("completedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
