@@ -1414,6 +1414,7 @@ var init_schema = __esm({
       recommendations: text2("recommendations"),
       summary: varchar2("summary", { length: 500 }),
       errorMessage: varchar2("errorMessage", { length: 500 }),
+      account: mysqlEnum("account", ["feminnita", "fnt"]).notNull().default("feminnita"),
       triggeredAt: timestamp("triggeredAt").defaultNow().notNull(),
       completedAt: timestamp("completedAt"),
       createdAt: timestamp("createdAt").defaultNow().notNull()
@@ -24652,7 +24653,7 @@ ${rawMetrics}` : "";
 
 // server/routers/tiktok-shop-manager.ts
 var tiktokShopManagerRouter = router({
-  triggerEvaluation: protectedProcedure.mutation(async ({ ctx }) => {
+  triggerEvaluation: protectedProcedure.input(z60.object({ account: z60.enum(["feminnita", "fnt"]).default("feminnita") }).optional()).mutation(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new Error("Banco indispon\xEDvel");
     const shopId = process.env.TIKTOK_SHOP_ID || null;
@@ -24660,6 +24661,7 @@ var tiktokShopManagerRouter = router({
       userId: ctx.user.id,
       shopId: shopId ?? void 0,
       status: "pending",
+      account: input?.account ?? "feminnita",
       triggeredAt: /* @__PURE__ */ new Date(),
       createdAt: /* @__PURE__ */ new Date()
     });
@@ -24681,7 +24683,7 @@ var tiktokShopManagerRouter = router({
       recommendations: ev.recommendations ? JSON.parse(ev.recommendations) : []
     };
   }),
-  listEvaluations: protectedProcedure.query(async ({ ctx }) => {
+  listEvaluations: protectedProcedure.input(z60.object({ account: z60.enum(["feminnita", "fnt"]).default("feminnita") }).optional()).query(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) return [];
     return db.select({
@@ -24691,7 +24693,10 @@ var tiktokShopManagerRouter = router({
       errorMessage: tiktokShopEvaluations.errorMessage,
       triggeredAt: tiktokShopEvaluations.triggeredAt,
       completedAt: tiktokShopEvaluations.completedAt
-    }).from(tiktokShopEvaluations).where(eq65(tiktokShopEvaluations.userId, ctx.user.id)).orderBy(desc33(tiktokShopEvaluations.triggeredAt)).limit(20);
+    }).from(tiktokShopEvaluations).where(and56(
+      eq65(tiktokShopEvaluations.userId, ctx.user.id),
+      eq65(tiktokShopEvaluations.account, input?.account ?? "feminnita")
+    )).orderBy(desc33(tiktokShopEvaluations.triggeredAt)).limit(20);
   }),
   listProducts: protectedProcedure.query(async () => {
     return collectTiktokShopData();
