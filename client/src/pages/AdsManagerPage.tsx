@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
-import MorningBriefing from "@/components/MorningBriefing";
 import { toast } from "sonner";
 import {
   BarChart3,
@@ -391,9 +390,6 @@ export default function AdsManagerPage() {
 
   return (
     <div className="max-w-full px-6 py-6 space-y-6">
-      {/* ── Briefing Matinal ── */}
-      <MorningBriefing />
-
       {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">

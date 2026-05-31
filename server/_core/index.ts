@@ -21,7 +21,6 @@ import { initializeBaileysOnStartup } from "./baileys-startup";
 import { setupBaileysDebugRoutes } from "./baileys-debug";
 import { initializeWebSocket } from "./websocket-notifications";
 import { startAllAgents } from "../agents/index";
-import { updateMarketKnowledge } from "../agents/knowledge-updater";
 import { registerBlogRoutes } from "../services/blog-server";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -360,25 +359,6 @@ async function startServer() {
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
   });
-
-  // Weekly market knowledge update — every Sunday at 08:00
-  scheduleWeeklyKnowledgeUpdate();
-}
-
-function scheduleWeeklyKnowledgeUpdate() {
-  const checkAndRun = () => {
-    const now = new Date();
-    const isSunday = now.getDay() === 0;
-    const isEightAM = now.getHours() === 8 && now.getMinutes() < 5;
-    if (isSunday && isEightAM) {
-      console.log("[KnowledgeUpdater] Iniciando atualização semanal...");
-      updateMarketKnowledge().then((r) =>
-        console.log(`[KnowledgeUpdater] Concluído: ${r.updated.join(", ")}`)
-      ).catch(console.error);
-    }
-  };
-  // Check every 5 minutes
-  setInterval(checkAndRun, 5 * 60 * 1000);
 }
 
 startServer().catch(console.error);

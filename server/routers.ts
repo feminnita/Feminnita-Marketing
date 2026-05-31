@@ -90,7 +90,6 @@ import { blogRouter } from "./routers/blog";
 import { trafficManagerRouter } from "./routers/traffic-manager";
 import { agentMemoryRouter } from "./routers/agent-memory";
 import { agentActionsRouter } from "./routers/agent-actions";
-import { morningBriefingRouter } from "./routers/morning-briefing";
 import { marketKnowledgeRouter } from "./routers/market-knowledge";
 import { specialistChatRouter } from "./routers/specialist-chat";
 import { pushSubscriptionsRouter } from "./routers/push-subscriptions";
@@ -254,7 +253,6 @@ export const appRouter = router({
   trafficManager: trafficManagerRouter,
   agentMemory: agentMemoryRouter,
   agentActions: agentActionsRouter,
-  morningBriefing: morningBriefingRouter,
   marketKnowledge: marketKnowledgeRouter,
   specialistChat: specialistChatRouter,
   pushSubscriptions: pushSubscriptionsRouter,

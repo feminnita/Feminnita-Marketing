@@ -22,18 +22,8 @@ import {
   MessageSquare,
   Send,
   XCircle,
-  Target,
   Volume2,
 } from "lucide-react";
-
-function toStr(item: any): string {
-  if (typeof item === "string") return item;
-  if (item === null || item === undefined) return "";
-  if (typeof item === "object") {
-    return item.summary || item.titulo || item.message || item.text || JSON.stringify(item);
-  }
-  return String(item);
-}
 
 // ─── Config por agente ────────────────────────────────────────────────────────
 
@@ -182,12 +172,6 @@ function ChatBubble({ message, agentName, onSpeak, isSpeaking }: {
 // ─── Painel lateral: análise + ações pendentes ────────────────────────────────
 
 function SidePanel({ agentName }: { agentName: string }) {
-  const config = AGENT_CONFIG[agentName];
-
-  const { data: latestAnalysis } = trpc.morningBriefing.getAgentLatest.useQuery(
-    { agentName } as { agentName: string }
-  );
-
   const { data: pendingActions, refetch: refetchActions } =
     trpc.agentActions.listByStatus.useQuery({
       agentName,
@@ -202,54 +186,10 @@ function SidePanel({ agentName }: { agentName: string }) {
     onSuccess: () => { refetchActions(); toast.success("Ação rejeitada"); },
   });
 
-  const analysis = latestAnalysis?.data as Record<string, any> | null;
   const pendingOnly = (pendingActions || []).slice(0, 5);
 
   return (
     <aside className="w-[30%] min-w-[260px] max-w-[340px] flex flex-col border-r border-slate-200 bg-white overflow-y-auto flex-shrink-0">
-      {/* Análise do dia */}
-      {analysis && (
-        <div className={`p-4 border-b border-slate-200 ${config.bgColor}`}>
-          <div className="flex items-center gap-2 mb-2">
-            <Globe className="w-3.5 h-3.5 text-green-600" />
-            <span className="text-xs font-semibold text-slate-700">
-              Análise de {latestAnalysis?.period}
-            </span>
-          </div>
-          <p className="text-xs text-slate-700 leading-relaxed">{toStr(analysis.summary)}</p>
-
-          {analysis.highlights && analysis.highlights.length > 0 && (
-            <div className="mt-2 space-y-1">
-              {(analysis.highlights as string[]).slice(0, 2).map((h, i) => (
-                <p key={i} className="text-xs text-green-700 flex items-start gap-1">
-                  <span>✓</span>{h}
-                </p>
-              ))}
-            </div>
-          )}
-          {analysis.alerts && analysis.alerts.length > 0 && (
-            <div className="mt-2 space-y-1">
-              {(analysis.alerts as string[]).slice(0, 2).map((a, i) => (
-                <p key={i} className="text-xs text-red-700 flex items-start gap-1">
-                  <span>⚠</span>{a}
-                </p>
-              ))}
-            </div>
-          )}
-
-          {/* Path to 100K (apenas Mariana) */}
-          {analysis.pathTo100k && (
-            <div className="mt-2 bg-white rounded p-2 border border-green-200">
-              <div className="flex items-center gap-1 mb-1">
-                <Target className="w-3 h-3 text-green-600" />
-                <span className="text-xs font-semibold text-green-800">Plano R$100K</span>
-              </div>
-              <p className="text-xs text-green-700">{analysis.pathTo100k}</p>
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Fila de aprovação */}
       <div className="p-4 flex-1">
         <div className="flex items-center gap-2 mb-3">

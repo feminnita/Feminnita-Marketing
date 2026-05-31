@@ -39,81 +39,14 @@ import {
   LayoutDashboard, LogOut, PanelLeft, Users, Calendar,
   BookOpen, Newspaper, CheckCircle, Brain, MessageCircle,
   Bell, Image, Briefcase, TrendingUp, ChevronDown, ChevronRight,
-  Settings, Megaphone, BarChart2, Bot, ShoppingBag, Music, Video, ClipboardCheck, Globe, Pencil, Zap,
-  AlertTriangle, X, ExternalLink, Sparkles, FolderOpen,
+  Settings, Megaphone, BarChart2, Bot, ShoppingBag, Music, Video, ClipboardCheck, Globe, Pencil,
+  Sparkles, FolderOpen,
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 import ChatWidget from "./ChatWidget";
-
-// ─── Banner diário da Fernanda ────────────────────────────────────────────────
-
-function FernandaMorningBanner() {
-  const today = new Date().toISOString().slice(0, 10);
-  const dismissKey = `fernanda_briefing_dismissed_${today}`;
-  const [dismissed, setDismissed] = useState(() => !!localStorage.getItem(dismissKey));
-  const [, setLocation] = useLocation();
-
-  const { data } = trpc.morningBriefing.getToday.useQuery(undefined, {
-    enabled: !dismissed,
-    retry: false,
-    refetchOnWindowFocus: false,
-  });
-
-  if (dismissed || !data) return null;
-
-  const topAlert = data.topAlerts?.[0];
-  const highCount = data.highPriorityActions ?? 0;
-
-  const handleDismiss = () => {
-    localStorage.setItem(dismissKey, "1");
-    setDismissed(true);
-  };
-
-  return (
-    <div className="flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-rose-900 to-pink-800 text-white text-sm flex-shrink-0">
-      <img
-        src="/agents/fernanda.jpg"
-        alt="Fernanda"
-        className="w-7 h-7 rounded-full object-cover object-top flex-shrink-0 border border-rose-400"
-        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-      />
-      <div className="flex-1 min-w-0 flex items-center gap-3 flex-wrap">
-        <span className="font-semibold text-rose-200 flex-shrink-0">Fernanda — {today}</span>
-        {data.pathTo100k && (
-          <span className="text-white/90 truncate">{data.pathTo100k}</span>
-        )}
-        {topAlert && (
-          <span className="flex items-center gap-1 text-amber-300 flex-shrink-0">
-            <AlertTriangle className="w-3.5 h-3.5" />
-            {topAlert}
-          </span>
-        )}
-        {highCount > 0 && (
-          <span className="bg-rose-700 text-white text-xs px-2 py-0.5 rounded-full flex-shrink-0">
-            {highCount} ação{highCount > 1 ? "ões" : ""} prioritária{highCount > 1 ? "s" : ""}
-          </span>
-        )}
-      </div>
-      <button
-        onClick={() => { setLocation("/briefing"); handleDismiss(); }}
-        className="flex items-center gap-1 text-xs text-rose-200 hover:text-white transition-colors flex-shrink-0 underline underline-offset-2"
-      >
-        Ver briefing completo
-        <ExternalLink className="w-3 h-3" />
-      </button>
-      <button
-        onClick={handleDismiss}
-        className="p-1 hover:bg-rose-700 rounded transition-colors flex-shrink-0"
-        title="Dispensar"
-      >
-        <X className="w-3.5 h-3.5" />
-      </button>
-    </div>
-  );
-}
 
 const influencers = [
   { id: 1, name: "Carol", emoji: "👩‍👧‍👦" },
@@ -407,11 +340,6 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
-                  <SidebarMenuSubButton onClick={() => setLocation("/briefing")}>
-                    <Zap className="h-3 w-3" /> Briefing Matinal
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-                <SidebarMenuSubItem>
                   <SidebarMenuSubButton onClick={() => setLocation("/equipe-marketing")}>
                     <Briefcase className="h-3 w-3" /> Equipe de Marketing
                   </SidebarMenuSubButton>
@@ -662,7 +590,6 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
             <SidebarTrigger className="h-9 w-9 rounded-lg bg-background" />
           </div>
         )}
-        <FernandaMorningBanner />
         <div className="flex-1 min-h-0 p-4 flex flex-col overflow-y-auto">{children}</div>
       </SidebarInset>
     </>

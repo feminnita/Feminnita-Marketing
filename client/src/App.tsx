@@ -74,7 +74,6 @@ const TranscricaoReuniaoPage  = lazy(() => import("@/pages/TranscricaoReuniaoPag
 const AmazonPage              = lazy(() => import("@/pages/AmazonPage"));
 const SpecialistsPage         = lazy(() => import("@/pages/SpecialistsPage"));
 const PublicInfluencerBlog    = lazy(() => import("@/pages/PublicInfluencerBlog"));
-const MorningBriefingPage     = lazy(() => import("@/pages/MorningBriefingPage"));
 const TiktokAgentPage         = lazy(() => import("@/pages/TiktokAgentPage"));
 const ChatPage                = lazy(() => import("@/pages/ChatPage"));
 const PortalLoginPage         = lazy(() => import("@/pages/PortalLoginPage"));
@@ -267,8 +266,6 @@ export default function App() {
         return <AmazonPage />;
       case "/especialistas":
         return <SpecialistsPage />;
-      case "/briefing":
-        return <MorningBriefingPage />;
       case "/gerar-imagem":
         return <HailuoImagePage />;
       case "/gerar-video":
