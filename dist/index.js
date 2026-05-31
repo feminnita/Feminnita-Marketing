@@ -2235,10 +2235,10 @@ async function tryTokenToBrowserSession(page, context, account) {
       if (rawCookies.length > 0 && !isLoginRedirect) {
         const parsed = rawCookies.map((c) => {
           const main = c.split(";")[0];
-          const eq116 = main.indexOf("=");
+          const eq113 = main.indexOf("=");
           return {
-            name: main.slice(0, eq116).trim(),
-            value: main.slice(eq116 + 1).trim(),
+            name: main.slice(0, eq113).trim(),
+            value: main.slice(eq113 + 1).trim(),
             domain: ".mercadolivre.com.br",
             path: "/",
             httpOnly: false,
@@ -4484,7 +4484,7 @@ Retorne APENAS JSON v\xE1lido:
 async function requestCreativeVariants(userId, brief) {
   const db = await getDb();
   if (!db) return;
-  const { eq: eq116 } = await import("drizzle-orm");
+  const { eq: eq113 } = await import("drizzle-orm");
   const variants = ["demografico", "transformacao", "golias"];
   const variantLabel = {
     demografico: "P\xFAblico-Alvo",
@@ -4592,7 +4592,7 @@ async function requestCreative(userId, brief) {
   });
   const creativeId = insertResult[0].insertId;
   if (brief.imageBase64Input) {
-    const { eq: eq117 } = await import("drizzle-orm");
+    const { eq: eq114 } = await import("drizzle-orm");
     let productDescription = brief.description;
     try {
       const visionResult = await invokeLLM({
@@ -4651,7 +4651,7 @@ Analise esta foto e retorne APENAS JSON v\xE1lido:
       generatedBody: copy2.body,
       status: finalStatus2,
       updatedAt: /* @__PURE__ */ new Date()
-    }).where(eq117(adCreatives.id, creativeId));
+    }).where(eq114(adCreatives.id, creativeId));
     console.log(`[CreativeAgent] Criativo #${creativeId} (foto produto \u2192 ${generatedImage ? "banner Imagen" : "foto original"}) \u2192 pending_approval`);
     return {
       id: creativeId,
@@ -4685,14 +4685,14 @@ Analise esta foto e retorne APENAS JSON v\xE1lido:
   const imageBase64 = await generateImageWithImagen(imagenPrompt);
   const finalStatus = imageBase64 ? "pending_approval" : "generated";
   const message = imageBase64 ? "Banner gerado com sucesso! Aguardando sua aprova\xE7\xE3o." : "Copy gerado. Imagem requer configura\xE7\xE3o do Gemini Imagen (adicione LLM_API_KEY ao .env).";
-  const { eq: eq116 } = await import("drizzle-orm");
+  const { eq: eq113 } = await import("drizzle-orm");
   await db.update(adCreatives).set({
     imageBase64: imageBase64 || void 0,
     generatedHeadline: copy.headline,
     generatedBody: copy.body,
     status: finalStatus,
     updatedAt: /* @__PURE__ */ new Date()
-  }).where(eq116(adCreatives.id, creativeId));
+  }).where(eq113(adCreatives.id, creativeId));
   console.log(`[CreativeAgent] Criativo #${creativeId} \u2192 ${finalStatus}`);
   return {
     id: creativeId,
@@ -5055,7 +5055,7 @@ __export(websocket_notifications_exports, {
   notifyPerformanceUpdate: () => notifyPerformanceUpdate
 });
 import { Server as SocketIOServer } from "socket.io";
-import { eq as eq90 } from "drizzle-orm";
+import { eq as eq87 } from "drizzle-orm";
 function broadcastChatUsers() {
   if (!io) return;
   const users2 = [...chatUsers.values()].map((u) => ({ name: u.name, color: u.color }));
@@ -5083,7 +5083,7 @@ async function sendChatPushToOfflineUsers(msg) {
       );
     } catch (err) {
       if (err.expired) {
-        await db.delete(pushSubscriptions).where(eq90(pushSubscriptions.id, sub.id));
+        await db.delete(pushSubscriptions).where(eq87(pushSubscriptions.id, sub.id));
       }
     }
   }
@@ -5165,7 +5165,7 @@ function initializeWebSocket(httpServer) {
       });
       getDb().then((db) => {
         if (!db) return;
-        db.select().from(pushSubscriptions).where(eq90(pushSubscriptions.userId, toUserIdNum)).then((subs) => {
+        db.select().from(pushSubscriptions).where(eq87(pushSubscriptions.userId, toUserIdNum)).then((subs) => {
           for (const sub of subs) {
             sendPush(
               { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
@@ -5315,7 +5315,7 @@ var init_websocket_notifications = __esm({
 });
 
 // server/services/ga4.ts
-import { eq as eq95, and as and76 } from "drizzle-orm";
+import { eq as eq92, and as and73 } from "drizzle-orm";
 function getGA4AuthUrl(redirectUri, state) {
   const params = new URLSearchParams({
     client_id: process.env.GOOGLE_GA4_CLIENT_ID,
@@ -5368,17 +5368,17 @@ async function refreshGA4Token(userId, tokenId, refreshToken) {
   const expiresAt = new Date(Date.now() + expiresIn * 1e3);
   const db = await getDb();
   if (db) {
-    await db.update(oauthTokens).set({ accessToken, expiresAt }).where(eq95(oauthTokens.id, tokenId));
+    await db.update(oauthTokens).set({ accessToken, expiresAt }).where(eq92(oauthTokens.id, tokenId));
   }
   return accessToken;
 }
 async function getValidGA4Token(userId) {
   const db = await getDb();
   if (!db) return null;
-  const rows = await db.select().from(oauthTokens).where(and76(
-    eq95(oauthTokens.userId, userId),
-    eq95(oauthTokens.plataforma, "google_analytics"),
-    eq95(oauthTokens.isActive, true)
+  const rows = await db.select().from(oauthTokens).where(and73(
+    eq92(oauthTokens.userId, userId),
+    eq92(oauthTokens.plataforma, "google_analytics"),
+    eq92(oauthTokens.isActive, true)
   )).limit(1);
   if (rows.length === 0) return null;
   const token = rows[0];
@@ -5439,7 +5439,7 @@ var ga4_oauth_exports = {};
 __export(ga4_oauth_exports, {
   registerGA4OAuthRoutes: () => registerGA4OAuthRoutes
 });
-import { eq as eq114, and as and91 } from "drizzle-orm";
+import { eq as eq111, and as and88 } from "drizzle-orm";
 function registerGA4OAuthRoutes(app) {
   app.get("/api/ga4/start", async (req, res) => {
     try {
@@ -5464,7 +5464,7 @@ function registerGA4OAuthRoutes(app) {
       if (!tokens) return res.redirect("/ga4?error=exchange_failed");
       const db = await getDb();
       if (!db) return res.redirect("/ga4?error=db_unavailable");
-      const existing = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and91(eq114(oauthTokens.userId, userId), eq114(oauthTokens.plataforma, "google_analytics"))).limit(1);
+      const existing = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and88(eq111(oauthTokens.userId, userId), eq111(oauthTokens.plataforma, "google_analytics"))).limit(1);
       const expiresAt = new Date(Date.now() + tokens.expiresIn * 1e3);
       if (existing.length > 0) {
         await db.update(oauthTokens).set({
@@ -5472,7 +5472,7 @@ function registerGA4OAuthRoutes(app) {
           ...tokens.refreshToken ? { refreshToken: tokens.refreshToken } : {},
           expiresAt,
           isActive: true
-        }).where(eq114(oauthTokens.id, existing[0].id));
+        }).where(eq111(oauthTokens.id, existing[0].id));
       } else {
         if (!tokens.refreshToken) {
           console.error("[GA4 OAuth] No refresh token received");
@@ -5515,7 +5515,7 @@ var meta_oauth_exports = {};
 __export(meta_oauth_exports, {
   registerMetaOAuthRoutes: () => registerMetaOAuthRoutes
 });
-import { eq as eq115, and as and92 } from "drizzle-orm";
+import { eq as eq112, and as and89 } from "drizzle-orm";
 function getAuthUrl(state) {
   const params = new URLSearchParams({
     client_id: APP_ID,
@@ -5577,7 +5577,7 @@ function registerMetaOAuthRoutes(app) {
     const db = await getDb();
     if (!db) return res.redirect("/gestor-trafego?error=db_unavailable");
     const expiresAt = new Date(Date.now() + long.expiresIn * 1e3);
-    const existing = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and92(eq115(oauthTokens.userId, userId), eq115(oauthTokens.plataforma, "meta"))).limit(1);
+    const existing = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and89(eq112(oauthTokens.userId, userId), eq112(oauthTokens.plataforma, "meta"))).limit(1);
     if (existing.length > 0) {
       const prevInfo = existing[0].accountInfo ? JSON.parse(existing[0].accountInfo) : {};
       await db.update(oauthTokens).set({
@@ -5585,7 +5585,7 @@ function registerMetaOAuthRoutes(app) {
         expiresAt,
         isActive: true,
         accountInfo: JSON.stringify(prevInfo)
-      }).where(eq115(oauthTokens.id, existing[0].id));
+      }).where(eq112(oauthTokens.id, existing[0].id));
     } else {
       await db.insert(oauthTokens).values({
         userId,
@@ -8276,8 +8276,8 @@ var blingOAuthRouter = router({
     const db = await (await Promise.resolve().then(() => (init_db(), db_exports))).getDb();
     if (!db) throw new Error("Database not available");
     const { oauthTokens: oauthTokens3 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
-    const { eq: eq116, and: and93 } = await import("drizzle-orm");
-    await db.update(oauthTokens3).set({ isActive: false }).where(and93(eq116(oauthTokens3.userId, ctx.user.id), eq116(oauthTokens3.plataforma, "bling")));
+    const { eq: eq113, and: and90 } = await import("drizzle-orm");
+    await db.update(oauthTokens3).set({ isActive: false }).where(and90(eq113(oauthTokens3.userId, ctx.user.id), eq113(oauthTokens3.plataforma, "bling")));
     return { sucesso: true };
   })
 });
@@ -13986,9 +13986,9 @@ function rateLimit(key, maxCalls, windowMs = 6e4) {
 function assertRateLimit(key, maxCalls, windowMs = 6e4, message) {
   const { allowed, remaining, resetAt } = rateLimit(key, maxCalls, windowMs);
   if (!allowed) {
-    const { TRPCError: TRPCError19 } = __require("@trpc/server");
+    const { TRPCError: TRPCError18 } = __require("@trpc/server");
     const waitSec = Math.ceil((resetAt - Date.now()) / 1e3);
-    throw new TRPCError19({
+    throw new TRPCError18({
       code: "TOO_MANY_REQUESTS",
       message: message ?? `Limite de requisi\xE7\xF5es atingido. Tente novamente em ${waitSec}s.`
     });
@@ -29995,8 +29995,8 @@ async function proposeActions(analysis, today) {
   try {
     const db = await getDb();
     if (!db) return;
-    const { eq: eq116, and: and93 } = await import("drizzle-orm");
-    const existing = await db.select({ title: agentActions.title }).from(agentActions).where(and93(eq116(agentActions.agentName, "fernanda"), eq116(agentActions.date, today)));
+    const { eq: eq113, and: and90 } = await import("drizzle-orm");
+    const existing = await db.select({ title: agentActions.title }).from(agentActions).where(and90(eq113(agentActions.agentName, "fernanda"), eq113(agentActions.date, today)));
     const existingTitles = new Set(existing.map((r) => r.title));
     const toInsert = [];
     for (const rec of analysis.recommendations) {
@@ -30700,304 +30700,35 @@ var agentActionsRouter = router({
   })
 });
 
-// server/routers/morning-briefing.ts
-init_agentMemory();
+// server/routers/market-knowledge.ts
+import { z as z68 } from "zod";
+var marketKnowledgeRouter = router({
+  triggerUpdate: protectedProcedure.input(z68.object({ domain: z68.string().optional() })).mutation(async ({ input }) => {
+    const result = await updateMarketKnowledge(input.domain);
+    return result;
+  }),
+  getStatus: protectedProcedure.query(async () => {
+    return getKnowledgeStatus();
+  }),
+  getLatest: protectedProcedure.input(z68.object({ agentName: z68.string() })).query(async ({ input }) => {
+    return getLatestKnowledge(input.agentName);
+  })
+});
+
+// server/routers/specialist-chat.ts
+import { z as z69 } from "zod";
+init_tts();
+init_db();
+init_schema();
 import { TRPCError as TRPCError11 } from "@trpc/server";
+import { eq as eq79, desc as desc42, and as and63 } from "drizzle-orm";
 
-// server/agents/sofia-agent.ts
-init_llm();
+// server/agents/specialist-chat-agent.ts
 init_agentMemory();
-init_db();
-init_schema();
-import { eq as eq79, and as and63 } from "drizzle-orm";
-var INSTAGRAM_ACCOUNT_ID = "59536615191";
-var GRAPH_BASE5 = "https://graph.facebook.com/v19.0";
-var SYSTEM_PROMPT8 = `Voc\xEA \xE9 a Sofia Oliveira \u2014 estrategista de conte\xFAdo e crescimento org\xE2nico com 10 anos de experi\xEAncia exclusiva em Instagram para marcas de moda, lifestyle e beleza no Brasil. Formada em Comunica\xE7\xE3o Digital pela PUC-SP, certificada pela Meta e pela Hootsuite Academy. Trabalhou como head de social media para marcas como Farm, Animale e diversas marcas DTC de moda feminina. J\xE1 cresceu perfis do zero at\xE9 500K seguidores com foco em convers\xE3o real, n\xE3o vaidade de n\xFAmero.
-
-SEU M\xC9TODO: voc\xEA analisa o funil org\xE2nico completo \u2014 descoberta (alcance/impress\xF5es), considera\xE7\xE3o (salvamentos/compartilhamentos) e convers\xE3o (cliques no link/DMs). Entende que no Instagram de 2024-2025, Reels s\xE3o o principal motor de alcance, Stories s\xE3o o motor de venda e carross\xE9is s\xE3o o motor de salvamento/autoridade.
-
-TEND\xCANCIAS QUE VOC\xCA ACOMPANHA EM TEMPO REAL:
-- Algoritmo atual prioriza: tempo de visualiza\xE7\xE3o > salvamentos > compartilhamentos > curtidas
-- Reels abaixo de 7 segundos t\xEAm 3x mais chance de replay loop (algoritmo adora)
-- "Conte\xFAdo de bastidor" converte 40% mais do que conte\xFAdo polido/est\xFAdio
-- Hor\xE1rios de pico para mulheres 28-45 no Brasil: 7h-9h, 12h-13h, 20h-22h
-- Hashtags: m\xE1ximo 5 ultra-espec\xEDficas superam 30 gen\xE9ricas
-- SEO do Instagram: primeiras 3 palavras da legenda s\xE3o indexadas \u2014 use palavras-chave reais
-- Stories com "sticker de pergunta" aumentam DMs em 3x (converte em venda)
-- Carrossel de "antes e depois" da revendedora tem engajamento 5x maior que foto de produto
-
-CONTEXTO FEMINNITA:
-- Pijamas atacado exclusivos | P\xFAblico: mulheres 28-45 revendedoras aut\xF4nomas
-- Tom: feminino, caloroso, de mulher para mulher \u2014 N\xC3O corporativo
-- Meta de receita via Instagram org\xE2nico: R$30K/m\xEAs (parte dos R$100K totais)
-- O que funciona COMPROVADO: unboxing real, stories de revendedoras felizes, bastidor do estoque
-- O que N\xC3O funciona: fotos de cat\xE1logo sem contexto, legendas longas demais, hashtags gen\xE9ricas
-
-Retorne APENAS JSON v\xE1lido:
-{
-  "summary": "diagn\xF3stico preciso do momento org\xE2nico em 2-3 frases",
-  "highlights": ["conquista espec\xEDfica com n\xFAmero ou contexto", "segundo ponto positivo"],
-  "alerts": ["problema com causa e impacto estimado na receita"],
-  "recommendations": ["a\xE7\xE3o concreta e imediata com formato e hor\xE1rio espec\xEDfico", "segundo ajuste t\xE1tico", "terceiro teste"],
-  "trendingTopics": ["tend\xEAncia atual do Instagram relevante para pijamas/revendas", "segunda tend\xEAncia"],
-  "proposedActions": [
-    {
-      "title": "Nome curto da a\xE7\xE3o",
-      "description": "roteiro detalhado do que filmar/postar e por qu\xEA vai funcionar",
-      "type": "post" | "story" | "reel" | "campaign" | "hashtag",
-      "priority": "alta" | "media" | "baixa",
-      "estimatedImpact": "estimativa concreta: ex '3-5K novos alcances, 20-40 DMs de interesse'"
-    }
-  ]
-}`;
-async function fetchInstagramInsights() {
-  const token = process.env.META_ACCESS_TOKEN;
-  if (!token) return {};
-  try {
-    const params = new URLSearchParams({
-      metric: "reach,impressions,profile_views,follower_count",
-      period: "day",
-      since: Math.floor((Date.now() - 7 * 864e5) / 1e3).toString(),
-      until: Math.floor(Date.now() / 1e3).toString(),
-      access_token: token
-    });
-    const res = await fetch(`${GRAPH_BASE5}/${INSTAGRAM_ACCOUNT_ID}/insights?${params}`);
-    if (!res.ok) return {};
-    return await res.json();
-  } catch {
-    return {};
-  }
-}
-async function proposeActions2(analysis, today) {
-  if (!analysis.proposedActions?.length) return;
-  try {
-    const db = await getDb();
-    if (!db) return;
-    const existing = await db.select({ title: agentActions.title }).from(agentActions).where(and63(eq79(agentActions.agentName, "sofia"), eq79(agentActions.date, today)));
-    const existingTitles = new Set(existing.map((r) => r.title));
-    const toInsert = analysis.proposedActions.filter((a) => a.title && !existingTitles.has(a.title)).map((a) => ({
-      agentName: "sofia",
-      date: today,
-      title: a.title.slice(0, 150),
-      description: a.description,
-      actionType: a.type || "post",
-      priority: ["alta", "media", "baixa"].includes(a.priority) ? a.priority : "media",
-      estimatedImpact: a.estimatedImpact,
-      status: "pending"
-    }));
-    if (toInsert.length > 0) {
-      await db.insert(agentActions).values(toInsert);
-      console.log(`[Sofia] ${toInsert.length} a\xE7\xF5es propostas no painel`);
-    }
-  } catch (err) {
-    console.error("[Sofia] Erro ao propor a\xE7\xF5es:", err.message);
-  }
-}
-async function runSofiaAnalysis() {
-  const today = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
-  console.log(`[Sofia] Iniciando an\xE1lise de Instagram \u2014 ${today}`);
-  const [memoryContext, igInsights, trendSearch, competitorSearch] = await Promise.all([
-    buildMemoryContext("sofia"),
-    fetchInstagramInsights(),
-    searchWeb("tend\xEAncias conte\xFAdo Instagram moda pijama Brasil 2026", { days: 7, topic: "news" }),
-    searchWeb("crescimento Instagram atacado moda feminina revendedoras estrat\xE9gia", { days: 14 })
-  ]);
-  const searchContext = [
-    formatSearchResults(trendSearch),
-    formatSearchResults(competitorSearch)
-  ].join("\n\n");
-  const userPrompt = `Data: ${today}
-
-DADOS DO INSTAGRAM (\xFAltimos 7 dias):
-${JSON.stringify(igInsights, null, 2).slice(0, 1500)}
-
-PESQUISA DE TEND\xCANCIAS:
-${searchContext.slice(0, 2e3)}
-
-MEM\xD3RIA ACUMULADA:
-${memoryContext.slice(0, 1e3)}
-
-${await (async () => {
-    const k = await getLatestKnowledge("knowledge_instagram");
-    return k ? `INTELIG\xCANCIA INSTAGRAM ATUAL (${k.updatedAt?.split("T")[0]}):
-Tend\xEAncias: ${k.trends?.join(" | ")}
-Dicas: ${k.tips?.join(" | ")}
-Alertas: ${k.warnings?.join(" | ")}` : "";
-  })()}
-
-Analise o estado atual do Instagram da Feminnita e gere o relat\xF3rio di\xE1rio com a\xE7\xF5es propostas.`;
-  try {
-    const result = await invokeLLM({
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT8 },
-        { role: "user", content: userPrompt }
-      ]
-    });
-    const content = result.choices[0]?.message?.content;
-    if (typeof content !== "string") throw new Error("LLM retornou resposta inv\xE1lida");
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(content);
-    await saveMemory("sofia", "daily_analysis", today, parsed);
-    console.log(`[Sofia] An\xE1lise ${today} salva \u2014 ${parsed.proposedActions?.length || 0} a\xE7\xF5es propostas`);
-    await proposeActions2(parsed, today);
-    return parsed;
-  } catch (err) {
-    const fallback = {
-      summary: `An\xE1lise ${today} \u2014 erro: ${err.message}`,
-      highlights: [],
-      alerts: ["Erro ao gerar an\xE1lise \u2014 verificar logs"],
-      recommendations: [],
-      trendingTopics: [],
-      proposedActions: []
-    };
-    await saveMemory("sofia", "daily_analysis", today, fallback);
-    return fallback;
-  }
-}
-
-// server/agents/clara-agent.ts
-init_llm();
-init_agentMemory();
-init_db();
-init_schema();
-import { eq as eq80, and as and64 } from "drizzle-orm";
-var SYSTEM_PROMPT9 = `Voc\xEA \xE9 a Clara Mendes \u2014 analista s\xEAnior de intelig\xEAncia de mercado e competitiva com 12 anos de experi\xEAncia em varejo, atacado e e-commerce de moda no Brasil. MBA em Estrat\xE9gia Empresarial pela FGV, forma\xE7\xE3o em Business Intelligence pela Funda\xE7\xE3o Dom Cabral. Trabalhou como analista de mercado para o Grupo Soma (Farm, Animale, NV), consultora de pricing para marcas de atacado t\xEAxtil em SP e pesquisadora de tend\xEAncias para o SEBRAE Moda. Conhece profundamente o mercado de pijamas, roupa \xEDntima e sleepwear no Brasil \u2014 sazonalidade, comportamento do comprador atacado, canais emergentes.
-
-SEU M\xC9TODO: voc\xEA combina dados quantitativos (pre\xE7os, SKUs, avalia\xE7\xF5es, presen\xE7a em marketplaces) com an\xE1lise qualitativa (posicionamento, comunica\xE7\xE3o, gaps percebidos). Usa a matriz SWOT din\xE2mica e o framework "Jobs to be Done" para identificar o que os concorrentes n\xE3o est\xE3o entregando \u2014 e onde a Feminnita pode entrar com vantagem.
-
-INTELIG\xCANCIA DE MERCADO QUE VOC\xCA DOMINA:
-- Sazonalidade do setor: pico de vendas pijamas = maio a setembro (inverno) e outubro-dezembro (Natal)
-- Ticket atacado mercado: R$180\u2013R$600/kit | Feminnita R$400 est\xE1 no segmento premium-m\xE9dio
-- Canais em crescimento explosivo: TikTok Shop (pijamas viralizam f\xE1cil), Shopee (volume), ML (reputa\xE7\xE3o)
-- Tend\xEAncia de produto 2025: pijamas plus size (lacuna enorme no atacado), conjuntos fam\xEDlia, tecido viscose premium
-- Movimento do mercado: marcas regionais crescem mais r\xE1pido que nacionais por entrega r\xE1pida e personaliza\xE7\xE3o
-- Ponto cego dos concorrentes: quase nenhum tem suporte ativo \xE0 revendedora (onboarding, materiais, estrat\xE9gia de venda)
-
-CONCORRENTES A MONITORAR (baseado no mercado real):
-- Marcas atacado pijamas SP/MG (menor ticket, mais volume, menos suporte)
-- Lupo e Hering (marca forte mas sem foco em revendedoras aut\xF4nomas)
-- Marcas do TikTok Shop emergentes (crescimento r\xE1pido, produto mais b\xE1sico)
-- Fornecedores de pijamas do Br\xE1s/Bom Retiro (pre\xE7o baixo, sem diferencial)
-
-CONTEXTO FEMINNITA:
-- Diferencial real: estampas exclusivas + suporte ativa \xE0s revendedoras + pronta entrega
-- Vulnerabilidade: queda de R$78K para R$20K/m\xEAs \u2014 pode sinalizar perda de mercado ou problema de posicionamento
-- Oportunidade imediata: reativar revendedoras antigas antes que migrem para concorrentes
-
-Retorne APENAS JSON v\xE1lido:
-{
-  "summary": "panorama competitivo preciso com contexto de mercado atual",
-  "highlights": ["vantagem competitiva real da Feminnita com fundamento", "segunda oportunidade de mercado"],
-  "alerts": ["amea\xE7a concreta com concorrente espec\xEDfico ou tend\xEAncia de mercado", "segundo risco"],
-  "recommendations": ["a\xE7\xE3o estrat\xE9gica espec\xEDfica e acion\xE1vel com prazo sugerido", "segundo movimento t\xE1tico"],
-  "competitors": [
-    {
-      "name": "Nome ou categoria do concorrente",
-      "strength": "o que eles fazem melhor",
-      "weakness": "gap ou ponto fraco explor\xE1vel",
-      "recentMove": "movimento recente ou tend\xEAncia identificada"
-    }
-  ],
-  "marketOpportunities": ["oportunidade de mercado com estimativa de tamanho ou timing", "segunda oportunidade"],
-  "pricingIntel": "an\xE1lise de pricing do mercado com refer\xEAncias concretas",
-  "proposedActions": [
-    {
-      "title": "Nome da iniciativa estrat\xE9gica",
-      "description": "plano de a\xE7\xE3o detalhado para ganhar vantagem competitiva",
-      "type": "pricing" | "product" | "marketing" | "channel",
-      "priority": "alta" | "media" | "baixa",
-      "estimatedImpact": "impacto estimado em receita ou posicionamento"
-    }
-  ]
-}`;
-async function proposeActions3(analysis, today) {
-  if (!analysis.proposedActions?.length) return;
-  try {
-    const db = await getDb();
-    if (!db) return;
-    const existing = await db.select({ title: agentActions.title }).from(agentActions).where(and64(eq80(agentActions.agentName, "clara"), eq80(agentActions.date, today)));
-    const existingTitles = new Set(existing.map((r) => r.title));
-    const toInsert = analysis.proposedActions.filter((a) => a.title && !existingTitles.has(a.title)).map((a) => ({
-      agentName: "clara",
-      date: today,
-      title: a.title.slice(0, 150),
-      description: a.description,
-      actionType: a.type || "marketing",
-      priority: ["alta", "media", "baixa"].includes(a.priority) ? a.priority : "media",
-      estimatedImpact: a.estimatedImpact,
-      status: "pending"
-    }));
-    if (toInsert.length > 0) {
-      await db.insert(agentActions).values(toInsert);
-      console.log(`[Clara] ${toInsert.length} a\xE7\xF5es propostas no painel`);
-    }
-  } catch (err) {
-    console.error("[Clara] Erro ao propor a\xE7\xF5es:", err.message);
-  }
-}
-async function runClaraAnalysis() {
-  const today = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
-  console.log(`[Clara] Iniciando an\xE1lise competitiva \u2014 ${today}`);
-  const [memoryContext, competitorData2] = await Promise.all([
-    buildMemoryContext("clara"),
-    multiSearch([
-      "pijamas atacado Brasil concorrentes marcas 2026 revendedoras",
-      "pre\xE7o atacado pijama kit por maior Brasil 2026",
-      "tend\xEAncia pijama estampa tecido moda feminina Brasil 2026"
-    ])
-  ]);
-  const userPrompt = `Data: ${today}
-
-PESQUISA DE MERCADO E CONCORR\xCANCIA:
-${competitorData2.slice(0, 3e3)}
-
-MEM\xD3RIA ACUMULADA:
-${memoryContext.slice(0, 800)}
-
-INTELIG\xCANCIA DE MERCADO ATUAL:
-${await Promise.all([getLatestKnowledge("knowledge_fashion"), getLatestKnowledge("knowledge_marketplaces")]).then(([f, m]) => [
-    f ? `Moda: ${f.trends?.join(" | ")}` : "",
-    m ? `Marketplaces: ${m.trends?.join(" | ")}` : ""
-  ].filter(Boolean).join("\n"))}
-
-Fa\xE7a a an\xE1lise competitiva di\xE1ria para a Feminnita. Identifique amea\xE7as, oportunidades e a\xE7\xF5es estrat\xE9gicas concretas.`;
-  try {
-    const result = await invokeLLM({
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT9 },
-        { role: "user", content: userPrompt }
-      ]
-    });
-    const content = result.choices[0]?.message?.content;
-    if (typeof content !== "string") throw new Error("LLM retornou resposta inv\xE1lida");
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(content);
-    await saveMemory("clara", "daily_analysis", today, parsed);
-    console.log(`[Clara] An\xE1lise ${today} salva \u2014 ${parsed.competitors?.length || 0} concorrentes monitorados`);
-    await proposeActions3(parsed, today);
-    return parsed;
-  } catch (err) {
-    const fallback = {
-      summary: `An\xE1lise ${today} \u2014 erro: ${err.message}`,
-      highlights: [],
-      alerts: ["Erro ao gerar an\xE1lise \u2014 verificar logs"],
-      recommendations: [],
-      competitors: [],
-      marketOpportunities: [],
-      pricingIntel: "",
-      proposedActions: []
-    };
-    await saveMemory("clara", "daily_analysis", today, fallback);
-    return fallback;
-  }
-}
-
-// server/agents/mariana-agent.ts
-init_llm();
-init_agentMemory();
+import Anthropic5 from "@anthropic-ai/sdk";
 
 // server/services/marketplaceAds.ts
-var GRAPH_BASE6 = "https://graph.facebook.com/v19.0";
+var GRAPH_BASE5 = "https://graph.facebook.com/v19.0";
 async function fetchMetaAdsMetrics(days = 7) {
   const token = process.env.META_ACCESS_TOKEN;
   const adAccountId = process.env.META_AD_ACCOUNT_ID || "act_231648936319132";
@@ -31011,7 +30742,7 @@ async function fetchMetaAdsMetrics(days = 7) {
       level: "account",
       access_token: token
     });
-    const res = await fetch(`${GRAPH_BASE6}/${adAccountId}/insights?${params}`);
+    const res = await fetch(`${GRAPH_BASE5}/${adAccountId}/insights?${params}`);
     if (!res.ok) {
       const err = await res.json();
       return { platform: "meta", available: false, reason: err.error?.message || `HTTP ${res.status}` };
@@ -31172,381 +30903,7 @@ function formatPlatformSummary(platforms) {
   return lines.join("\n");
 }
 
-// server/agents/mariana-agent.ts
-init_db();
-init_schema();
-import { eq as eq81, and as and65 } from "drizzle-orm";
-var SYSTEM_PROMPT10 = `Voc\xEA \xE9 a Mariana Costa \u2014 diretora comercial e estrategista de vendas com 14 anos de experi\xEAncia em atacado t\xEAxtil, e-commerce e expans\xE3o multicanal no Brasil. Especializa\xE7\xE3o em Gest\xE3o Comercial pela FGV e em Growth Hacking pela Reforge (San Francisco). Construiu do zero opera\xE7\xF5es de atacado digital para marcas de moda que sa\xEDram de R$50K para R$500K/m\xEAs em 18 meses. Conhece profundamente o comportamento da revendedora aut\xF4noma brasileira \u2014 suas obje\xE7\xF5es, motiva\xE7\xF5es, jornada de compra e pontos de abandono.
-
-SEU M\xC9TODO: voc\xEA pensa em funil de receita, n\xE3o em a\xE7\xF5es isoladas. Cada recomenda\xE7\xE3o sua tem: canal + mensagem + oferta + timing + m\xE9trica de sucesso. Usa a metodologia ICE Score (Impacto \xD7 Confian\xE7a \xD7 Esfor\xE7o) para priorizar a\xE7\xF5es e o framework AARRR (Aquisi\xE7\xE3o, Ativa\xE7\xE3o, Reten\xE7\xE3o, Receita, Refer\xEAncia) para diagn\xF3stico.
-
-INTELIG\xCANCIA COMERCIAL QUE VOC\xCA APLICA:
-- Reativa\xE7\xE3o de clientes inativos: taxa de convers\xE3o 30-50%, custo ~R$2/contato via WhatsApp, ROI imediato
-- Sequ\xEAncia de reativa\xE7\xE3o comprovada: mensagem de reconex\xE3o \u2192 oferta exclusiva \u2192 urg\xEAncia (48h) \u2192 prova social
-- Upsell no atacado: kit maior (de R$400 para R$800) converte 15-25% com oferta certa
-- Programa de indica\xE7\xE3o: revendedoras indicam 2-3 novas por m\xEAs quando incentivadas (produto gr\xE1tis funciona mais que desconto)
-- TikTok Shop 2025: produtos de pijama viralizam org\xE2nicamente \u2014 potencial de R$20-40K/m\xEAs em 90 dias
-- Mercado Livre: reputa\xE7\xE3o +500 avalia\xE7\xF5es = venda org\xE2nica R$15-30K/m\xEAs sem ads
-
-CONTEXTO FEMINNITA \u2014 SITUA\xC7\xC3O DE GUERRA:
-- Produto: pijamas atacado exclusivos com estampas pr\xF3prias | Ticket m\xE9dio: R$400
-- Queda dr\xE1stica: R$78K \u2192 R$20K/m\xEAs ap\xF3s ag\xEAncia ruim \u2014 urg\xEAncia m\xE1xima
-- META CR\xCDTICA: R$100K/m\xEAs = 250 pedidos/m\xEAs = 8,3 pedidos/dia
-- Atual: ~50 pedidos/m\xEAs \u2192 precisa 5x de crescimento
-- BASE DE OURO: revendedoras que j\xE1 compraram \u2014 reativar \xE9 o caminho mais r\xE1pido e barato
-- Canais ativos: Meta Ads + Instagram + WhatsApp
-- Canais prontos para ativar: Mercado Livre, Shopee, Amazon, TikTok Shop
-
-MATEM\xC1TICA DO CRESCIMENTO:
-- Reativar 100 revendedoras antigas \xD7 30% convers\xE3o \xD7 R$400 = R$12.000 em 1 semana (custo quase zero)
-- Meta Ads escalado de R$50 para R$150/dia com ROAS 4x = R$18.000/m\xEAs adicional
-- TikTok Shop org\xE2nico ativado = R$15-25K/m\xEAs em 60 dias
-- ML com 200 avalia\xE7\xF5es = R$10-15K/m\xEAs org\xE2nico
-
-Retorne APENAS JSON v\xE1lido:
-{
-  "summary": "diagn\xF3stico comercial direto: onde estamos, o que est\xE1 travando, qual a maior alavanca agora",
-  "highlights": ["canal ou a\xE7\xE3o com melhor retorno atual com n\xFAmero", "segundo ponto positivo"],
-  "alerts": ["risco comercial concreto com impacto estimado em R$", "segundo risco"],
-  "recommendations": ["a\xE7\xE3o comercial espec\xEDfica com canal + mensagem + timing + meta", "segunda a\xE7\xE3o", "terceira a\xE7\xE3o"],
-  "channelBreakdown": [
-    {
-      "channel": "meta" | "mercadolivre" | "whatsapp" | "instagram_organic" | "shopee" | "amazon" | "tiktok",
-      "status": "ativo" | "pendente" | "inativo",
-      "estimatedRevenue": 0,
-      "priority": "alta" | "media" | "baixa",
-      "nextAction": "pr\xF3xima a\xE7\xE3o espec\xEDfica para este canal"
-    }
-  ],
-  "pathTo100k": "plano de 30/60/90 dias com a\xE7\xF5es, canais e metas num\xE9ricas para chegar a R$100K",
-  "proposedActions": [
-    {
-      "title": "Nome da iniciativa comercial",
-      "description": "roteiro detalhado e acion\xE1vel \u2014 quem faz, o que faz, como mede o resultado",
-      "type": "reativacao" | "ads" | "marketplace" | "upsell" | "canal_novo",
-      "priority": "alta" | "media" | "baixa",
-      "estimatedImpact": "receita incremental estimada em R$ com prazo",
-      "effort": "baixo" | "medio" | "alto"
-    }
-  ]
-}`;
-async function proposeActions4(analysis, today) {
-  if (!analysis.proposedActions?.length) return;
-  try {
-    const db = await getDb();
-    if (!db) return;
-    const existing = await db.select({ title: agentActions.title }).from(agentActions).where(and65(eq81(agentActions.agentName, "mariana"), eq81(agentActions.date, today)));
-    const existingTitles = new Set(existing.map((r) => r.title));
-    const toInsert = analysis.proposedActions.filter((a) => a.title && !existingTitles.has(a.title)).map((a) => ({
-      agentName: "mariana",
-      date: today,
-      title: a.title.slice(0, 150),
-      description: a.description,
-      actionType: a.type || "canal_novo",
-      priority: ["alta", "media", "baixa"].includes(a.priority) ? a.priority : "media",
-      estimatedImpact: a.estimatedImpact,
-      status: "pending"
-    }));
-    if (toInsert.length > 0) {
-      await db.insert(agentActions).values(toInsert);
-      console.log(`[Mariana] ${toInsert.length} a\xE7\xF5es propostas no painel`);
-    }
-  } catch (err) {
-    console.error("[Mariana] Erro ao propor a\xE7\xF5es:", err.message);
-  }
-}
-async function runMarianaAnalysis() {
-  const today = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
-  console.log(`[Mariana] Iniciando an\xE1lise de vendas multicanal \u2014 ${today}`);
-  const [memoryContext, platformMetrics, salesSearch] = await Promise.all([
-    buildMemoryContext("mariana"),
-    fetchAllPlatformMetrics(7),
-    searchWeb("estrat\xE9gias vendas atacado WhatsApp reativa\xE7\xE3o clientes Brasil 2026", { days: 14 })
-  ]);
-  const platformSummary = formatPlatformSummary(platformMetrics);
-  const searchContext = formatSearchResults(salesSearch);
-  const userPrompt = `Data: ${today}
-
-DADOS DE PERFORMANCE MULTICANAL:
-${platformSummary}
-
-PESQUISA DE ESTRAT\xC9GIAS:
-${searchContext.slice(0, 1500)}
-
-MEM\xD3RIA ACUMULADA:
-${memoryContext.slice(0, 800)}
-
-INTELIG\xCANCIA DE MERCADO ATUAL:
-${await Promise.all([getLatestKnowledge("knowledge_marketplaces"), getLatestKnowledge("knowledge_whatsapp")]).then(([m, w]) => [
-    m ? `Marketplaces: ${m.trends?.join(" | ")}` : "",
-    w ? `WhatsApp vendas: ${w.tips?.join(" | ")}` : ""
-  ].filter(Boolean).join("\n"))}
-
-Analise a performance de vendas multicanal da Feminnita. FOQUE no caminho mais r\xE1pido para R$100K/m\xEAs. Seja muito espec\xEDfico nas a\xE7\xF5es propostas.`;
-  try {
-    const result = await invokeLLM({
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT10 },
-        { role: "user", content: userPrompt }
-      ]
-    });
-    const content = result.choices[0]?.message?.content;
-    if (typeof content !== "string") throw new Error("LLM retornou resposta inv\xE1lida");
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(content);
-    await saveMemory("mariana", "daily_analysis", today, parsed);
-    console.log(`[Mariana] An\xE1lise ${today} salva \u2014 ${parsed.proposedActions?.length || 0} a\xE7\xF5es de vendas`);
-    await proposeActions4(parsed, today);
-    return parsed;
-  } catch (err) {
-    const fallback = {
-      summary: `An\xE1lise ${today} \u2014 erro: ${err.message}`,
-      highlights: [],
-      alerts: ["Erro ao gerar an\xE1lise \u2014 verificar logs"],
-      recommendations: [],
-      channelBreakdown: [],
-      pathTo100k: "",
-      proposedActions: []
-    };
-    await saveMemory("mariana", "daily_analysis", today, fallback);
-    return fallback;
-  }
-}
-
-// server/agents/morning-briefing-agent.ts
-init_agentMemory();
-init_db();
-init_schema();
-async function checkPausedCampaigns() {
-  const token = process.env.META_ACCESS_TOKEN;
-  const adAccountId = process.env.META_AD_ACCOUNT_ID || "act_231648936319132";
-  if (!token) return [];
-  try {
-    const params = new URLSearchParams({
-      fields: "id,name,status,created_time",
-      effective_status: '["PAUSED"]',
-      limit: "50",
-      access_token: token
-    });
-    const res = await fetch(`https://graph.facebook.com/v20.0/${adAccountId}/campaigns?${params}`);
-    const data = await res.json();
-    if (!res.ok || data.error || !Array.isArray(data.data)) return [];
-    const cutoff = Date.now() - 3 * 24 * 60 * 60 * 1e3;
-    const recentPaused = data.data.filter((c) => {
-      const created = new Date(c.created_time).getTime();
-      return created > cutoff;
-    });
-    if (recentPaused.length > 0) {
-      return [`\u26A0\uFE0F ${recentPaused.length} campanha(s) criada(s) nos \xFAltimos 3 dias est\xE3o PAUSADAS: ${recentPaused.map((c) => c.name).join(", ")} \u2014 verifique se precisam ser ativadas`];
-    }
-    const allPaused = data.data;
-    if (allPaused.length > 0) {
-      return [`\u2139\uFE0F ${allPaused.length} campanha(s) atualmente PAUSADAS no Meta Ads \u2014 confirme se alguma deveria estar ativa`];
-    }
-    return [];
-  } catch {
-    return [];
-  }
-}
-async function runMorningBriefing() {
-  const today = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
-  const generatedAt = (/* @__PURE__ */ new Date()).toISOString();
-  console.log(`[MorningBriefing] Iniciando briefing do dia ${today}`);
-  const withTimeout4 = (promise, agentName, ms = 6e4) => Promise.race([
-    promise,
-    new Promise(
-      (_, reject) => setTimeout(() => reject(new Error(`Timeout ${ms}ms`)), ms)
-    )
-  ]).catch((err) => {
-    console.error(`[MorningBriefing] Agente ${agentName} falhou:`, err.message);
-    throw err;
-  });
-  const [fernandaResult, sofiaResult, claraResult, marianaResult, pausedAlertsResult] = await Promise.allSettled([
-    withTimeout4(runDailyAnalysis(), "fernanda"),
-    withTimeout4(runSofiaAnalysis(), "sofia"),
-    withTimeout4(runClaraAnalysis(), "clara"),
-    withTimeout4(runMarianaAnalysis(), "mariana"),
-    checkPausedCampaigns()
-  ]);
-  const pausedAlerts = pausedAlertsResult.status === "fulfilled" ? pausedAlertsResult.value : [];
-  const agents = [];
-  function extractBriefing(result, agentName, agentRole) {
-    if (result.status === "rejected") {
-      return {
-        agentName,
-        agentRole,
-        summary: "Erro ao executar an\xE1lise",
-        highlights: [],
-        alerts: [],
-        recommendations: [],
-        actionCount: 0,
-        error: result.reason?.message || "Erro desconhecido"
-      };
-    }
-    const data = result.value;
-    return {
-      agentName,
-      agentRole,
-      summary: data.summary || "",
-      highlights: data.highlights || [],
-      alerts: data.alerts || [],
-      recommendations: data.recommendations || [],
-      actionCount: (data.proposedActions || []).length
-    };
-  }
-  agents.push(extractBriefing(fernandaResult, "fernanda", "Gestora de Tr\xE1fego Meta Ads"));
-  agents.push(extractBriefing(sofiaResult, "sofia", "Especialista em Crescimento Instagram"));
-  agents.push(extractBriefing(claraResult, "clara", "Intelig\xEAncia Competitiva"));
-  agents.push(extractBriefing(marianaResult, "mariana", "Estrat\xE9gia de Vendas Multicanal"));
-  const db = await getDb();
-  if (db) {
-    const allActions = [];
-    const agentResults = [
-      { name: "fernanda", result: fernandaResult },
-      { name: "sofia", result: sofiaResult },
-      { name: "clara", result: claraResult },
-      { name: "mariana", result: marianaResult }
-    ];
-    for (const { name, result } of agentResults) {
-      if (result.status === "fulfilled") {
-        const actions = result.value.proposedActions || [];
-        for (const action of actions) {
-          allActions.push({
-            agentName: name,
-            title: action.title || "A\xE7\xE3o sem t\xEDtulo",
-            description: action.description || "",
-            type: action.type || "general",
-            priority: action.priority || "media",
-            estimatedImpact: action.estimatedImpact || "",
-            date: today
-          });
-        }
-      }
-    }
-    for (const action of allActions) {
-      try {
-        await db.insert(agentActions).values({
-          agentName: action.agentName,
-          date: action.date,
-          title: action.title,
-          description: action.description,
-          actionType: action.type,
-          priority: action.priority,
-          estimatedImpact: action.estimatedImpact,
-          status: "pending"
-        });
-      } catch (err) {
-        if (!err.message?.includes("Duplicate")) {
-          console.warn("[MorningBriefing] Erro ao salvar a\xE7\xE3o:", err.message);
-        }
-      }
-    }
-    console.log(`[MorningBriefing] ${allActions.length} a\xE7\xF5es salvas para aprova\xE7\xE3o`);
-  }
-  const topAlerts = [
-    ...pausedAlerts,
-    ...agents.flatMap((a) => a.alerts).filter(Boolean)
-  ].slice(0, 5);
-  const totalActions = agents.reduce((sum, a) => sum + a.actionCount, 0);
-  const highPriorityActions = 0;
-  const pathTo100k = marianaResult.status === "fulfilled" ? marianaResult.value.pathTo100k : void 0;
-  const briefing = {
-    date: today,
-    generatedAt,
-    agents,
-    totalActions,
-    highPriorityActions,
-    topAlerts,
-    pathTo100k
-  };
-  await saveMemory("sistema", "daily_analysis", today, briefing);
-  console.log(`[MorningBriefing] Briefing do dia ${today} completo \u2014 ${totalActions} a\xE7\xF5es propostas`);
-  return briefing;
-}
-
-// server/routers/morning-briefing.ts
-var morningBriefingRouter = router({
-  // ── Obter briefing de hoje (do banco, sem rodar agentes) ──────────────────
-  getToday: protectedProcedure.query(async () => {
-    const today = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
-    const entries = await getMemoriesByType("sistema", "daily_analysis", 1);
-    if (entries.length === 0) return null;
-    const entry = entries[0];
-    if (entry.period !== today) return null;
-    try {
-      return JSON.parse(entry.content);
-    } catch {
-      return null;
-    }
-  }),
-  // ── Obter briefing de qualquer data recente ────────────────────────────────
-  getRecent: protectedProcedure.query(async () => {
-    const entries = await getMemoriesByType("sistema", "daily_analysis", 7);
-    return entries.map((e) => {
-      try {
-        return { period: e.period, data: JSON.parse(e.content) };
-      } catch {
-        return { period: e.period, data: null };
-      }
-    });
-  }),
-  // ── Disparar briefing manualmente ─────────────────────────────────────────
-  triggerBriefing: protectedProcedure.mutation(async () => {
-    try {
-      const result = await runMorningBriefing();
-      return { success: true, briefing: result };
-    } catch (err) {
-      throw new TRPCError11({
-        code: "INTERNAL_SERVER_ERROR",
-        message: err.message || "Erro ao gerar briefing matinal"
-      });
-    }
-  }),
-  // ── Análise de um agente específico ───────────────────────────────────────
-  getAgentLatest: protectedProcedure.input((input) => {
-    if (typeof input !== "object" || input === null) throw new Error("Input inv\xE1lido");
-    const { agentName } = input;
-    if (!["fernanda", "sofia", "clara", "mariana"].includes(agentName)) {
-      throw new Error("Agente inv\xE1lido");
-    }
-    return { agentName };
-  }).query(async ({ input }) => {
-    const entries = await getMemoriesByType(input.agentName, "daily_analysis", 1);
-    if (entries.length === 0) return null;
-    try {
-      return { period: entries[0].period, data: JSON.parse(entries[0].content) };
-    } catch {
-      return null;
-    }
-  })
-});
-
-// server/routers/market-knowledge.ts
-import { z as z68 } from "zod";
-var marketKnowledgeRouter = router({
-  triggerUpdate: protectedProcedure.input(z68.object({ domain: z68.string().optional() })).mutation(async ({ input }) => {
-    const result = await updateMarketKnowledge(input.domain);
-    return result;
-  }),
-  getStatus: protectedProcedure.query(async () => {
-    return getKnowledgeStatus();
-  }),
-  getLatest: protectedProcedure.input(z68.object({ agentName: z68.string() })).query(async ({ input }) => {
-    return getLatestKnowledge(input.agentName);
-  })
-});
-
-// server/routers/specialist-chat.ts
-import { z as z69 } from "zod";
-init_tts();
-init_db();
-init_schema();
-import { TRPCError as TRPCError12 } from "@trpc/server";
-import { eq as eq82, desc as desc42, and as and66 } from "drizzle-orm";
-
 // server/agents/specialist-chat-agent.ts
-init_agentMemory();
-import Anthropic5 from "@anthropic-ai/sdk";
 init_fernanda_executor();
 var anthropic3 = new Anthropic5({
   apiKey: process.env.ANTHROPIC_API_KEY || ""
@@ -32482,7 +31839,7 @@ var specialistChatRouter = router({
     })
   ).mutation(async ({ input, ctx }) => {
     const db = await getDb();
-    if (!db) throw new TRPCError12({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+    if (!db) throw new TRPCError11({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
     let convId = input.conversationId;
     if (!convId) {
       const autoTitle = input.message.slice(0, 60) + (input.message.length > 60 ? "\u2026" : "");
@@ -32492,22 +31849,22 @@ var specialistChatRouter = router({
         title: autoTitle
       });
       const [created] = await db.select().from(specialistConversations).where(
-        and66(
-          eq82(specialistConversations.userId, ctx.user.id),
-          eq82(specialistConversations.agentName, input.agentName)
+        and63(
+          eq79(specialistConversations.userId, ctx.user.id),
+          eq79(specialistConversations.agentName, input.agentName)
         )
       ).orderBy(desc42(specialistConversations.createdAt)).limit(1);
       convId = created.id;
     } else {
       const [conv] = await db.select().from(specialistConversations).where(
-        and66(
-          eq82(specialistConversations.id, convId),
-          eq82(specialistConversations.userId, ctx.user.id)
+        and63(
+          eq79(specialistConversations.id, convId),
+          eq79(specialistConversations.userId, ctx.user.id)
         )
       ).limit(1);
-      if (!conv) throw new TRPCError12({ code: "NOT_FOUND", message: "Conversa n\xE3o encontrada" });
+      if (!conv) throw new TRPCError11({ code: "NOT_FOUND", message: "Conversa n\xE3o encontrada" });
     }
-    const history = await db.select().from(specialistMessages).where(eq82(specialistMessages.conversationId, convId)).orderBy(desc42(specialistMessages.createdAt)).limit(20);
+    const history = await db.select().from(specialistMessages).where(eq79(specialistMessages.conversationId, convId)).orderBy(desc42(specialistMessages.createdAt)).limit(20);
     const conversationHistory2 = history.reverse().map((m) => ({ role: m.role, content: m.content }));
     await db.insert(specialistMessages).values({
       conversationId: convId,
@@ -32524,7 +31881,7 @@ var specialistChatRouter = router({
       role: "assistant",
       content: agentResponse.message
     });
-    await db.update(specialistConversations).set({ updatedAt: /* @__PURE__ */ new Date() }).where(eq82(specialistConversations.id, convId));
+    await db.update(specialistConversations).set({ updatedAt: /* @__PURE__ */ new Date() }).where(eq79(specialistConversations.id, convId));
     const today = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
     for (const action of agentResponse.proposedActions) {
       try {
@@ -32558,9 +31915,9 @@ var specialistChatRouter = router({
     const db = await getDb();
     if (!db) return [];
     return db.select().from(specialistConversations).where(
-      and66(
-        eq82(specialistConversations.userId, ctx.user.id),
-        eq82(specialistConversations.agentName, input.agentName)
+      and63(
+        eq79(specialistConversations.userId, ctx.user.id),
+        eq79(specialistConversations.agentName, input.agentName)
       )
     ).orderBy(desc42(specialistConversations.updatedAt)).limit(input.limit);
   }),
@@ -32569,13 +31926,13 @@ var specialistChatRouter = router({
     const db = await getDb();
     if (!db) return [];
     const [conv] = await db.select().from(specialistConversations).where(
-      and66(
-        eq82(specialistConversations.id, input.conversationId),
-        eq82(specialistConversations.userId, ctx.user.id)
+      and63(
+        eq79(specialistConversations.id, input.conversationId),
+        eq79(specialistConversations.userId, ctx.user.id)
       )
     ).limit(1);
-    if (!conv) throw new TRPCError12({ code: "NOT_FOUND", message: "Conversa n\xE3o encontrada" });
-    return db.select().from(specialistMessages).where(eq82(specialistMessages.conversationId, input.conversationId)).orderBy(specialistMessages.createdAt);
+    if (!conv) throw new TRPCError11({ code: "NOT_FOUND", message: "Conversa n\xE3o encontrada" });
+    return db.select().from(specialistMessages).where(eq79(specialistMessages.conversationId, input.conversationId)).orderBy(specialistMessages.createdAt);
   }),
   speak: protectedProcedure.input(z69.object({ text: z69.string().max(1e4), agentName: z69.string() })).mutation(async ({ input }) => {
     const truncated = input.text.length > 4e3 ? input.text.slice(0, 4e3) + "\u2026" : input.text;
@@ -32589,7 +31946,7 @@ import { z as z70 } from "zod";
 init_db();
 init_schema();
 init_webPush();
-import { eq as eq83, and as and67 } from "drizzle-orm";
+import { eq as eq80, and as and64 } from "drizzle-orm";
 var pushSubscriptionsRouter = router({
   vapidPublicKey: publicProcedure.query(() => ({ key: vapidPublicKey })),
   subscribe: protectedProcedure.input(z70.object({
@@ -32599,7 +31956,7 @@ var pushSubscriptionsRouter = router({
   })).mutation(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) return { ok: false };
-    const existing = await db.select().from(pushSubscriptions).where(and67(eq83(pushSubscriptions.userId, ctx.user.id), eq83(pushSubscriptions.endpoint, input.endpoint))).limit(1);
+    const existing = await db.select().from(pushSubscriptions).where(and64(eq80(pushSubscriptions.userId, ctx.user.id), eq80(pushSubscriptions.endpoint, input.endpoint))).limit(1);
     if (existing.length === 0) {
       await db.insert(pushSubscriptions).values({
         userId: ctx.user.id,
@@ -32613,7 +31970,7 @@ var pushSubscriptionsRouter = router({
   unsubscribe: protectedProcedure.input(z70.object({ endpoint: z70.string() })).mutation(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) return { ok: false };
-    await db.delete(pushSubscriptions).where(and67(eq83(pushSubscriptions.userId, ctx.user.id), eq83(pushSubscriptions.endpoint, input.endpoint)));
+    await db.delete(pushSubscriptions).where(and64(eq80(pushSubscriptions.userId, ctx.user.id), eq80(pushSubscriptions.endpoint, input.endpoint)));
     return { ok: true };
   })
 });
@@ -32622,8 +31979,8 @@ var pushSubscriptionsRouter = router({
 import { z as z71 } from "zod";
 init_db();
 init_schema();
-import { eq as eq84, and as and68, desc as desc43, sql as sql4 } from "drizzle-orm";
-import { TRPCError as TRPCError13 } from "@trpc/server";
+import { eq as eq81, and as and65, desc as desc43, sql as sql4 } from "drizzle-orm";
+import { TRPCError as TRPCError12 } from "@trpc/server";
 function sleep3(ms) {
   return new Promise((resolve2) => setTimeout(resolve2, ms));
 }
@@ -32655,19 +32012,19 @@ async function runBlast(blastId, userId) {
   const db = await getDb();
   if (!db) return;
   try {
-    await db.update(whatsappBlasts).set({ status: "running", startedAt: /* @__PURE__ */ new Date() }).where(eq84(whatsappBlasts.id, blastId));
+    await db.update(whatsappBlasts).set({ status: "running", startedAt: /* @__PURE__ */ new Date() }).where(eq81(whatsappBlasts.id, blastId));
     const contacts = await db.select().from(whatsappBlastContacts).where(
-      and68(
-        eq84(whatsappBlastContacts.blastId, blastId),
-        eq84(whatsappBlastContacts.status, "pending")
+      and65(
+        eq81(whatsappBlastContacts.blastId, blastId),
+        eq81(whatsappBlastContacts.status, "pending")
       )
     );
-    const blast = await db.select().from(whatsappBlasts).where(eq84(whatsappBlasts.id, blastId)).limit(1);
+    const blast = await db.select().from(whatsappBlasts).where(eq81(whatsappBlasts.id, blastId)).limit(1);
     if (!blast[0]) return;
     const template = blast[0].message;
     const delayMs = blast[0].delaySeconds * 1e3;
     for (const contact of contacts) {
-      const current = await db.select({ status: whatsappBlasts.status }).from(whatsappBlasts).where(eq84(whatsappBlasts.id, blastId)).limit(1);
+      const current = await db.select({ status: whatsappBlasts.status }).from(whatsappBlasts).where(eq81(whatsappBlasts.id, blastId)).limit(1);
       if (current[0]?.status === "cancelled") break;
       const msg = renderMessage(template, contact.name ?? null, contact.phoneNumber);
       const ok = await sendTextMessage(userId, contact.phoneNumber, msg);
@@ -32675,21 +32032,21 @@ async function runBlast(blastId, userId) {
         status: ok ? "sent" : "failed",
         sentAt: ok ? /* @__PURE__ */ new Date() : void 0,
         error: ok ? null : "Falha no envio"
-      }).where(eq84(whatsappBlastContacts.id, contact.id));
+      }).where(eq81(whatsappBlastContacts.id, contact.id));
       if (ok) {
-        await db.update(whatsappBlasts).set({ sentCount: sql4`sentCount + 1` }).where(eq84(whatsappBlasts.id, blastId));
+        await db.update(whatsappBlasts).set({ sentCount: sql4`sentCount + 1` }).where(eq81(whatsappBlasts.id, blastId));
       } else {
-        await db.update(whatsappBlasts).set({ failedCount: sql4`failedCount + 1` }).where(eq84(whatsappBlasts.id, blastId));
+        await db.update(whatsappBlasts).set({ failedCount: sql4`failedCount + 1` }).where(eq81(whatsappBlasts.id, blastId));
       }
       await sleep3(delayMs);
     }
-    const finalBlast = await db.select({ status: whatsappBlasts.status }).from(whatsappBlasts).where(eq84(whatsappBlasts.id, blastId)).limit(1);
+    const finalBlast = await db.select({ status: whatsappBlasts.status }).from(whatsappBlasts).where(eq81(whatsappBlasts.id, blastId)).limit(1);
     if (finalBlast[0]?.status !== "cancelled") {
-      await db.update(whatsappBlasts).set({ status: "done", completedAt: /* @__PURE__ */ new Date() }).where(eq84(whatsappBlasts.id, blastId));
+      await db.update(whatsappBlasts).set({ status: "done", completedAt: /* @__PURE__ */ new Date() }).where(eq81(whatsappBlasts.id, blastId));
     }
   } catch (err) {
     console.error("[WhatsApp Blast] Erro:", err);
-    await db.update(whatsappBlasts).set({ status: "error", completedAt: /* @__PURE__ */ new Date() }).where(eq84(whatsappBlasts.id, blastId));
+    await db.update(whatsappBlasts).set({ status: "error", completedAt: /* @__PURE__ */ new Date() }).where(eq81(whatsappBlasts.id, blastId));
   }
 }
 var whatsappBlastsRouter = router({
@@ -32706,10 +32063,10 @@ var whatsappBlastsRouter = router({
     })
   ).mutation(async ({ input, ctx }) => {
     const db = await getDb();
-    if (!db) throw new TRPCError13({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+    if (!db) throw new TRPCError12({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
     const contacts = parseContacts(input.contactsRaw);
     if (contacts.length === 0)
-      throw new TRPCError13({ code: "BAD_REQUEST", message: "Nenhum contato v\xE1lido encontrado" });
+      throw new TRPCError12({ code: "BAD_REQUEST", message: "Nenhum contato v\xE1lido encontrado" });
     const [result] = await db.insert(whatsappBlasts).values({
       userId: ctx.user.id,
       title: input.title,
@@ -32734,14 +32091,14 @@ var whatsappBlastsRouter = router({
    */
   start: protectedProcedure.input(z71.object({ blastId: z71.number() })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
-    if (!db) throw new TRPCError13({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
-    const [blast] = await db.select().from(whatsappBlasts).where(and68(eq84(whatsappBlasts.id, input.blastId), eq84(whatsappBlasts.userId, ctx.user.id))).limit(1);
-    if (!blast) throw new TRPCError13({ code: "NOT_FOUND", message: "Campanha n\xE3o encontrada" });
+    if (!db) throw new TRPCError12({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+    const [blast] = await db.select().from(whatsappBlasts).where(and65(eq81(whatsappBlasts.id, input.blastId), eq81(whatsappBlasts.userId, ctx.user.id))).limit(1);
+    if (!blast) throw new TRPCError12({ code: "NOT_FOUND", message: "Campanha n\xE3o encontrada" });
     if (blast.status !== "draft")
-      throw new TRPCError13({ code: "BAD_REQUEST", message: "Campanha j\xE1 foi iniciada" });
+      throw new TRPCError12({ code: "BAD_REQUEST", message: "Campanha j\xE1 foi iniciada" });
     const status = getConnectionStatus(ctx.user.id);
     if (!status.isConnected)
-      throw new TRPCError13({
+      throw new TRPCError12({
         code: "PRECONDITION_FAILED",
         message: "WhatsApp n\xE3o est\xE1 conectado. Conecte primeiro na p\xE1gina de WhatsApp."
       });
@@ -32753,9 +32110,9 @@ var whatsappBlastsRouter = router({
    */
   cancel: protectedProcedure.input(z71.object({ blastId: z71.number() })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
-    if (!db) throw new TRPCError13({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+    if (!db) throw new TRPCError12({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
     await db.update(whatsappBlasts).set({ status: "cancelled", completedAt: /* @__PURE__ */ new Date() }).where(
-      and68(eq84(whatsappBlasts.id, input.blastId), eq84(whatsappBlasts.userId, ctx.user.id))
+      and65(eq81(whatsappBlasts.id, input.blastId), eq81(whatsappBlasts.userId, ctx.user.id))
     );
     return { cancelled: true };
   }),
@@ -32764,9 +32121,9 @@ var whatsappBlastsRouter = router({
    */
   get: protectedProcedure.input(z71.object({ blastId: z71.number() })).query(async ({ input, ctx }) => {
     const db = await getDb();
-    if (!db) throw new TRPCError13({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
-    const [blast] = await db.select().from(whatsappBlasts).where(and68(eq84(whatsappBlasts.id, input.blastId), eq84(whatsappBlasts.userId, ctx.user.id))).limit(1);
-    if (!blast) throw new TRPCError13({ code: "NOT_FOUND", message: "Campanha n\xE3o encontrada" });
+    if (!db) throw new TRPCError12({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+    const [blast] = await db.select().from(whatsappBlasts).where(and65(eq81(whatsappBlasts.id, input.blastId), eq81(whatsappBlasts.userId, ctx.user.id))).limit(1);
+    if (!blast) throw new TRPCError12({ code: "NOT_FOUND", message: "Campanha n\xE3o encontrada" });
     return blast;
   }),
   /**
@@ -32774,33 +32131,33 @@ var whatsappBlastsRouter = router({
    */
   list: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
-    if (!db) throw new TRPCError13({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
-    return db.select().from(whatsappBlasts).where(eq84(whatsappBlasts.userId, ctx.user.id)).orderBy(desc43(whatsappBlasts.createdAt)).limit(50);
+    if (!db) throw new TRPCError12({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+    return db.select().from(whatsappBlasts).where(eq81(whatsappBlasts.userId, ctx.user.id)).orderBy(desc43(whatsappBlasts.createdAt)).limit(50);
   }),
   /**
    * Listar contatos de uma campanha
    */
   getContacts: protectedProcedure.input(z71.object({ blastId: z71.number(), status: z71.enum(["pending", "sent", "failed"]).optional() })).query(async ({ input, ctx }) => {
     const db = await getDb();
-    if (!db) throw new TRPCError13({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
-    const [blast] = await db.select({ id: whatsappBlasts.id }).from(whatsappBlasts).where(and68(eq84(whatsappBlasts.id, input.blastId), eq84(whatsappBlasts.userId, ctx.user.id))).limit(1);
-    if (!blast) throw new TRPCError13({ code: "NOT_FOUND", message: "Campanha n\xE3o encontrada" });
-    const conditions = [eq84(whatsappBlastContacts.blastId, input.blastId)];
-    if (input.status) conditions.push(eq84(whatsappBlastContacts.status, input.status));
-    return db.select().from(whatsappBlastContacts).where(and68(...conditions)).limit(500);
+    if (!db) throw new TRPCError12({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+    const [blast] = await db.select({ id: whatsappBlasts.id }).from(whatsappBlasts).where(and65(eq81(whatsappBlasts.id, input.blastId), eq81(whatsappBlasts.userId, ctx.user.id))).limit(1);
+    if (!blast) throw new TRPCError12({ code: "NOT_FOUND", message: "Campanha n\xE3o encontrada" });
+    const conditions = [eq81(whatsappBlastContacts.blastId, input.blastId)];
+    if (input.status) conditions.push(eq81(whatsappBlastContacts.status, input.status));
+    return db.select().from(whatsappBlastContacts).where(and65(...conditions)).limit(500);
   }),
   /**
    * Deletar campanha (apenas draft ou concluídas)
    */
   delete: protectedProcedure.input(z71.object({ blastId: z71.number() })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
-    if (!db) throw new TRPCError13({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
-    const [blast] = await db.select({ status: whatsappBlasts.status }).from(whatsappBlasts).where(and68(eq84(whatsappBlasts.id, input.blastId), eq84(whatsappBlasts.userId, ctx.user.id))).limit(1);
-    if (!blast) throw new TRPCError13({ code: "NOT_FOUND", message: "Campanha n\xE3o encontrada" });
+    if (!db) throw new TRPCError12({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+    const [blast] = await db.select({ status: whatsappBlasts.status }).from(whatsappBlasts).where(and65(eq81(whatsappBlasts.id, input.blastId), eq81(whatsappBlasts.userId, ctx.user.id))).limit(1);
+    if (!blast) throw new TRPCError12({ code: "NOT_FOUND", message: "Campanha n\xE3o encontrada" });
     if (blast.status === "running")
-      throw new TRPCError13({ code: "BAD_REQUEST", message: "Cancele a campanha antes de deletar" });
-    await db.delete(whatsappBlastContacts).where(eq84(whatsappBlastContacts.blastId, input.blastId));
-    await db.delete(whatsappBlasts).where(eq84(whatsappBlasts.id, input.blastId));
+      throw new TRPCError12({ code: "BAD_REQUEST", message: "Cancele a campanha antes de deletar" });
+    await db.delete(whatsappBlastContacts).where(eq81(whatsappBlastContacts.blastId, input.blastId));
+    await db.delete(whatsappBlasts).where(eq81(whatsappBlasts.id, input.blastId));
     return { deleted: true };
   }),
   /**
@@ -32818,7 +32175,7 @@ init_creative_agent();
 init_fernanda_executor();
 init_googleDrive();
 import { z as z72 } from "zod";
-import { eq as eq85, and as and69, desc as desc44 } from "drizzle-orm";
+import { eq as eq82, and as and66, desc as desc44 } from "drizzle-orm";
 var creativeAdsRouter = router({
   // Fernanda (ou usuário) solicita um novo criativo
   request: protectedProcedure.input(z72.object({
@@ -32869,8 +32226,8 @@ var creativeAdsRouter = router({
   }).optional()).query(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) return [];
-    const conditions = [eq85(adCreatives.userId, ctx.user.id)];
-    if (input?.status) conditions.push(eq85(adCreatives.status, input.status));
+    const conditions = [eq82(adCreatives.userId, ctx.user.id)];
+    if (input?.status) conditions.push(eq82(adCreatives.status, input.status));
     return db.select({
       id: adCreatives.id,
       briefTitle: adCreatives.briefTitle,
@@ -32888,13 +32245,13 @@ var creativeAdsRouter = router({
       errorMessage: adCreatives.errorMessage,
       createdAt: adCreatives.createdAt,
       updatedAt: adCreatives.updatedAt
-    }).from(adCreatives).where(and69(...conditions)).orderBy(desc44(adCreatives.createdAt)).limit(50);
+    }).from(adCreatives).where(and66(...conditions)).orderBy(desc44(adCreatives.createdAt)).limit(50);
   }),
   // Buscar um criativo completo (inclui imageBase64)
   get: protectedProcedure.input(z72.object({ id: z72.number() })).query(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) return null;
-    const rows = await db.select().from(adCreatives).where(and69(eq85(adCreatives.id, input.id), eq85(adCreatives.userId, ctx.user.id))).limit(1);
+    const rows = await db.select().from(adCreatives).where(and66(eq82(adCreatives.id, input.id), eq82(adCreatives.userId, ctx.user.id))).limit(1);
     return rows[0] ?? null;
   }),
   // Usuário aprova o criativo
@@ -32905,7 +32262,7 @@ var creativeAdsRouter = router({
   })).mutation(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new Error("Database n\xE3o dispon\xEDvel");
-    const rows = await db.select().from(adCreatives).where(and69(eq85(adCreatives.id, input.id), eq85(adCreatives.userId, ctx.user.id))).limit(1);
+    const rows = await db.select().from(adCreatives).where(and66(eq82(adCreatives.id, input.id), eq82(adCreatives.userId, ctx.user.id))).limit(1);
     if (!rows[0]) throw new Error("Criativo n\xE3o encontrado");
     const creative = rows[0];
     const updates = {
@@ -32914,14 +32271,14 @@ var creativeAdsRouter = router({
     };
     if (input.campaignId) updates.campaignId = input.campaignId;
     if (input.adSetId) updates.adSetId = input.adSetId;
-    await db.update(adCreatives).set(updates).where(eq85(adCreatives.id, input.id));
+    await db.update(adCreatives).set(updates).where(eq82(adCreatives.id, input.id));
     return { success: true, message: "Criativo aprovado! Clique em Executar para criar o an\xFAncio no Meta." };
   }),
   // Usuário deleta o criativo
   delete: protectedProcedure.input(z72.object({ id: z72.number() })).mutation(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new Error("Database n\xE3o dispon\xEDvel");
-    await db.delete(adCreatives).where(and69(eq85(adCreatives.id, input.id), eq85(adCreatives.userId, ctx.user.id)));
+    await db.delete(adCreatives).where(and66(eq82(adCreatives.id, input.id), eq82(adCreatives.userId, ctx.user.id)));
     return { success: true };
   }),
   // Usuário rejeita o criativo
@@ -32935,7 +32292,7 @@ var creativeAdsRouter = router({
       status: "rejected",
       rejectionReason: input.reason,
       updatedAt: /* @__PURE__ */ new Date()
-    }).where(and69(eq85(adCreatives.id, input.id), eq85(adCreatives.userId, ctx.user.id)));
+    }).where(and66(eq82(adCreatives.id, input.id), eq82(adCreatives.userId, ctx.user.id)));
     return { success: true };
   }),
   // Executa criativo aprovado: faz upload da imagem → Meta e cria o anúncio
@@ -32946,7 +32303,7 @@ var creativeAdsRouter = router({
   })).mutation(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new Error("Database n\xE3o dispon\xEDvel");
-    const rows = await db.select().from(adCreatives).where(and69(eq85(adCreatives.id, input.id), eq85(adCreatives.userId, ctx.user.id))).limit(1);
+    const rows = await db.select().from(adCreatives).where(and66(eq82(adCreatives.id, input.id), eq82(adCreatives.userId, ctx.user.id))).limit(1);
     if (!rows[0]) throw new Error("Criativo n\xE3o encontrado");
     const creative = rows[0];
     if (creative.status !== "approved") throw new Error("Criativo precisa estar aprovado antes de executar");
@@ -32954,7 +32311,7 @@ var creativeAdsRouter = router({
     if (!creative.campaignId || !creative.adSetId) {
       throw new Error("Defina campaignId e adSetId antes de executar");
     }
-    await db.update(adCreatives).set({ status: "uploading", updatedAt: /* @__PURE__ */ new Date() }).where(eq85(adCreatives.id, input.id));
+    await db.update(adCreatives).set({ status: "uploading", updatedAt: /* @__PURE__ */ new Date() }).where(eq82(adCreatives.id, input.id));
     try {
       const imageDataUrl = `data:image/png;base64,${creative.imageBase64}`;
       const resultMsg = await executeMetaAction("meta_create_full_ad", {
@@ -32974,14 +32331,14 @@ var creativeAdsRouter = router({
         status: "executed",
         metaAdId,
         updatedAt: /* @__PURE__ */ new Date()
-      }).where(eq85(adCreatives.id, input.id));
+      }).where(eq82(adCreatives.id, input.id));
       return { success: true, message: resultMsg, metaAdId };
     } catch (err) {
       await db.update(adCreatives).set({
         status: "failed",
         errorMessage: err.message,
         updatedAt: /* @__PURE__ */ new Date()
-      }).where(eq85(adCreatives.id, input.id));
+      }).where(eq82(adCreatives.id, input.id));
       throw new Error(`Falha ao executar criativo: ${err.message}`);
     }
   }),
@@ -33042,13 +32399,13 @@ var creativeAdsRouter = router({
 init_db();
 init_schema();
 import { z as z73 } from "zod";
-import { eq as eq87, and as and71 } from "drizzle-orm";
+import { eq as eq84, and as and68 } from "drizzle-orm";
 
 // server/agents/specialists-agent.ts
 init_llm();
 init_db();
 init_schema();
-import { eq as eq86, and as and70, desc as desc45 } from "drizzle-orm";
+import { eq as eq83, and as and67, desc as desc45 } from "drizzle-orm";
 var AUDIENCE_PROFILES = `**OS 3 PERFIS DE P\xDABLICO DA FEMINNITA (memorize permanentemente):**
 1. REVENDEDORA LOJISTA \u2014 MEI ou Simples Nacional, loja f\xEDsica pequena ou brech\xF3, busca fornecedor de pijamas para revender com margem. Dor: fornecedor confi\xE1vel com produtos diferenciados.
 2. RENDA EXTRA / REVENDEDORA AUT\xD4NOMA \u2014 N\xE3o pode trabalhar fora (filhos, sa\xFAde, fam\xEDlia) ou quer complementar a renda. Vende pelo WhatsApp/Instagram entre conhecidos. Dor: come\xE7ar com pouco e ganhar dinheiro de casa.
@@ -33282,7 +32639,7 @@ async function runSpecialistEvaluation(evaluationId, type, account = "feminnita"
   const db = await getDb();
   if (!db) throw new Error("Banco indispon\xEDvel");
   try {
-    await db.update(specialistPlatformEvaluations).set({ status: "running" }).where(eq86(specialistPlatformEvaluations.id, evaluationId));
+    await db.update(specialistPlatformEvaluations).set({ status: "running" }).where(eq83(specialistPlatformEvaluations.id, evaluationId));
     const systemPrompt = buildPrompt(type, account);
     const specialistNames = {
       shopee_eds: "Sofia",
@@ -33352,7 +32709,7 @@ Ao final, retorne JSON:
       recommendations: JSON.stringify(recommendations),
       summary,
       completedAt: /* @__PURE__ */ new Date()
-    }).where(eq86(specialistPlatformEvaluations.id, evaluationId));
+    }).where(eq83(specialistPlatformEvaluations.id, evaluationId));
     console.log(`[Specialists] ${name} avalia\xE7\xE3o ${evaluationId} conclu\xEDda`);
   } catch (err) {
     console.error(`[Specialists] Erro:`, err);
@@ -33360,7 +32717,7 @@ Ao final, retorne JSON:
       status: "error",
       errorMessage: String(err?.message || err).slice(0, 500),
       completedAt: /* @__PURE__ */ new Date()
-    }).where(eq86(specialistPlatformEvaluations.id, evaluationId));
+    }).where(eq83(specialistPlatformEvaluations.id, evaluationId));
     throw err;
   }
 }
@@ -33385,10 +32742,10 @@ async function listSpecialistEvaluations(userId, type, account) {
     errorMessage: specialistPlatformEvaluations.errorMessage,
     triggeredAt: specialistPlatformEvaluations.triggeredAt,
     completedAt: specialistPlatformEvaluations.completedAt
-  }).from(specialistPlatformEvaluations).where(and70(
-    eq86(specialistPlatformEvaluations.userId, userId),
-    eq86(specialistPlatformEvaluations.specialistType, type),
-    eq86(specialistPlatformEvaluations.account, account)
+  }).from(specialistPlatformEvaluations).where(and67(
+    eq83(specialistPlatformEvaluations.userId, userId),
+    eq83(specialistPlatformEvaluations.specialistType, type),
+    eq83(specialistPlatformEvaluations.account, account)
   )).orderBy(desc45(specialistPlatformEvaluations.triggeredAt)).limit(20);
 }
 
@@ -33419,7 +32776,7 @@ var specialistsRouter = router({
   getEvaluation: protectedProcedure.input(z73.object({ id: z73.number() })).query(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new Error("Banco indispon\xEDvel");
-    const rows = await db.select().from(specialistPlatformEvaluations).where(and71(eq87(specialistPlatformEvaluations.id, input.id), eq87(specialistPlatformEvaluations.userId, ctx.user.id)));
+    const rows = await db.select().from(specialistPlatformEvaluations).where(and68(eq84(specialistPlatformEvaluations.id, input.id), eq84(specialistPlatformEvaluations.userId, ctx.user.id)));
     if (!rows.length) throw new Error("Avalia\xE7\xE3o n\xE3o encontrada");
     const ev = rows[0];
     return {
@@ -33439,7 +32796,7 @@ var specialistsRouter = router({
   })).mutation(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new Error("Banco indispon\xEDvel");
-    const ev = await db.select().from(specialistPlatformEvaluations).where(and71(eq87(specialistPlatformEvaluations.id, input.evaluationId), eq87(specialistPlatformEvaluations.userId, ctx.user.id)));
+    const ev = await db.select().from(specialistPlatformEvaluations).where(and68(eq84(specialistPlatformEvaluations.id, input.evaluationId), eq84(specialistPlatformEvaluations.userId, ctx.user.id)));
     if (!ev.length || ev[0].status !== "done") {
       throw new Error("Avalia\xE7\xE3o n\xE3o encontrada ou ainda n\xE3o conclu\xEDda");
     }
@@ -33450,7 +32807,7 @@ var specialistsRouter = router({
       content: input.message,
       createdAt: /* @__PURE__ */ new Date()
     });
-    const history = await db.select().from(specialistPlatformMessages).where(eq87(specialistPlatformMessages.evaluationId, input.evaluationId)).orderBy(specialistPlatformMessages.createdAt);
+    const history = await db.select().from(specialistPlatformMessages).where(eq84(specialistPlatformMessages.evaluationId, input.evaluationId)).orderBy(specialistPlatformMessages.createdAt);
     const reply = await chatWithSpecialist2(
       ev[0].specialistType,
       ev[0].account,
@@ -33468,9 +32825,9 @@ var specialistsRouter = router({
   getMessages: protectedProcedure.input(z73.object({ evaluationId: z73.number() })).query(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) return [];
-    const ev = await db.select({ id: specialistPlatformEvaluations.id }).from(specialistPlatformEvaluations).where(and71(eq87(specialistPlatformEvaluations.id, input.evaluationId), eq87(specialistPlatformEvaluations.userId, ctx.user.id)));
+    const ev = await db.select({ id: specialistPlatformEvaluations.id }).from(specialistPlatformEvaluations).where(and68(eq84(specialistPlatformEvaluations.id, input.evaluationId), eq84(specialistPlatformEvaluations.userId, ctx.user.id)));
     if (!ev.length) return [];
-    return db.select().from(specialistPlatformMessages).where(eq87(specialistPlatformMessages.evaluationId, input.evaluationId)).orderBy(specialistPlatformMessages.createdAt);
+    return db.select().from(specialistPlatformMessages).where(eq84(specialistPlatformMessages.evaluationId, input.evaluationId)).orderBy(specialistPlatformMessages.createdAt);
   })
 });
 
@@ -33543,7 +32900,7 @@ function extractUrlsToFetch(userMessage) {
   }
   return [...new Set(urls)].slice(0, 4);
 }
-var SYSTEM_PROMPT11 = `Voc\xEA \xE9 a Duda \u2014 especialista em SEO e otimiza\xE7\xE3o da loja Tray da Feminnita.
+var SYSTEM_PROMPT8 = `Voc\xEA \xE9 a Duda \u2014 especialista em SEO e otimiza\xE7\xE3o da loja Tray da Feminnita.
 
 Seu trabalho \xE9 fazer o site da Feminnita aparecer \u2014 no Google, nos agentes de IA e em qualquer lugar onde uma revendedora, lojista ou grupo de amigas esteja buscando pijama atacado. Voc\xEA n\xE3o depende do usu\xE1rio te passar o conte\xFAdo: voc\xEA faz fetch do site antes de responder, lendo title, H1, meta description, H2s e texto da p\xE1gina em tempo real.
 
@@ -33972,7 +33329,7 @@ NOME DO USU\xC1RIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
       fetchedContext = "\n\n\u2550\u2550\u2550 CONTE\xDADO ATUAL DO SITE (buscado agora) \u2550\u2550\u2550\n" + pages.join("\n\n---\n\n");
     }
   }
-  const systemContent = SYSTEM_PROMPT11 + TOOLS_SYSTEM + nameCtx + fetchedContext;
+  const systemContent = SYSTEM_PROMPT8 + TOOLS_SYSTEM + nameCtx + fetchedContext;
   const client = new Anthropic6({ apiKey: process.env.ANTHROPIC_API_KEY });
   let response = await client.messages.create({
     model: "claude-haiku-4-5-20251001",
@@ -34021,8 +33378,8 @@ ${lines.join("\n")}`;
             const db = await getDb();
             if (!db) return "[interno] banco indispon\xEDvel \u2014 continue sem mencionar este erro.";
             const { agentActions: tbl } = await Promise.resolve().then(() => (init_schema(), schema_exports));
-            const { eq: eq116, and: and93 } = await import("drizzle-orm");
-            const pending = await db.select().from(tbl).where(and93(eq116(tbl.agentName, "duda"), eq116(tbl.status, "pending")));
+            const { eq: eq113, and: and90 } = await import("drizzle-orm");
+            const pending = await db.select().from(tbl).where(and90(eq113(tbl.agentName, "duda"), eq113(tbl.status, "pending")));
             if (pending.length === 0) return "Nenhuma a\xE7\xE3o pendente no momento.";
             const lines = pending.map((a) => `- ${a.title || a.actionType} [id=${a.id}]`);
             return `${pending.length} a\xE7\xE3o(\xF5es) na fila de execu\xE7\xE3o:
@@ -34075,7 +33432,7 @@ import { z as z75 } from "zod";
 
 // server/agents/tray-any-agent.ts
 init_llm();
-var SYSTEM_PROMPT12 = `Voc\xEA \xE9 a Any \u2014 especialista em programa de afiliadas da Feminnita.
+var SYSTEM_PROMPT9 = `Voc\xEA \xE9 a Any \u2014 especialista em programa de afiliadas da Feminnita.
 
 Seu trabalho \xE9 transformar revendedoras satisfeitas, micro-influenciadoras e admins de grupo em promotoras ativas da marca \u2014 criando um canal de vendas que funciona sem pagar por clique, sem depender de algoritmo e sem precisar que a Feminnita fa\xE7a o trabalho de indica\xE7\xE3o sozinha.
 
@@ -34426,7 +33783,7 @@ NOME DO USU\xC1RIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
   try {
     const result = await invokeLLM({
       messages: [
-        { role: "system", content: SYSTEM_PROMPT12 + nameCtx },
+        { role: "system", content: SYSTEM_PROMPT9 + nameCtx },
         ...normalized
       ]
     });
@@ -34461,7 +33818,7 @@ import Anthropic7 from "@anthropic-ai/sdk";
 init_ml_ads_browser_agent();
 init_db();
 init_schema();
-import { desc as desc46, eq as eq88, and as and72, isNotNull } from "drizzle-orm";
+import { desc as desc46, eq as eq85, and as and69, isNotNull } from "drizzle-orm";
 async function runAdsMutation(account, actionType, campaignId, campaignName, budget) {
   const acc = account;
   try {
@@ -34722,9 +34079,9 @@ async function buildGabiPrompt(account = "feminnita") {
         executionLog: agentActions.executionLog,
         executedAt: agentActions.executedAt,
         actionType: agentActions.actionType
-      }).from(agentActions).where(and72(
-        eq88(agentActions.agentName, "gabi"),
-        eq88(agentActions.status, "done"),
+      }).from(agentActions).where(and69(
+        eq85(agentActions.agentName, "gabi"),
+        eq85(agentActions.status, "done"),
         isNotNull(agentActions.executedAt)
       )).orderBy(desc46(agentActions.executedAt)).limit(30);
       if (recent.length > 0) {
@@ -35050,22 +34407,22 @@ NOME DO USU\xC1RIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
           call = (async () => {
             const db = await getDb();
             if (!db) throw new Error("DB indispon\xEDvel");
-            const { eq: eq116, and: and93, desc: desc56 } = await import("drizzle-orm");
+            const { eq: eq113, and: and90, desc: desc56 } = await import("drizzle-orm");
             const { marketplaceAdsMetrics: marketplaceAdsMetrics2 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
             const targetPlatform = inp.platform || "ml";
             const targetAccount = inp.account || account;
-            const rows = await db.select().from(marketplaceAdsMetrics2).where(and93(
-              eq116(marketplaceAdsMetrics2.platform, targetPlatform),
-              eq116(marketplaceAdsMetrics2.account, targetAccount)
+            const rows = await db.select().from(marketplaceAdsMetrics2).where(and90(
+              eq113(marketplaceAdsMetrics2.platform, targetPlatform),
+              eq113(marketplaceAdsMetrics2.account, targetAccount)
             )).orderBy(desc56(marketplaceAdsMetrics2.scrapedAt)).limit(200);
             if (!rows.length) {
               const { or: or6 } = await import("drizzle-orm");
-              const pending = await db.select({ id: agentActions.id }).from(agentActions).where(and93(
-                eq116(agentActions.actionType, "scrape_ads_metrics"),
+              const pending = await db.select({ id: agentActions.id }).from(agentActions).where(and90(
+                eq113(agentActions.actionType, "scrape_ads_metrics"),
                 or6(
-                  eq116(agentActions.status, "approved"),
-                  eq116(agentActions.status, "executing"),
-                  eq116(agentActions.status, "pending")
+                  eq113(agentActions.status, "approved"),
+                  eq113(agentActions.status, "executing"),
+                  eq113(agentActions.status, "pending")
                 )
               )).limit(1);
               if (!pending.length) {
@@ -35107,11 +34464,11 @@ ${lines.join("\n")}`;
             const db = await getDb();
             if (!db) return "Banco indispon\xEDvel.";
             const { or: or6 } = await import("drizzle-orm");
-            const allPending = await db.select().from(agentActions).where(and72(
-              eq88(agentActions.agentName, "gabi"),
+            const allPending = await db.select().from(agentActions).where(and69(
+              eq85(agentActions.agentName, "gabi"),
               or6(
-                eq88(agentActions.status, "pending"),
-                eq88(agentActions.status, "approved")
+                eq85(agentActions.status, "pending"),
+                eq85(agentActions.status, "approved")
               )
             ));
             const adsActions = allPending.filter(
@@ -35119,7 +34476,7 @@ ${lines.join("\n")}`;
             );
             if (adsActions.length === 0) return "Nenhuma a\xE7\xE3o de Ads ML pendente. Use propose_ads_actions para criar as a\xE7\xF5es antes de executar.";
             for (const a of adsActions) {
-              await db.update(agentActions).set({ status: "approved" }).where(eq88(agentActions.id, a.id));
+              await db.update(agentActions).set({ status: "approved" }).where(eq85(agentActions.id, a.id));
             }
             const names = adsActions.map((a) => a.title || a.actionType).join(", ");
             return `${adsActions.length} a\xE7\xE3o(\xF5es) enfileirada(s) para execu\xE7\xE3o via browser automation: ${names}.
@@ -35542,9 +34899,9 @@ NOME DO USU\xC1RIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
           call = (async () => {
             const db = await getDb();
             if (!db) return "Banco indispon\xEDvel \u2014 n\xE3o foi poss\xEDvel verificar as a\xE7\xF5es.";
-            const { eq: eq116, and: and93 } = await import("drizzle-orm");
+            const { eq: eq113, and: and90 } = await import("drizzle-orm");
             const { agentActions: agentActionsTable2 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
-            const pending = await db.select().from(agentActionsTable2).where(and93(eq116(agentActionsTable2.agentName, "luiza"), eq116(agentActionsTable2.status, "pending")));
+            const pending = await db.select().from(agentActionsTable2).where(and90(eq113(agentActionsTable2.agentName, "luiza"), eq113(agentActionsTable2.status, "pending")));
             if (pending.length === 0) return "Nenhuma a\xE7\xE3o pendente encontrada para executar.";
             const lines = pending.map((a) => `- ${a.title || a.actionType} [id=${a.id}]`);
             return `${pending.length} a\xE7\xE3o(\xF5es) enfileirada(s) para execu\xE7\xE3o via browser Shopee (pr\xF3ximos ~5 min):
@@ -35656,7 +35013,7 @@ async function updateLuizaShopeeKnowledge() {
 // server/routers/shopee-luiza.ts
 init_db();
 init_schema();
-import { eq as eq89, and as and73, desc as desc47 } from "drizzle-orm";
+import { eq as eq86, and as and70, desc as desc47 } from "drizzle-orm";
 var shopeeLuizaRouter = router({
   chat: protectedProcedure.input(z77.object({
     messages: z77.array(z77.object({
@@ -35679,12 +35036,12 @@ var shopeeLuizaRouter = router({
           agentName,
           title
         });
-        const [created] = await db.select().from(specialistConversations).where(and73(eq89(specialistConversations.userId, ctx.user.id), eq89(specialistConversations.agentName, agentName))).orderBy(desc47(specialistConversations.createdAt)).limit(1);
+        const [created] = await db.select().from(specialistConversations).where(and70(eq86(specialistConversations.userId, ctx.user.id), eq86(specialistConversations.agentName, agentName))).orderBy(desc47(specialistConversations.createdAt)).limit(1);
         convId = created.id;
       }
       await db.insert(specialistMessages).values({ conversationId: convId, role: "user", content: userMessage.content });
       await db.insert(specialistMessages).values({ conversationId: convId, role: "assistant", content: reply });
-      if (convId) await db.update(specialistConversations).set({ updatedAt: /* @__PURE__ */ new Date() }).where(eq89(specialistConversations.id, convId));
+      if (convId) await db.update(specialistConversations).set({ updatedAt: /* @__PURE__ */ new Date() }).where(eq86(specialistConversations.id, convId));
       return { reply, conversationId: convId };
     }
     return { reply, conversationId: null };
@@ -36254,12 +35611,12 @@ var sheinIsabelaRouter = router({
 import { z as z80 } from "zod";
 init_db();
 init_schema();
-import { TRPCError as TRPCError14 } from "@trpc/server";
+import { TRPCError as TRPCError13 } from "@trpc/server";
 
 // server/agents/agent-task-runner.ts
 init_db();
 init_schema();
-import { eq as eq91, and as and74, desc as desc48 } from "drizzle-orm";
+import { eq as eq88, and as and71, desc as desc48 } from "drizzle-orm";
 init_websocket_notifications();
 init_webPush();
 var AGENT_DISPLAY = {
@@ -36272,25 +35629,25 @@ async function runAgentTask(taskId, userId, agentName, message) {
   const db = await getDb();
   if (!db) return;
   try {
-    await db.update(agentTasks).set({ status: "processing", startedAt: /* @__PURE__ */ new Date() }).where(eq91(agentTasks.id, taskId));
+    await db.update(agentTasks).set({ status: "processing", startedAt: /* @__PURE__ */ new Date() }).where(eq88(agentTasks.id, taskId));
     const response = await chatWithSpecialist(agentName, message, []);
     await db.update(agentTasks).set({
       status: "done",
       result: response.message,
       finishedAt: /* @__PURE__ */ new Date()
-    }).where(eq91(agentTasks.id, taskId));
+    }).where(eq88(agentTasks.id, taskId));
     try {
-      const [existingConv] = await db.select().from(specialistConversations).where(and74(
-        eq91(specialistConversations.userId, userId),
-        eq91(specialistConversations.agentName, agentName)
+      const [existingConv] = await db.select().from(specialistConversations).where(and71(
+        eq88(specialistConversations.userId, userId),
+        eq88(specialistConversations.agentName, agentName)
       )).orderBy(desc48(specialistConversations.updatedAt)).limit(1);
       let convId;
       if (existingConv) {
         convId = existingConv.id;
-        await db.update(specialistConversations).set({ updatedAt: /* @__PURE__ */ new Date() }).where(eq91(specialistConversations.id, convId));
+        await db.update(specialistConversations).set({ updatedAt: /* @__PURE__ */ new Date() }).where(eq88(specialistConversations.id, convId));
       } else {
         await db.insert(specialistConversations).values({ userId, agentName, title: message.slice(0, 60) });
-        const [created] = await db.select().from(specialistConversations).where(and74(eq91(specialistConversations.userId, userId), eq91(specialistConversations.agentName, agentName))).orderBy(desc48(specialistConversations.createdAt)).limit(1);
+        const [created] = await db.select().from(specialistConversations).where(and71(eq88(specialistConversations.userId, userId), eq88(specialistConversations.agentName, agentName))).orderBy(desc48(specialistConversations.createdAt)).limit(1);
         convId = created.id;
       }
       await db.insert(specialistMessages).values({ conversationId: convId, role: "user", content: `\u23F3 Tarefa: ${message}` });
@@ -36310,7 +35667,7 @@ async function runAgentTask(taskId, userId, agentName, message) {
         ts: Date.now()
       });
     } else if (db) {
-      const subs = await db.select().from(pushSubscriptions).where(eq91(pushSubscriptions.userId, userId));
+      const subs = await db.select().from(pushSubscriptions).where(eq88(pushSubscriptions.userId, userId));
       for (const sub of subs) {
         try {
           await sendPush(
@@ -36323,13 +35680,13 @@ async function runAgentTask(taskId, userId, agentName, message) {
           );
         } catch (err) {
           if (err.expired) {
-            await db.delete(pushSubscriptions).where(eq91(pushSubscriptions.id, sub.id));
+            await db.delete(pushSubscriptions).where(eq88(pushSubscriptions.id, sub.id));
           }
         }
       }
     }
   } catch (err) {
-    await db.update(agentTasks).set({ status: "error", result: err.message, finishedAt: /* @__PURE__ */ new Date() }).where(eq91(agentTasks.id, taskId));
+    await db.update(agentTasks).set({ status: "error", result: err.message, finishedAt: /* @__PURE__ */ new Date() }).where(eq88(agentTasks.id, taskId));
   }
 }
 
@@ -36341,7 +35698,7 @@ var agentTasksRouter = router({
     message: z80.string().min(1).max(1e4)
   })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
-    if (!db) throw new TRPCError14({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+    if (!db) throw new TRPCError13({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
     const result = await db.insert(agentTasks).values({
       userId: ctx.user.id,
       agentName: input.agentName,
@@ -36360,16 +35717,16 @@ var agentTasksRouter = router({
   })).query(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) return [];
-    const { and: and93, eq: eq116, desc: desc56 } = await import("drizzle-orm");
-    const conditions = [eq116(agentTasks.userId, ctx.user.id)];
-    if (input.agentName) conditions.push(eq116(agentTasks.agentName, input.agentName));
-    return db.select().from(agentTasks).where(and93(...conditions)).orderBy(desc56(agentTasks.createdAt)).limit(input.limit);
+    const { and: and90, eq: eq113, desc: desc56 } = await import("drizzle-orm");
+    const conditions = [eq113(agentTasks.userId, ctx.user.id)];
+    if (input.agentName) conditions.push(eq113(agentTasks.agentName, input.agentName));
+    return db.select().from(agentTasks).where(and90(...conditions)).orderBy(desc56(agentTasks.createdAt)).limit(input.limit);
   })
 });
 
 // server/routers/chat-upload.ts
 import { z as z81 } from "zod";
-import { TRPCError as TRPCError15 } from "@trpc/server";
+import { TRPCError as TRPCError14 } from "@trpc/server";
 import path9 from "path";
 import fs9 from "fs";
 var UPLOAD_DIR = path9.join(process.cwd(), "dist", "public", "chat-files");
@@ -36386,7 +35743,7 @@ var chatUploadRouter = router({
   })).mutation(async ({ input, ctx }) => {
     const buffer = Buffer.from(input.fileData, "base64");
     if (buffer.length > MAX_SIZE_MB * 1024 * 1024) {
-      throw new TRPCError15({ code: "PAYLOAD_TOO_LARGE", message: `Arquivo muito grande (m\xE1x ${MAX_SIZE_MB}MB)` });
+      throw new TRPCError14({ code: "PAYLOAD_TOO_LARGE", message: `Arquivo muito grande (m\xE1x ${MAX_SIZE_MB}MB)` });
     }
     ensureDir();
     const ext = path9.extname(input.fileName).toLowerCase() || "";
@@ -36481,15 +35838,15 @@ var hailuoImageRouter = router({
 init_db();
 init_schema();
 import { z as z84 } from "zod";
-import { TRPCError as TRPCError17 } from "@trpc/server";
-import { eq as eq93, desc as desc49, and as and75, gte as gte5, count } from "drizzle-orm";
+import { TRPCError as TRPCError16 } from "@trpc/server";
+import { eq as eq90, desc as desc49, and as and72, gte as gte5, count } from "drizzle-orm";
 
 // server/routers/video-credits.ts
 init_db();
 init_schema();
 import { z as z83 } from "zod";
-import { TRPCError as TRPCError16 } from "@trpc/server";
-import { eq as eq92, sql as sql5 } from "drizzle-orm";
+import { TRPCError as TRPCError15 } from "@trpc/server";
+import { eq as eq89, sql as sql5 } from "drizzle-orm";
 var CREDIT_COSTS = {
   livre: 10,
   runningup: 15,
@@ -36501,22 +35858,22 @@ var CREDIT_PACKAGES = [
   { id: "ultra", name: "Ultra", credits: 220, amountBrl: "149.00", label: "~14 Running Up" }
 ];
 async function getOrCreatePlan(userId, db) {
-  const rows = await db.select().from(videoPlans).where(eq92(videoPlans.userId, userId)).limit(1);
+  const rows = await db.select().from(videoPlans).where(eq89(videoPlans.userId, userId)).limit(1);
   if (rows.length > 0) return rows[0];
   await db.insert(videoPlans).values({ userId, videoCreditsBalance: 0 });
-  const newRows = await db.select().from(videoPlans).where(eq92(videoPlans.userId, userId)).limit(1);
+  const newRows = await db.select().from(videoPlans).where(eq89(videoPlans.userId, userId)).limit(1);
   return newRows[0];
 }
 async function debitCredits(userId, mode, db) {
   const cost = CREDIT_COSTS[mode];
   const plan = await getOrCreatePlan(userId, db);
   if ((plan.videoCreditsBalance ?? 0) < cost) {
-    throw new TRPCError16({
+    throw new TRPCError15({
       code: "FORBIDDEN",
       message: `Cr\xE9ditos insuficientes. Necess\xE1rio: ${cost}, dispon\xEDvel: ${plan.videoCreditsBalance ?? 0}. Adquira mais cr\xE9ditos.`
     });
   }
-  await db.update(videoPlans).set({ videoCreditsBalance: sql5`${videoPlans.videoCreditsBalance} - ${cost}` }).where(eq92(videoPlans.userId, userId));
+  await db.update(videoPlans).set({ videoCreditsBalance: sql5`${videoPlans.videoCreditsBalance} - ${cost}` }).where(eq89(videoPlans.userId, userId));
 }
 async function getOrCreateAsaasCustomer(email, name) {
   const key = process.env.ASAAS_API_KEY;
@@ -36574,7 +35931,7 @@ var videoCreditsRouter = router({
   getPackages: protectedProcedure.query(() => CREDIT_PACKAGES),
   createOrder: protectedProcedure.input(z83.object({ packageId: z83.enum(["starter", "pro", "ultra"]) })).mutation(async ({ input, ctx }) => {
     const pkg = CREDIT_PACKAGES.find((p) => p.id === input.packageId);
-    if (!pkg) throw new TRPCError16({ code: "BAD_REQUEST", message: "Pacote inv\xE1lido" });
+    if (!pkg) throw new TRPCError15({ code: "BAD_REQUEST", message: "Pacote inv\xE1lido" });
     const db = await getDb();
     if (!db) throw new Error("DB indispon\xEDvel");
     const insertResult = await db.insert(videoCreditOrders).values({
@@ -36596,7 +35953,7 @@ var videoCreditsRouter = router({
       `${pkg.credits} Cr\xE9ditos de V\xEDdeo IA \u2014 Feminnita Marketing`,
       externalRef
     );
-    await db.update(videoCreditOrders).set({ asaasPaymentId: payment.paymentId, asaasPaymentUrl: payment.paymentUrl }).where(eq92(videoCreditOrders.id, orderId));
+    await db.update(videoCreditOrders).set({ asaasPaymentId: payment.paymentId, asaasPaymentUrl: payment.paymentUrl }).where(eq89(videoCreditOrders.id, orderId));
     return {
       orderId,
       paymentUrl: payment.paymentUrl,
@@ -36627,11 +35984,11 @@ var videoCreditsRouter = router({
     if (!userId || !orderId) return { ok: true };
     const db = await getDb();
     if (!db) return { ok: false, error: "DB indispon\xEDvel" };
-    const orders = await db.select().from(videoCreditOrders).where(eq92(videoCreditOrders.id, orderId)).limit(1);
+    const orders = await db.select().from(videoCreditOrders).where(eq89(videoCreditOrders.id, orderId)).limit(1);
     if (!orders.length || orders[0].status === "paid") return { ok: true };
     const order = orders[0];
-    await db.update(videoCreditOrders).set({ status: "paid", paidAt: /* @__PURE__ */ new Date() }).where(eq92(videoCreditOrders.id, orderId));
-    await db.update(videoPlans).set({ videoCreditsBalance: sql5`${videoPlans.videoCreditsBalance} + ${order.credits}` }).where(eq92(videoPlans.userId, userId));
+    await db.update(videoCreditOrders).set({ status: "paid", paidAt: /* @__PURE__ */ new Date() }).where(eq89(videoCreditOrders.id, orderId));
+    await db.update(videoPlans).set({ videoCreditsBalance: sql5`${videoPlans.videoCreditsBalance} + ${order.credits}` }).where(eq89(videoPlans.userId, userId));
     console.log(`[VideoCredits] +${order.credits} cr\xE9ditos \u2192 userId ${userId} (order #${orderId})`);
     return { ok: true };
   }),
@@ -36639,11 +35996,11 @@ var videoCreditsRouter = router({
     userId: z83.number().int(),
     credits: z83.number().int().min(1).max(1e4)
   })).mutation(async ({ input, ctx }) => {
-    if (ctx.user.role !== "admin") throw new TRPCError16({ code: "FORBIDDEN" });
+    if (ctx.user.role !== "admin") throw new TRPCError15({ code: "FORBIDDEN" });
     const db = await getDb();
     if (!db) throw new Error("DB indispon\xEDvel");
     await getOrCreatePlan(input.userId, db);
-    await db.update(videoPlans).set({ videoCreditsBalance: sql5`${videoPlans.videoCreditsBalance} + ${input.credits}` }).where(eq92(videoPlans.userId, input.userId));
+    await db.update(videoPlans).set({ videoCreditsBalance: sql5`${videoPlans.videoCreditsBalance} + ${input.credits}` }).where(eq89(videoPlans.userId, input.userId));
     return { ok: true };
   })
 });
@@ -36796,7 +36153,7 @@ async function rhGetStatus(taskId) {
   return { status: taskStatus };
 }
 async function getOrCreatePlan2(userId, db) {
-  const rows = await db.select().from(videoPlans).where(eq93(videoPlans.userId, userId)).limit(1);
+  const rows = await db.select().from(videoPlans).where(eq90(videoPlans.userId, userId)).limit(1);
   if (rows.length > 0) return rows[0];
   await db.insert(videoPlans).values({
     userId,
@@ -36805,13 +36162,13 @@ async function getOrCreatePlan2(userId, db) {
     livreExtraCredits: 0,
     runningUpExtraCredits: 0
   });
-  const newRows = await db.select().from(videoPlans).where(eq93(videoPlans.userId, userId)).limit(1);
+  const newRows = await db.select().from(videoPlans).where(eq90(videoPlans.userId, userId)).limit(1);
   return newRows[0];
 }
 async function getMonthCount(userId, mode, db) {
   const monthStart = new Date((/* @__PURE__ */ new Date()).getFullYear(), (/* @__PURE__ */ new Date()).getMonth(), 1);
   const rows = await db.select({ cnt: count() }).from(videoJobs).where(
-    and75(eq93(videoJobs.userId, userId), eq93(videoJobs.mode, mode), gte5(videoJobs.createdAt, monthStart))
+    and72(eq90(videoJobs.userId, userId), eq90(videoJobs.mode, mode), gte5(videoJobs.createdAt, monthStart))
   );
   return Number(rows[0]?.cnt ?? 0);
 }
@@ -36843,9 +36200,9 @@ var runpodVideoRouter = router({
     const result = await sfGetStatus(input.jobId);
     const db = await getDb();
     if (db && result.status === "COMPLETED") {
-      await db.update(videoJobs).set({ status: "completed", completedAt: /* @__PURE__ */ new Date() }).where(eq93(videoJobs.runpodJobId, input.jobId)).catch(() => null);
+      await db.update(videoJobs).set({ status: "completed", completedAt: /* @__PURE__ */ new Date() }).where(eq90(videoJobs.runpodJobId, input.jobId)).catch(() => null);
     } else if (db && result.status === "FAILED") {
-      await db.update(videoJobs).set({ status: "failed", completedAt: /* @__PURE__ */ new Date() }).where(eq93(videoJobs.runpodJobId, input.jobId)).catch(() => null);
+      await db.update(videoJobs).set({ status: "failed", completedAt: /* @__PURE__ */ new Date() }).where(eq90(videoJobs.runpodJobId, input.jobId)).catch(() => null);
     }
     return { status: result.status, videoUrl: result.videoUrl, error: result.error };
   }),
@@ -36860,7 +36217,7 @@ var runpodVideoRouter = router({
       errorMessage: videoJobs.errorMessage,
       completedAt: videoJobs.completedAt,
       createdAt: videoJobs.createdAt
-    }).from(videoJobs).where(eq93(videoJobs.userId, ctx.user.id)).orderBy(desc49(videoJobs.createdAt)).limit(input.limit);
+    }).from(videoJobs).where(eq90(videoJobs.userId, ctx.user.id)).orderBy(desc49(videoJobs.createdAt)).limit(input.limit);
     return { jobs };
   }),
   checkConfig: protectedProcedure.query(() => ({
@@ -36888,12 +36245,12 @@ var runpodVideoRouter = router({
     mode: z84.enum(["livre", "runningup"]),
     credits: z84.number().int().min(1).max(1e3)
   })).mutation(async ({ input, ctx }) => {
-    if (ctx.user.role !== "admin") throw new TRPCError17({ code: "FORBIDDEN" });
+    if (ctx.user.role !== "admin") throw new TRPCError16({ code: "FORBIDDEN" });
     const db = await getDb();
     if (!db) throw new Error("DB n\xE3o dispon\xEDvel");
     const plan = await getOrCreatePlan2(input.userId, db);
     const update = input.mode === "livre" ? { livreExtraCredits: plan.livreExtraCredits + input.credits } : { runningUpExtraCredits: plan.runningUpExtraCredits + input.credits };
-    await db.update(videoPlans).set(update).where(eq93(videoPlans.userId, input.userId));
+    await db.update(videoPlans).set(update).where(eq90(videoPlans.userId, input.userId));
     return { ok: true };
   }),
   // Running Up: foto + vídeo referência → RunningHub WanVideo Animate + ViTPose
@@ -36956,8 +36313,8 @@ var runpodVideoRouter = router({
 init_db();
 init_schema();
 import { z as z85 } from "zod";
-import { TRPCError as TRPCError18 } from "@trpc/server";
-import { eq as eq94, desc as desc50 } from "drizzle-orm";
+import { TRPCError as TRPCError17 } from "@trpc/server";
+import { eq as eq91, desc as desc50 } from "drizzle-orm";
 import Anthropic10 from "@anthropic-ai/sdk";
 import path10 from "path";
 import fs10 from "fs";
@@ -36976,12 +36333,12 @@ var PRESET_VOICES = [
 ];
 function getElKey() {
   const key = process.env.ELEVENLABS_API_KEY;
-  if (!key) throw new TRPCError18({ code: "PRECONDITION_FAILED", message: "ELEVENLABS_API_KEY n\xE3o configurado." });
+  if (!key) throw new TRPCError17({ code: "PRECONDITION_FAILED", message: "ELEVENLABS_API_KEY n\xE3o configurado." });
   return key;
 }
 function getSfKey2() {
   const key = process.env.SILICONFLOW_API_KEY;
-  if (!key) throw new TRPCError18({ code: "PRECONDITION_FAILED", message: "SILICONFLOW_API_KEY n\xE3o configurado." });
+  if (!key) throw new TRPCError17({ code: "PRECONDITION_FAILED", message: "SILICONFLOW_API_KEY n\xE3o configurado." });
   return key;
 }
 function ensureUploads() {
@@ -37062,7 +36419,7 @@ async function sfSubmit2(imageBase64, mimeType, prompt) {
   });
   if (!res.ok) {
     const t2 = await res.text().catch(() => "");
-    throw new TRPCError18({ code: "INTERNAL_SERVER_ERROR", message: `SiliconFlow submit ${res.status}: ${t2.slice(0, 200)}` });
+    throw new TRPCError17({ code: "INTERNAL_SERVER_ERROR", message: `SiliconFlow submit ${res.status}: ${t2.slice(0, 200)}` });
   }
   const data = await res.json();
   return data.requestId;
@@ -37299,7 +36656,7 @@ var modoFalaRouter = router({
       runpodJobId: videoJobs.runpodJobId,
       status: videoJobs.status,
       createdAt: videoJobs.createdAt
-    }).from(videoJobs).where(eq94(videoJobs.userId, ctx.user.id)).orderBy(desc50(videoJobs.createdAt)).limit(input.limit);
+    }).from(videoJobs).where(eq91(videoJobs.userId, ctx.user.id)).orderBy(desc50(videoJobs.createdAt)).limit(input.limit);
     return { jobs };
   })
 });
@@ -37309,14 +36666,14 @@ import { z as z86 } from "zod";
 init_ga4();
 init_db();
 init_schema();
-import { eq as eq96, and as and77 } from "drizzle-orm";
+import { eq as eq93, and as and74 } from "drizzle-orm";
 async function getPropertyId(userId) {
   const db = await getDb();
   if (!db) return null;
-  const rows = await db.select({ accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and77(
-    eq96(oauthTokens.userId, userId),
-    eq96(oauthTokens.plataforma, "google_analytics"),
-    eq96(oauthTokens.isActive, true)
+  const rows = await db.select({ accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and74(
+    eq93(oauthTokens.userId, userId),
+    eq93(oauthTokens.plataforma, "google_analytics"),
+    eq93(oauthTokens.isActive, true)
   )).limit(1);
   if (rows.length === 0) return null;
   const info = rows[0].accountInfo ? JSON.parse(rows[0].accountInfo) : {};
@@ -37326,7 +36683,7 @@ var ga4Router = router({
   status: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) return { connected: false, propertyId: null };
-    const rows = await db.select({ isActive: oauthTokens.isActive, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and77(eq96(oauthTokens.userId, ctx.user.id), eq96(oauthTokens.plataforma, "google_analytics"))).limit(1);
+    const rows = await db.select({ isActive: oauthTokens.isActive, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and74(eq93(oauthTokens.userId, ctx.user.id), eq93(oauthTokens.plataforma, "google_analytics"))).limit(1);
     if (rows.length === 0) return { connected: false, propertyId: null };
     const info = rows[0].accountInfo ? JSON.parse(rows[0].accountInfo) : {};
     return { connected: Boolean(rows[0].isActive), propertyId: info.propertyId ?? null };
@@ -37334,17 +36691,17 @@ var ga4Router = router({
   setPropertyId: protectedProcedure.input(z86.object({ propertyId: z86.string().min(1) })).mutation(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new Error("DB indispon\xEDvel");
-    const rows = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and77(eq96(oauthTokens.userId, ctx.user.id), eq96(oauthTokens.plataforma, "google_analytics"))).limit(1);
+    const rows = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and74(eq93(oauthTokens.userId, ctx.user.id), eq93(oauthTokens.plataforma, "google_analytics"))).limit(1);
     if (rows.length === 0) throw new Error("GA4 n\xE3o conectado");
     const info = rows[0].accountInfo ? JSON.parse(rows[0].accountInfo) : {};
     info.propertyId = input.propertyId;
-    await db.update(oauthTokens).set({ accountInfo: JSON.stringify(info) }).where(eq96(oauthTokens.id, rows[0].id));
+    await db.update(oauthTokens).set({ accountInfo: JSON.stringify(info) }).where(eq93(oauthTokens.id, rows[0].id));
     return { success: true };
   }),
   disconnect: protectedProcedure.mutation(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("DB indispon\xEDvel");
-    await db.update(oauthTokens).set({ isActive: false }).where(and77(eq96(oauthTokens.userId, ctx.user.id), eq96(oauthTokens.plataforma, "google_analytics")));
+    await db.update(oauthTokens).set({ isActive: false }).where(and74(eq93(oauthTokens.userId, ctx.user.id), eq93(oauthTokens.plataforma, "google_analytics")));
     return { success: true };
   }),
   overview: protectedProcedure.input(z86.object({ days: z86.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
@@ -37823,8 +37180,8 @@ var appRouter = router({
       const dbConn = await getDb();
       if (!dbConn) throw new Error("DB indispon\xEDvel");
       const { users: users2 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
-      const { eq: eq116 } = await import("drizzle-orm");
-      await dbConn.update(users2).set({ name: input.name }).where(eq116(users2.id, ctx.user.id));
+      const { eq: eq113 } = await import("drizzle-orm");
+      await dbConn.update(users2).set({ name: input.name }).where(eq113(users2.id, ctx.user.id));
       return { success: true };
     })
   }),
@@ -37904,7 +37261,6 @@ var appRouter = router({
   trafficManager: trafficManagerRouter,
   agentMemory: agentMemoryRouter,
   agentActions: agentActionsRouter,
-  morningBriefing: morningBriefingRouter,
   marketKnowledge: marketKnowledgeRouter,
   specialistChat: specialistChatRouter,
   pushSubscriptions: pushSubscriptionsRouter,
@@ -37922,8 +37278,8 @@ var appRouter = router({
       try {
         const db = await getDb();
         if (!db) return [];
-        const { eq: eq116 } = await import("drizzle-orm");
-        const allInfluencers = await db.select().from(influencers).where(eq116(influencers.userId, ctx.user.id));
+        const { eq: eq113 } = await import("drizzle-orm");
+        const allInfluencers = await db.select().from(influencers).where(eq113(influencers.userId, ctx.user.id));
         return allInfluencers;
       } catch (error) {
         console.error("[Influencers] Erro ao listar:", error);
@@ -37943,7 +37299,7 @@ var appRouter = router({
     })).mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const { eq: eq116 } = await import("drizzle-orm");
+      const { eq: eq113 } = await import("drizzle-orm");
       const result = await db.insert(influencers).values({
         userId: ctx.user.id,
         name: input.name,
@@ -37954,7 +37310,7 @@ var appRouter = router({
         tiktokHandle: input.tiktokHandle,
         isActive: true
       });
-      const created = await db.select().from(influencers).where(eq116(influencers.id, result[0].insertId)).limit(1);
+      const created = await db.select().from(influencers).where(eq113(influencers.id, result[0].insertId)).limit(1);
       return created[0];
     }),
     update: protectedProcedure.input(z88.object({
@@ -37969,18 +37325,18 @@ var appRouter = router({
     })).mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const { eq: eq116, and: and93 } = await import("drizzle-orm");
-      const owned = await db.select({ id: influencers.id }).from(influencers).where(and93(eq116(influencers.id, input.id), eq116(influencers.userId, ctx.user.id))).limit(1);
+      const { eq: eq113, and: and90 } = await import("drizzle-orm");
+      const owned = await db.select({ id: influencers.id }).from(influencers).where(and90(eq113(influencers.id, input.id), eq113(influencers.userId, ctx.user.id))).limit(1);
       if (owned.length === 0) throw new Error("Influencer n\xE3o encontrado");
       const { id, ...updates } = input;
-      await db.update(influencers).set(updates).where(eq116(influencers.id, id));
-      const updated = await db.select().from(influencers).where(eq116(influencers.id, id)).limit(1);
+      await db.update(influencers).set(updates).where(eq113(influencers.id, id));
+      const updated = await db.select().from(influencers).where(eq113(influencers.id, id)).limit(1);
       return updated[0];
     }),
     upsertDefaults: protectedProcedure.mutation(async ({ ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const { eq: eq116 } = await import("drizzle-orm");
+      const { eq: eq113 } = await import("drizzle-orm");
       const defaults = [
         {
           name: "Carol",
@@ -38015,7 +37371,7 @@ var appRouter = router({
           tiktokHandle: "@luizafeminnita"
         }
       ];
-      const existing = await db.select({ name: influencers.name }).from(influencers).where(eq116(influencers.userId, ctx.user.id));
+      const existing = await db.select({ name: influencers.name }).from(influencers).where(eq113(influencers.userId, ctx.user.id));
       const existingNames = existing.map((i) => i.name);
       let created = 0;
       for (const inf of defaults) {
@@ -38033,31 +37389,31 @@ var appRouter = router({
     })).query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
-      const { eq: eq116, and: and93, desc: desc56 } = await import("drizzle-orm");
-      const owned = await db.select({ id: influencers.id }).from(influencers).where(and93(eq116(influencers.id, input.influencerId), eq116(influencers.userId, ctx.user.id))).limit(1);
+      const { eq: eq113, and: and90, desc: desc56 } = await import("drizzle-orm");
+      const owned = await db.select({ id: influencers.id }).from(influencers).where(and90(eq113(influencers.id, input.influencerId), eq113(influencers.userId, ctx.user.id))).limit(1);
       if (owned.length === 0) return [];
-      const conditions = [eq116(influencerPosts.influencerId, input.influencerId)];
+      const conditions = [eq113(influencerPosts.influencerId, input.influencerId)];
       if (input.status) {
-        conditions.push(eq116(influencerPosts.status, input.status));
+        conditions.push(eq113(influencerPosts.status, input.status));
       }
-      return db.select().from(influencerPosts).where(and93(...conditions)).orderBy(desc56(influencerPosts.createdAt)).limit(input.limit);
+      return db.select().from(influencerPosts).where(and90(...conditions)).orderBy(desc56(influencerPosts.createdAt)).limit(input.limit);
     }),
     deletePost: protectedProcedure.input(z88.object({ postId: z88.number() })).mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
-      const { eq: eq116, and: and93 } = await import("drizzle-orm");
-      const post = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq116(influencerPosts.id, input.postId)).limit(1);
+      const { eq: eq113, and: and90 } = await import("drizzle-orm");
+      const post = await db.select({ influencerId: influencerPosts.influencerId }).from(influencerPosts).where(eq113(influencerPosts.id, input.postId)).limit(1);
       if (post.length === 0) throw new Error("Post n\xE3o encontrado");
-      const owned = await db.select({ id: influencers.id }).from(influencers).where(and93(eq116(influencers.id, post[0].influencerId ?? 0), eq116(influencers.userId, ctx.user.id))).limit(1);
+      const owned = await db.select({ id: influencers.id }).from(influencers).where(and90(eq113(influencers.id, post[0].influencerId ?? 0), eq113(influencers.userId, ctx.user.id))).limit(1);
       if (owned.length === 0) throw new Error("Acesso negado");
-      await db.delete(influencerPosts).where(eq116(influencerPosts.id, input.postId));
+      await db.delete(influencerPosts).where(eq113(influencerPosts.id, input.postId));
       return { success: true };
     }),
     getAllPosts: protectedProcedure.input(z88.object({ limit: z88.number().default(200) })).query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
-      const { eq: eq116, desc: desc56, inArray: inArray10 } = await import("drizzle-orm");
-      const myInfluencers = await db.select({ id: influencers.id, name: influencers.name }).from(influencers).where(eq116(influencers.userId, ctx.user.id));
+      const { eq: eq113, desc: desc56, inArray: inArray10 } = await import("drizzle-orm");
+      const myInfluencers = await db.select({ id: influencers.id, name: influencers.name }).from(influencers).where(eq113(influencers.userId, ctx.user.id));
       if (myInfluencers.length === 0) return [];
       const ids = myInfluencers.map((i) => i.id);
       const posts = await db.select().from(influencerPosts).where(inArray10(influencerPosts.influencerId, ids)).orderBy(desc56(influencerPosts.createdAt)).limit(input.limit);
@@ -38088,12 +37444,12 @@ var appRouter = router({
       try {
         const dbConn = await getDb();
         if (!dbConn) return [];
-        const { or: or6, and: and93, eq: eq116, desc: desc56 } = await import("drizzle-orm");
+        const { or: or6, and: and90, eq: eq113, desc: desc56 } = await import("drizzle-orm");
         const { directMessages: directMessages2 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
         const msgs = await dbConn.select().from(directMessages2).where(
           or6(
-            and93(eq116(directMessages2.fromUserId, ctx.user.id), eq116(directMessages2.toUserId, input.withUserId)),
-            and93(eq116(directMessages2.fromUserId, input.withUserId), eq116(directMessages2.toUserId, ctx.user.id))
+            and90(eq113(directMessages2.fromUserId, ctx.user.id), eq113(directMessages2.toUserId, input.withUserId)),
+            and90(eq113(directMessages2.fromUserId, input.withUserId), eq113(directMessages2.toUserId, ctx.user.id))
           )
         ).orderBy(desc56(directMessages2.createdAt)).limit(50);
         return msgs.reverse();
@@ -38226,7 +37582,7 @@ function serveStatic(app) {
 init_db();
 init_schema();
 import crypto12 from "crypto";
-import { eq as eq97, and as and78 } from "drizzle-orm";
+import { eq as eq94, and as and75 } from "drizzle-orm";
 async function fireMetaCAPIPurchase(opts) {
   try {
     const pixelId = process.env.META_PIXEL_ID;
@@ -38316,7 +37672,7 @@ async function handleEstoqueCreated(data) {
       quantidadeDisponivel,
       dataAtualizacao: /* @__PURE__ */ new Date()
     });
-    await db.update(blingProdutos).set({ estoque: quantidade, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and78(eq97(blingProdutos.id, produtoId), eq97(blingProdutos.userId, userId)));
+    await db.update(blingProdutos).set({ estoque: quantidade, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and75(eq94(blingProdutos.id, produtoId), eq94(blingProdutos.userId, userId)));
     console.log(`[Bling Webhook] Estoque criado \u2014 produto ${produtoId} (SKU: ${produtoSku}), saldo: ${quantidade}`);
   } catch (error) {
     console.error("[Bling Webhook] Erro ao processar cria\xE7\xE3o de estoque:", error);
@@ -38339,9 +37695,9 @@ async function handleEstoqueUpdated(data) {
       return;
     }
     const userId = "system";
-    const existing = await db.select({ id: blingEstoque.id }).from(blingEstoque).where(and78(eq97(blingEstoque.produtoId, produtoId), eq97(blingEstoque.userId, userId))).limit(1);
+    const existing = await db.select({ id: blingEstoque.id }).from(blingEstoque).where(and75(eq94(blingEstoque.produtoId, produtoId), eq94(blingEstoque.userId, userId))).limit(1);
     if (existing.length > 0) {
-      await db.update(blingEstoque).set({ quantidade, quantidadeReservada, quantidadeDisponivel, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and78(eq97(blingEstoque.produtoId, produtoId), eq97(blingEstoque.userId, userId)));
+      await db.update(blingEstoque).set({ quantidade, quantidadeReservada, quantidadeDisponivel, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and75(eq94(blingEstoque.produtoId, produtoId), eq94(blingEstoque.userId, userId)));
     } else {
       await db.insert(blingEstoque).values({
         userId,
@@ -38353,7 +37709,7 @@ async function handleEstoqueUpdated(data) {
         dataAtualizacao: /* @__PURE__ */ new Date()
       });
     }
-    await db.update(blingProdutos).set({ estoque: quantidade, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and78(eq97(blingProdutos.id, produtoId), eq97(blingProdutos.userId, userId)));
+    await db.update(blingProdutos).set({ estoque: quantidade, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and75(eq94(blingProdutos.id, produtoId), eq94(blingProdutos.userId, userId)));
     console.log(`[Bling Webhook] Estoque atualizado \u2014 produto ${produtoId} (SKU: ${produtoSku}), novo saldo: ${quantidade}`);
   } catch (error) {
     console.error("[Bling Webhook] Erro ao processar atualiza\xE7\xE3o de estoque:", error);
@@ -38372,8 +37728,8 @@ async function handleEstoqueDeleted(data) {
       return;
     }
     const userId = "system";
-    await db.update(blingEstoque).set({ quantidade: 0, quantidadeReservada: 0, quantidadeDisponivel: 0, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and78(eq97(blingEstoque.produtoId, produtoId), eq97(blingEstoque.userId, userId)));
-    await db.update(blingProdutos).set({ estoque: 0, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and78(eq97(blingProdutos.id, produtoId), eq97(blingProdutos.userId, userId)));
+    await db.update(blingEstoque).set({ quantidade: 0, quantidadeReservada: 0, quantidadeDisponivel: 0, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and75(eq94(blingEstoque.produtoId, produtoId), eq94(blingEstoque.userId, userId)));
+    await db.update(blingProdutos).set({ estoque: 0, dataAtualizacao: /* @__PURE__ */ new Date() }).where(and75(eq94(blingProdutos.id, produtoId), eq94(blingProdutos.userId, userId)));
     console.log(`[Bling Webhook] Estoque deletado \u2014 produto ${produtoId} zerado`);
   } catch (error) {
     console.error("[Bling Webhook] Erro ao processar exclus\xE3o de estoque:", error);
@@ -38689,7 +38045,7 @@ init_websocket_notifications();
 // server/agents/sync-agent.ts
 init_db();
 init_schema();
-import { eq as eq98, and as and79, isNotNull as isNotNull2 } from "drizzle-orm";
+import { eq as eq95, and as and76, isNotNull as isNotNull2 } from "drizzle-orm";
 var BLING_SYNC_INTERVAL_MS = 60 * 60 * 1e3;
 var META_SYNC_INTERVAL_MS = 30 * 60 * 1e3;
 async function syncBlingForUser(userId, accessToken) {
@@ -38784,7 +38140,7 @@ async function runBlingSync() {
     return;
   }
   try {
-    const tokens = await db.select().from(oauthTokens).where(and79(eq98(oauthTokens.plataforma, "bling"), eq98(oauthTokens.isActive, true), isNotNull2(oauthTokens.accessToken)));
+    const tokens = await db.select().from(oauthTokens).where(and76(eq95(oauthTokens.plataforma, "bling"), eq95(oauthTokens.isActive, true), isNotNull2(oauthTokens.accessToken)));
     console.log(`[SyncAgent] Bling \u2014 ${tokens.length} usu\xE1rio(s) para sincronizar`);
     for (const token of tokens) {
       try {
@@ -38806,7 +38162,7 @@ async function runMetaSync() {
     return;
   }
   try {
-    const tokens = await db.select().from(oauthTokens).where(and79(eq98(oauthTokens.plataforma, "meta"), eq98(oauthTokens.isActive, true), isNotNull2(oauthTokens.accessToken)));
+    const tokens = await db.select().from(oauthTokens).where(and76(eq95(oauthTokens.plataforma, "meta"), eq95(oauthTokens.isActive, true), isNotNull2(oauthTokens.accessToken)));
     console.log(`[SyncAgent] Meta \u2014 ${tokens.length} usu\xE1rio(s) para sincronizar`);
     for (const token of tokens) {
       try {
@@ -38840,14 +38196,14 @@ function startSyncAgent() {
 // server/agents/token-refresh-agent.ts
 init_db();
 init_schema();
-import { eq as eq99, and as and80, lte as lte3, isNotNull as isNotNull3 } from "drizzle-orm";
+import { eq as eq96, and as and77, lte as lte3, isNotNull as isNotNull3 } from "drizzle-orm";
 async function seedMetaTokensIfMissing() {
   const db = await getDb();
   if (!db) return;
   const userToken = process.env.META_ACCESS_TOKEN;
   const pageToken = process.env.META_PAGE_ACCESS_TOKEN;
   if (!userToken && !pageToken) return;
-  const existing = await db.select({ id: oauthTokens.id }).from(oauthTokens).where(and80(eq99(oauthTokens.plataforma, "meta"), eq99(oauthTokens.isActive, true))).limit(1);
+  const existing = await db.select({ id: oauthTokens.id }).from(oauthTokens).where(and77(eq96(oauthTokens.plataforma, "meta"), eq96(oauthTokens.isActive, true))).limit(1);
   if (existing.length > 0) return;
   const now = /* @__PURE__ */ new Date();
   const expiresAt = new Date(now.getTime() + 55 * 24 * 60 * 60 * 1e3);
@@ -38968,8 +38324,8 @@ async function runTokenRefresh() {
   const threshold = new Date(Date.now() + EXPIRY_THRESHOLD_MS);
   try {
     const tokens = await db.select().from(oauthTokens).where(
-      and80(
-        eq99(oauthTokens.isActive, true),
+      and77(
+        eq96(oauthTokens.isActive, true),
         isNotNull3(oauthTokens.expiresAt),
         lte3(oauthTokens.expiresAt, threshold)
       )
@@ -38983,7 +38339,7 @@ async function runTokenRefresh() {
           accessToken: result.accessToken,
           expiresAt: result.expiresAt,
           updatedAt: /* @__PURE__ */ new Date()
-        }).where(eq99(oauthTokens.id, token.id));
+        }).where(eq96(oauthTokens.id, token.id));
         failureCount.delete(token.id);
         console.log(`[TokenRefresh] Token id=${token.id} renovado com sucesso \u2014 expira em ${result.expiresAt.toISOString()}`);
       } catch (err) {
@@ -38991,7 +38347,7 @@ async function runTokenRefresh() {
         failureCount.set(token.id, failures);
         console.error(`[TokenRefresh] Token id=${token.id} falhou (tentativa ${failures}/${MAX_RETRY_FAILURES}):`, err);
         if (failures >= MAX_RETRY_FAILURES) {
-          await db.update(oauthTokens).set({ isActive: false, updatedAt: /* @__PURE__ */ new Date() }).where(eq99(oauthTokens.id, token.id));
+          await db.update(oauthTokens).set({ isActive: false, updatedAt: /* @__PURE__ */ new Date() }).where(eq96(oauthTokens.id, token.id));
           failureCount.delete(token.id);
           console.warn(`[TokenRefresh] Token id=${token.id} desativado ap\xF3s ${MAX_RETRY_FAILURES} falhas consecutivas`);
         }
@@ -39032,7 +38388,7 @@ function startTokenRefreshAgent() {
 init_db();
 init_schema();
 init_llm();
-import { eq as eq100 } from "drizzle-orm";
+import { eq as eq97 } from "drizzle-orm";
 var lastRunDate2 = null;
 async function runContentGeneration() {
   const db = await getDb();
@@ -39043,7 +38399,7 @@ async function runContentGeneration() {
   console.log("[ContentAgent] Iniciando gera\xE7\xE3o de conte\xFAdo...");
   let activeInfluencers = [];
   try {
-    activeInfluencers = await db.select().from(influencers).where(eq100(influencers.isActive, true));
+    activeInfluencers = await db.select().from(influencers).where(eq97(influencers.isActive, true));
   } catch (err) {
     console.error("[ContentAgent] Erro ao buscar influencers:", err);
     return;
@@ -39133,7 +38489,7 @@ function startContentAgent() {
 // server/agents/alert-agent.ts
 init_db();
 init_schema();
-import { eq as eq101, and as and81 } from "drizzle-orm";
+import { eq as eq98, and as and78 } from "drizzle-orm";
 var notifyNewAlert2;
 try {
   notifyNewAlert2 = (init_websocket_notifications(), __toCommonJS(websocket_notifications_exports)).notifyNewAlert;
@@ -39214,7 +38570,7 @@ async function runAlertCheck() {
   }
   let tokens = [];
   try {
-    tokens = await db.select().from(oauthTokens).where(and81(eq101(oauthTokens.plataforma, "meta"), eq101(oauthTokens.isActive, true)));
+    tokens = await db.select().from(oauthTokens).where(and78(eq98(oauthTokens.plataforma, "meta"), eq98(oauthTokens.isActive, true)));
   } catch (err) {
     console.error("[AlertAgent] Erro ao buscar tokens:", err);
     return;
@@ -39231,10 +38587,10 @@ async function runAlertCheck() {
         for (const alertDef of thresholdAlerts) {
           try {
             const existing = await db.select().from(metaCampaignAlerts).where(
-              and81(
-                eq101(metaCampaignAlerts.campaignId, campaign.id),
-                eq101(metaCampaignAlerts.alertType, alertDef.alertType),
-                eq101(metaCampaignAlerts.isResolved, false)
+              and78(
+                eq98(metaCampaignAlerts.campaignId, campaign.id),
+                eq98(metaCampaignAlerts.alertType, alertDef.alertType),
+                eq98(metaCampaignAlerts.isResolved, false)
               )
             ).limit(1);
             if (existing.length > 0) continue;
@@ -39283,7 +38639,7 @@ function startAlertAgent() {
 // server/agents/performance-agent.ts
 init_db();
 init_schema();
-import { eq as eq102 } from "drizzle-orm";
+import { eq as eq99 } from "drizzle-orm";
 var CHECK_INTERVAL_MS = 5 * 60 * 1e3;
 var RUN_HOUR2 = 0;
 var lastRunDate3 = null;
@@ -39334,7 +38690,7 @@ async function runPerformanceCollection() {
     return;
   }
   try {
-    const activeInfluencers = await db.select().from(influencers).where(eq102(influencers.isActive, true));
+    const activeInfluencers = await db.select().from(influencers).where(eq99(influencers.isActive, true));
     console.log(`[PerformanceAgent] ${activeInfluencers.length} influencer(s) ativo(s)`);
     for (const influencer of activeInfluencers) {
       try {
@@ -39381,7 +38737,7 @@ function startPerformanceAgent() {
 // server/agents/publication-worker.ts
 init_db();
 init_schema();
-import { eq as eq103, and as and83, or as or5, lte as lte4 } from "drizzle-orm";
+import { eq as eq100, and as and80, or as or5, lte as lte4 } from "drizzle-orm";
 var MAX_JOBS_PER_CYCLE = 5;
 async function publishToInstagram2(instagramId, accessToken, caption, mediaUrls) {
   if (mediaUrls.length === 0) {
@@ -39440,9 +38796,9 @@ async function processJobs() {
   try {
     jobs = await db.select().from(publicationQueueJobs).where(
       or5(
-        eq103(publicationQueueJobs.status, "ready"),
-        and83(
-          eq103(publicationQueueJobs.status, "waiting"),
+        eq100(publicationQueueJobs.status, "ready"),
+        and80(
+          eq100(publicationQueueJobs.status, "waiting"),
           lte4(publicationQueueJobs.nextRetryTime, now)
         )
       )
@@ -39455,10 +38811,10 @@ async function processJobs() {
   console.log(`[PublicationWorker] Processando ${jobs.length} job(s)...`);
   for (const job of jobs) {
     try {
-      await db.update(publicationQueueJobs).set({ status: "processing" }).where(eq103(publicationQueueJobs.id, job.id));
-      const [post] = await db.select().from(influencerPosts).where(eq103(influencerPosts.id, job.postId)).limit(1);
+      await db.update(publicationQueueJobs).set({ status: "processing" }).where(eq100(publicationQueueJobs.id, job.id));
+      const [post] = await db.select().from(influencerPosts).where(eq100(influencerPosts.id, job.postId)).limit(1);
       if (!post) throw new Error(`Post id=${job.postId} n\xE3o encontrado.`);
-      const [account] = await db.select().from(instagramAccounts).where(eq103(instagramAccounts.id, job.accountId)).limit(1);
+      const [account] = await db.select().from(instagramAccounts).where(eq100(instagramAccounts.id, job.accountId)).limit(1);
       if (!account) throw new Error(`InstagramAccount id=${job.accountId} n\xE3o encontrada.`);
       const caption = post.caption ?? post.content ?? "";
       const mediaUrls = Array.isArray(post.mediaUrls) ? post.mediaUrls : [];
@@ -39468,19 +38824,19 @@ async function processJobs() {
         caption,
         mediaUrls
       );
-      await db.update(publicationQueueJobs).set({ status: "done" }).where(eq103(publicationQueueJobs.id, job.id));
-      await db.update(influencerPosts).set({ status: "published", publishedAt: now, postId: igPostId }).where(eq103(influencerPosts.id, job.postId));
+      await db.update(publicationQueueJobs).set({ status: "done" }).where(eq100(publicationQueueJobs.id, job.id));
+      await db.update(influencerPosts).set({ status: "published", publishedAt: now, postId: igPostId }).where(eq100(influencerPosts.id, job.postId));
       console.log(`[PublicationWorker] Job ${job.id} publicado. IG postId=${igPostId}`);
     } catch (err) {
       console.error(`[PublicationWorker] Erro no job ${job.id}:`, err);
       const newRetryCount = job.retryCount + 1;
       if (newRetryCount >= job.maxRetries) {
-        await db.update(publicationQueueJobs).set({ status: "failed", retryCount: newRetryCount, lastError: String(err) }).where(eq103(publicationQueueJobs.id, job.id));
+        await db.update(publicationQueueJobs).set({ status: "failed", retryCount: newRetryCount, lastError: String(err) }).where(eq100(publicationQueueJobs.id, job.id));
         console.log(`[PublicationWorker] Job ${job.id} marcado como failed ap\xF3s ${newRetryCount} tentativas.`);
       } else {
         const backoffMs = Math.pow(newRetryCount, 2) * 5 * 60 * 1e3;
         const nextRetryTime = new Date(Date.now() + backoffMs);
-        await db.update(publicationQueueJobs).set({ status: "waiting", retryCount: newRetryCount, lastError: String(err), nextRetryTime }).where(eq103(publicationQueueJobs.id, job.id));
+        await db.update(publicationQueueJobs).set({ status: "waiting", retryCount: newRetryCount, lastError: String(err), nextRetryTime }).where(eq100(publicationQueueJobs.id, job.id));
         console.log(`[PublicationWorker] Job ${job.id} reagendado para ${nextRetryTime.toISOString()} (tentativa ${newRetryCount}).`);
       }
     }
@@ -39501,7 +38857,7 @@ function startPublicationWorker() {
 init_db();
 init_schema();
 init_llm();
-import { eq as eq104 } from "drizzle-orm";
+import { eq as eq101 } from "drizzle-orm";
 var lastRunDate4 = null;
 var RUN_HOUR3 = 7;
 async function runMarketResearchLLM(today) {
@@ -39635,7 +38991,7 @@ async function resolveAdminUserId() {
   try {
     const db = await getDb();
     if (!db) return 1;
-    const adminUsers = await db.select({ id: users.id }).from(users).where(eq104(users.role, "admin")).limit(1);
+    const adminUsers = await db.select({ id: users.id }).from(users).where(eq101(users.role, "admin")).limit(1);
     return adminUsers[0]?.id ?? 1;
   } catch {
     return 1;
@@ -39739,7 +39095,7 @@ function startMarketResearchAgent() {
 init_db();
 init_schema();
 init_llm();
-import { eq as eq105, desc as desc52 } from "drizzle-orm";
+import { eq as eq102, desc as desc52 } from "drizzle-orm";
 var CHECK_INTERVAL_MS2 = 30 * 60 * 1e3;
 async function processPendingBriefs() {
   const db = await getDb();
@@ -39750,7 +39106,7 @@ async function processPendingBriefs() {
   console.log("[Copywriter] Buscando briefs pendentes...");
   let pendingBriefs = [];
   try {
-    pendingBriefs = await db.select().from(contentBriefs).where(eq105(contentBriefs.status, "pending")).limit(10);
+    pendingBriefs = await db.select().from(contentBriefs).where(eq102(contentBriefs.status, "pending")).limit(10);
   } catch (err) {
     console.error("[Copywriter] Erro ao buscar briefs:", err);
     return;
@@ -39772,7 +39128,7 @@ async function processPendingBriefs() {
       let influencer = null;
       if (brief.influencerId) {
         try {
-          const rows = await db.select().from(influencers).where(eq105(influencers.id, brief.influencerId)).limit(1);
+          const rows = await db.select().from(influencers).where(eq102(influencers.id, brief.influencerId)).limit(1);
           influencer = rows[0] ?? null;
         } catch (err) {
           console.error(`[Copywriter] Erro ao buscar influencer id=${brief.influencerId}:`, err);
@@ -39932,7 +39288,7 @@ async function processPendingBriefs() {
         const raw = response.choices[0].message.content;
         generatedContent = JSON.parse(typeof raw === "string" ? raw : JSON.stringify(raw));
       }
-      await db.update(contentBriefs).set({ generatedContent, status: "generated" }).where(eq105(contentBriefs.id, brief.id));
+      await db.update(contentBriefs).set({ generatedContent, status: "generated" }).where(eq102(contentBriefs.id, brief.id));
       console.log(`[Copywriter] Brief id=${brief.id} (${brief.briefType}) gerado para ${influencerName}.`);
     } catch (err) {
       console.error(`[Copywriter] Erro ao processar brief id=${brief.id}:`, err);
@@ -39957,7 +39313,7 @@ function startCopywriterAgent() {
 init_db();
 init_schema();
 init_llm();
-import { eq as eq106, desc as desc53 } from "drizzle-orm";
+import { eq as eq103, desc as desc53 } from "drizzle-orm";
 var CHECK_INTERVAL_MS3 = 60 * 60 * 1e3;
 var RUN_DAY = 1;
 var RUN_HOUR4 = 8;
@@ -39997,7 +39353,7 @@ async function generateWeeklyContentPlan() {
   }
   let activeInfluencers = [];
   try {
-    activeInfluencers = await db.select().from(influencers).where(eq106(influencers.isActive, true));
+    activeInfluencers = await db.select().from(influencers).where(eq103(influencers.isActive, true));
   } catch (err) {
     console.error("[CreativeTeam] Erro ao buscar influencers:", err);
     return;
@@ -40118,7 +39474,7 @@ function startCreativeTeamAgent() {
 init_db();
 init_schema();
 init_llm();
-import { eq as eq107, and as and85, inArray as inArray9 } from "drizzle-orm";
+import { eq as eq104, and as and82, inArray as inArray9 } from "drizzle-orm";
 var CHECK_INTERVAL_MS4 = 5 * 60 * 1e3;
 async function processNewCollections() {
   const db = await getDb();
@@ -40130,9 +39486,9 @@ async function processNewCollections() {
   let pendingCollections = [];
   try {
     pendingCollections = await db.select().from(productCollections).where(
-      and85(
-        eq107(productCollections.status, "ativo"),
-        eq107(productCollections.briefsGenerated, false)
+      and82(
+        eq104(productCollections.status, "ativo"),
+        eq104(productCollections.briefsGenerated, false)
       )
     );
   } catch (err) {
@@ -40184,7 +39540,7 @@ async function processNewCollections() {
       }
       if (collectionAnalysis) {
         try {
-          await db.update(productCollections).set({ contentPlan: { llmAnalysis: collectionAnalysis } }).where(eq107(productCollections.id, collection.id));
+          await db.update(productCollections).set({ contentPlan: { llmAnalysis: collectionAnalysis } }).where(eq104(productCollections.id, collection.id));
         } catch (err) {
           console.error(`[LaunchAgent] Erro ao salvar content_plan id=${collection.id}:`, err);
         }
@@ -40233,7 +39589,7 @@ async function processNewCollections() {
           );
         }
       }
-      await db.update(productCollections).set({ briefsGenerated: true }).where(eq107(productCollections.id, collection.id));
+      await db.update(productCollections).set({ briefsGenerated: true }).where(eq104(productCollections.id, collection.id));
       console.log(
         `[LaunchAgent] Cole\xE7\xE3o id=${collection.id} processada \u2014 ${briefsInserted} brief(s) criados.`
       );
@@ -40263,7 +39619,7 @@ init_llm();
 init_agentMemory();
 init_db();
 init_schema();
-import { eq as eq108, desc as desc54 } from "drizzle-orm";
+import { eq as eq105, desc as desc54 } from "drizzle-orm";
 var INFLUENCER_PROFILES2 = {
   carol: {
     agentName: "carol",
@@ -40346,7 +39702,7 @@ async function loadPerformanceHistory(influencerDbId) {
   try {
     const db = await getDb();
     if (!db) return "Sem hist\xF3rico de performance dispon\xEDvel.";
-    const recentPosts = await db.select().from(influencerPosts).where(eq108(influencerPosts.influencerId, influencerDbId)).orderBy(desc54(influencerPosts.publishedAt)).limit(10);
+    const recentPosts = await db.select().from(influencerPosts).where(eq105(influencerPosts.influencerId, influencerDbId)).orderBy(desc54(influencerPosts.publishedAt)).limit(10);
     if (recentPosts.length === 0) return "Primeiros posts ainda ser\xE3o criados \u2014 sem hist\xF3rico.";
     const summary = recentPosts.map((p) => {
       const metrics = p.engagementMetrics;
@@ -40499,7 +39855,7 @@ async function runInfluencerAgent(agentName) {
   try {
     const db = await getDb();
     if (!db) throw new Error("DB indispon\xEDvel");
-    const dbRecord = await db.select({ id: influencers.id }).from(influencers).where(eq108(influencers.instagramHandle, profile.instagramHandle)).limit(1);
+    const dbRecord = await db.select({ id: influencers.id }).from(influencers).where(eq105(influencers.instagramHandle, profile.instagramHandle)).limit(1);
     const influencerDbId = dbRecord[0]?.id ?? 0;
     const [memoryContext, performanceHistory, trendData] = await Promise.all([
       buildMemoryContext(agentName),
@@ -40540,7 +39896,7 @@ async function runAllInfluencerAgents() {
 init_db();
 init_schema();
 init_ml_ads_browser_agent();
-import { eq as eq109, and as and86 } from "drizzle-orm";
+import { eq as eq106, and as and83 } from "drizzle-orm";
 var INTERVAL_MS = 5 * 60 * 1e3;
 function startMLActionsExecutor() {
   let running = false;
@@ -40551,11 +39907,11 @@ function startMLActionsExecutor() {
       const db = await getDb();
       if (!db) return;
       const { or: or6 } = await import("drizzle-orm");
-      const pending = await db.select().from(agentActions).where(and86(
-        eq109(agentActions.agentName, "gabi"),
+      const pending = await db.select().from(agentActions).where(and83(
+        eq106(agentActions.agentName, "gabi"),
         or6(
-          eq109(agentActions.status, "pending"),
-          eq109(agentActions.status, "approved")
+          eq106(agentActions.status, "pending"),
+          eq106(agentActions.status, "approved")
         )
         // Filtra apenas ações de ML Ads (não scrape, que o playwright-agent Python já cuida)
         // pause_ads_campaign | activate_ads_campaign | update_ads_budget
@@ -40563,7 +39919,7 @@ function startMLActionsExecutor() {
       if (pending.length === 0) return;
       console.log(`[MLExecutor] ${pending.length} a\xE7\xE3o(\xF5es) pendente(s) \u2014 abrindo browser`);
       for (const action of pending) {
-        await db.update(agentActions).set({ status: "executing" }).where(eq109(agentActions.id, action.id));
+        await db.update(agentActions).set({ status: "executing" }).where(eq106(agentActions.id, action.id));
       }
       const byAccount = /* @__PURE__ */ new Map();
       for (const action of pending) {
@@ -40585,7 +39941,7 @@ function startMLActionsExecutor() {
         } catch (e) {
           console.error(`[MLExecutor] Browser falhou para ${account}:`, e.message);
           for (const action of accountActions) {
-            await db.update(agentActions).set({ status: "pending", executionLog: `ERRO browser: ${e.message}` }).where(eq109(agentActions.id, action.id));
+            await db.update(agentActions).set({ status: "pending", executionLog: `ERRO browser: ${e.message}` }).where(eq106(agentActions.id, action.id));
           }
           continue;
         }
@@ -40599,7 +39955,7 @@ function startMLActionsExecutor() {
             status: nextStatus,
             executedAt: isError ? void 0 : /* @__PURE__ */ new Date(),
             executionLog: log
-          }).where(eq109(agentActions.id, action.id));
+          }).where(eq106(agentActions.id, action.id));
         }
       }
       console.log(`[MLExecutor] Ciclo conclu\xEDdo`);
@@ -40618,7 +39974,7 @@ function startMLActionsExecutor() {
 // server/agents/shopee-actions-executor.ts
 init_db();
 init_schema();
-import { eq as eq110, and as and87 } from "drizzle-orm";
+import { eq as eq107, and as and84 } from "drizzle-orm";
 
 // server/agents/shopee-ads-browser-agent.ts
 import { chromium as chromium2 } from "playwright";
@@ -40921,11 +40277,11 @@ function startShopeeActionsExecutor() {
     try {
       const db = await getDb();
       if (!db) return;
-      const pending = await db.select().from(agentActions).where(and87(eq110(agentActions.agentName, "luiza"), eq110(agentActions.status, "pending")));
+      const pending = await db.select().from(agentActions).where(and84(eq107(agentActions.agentName, "luiza"), eq107(agentActions.status, "pending")));
       if (pending.length === 0) return;
       console.log(`[ShopeeExecutor] ${pending.length} a\xE7\xE3o(\xF5es) pendente(s) \u2014 executando via browser`);
       for (const action of pending) {
-        await db.update(agentActions).set({ status: "executing" }).where(eq110(agentActions.id, action.id));
+        await db.update(agentActions).set({ status: "executing" }).where(eq107(agentActions.id, action.id));
         const payload = action.payload;
         const acc = payload?.account || "feminnita";
         const campaignId = String(payload?.campaignId || "");
@@ -40949,11 +40305,11 @@ function startShopeeActionsExecutor() {
               log = `Tipo n\xE3o suportado: ${action.actionType}`;
           }
           console.log(`[ShopeeExecutor] \u2705 id=${action.id}: ${log}`);
-          await db.update(agentActions).set({ status: "done", executedAt: /* @__PURE__ */ new Date(), executionLog: log }).where(eq110(agentActions.id, action.id));
+          await db.update(agentActions).set({ status: "done", executedAt: /* @__PURE__ */ new Date(), executionLog: log }).where(eq107(agentActions.id, action.id));
         } catch (e) {
           log = `ERRO: ${e.message}`;
           console.error(`[ShopeeExecutor] \u274C id=${action.id}: ${log}`);
-          await db.update(agentActions).set({ status: "pending", executionLog: log }).where(eq110(agentActions.id, action.id));
+          await db.update(agentActions).set({ status: "pending", executionLog: log }).where(eq107(agentActions.id, action.id));
         }
       }
       console.log(`[ShopeeExecutor] Ciclo conclu\xEDdo`);
@@ -40972,7 +40328,7 @@ function startShopeeActionsExecutor() {
 // server/agents/tray-actions-executor.ts
 init_db();
 init_schema();
-import { eq as eq111, and as and88 } from "drizzle-orm";
+import { eq as eq108, and as and85 } from "drizzle-orm";
 
 // server/agents/tray-browser-agent.ts
 import { chromium as chromium3 } from "playwright";
@@ -41136,11 +40492,11 @@ function startTrayActionsExecutor() {
     try {
       const db = await getDb();
       if (!db) return;
-      const pending = await db.select().from(agentActions).where(and88(eq111(agentActions.agentName, "duda"), eq111(agentActions.status, "pending")));
+      const pending = await db.select().from(agentActions).where(and85(eq108(agentActions.agentName, "duda"), eq108(agentActions.status, "pending")));
       if (pending.length === 0) return;
       console.log(`[TrayExecutor] ${pending.length} a\xE7\xE3o(\xF5es) pendente(s) \u2014 abrindo browser`);
       for (const action of pending) {
-        await db.update(agentActions).set({ status: "executing" }).where(eq111(agentActions.id, action.id));
+        await db.update(agentActions).set({ status: "executing" }).where(eq108(agentActions.id, action.id));
       }
       const batchActions = pending.map((a) => {
         const p = a.payload || {};
@@ -41160,7 +40516,7 @@ function startTrayActionsExecutor() {
       } catch (e) {
         console.error(`[TrayExecutor] Browser falhou:`, e.message);
         for (const action of pending) {
-          await db.update(agentActions).set({ status: "pending", executionLog: `ERRO browser: ${e.message}` }).where(eq111(agentActions.id, action.id));
+          await db.update(agentActions).set({ status: "pending", executionLog: `ERRO browser: ${e.message}` }).where(eq108(agentActions.id, action.id));
         }
         return;
       }
@@ -41172,7 +40528,7 @@ function startTrayActionsExecutor() {
           status: isError ? "pending" : "done",
           executedAt: isError ? void 0 : /* @__PURE__ */ new Date(),
           executionLog: log
-        }).where(eq111(agentActions.id, action.id));
+        }).where(eq108(agentActions.id, action.id));
       }
       console.log(`[TrayExecutor] Ciclo conclu\xEDdo`);
     } catch (err) {
@@ -41190,7 +40546,7 @@ function startTrayActionsExecutor() {
 // server/agents/ml-ads-api.ts
 init_db();
 init_schema();
-import { eq as eq112, and as and89 } from "drizzle-orm";
+import { eq as eq109, and as and86 } from "drizzle-orm";
 var ML_BASE3 = "https://api.mercadolibre.com";
 function getToken2(account) {
   return account === "fnt" ? process.env.ML_ACCESS_TOKEN_2 || "" : process.env.ML_ACCESS_TOKEN_1 || "";
@@ -41266,7 +40622,7 @@ async function apiScrapeMLMetrics(account = "feminnita") {
       console.error("[MLMetrics] Banco indispon\xEDvel");
       return 0;
     }
-    await db.delete(marketplaceAdsMetrics).where(and89(eq112(marketplaceAdsMetrics.platform, "ml"), eq112(marketplaceAdsMetrics.account, account)));
+    await db.delete(marketplaceAdsMetrics).where(and86(eq109(marketplaceAdsMetrics.platform, "ml"), eq109(marketplaceAdsMetrics.account, account)));
     const now = /* @__PURE__ */ new Date();
     const rows = campaigns3.map((c) => {
       const budget = Number(c.budget || 0);
@@ -41298,30 +40654,6 @@ async function apiScrapeMLMetrics(account = "feminnita") {
 }
 
 // server/agents/index.ts
-function startMorningBriefingScheduler() {
-  const HOUR = 7;
-  let timeout;
-  function scheduleNext() {
-    const now = /* @__PURE__ */ new Date();
-    const next = /* @__PURE__ */ new Date();
-    next.setHours(HOUR, 0, 0, 0);
-    if (next <= now) next.setDate(next.getDate() + 1);
-    const msUntilNext = next.getTime() - now.getTime();
-    timeout = setTimeout(async () => {
-      console.log("[MorningBriefing] Iniciando briefing di\xE1rio...");
-      try {
-        await runMorningBriefing();
-        console.log("[MorningBriefing] Briefing conclu\xEDdo.");
-      } catch (err) {
-        console.error("[MorningBriefing] Erro:", err);
-      }
-      scheduleNext();
-    }, msUntilNext);
-    console.log(`[MorningBriefing] Pr\xF3ximo briefing agendado para ${next.toLocaleString("pt-BR")}`);
-  }
-  scheduleNext();
-  return () => clearTimeout(timeout);
-}
 function startInfluencerDailyAgent() {
   const HOUR = 8;
   let timeout;
@@ -41376,7 +40708,6 @@ function startAllAgents() {
     { name: "Copywriter", start: startCopywriterAgent },
     { name: "CreativeTeam", start: startCreativeTeamAgent },
     { name: "LaunchAgent", start: startLaunchAgent },
-    { name: "MorningBriefing", start: startMorningBriefingScheduler },
     { name: "InfluencerDailyAgent", start: startInfluencerDailyAgent },
     { name: "FernandaDaily", start: startFernandaDailyAgent },
     { name: "MLActionsExecutor", start: startMLActionsExecutor },
@@ -41402,7 +40733,7 @@ function startAllAgents() {
 // server/services/blog-server.ts
 init_db();
 init_schema();
-import { eq as eq113, desc as desc55, and as and90 } from "drizzle-orm";
+import { eq as eq110, desc as desc55, and as and87 } from "drizzle-orm";
 function mdToHtml(md) {
   return md.replace(/^### (.+)$/gm, "<h3>$1</h3>").replace(/^## (.+)$/gm, "<h2>$1</h2>").replace(/^# (.+)$/gm, "<h1>$1</h1>").replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\*(.+?)\*/g, "<em>$1</em>").replace(/^> (.+)$/gm, "<blockquote>$1</blockquote>").replace(/^- (.+)$/gm, "<li>$1</li>").replace(/(<li>.*<\/li>\n?)+/g, (m) => `<ul>${m}</ul>`).replace(/\n\n/g, "</p><p>").replace(/^(?!<[a-z])/gm, "").replace(/^(.+)$/gm, (line) => line.match(/^<[a-z]/) ? line : `<p>${line}</p>`);
 }
@@ -41724,7 +41055,7 @@ function registerBlogRoutes(app) {
     try {
       const db = await getDb();
       if (!db) return res.status(503).send("Banco indispon\xEDvel");
-      const posts = await db.select().from(blogPosts).where(eq113(blogPosts.status, "published")).orderBy(desc55(blogPosts.publishedAt)).limit(20);
+      const posts = await db.select().from(blogPosts).where(eq110(blogPosts.status, "published")).orderBy(desc55(blogPosts.publishedAt)).limit(20);
       res.setHeader("Content-Type", "application/rss+xml; charset=utf-8");
       res.send(renderRss(posts));
     } catch (e) {
@@ -41735,7 +41066,7 @@ function registerBlogRoutes(app) {
     try {
       const db = await getDb();
       if (!db) return res.status(503).send("Banco indispon\xEDvel");
-      const [post] = await db.select().from(blogPosts).where(and90(eq113(blogPosts.slug, req.params.slug), eq113(blogPosts.status, "published"))).limit(1);
+      const [post] = await db.select().from(blogPosts).where(and87(eq110(blogPosts.slug, req.params.slug), eq110(blogPosts.status, "published"))).limit(1);
       if (!post) return res.status(404).send(layout({
         title: "Artigo n\xE3o encontrado \u2014 Blog Feminnita",
         body: `<div style="margin-top:120px;text-align:center;padding:4rem 1rem;">
@@ -41753,7 +41084,7 @@ function registerBlogRoutes(app) {
     try {
       const db = await getDb();
       if (!db) return res.status(503).send("Banco indispon\xEDvel");
-      const posts = await db.select().from(blogPosts).where(eq113(blogPosts.status, "published")).orderBy(desc55(blogPosts.publishedAt)).limit(50);
+      const posts = await db.select().from(blogPosts).where(eq110(blogPosts.status, "published")).orderBy(desc55(blogPosts.publishedAt)).limit(50);
       res.send(renderListPage(posts));
     } catch (e) {
       res.status(500).send("Erro ao carregar blog");
@@ -41898,11 +41229,11 @@ async function startServer() {
   app.get("/api/debug/agent-actions", async (_req, res) => {
     try {
       const { getDb: getDb2 } = await Promise.resolve().then(() => (init_db(), db_exports));
-      const { desc: desc56, eq: eq116 } = await import("drizzle-orm");
+      const { desc: desc56, eq: eq113 } = await import("drizzle-orm");
       const { agentActions: agentActions2 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
       const db = await getDb2();
       if (!db) return res.status(503).json({ error: "Banco indispon\xEDvel" });
-      const rows = await db.select().from(agentActions2).where(eq116(agentActions2.agentName, "gabi")).orderBy(desc56(agentActions2.createdAt)).limit(20);
+      const rows = await db.select().from(agentActions2).where(eq113(agentActions2.agentName, "gabi")).orderBy(desc56(agentActions2.createdAt)).limit(20);
       return res.json({
         count: rows.length,
         actions: rows.map((r) => ({
@@ -42034,20 +41365,5 @@ async function startServer() {
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
   });
-  scheduleWeeklyKnowledgeUpdate();
-}
-function scheduleWeeklyKnowledgeUpdate() {
-  const checkAndRun = () => {
-    const now = /* @__PURE__ */ new Date();
-    const isSunday = now.getDay() === 0;
-    const isEightAM = now.getHours() === 8 && now.getMinutes() < 5;
-    if (isSunday && isEightAM) {
-      console.log("[KnowledgeUpdater] Iniciando atualiza\xE7\xE3o semanal...");
-      updateMarketKnowledge().then(
-        (r) => console.log(`[KnowledgeUpdater] Conclu\xEDdo: ${r.updated.join(", ")}`)
-      ).catch(console.error);
-    }
-  };
-  setInterval(checkAndRun, 5 * 60 * 1e3);
 }
 startServer().catch(console.error);
