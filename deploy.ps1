@@ -1,8 +1,10 @@
 # deploy.ps1 — Full deploy: build local + envia tudo para o VPS + restart
 # Uso: .\deploy.ps1
 
-$VPS = "root@72.61.55.194"
-$REMOTE_DIR = "/opt/marketing"
+# Servidor REAL do marketing.feminnita.com.br: Vultr 216.238.107.134
+# (NÃO é o Hostinger 72.61.55.194 — esse tem uma cópia que não serve o domínio)
+$VPS = "root@216.238.107.134"
+$REMOTE_DIR = "/var/www/feminnita-marketing"
 
 Write-Host "==> Aplicando migrações no banco..." -ForegroundColor Cyan
 npm run db:push
@@ -10,8 +12,8 @@ if ($LASTEXITCODE -ne 0) {
     Write-Host "AVISO: db:push falhou, continuando deploy..." -ForegroundColor Yellow
 }
 
-Write-Host "==> Buildando localmente..." -ForegroundColor Cyan
-npm run build
+Write-Host "==> Buildando localmente (frontend + backend)..." -ForegroundColor Cyan
+npm run build:full
 if ($LASTEXITCODE -ne 0) {
     Write-Host "ERRO: build falhou. Deploy cancelado." -ForegroundColor Red
     exit 1
@@ -46,7 +48,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "==> Reiniciando pm2 no VPS..." -ForegroundColor Cyan
-ssh $VPS "pm2 restart feminnita"
+ssh $VPS "pm2 restart feminnita-marketing"
 if ($LASTEXITCODE -ne 0) {
     Write-Host "ERRO: pm2 restart falhou." -ForegroundColor Red
     exit 1
