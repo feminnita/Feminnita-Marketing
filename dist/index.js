@@ -3869,6 +3869,7 @@ __export(fernanda_executor_exports, {
   createCampaign: () => createCampaign,
   createEngagementAudience: () => createEngagementAudience,
   createFullAd: () => createFullAd,
+  createLookalikeAudience: () => createLookalikeAudience,
   createPixelAudience: () => createPixelAudience,
   duplicateAdSet: () => duplicateAdSet,
   duplicateCampaign: () => duplicateCampaign2,
@@ -3879,18 +3880,19 @@ __export(fernanda_executor_exports, {
   getCustomAudiences: () => getCustomAudiences,
   pauseCampaign: () => pauseCampaign2,
   resumeCampaign: () => resumeCampaign2,
+  searchInterests: () => searchInterests,
   updateAdSetBudget: () => updateAdSetBudget,
   updateCampaignBudget: () => updateCampaignBudget2,
   uploadAdImage: () => uploadAdImage
 });
 function getToken(token) {
-  return token || META_TOKEN2;
+  return token || META_TOKEN;
 }
 function getAccount(account) {
-  return account || AD_ACCOUNT_ID2;
+  return account || AD_ACCOUNT_ID;
 }
 async function metaPost2(path16, body, token) {
-  const res = await fetch(`${GRAPH_BASE3}/${path16}`, {
+  const res = await fetch(`${GRAPH_BASE2}/${path16}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ...body, access_token: getToken(token) })
@@ -3901,7 +3903,7 @@ async function metaPost2(path16, body, token) {
 }
 async function metaGet2(path16, params = {}, token) {
   const qs = new URLSearchParams({ ...params, access_token: getToken(token) }).toString();
-  const res = await fetch(`${GRAPH_BASE3}/${path16}?${qs}`);
+  const res = await fetch(`${GRAPH_BASE2}/${path16}?${qs}`);
   const data = await res.json();
   if (data.error) throw new Error(`Meta API: ${data.error.message} (c\xF3digo ${data.error.code})`);
   return data;
@@ -4016,6 +4018,38 @@ async function createEngagementAudience(params) {
   }, params.token);
   return `P\xFAblico de engajamento IG "${params.name}" criado (ID: ${data.id}).`;
 }
+async function searchInterests(query, limit = 12, token) {
+  const data = await metaGet2(`search`, {
+    type: "adinterest",
+    q: query,
+    limit: String(limit),
+    locale: "pt_BR"
+  }, token);
+  const interests = data.data || [];
+  if (!interests.length) return `Nenhum interesse encontrado para "${query}".`;
+  const lines = interests.map((i) => {
+    const size = i.audience_size_lower_bound && i.audience_size_upper_bound ? `${Number(i.audience_size_lower_bound).toLocaleString("pt-BR")}\u2013${Number(i.audience_size_upper_bound).toLocaleString("pt-BR")}` : i.audience_size ? Number(i.audience_size).toLocaleString("pt-BR") : "?";
+    const path16 = Array.isArray(i.path) && i.path.length ? ` (${i.path.join(" > ")})` : "";
+    return `\u2022 [${i.id}] ${i.name} | alcance ~${size}${path16}`;
+  });
+  return `INTERESSES para "${query}":
+${lines.join("\n")}`;
+}
+async function createLookalikeAudience(params) {
+  const account = getAccount(params.adAccountId);
+  const ratio = Math.min(Math.max((params.ratioPct ?? 1) / 100, 0.01), 0.2);
+  const data = await metaPost2(`${account}/customaudiences`, {
+    name: params.name,
+    subtype: "LOOKALIKE",
+    origin_audience_id: params.originAudienceId,
+    lookalike_spec: JSON.stringify({
+      type: "custom_ratio",
+      country: params.country || "BR",
+      ratio
+    })
+  }, params.token);
+  return `P\xFAblico semelhante "${params.name}" criado (ID: ${data.id}) \u2014 ${(ratio * 100).toFixed(0)}% mais parecidos no ${params.country || "BR"}.`;
+}
 async function duplicateAdSet(params) {
   const copyData = await metaPost2(`${params.adSetId}/copies`, {
     rename_options: JSON.stringify({ rename_prefix: "", rename_suffix: " - C\xF3pia" }),
@@ -4048,7 +4082,7 @@ async function updateAdSetBudget(adSetId, dailyBudgetReais) {
   await metaPost2(adSetId, { daily_budget: Math.round(dailyBudgetReais * 100) });
 }
 async function createCampaign(name, objective, dailyBudgetReais) {
-  const data = await metaPost2(`${AD_ACCOUNT_ID2}/campaigns`, {
+  const data = await metaPost2(`${AD_ACCOUNT_ID}/campaigns`, {
     name,
     objective,
     status: "PAUSED",
@@ -4076,7 +4110,7 @@ async function uploadAdImage(imageUrl) {
     const buffer = await imgRes.arrayBuffer();
     base64 = Buffer.from(buffer).toString("base64");
   }
-  const data = await metaPost2(`${AD_ACCOUNT_ID2}/adimages`, {
+  const data = await metaPost2(`${AD_ACCOUNT_ID}/adimages`, {
     bytes: base64
   });
   const images = data.images || {};
@@ -4086,7 +4120,7 @@ async function uploadAdImage(imageUrl) {
   return imageHash;
 }
 async function createAdCreative(params) {
-  const data = await metaPost2(`${AD_ACCOUNT_ID2}/adcreatives`, {
+  const data = await metaPost2(`${AD_ACCOUNT_ID}/adcreatives`, {
     name: params.name,
     object_story_spec: {
       page_id: params.pageId,
@@ -4120,7 +4154,7 @@ async function createFullAd(params) {
     callToAction: params.callToAction
   });
   console.log(`[FernandaExecutor] Criando an\xFAncio...`);
-  const adData = await metaPost2(`${AD_ACCOUNT_ID2}/ads`, {
+  const adData = await metaPost2(`${AD_ACCOUNT_ID}/ads`, {
     name: params.adName,
     adset_id: params.adSetId,
     creative: { creative_id: creativeId },
@@ -4130,7 +4164,7 @@ async function createFullAd(params) {
   return { adId: adData.id, creativeId, imageHash };
 }
 async function executeMetaAction(actionType, payload) {
-  if (!META_TOKEN2) throw new Error("META_ACCESS_TOKEN n\xE3o configurado no servidor");
+  if (!META_TOKEN) throw new Error("META_ACCESS_TOKEN n\xE3o configurado no servidor");
   switch (actionType) {
     case "meta_pause_campaign":
       if (!payload.campaignId) throw new Error("campaignId obrigat\xF3rio");
@@ -4177,13 +4211,13 @@ async function executeMetaAction(actionType, payload) {
       throw new Error(`Tipo de a\xE7\xE3o Meta desconhecido: ${actionType}`);
   }
 }
-var META_TOKEN2, AD_ACCOUNT_ID2, GRAPH_BASE3;
+var META_TOKEN, AD_ACCOUNT_ID, GRAPH_BASE2;
 var init_fernanda_executor = __esm({
   "server/agents/fernanda-executor.ts"() {
     "use strict";
-    META_TOKEN2 = process.env.META_SYSTEM_USER_TOKEN || process.env.META_ACCESS_TOKEN || "";
-    AD_ACCOUNT_ID2 = process.env.META_AD_ACCOUNT_ID || "act_231648936319132";
-    GRAPH_BASE3 = "https://graph.facebook.com/v20.0";
+    META_TOKEN = process.env.META_SYSTEM_USER_TOKEN || process.env.META_ACCESS_TOKEN || "";
+    AD_ACCOUNT_ID = process.env.META_AD_ACCOUNT_ID || "act_231648936319132";
+    GRAPH_BASE2 = "https://graph.facebook.com/v20.0";
   }
 });
 
@@ -21997,11 +22031,12 @@ async function swapUrlTags(adId, urlTags, creds) {
 }
 
 // server/agents/ads-manager-agent.ts
-var AD_ACCOUNT_ID = process.env.META_AD_ACCOUNT_ID || "act_231648936319132";
-var META_TOKEN = process.env.META_ACCESS_TOKEN || "";
-var GRAPH_BASE2 = "https://graph.facebook.com/v19.0";
+init_fernanda_executor();
+var AD_ACCOUNT_ID2 = process.env.META_AD_ACCOUNT_ID || "act_231648936319132";
+var META_TOKEN2 = process.env.META_ACCESS_TOKEN || "";
+var GRAPH_BASE3 = "https://graph.facebook.com/v19.0";
 async function fetchCampaigns2() {
-  const url = `${GRAPH_BASE2}/${AD_ACCOUNT_ID}/campaigns?fields=id,name,status,effective_status,objective,daily_budget,lifetime_budget,created_time&limit=50&access_token=${META_TOKEN}`;
+  const url = `${GRAPH_BASE3}/${AD_ACCOUNT_ID2}/campaigns?fields=id,name,status,effective_status,objective,daily_budget,lifetime_budget,created_time&limit=50&access_token=${META_TOKEN2}`;
   const res = await fetch(url);
   const data = await res.json();
   if (!res.ok || data.error) {
@@ -22021,7 +22056,7 @@ async function fetchWithTimeout(url, timeoutMs = 8e3) {
   }
 }
 async function fetchInsights(campaignId) {
-  const url = `${GRAPH_BASE2}/${campaignId}/insights?fields=impressions,reach,clicks,spend,cpc,ctr,cpp,actions&date_preset=last_7d&access_token=${META_TOKEN}`;
+  const url = `${GRAPH_BASE3}/${campaignId}/insights?fields=impressions,reach,clicks,spend,cpc,ctr,cpp,actions&date_preset=last_7d&access_token=${META_TOKEN2}`;
   try {
     const { ok, data } = await fetchWithTimeout(url);
     if (!ok || data.error) {
@@ -22035,7 +22070,7 @@ async function fetchInsights(campaignId) {
   }
 }
 async function fetchAds(campaignId) {
-  const url = `${GRAPH_BASE2}/${campaignId}/ads?fields=id,name,status,created_time&limit=50&access_token=${META_TOKEN}`;
+  const url = `${GRAPH_BASE3}/${campaignId}/ads?fields=id,name,status,created_time&limit=50&access_token=${META_TOKEN2}`;
   try {
     const { ok, data } = await fetchWithTimeout(url);
     if (!ok || data.error) {
@@ -22081,7 +22116,7 @@ async function collectAdsData(includeAds = false) {
       insights: parseInsights(rawInsights)
     };
   }));
-  return { campaigns: campaigns3, adAccountId: AD_ACCOUNT_ID };
+  return { campaigns: campaigns3, adAccountId: AD_ACCOUNT_ID2 };
 }
 var SYSTEM_PROMPT4 = `Voc\xEA \xE9 a Fernanda Leal \u2014 gestora s\xEAnior de tr\xE1fego pago Meta Ads da Feminnita Pijamas.
 
@@ -22243,6 +22278,36 @@ BENCHMARKS DESTA CONTA:
 - CPM saud\xE1vel: R$15\u2013R$40
 - Custo por compra aceit\xE1vel: at\xE9 R$120 (baseado no CAC natural calculado)
 - ROAS m\xEDnimo sustent\xE1vel: 3.3x
+
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+SEGMENTA\xC7\xC3O E LAN\xC7AMENTO \u2014 A QUEM MOSTRAR E COMO SUBIR (regra desta conta)
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+O dono desta conta N\xC3O \xE9 especialista em tr\xE1fego. Voc\xEA NUNCA o deixa no escuro sobre "para quem mostrar o an\xFAncio". Sempre que houver campanha nova ou d\xFAvida de p\xFAblico, voc\xEA entrega UMA recomenda\xE7\xE3o concreta e fechada \u2014 p\xFAblico, g\xEAnero, idade, regi\xE3o, or\xE7amento e estrutura \u2014 nunca uma lista de op\xE7\xF5es para ele escolher. Decida voc\xEA; ele s\xF3 aprova.
+
+GROUNDING OBRIGAT\xD3RIO ANTES DE RECOMENDAR P\xDABLICO (nunca chute):
+1. get_custom_audiences \u2192 veja quais p\xFAblicos J\xC1 existem (compradores, visitantes, semelhantes). Reaproveite antes de criar.
+2. search_interests \u2192 confirme que um interesse EXISTE no Meta e qual o tamanho real dele. NUNCA invente nome de interesse \u2014 busque e use exatamente o que a ferramenta retornar.
+3. Se faltar um p\xFAblico necess\xE1rio, CRIE voc\xEA mesma com create_pixel_audience / create_lookalike_audience. Nunca pe\xE7a para o dono montar p\xFAblico manualmente.
+
+A ESCADA DE P\xDABLICO DA FEMINNITA (do quente ao frio \u2014 ordem de retorno real):
+1. QUENTE / Retargeting (maior retorno \u2014 comece por aqui se j\xE1 existe tr\xE1fego no site): quem visitou, adicionou ao carrinho ou iniciou compra nos \xFAltimos 30\u201390 dias e N\xC3O comprou. Crie com create_pixel_audience (evento AddToCart ou InitiateCheckout, excluindo Purchase). Or\xE7amento pequeno, retorno alto.
+2. SEMELHANTE / Lookalike (melhor p\xFAblico frio que existe) \u2014 quando o pixel j\xE1 tem ~100+ compras: semelhante 1% aos compradores, via create_lookalike_audience a partir do p\xFAblico de compradores. O Meta acha quem se parece com quem J\xC1 comprou.
+3. FRIO por interesse \u2014 enquanto n\xE3o h\xE1 dados suficientes para semelhante: Advantage+ (p\xFAblico amplo, deixa o Meta achar) OU 1 conjunto com pilha de 3\u20135 interesses validados no search_interests. Interesses plaus\xEDveis aqui: revenda/sacoleira, empreendedorismo feminino, renda extra, moda \xEDntima/pijama, lojistas. Sempre confirme nome e tamanho pela ferramenta.
+
+DEFAULTS DE SEGMENTA\xC7\xC3O DESTA CONTA (ponto de partida):
+- G\xEAnero: mulheres (o comprador \xE9 majoritariamente feminino).
+- Idade: 25\u201355 (n\xFAcleo da revendedora).
+- Localiza\xE7\xE3o: Brasil, com prioridade Sul e Sudeste (onde est\xE1 o hist\xF3rico). Com or\xE7amento baixo, pode rodar Brasil inteiro e deixar o Meta concentrar.
+- Exclus\xE3o obrigat\xF3ria no frio: excluir quem j\xE1 comprou, para n\xE3o pagar de novo por cliente que j\xE1 \xE9 seu.
+
+LAN\xC7AR DO ZERO \u2014 BLUEPRINT DE 1 CAMPANHA (entregue pronto, em linguagem simples):
+- Objetivo: Vendas, otimizando para Compra (o sinal mais forte). Nunca otimizar para clique/visualiza\xE7\xE3o quando se quer venda.
+- Estrutura: 1 campanha com or\xE7amento na campanha (CBO). Dentro: 1 conjunto Advantage+ (amplo) para o Meta achar o comprador + 1 conjunto de retargeting quente. Mesmo criativo vencedor nos dois.
+- Or\xE7amento de partida: R$25\u201350/dia na campanha. S\xF3 escale (no m\xE1ximo +20% a cada 3 dias) depois de estabilizar.
+- Aprendizado: 7\u201314 dias. N\xE3o julgue nos 3 primeiros dias \u2014 olhe se o custo est\xE1 caindo e os cliques aparecendo.
+- O que testar primeiro: o CRIATIVO, mantendo o p\xFAblico amplo. P\xFAblico se ajusta depois; o que mais move resultado \xE9 o an\xFAncio certo para a pessoa certa.
+
+A regra dos "80% criativo" continua valendo \u2014 MAS o p\xFAblico precisa estar montado certo UMA vez para o criativo ter onde funcionar. Montar a escada de p\xFAblico acima \xE9 a funda\xE7\xE3o. Com ela pronta, sua energia volta para o criativo.
 
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
 COMO VOC\xCA ANALISA E RESPONDE
@@ -22522,6 +22587,49 @@ var CHAT_TOOLS = [
       },
       required: ["adset_id", "daily_budget_brl"]
     }
+  },
+  {
+    name: "get_custom_audiences",
+    description: "Lista os p\xFAblicos personalizados que J\xC1 existem na conta (compradores, visitantes, retargeting, semelhantes) com tamanho aproximado. Use SEMPRE antes de recomendar ou criar p\xFAblico novo, para reaproveitar o que existe.",
+    input_schema: { type: "object", properties: {}, required: [] }
+  },
+  {
+    name: "search_interests",
+    description: "Busca interesses reais de segmenta\xE7\xE3o no Meta e retorna o nome oficial, ID e tamanho de alcance. Use para validar que um interesse existe antes de sugeri-lo \u2014 nunca invente nomes de interesse.",
+    input_schema: {
+      type: "object",
+      properties: {
+        q: { type: "string", description: "Termo a buscar (ex: 'revenda de roupas', 'empreendedorismo feminino')" }
+      },
+      required: ["q"]
+    }
+  },
+  {
+    name: "create_pixel_audience",
+    description: "Cria um p\xFAblico de retargeting a partir de eventos do pixel (ex: quem adicionou ao carrinho e n\xE3o comprou). N\xE3o gasta dinheiro \u2014 s\xF3 monta o p\xFAblico para uso futuro.",
+    input_schema: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "Nome do p\xFAblico (ex: 'Carrinho 30d sem compra')" },
+        event: { type: "string", description: "Evento do pixel: AddToCart, InitiateCheckout, ViewContent, PageView ou Purchase" },
+        retention_days: { type: "number", description: "Janela em dias (padr\xE3o 90)" },
+        exclude_event: { type: "string", description: "Evento a excluir, ex: 'Purchase' para tirar quem j\xE1 comprou" }
+      },
+      required: ["name", "event"]
+    }
+  },
+  {
+    name: "create_lookalike_audience",
+    description: "Cria um p\xFAblico semelhante (lookalike) a partir de um p\xFAblico de origem (ex: compradores). Use o get_custom_audiences antes para pegar o ID do p\xFAblico de origem. N\xE3o gasta dinheiro.",
+    input_schema: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "Nome do p\xFAblico semelhante" },
+        origin_audience_id: { type: "string", description: "ID do p\xFAblico de origem (ex: compradores)" },
+        ratio_pct: { type: "number", description: "Grau de semelhan\xE7a: 1 = 1% (mais parecido), at\xE9 10" }
+      },
+      required: ["name", "origin_audience_id"]
+    }
   }
 ];
 async function executeChatTool(name, input) {
@@ -22595,6 +22703,29 @@ async function executeChatTool(name, input) {
         ctr: `${ad.ctr.toFixed(2)}%`,
         roas: ad.roas ? ad.roas.toFixed(2) + "x" : "N/D"
       })));
+    }
+    if (name === "get_custom_audiences") {
+      return await getCustomAudiences();
+    }
+    if (name === "search_interests") {
+      return await searchInterests(input.q, 12);
+    }
+    if (name === "create_pixel_audience") {
+      const pixelId = process.env.META_PIXEL_ID || "1167582397593975";
+      return await createPixelAudience({
+        name: input.name,
+        pixelId,
+        event: input.event,
+        retentionDays: input.retention_days || 90,
+        excludeEvent: input.exclude_event
+      });
+    }
+    if (name === "create_lookalike_audience") {
+      return await createLookalikeAudience({
+        name: input.name,
+        originAudienceId: input.origin_audience_id,
+        ratioPct: input.ratio_pct || 1
+      });
     }
     if (name === "fetch_landing_page") {
       const url = input.url;
@@ -22732,7 +22863,7 @@ async function runAdsEvaluation(evaluationId) {
   if (!db) throw new Error("Banco indispon\xEDvel");
   try {
     await db.update(adsEvaluations).set({ status: "running" }).where(eq57(adsEvaluations.id, evaluationId));
-    if (!META_TOKEN) {
+    if (!META_TOKEN2) {
       await db.update(adsEvaluations).set({
         status: "error",
         errorMessage: "META_ACCESS_TOKEN n\xE3o configurado no servidor",
