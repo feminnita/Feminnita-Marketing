@@ -387,6 +387,36 @@ BENCHMARKS DESTA CONTA:
 - ROAS mínimo sustentável: 3.3x
 
 ═══════════════════════════════════════════════════════
+SEGMENTAÇÃO E LANÇAMENTO — A QUEM MOSTRAR E COMO SUBIR (regra desta conta)
+═══════════════════════════════════════════════════════
+O dono desta conta NÃO é especialista em tráfego. Você NUNCA o deixa no escuro sobre "para quem mostrar o anúncio". Sempre que houver campanha nova ou dúvida de público, você entrega UMA recomendação concreta e fechada — público, gênero, idade, região, orçamento e estrutura — nunca uma lista de opções para ele escolher. Decida você; ele só aprova.
+
+GROUNDING OBRIGATÓRIO ANTES DE RECOMENDAR PÚBLICO (nunca chute):
+1. get_custom_audiences → veja quais públicos JÁ existem (compradores, visitantes, semelhantes). Reaproveite antes de criar.
+2. search_interests → confirme que um interesse EXISTE no Meta e qual o tamanho real dele. NUNCA invente nome de interesse — busque e use exatamente o que a ferramenta retornar.
+3. Se faltar um público necessário, CRIE você mesma com create_pixel_audience / create_lookalike_audience. Nunca peça para o dono montar público manualmente.
+
+A ESCADA DE PÚBLICO DA FEMINNITA (do quente ao frio — ordem de retorno real):
+1. QUENTE / Retargeting (maior retorno — comece por aqui se já existe tráfego no site): quem visitou, adicionou ao carrinho ou iniciou compra nos últimos 30–90 dias e NÃO comprou. Crie com create_pixel_audience (evento AddToCart ou InitiateCheckout, excluindo Purchase). Orçamento pequeno, retorno alto.
+2. SEMELHANTE / Lookalike (melhor público frio que existe) — quando o pixel já tem ~100+ compras: semelhante 1% aos compradores, via create_lookalike_audience a partir do público de compradores. O Meta acha quem se parece com quem JÁ comprou.
+3. FRIO por interesse — enquanto não há dados suficientes para semelhante: Advantage+ (público amplo, deixa o Meta achar) OU 1 conjunto com pilha de 3–5 interesses validados no search_interests. Interesses plausíveis aqui: revenda/sacoleira, empreendedorismo feminino, renda extra, moda íntima/pijama, lojistas. Sempre confirme nome e tamanho pela ferramenta.
+
+DEFAULTS DE SEGMENTAÇÃO DESTA CONTA (ponto de partida):
+- Gênero: mulheres (o comprador é majoritariamente feminino).
+- Idade: 25–55 (núcleo da revendedora).
+- Localização: Brasil, com prioridade Sul e Sudeste (onde está o histórico). Com orçamento baixo, pode rodar Brasil inteiro e deixar o Meta concentrar.
+- Exclusão obrigatória no frio: excluir quem já comprou, para não pagar de novo por cliente que já é seu.
+
+LANÇAR DO ZERO — BLUEPRINT DE 1 CAMPANHA (entregue pronto, em linguagem simples):
+- Objetivo: Vendas, otimizando para Compra (o sinal mais forte). Nunca otimizar para clique/visualização quando se quer venda.
+- Estrutura: 1 campanha com orçamento na campanha (CBO). Dentro: 1 conjunto Advantage+ (amplo) para o Meta achar o comprador + 1 conjunto de retargeting quente. Mesmo criativo vencedor nos dois.
+- Orçamento de partida: R$25–50/dia na campanha. Só escale (no máximo +20% a cada 3 dias) depois de estabilizar.
+- Aprendizado: 7–14 dias. Não julgue nos 3 primeiros dias — olhe se o custo está caindo e os cliques aparecendo.
+- O que testar primeiro: o CRIATIVO, mantendo o público amplo. Público se ajusta depois; o que mais move resultado é o anúncio certo para a pessoa certa.
+
+A regra dos "80% criativo" continua valendo — MAS o público precisa estar montado certo UMA vez para o criativo ter onde funcionar. Montar a escada de público acima é a fundação. Com ela pronta, sua energia volta para o criativo.
+
+═══════════════════════════════════════════════════════
 COMO VOCÊ ANALISA E RESPONDE
 ═══════════════════════════════════════════════════════
 Ao receber dados de campanha, siga esta ordem de raciocínio:
@@ -551,6 +581,13 @@ import {
   updateAdsetBudget,
 } from "../services/meta-ads-service";
 
+import {
+  getCustomAudiences,
+  searchInterests,
+  createPixelAudience,
+  createLookalikeAudience,
+} from "./fernanda-executor";
+
 const CHAT_TOOLS: Anthropic.Tool[] = [
   {
     name: "get_account_summary",
@@ -695,6 +732,49 @@ const CHAT_TOOLS: Anthropic.Tool[] = [
       required: ["adset_id", "daily_budget_brl"],
     },
   },
+  {
+    name: "get_custom_audiences",
+    description: "Lista os públicos personalizados que JÁ existem na conta (compradores, visitantes, retargeting, semelhantes) com tamanho aproximado. Use SEMPRE antes de recomendar ou criar público novo, para reaproveitar o que existe.",
+    input_schema: { type: "object" as const, properties: {}, required: [] },
+  },
+  {
+    name: "search_interests",
+    description: "Busca interesses reais de segmentação no Meta e retorna o nome oficial, ID e tamanho de alcance. Use para validar que um interesse existe antes de sugeri-lo — nunca invente nomes de interesse.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        q: { type: "string", description: "Termo a buscar (ex: 'revenda de roupas', 'empreendedorismo feminino')" },
+      },
+      required: ["q"],
+    },
+  },
+  {
+    name: "create_pixel_audience",
+    description: "Cria um público de retargeting a partir de eventos do pixel (ex: quem adicionou ao carrinho e não comprou). Não gasta dinheiro — só monta o público para uso futuro.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        name: { type: "string", description: "Nome do público (ex: 'Carrinho 30d sem compra')" },
+        event: { type: "string", description: "Evento do pixel: AddToCart, InitiateCheckout, ViewContent, PageView ou Purchase" },
+        retention_days: { type: "number", description: "Janela em dias (padrão 90)" },
+        exclude_event: { type: "string", description: "Evento a excluir, ex: 'Purchase' para tirar quem já comprou" },
+      },
+      required: ["name", "event"],
+    },
+  },
+  {
+    name: "create_lookalike_audience",
+    description: "Cria um público semelhante (lookalike) a partir de um público de origem (ex: compradores). Use o get_custom_audiences antes para pegar o ID do público de origem. Não gasta dinheiro.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        name: { type: "string", description: "Nome do público semelhante" },
+        origin_audience_id: { type: "string", description: "ID do público de origem (ex: compradores)" },
+        ratio_pct: { type: "number", description: "Grau de semelhança: 1 = 1% (mais parecido), até 10" },
+      },
+      required: ["name", "origin_audience_id"],
+    },
+  },
 ];
 
 async function executeChatTool(name: string, input: Record<string, any>): Promise<string> {
@@ -754,6 +834,29 @@ async function executeChatTool(name: string, input: Record<string, any>): Promis
         spend: `R$${ad.spend.toFixed(2)}`, ctr: `${ad.ctr.toFixed(2)}%`,
         roas: ad.roas ? ad.roas.toFixed(2) + "x" : "N/D",
       })));
+    }
+    if (name === "get_custom_audiences") {
+      return await getCustomAudiences();
+    }
+    if (name === "search_interests") {
+      return await searchInterests(input.q, 12);
+    }
+    if (name === "create_pixel_audience") {
+      const pixelId = process.env.META_PIXEL_ID || "1167582397593975";
+      return await createPixelAudience({
+        name: input.name,
+        pixelId,
+        event: input.event,
+        retentionDays: input.retention_days || 90,
+        excludeEvent: input.exclude_event,
+      });
+    }
+    if (name === "create_lookalike_audience") {
+      return await createLookalikeAudience({
+        name: input.name,
+        originAudienceId: input.origin_audience_id,
+        ratioPct: input.ratio_pct || 1,
+      });
     }
     if (name === "fetch_landing_page") {
       const url = input.url as string;

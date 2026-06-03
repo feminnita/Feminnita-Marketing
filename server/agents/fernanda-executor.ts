@@ -189,6 +189,59 @@ export async function createEngagementAudience(params: {
   return `Público de engajamento IG "${params.name}" criado (ID: ${data.id}).`;
 }
 
+// ─── Pesquisa de interesses (segmentação) ─────────────────────────────────────
+
+export async function searchInterests(query: string, limit = 12, token?: string): Promise<string> {
+  const data = await metaGet(`search`, {
+    type: "adinterest",
+    q: query,
+    limit: String(limit),
+    locale: "pt_BR",
+  }, token);
+
+  const interests = (data.data || []) as any[];
+  if (!interests.length) return `Nenhum interesse encontrado para "${query}".`;
+
+  const lines = interests.map((i: any) => {
+    const size = i.audience_size_lower_bound && i.audience_size_upper_bound
+      ? `${Number(i.audience_size_lower_bound).toLocaleString("pt-BR")}–${Number(i.audience_size_upper_bound).toLocaleString("pt-BR")}`
+      : i.audience_size
+      ? Number(i.audience_size).toLocaleString("pt-BR")
+      : "?";
+    const path = Array.isArray(i.path) && i.path.length ? ` (${i.path.join(" > ")})` : "";
+    return `• [${i.id}] ${i.name} | alcance ~${size}${path}`;
+  });
+
+  return `INTERESSES para "${query}":\n${lines.join("\n")}`;
+}
+
+// ─── Criar público semelhante (lookalike) ─────────────────────────────────────
+
+export async function createLookalikeAudience(params: {
+  name: string;
+  originAudienceId: string;   // público de origem (ex.: compradores)
+  ratioPct?: number;          // 1 = 1% (mais parecido); até 20
+  country?: string;
+  token?: string;
+  adAccountId?: string;
+}): Promise<string> {
+  const account = getAccount(params.adAccountId);
+  const ratio = Math.min(Math.max((params.ratioPct ?? 1) / 100, 0.01), 0.20);
+
+  const data = await metaPost(`${account}/customaudiences`, {
+    name: params.name,
+    subtype: "LOOKALIKE",
+    origin_audience_id: params.originAudienceId,
+    lookalike_spec: JSON.stringify({
+      type: "custom_ratio",
+      country: params.country || "BR",
+      ratio,
+    }),
+  }, params.token);
+
+  return `Público semelhante "${params.name}" criado (ID: ${data.id}) — ${(ratio * 100).toFixed(0)}% mais parecidos no ${params.country || "BR"}.`;
+}
+
 // ─── Duplicar conjunto de anúncios ────────────────────────────────────────────
 
 export async function duplicateAdSet(params: {
