@@ -21753,6 +21753,34 @@ CPM s\xF3 tende a subir (elei\xE7\xE3o/Black Friday s\xE3o desculpas). CPC = CPM
 1. Pixel/eventos OK? 2. CPA/ROAS vs margem real do produto. 3. Criativos cansados (hook rate/CTR caindo, frequ\xEAncia >3-4) \u2192 trocar/variar. 4. Lance/or\xE7amento: cortar o ruim, escalar o bom (+30%/dia). 5. P\xFAblico: super-quente\u2192quente\u2192frio cobertos? retargeting de carrinho ligado? 6. Fora do gerenciador (p\xE1gina/oferta/ticket). \u2192 Propor a\xE7\xF5es.
 `;
 
+// server/agents/doctrines/feminnita-context.ts
+var FEMINNITA_CONTEXT = `
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+CONTEXTO DA LOJA \u2014 QUEM \xC9 A FEMINNITA (use isto para calibrar tudo)
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+- MARCA: Feminnita \u2014 moda \xEDntima / dormir feminina. Categoria principal: PIJAMAS femininos (manga longa e curta, suede, canelado, estampado, linha Outono-Inverno) + lingerie/conforto. Sortimento amplo de estampas e modelagens, grade P/M/G/GG.
+- DOIS NEG\xD3CIOS:
+  \u2022 Feminnita (Conta A) = B2C, consumidor final, venda por pe\xE7a nos marketplaces e site.
+  \u2022 FNT Confec\xE7\xF5es (Conta B) = B2B atacado para REVENDEDORAS (grade fechada, pedido maior).
+- P\xDABLICO B2C: mulheres adultas (faixa ~25\u201355), compra por conforto, autoestima e presente; sens\xEDvel a pre\xE7o e a foto/estampa. Forte no Sul/Sudeste.
+- P\xDABLICO B2B (FNT): revendedoras que compram para revender \u2014 decidem por margem de revenda, variedade e aus\xEAncia de pedido m\xEDnimo alto.
+
+N\xDAMEROS REAIS (snapshot 12m, ~jun/2026 \u2014 receita e ticket m\xE9dio por canal):
+- Atacado (FNT/B2B):  R$ 1,96 mi  | ticket ~R$ 14.870  (grade fechada)
+- Mercado Livre:      R$ 1,64 mi  | ticket ~R$ 80   | ~20,5 mil pedidos  \u2190 MAIOR canal B2C
+- TikTok Shop:        R$ 344 mil  | ticket ~R$ 77
+- Shopee:             R$ 132 mil  | ticket ~R$ 76
+- Amazon:             R$ 91 mil   | ticket ~R$ 58
+- Shein:              R$ 60 mil   | ticket ~R$ 82
+- Tray (loja pr\xF3pria):R$ 41 mil   | ticket ~R$ 179
+IMPLICA\xC7\xC3O PR\xC1TICA: o ticket B2C real \xE9 ~R$ 75\u201382 (N\xC3O \xE9 R$ 400). Isso define a r\xE9gua: no ML, ticket ~R$ 80 fica EM CIMA do limite Cl\xE1ssico\xD7Premium (\u2265R$79). Margem \xE9 apertada (produto f\xEDsico) \u2192 cada real de ads conta; subir ticket (kit/combo) \xE9 alavanca real.
+
+CONCORR\xCANCIA: Lupo (refer\xEAncia nacional) + marcas regionais + vendedores de pijama atacado no ML/Shopee. Diferencial defens\xE1vel da Feminnita = variedade de estampas/modelagens + atender varejo E atacado + relacionamento com revendedoras (n\xE3o competir s\xF3 por pre\xE7o).
+
+METAS / DOR: faturamento caiu de ~R$78k \u2192 ~R$20k/m\xEAs ap\xF3s uma ag\xEAncia ruim; meta \xE9 recuperar/escalar. Por isso: priorizar o que tem margem e giro (curva A), n\xE3o queimar verba em cauda.
+(Confirme com o Chris se algum diferencial/posicionamento mudou \u2014 este bloco \xE9 a base, a ficha traz o n\xFAmero vivo.)
+`;
+
 // server/services/meta-ads-service.ts
 init_db();
 init_schema();
@@ -22413,9 +22441,27 @@ Campos obrigat\xF3rios:
 - cta: bot\xE3o espec\xEDfico e direto (n\xE3o "Saiba mais" \u2014 use algo como "Quero ser revendedora" ou "Ver cat\xE1logo agora")
 - observacoes: detalhes t\xE9cnicos (tamanho, propor\xE7\xE3o, fundo, fonte) + qual dor/desejo este criativo ativa
 
+${FEMINNITA_CONTEXT}
 ${FERNANDA_META_DOCTRINE}
 
 Formato de resposta: JSON com os campos "analysis" (texto corrido em portugu\xEAs), "recommendations" (array com priority, campanha, titulo, descricao, acao), "summary" (1 frase resumindo o estado da conta) e "creativeBriefs" (array de briefs \u2014 vazio [] se n\xE3o houver recomenda\xE7\xE3o de novo criativo).`;
+async function buildFernandaHistory() {
+  try {
+    const db = await getDb();
+    if (!db) return "";
+    const { desc: desc56, isNotNull: isNotNull4 } = await import("drizzle-orm");
+    const rows = await db.select({ summary: adsEvaluations.summary, completedAt: adsEvaluations.completedAt }).from(adsEvaluations).where(isNotNull4(adsEvaluations.completedAt)).orderBy(desc56(adsEvaluations.completedAt)).limit(3);
+    if (!rows.length) return "";
+    const lines = rows.map((r) => `- [${r.completedAt ? new Date(r.completedAt).toISOString().slice(0, 10) : "?"}] ${r.summary || "(sem resumo)"}`);
+    return `
+
+\u2501\u2501\u2501 SUAS AN\xC1LISES ANTERIORES (continuidade) \u2501\u2501\u2501
+Antes de repetir uma recomenda\xE7\xE3o, verifique se ela j\xE1 foi feita e qual foi o efeito. Replique o que melhorou; n\xE3o insista no que n\xE3o moveu o ROAS/CPA.
+${lines.join("\n")}`;
+  } catch {
+    return "";
+  }
+}
 async function analyzeWithLLM(campaigns3) {
   const dataStr = JSON.stringify(campaigns3, null, 2);
   const adsSummary = campaigns3.map((c) => {
@@ -22427,7 +22473,7 @@ ${adsList}`;
   }).join("\n\n");
   const result = await invokeLLM({
     messages: [
-      { role: "system", content: SYSTEM_PROMPT4 },
+      { role: "system", content: SYSTEM_PROMPT4 + await buildFernandaHistory() },
       {
         role: "user",
         content: `Avalie o estado atual da conta Meta Ads com os dados abaixo e gere o relat\xF3rio completo.
@@ -22846,7 +22892,7 @@ async function executeChatTool(name, input) {
   }
 }
 async function chatWithAgent(conversationHistory2, rawMetrics, imageBase64, imageMimeType, userName) {
-  const systemContent = SYSTEM_PROMPT4 + `
+  const systemContent = SYSTEM_PROMPT4 + await buildFernandaHistory() + `
 
 ${userName ? `NOME DO USU\xC1RIO: Chame-o(a) de "${userName}" durante a conversa.` : ""}
 
@@ -31393,7 +31439,7 @@ async function executeSpecialistTool(name, input) {
   }
   return JSON.stringify({ error: `Ferramenta desconhecida: ${name}` });
 }
-var FEMINNITA_CONTEXT = `
+var FEMINNITA_CONTEXT2 = `
 CONTEXTO FEMINNITA:
 - Pijamas atacado para revendedoras | Ticket m\xE9dio pedido: R$400
 - Vendas atuais: ~R$20.000/m\xEAs (eram R$78.000 antes \u2014 caiu por culpa de ag\xEAncia ruim)
@@ -31408,7 +31454,7 @@ var SYSTEM_PROMPTS = {
 
 Voc\xEA gerencia as campanhas pagas da Feminnita no Meta com foco em escalar de R$20K para R$100K/m\xEAs. Cada real investido precisa retornar no m\xEDnimo 4x em faturamento.
 
-${FEMINNITA_CONTEXT}
+${FEMINNITA_CONTEXT2}
 
 \u2550\u2550\u2550 EXPERTISE \u2550\u2550\u2550
 - Campanhas de convers\xE3o para revendedoras (Advantage+, CBO, ABO)
@@ -31458,7 +31504,7 @@ TOM: Anal\xEDtica e decisiva. Fala em ROAS, CPA, CPL \u2014 n\xE3o em "parece bo
 
 Seu trabalho \xE9 fazer o perfil crescer, engajar e converter \u2014 sem pagar por isso. Voc\xEA cuida do que acontece antes do an\xFAncio existir: a conta que uma revendedora encontra quando pesquisa, o Reel que ela salva \xE0s 21h, o carrossel que ela manda para uma amiga com "olha isso". Voc\xEA n\xE3o sobe campanha paga (isso \xE9 com Fernanda). Voc\xEA n\xE3o fecha venda diretamente (isso \xE9 com Mariana). Voc\xEA constr\xF3i a audi\xEAncia que alimenta o funil inteiro \u2014 a custo zero.
 
-${FEMINNITA_CONTEXT}
+${FEMINNITA_CONTEXT2}
 
 \u2550\u2550\u2550 REGRA FUNDAMENTAL \u2550\u2550\u2550
 A Feminnita n\xE3o \xE9 a hero\xEDna do conte\xFAdo. A revendedora \xE9. A Feminnita \xE9 o guia \u2014 aparece com a solu\xE7\xE3o, n\xE3o com o produto. Todo post, Reel e Story coloca a seguidora no centro da narrativa. Antes de recomendar qualquer conte\xFAdo, voc\xEA pergunta: "Isso serve para a revendedora \u2014 ou s\xF3 fala sobre a Feminnita?" Se a resposta for a segunda op\xE7\xE3o, reescreve.
@@ -31632,7 +31678,7 @@ Voc\xEA trabalha exclusivamente para a Feminnita (marca voltada ao consumidor fi
 
 Sua miss\xE3o \xE9 garantir que a Feminnita nunca anuncie no escuro \u2014 voc\xEA sabe exatamente onde a empresa est\xE1 no mercado, o que os concorrentes est\xE3o fazendo, onde est\xE3o as oportunidades n\xE3o exploradas, e \u2014 acima de tudo \u2014 de onde vem a pr\xF3xima amea\xE7a antes que ela se torne problema.
 
-${FEMINNITA_CONTEXT}
+${FEMINNITA_CONTEXT2}
 
 \u2550\u2550\u2550 REGRA FUNDAMENTAL \u2550\u2550\u2550
 Voc\xEA n\xE3o chuta. Voc\xEA pesquisa.
@@ -31713,7 +31759,7 @@ Voc\xEA pensa em dinheiro \u2014 entrada, sa\xEDda, velocidade e alavancagem. Su
 
 Voc\xEA n\xE3o cuida de tr\xE1fego isolado (isso \xE9 com Fernanda), n\xE3o faz conte\xFAdo (isso \xE9 com Sofia) e n\xE3o monitora concorr\xEAncia (isso \xE9 com Clara). Voc\xEA olha para o funil completo de vendas e responde: "quanto isso vai faturar e quando?"
 
-${FEMINNITA_CONTEXT}
+${FEMINNITA_CONTEXT2}
 
 \u2550\u2550\u2550 REGRA FUNDAMENTAL \u2550\u2550\u2550
 Voc\xEA pensa em alavancagem, n\xE3o em esfor\xE7o.
@@ -34067,7 +34113,11 @@ Voc\xEA raciocina como quem trabalha no Mercado Livre a vida inteira. Antes de o
 - Atraso > 15%, cancelamento > 2%, reclama\xE7\xE3o > 3% \u2192 perde Mercado L\xEDder.
 - Perder o n\xEDvel derruba a visibilidade ~90% e leva ~60 dias pra recuperar. Reputa\xE7\xE3o verde \xE9 pr\xE9-requisito de tudo. Diversificar canais reduz o risco.
 
+\u2501\u2501\u2501 APRENDER COM A CONTA (hist\xF3rico de decis\xF5es) \u2501\u2501\u2501
+Voc\xEA n\xE3o decide no v\xE1cuo: antes de propor, olhe o PLACAR das suas decis\xF5es passadas (ml_review_decisions) \u2014 o que as a\xE7\xF5es que voc\xEA executou fizeram com o ROAS/ACoS de cada campanha. Replique o padr\xE3o do que MELHOROU; n\xE3o repita o tipo de a\xE7\xE3o que PIOROU. Com o tempo isso te torna cada vez melhor NESTA conta espec\xEDfica.
+
 \u2501\u2501\u2501 ORDEM DO DIAGN\xD3STICO (quando pedirem an\xE1lise/auditoria) \u2501\u2501\u2501
+0. Placar das decis\xF5es passadas (ml_review_decisions) \u2014 o que j\xE1 funcionou/n\xE3o funcionou aqui.
 1. Margem do SKU (verde/amarelo/vermelho) \u2014 define se merece esfor\xE7o/verba.
 2. Curva ABC (\xE9 A/B/C? qual o papel dele?).
 3. Convers\xE3o: visita alta + venda baixa \u2192 SEO/ficha/pre\xE7o/foto (n\xE3o lance).
@@ -34331,6 +34381,11 @@ var GABI_ML_TOOLS = [
       },
       required: []
     }
+  },
+  {
+    name: "ml_review_decisions",
+    description: "PLACAR das suas decis\xF5es passadas de Ads: compara o ROAS/ACoS de cada campanha ANTES da a\xE7\xE3o que voc\xEA executou vs agora, e diz se melhorou/piorou/neutro. \xC9 como voc\xEA aprende com a conta. Use ANTES de propor novas a\xE7\xF5es numa an\xE1lise, para replicar o que deu certo e n\xE3o repetir o que deu errado.",
+    input_schema: { type: "object", properties: {}, required: [] }
   }
 ];
 var FICHA_API_BASE = process.env.FICHA_API_BASE || "https://gestao.feminnita.com.br";
@@ -34372,6 +34427,63 @@ async function getFichaConta(canal = "ML") {
     ].join("\n");
   } catch (e) {
     return `ERRO ao ler a ficha da conta: ${e?.message || String(e)}`;
+  }
+}
+async function reviewMlDecisions(account) {
+  try {
+    const db = await getDb();
+    if (!db) return "N\xE3o consegui acessar o banco de decis\xF5es agora.";
+    const { eq: eq113, and: and90, desc: desc56, isNotNull: isNotNull4, lte: lte5 } = await import("drizzle-orm");
+    const { marketplaceAdsMetrics: marketplaceAdsMetrics2 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
+    const acts = await db.select({
+      title: agentActions.title,
+      actionType: agentActions.actionType,
+      payload: agentActions.payload,
+      executedAt: agentActions.executedAt
+    }).from(agentActions).where(and90(
+      eq113(agentActions.agentName, "gabi"),
+      eq113(agentActions.status, "done"),
+      isNotNull4(agentActions.executedAt)
+    )).orderBy(desc56(agentActions.executedAt)).limit(25);
+    const adsActs = acts.filter((a) => {
+      const p = a.payload;
+      return p && p.platform === "ml" && p.campaignId;
+    });
+    if (!adsActs.length) {
+      return "Ainda n\xE3o h\xE1 decis\xF5es de Ads executadas para avaliar. O placar come\xE7a a valer assim que voc\xEA aprovar e executar a\xE7\xF5es (pausar/budget/criar) \u2014 a\xED eu me\xE7o o antes\xD7depois de cada uma.";
+    }
+    const num = (v) => Number(v) || 0;
+    const lines = [];
+    let win = 0, loss = 0, neutral = 0;
+    for (const a of adsActs.slice(0, 12)) {
+      const p = a.payload;
+      const cid = String(p.campaignId);
+      const when = a.executedAt;
+      const fmtWhen = when ? new Date(when).toISOString().slice(0, 10) : "?";
+      const cond = (extra) => and90(
+        eq113(marketplaceAdsMetrics2.platform, "ml"),
+        eq113(marketplaceAdsMetrics2.account, account),
+        eq113(marketplaceAdsMetrics2.campaignId, cid),
+        ...extra ? [extra] : []
+      );
+      const base = await db.select().from(marketplaceAdsMetrics2).where(cond(when ? lte5(marketplaceAdsMetrics2.scrapedAt, when) : void 0)).orderBy(desc56(marketplaceAdsMetrics2.scrapedAt)).limit(1);
+      const cur = await db.select().from(marketplaceAdsMetrics2).where(cond()).orderBy(desc56(marketplaceAdsMetrics2.scrapedAt)).limit(1);
+      const b = base[0], c = cur[0];
+      const acao = p.action || a.actionType;
+      const nome = p.campaignName || cid;
+      if (!b || !c) {
+        lines.push(`\u2022 ${fmtWhen} ${acao} "${nome}": sem m\xE9trica suficiente p/ avaliar ainda.`);
+        continue;
+      }
+      const dRoas = num(c.roas) - num(b.roas);
+      const verdict = dRoas > 0.1 ? (win++, "\u2705 melhorou") : dRoas < -0.1 ? (loss++, "\u274C piorou") : (neutral++, "\u2796 neutro");
+      lines.push(`\u2022 ${fmtWhen} ${acao} "${nome}": ROAS ${num(b.roas).toFixed(2)}\u2192${num(c.roas).toFixed(2)} | ACoS ${num(b.acos).toFixed(0)}%\u2192${num(c.acos).toFixed(0)}% ${verdict}`);
+    }
+    return `PLACAR DAS SUAS DECIS\xD5ES DE ADS (antes \xD7 depois \u2014 ${win} melhoraram, ${loss} pioraram, ${neutral} neutras):
+${lines.join("\n")}
+(Aprenda: replique o padr\xE3o do que melhorou; n\xE3o repita o tipo de a\xE7\xE3o que piorou. Lembre que a m\xE9trica atualiza a cada 6h.)`;
+  } catch (e) {
+    return `ERRO ao revisar decis\xF5es: ${e?.message || String(e)}`;
   }
 }
 function getMLToken3(account = "feminnita") {
@@ -34427,6 +34539,7 @@ Voc\xEA gerencia duas contas:
 
 Conta ativa nesta sess\xE3o: ${accountCtx}
 Conex\xE3o ML: ${tokenOk ? "\u2705 conectada" : "\u26A0\uFE0F token n\xE3o configurado"}
+${FEMINNITA_CONTEXT}
 ${GABI_ML_DOCTRINE}
 \u2550\u2550\u2550 DOIS MODOS DE TRABALHO \u2014 NUNCA MISTURE \u2550\u2550\u2550
 
@@ -34439,8 +34552,8 @@ Ferramentas deste modo: ml_list_items, ml_pause_item, ml_activate_item, ml_updat
 
 \u2501\u2501\u2501 MODO ADS / CAMPANHAS \u2501\u2501\u2501
 Ativado quando: usu\xE1rio fala de campanha, Product Ads, budget, CPC, ROAS, CTR, patrocinado, Ads, m\xE9tricas
-Ferramentas deste modo: ml_get_ficha_conta, ml_get_ads_metrics, ml_ads_list_campaigns, ml_ads_pause_campaign, ml_ads_activate_campaign, ml_ads_update_budget, ml_ads_create_campaign, ml_ads_campaign_stats
-SEMPRE comece an\xE1lise de Ads/produto chamando ml_get_ficha_conta \u2014 \xE9 a margem (ACoS-teto) e a curva ABC que dizem o que merece verba.
+Ferramentas deste modo: ml_get_ficha_conta, ml_review_decisions, ml_get_ads_metrics, ml_ads_list_campaigns, ml_ads_pause_campaign, ml_ads_activate_campaign, ml_ads_update_budget, ml_ads_create_campaign, ml_ads_campaign_stats
+SEMPRE comece an\xE1lise de Ads/produto chamando ml_get_ficha_conta \u2014 \xE9 a margem (ACoS-teto) e a curva ABC que dizem o que merece verba. E chame ml_review_decisions para ver o PLACAR do que suas a\xE7\xF5es anteriores geraram (aprender com a conta).
 REGRA CR\xCDTICA: A API do ML bloqueia m\xE9tricas diretamente. USE SEMPRE ml_get_ads_metrics PRIMEIRO \u2014 esses dados s\xE3o reais, coletados via browser a cada 6h. Se retornar vazio, informe que o agente est\xE1 coletando e use ml_ads_list_campaigns para estrutura.
 REGRA: Voc\xEA PODE criar, pausar, ativar e ajustar budget de campanhas via browser automation. NUNCA diga "n\xE3o consigo pela API" \u2014 use as ferramentas ml_ads_*.
 \u2192 N\xC3O mencione an\xFAncios/EDS neste modo
@@ -34456,8 +34569,8 @@ FLUXO OBRIGAT\xD3RIO ANTES DE EXECUTAR QUALQUER A\xC7\xC3O DIRETA:
 
 \u2501\u2501\u2501 AN\xC1LISE COMPLETA + PROPOSTA DE A\xC7\xD5ES \u2501\u2501\u2501
 Quando o usu\xE1rio pedir "an\xE1lise completa", "auditoria", "proponha a\xE7\xF5es" ou similar:
-1. Chame ml_get_ficha_conta (margem/ACoS-teto + curva ABC) E ml_ads_list_campaigns para listar TODAS as campanhas
-2. Analise a estrutura: budgets vs. ROAS alvo, campanhas dormentes, ACoS acima do ACoS-teto (margem) do SKU, fragmenta\xE7\xE3o de or\xE7amento, verba em produto C/sem margem
+1. Chame ml_get_ficha_conta (margem/ACoS-teto + curva ABC), ml_review_decisions (placar do que j\xE1 fez) E ml_ads_list_campaigns para listar TODAS as campanhas
+2. Analise a estrutura: budgets vs. ROAS alvo, campanhas dormentes, ACoS acima do ACoS-teto (margem) do SKU, fragmenta\xE7\xE3o de or\xE7amento, verba em produto C/sem margem, e o que o placar mostrou que piorou/melhorou
 3. Monte a\xE7\xF5es concretas e chame propose_ads_actions com todas as recomenda\xE7\xF5es
 4. Ap\xF3s salvar, resuma o que foi proposto e diga: "Suas X a\xE7\xF5es est\xE3o em /acoes-agentes aguardando aprova\xE7\xE3o."
 REGRA CR\xCDTICA: Durante an\xE1lise, NUNCA execute diretamente \u2014 use sempre propose_ads_actions
@@ -34719,6 +34832,8 @@ NOME DO USU\xC1RIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
           })();
         } else if (toolUse.name === "ml_get_ficha_conta") {
           call = getFichaConta(inp.canal || (account === "fnt" ? "ML B" : "ML"));
+        } else if (toolUse.name === "ml_review_decisions") {
+          call = reviewMlDecisions(account);
         } else if (toolUse.name === "ml_get_ads_metrics") {
           call = (async () => {
             const db = await getDb();
