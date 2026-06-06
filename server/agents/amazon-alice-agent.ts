@@ -4,10 +4,68 @@
  */
 
 import { invokeLLM } from "../_core/llm";
+import Anthropic from "@anthropic-ai/sdk";
 import { buildMemoryContext, saveMemory } from "../services/agentMemory";
 import { getLatestKnowledge } from "./knowledge-updater";
 import { AMAZON_DOCTRINE } from "./doctrines/amazon-doctrine";
 import { FEMINNITA_CONTEXT } from "./doctrines/feminnita-context";
+
+const FICHA_API_BASE = process.env.FICHA_API_BASE || "https://gestao.feminnita.com.br";
+const FICHA_API_TOKEN = process.env.FICHA_API_TOKEN || "12da9838b502982ad048b2e6a44b94f55a41753d1ab7f9133a773a941d021971";
+
+/**
+ * Lê a FICHA / história da conta (curva ABC + margem por SKU) do servidor de gestão
+ * para o canal Amazon e devolve um RESUMO compacto. Mesma fonte da Gabi (ML), canal Amazon.
+ */
+async function getFichaContaAmazon(canal = "Amazon"): Promise<string> {
+  try {
+    const url = `${FICHA_API_BASE}/api/rest/ficha-clinica-sku?canal=${encodeURIComponent(canal)}&token=${FICHA_API_TOKEN}`;
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 30000);
+    const resp = await fetch(url, { signal: ctrl.signal }).finally(() => clearTimeout(t));
+    if (!resp.ok) return `Não consegui ler a ficha da conta Amazon (HTTP ${resp.status}). A ficha é gerada sob demanda no servidor de gestão — pode ainda estar em geração.`;
+    const data: any = await resp.json();
+    const skus: any[] = Array.isArray(data) ? data : (data.skus || []);
+    if (!Array.isArray(skus) || skus.length === 0) {
+      return `Ficha do canal ${canal} ainda vazia ou em geração (o backfill pode estar rodando). Resposta: ${JSON.stringify(data).slice(0, 400)}`;
+    }
+    const num = (v: any) => (typeof v === "number" ? v : Number(v)) || 0;
+    const cls = (s: any) => String(s.classe_abc || "").toUpperCase();
+    const rec = (s: any) => num(s.receita_12m);
+    const mrg = (s: any) => num(s.margem_pct ?? s.acos_teto_pct);
+    const r = data.resumo || {};
+    const cnt = r.curva || { A: 0, B: 0, C: 0 };
+    const semCusto = r.sem_custo ?? skus.filter(s => s.sem_custo === true).length;
+    const topA = [...skus].filter(s => cls(s) === "A").sort((a, b) => rec(b) - rec(a)).slice(0, 12);
+    const fmt = (s: any) => `  • ${s.sku || "?"} ${(s.descricao || "").toString().slice(0, 40)} | receita12m R$${rec(s).toFixed(0)} | margem(ACoS-teto) ${s.sem_custo ? "?(sem custo)" : mrg(s).toFixed(1) + "%"}`;
+    return [
+      `FICHA DA CONTA — canal ${canal} (gerada: ${data.gerado_em || "?"})`,
+      `Total SKUs: ${skus.length} | Curva A: ${cnt.A} · B: ${cnt.B} · C: ${cnt.C}`,
+      semCusto > 0 ? `⚠️ ${semCusto} SKUs sem custo cadastrado → margem/ACoS-teto deles não confiável; avise e decida verba só pelos que têm custo.` : `Custo cadastrado em todos.`,
+      `Top A por receita 12m (são os best-sellers — priorizar nos ads, são os retail-ready):`,
+      ...topA.map(fmt),
+      `(Use: margem = ACoS-teto/break-even; anuncie primeiro os best-sellers da curva A; produto C sem margem não merece verba.)`,
+    ].join("\n");
+  } catch (e: any) {
+    return `ERRO ao ler a ficha da conta Amazon: ${e?.message || String(e)}`;
+  }
+}
+
+const anthropicAlice = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || "" });
+
+const ALICE_TOOLS: Anthropic.Tool[] = [
+  {
+    name: "get_ficha_conta",
+    description: "Lê a FICHA / HISTÓRIA DA CONTA Amazon por SKU: curva ABC (receita 12 meses), tendência e MARGEM líquida (= ACoS de break-even). Use ANTES de recomendar quais ASINs anunciar (best-sellers da curva A) e para saber o ACoS-teto de cada produto. Dado do servidor de gestão (on-demand).",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        canal: { type: "string", enum: ["Amazon", "Amazon B"], description: "Canal: 'Amazon' (Conta A) ou 'Amazon B' (Conta B FNT). Padrão Amazon." },
+      },
+      required: [],
+    },
+  },
+];
 
 const AGENT_NAME = "alice-amazon";
 
@@ -231,11 +289,48 @@ export async function chatWithAliceAmazon(
 ): Promise<string> {
   const systemPrompt = await buildAliceAmazonPrompt(account);
   const nameCtx = userName ? `\nNOME DO USUÁRIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
-  const result = await invokeLLM({
-    messages: [{ role: "system", content: systemPrompt + nameCtx }, ...history],
-    maxTokens: 2000,
-  });
-  return String(result.choices[0]?.message?.content || "Não consegui processar.");
+  const system = systemPrompt + nameCtx + `\n\nFERRAMENTA DE DADOS: use get_ficha_conta para puxar a história da conta Amazon (curva ABC + margem por SKU) ANTES de recomendar quais ASINs anunciar ou definir ACoS-teto. Se a ficha vier vazia/em geração, avise e siga com o que o usuário trouxer.`;
+
+  const messages: Anthropic.MessageParam[] = history.map(m => ({ role: m.role, content: m.content }));
+
+  try {
+    let iterations = 0;
+    while (iterations < 2) {
+      iterations++;
+      const resp = await anthropicAlice.messages.create({
+        model: "claude-sonnet-4-6",
+        max_tokens: 2000,
+        system,
+        tools: ALICE_TOOLS,
+        messages,
+      });
+      const hasTool = resp.content.some(b => b.type === "tool_use");
+      const text = resp.content.filter(b => b.type === "text").map(b => (b as Anthropic.TextBlock).text).join("");
+      if (!hasTool) return text || "Não consegui processar.";
+      const toolResults: Anthropic.ToolResultBlockParam[] = [];
+      for (const b of resp.content) {
+        if (b.type === "tool_use") {
+          const inp = (b.input || {}) as Record<string, any>;
+          const out = b.name === "get_ficha_conta"
+            ? await getFichaContaAmazon(inp.canal || (account === "fnt" ? "Amazon B" : "Amazon"))
+            : `Ferramenta desconhecida: ${b.name}`;
+          toolResults.push({ type: "tool_result", tool_use_id: b.id, content: out });
+        }
+      }
+      messages.push({ role: "assistant", content: resp.content });
+      messages.push({ role: "user", content: toolResults });
+    }
+    // força resposta final sem ferramentas
+    const finalResp = await anthropicAlice.messages.create({
+      model: "claude-sonnet-4-6", max_tokens: 2000, system, messages,
+    });
+    return finalResp.content.filter(b => b.type === "text").map(b => (b as Anthropic.TextBlock).text).join("") || "Não consegui processar.";
+  } catch (e: any) {
+    console.error("[Alice] erro no chat:", e?.message);
+    // fallback sem tools
+    const result = await invokeLLM({ messages: [{ role: "system", content: system }, ...history], maxTokens: 2000 });
+    return String(result.choices[0]?.message?.content || "Não consegui processar.");
+  }
 }
 
 export async function updateAliceAmazonKnowledge(): Promise<string> {
