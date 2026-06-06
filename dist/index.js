@@ -21684,6 +21684,75 @@ init_llm();
 import { eq as eq57 } from "drizzle-orm";
 import Anthropic3 from "@anthropic-ai/sdk";
 
+// server/agents/doctrines/fernanda-meta-doctrine.ts
+var FERNANDA_META_DOCTRINE = `
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+DOUTRINA OPERACIONAL \u2014 COMO VOC\xCA DECIDE (regras com n\xFAmero)
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+
+\u2501\u2501\u2501 A M\xC9TRICA-RAINHA \u2501\u2501\u2501
+A \xDANICA m\xE9trica que decide a\xE7\xE3o \xE9 o CUSTO POR RESULTADO (CPA) vs a MARGEM real do produto.
+- Se o CPA est\xE1 dentro da margem \u2192 a campanha est\xE1 BOA. Esque\xE7a o resto (CTR/CPM/CPC s\xE3o s\xF3 diagn\xF3stico).
+- Regra de ouro: NUNCA mexa numa campanha que est\xE1 dando certo. Quer testar algo? DUPLIQUE e mexa na c\xF3pia. (O Facebook \xE9 um le\xE3o: movimento brusco e ele come sua m\xE3o.)
+- M\xE9tricas todas \xF3timas MAS n\xE3o vende \u2192 o problema est\xE1 FORA do gerenciador (p\xE1gina de venda, oferta, atendimento). Trabalhe de fora para dentro (p\xE1gina/oferta antes do criativo s\xF3 quando n\xE3o converte).
+
+\u2501\u2501\u2501 ECONOMIA DE PRODUTO F\xCDSICO (a Feminnita N\xC3O \xE9 infoproduto) \u2501\u2501\u2501
+ATEN\xC7\xC3O: a maioria dos cursos de tr\xE1fego pensa em infoproduto (margem ~100%, ROAS 1,4 d\xE1 lucro). EM MODA F\xCDSICA ISSO \xC9 MENTIRA.
+- Margem real t\xEDpica ~25%: metade do pre\xE7o j\xE1 \xE9 custo de pe\xE7a + custo fixo rateado.
+- O CPA m\xE1ximo que voc\xEA pode pagar sai da MARGEM, n\xE3o de um "ROAS bonito": reserve ~METADE do lucro bruto para tr\xE1fego. Ex.: pe\xE7a vendida a R$50 com custo R$35 \u2192 lucro bruto R$15 \u2192 CPA m\xE1x \u2248 R$7/venda. Pagou mais que isso = preju\xEDzo, mesmo com ROAS que pareceria ok num infoproduto.
+- META DE ROAS: derive da margem do produto anunciado, NUNCA copie n\xFAmero de curso. Sempre cruze CPA/ROAS com custo de pe\xE7a + fixo + frete + imposto.
+- A alavanca de escala N\xC3O \xE9 baixar CPA \u2014 \xE9 SUBIR O TICKET M\xC9DIO (kit/combo, cross-sell pijama+robe, brinde por faixa, frete gr\xE1tis acima de X). Dobrou o ticket \u2192 dobrou o CPA que pode pagar. Quem pode pagar mais pelo cliente ganha.
+- Antes de escalar verba, feche a conta de viabilidade COM custo real. Se n\xE3o fecha no ROAS atual, mexa na OFERTA/ticket \u2014 n\xE3o na verba.
+
+\u2501\u2501\u2501 CRIATIVO \xC9 99% \u2014 ESTRUTURA FGC \u2501\u2501\u2501
+Com Advantage+ a segmenta\xE7\xE3o virou autom\xE1tica; o criativo \xE9 onde voc\xEA ganha. "O an\xFAncio \xE9 um FILTRO, n\xE3o um \xEDm\xE3" \u2014 atrai s\xF3 quem converte.
+- Estrutura FGC = Formato \xB7 Gancho \xB7 Corpo.
+- AN\xDANCIO NATIVO vence PANFLETEIRO. Panfleteiro (cara de an\xFAncio, design colorido) \u2192 a pessoa pula e a Meta cobra CPM mais caro. Nativo (parece conte\xFAdo org\xE2nico de moda/lifestyle) \u2192 ret\xE9m aten\xE7\xE3o \u2192 CPM mais barato.
+- HOOK RATE = views de 3s \xF7 impress\xF5es. \xC9 a sa\xFAde do gancho. Vencedor geralmente tem hook rate >60%.
+- Hook rate ALTO + convers\xE3o BAIXA \u2192 mantenha o gancho, troque o final/corpo (n\xE3o jogue o criativo fora).
+- Legenda/texto sempre CENTRALIZADO (o feed corta topo e base).
+- REGRA: sempre 6 an\xFAncios rodando + 6 prontos para ativar. \u226510 varia\xE7\xF5es do vencedor (hooks, copy, cor/tipografia, regravar com finais diferentes, formato) ou est\xE1 deixando dinheiro na mesa. Mexer em cor N\xC3O salva an\xFAncio ruim \u2014 \xE9 cereja do que j\xE1 funciona.
+- Subir \u22651 criativo novo praticamente todo dia. O fator n\xBA1 de escala = v\xE1rios criativos diferentes rodando ao mesmo tempo, atacando \xE2ngulos/dores diferentes.
+
+\u2501\u2501\u2501 TESTE DE CRIATIVO \u2501\u2501\u2501
+- Modo ISOLADO (CBO 1 campanha-1 conjunto-1 an\xFAncio cada): quando os criativos s\xE3o MUITO diferentes entre si (imagem \xD7 v\xEDdeo \xD7 UGC; copies/\xE2ngulos distintos).
+- Modo DIVIDIDO (CBO 1-1-N, todos no mesmo conjunto): quando s\xE3o PEQUENAS varia\xE7\xF5es (s\xF3 muda o gancho / s\xF3 muda a modelo / s\xF3 muda a edi\xE7\xE3o).
+- Or\xE7amento de teste = ~metade da margem por dia \xD7 2 dias (2 dias elimina "dia ruim").
+- Objetivo SEMPRE Vendas; evento de convers\xE3o = Compra. NUNCA testar com Tr\xE1fego/Engajamento "porque \xE9 barato", nem otimizar p/ "iniciar finaliza\xE7\xE3o de compra" (atrai dedo-nervoso, barato e n\xE3o vende).
+- REGRA M\xC1XIMA: o teste tem que VENDER com lucro. CTR alto/checkout iniciado n\xE3o validam nada. N\xE3o vendeu \u2192 descarta (n\xE3o ressuscita trocando p\xFAblico). Empatou \u2192 deixa rodar. Vendeu 2\xD7+ \u2192 escala.
+- Escala vertical = +30%/dia (testa o teto sem resetar o aprendizado). Nunca escalar o que n\xE3o d\xE1 lucro (s\xF3 escala preju\xEDzo).
+
+\u2501\u2501\u2501 P\xDABLICO (escada de temperatura) \u2501\u2501\u2501
+Atacar nesta ordem: SUPER-QUENTE (carrinho/checkout abandonado, visitou 1\u20137 dias, lista de clientes) \u2192 QUENTE (engajou 7\u2013540 dias, pesquisando produto) \u2192 FRIO (lookalike, aberto/Advantage, interesses).
+- Em moda: conhecer o p\xFAblico = CONVERSAR/PESQUISAR com ele (enquete no Instagram), n\xE3o inventar persona.
+- Cada criativo ataca UMA dor \u2192 v\xE1rios criativos = v\xE1rios p\xFAblicos. Deixe a Meta achar.
+- Base pr\xF3pria (WhatsApp/lista/seguidores) e RECOMPRA = camada barata antes do frio.
+- Defaults Feminnita: mulheres 25\u201355, Sul/Sudeste; retargeting de carrinho SEMPRE ligado.
+
+\u2501\u2501\u2501 OR\xC7AMENTO / ADVANTAGE \u2501\u2501\u2501
+- CBO (Advantage, n\xEDvel campanha) na maioria \u2014 distribui melhor, menos trabalho. ABO (n\xEDvel conjunto) s\xF3 p/ isolar/comparar p\xFAblicos.
+- Or\xE7amento Di\xE1rio na maioria.
+- Advantage \xE9 PARTE da estrat\xE9gia, n\xE3o a estrat\xE9gia. N\xE3o mexer em interesse manual (a Meta ignora e expande).
+
+\u2501\u2501\u2501 DETALHAMENTO \u2014 o ouro que ningu\xE9m olha \u2501\u2501\u2501
+No gerenciador \u2192 Detalhamento. Achar o segmento mais barato/que converte e DUPLICAR a campanha isolando-o (nunca alterar a original):
+- por G\xCANERO, por POSICIONAMENTO (FB feed/reels \xD7 IG \xD7 Stories), por DISPOSITIVO.
+- Convers\xE3o por CRIATIVO e por P\xDABLICO (gasto \xB7 CPL \xB7 vendas \xB7 taxa conv \xB7 ROAS). LEAD CARO QUE CONVERTE > lead barato que n\xE3o converte. Foco primeiro no que COMPRA, depois baratear.
+
+\u2501\u2501\u2501 CPM \u2014 sob seu controle \u2501\u2501\u2501
+CPM s\xF3 tende a subir (elei\xE7\xE3o/Black Friday s\xE3o desculpas). CPC = CPM \xD7 CTR. Reduz CPM: arquivo de qualidade (n\xE3o baixar da biblioteca/c\xF3pia da c\xF3pia, limpar metadados), encher de criativos (criativo din\xE2mico/Flex), engajamento, responsividade (vers\xE3o Stories E feed), p\xE1gina boa (responsiva, n\xE3o bugada, baixo bounce), ativos limpos (perfil/BM/fanpage saud\xE1veis, Instagram ligado), e PACI\xCANCIA (n\xE3o ficar dando F5 \u2014 o CPM cai sozinho quando estabiliza).
+
+\u2501\u2501\u2501 TRAQUEAMENTO (garantir antes de otimizar) \u2501\u2501\u2501
+- Prioridade ALTA da Meta: 1 dado do usu\xE1rio + 1 identificador de clique. Sem isso a Meta otimiza cego.
+- Site: FBC (do fbclid na URL) \u2014 mais importante que FBP. Eventos: ViewContent \u2192 AddToCart \u2192 InitiateCheckout \u2192 Purchase.
+- WhatsApp: ctwa_clid + telefone (via Webhook). Instagram: igsid.
+- CAPI (servidor) > pixel web. Disparar Lead na p\xE1gina de "obrigado", n\xE3o no clique do bot\xE3o.
+- Cat\xE1logo ligado habilita an\xFAncios din\xE2micos/retargeting de produto (\xF3timo p/ loja).
+
+\u2501\u2501\u2501 ORDEM DO DIAGN\xD3STICO (quando pedirem an\xE1lise) \u2501\u2501\u2501
+1. Pixel/eventos OK? 2. CPA/ROAS vs margem real do produto. 3. Criativos cansados (hook rate/CTR caindo, frequ\xEAncia >3-4) \u2192 trocar/variar. 4. Lance/or\xE7amento: cortar o ruim, escalar o bom (+30%/dia). 5. P\xFAblico: super-quente\u2192quente\u2192frio cobertos? retargeting de carrinho ligado? 6. Fora do gerenciador (p\xE1gina/oferta/ticket). \u2192 Propor a\xE7\xF5es.
+`;
+
 // server/services/meta-ads-service.ts
 init_db();
 init_schema();
@@ -22343,6 +22412,8 @@ Campos obrigat\xF3rios:
 - copy: corpo do an\xFAncio em 2-3 frases: prova da sacada + oferta + urg\xEAncia
 - cta: bot\xE3o espec\xEDfico e direto (n\xE3o "Saiba mais" \u2014 use algo como "Quero ser revendedora" ou "Ver cat\xE1logo agora")
 - observacoes: detalhes t\xE9cnicos (tamanho, propor\xE7\xE3o, fundo, fonte) + qual dor/desejo este criativo ativa
+
+${FERNANDA_META_DOCTRINE}
 
 Formato de resposta: JSON com os campos "analysis" (texto corrido em portugu\xEAs), "recommendations" (array com priority, campanha, titulo, descricao, acao), "summary" (1 frase resumindo o estado da conta) e "creativeBriefs" (array de briefs \u2014 vazio [] se n\xE3o houver recomenda\xE7\xE3o de novo criativo).`;
 async function analyzeWithLLM(campaigns3) {
@@ -33947,6 +34018,65 @@ init_llm();
 init_agentMemory();
 import Anthropic7 from "@anthropic-ai/sdk";
 init_ml_ads_browser_agent();
+
+// server/agents/doctrines/gabi-ml-doctrine.ts
+var GABI_ML_DOCTRINE = `
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+DOUTRINA OPERACIONAL \u2014 COMO VOC\xCA DECIDE (regras com n\xFAmero)
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+Voc\xEA raciocina como quem trabalha no Mercado Livre a vida inteira. Antes de opinar, olhe a HIST\xD3RIA DA CONTA (use ml_get_ficha_conta: curva ABC por receita 12m, sazonalidade, tend\xEAncia, margem por SKU), nunca s\xF3 a venda do momento.
+
+\u2501\u2501\u2501 MARGEM = O FILTRO DE TUDO \u2501\u2501\u2501
+- Margem l\xEDquida > 15% = VERDE (pode investir/anunciar). 10\u201315% = AMARELO (cautela, otimizar custo/pre\xE7o antes). < 10% = N\xC3O VENDER/n\xE3o anunciar.
+- O ACoS-TETO de um produto \xE9 a pr\xF3pria MARGEM L\xCDQUIDA dele. Gastar em ads acima do ACoS-teto = vender no preju\xEDzo. Cada SKU tem um teto diferente.
+- SKU SEM CUSTO cadastrado (a ficha avisa quando isso ocorre): N\xC3O invente n\xFAmero nem trate como margem alta. Diga que o custo n\xE3o est\xE1 cadastrado e, se precisar de uma refer\xEAncia, use a regra de moda f\xEDsica como ESTIMATIVA expl\xEDcita (custo \u2248 50% do pre\xE7o de venda \u2192 margem bruta ~50%, menos comiss\xE3o do canal ~14% e taxas \u2192 margem l\xEDquida estimada ~25-30%). Sempre rotule como estimativa e pe\xE7a o custo real antes de decidir verba.
+
+\u2501\u2501\u2501 ACoS POR FASE DA CAMPANHA (Product Ads) \u2501\u2501\u2501
+- Visibilidade (produto novo/ganhar tra\xE7\xE3o): ACoS-alvo 30\u2013100% (padr\xE3o ~35%).
+- Crescimento: ACoS-alvo ~20%.
+- Rentabilidade: ACoS-alvo 5\u201315%.
+- Product Ads S\xD3 vale ativar em produto do AMARELO pra cima E com hist\xF3rico (~30\u201360 vendas). Antes disso, o dinheiro est\xE1 melhor em ficha/pre\xE7o/convers\xE3o.
+- Pr\xE9-requisito de Ads: ser Mercado L\xEDder + reputa\xE7\xE3o VERDE.
+
+\u2501\u2501\u2501 CONVERS\xC3O (sa\xFAde do an\xFAncio) \u2501\u2501\u2501
+- Convers\xE3o org\xE2nica boa > 1,5%. Entre 1% e 1,5% = amarelo. < 1% = VERMELHO (an\xFAncio doente).
+- Em Ads, CVR esperado 2\u20133%.
+- VISITA ALTA + VENDA BAIXA = problema de SEO/ficha/pre\xE7o/foto, N\xC3O de lance. N\xE3o jogue verba num an\xFAncio que converte mal \u2014 conserte a convers\xE3o primeiro.
+
+\u2501\u2501\u2501 CURVA ABC \u2192 A\xC7\xC3O \u2501\u2501\u2501
+- A (campe\xF5es de receita 12m): proteger estoque, Full, Ads em rentabilidade, nunca deixar romper.
+- B (medianos): otimizar ficha/pre\xE7o, testar Ads em crescimento, candidatos a virar A.
+- C (cauda): maioria n\xE3o merece verba; reciclar, encartar em cat\xE1logo ou cortar. S\xF3 anunciar C se tiver margem folgada e objetivo de giro.
+
+\u2501\u2501\u2501 CL\xC1SSICO \xD7 PREMIUM \u2501\u2501\u2501
+- Ticket \u2265 ~R$79 \u2192 Premium (parcelamento sem juros aumenta convers\xE3o e compensa a taxa maior). Abaixo disso \u2192 Cl\xE1ssico.
+- Tamb\xE9m usar Premium para disputar Buy Box em monop\xF3lio/menor pre\xE7o quando a margem aguenta.
+
+\u2501\u2501\u2501 ESTOQUE / RUPTURA \u2501\u2501\u2501
+- Estoque virtual ALTO = mais visibilidade (o ML entrega mais quem tem estoque). Confirma o buffer alto do StockHub.
+- Vai zerar? SOBE O PRE\xC7O, n\xE3o pausa. Pausar/zerar mata o hist\xF3rico do an\xFAncio (e derruba a conta). Cancelamento por falta de estoque \xE9 o pior \u2014 destr\xF3i reputa\xE7\xE3o.
+- Full = s\xF3 pros campe\xF5es de giro (estoque preso no ML); n\xE3o mandar cauda pro Full.
+
+\u2501\u2501\u2501 CAT\xC1LOGO / M\xDALTIPLOS / PROMO\xC7\xD5ES \u2501\u2501\u2501
+- Cat\xE1logo posiciona por PRE\xC7O (e qualidade da oferta). Para fugir da guerra de pre\xE7o: EAN pr\xF3prio/marca pr\xF3pria.
+- An\xFAncios m\xFAltiplos do mesmo produto: OK com SKU/EAN diferentes (nunca duplicar id\xEAntico = o ML pune).
+- Reciclagem: s\xF3 para produto sem reposi\xE7\xE3o.
+- Promo\xE7\xF5es COMPARTILHADAS: o ML paga parte do desconto \u2014 usar quando dispon\xEDvel.
+
+\u2501\u2501\u2501 REPUTA\xC7\xC3O (n\xE3o negoci\xE1vel) \u2501\u2501\u2501
+- Atraso > 15%, cancelamento > 2%, reclama\xE7\xE3o > 3% \u2192 perde Mercado L\xEDder.
+- Perder o n\xEDvel derruba a visibilidade ~90% e leva ~60 dias pra recuperar. Reputa\xE7\xE3o verde \xE9 pr\xE9-requisito de tudo. Diversificar canais reduz o risco.
+
+\u2501\u2501\u2501 ORDEM DO DIAGN\xD3STICO (quando pedirem an\xE1lise/auditoria) \u2501\u2501\u2501
+1. Margem do SKU (verde/amarelo/vermelho) \u2014 define se merece esfor\xE7o/verba.
+2. Curva ABC (\xE9 A/B/C? qual o papel dele?).
+3. Convers\xE3o: visita alta + venda baixa \u2192 SEO/ficha/pre\xE7o/foto (n\xE3o lance).
+4. Ads: s\xF3 do amarelo pra cima, ACoS-alvo pela fase, nunca acima do ACoS-teto/margem.
+5. Estoque/reputa\xE7\xE3o OK? (sem isso, nada de escalar.)
+6. Propor a\xE7\xF5es concretas (propose_ads_actions) \u2014 nunca executar direto na an\xE1lise.
+`;
+
+// server/agents/ml-gabi-agent.ts
 init_db();
 init_schema();
 import { desc as desc46, eq as eq85, and as and69, isNotNull } from "drizzle-orm";
@@ -34190,8 +34320,60 @@ var GABI_ML_TOOLS = [
       },
       required: ["itemId", "attributes"]
     }
+  },
+  {
+    name: "ml_get_ficha_conta",
+    description: "L\xEA a FICHA / HIST\xD3RIA DA CONTA do Mercado Livre por SKU: curva ABC (receita 12 meses), sazonalidade, tend\xEAncia e MARGEM l\xEDquida (= ACoS-teto). \xC9 a fonte oficial para decidir o que merece esfor\xE7o/verba. Use ANTES de qualquer an\xE1lise de Ads ou recomenda\xE7\xE3o de produto. Dado cacheado no servidor de gest\xE3o (an\xE1lise on-demand, n\xE3o tempo real).",
+    input_schema: {
+      type: "object",
+      properties: {
+        canal: { type: "string", enum: ["ML", "ML B"], description: "Canal: 'ML' (Conta A Feminnita) ou 'ML B' (Conta B FNT). Padr\xE3o: ML." }
+      },
+      required: []
+    }
   }
 ];
+var FICHA_API_BASE = process.env.FICHA_API_BASE || "https://gestao.feminnita.com.br";
+var FICHA_API_TOKEN = process.env.FICHA_API_TOKEN || "12da9838b502982ad048b2e6a44b94f55a41753d1ab7f9133a773a941d021971";
+async function getFichaConta(canal = "ML") {
+  try {
+    const url = `${FICHA_API_BASE}/api/rest/ficha-clinica-sku?canal=${encodeURIComponent(canal)}&token=${FICHA_API_TOKEN}`;
+    const resp = await withTimeout2(fetch(url), 3e4, "ficha-conta");
+    if (!resp.ok) return `N\xE3o consegui ler a ficha da conta (HTTP ${resp.status}). A ficha \xE9 gerada sob demanda no servidor de gest\xE3o \u2014 pode ainda n\xE3o estar pronta.`;
+    const data = await resp.json();
+    const skus = Array.isArray(data) ? data : data.skus || data.fichas || [];
+    if (!Array.isArray(skus) || skus.length === 0) {
+      return `Ficha da conta (${canal}) ainda vazia ou em gera\xE7\xE3o. Resposta crua: ${JSON.stringify(data).slice(0, 600)}`;
+    }
+    const num = (v) => (typeof v === "number" ? v : Number(v)) || 0;
+    const cls = (s) => String(s.classe_abc || s.abc || "").toUpperCase();
+    const rec = (s) => num(s.receita_12m ?? s.receita);
+    const mrg = (s) => num(s.margem_pct ?? s.acos_teto_pct ?? s.margem_liq_pct);
+    const r = data.resumo || {};
+    const cnt = r.curva || (() => {
+      const c = { A: 0, B: 0, C: 0 };
+      for (const s of skus) {
+        const k = cls(s);
+        if (c[k] != null) c[k]++;
+      }
+      return c;
+    })();
+    const semCusto = r.sem_custo ?? skus.filter((s) => s.sem_custo === true).length;
+    const topA = [...skus].filter((s) => cls(s) === "A").sort((a, b) => rec(b) - rec(a)).slice(0, 12);
+    const fmt = (s) => `  \u2022 ${s.sku || "?"} ${(s.descricao || "").toString().slice(0, 40)} | receita12m R$${rec(s).toFixed(0)} | margem(ACoS-teto) ${s.sem_custo ? "?(sem custo)" : mrg(s).toFixed(1) + "%"} | tend ${s.tendencia || "-"}`;
+    const gerado = data.gerado_em || "?";
+    return [
+      `FICHA DA CONTA \u2014 canal ${canal} (gerada: ${gerado}; modo ${data.modo || "?"})`,
+      `Total SKUs: ${skus.length} | Curva A: ${cnt.A} \xB7 B: ${cnt.B} \xB7 C: ${cnt.C}`,
+      semCusto > 0 ? `\u26A0\uFE0F ${semCusto} SKUs SEM CUSTO cadastrado \u2192 a margem/ACoS-teto desses N\xC3O \xE9 confi\xE1vel; avise o usu\xE1rio e baseie decis\xE3o de verba s\xF3 nos que t\xEAm custo.` : `Custo cadastrado em todos os SKUs.`,
+      `Top A por receita 12m:`,
+      ...topA.map(fmt),
+      `(Use: margem = ACoS-teto; classe A protege estoque/Full; visita alta + venda baixa = SEO/ficha, n\xE3o lance.)`
+    ].join("\n");
+  } catch (e) {
+    return `ERRO ao ler a ficha da conta: ${e?.message || String(e)}`;
+  }
+}
 function getMLToken3(account = "feminnita") {
   return account === "fnt" ? process.env.ML_ACCESS_TOKEN_2 || "" : process.env.ML_ACCESS_TOKEN_1 || "";
 }
@@ -34245,7 +34427,7 @@ Voc\xEA gerencia duas contas:
 
 Conta ativa nesta sess\xE3o: ${accountCtx}
 Conex\xE3o ML: ${tokenOk ? "\u2705 conectada" : "\u26A0\uFE0F token n\xE3o configurado"}
-
+${GABI_ML_DOCTRINE}
 \u2550\u2550\u2550 DOIS MODOS DE TRABALHO \u2014 NUNCA MISTURE \u2550\u2550\u2550
 
 Voc\xEA opera em dois modos distintos. Identifique o contexto da pergunta e fique EXCLUSIVAMENTE naquele modo.
@@ -34257,7 +34439,8 @@ Ferramentas deste modo: ml_list_items, ml_pause_item, ml_activate_item, ml_updat
 
 \u2501\u2501\u2501 MODO ADS / CAMPANHAS \u2501\u2501\u2501
 Ativado quando: usu\xE1rio fala de campanha, Product Ads, budget, CPC, ROAS, CTR, patrocinado, Ads, m\xE9tricas
-Ferramentas deste modo: ml_get_ads_metrics, ml_ads_list_campaigns, ml_ads_pause_campaign, ml_ads_activate_campaign, ml_ads_update_budget, ml_ads_create_campaign, ml_ads_campaign_stats
+Ferramentas deste modo: ml_get_ficha_conta, ml_get_ads_metrics, ml_ads_list_campaigns, ml_ads_pause_campaign, ml_ads_activate_campaign, ml_ads_update_budget, ml_ads_create_campaign, ml_ads_campaign_stats
+SEMPRE comece an\xE1lise de Ads/produto chamando ml_get_ficha_conta \u2014 \xE9 a margem (ACoS-teto) e a curva ABC que dizem o que merece verba.
 REGRA CR\xCDTICA: A API do ML bloqueia m\xE9tricas diretamente. USE SEMPRE ml_get_ads_metrics PRIMEIRO \u2014 esses dados s\xE3o reais, coletados via browser a cada 6h. Se retornar vazio, informe que o agente est\xE1 coletando e use ml_ads_list_campaigns para estrutura.
 REGRA: Voc\xEA PODE criar, pausar, ativar e ajustar budget de campanhas via browser automation. NUNCA diga "n\xE3o consigo pela API" \u2014 use as ferramentas ml_ads_*.
 \u2192 N\xC3O mencione an\xFAncios/EDS neste modo
@@ -34273,8 +34456,8 @@ FLUXO OBRIGAT\xD3RIO ANTES DE EXECUTAR QUALQUER A\xC7\xC3O DIRETA:
 
 \u2501\u2501\u2501 AN\xC1LISE COMPLETA + PROPOSTA DE A\xC7\xD5ES \u2501\u2501\u2501
 Quando o usu\xE1rio pedir "an\xE1lise completa", "auditoria", "proponha a\xE7\xF5es" ou similar:
-1. Chame ml_ads_list_campaigns para listar TODAS as campanhas
-2. Analise a estrutura: budgets vs. ROAS alvo, campanhas dormentes, ACoS inconsistentes, fragmenta\xE7\xE3o de or\xE7amento
+1. Chame ml_get_ficha_conta (margem/ACoS-teto + curva ABC) E ml_ads_list_campaigns para listar TODAS as campanhas
+2. Analise a estrutura: budgets vs. ROAS alvo, campanhas dormentes, ACoS acima do ACoS-teto (margem) do SKU, fragmenta\xE7\xE3o de or\xE7amento, verba em produto C/sem margem
 3. Monte a\xE7\xF5es concretas e chame propose_ads_actions com todas as recomenda\xE7\xF5es
 4. Ap\xF3s salvar, resuma o que foi proposto e diga: "Suas X a\xE7\xF5es est\xE3o em /acoes-agentes aguardando aprova\xE7\xE3o."
 REGRA CR\xCDTICA: Durante an\xE1lise, NUNCA execute diretamente \u2014 use sempre propose_ads_actions
@@ -34534,6 +34717,8 @@ NOME DO USU\xC1RIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
             });
             return `${isError ? "\u274C" : "\u2705"} ${name}: ${log}`;
           })();
+        } else if (toolUse.name === "ml_get_ficha_conta") {
+          call = getFichaConta(inp.canal || (account === "fnt" ? "ML B" : "ML"));
         } else if (toolUse.name === "ml_get_ads_metrics") {
           call = (async () => {
             const db = await getDb();
