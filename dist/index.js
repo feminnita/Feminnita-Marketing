@@ -22777,10 +22777,46 @@ var CHAT_TOOLS = [
       },
       required: ["name", "origin_audience_id"]
     }
+  },
+  {
+    name: "request_creative",
+    description: "Gera um CRIATIVO completo (imagem via IA + copy) no padr\xE3o da doutrina (estrutura FGC, hook forte nos 3s, visual nativo) e salva como 'aguardando aprova\xE7\xE3o' para o usu\xE1rio ver a arte e aprovar na tela de Ads Manager. Use quando o usu\xE1rio pedir para criar/gerar an\xFAncio, criativo, arte, banner ou copy. Monte um brief bom a partir do contexto da conversa (1 dor/desejo por criativo).",
+    input_schema: {
+      type: "object",
+      properties: {
+        titulo: { type: "string", description: "\xC2ngulo/t\xEDtulo do criativo (ex.: 'Pijama suede inverno - conforto que fideliza')" },
+        descricao: { type: "string", description: "Descri\xE7\xE3o do produto/oferta + \xE2ngulo estrat\xE9gico (foco em 1 dor/desejo)" },
+        produto: { type: "string", description: "Produto em destaque (ex.: 'pijama suede manga longa')" },
+        publico: { type: "string", description: "P\xFAblico-alvo espec\xEDfico" },
+        tipo_campanha: { type: "string", description: "Prospec\xE7\xE3o | Remarketing | Lan\xE7amento | Oferta" },
+        texto_arte: { type: "string", description: "Texto curto sugerido para sobrepor na arte (centralizado)" },
+        campaignId: { type: "string", description: "ID da campanha Meta, se for para uma espec\xEDfica (opcional)" },
+        adSetId: { type: "string", description: "ID do conjunto de an\xFAncios (opcional)" }
+      },
+      required: ["titulo", "descricao"]
+    }
   }
 ];
-async function executeChatTool(name, input) {
+async function executeChatTool(name, input, userId) {
   try {
+    if (name === "request_creative") {
+      if (!userId) return "N\xE3o consegui identificar o usu\xE1rio para gerar o criativo agora.";
+      const { requestCreative: requestCreative2 } = await Promise.resolve().then(() => (init_creative_agent(), creative_agent_exports));
+      const r = await requestCreative2(userId, {
+        title: String(input.titulo || "Criativo Feminnita"),
+        description: String(input.descricao || input.titulo || ""),
+        product: input.produto ? String(input.produto) : void 0,
+        targetAudience: input.publico ? String(input.publico) : void 0,
+        campaignType: input.tipo_campanha ? String(input.tipo_campanha) : void 0,
+        textOverlay: input.texto_arte ? String(input.texto_arte) : void 0,
+        campaignId: input.campaignId ? String(input.campaignId) : void 0,
+        adSetId: input.adSetId ? String(input.adSetId) : void 0
+      });
+      return `Criativo gerado (imagem + copy) e salvo como "aguardando aprova\xE7\xE3o" \u2014 abra a tela de Ads Manager para ver a arte e aprovar.
+Headline: ${r.headline || "(ver na tela)"}
+Texto: ${r.body || "(ver na tela)"}
+Status: ${r.status} (id ${r.id}). Posso gerar varia\xE7\xF5es de gancho desse mesmo criativo, se quiser.`;
+    }
     if (name === "get_account_summary") {
       const data = await fetchMetaAdsData();
       if (data.error) return JSON.stringify({ error: data.error });
@@ -22921,7 +22957,7 @@ async function executeChatTool(name, input) {
     return JSON.stringify({ error: err.message });
   }
 }
-async function chatWithAgent(conversationHistory2, rawMetrics, imageBase64, imageMimeType, userName) {
+async function chatWithAgent(conversationHistory2, rawMetrics, imageBase64, imageMimeType, userName, userId) {
   const systemContent = SYSTEM_PROMPT4 + await buildFernandaHistory() + `
 
 ${userName ? `NOME DO USU\xC1RIO: Chame-o(a) de "${userName}" durante a conversa.` : ""}
@@ -22985,7 +23021,7 @@ REGRAS CR\xCDTICAS:
     for (const block of response.content) {
       if (block.type === "tool_use") {
         console.log(`[AdsManagerAgent] Tool: ${block.name}`);
-        const result = await executeChatTool(block.name, block.input);
+        const result = await executeChatTool(block.name, block.input, userId);
         toolResults.push({ type: "tool_result", tool_use_id: block.id, content: result });
       }
     }
@@ -23147,7 +23183,8 @@ var adsManagerRouter = router({
         ev[0].rawMetrics || "[]",
         input.imageBase64,
         input.imageMimeType,
-        ctx.user?.name ?? void 0
+        ctx.user?.name ?? void 0,
+        ctx.user?.id
       );
     } catch (err) {
       console.error("[AdsManager] Erro em chatWithAgent:", err?.message, err?.status, JSON.stringify(err?.error ?? {}));
