@@ -35557,6 +35557,68 @@ import { z as z78 } from "zod";
 // server/agents/amazon-alice-agent.ts
 init_llm();
 init_agentMemory();
+
+// server/agents/doctrines/amazon-doctrine.ts
+var AMAZON_DOCTRINE = `
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+DOUTRINA OPERACIONAL \u2014 A10, LISTAGEM (SEO) E MEC\xC2NICA OFICIAL
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+
+\u2501\u2501\u2501 O ALGORITMO A10 (como a Amazon ranqueia) \u2501\u2501\u2501
+A Amazon \xE9 um buscador de INTEN\xC7\xC3O DE COMPRA: ranqueia o que CONVERTE e VENDE. Relev\xE2ncia sem convers\xE3o n\xE3o ranqueia; convers\xE3o sem relev\xE2ncia n\xE3o sustenta. Flywheel: vendas \u2192 ranking \u2192 visibilidade \u2192 vendas.
+Fatores de ranking por peso (2026):
+1. SALES VELOCITY (n\xBA1) \u2014 volume e CONST\xC2NCIA. Vender todo dia > vender em picos.
+2. Taxa de convers\xE3o (CVR) \u2014 listagem fraca = ranking fraco mesmo com ads.
+3. Relev\xE2ncia de keyword \u2014 t\xEDtulo (maior peso) > bullets > backend terms (indexam sem aparecer).
+4. Avalia\xE7\xF5es \u2014 <10-15 reviews converte mal \u2192 ranqueia mal.
+5. Autoridade do vendedor (seller metrics) \u2014 conta ruim penaliza mesmo bom produto.
+6. Pre\xE7o competitivo \u2014 n\xE3o o mais barato, mas dentro da faixa da categoria.
+7. Estoque \u2014 stockout derruba ranking r\xE1pido e custa semanas pra recuperar.
+8. Tr\xE1fego externo \u2014 Meta/TikTok rastreado alimenta o algoritmo (+ Brand Referral Bonus at\xE9 10% rebate). Integra com a Fernanda.
+9. Sinais de ads \u2014 CVR de Sponsored Products agora alimenta o ranking org\xE2nico.
+MITOS (n\xE3o fazem mais): keyword stuffing (indexa na 1\xAA apari\xE7\xE3o), "aquecer" com venda fake (suspende), perseguir s\xF3 ACoS baixo (ACoS baixo + vendas baixas = rank estagnado).
+
+\u2501\u2501\u2501 ANATOMIA DA LISTAGEM (SEO \u2014 onde mora a convers\xE3o) \u2501\u2501\u2501
+T\xCDTULO (campo de maior peso, m\xE1x 200 chars BR): [Marca]+[Tipo]+[Material]+[Caracter\xEDstica]+[P\xFAblico/ocasi\xE3o]. Keyword principal nos primeiros 80 chars (corte do mobile). N\xC3O: pre\xE7o, "melhor/n\xBA1", caps excessivo, caracteres especiais.
+BULLETS (5): "BENEF\xCDCIO EM CAPS \u2014 feature + contexto de uso". Para pijama: Conforto/Material \xB7 Caimento/Fit \xB7 Design/Estampa \xB7 Cuidados/Durabilidade \xB7 Ocasi\xE3o/Presente. Cada bullet usa a keyword 1\xD7 (sem repetir as do t\xEDtulo).
+BACKEND SEARCH TERMS (m\xE1x 250 BYTES \u2014 acento conta dobrado): N\xC3O repetir o que j\xE1 est\xE1 no t\xEDtulo/bullets; sem v\xEDrgulas; incluir varia\xE7\xF5es ortogr\xE1ficas (pijama/pyjama), sin\xF4nimos (camisola, conjunto de dormir), termos de ocasi\xE3o, e termos em ingl\xEAs se buscarem assim.
+IMAGENS (o fator de convers\xE3o mais subestimado em moda): main em fundo BRANCO puro, produto \u226585% do frame; secund\xE1rias \u22651000px (zoom), at\xE9 9 + v\xEDdeo. Sequ\xEAncia pijama: main \u2192 no corpo (frente) \u2192 close textura \u2192 no corpo (costas) \u2192 infogr\xE1fico tecido/lavagem \u2192 TABELA DE MEDIDAS (reduz devolu\xE7\xE3o, cr\xEDtico) \u2192 lifestyle. V\xEDdeo 15\u201345s: +at\xE9 20% convers\xE3o.
+A+ CONTENT (requer Brand Registry): +10\u201315% convers\xE3o. Substitui descri\xE7\xE3o por m\xF3dulos visuais; incluir storytelling + comparativo + cross-sell de casal.
+
+\u2501\u2501\u2501 TACoS \u2014 a b\xFAssola do neg\xF3cio (complementa o ACoS por fase j\xE1 no prompt) \u2501\u2501\u2501
+TACoS = gasto ads \xF7 vendas TOTAIS (ads+org\xE2nico). Bandas: 5\u201315% saud\xE1vel (org\xE2nico crescendo) \xB7 15\u201325% aceit\xE1vel em lan\xE7amento \xB7 >25% depend\xEAncia excessiva de ads (org\xE2nico n\xE3o cresce). Sempre calcular ACoS de break-even com CUSTO REAL da pe\xE7a + frete + impostos + taxa Amazon (~15% moda) \u2014 n\xE3o margem estimada.
+Diagn\xF3stico por m\xE9trica: CTR <0,3% = problema de main image/t\xEDtulo \xB7 CVR <10% = problema de listing (pre\xE7o/imagens/reviews) \xB7 impress\xF5es sem clique = keyword irrelevante ou bid baixo p/ o placement.
+
+\u2501\u2501\u2501 MEC\xC2NICA OFICIAL DA AMAZON (Ads Academy) \u2501\u2501\u2501
+TARGETING AUTOM\xC1TICO \u2014 4 tipos: close match (query muito relacionada), loose match (vagamente), substitutes (visitantes de produtos similares), complements (produtos que complementam). Come\xE7ar no auto 2\u20134 semanas p/ descobrir keywords que convertem \u2192 migrar p/ manual.
+MATCH TYPES: broad (qualquer palavra, qualquer ordem + varia\xE7\xF5es \u2014 descoberta, bid baixo) \xB7 phrase (frase exata, pode ter palavras antes/depois) \xB7 exact (exato ou mesmo significado \u2014 bid maior, maior CVR, p/ keywords provadas) \xB7 negative (impede queries \u2014 essencial p/ parar gasto irrelevante). Close variations (plural/singular/erros) j\xE1 s\xE3o inclu\xEDdas \u2014 n\xE3o precisa duplicar.
+PRODUCT TARGETING: por categoria (refina por pre\xE7o/marca/estrela/Prime) ou por ASIN (exact = concorrentes diretos; expanded = relacionados). Negative product targeting exclui p\xE1ginas/categorias sem relev\xE2ncia.
+BIDS (oficial): suggested bid = base recomendada (lances vencedores dos \xFAltimos 7d). 3 estrat\xE9gias SP: down only (mais seguro, come\xE7ar) \xB7 up & down (+at\xE9 100% no topo se chance alta \u2014 p/ produto com hist\xF3rico) \xB7 fixed (s\xF3 quando j\xE1 sabe o lance). Placement: Top of Search at\xE9 +900%, Product Pages, Rest of Search.
+BUDGET: Daily (m\xEDn $1, "always on", maioria dos casos) \xB7 Lifetime (m\xEDn $100, s\xF3 Sponsored Brands, com data-fim, n\xE3o pode diminuir \u2014 p/ Prime Day/BF).
+SPONSORED DISPLAY \u2014 audiences: Amazon audiences (lifestyle/interests/life-events/in-market) \xB7 views remarketing (visitou at\xE9 90d) \xB7 purchases remarketing (comprou at\xE9 365d: repeat/cross-sell). Pode combinar.
+DADO OFICIAL: SP+SB juntos = +31% ROAS vs SP s\xF3; SP+SB+SD = at\xE9 +15% YoY vendas.
+
+\u2501\u2501\u2501 RANKING ORG\xC2NICO \u2014 subir e manter \u2501\u2501\u2501
+Ads que convertem \u2192 sales velocity \u2192 rank org\xE2nico \u2192 vendas sem pagar clique (o objetivo \xE9 construir org\xE2nico, n\xE3o viver de ads). Alavancas: lan\xE7amento agressivo (30\u201360d, ACoS alto OK p/ construir hist\xF3rico) \xB7 reviews (<15 converte mal; Vine, insert card sem condicionar, follow-up 1 email/pedido) \xB7 pre\xE7o na faixa do top 10 \xB7 estoque constante (stockout destr\xF3i rank) \xB7 devolu\xE7\xE3o baixa (guia de tamanhos = maior redutor) \xB7 seller metrics: ODR <1%, cancelamento <2,5%, atraso de envio <4% (acima disso penaliza e arrisca suspens\xE3o).
+
+\u2501\u2501\u2501 RETAIL READINESS \u2014 checklist OFICIAL (antes de gastar 1 real em ads) \u2501\u2501\u2501
+\u226515 avalia\xE7\xF5es \xB7 nota \u22653,5\u2605 \xB7 imagens+v\xEDdeo HD (incl. modelo usando) \xB7 GUIA DE TAMANHOS \xB7 estoque dispon\xEDvel \xB7 ganhando o Featured Offer (Buy Box) \xB7 A+ Content. Se algo estiver vermelho \u2192 corrigir ANTES da campanha. Aten\xE7\xE3o: SP PARA de veicular se perder o Featured Offer; SB CONTINUA (voc\xEA paga clique que vai pro concorrente).
+
+\u2501\u2501\u2501 SEARCH TERM REPORT \u2014 regra de otimiza\xE7\xE3o (oficial) \u2501\u2501\u2501
+Termo convertendo acima do ROAS alvo \u2192 AUMENTAR bid (escalar). Termo sem convers\xE3o e gasto acima do CPA alvo \u2192 NEGATIVAR. Termo sem convers\xE3o mas gasto dentro do CPA \u2192 MANTER e monitorar.
+
+\u2501\u2501\u2501 PRIME DAY / datas (complementa as datas j\xE1 no prompt) \u2501\u2501\u2501
+ANTES (2 semanas): ligar SP+SB+SD, SP em up/down, auto+manual juntos, Store atualizada. DURANTE: muitos decidem na hora; monitorar inventory; bid no m\xE1ximo aceit\xE1vel; medir ROAS s\xF3 ap\xF3s 7\u201314d (janela de atribui\xE7\xE3o). DEPOIS: remarketing SD (views+purchases), realocar budget dos low p/ high performers, subir bid nas keywords que converteram. Dado oficial: SP+SB+SD+Display no Prime Day = +50% vendas vs 2 semanas antes.
+
+\u2501\u2501\u2501 AMAZON BR \u2014 espec\xEDfico moda \u2501\u2501\u2501
+Categoria: Roupas/Sapatos/Joias \u2192 Pijamas e Roup\xF5es \u2192 Feminino. Comiss\xE3o Amazon ~15%. FBA favorece ranking (Prime) \u2014 avaliar custo de armazenagem vs envio pr\xF3prio (f\xE1brica Nova Friburgo). Brand Referral Bonus: tr\xE1fego do Meta/TikTok rastreado = rebate at\xE9 10% \u2014 integrar com a Fernanda.
+
+\u2501\u2501\u2501 ORDEM DO DIAGN\xD3STICO (quando avaliar a conta) \u2501\u2501\u2501
+1. Seller metrics (ODR/cancelamento/atraso) OK? 2. Estoque (algo zerando?). 3. Listing retail-ready (t\xEDtulo/bullets/imagens/\u226515 reviews/Featured Offer)? 4. TACoS na faixa (5\u201325% pela fase)? 5. ACoS por campanha vs break-even (pausar/reduzir o que passa). 6. Search Term Report (negativar o que gasta sem converter). 7. Ranking org\xE2nico das keywords-chave caiu? (ver estoque/reviews/pre\xE7o). 8. CVR caiu? (concorrente novo/pre\xE7o/reviews negativas).
+`;
+
+// server/agents/amazon-alice-agent.ts
+init_feminnita_context();
 var AGENT_NAME9 = "alice-amazon";
 async function buildAliceAmazonPrompt(account = "feminnita") {
   const [marketKnowledge, fashionKnowledge, memoryContext] = await Promise.all([
@@ -35763,6 +35825,8 @@ NATAL (dezembro): segundo maior volume | manter campanhas est\xE1veis \u2014 n\x
 \u2022 N\xE3o escala FNT na Amazon sem primeiro validar demanda de atacado
 \u2022 N\xE3o lan\xE7a campanha em produto sem ao menos 5 reviews
 \u2022 N\xE3o define budget sem validar margem com Mariana
+${FEMINNITA_CONTEXT}
+${AMAZON_DOCTRINE}
 ${knowledge ? `
 \u2501\u2501\u2501 INTELIG\xCANCIA ATUAL \u2501\u2501\u2501
 ${knowledge}` : ""}
