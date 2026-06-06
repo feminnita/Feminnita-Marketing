@@ -12,6 +12,7 @@ import { adsEvaluations } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { invokeLLM } from "../_core/llm";
 import Anthropic from "@anthropic-ai/sdk";
+import { FERNANDA_META_DOCTRINE } from "./doctrines/fernanda-meta-doctrine";
 
 const AD_ACCOUNT_ID = process.env.META_AD_ACCOUNT_ID || "act_231648936319132";
 const META_TOKEN = process.env.META_ACCESS_TOKEN || "";
@@ -450,6 +451,8 @@ Campos obrigatórios:
 - copy: corpo do anúncio em 2-3 frases: prova da sacada + oferta + urgência
 - cta: botão específico e direto (não "Saiba mais" — use algo como "Quero ser revendedora" ou "Ver catálogo agora")
 - observacoes: detalhes técnicos (tamanho, proporção, fundo, fonte) + qual dor/desejo este criativo ativa
+
+${FERNANDA_META_DOCTRINE}
 
 Formato de resposta: JSON com os campos "analysis" (texto corrido em português), "recommendations" (array com priority, campanha, titulo, descricao, acao), "summary" (1 frase resumindo o estado da conta) e "creativeBriefs" (array de briefs — vazio [] se não houver recomendação de novo criativo).`;
 

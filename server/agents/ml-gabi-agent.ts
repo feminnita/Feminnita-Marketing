@@ -10,6 +10,7 @@ import { buildMemoryContext, saveMemory } from "../services/agentMemory";
 import { getLatestKnowledge } from "./knowledge-updater";
 import { listMLItems, pauseMLItem, activateMLItem, updateMLPrice, updateMLStock, getMLItemDetails, getMLCategoryAttributes, updateMLItemAttributes, listMLAdsCampaigns, getMLAdsCampaignStats } from "./gabi-executor";
 import { runActionsInSession } from "./ml-ads-browser-agent";
+import { GABI_ML_DOCTRINE } from "./doctrines/gabi-ml-doctrine";
 
 /**
  * Executa mutação em campanha ML Ads via Playwright (browser).
@@ -265,7 +266,59 @@ const GABI_ML_TOOLS: Anthropic.Tool[] = [
       required: ["itemId", "attributes"],
     },
   },
+  {
+    name: "ml_get_ficha_conta",
+    description: "Lê a FICHA / HISTÓRIA DA CONTA do Mercado Livre por SKU: curva ABC (receita 12 meses), sazonalidade, tendência e MARGEM líquida (= ACoS-teto). É a fonte oficial para decidir o que merece esforço/verba. Use ANTES de qualquer análise de Ads ou recomendação de produto. Dado cacheado no servidor de gestão (análise on-demand, não tempo real).",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        canal: { type: "string", enum: ["ML", "ML B"], description: "Canal: 'ML' (Conta A Feminnita) ou 'ML B' (Conta B FNT). Padrão: ML." },
+      },
+      required: [],
+    },
+  },
 ];
+
+const FICHA_API_BASE = process.env.FICHA_API_BASE || "https://gestao.feminnita.com.br";
+const FICHA_API_TOKEN = process.env.FICHA_API_TOKEN || "12da9838b502982ad048b2e6a44b94f55a41753d1ab7f9133a773a941d021971";
+
+/**
+ * Busca a ficha/história da conta (curva ABC + margem por SKU) no servidor de gestão
+ * e devolve um RESUMO compacto (não o JSON inteiro — são centenas de SKUs).
+ */
+async function getFichaConta(canal = "ML"): Promise<string> {
+  try {
+    const url = `${FICHA_API_BASE}/api/rest/ficha-clinica-sku?canal=${encodeURIComponent(canal)}&token=${FICHA_API_TOKEN}`;
+    const resp = await withTimeout(fetch(url), 30000, "ficha-conta");
+    if (!resp.ok) return `Não consegui ler a ficha da conta (HTTP ${resp.status}). A ficha é gerada sob demanda no servidor de gestão — pode ainda não estar pronta.`;
+    const data: any = await resp.json();
+    // shape real: { gerado_em, modo, max_data, canal, resumo:{total_skus,receita_12m,curva:{A,B,C},sem_custo}, skus:[{sku,descricao,classe_abc,receita_12m,margem_pct,acos_teto_pct,custo_unit,sem_custo,tendencia,...}] }
+    const skus: any[] = Array.isArray(data) ? data : (data.skus || data.fichas || []);
+    if (!Array.isArray(skus) || skus.length === 0) {
+      return `Ficha da conta (${canal}) ainda vazia ou em geração. Resposta crua: ${JSON.stringify(data).slice(0, 600)}`;
+    }
+    const num = (v: any) => (typeof v === "number" ? v : Number(v)) || 0;
+    const cls = (s: any) => String(s.classe_abc || s.abc || "").toUpperCase();
+    const rec = (s: any) => num(s.receita_12m ?? s.receita);
+    const mrg = (s: any) => num(s.margem_pct ?? s.acos_teto_pct ?? s.margem_liq_pct);
+    const r = data.resumo || {};
+    const cnt = r.curva || (() => { const c = { A: 0, B: 0, C: 0 } as Record<string, number>; for (const s of skus) { const k = cls(s); if (c[k] != null) c[k]++; } return c; })();
+    const semCusto = r.sem_custo ?? skus.filter(s => s.sem_custo === true).length;
+    const topA = [...skus].filter(s => cls(s) === "A").sort((a, b) => rec(b) - rec(a)).slice(0, 12);
+    const fmt = (s: any) => `  • ${s.sku || "?"} ${(s.descricao || "").toString().slice(0, 40)} | receita12m R$${rec(s).toFixed(0)} | margem(ACoS-teto) ${s.sem_custo ? "?(sem custo)" : mrg(s).toFixed(1) + "%"} | tend ${s.tendencia || "-"}`;
+    const gerado = data.gerado_em || "?";
+    return [
+      `FICHA DA CONTA — canal ${canal} (gerada: ${gerado}; modo ${data.modo || "?"})`,
+      `Total SKUs: ${skus.length} | Curva A: ${cnt.A} · B: ${cnt.B} · C: ${cnt.C}`,
+      semCusto > 0 ? `⚠️ ${semCusto} SKUs SEM CUSTO cadastrado → a margem/ACoS-teto desses NÃO é confiável; avise o usuário e baseie decisão de verba só nos que têm custo.` : `Custo cadastrado em todos os SKUs.`,
+      `Top A por receita 12m:`,
+      ...topA.map(fmt),
+      `(Use: margem = ACoS-teto; classe A protege estoque/Full; visita alta + venda baixa = SEO/ficha, não lance.)`,
+    ].join("\n");
+  } catch (e: any) {
+    return `ERRO ao ler a ficha da conta: ${e?.message || String(e)}`;
+  }
+}
 
 function getMLToken(account = "feminnita"): string {
   return account === "fnt"
@@ -331,7 +384,7 @@ Você gerencia duas contas:
 
 Conta ativa nesta sessão: ${accountCtx}
 Conexão ML: ${tokenOk ? "✅ conectada" : "⚠️ token não configurado"}
-
+${GABI_ML_DOCTRINE}
 ═══ DOIS MODOS DE TRABALHO — NUNCA MISTURE ═══
 
 Você opera em dois modos distintos. Identifique o contexto da pergunta e fique EXCLUSIVAMENTE naquele modo.
@@ -343,7 +396,8 @@ Ferramentas deste modo: ml_list_items, ml_pause_item, ml_activate_item, ml_updat
 
 ━━━ MODO ADS / CAMPANHAS ━━━
 Ativado quando: usuário fala de campanha, Product Ads, budget, CPC, ROAS, CTR, patrocinado, Ads, métricas
-Ferramentas deste modo: ml_get_ads_metrics, ml_ads_list_campaigns, ml_ads_pause_campaign, ml_ads_activate_campaign, ml_ads_update_budget, ml_ads_create_campaign, ml_ads_campaign_stats
+Ferramentas deste modo: ml_get_ficha_conta, ml_get_ads_metrics, ml_ads_list_campaigns, ml_ads_pause_campaign, ml_ads_activate_campaign, ml_ads_update_budget, ml_ads_create_campaign, ml_ads_campaign_stats
+SEMPRE comece análise de Ads/produto chamando ml_get_ficha_conta — é a margem (ACoS-teto) e a curva ABC que dizem o que merece verba.
 REGRA CRÍTICA: A API do ML bloqueia métricas diretamente. USE SEMPRE ml_get_ads_metrics PRIMEIRO — esses dados são reais, coletados via browser a cada 6h. Se retornar vazio, informe que o agente está coletando e use ml_ads_list_campaigns para estrutura.
 REGRA: Você PODE criar, pausar, ativar e ajustar budget de campanhas via browser automation. NUNCA diga "não consigo pela API" — use as ferramentas ml_ads_*.
 → NÃO mencione anúncios/EDS neste modo
@@ -359,8 +413,8 @@ FLUXO OBRIGATÓRIO ANTES DE EXECUTAR QUALQUER AÇÃO DIRETA:
 
 ━━━ ANÁLISE COMPLETA + PROPOSTA DE AÇÕES ━━━
 Quando o usuário pedir "análise completa", "auditoria", "proponha ações" ou similar:
-1. Chame ml_ads_list_campaigns para listar TODAS as campanhas
-2. Analise a estrutura: budgets vs. ROAS alvo, campanhas dormentes, ACoS inconsistentes, fragmentação de orçamento
+1. Chame ml_get_ficha_conta (margem/ACoS-teto + curva ABC) E ml_ads_list_campaigns para listar TODAS as campanhas
+2. Analise a estrutura: budgets vs. ROAS alvo, campanhas dormentes, ACoS acima do ACoS-teto (margem) do SKU, fragmentação de orçamento, verba em produto C/sem margem
 3. Monte ações concretas e chame propose_ads_actions com todas as recomendações
 4. Após salvar, resuma o que foi proposto e diga: "Suas X ações estão em /acoes-agentes aguardando aprovação."
 REGRA CRÍTICA: Durante análise, NUNCA execute diretamente — use sempre propose_ads_actions
@@ -597,6 +651,8 @@ export async function chatWithGabi(
             });
             return `${isError ? "❌" : "✅"} ${name}: ${log}`;
           })();
+        } else if (toolUse.name === "ml_get_ficha_conta") {
+          call = getFichaConta(inp.canal || (account === "fnt" ? "ML B" : "ML"));
         } else if (toolUse.name === "ml_get_ads_metrics") {
           call = (async (): Promise<string> => {
             const db = await getDb();
