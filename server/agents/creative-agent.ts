@@ -14,6 +14,20 @@ import { invokeLLM } from "../_core/llm";
 import { getDb } from "../db";
 import { adCreatives, oauthCredentials } from "../../drizzle/schema";
 import { listFolderFiles, downloadFileAsBase64, isDriveConfigured } from "../services/googleDrive";
+import { FEMINNITA_CONTEXT } from "./doctrines/feminnita-context";
+
+// Doutrina criativa (destilada): regras que o copy/arte deve seguir. Tem PRECEDÊNCIA
+// sobre números antigos em prompts legados (ex.: ticket "R$400" desatualizado).
+const CREATIVE_DOCTRINE = `
+━━━ DOUTRINA CRIATIVA (regras de ouro — seguir ao gerar copy e arte) ━━━
+- ESTRUTURA FGC: Formato · Gancho · Corpo. O criativo é 99% do resultado.
+- HOOK nos primeiros 3 segundos / primeiro frame: tem que parar o scroll. Meta de hook rate (views 3s ÷ impressões) > 60%. Deixe claro do que se trata já no início — nada de tela em branco/logo.
+- NATIVO vence PANFLETEIRO: o anúncio que NÃO parece anúncio (parece conteúdo orgânico de moda/lifestyle, depoimento, dica) retém atenção e baixa o CPM. Evite cara de catálogo/banner colorido com preço gigante.
+- 1 dor/desejo por criativo (foco único). Cada ângulo = um público; a Meta acha quem converte.
+- Texto na arte CENTRALIZADO (o feed corta topo e base) — nunca colado em cima/embaixo.
+- Sempre pensar em VARIAÇÕES: do criativo vencedor, gerar variações de gancho (mesmo corpo, troca os 3s iniciais). Regra: ter sempre 6 rodando + 6 prontos.
+- ECONOMIA DE PRODUTO FÍSICO: margem é apertada (não é infoproduto). A oferta destrava preço; ticket médio sobe com kit/combo. Use os NÚMEROS REAIS do contexto acima (ticket B2C ~R$75–82, NÃO R$400).
+`;
 
 const GEMINI_API_KEY = process.env.LLM_API_KEY || process.env.GEMINI_API_KEY || "";
 const IMAGEN_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict";
@@ -227,10 +241,15 @@ PRODUCT: ${product}
 ${productDesc ? `PRODUCT DETAILS: ${productDesc}` : ""}
 CAMPAIGN: ${campaignType} — targeting ${audience} (wholesale resellers in Brazil)
 
+SCROLL-STOPPER (hook visual — regra de ouro):
+- The first impression must STOP THE SCROLL in under 3 seconds. Strong focal point, immediate clarity of what it is.
+- Prefer an AUTHENTIC / NATIVE look (feels like organic lifestyle content or a real photo a customer would post) over a glossy "catalog ad" look — native creatives retain attention and lower CPM. Avoid the sterile banner/flyer aesthetic.
+- Leave clean CENTERED safe space for text (the feed crops top and bottom) — never plan text touching the top/bottom edges.
+
 TECHNICAL:
 - Format: 1:1 square, 1080x1080px quality
 - NO logos, NO watermarks, NO text overlays on image
-- Style: luxury boutique, warm and feminine, NOT sterile or cold
+- Style: warm, feminine, real and aspirational — boutique quality but NOT cold/stocky; authentic over over-produced
 - Suitable for Facebook and Instagram feed ads
 - Ultra-realistic photography style, NOT illustration or cartoon`.trim();
 }
@@ -318,7 +337,12 @@ async function fernandaWritesBrief(
 ): Promise<string> {
   const hookInstruction = HOOK_BRIEF_INSTRUCTIONS[hookVariant] || HOOK_BRIEF_INSTRUCTIONS.demografico;
 
-  const prompt = `${FERNANDA_SYSTEM}
+  const prompt = `${FEMINNITA_CONTEXT}
+${CREATIVE_DOCTRINE}
+
+(As regras e números reais acima TÊM PRECEDÊNCIA sobre quaisquer valores antigos no texto a seguir.)
+
+${FERNANDA_SYSTEM}
 
 PRODUTO/IMAGEM ANALISADA:
 ${productDescription}
