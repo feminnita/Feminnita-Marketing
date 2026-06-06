@@ -804,10 +804,43 @@ const CHAT_TOOLS: Anthropic.Tool[] = [
       required: ["name", "origin_audience_id"],
     },
   },
+  {
+    name: "request_creative",
+    description: "Gera um CRIATIVO completo (imagem via IA + copy) no padrão da doutrina (estrutura FGC, hook forte nos 3s, visual nativo) e salva como 'aguardando aprovação' para o usuário ver a arte e aprovar na tela de Ads Manager. Use quando o usuário pedir para criar/gerar anúncio, criativo, arte, banner ou copy. Monte um brief bom a partir do contexto da conversa (1 dor/desejo por criativo).",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        titulo: { type: "string", description: "Ângulo/título do criativo (ex.: 'Pijama suede inverno - conforto que fideliza')" },
+        descricao: { type: "string", description: "Descrição do produto/oferta + ângulo estratégico (foco em 1 dor/desejo)" },
+        produto: { type: "string", description: "Produto em destaque (ex.: 'pijama suede manga longa')" },
+        publico: { type: "string", description: "Público-alvo específico" },
+        tipo_campanha: { type: "string", description: "Prospecção | Remarketing | Lançamento | Oferta" },
+        texto_arte: { type: "string", description: "Texto curto sugerido para sobrepor na arte (centralizado)" },
+        campaignId: { type: "string", description: "ID da campanha Meta, se for para uma específica (opcional)" },
+        adSetId: { type: "string", description: "ID do conjunto de anúncios (opcional)" },
+      },
+      required: ["titulo", "descricao"],
+    },
+  },
 ];
 
-async function executeChatTool(name: string, input: Record<string, any>): Promise<string> {
+async function executeChatTool(name: string, input: Record<string, any>, userId?: number): Promise<string> {
   try {
+    if (name === "request_creative") {
+      if (!userId) return "Não consegui identificar o usuário para gerar o criativo agora.";
+      const { requestCreative } = await import("./creative-agent");
+      const r = await requestCreative(userId, {
+        title: String(input.titulo || "Criativo Feminnita"),
+        description: String(input.descricao || input.titulo || ""),
+        product: input.produto ? String(input.produto) : undefined,
+        targetAudience: input.publico ? String(input.publico) : undefined,
+        campaignType: input.tipo_campanha ? String(input.tipo_campanha) : undefined,
+        textOverlay: input.texto_arte ? String(input.texto_arte) : undefined,
+        campaignId: input.campaignId ? String(input.campaignId) : undefined,
+        adSetId: input.adSetId ? String(input.adSetId) : undefined,
+      });
+      return `Criativo gerado (imagem + copy) e salvo como "aguardando aprovação" — abra a tela de Ads Manager para ver a arte e aprovar.\nHeadline: ${r.headline || "(ver na tela)"}\nTexto: ${r.body || "(ver na tela)"}\nStatus: ${r.status} (id ${r.id}). Posso gerar variações de gancho desse mesmo criativo, se quiser.`;
+    }
     if (name === "get_account_summary") {
       const data = await fetchMetaAdsData();
       if (data.error) return JSON.stringify({ error: data.error });
@@ -944,7 +977,8 @@ export async function chatWithAgent(
   rawMetrics: string,
   imageBase64?: string,
   imageMimeType?: string,
-  userName?: string
+  userName?: string,
+  userId?: number
 ): Promise<string> {
   const systemContent = SYSTEM_PROMPT + (await buildFernandaHistory()) + `
 
@@ -1021,7 +1055,7 @@ REGRAS CRÍTICAS:
     for (const block of response.content) {
       if (block.type === "tool_use") {
         console.log(`[AdsManagerAgent] Tool: ${block.name}`);
-        const result = await executeChatTool(block.name, block.input as Record<string, any>);
+        const result = await executeChatTool(block.name, block.input as Record<string, any>, userId);
         toolResults.push({ type: "tool_result", tool_use_id: block.id, content: result });
       }
     }

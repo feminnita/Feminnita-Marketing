@@ -139,6 +139,7 @@ export const adsManagerRouter = router({
           input.imageBase64,
           input.imageMimeType,
           ctx.user?.name ?? undefined,
+          ctx.user?.id,
         );
       } catch (err: any) {
         console.error("[AdsManager] Erro em chatWithAgent:", err?.message, err?.status, JSON.stringify(err?.error ?? {}));
