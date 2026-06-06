@@ -6,6 +6,8 @@
 import { invokeLLM } from "../_core/llm";
 import { buildMemoryContext, saveMemory } from "../services/agentMemory";
 import { getLatestKnowledge } from "./knowledge-updater";
+import { AMAZON_DOCTRINE } from "./doctrines/amazon-doctrine";
+import { FEMINNITA_CONTEXT } from "./doctrines/feminnita-context";
 
 const AGENT_NAME = "alice-amazon";
 
@@ -216,6 +218,8 @@ NATAL (dezembro): segundo maior volume | manter campanhas estáveis — não cor
 • Não escala FNT na Amazon sem primeiro validar demanda de atacado
 • Não lança campanha em produto sem ao menos 5 reviews
 • Não define budget sem validar margem com Mariana
+${FEMINNITA_CONTEXT}
+${AMAZON_DOCTRINE}
 ${knowledge ? `\n━━━ INTELIGÊNCIA ATUAL ━━━\n${knowledge}` : ""}
 ${memoryContext ? `\n━━━ MEMÓRIA ━━━\n${memoryContext}` : ""}`;
 }
