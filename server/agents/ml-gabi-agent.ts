@@ -11,6 +11,7 @@ import { getLatestKnowledge } from "./knowledge-updater";
 import { listMLItems, pauseMLItem, activateMLItem, updateMLPrice, updateMLStock, getMLItemDetails, getMLCategoryAttributes, updateMLItemAttributes, listMLAdsCampaigns, getMLAdsCampaignStats } from "./gabi-executor";
 import { runActionsInSession } from "./ml-ads-browser-agent";
 import { GABI_ML_DOCTRINE } from "./doctrines/gabi-ml-doctrine";
+import { FEMINNITA_CONTEXT } from "./doctrines/feminnita-context";
 
 /**
  * Executa mutação em campanha ML Ads via Playwright (browser).
@@ -277,6 +278,11 @@ const GABI_ML_TOOLS: Anthropic.Tool[] = [
       required: [],
     },
   },
+  {
+    name: "ml_review_decisions",
+    description: "PLACAR das suas decisões passadas de Ads: compara o ROAS/ACoS de cada campanha ANTES da ação que você executou vs agora, e diz se melhorou/piorou/neutro. É como você aprende com a conta. Use ANTES de propor novas ações numa análise, para replicar o que deu certo e não repetir o que deu errado.",
+    input_schema: { type: "object" as const, properties: {}, required: [] },
+  },
 ];
 
 const FICHA_API_BASE = process.env.FICHA_API_BASE || "https://gestao.feminnita.com.br";
@@ -317,6 +323,75 @@ async function getFichaConta(canal = "ML"): Promise<string> {
     ].join("\n");
   } catch (e: any) {
     return `ERRO ao ler a ficha da conta: ${e?.message || String(e)}`;
+  }
+}
+
+/**
+ * PLACAR DAS DECISÕES (loop de feedback, on-demand): para cada ação de Ads que a Gabi
+ * executou, compara o ROAS/ACoS da campanha imediatamente ANTES da ação vs o mais recente.
+ * Usa só dados existentes (agent_actions + marketplace_ads_metrics) — sem migração nem cron.
+ */
+async function reviewMlDecisions(account: string): Promise<string> {
+  try {
+    const db = await getDb();
+    if (!db) return "Não consegui acessar o banco de decisões agora.";
+    const { eq, and, desc, isNotNull, lte } = await import("drizzle-orm");
+    const { marketplaceAdsMetrics } = await import("../../drizzle/schema");
+
+    const acts = await db
+      .select({
+        title: agentActionsTable.title,
+        actionType: agentActionsTable.actionType,
+        payload: agentActionsTable.payload,
+        executedAt: agentActionsTable.executedAt,
+      })
+      .from(agentActionsTable)
+      .where(and(
+        eq(agentActionsTable.agentName, "gabi"),
+        eq(agentActionsTable.status, "done"),
+        isNotNull(agentActionsTable.executedAt),
+      ))
+      .orderBy(desc(agentActionsTable.executedAt))
+      .limit(25);
+
+    const adsActs = acts.filter(a => {
+      const p = a.payload as any;
+      return p && (p.platform === "ml") && p.campaignId;
+    });
+    if (!adsActs.length) {
+      return "Ainda não há decisões de Ads executadas para avaliar. O placar começa a valer assim que você aprovar e executar ações (pausar/budget/criar) — aí eu meço o antes×depois de cada uma.";
+    }
+
+    const num = (v: any) => Number(v) || 0;
+    const lines: string[] = [];
+    let win = 0, loss = 0, neutral = 0;
+    for (const a of adsActs.slice(0, 12)) {
+      const p = a.payload as any;
+      const cid = String(p.campaignId);
+      const when = a.executedAt as Date;
+      const fmtWhen = when ? new Date(when).toISOString().slice(0, 10) : "?";
+      const cond = (extra?: any) => and(
+        eq(marketplaceAdsMetrics.platform, "ml"),
+        eq(marketplaceAdsMetrics.account, account),
+        eq(marketplaceAdsMetrics.campaignId, cid),
+        ...(extra ? [extra] : []),
+      );
+      const base = await db.select().from(marketplaceAdsMetrics)
+        .where(cond(when ? lte(marketplaceAdsMetrics.scrapedAt, when) : undefined))
+        .orderBy(desc(marketplaceAdsMetrics.scrapedAt)).limit(1);
+      const cur = await db.select().from(marketplaceAdsMetrics)
+        .where(cond()).orderBy(desc(marketplaceAdsMetrics.scrapedAt)).limit(1);
+      const b = base[0], c = cur[0];
+      const acao = p.action || a.actionType;
+      const nome = p.campaignName || cid;
+      if (!b || !c) { lines.push(`• ${fmtWhen} ${acao} "${nome}": sem métrica suficiente p/ avaliar ainda.`); continue; }
+      const dRoas = num(c.roas) - num(b.roas);
+      const verdict = dRoas > 0.1 ? (win++, "✅ melhorou") : dRoas < -0.1 ? (loss++, "❌ piorou") : (neutral++, "➖ neutro");
+      lines.push(`• ${fmtWhen} ${acao} "${nome}": ROAS ${num(b.roas).toFixed(2)}→${num(c.roas).toFixed(2)} | ACoS ${num(b.acos).toFixed(0)}%→${num(c.acos).toFixed(0)}% ${verdict}`);
+    }
+    return `PLACAR DAS SUAS DECISÕES DE ADS (antes × depois — ${win} melhoraram, ${loss} pioraram, ${neutral} neutras):\n${lines.join("\n")}\n(Aprenda: replique o padrão do que melhorou; não repita o tipo de ação que piorou. Lembre que a métrica atualiza a cada 6h.)`;
+  } catch (e: any) {
+    return `ERRO ao revisar decisões: ${e?.message || String(e)}`;
   }
 }
 
@@ -384,6 +459,7 @@ Você gerencia duas contas:
 
 Conta ativa nesta sessão: ${accountCtx}
 Conexão ML: ${tokenOk ? "✅ conectada" : "⚠️ token não configurado"}
+${FEMINNITA_CONTEXT}
 ${GABI_ML_DOCTRINE}
 ═══ DOIS MODOS DE TRABALHO — NUNCA MISTURE ═══
 
@@ -396,8 +472,8 @@ Ferramentas deste modo: ml_list_items, ml_pause_item, ml_activate_item, ml_updat
 
 ━━━ MODO ADS / CAMPANHAS ━━━
 Ativado quando: usuário fala de campanha, Product Ads, budget, CPC, ROAS, CTR, patrocinado, Ads, métricas
-Ferramentas deste modo: ml_get_ficha_conta, ml_get_ads_metrics, ml_ads_list_campaigns, ml_ads_pause_campaign, ml_ads_activate_campaign, ml_ads_update_budget, ml_ads_create_campaign, ml_ads_campaign_stats
-SEMPRE comece análise de Ads/produto chamando ml_get_ficha_conta — é a margem (ACoS-teto) e a curva ABC que dizem o que merece verba.
+Ferramentas deste modo: ml_get_ficha_conta, ml_review_decisions, ml_get_ads_metrics, ml_ads_list_campaigns, ml_ads_pause_campaign, ml_ads_activate_campaign, ml_ads_update_budget, ml_ads_create_campaign, ml_ads_campaign_stats
+SEMPRE comece análise de Ads/produto chamando ml_get_ficha_conta — é a margem (ACoS-teto) e a curva ABC que dizem o que merece verba. E chame ml_review_decisions para ver o PLACAR do que suas ações anteriores geraram (aprender com a conta).
 REGRA CRÍTICA: A API do ML bloqueia métricas diretamente. USE SEMPRE ml_get_ads_metrics PRIMEIRO — esses dados são reais, coletados via browser a cada 6h. Se retornar vazio, informe que o agente está coletando e use ml_ads_list_campaigns para estrutura.
 REGRA: Você PODE criar, pausar, ativar e ajustar budget de campanhas via browser automation. NUNCA diga "não consigo pela API" — use as ferramentas ml_ads_*.
 → NÃO mencione anúncios/EDS neste modo
@@ -413,8 +489,8 @@ FLUXO OBRIGATÓRIO ANTES DE EXECUTAR QUALQUER AÇÃO DIRETA:
 
 ━━━ ANÁLISE COMPLETA + PROPOSTA DE AÇÕES ━━━
 Quando o usuário pedir "análise completa", "auditoria", "proponha ações" ou similar:
-1. Chame ml_get_ficha_conta (margem/ACoS-teto + curva ABC) E ml_ads_list_campaigns para listar TODAS as campanhas
-2. Analise a estrutura: budgets vs. ROAS alvo, campanhas dormentes, ACoS acima do ACoS-teto (margem) do SKU, fragmentação de orçamento, verba em produto C/sem margem
+1. Chame ml_get_ficha_conta (margem/ACoS-teto + curva ABC), ml_review_decisions (placar do que já fez) E ml_ads_list_campaigns para listar TODAS as campanhas
+2. Analise a estrutura: budgets vs. ROAS alvo, campanhas dormentes, ACoS acima do ACoS-teto (margem) do SKU, fragmentação de orçamento, verba em produto C/sem margem, e o que o placar mostrou que piorou/melhorou
 3. Monte ações concretas e chame propose_ads_actions com todas as recomendações
 4. Após salvar, resuma o que foi proposto e diga: "Suas X ações estão em /acoes-agentes aguardando aprovação."
 REGRA CRÍTICA: Durante análise, NUNCA execute diretamente — use sempre propose_ads_actions
@@ -653,6 +729,8 @@ export async function chatWithGabi(
           })();
         } else if (toolUse.name === "ml_get_ficha_conta") {
           call = getFichaConta(inp.canal || (account === "fnt" ? "ML B" : "ML"));
+        } else if (toolUse.name === "ml_review_decisions") {
+          call = reviewMlDecisions(account);
         } else if (toolUse.name === "ml_get_ads_metrics") {
           call = (async (): Promise<string> => {
             const db = await getDb();

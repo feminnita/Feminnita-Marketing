@@ -13,6 +13,7 @@ import { eq } from "drizzle-orm";
 import { invokeLLM } from "../_core/llm";
 import Anthropic from "@anthropic-ai/sdk";
 import { FERNANDA_META_DOCTRINE } from "./doctrines/fernanda-meta-doctrine";
+import { FEMINNITA_CONTEXT } from "./doctrines/feminnita-context";
 
 const AD_ACCOUNT_ID = process.env.META_AD_ACCOUNT_ID || "act_231648936319132";
 const META_TOKEN = process.env.META_ACCESS_TOKEN || "";
@@ -452,9 +453,34 @@ Campos obrigatórios:
 - cta: botão específico e direto (não "Saiba mais" — use algo como "Quero ser revendedora" ou "Ver catálogo agora")
 - observacoes: detalhes técnicos (tamanho, proporção, fundo, fonte) + qual dor/desejo este criativo ativa
 
+${FEMINNITA_CONTEXT}
 ${FERNANDA_META_DOCTRINE}
 
 Formato de resposta: JSON com os campos "analysis" (texto corrido em português), "recommendations" (array com priority, campanha, titulo, descricao, acao), "summary" (1 frase resumindo o estado da conta) e "creativeBriefs" (array de briefs — vazio [] se não houver recomendação de novo criativo).`;
+
+/**
+ * Histórico de decisões (loop de feedback, on-demand): traz as últimas análises da Fernanda
+ * para dar continuidade — ela verifica se a recomendação anterior foi feita e o efeito,
+ * em vez de repetir do zero. Usa adsEvaluations (já existente); sem migração nem cron.
+ */
+async function buildFernandaHistory(): Promise<string> {
+  try {
+    const db = await getDb();
+    if (!db) return "";
+    const { desc, isNotNull } = await import("drizzle-orm");
+    const rows = await db
+      .select({ summary: adsEvaluations.summary, completedAt: adsEvaluations.completedAt })
+      .from(adsEvaluations)
+      .where(isNotNull(adsEvaluations.completedAt))
+      .orderBy(desc(adsEvaluations.completedAt))
+      .limit(3);
+    if (!rows.length) return "";
+    const lines = rows.map(r => `- [${r.completedAt ? new Date(r.completedAt).toISOString().slice(0, 10) : "?"}] ${r.summary || "(sem resumo)"}`);
+    return `\n\n━━━ SUAS ANÁLISES ANTERIORES (continuidade) ━━━\nAntes de repetir uma recomendação, verifique se ela já foi feita e qual foi o efeito. Replique o que melhorou; não insista no que não moveu o ROAS/CPA.\n${lines.join("\n")}`;
+  } catch {
+    return "";
+  }
+}
 
 export async function analyzeWithLLM(
   campaigns: CampaignData[]
@@ -474,7 +500,7 @@ export async function analyzeWithLLM(
 
   const result = await invokeLLM({
     messages: [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: SYSTEM_PROMPT + (await buildFernandaHistory()) },
       {
         role: "user",
         content: `Avalie o estado atual da conta Meta Ads com os dados abaixo e gere o relatório completo.
@@ -920,7 +946,7 @@ export async function chatWithAgent(
   imageMimeType?: string,
   userName?: string
 ): Promise<string> {
-  const systemContent = SYSTEM_PROMPT + `
+  const systemContent = SYSTEM_PROMPT + (await buildFernandaHistory()) + `
 
 ${userName ? `NOME DO USUÁRIO: Chame-o(a) de "${userName}" durante a conversa.` : ""}
 
