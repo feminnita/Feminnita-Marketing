@@ -35557,6 +35557,7 @@ import { z as z78 } from "zod";
 // server/agents/amazon-alice-agent.ts
 init_llm();
 init_agentMemory();
+import Anthropic9 from "@anthropic-ai/sdk";
 
 // server/agents/doctrines/amazon-doctrine.ts
 var AMAZON_DOCTRINE = `
@@ -35619,6 +35620,55 @@ Categoria: Roupas/Sapatos/Joias \u2192 Pijamas e Roup\xF5es \u2192 Feminino. Com
 
 // server/agents/amazon-alice-agent.ts
 init_feminnita_context();
+var FICHA_API_BASE2 = process.env.FICHA_API_BASE || "https://gestao.feminnita.com.br";
+var FICHA_API_TOKEN2 = process.env.FICHA_API_TOKEN || "12da9838b502982ad048b2e6a44b94f55a41753d1ab7f9133a773a941d021971";
+async function getFichaContaAmazon(canal = "Amazon") {
+  try {
+    const url = `${FICHA_API_BASE2}/api/rest/ficha-clinica-sku?canal=${encodeURIComponent(canal)}&token=${FICHA_API_TOKEN2}`;
+    const ctrl = new AbortController();
+    const t2 = setTimeout(() => ctrl.abort(), 3e4);
+    const resp = await fetch(url, { signal: ctrl.signal }).finally(() => clearTimeout(t2));
+    if (!resp.ok) return `N\xE3o consegui ler a ficha da conta Amazon (HTTP ${resp.status}). A ficha \xE9 gerada sob demanda no servidor de gest\xE3o \u2014 pode ainda estar em gera\xE7\xE3o.`;
+    const data = await resp.json();
+    const skus = Array.isArray(data) ? data : data.skus || [];
+    if (!Array.isArray(skus) || skus.length === 0) {
+      return `Ficha do canal ${canal} ainda vazia ou em gera\xE7\xE3o (o backfill pode estar rodando). Resposta: ${JSON.stringify(data).slice(0, 400)}`;
+    }
+    const num = (v) => (typeof v === "number" ? v : Number(v)) || 0;
+    const cls = (s) => String(s.classe_abc || "").toUpperCase();
+    const rec = (s) => num(s.receita_12m);
+    const mrg = (s) => num(s.margem_pct ?? s.acos_teto_pct);
+    const r = data.resumo || {};
+    const cnt = r.curva || { A: 0, B: 0, C: 0 };
+    const semCusto = r.sem_custo ?? skus.filter((s) => s.sem_custo === true).length;
+    const topA = [...skus].filter((s) => cls(s) === "A").sort((a, b) => rec(b) - rec(a)).slice(0, 12);
+    const fmt = (s) => `  \u2022 ${s.sku || "?"} ${(s.descricao || "").toString().slice(0, 40)} | receita12m R$${rec(s).toFixed(0)} | margem(ACoS-teto) ${s.sem_custo ? "?(sem custo)" : mrg(s).toFixed(1) + "%"}`;
+    return [
+      `FICHA DA CONTA \u2014 canal ${canal} (gerada: ${data.gerado_em || "?"})`,
+      `Total SKUs: ${skus.length} | Curva A: ${cnt.A} \xB7 B: ${cnt.B} \xB7 C: ${cnt.C}`,
+      semCusto > 0 ? `\u26A0\uFE0F ${semCusto} SKUs sem custo cadastrado \u2192 margem/ACoS-teto deles n\xE3o confi\xE1vel; avise e decida verba s\xF3 pelos que t\xEAm custo.` : `Custo cadastrado em todos.`,
+      `Top A por receita 12m (s\xE3o os best-sellers \u2014 priorizar nos ads, s\xE3o os retail-ready):`,
+      ...topA.map(fmt),
+      `(Use: margem = ACoS-teto/break-even; anuncie primeiro os best-sellers da curva A; produto C sem margem n\xE3o merece verba.)`
+    ].join("\n");
+  } catch (e) {
+    return `ERRO ao ler a ficha da conta Amazon: ${e?.message || String(e)}`;
+  }
+}
+var anthropicAlice = new Anthropic9({ apiKey: process.env.ANTHROPIC_API_KEY || "" });
+var ALICE_TOOLS = [
+  {
+    name: "get_ficha_conta",
+    description: "L\xEA a FICHA / HIST\xD3RIA DA CONTA Amazon por SKU: curva ABC (receita 12 meses), tend\xEAncia e MARGEM l\xEDquida (= ACoS de break-even). Use ANTES de recomendar quais ASINs anunciar (best-sellers da curva A) e para saber o ACoS-teto de cada produto. Dado do servidor de gest\xE3o (on-demand).",
+    input_schema: {
+      type: "object",
+      properties: {
+        canal: { type: "string", enum: ["Amazon", "Amazon B"], description: "Canal: 'Amazon' (Conta A) ou 'Amazon B' (Conta B FNT). Padr\xE3o Amazon." }
+      },
+      required: []
+    }
+  }
+];
 var AGENT_NAME9 = "alice-amazon";
 async function buildAliceAmazonPrompt(account = "feminnita") {
   const [marketKnowledge, fashionKnowledge, memoryContext] = await Promise.all([
@@ -35838,11 +35888,47 @@ async function chatWithAliceAmazon(history, account = "feminnita", userName) {
   const systemPrompt = await buildAliceAmazonPrompt(account);
   const nameCtx = userName ? `
 NOME DO USU\xC1RIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
-  const result = await invokeLLM({
-    messages: [{ role: "system", content: systemPrompt + nameCtx }, ...history],
-    maxTokens: 2e3
-  });
-  return String(result.choices[0]?.message?.content || "N\xE3o consegui processar.");
+  const system = systemPrompt + nameCtx + `
+
+FERRAMENTA DE DADOS: use get_ficha_conta para puxar a hist\xF3ria da conta Amazon (curva ABC + margem por SKU) ANTES de recomendar quais ASINs anunciar ou definir ACoS-teto. Se a ficha vier vazia/em gera\xE7\xE3o, avise e siga com o que o usu\xE1rio trouxer.`;
+  const messages = history.map((m) => ({ role: m.role, content: m.content }));
+  try {
+    let iterations = 0;
+    while (iterations < 2) {
+      iterations++;
+      const resp = await anthropicAlice.messages.create({
+        model: "claude-sonnet-4-6",
+        max_tokens: 2e3,
+        system,
+        tools: ALICE_TOOLS,
+        messages
+      });
+      const hasTool = resp.content.some((b) => b.type === "tool_use");
+      const text3 = resp.content.filter((b) => b.type === "text").map((b) => b.text).join("");
+      if (!hasTool) return text3 || "N\xE3o consegui processar.";
+      const toolResults = [];
+      for (const b of resp.content) {
+        if (b.type === "tool_use") {
+          const inp = b.input || {};
+          const out = b.name === "get_ficha_conta" ? await getFichaContaAmazon(inp.canal || (account === "fnt" ? "Amazon B" : "Amazon")) : `Ferramenta desconhecida: ${b.name}`;
+          toolResults.push({ type: "tool_result", tool_use_id: b.id, content: out });
+        }
+      }
+      messages.push({ role: "assistant", content: resp.content });
+      messages.push({ role: "user", content: toolResults });
+    }
+    const finalResp = await anthropicAlice.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 2e3,
+      system,
+      messages
+    });
+    return finalResp.content.filter((b) => b.type === "text").map((b) => b.text).join("") || "N\xE3o consegui processar.";
+  } catch (e) {
+    console.error("[Alice] erro no chat:", e?.message);
+    const result = await invokeLLM({ messages: [{ role: "system", content: system }, ...history], maxTokens: 2e3 });
+    return String(result.choices[0]?.message?.content || "N\xE3o consegui processar.");
+  }
 }
 async function updateAliceAmazonKnowledge() {
   const systemPrompt = await buildAliceAmazonPrompt();
@@ -36569,12 +36655,12 @@ var videoCreditsRouter = router({
 });
 
 // server/routers/runpod-video.ts
-import Anthropic9 from "@anthropic-ai/sdk";
+import Anthropic10 from "@anthropic-ai/sdk";
 async function optimizeVideoPrompt(userPrompt) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return userPrompt;
   try {
-    const client = new Anthropic9({ apiKey });
+    const client = new Anthropic10({ apiKey });
     const msg = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 300,
@@ -36878,7 +36964,7 @@ init_schema();
 import { z as z85 } from "zod";
 import { TRPCError as TRPCError17 } from "@trpc/server";
 import { eq as eq91, desc as desc50 } from "drizzle-orm";
-import Anthropic10 from "@anthropic-ai/sdk";
+import Anthropic11 from "@anthropic-ai/sdk";
 import path10 from "path";
 import fs10 from "fs";
 import { execFile } from "child_process";
@@ -36911,7 +36997,7 @@ async function extractSceneComponents(prompt) {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return { speech: prompt, movementPrompt: prompt };
   try {
-    const client = new Anthropic10({ apiKey: key });
+    const client = new Anthropic11({ apiKey: key });
     const msg = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 600,
@@ -36943,7 +37029,7 @@ async function preprocessNumbers(text3) {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return text3;
   try {
-    const client = new Anthropic10({ apiKey: key });
+    const client = new Anthropic11({ apiKey: key });
     const msg = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 500,
@@ -37456,8 +37542,8 @@ init_const();
 init_db();
 
 // server/agents/portal-copy-agent.ts
-import Anthropic11 from "@anthropic-ai/sdk";
-var anthropic6 = new Anthropic11({ apiKey: process.env.ANTHROPIC_API_KEY || "" });
+import Anthropic12 from "@anthropic-ai/sdk";
+var anthropic6 = new Anthropic12({ apiKey: process.env.ANTHROPIC_API_KEY || "" });
 var ANA_SYSTEM_PROMPT = `Voc\xEA \xE9 a Ana \u2014 especialista em copy de vendas da Feminnita, criada para ajudar revendedoras a venderem pijamas pelo WhatsApp, Instagram e grupos de fam\xEDlia.
 
 \u2501\u2501\u2501 QUEM \xC9 A ANA \u2501\u2501\u2501
