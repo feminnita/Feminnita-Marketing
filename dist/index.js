@@ -3862,6 +3862,40 @@ var init_tts = __esm({
   }
 });
 
+// server/agents/doctrines/feminnita-context.ts
+var FEMINNITA_CONTEXT;
+var init_feminnita_context = __esm({
+  "server/agents/doctrines/feminnita-context.ts"() {
+    "use strict";
+    FEMINNITA_CONTEXT = `
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+CONTEXTO DA LOJA \u2014 QUEM \xC9 A FEMINNITA (use isto para calibrar tudo)
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+- MARCA: Feminnita \u2014 moda \xEDntima / dormir feminina. Categoria principal: PIJAMAS femininos (manga longa e curta, suede, canelado, estampado, linha Outono-Inverno) + lingerie/conforto. Sortimento amplo de estampas e modelagens, grade P/M/G/GG.
+- DOIS NEG\xD3CIOS:
+  \u2022 Feminnita (Conta A) = B2C, consumidor final, venda por pe\xE7a nos marketplaces e site.
+  \u2022 FNT Confec\xE7\xF5es (Conta B) = B2B atacado para REVENDEDORAS (grade fechada, pedido maior).
+- P\xDABLICO B2C: mulheres adultas (faixa ~25\u201355), compra por conforto, autoestima e presente; sens\xEDvel a pre\xE7o e a foto/estampa. Forte no Sul/Sudeste.
+- P\xDABLICO B2B (FNT): revendedoras que compram para revender \u2014 decidem por margem de revenda, variedade e aus\xEAncia de pedido m\xEDnimo alto.
+
+N\xDAMEROS REAIS (snapshot 12m, ~jun/2026 \u2014 receita e ticket m\xE9dio por canal):
+- Atacado (FNT/B2B):  R$ 1,96 mi  | ticket ~R$ 14.870  (grade fechada)
+- Mercado Livre:      R$ 1,64 mi  | ticket ~R$ 80   | ~20,5 mil pedidos  \u2190 MAIOR canal B2C
+- TikTok Shop:        R$ 344 mil  | ticket ~R$ 77
+- Shopee:             R$ 132 mil  | ticket ~R$ 76
+- Amazon:             R$ 91 mil   | ticket ~R$ 58
+- Shein:              R$ 60 mil   | ticket ~R$ 82
+- Tray (loja pr\xF3pria):R$ 41 mil   | ticket ~R$ 179
+IMPLICA\xC7\xC3O PR\xC1TICA: o ticket B2C real \xE9 ~R$ 75\u201382 (N\xC3O \xE9 R$ 400). Isso define a r\xE9gua: no ML, ticket ~R$ 80 fica EM CIMA do limite Cl\xE1ssico\xD7Premium (\u2265R$79). Margem \xE9 apertada (produto f\xEDsico) \u2192 cada real de ads conta; subir ticket (kit/combo) \xE9 alavanca real.
+
+CONCORR\xCANCIA: Lupo (refer\xEAncia nacional) + marcas regionais + vendedores de pijama atacado no ML/Shopee. Diferencial defens\xE1vel da Feminnita = variedade de estampas/modelagens + atender varejo E atacado + relacionamento com revendedoras (n\xE3o competir s\xF3 por pre\xE7o).
+
+METAS / DOR: faturamento caiu de ~R$78k \u2192 ~R$20k/m\xEAs ap\xF3s uma ag\xEAncia ruim; meta \xE9 recuperar/escalar. Por isso: priorizar o que tem margem e giro (curva A), n\xE3o queimar verba em cauda.
+(Confirme com o Chris se algum diferencial/posicionamento mudou \u2014 este bloco \xE9 a base, a ficha traz o n\xFAmero vivo.)
+`;
+  }
+});
+
 // server/agents/fernanda-executor.ts
 var fernanda_executor_exports = {};
 __export(fernanda_executor_exports, {
@@ -4401,16 +4435,26 @@ PRODUCT: ${product}
 ${productDesc ? `PRODUCT DETAILS: ${productDesc}` : ""}
 CAMPAIGN: ${campaignType} \u2014 targeting ${audience} (wholesale resellers in Brazil)
 
+SCROLL-STOPPER (hook visual \u2014 regra de ouro):
+- The first impression must STOP THE SCROLL in under 3 seconds. Strong focal point, immediate clarity of what it is.
+- Prefer an AUTHENTIC / NATIVE look (feels like organic lifestyle content or a real photo a customer would post) over a glossy "catalog ad" look \u2014 native creatives retain attention and lower CPM. Avoid the sterile banner/flyer aesthetic.
+- Leave clean CENTERED safe space for text (the feed crops top and bottom) \u2014 never plan text touching the top/bottom edges.
+
 TECHNICAL:
 - Format: 1:1 square, 1080x1080px quality
 - NO logos, NO watermarks, NO text overlays on image
-- Style: luxury boutique, warm and feminine, NOT sterile or cold
+- Style: warm, feminine, real and aspirational \u2014 boutique quality but NOT cold/stocky; authentic over over-produced
 - Suitable for Facebook and Instagram feed ads
 - Ultra-realistic photography style, NOT illustration or cartoon`.trim();
 }
 async function fernandaWritesBrief(productDescription, campaignAngle, hookVariant = "demografico") {
   const hookInstruction = HOOK_BRIEF_INSTRUCTIONS[hookVariant] || HOOK_BRIEF_INSTRUCTIONS.demografico;
-  const prompt = `${FERNANDA_SYSTEM}
+  const prompt = `${FEMINNITA_CONTEXT}
+${CREATIVE_DOCTRINE}
+
+(As regras e n\xFAmeros reais acima T\xCAM PRECED\xCANCIA sobre quaisquer valores antigos no texto a seguir.)
+
+${FERNANDA_SYSTEM}
 
 PRODUTO/IMAGEM ANALISADA:
 ${productDescription}
@@ -4765,7 +4809,7 @@ NOME DO USU\xC1RIO: Chame-o(a) de "${userName}" durante a conversa.` : "";
   const content = result.choices[0]?.message?.content;
   return typeof content === "string" ? content : "N\xE3o consegui processar.";
 }
-var GEMINI_API_KEY, IMAGEN_ENDPOINT, DEFAULT_REFERENCE_FOLDER, ARTES_ADS_FOLDER, FERNANDA_SYSTEM, HOOK_BRIEF_INSTRUCTIONS, HOOK_VARIANTS, BEATRIZ_CHAT_PROMPT;
+var CREATIVE_DOCTRINE, GEMINI_API_KEY, IMAGEN_ENDPOINT, DEFAULT_REFERENCE_FOLDER, ARTES_ADS_FOLDER, FERNANDA_SYSTEM, HOOK_BRIEF_INSTRUCTIONS, HOOK_VARIANTS, BEATRIZ_CHAT_PROMPT;
 var init_creative_agent = __esm({
   "server/agents/creative-agent.ts"() {
     "use strict";
@@ -4773,6 +4817,17 @@ var init_creative_agent = __esm({
     init_db();
     init_schema();
     init_googleDrive();
+    init_feminnita_context();
+    CREATIVE_DOCTRINE = `
+\u2501\u2501\u2501 DOUTRINA CRIATIVA (regras de ouro \u2014 seguir ao gerar copy e arte) \u2501\u2501\u2501
+- ESTRUTURA FGC: Formato \xB7 Gancho \xB7 Corpo. O criativo \xE9 99% do resultado.
+- HOOK nos primeiros 3 segundos / primeiro frame: tem que parar o scroll. Meta de hook rate (views 3s \xF7 impress\xF5es) > 60%. Deixe claro do que se trata j\xE1 no in\xEDcio \u2014 nada de tela em branco/logo.
+- NATIVO vence PANFLETEIRO: o an\xFAncio que N\xC3O parece an\xFAncio (parece conte\xFAdo org\xE2nico de moda/lifestyle, depoimento, dica) ret\xE9m aten\xE7\xE3o e baixa o CPM. Evite cara de cat\xE1logo/banner colorido com pre\xE7o gigante.
+- 1 dor/desejo por criativo (foco \xFAnico). Cada \xE2ngulo = um p\xFAblico; a Meta acha quem converte.
+- Texto na arte CENTRALIZADO (o feed corta topo e base) \u2014 nunca colado em cima/embaixo.
+- Sempre pensar em VARIA\xC7\xD5ES: do criativo vencedor, gerar varia\xE7\xF5es de gancho (mesmo corpo, troca os 3s iniciais). Regra: ter sempre 6 rodando + 6 prontos.
+- ECONOMIA DE PRODUTO F\xCDSICO: margem \xE9 apertada (n\xE3o \xE9 infoproduto). A oferta destrava pre\xE7o; ticket m\xE9dio sobe com kit/combo. Use os N\xDAMEROS REAIS do contexto acima (ticket B2C ~R$75\u201382, N\xC3O R$400).
+`;
     GEMINI_API_KEY = process.env.LLM_API_KEY || process.env.GEMINI_API_KEY || "";
     IMAGEN_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict";
     DEFAULT_REFERENCE_FOLDER = process.env.GOOGLE_DRIVE_REFERENCE_FOLDER || "";
@@ -21753,33 +21808,8 @@ CPM s\xF3 tende a subir (elei\xE7\xE3o/Black Friday s\xE3o desculpas). CPC = CPM
 1. Pixel/eventos OK? 2. CPA/ROAS vs margem real do produto. 3. Criativos cansados (hook rate/CTR caindo, frequ\xEAncia >3-4) \u2192 trocar/variar. 4. Lance/or\xE7amento: cortar o ruim, escalar o bom (+30%/dia). 5. P\xFAblico: super-quente\u2192quente\u2192frio cobertos? retargeting de carrinho ligado? 6. Fora do gerenciador (p\xE1gina/oferta/ticket). \u2192 Propor a\xE7\xF5es.
 `;
 
-// server/agents/doctrines/feminnita-context.ts
-var FEMINNITA_CONTEXT = `
-\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-CONTEXTO DA LOJA \u2014 QUEM \xC9 A FEMINNITA (use isto para calibrar tudo)
-\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-- MARCA: Feminnita \u2014 moda \xEDntima / dormir feminina. Categoria principal: PIJAMAS femininos (manga longa e curta, suede, canelado, estampado, linha Outono-Inverno) + lingerie/conforto. Sortimento amplo de estampas e modelagens, grade P/M/G/GG.
-- DOIS NEG\xD3CIOS:
-  \u2022 Feminnita (Conta A) = B2C, consumidor final, venda por pe\xE7a nos marketplaces e site.
-  \u2022 FNT Confec\xE7\xF5es (Conta B) = B2B atacado para REVENDEDORAS (grade fechada, pedido maior).
-- P\xDABLICO B2C: mulheres adultas (faixa ~25\u201355), compra por conforto, autoestima e presente; sens\xEDvel a pre\xE7o e a foto/estampa. Forte no Sul/Sudeste.
-- P\xDABLICO B2B (FNT): revendedoras que compram para revender \u2014 decidem por margem de revenda, variedade e aus\xEAncia de pedido m\xEDnimo alto.
-
-N\xDAMEROS REAIS (snapshot 12m, ~jun/2026 \u2014 receita e ticket m\xE9dio por canal):
-- Atacado (FNT/B2B):  R$ 1,96 mi  | ticket ~R$ 14.870  (grade fechada)
-- Mercado Livre:      R$ 1,64 mi  | ticket ~R$ 80   | ~20,5 mil pedidos  \u2190 MAIOR canal B2C
-- TikTok Shop:        R$ 344 mil  | ticket ~R$ 77
-- Shopee:             R$ 132 mil  | ticket ~R$ 76
-- Amazon:             R$ 91 mil   | ticket ~R$ 58
-- Shein:              R$ 60 mil   | ticket ~R$ 82
-- Tray (loja pr\xF3pria):R$ 41 mil   | ticket ~R$ 179
-IMPLICA\xC7\xC3O PR\xC1TICA: o ticket B2C real \xE9 ~R$ 75\u201382 (N\xC3O \xE9 R$ 400). Isso define a r\xE9gua: no ML, ticket ~R$ 80 fica EM CIMA do limite Cl\xE1ssico\xD7Premium (\u2265R$79). Margem \xE9 apertada (produto f\xEDsico) \u2192 cada real de ads conta; subir ticket (kit/combo) \xE9 alavanca real.
-
-CONCORR\xCANCIA: Lupo (refer\xEAncia nacional) + marcas regionais + vendedores de pijama atacado no ML/Shopee. Diferencial defens\xE1vel da Feminnita = variedade de estampas/modelagens + atender varejo E atacado + relacionamento com revendedoras (n\xE3o competir s\xF3 por pre\xE7o).
-
-METAS / DOR: faturamento caiu de ~R$78k \u2192 ~R$20k/m\xEAs ap\xF3s uma ag\xEAncia ruim; meta \xE9 recuperar/escalar. Por isso: priorizar o que tem margem e giro (curva A), n\xE3o queimar verba em cauda.
-(Confirme com o Chris se algum diferencial/posicionamento mudou \u2014 este bloco \xE9 a base, a ficha traz o n\xFAmero vivo.)
-`;
+// server/agents/ads-manager-agent.ts
+init_feminnita_context();
 
 // server/services/meta-ads-service.ts
 init_db();
@@ -34127,6 +34157,7 @@ Voc\xEA n\xE3o decide no v\xE1cuo: antes de propor, olhe o PLACAR das suas decis
 `;
 
 // server/agents/ml-gabi-agent.ts
+init_feminnita_context();
 init_db();
 init_schema();
 import { desc as desc46, eq as eq85, and as and69, isNotNull } from "drizzle-orm";
