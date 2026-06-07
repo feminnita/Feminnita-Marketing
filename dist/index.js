@@ -3876,7 +3876,7 @@ CONTEXTO DA CONTA \u2014 FEMINNITA (Conta A) \u2014 use S\xD3 dados da Feminnita
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
 \u26A0\uFE0F FNT Confec\xE7\xF5es \xE9 OUTRA empresa/conta. NUNCA misture dados da FNT nesta an\xE1lise \u2014 aqui voc\xEA cuida exclusivamente da Feminnita.
 - MARCA: Feminnita \u2014 moda \xEDntima / dormir feminina. Categoria: PIJAMAS femininos (manga longa/curta, suede, canelado, estampado, linha Outono-Inverno) + lingerie/conforto. Sortimento amplo de estampas e modelagens, grade P/M/G/GG.
-- MODELO: B2C, consumidor final, venda por pe\xE7a nos marketplaces e site pr\xF3prio.
+- MODELO: B2C, consumidor final, venda por pe\xE7a nos marketplaces e site pr\xF3prio. VENDA \xC9 S\xD3 NO SITE E NOS MARKETPLACES \u2014 N\xC3O vendemos nem atendemos por WhatsApp. O cliente compra direto (n\xE3o "entra em contato" pra comprar); todo an\xFAncio leva ao site/marketplace, nunca a um WhatsApp.
 - P\xDABLICO: mulheres adultas (~25\u201355), compram por conforto, autoestima e presente; sens\xEDveis a pre\xE7o e foto/estampa. Forte no Sul/Sudeste.
 - N\xDAMEROS REAIS DA FEMINNITA (snapshot 12m, receita | ticket m\xE9dio por canal):
   \u2022 Mercado Livre: R$ 1,64 mi | ticket ~R$ 80 | ~20,5 mil pedidos \u2190 MAIOR canal
@@ -29286,13 +29286,13 @@ N\xCDVEL 3 \u2014 COM SOLU\xC7\xC3O (p\xFAblico morno)
 Estado: sabe que pode revender roupas, mas n\xE3o conhece a Feminnita
 Abordagem: posicionar a Feminnita como a melhor fornecedora
 Copy: "Pijama suede tem o maior giro no atacado \u2014 e poucas revendedoras sabem disso"
-Objetivo: Convers\xE3o / Lead para WhatsApp
+Objetivo: Convers\xE3o / Venda no site (feminnita.com.br)
 
 N\xCDVEL 4 \u2014 COM PRODUTO (p\xFAblico morno/quente)
 Estado: conhece a Feminnita mas ainda n\xE3o comprou
 Abordagem: prova social + oferta com urg\xEAncia + margem demonstrada
 Copy: "Kit de 12 pe\xE7as \u2014 R$38/pe\xE7a \u2192 revende a R$70 \u2192 R$384 de lucro por kit"
-Objetivo: Convers\xE3o / Mensagem WhatsApp
+Objetivo: Convers\xE3o / Compra no site (feminnita.com.br)
 
 N\xCDVEL 5 \u2014 MAIS CONSCIENTE (retargeting \u2014 p\xFAblico quente)
 Estado: j\xE1 comprou, precisa de motivo para recomprar
@@ -29318,7 +29318,7 @@ BLOCO 2 \u2014 ANA OLIVEIRA (An\xE1lise e Otimiza\xE7\xE3o)
 AN \u2014 AN\xC1LISE: o que os dados est\xE3o dizendo? Comparar com benchmarks. Identificar: problema no criativo? audi\xEAncia? oferta? p\xE1gina?
 A \u2014 An\xFAncio com problema \u2192 trocar criativo
 U \u2014 Audi\xEAncia com problema \u2192 revisar segmenta\xE7\xE3o ou lookalike
-D \u2014 Destino com problema (WhatsApp/DM n\xE3o converte) \u2192 alertar Mariana
+D \u2014 Destino com problema (p\xE1gina do site n\xE3o converte) \u2192 alertar Mariana
 I \u2014 Investimento mal distribu\xEDdo \u2192 realocar budget
 \xCA \u2014 Escalar o que funciona antes de testar o novo
 
@@ -29367,10 +29367,12 @@ P\xFAblico: quem engajou mas n\xE3o converteu (\xFAltimos 7\u201314 dias)
 Criativo: diferente do de aquisi\xE7\xE3o \u2014 foco em prova social + urg\xEAncia (n\xEDvel 4 de Schwartz)
 Frequ\xEAncia m\xE1xima: 5x por semana por pessoa (acima disso = irritante)
 
+REGRA DE DESTINO: a Feminnita VENDE SOMENTE PELO SITE (feminnita.com.br). NUNCA direcionar venda ou atendimento para WhatsApp/DM \u2014 todo tr\xE1fego de convers\xE3o vai para o site (p\xE1gina de categoria/produto/checkout). O cliente n\xE3o "entra em contato" para comprar; ele compra direto no site.
+
 FUNIS POR TEMPERATURA:
-FRIO \u2192 criativo educa\xE7\xE3o + problema (n\xEDvel 1\u20132) \u2192 destino: perfil Instagram ou WhatsApp \u2192 KPI: CPL \u2264 R$15
-MORNO \u2192 prova social + oferta + margem (n\xEDvel 3\u20134) \u2192 destino: WhatsApp com script Mariana \u2192 KPI: CAC \u2264 R$80
-QUENTE \u2192 novidade + kit novo + desconto progressivo (n\xEDvel 5) \u2192 destino: WhatsApp direto \u2192 KPI: ticket \u2265 R$600
+FRIO \u2192 criativo educa\xE7\xE3o + problema (n\xEDvel 1\u20132) \u2192 destino: site (conte\xFAdo/categoria) ou perfil Instagram \u2192 KPI: CPC/CPL \u2264 R$15
+MORNO \u2192 prova social + oferta + margem (n\xEDvel 3\u20134) \u2192 destino: site (p\xE1gina da oferta/categoria) \u2192 KPI: CAC \u2264 R$80
+QUENTE \u2192 novidade + kit novo + desconto progressivo (n\xEDvel 5) \u2192 destino: site (checkout) \u2192 KPI: ticket \u2265 R$600
 
 \u2501\u2501\u2501 CRIATIVO MODULAR (Ezra Firestone) \u2501\u2501\u2501
 "Creative is the variable. Everything else is just infrastructure."
