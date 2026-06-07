@@ -4724,7 +4724,7 @@ CAMPOS DO BANNER:
 - titulo: frase de impacto principal (m\xE1x 35 chars) \u2014 muda conforme o hook, ex: identidade / transforma\xE7\xE3o / choque
 - preco: linha de pre\xE7o/oferta (m\xE1x 45 chars) \u2014 use S\xD3 pre\xE7o/oferta REAL fornecido nos dados; se n\xE3o tiver, use "[oferta atual]". N\xC3O invente pre\xE7o nem "pedido m\xEDnimo".
 - subtitulo: verbo de a\xE7\xE3o + lucro (m\xE1x 25 chars) \u2014 ex: "REVENDA E LUCRE", "GANHE EM CASA", "FATURE REVENDENDO"
-- cta: chamada para a\xE7\xE3o do bot\xE3o (m\xE1x 30 chars) \u2014 ex: "QUERO REVENDER \u2014 CLIQUE AQUI", "SEJA REVENDEDORA AGORA", "PE\xC7O MEU KIT"
+- cta: chamada para a\xE7\xE3o do bot\xE3o (m\xE1x 30 chars) \u2014 ex: "QUERO REVENDER \u2014 CLIQUE AQUI", "SEJA REVENDEDORA AGORA", "COMPRAR PRA REVENDER"
 - rodape: info de pagamento/log\xEDstica \u2014 S\xD3 se vier como dado REAL; sen\xE3o deixe "[forma de pagamento]". N\xC3O invente "5% PIX" / "3x sem juros".
 
 TAMB\xC9M gere:
@@ -5047,7 +5047,7 @@ var init_creative_agent = __esm({
 - 1 dor/desejo por criativo (foco \xFAnico). Cada \xE2ngulo = um p\xFAblico; a Meta acha quem converte.
 - Texto na arte CENTRALIZADO (o feed corta topo e base) \u2014 nunca colado em cima/embaixo.
 - Sempre pensar em VARIA\xC7\xD5ES: do criativo vencedor, gerar varia\xE7\xF5es de gancho (mesmo corpo, troca os 3s iniciais). Regra: ter sempre 6 rodando + 6 prontos.
-- ECONOMIA DE PRODUTO F\xCDSICO: margem \xE9 apertada (n\xE3o \xE9 infoproduto). A oferta destrava pre\xE7o; ticket m\xE9dio sobe com kit/combo. Use os N\xDAMEROS REAIS do contexto acima (ticket B2C ~R$75\u201382, N\xC3O R$400).
+- ECONOMIA DE PRODUTO F\xCDSICO: margem \xE9 apertada (n\xE3o \xE9 infoproduto). A oferta destrava pre\xE7o; ticket m\xE9dio sobe com mais pe\xE7as no pedido (sem pedido m\xEDnimo \u2014 ela compra o que quiser pra revender). Use os N\xDAMEROS REAIS do contexto acima (ticket B2C ~R$75\u201382, N\xC3O R$400).
 `;
     GEMINI_API_KEY = process.env.LLM_API_KEY || process.env.GEMINI_API_KEY || "";
     IMAGEN_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict";
@@ -22532,7 +22532,7 @@ Decis\xE3o de 14 DIAS (D+14+): Est\xE1 escalando mas o custo por compra subiu? \
 
 MANIPULA\xC7\xC3O DE AOV \u2014 Aumentar o valor m\xE9dio do pedido (Shackelford):
 Antes de aumentar budget, pergunte: "Existe algo que posso fazer na oferta para aumentar o ticket m\xE9dio?"
-T\xE1ticas: bundle (kit de 3 pijamas com desconto), upsell no checkout, frete gr\xE1tis acima de valor X, desconto progressivo por quantidade.
+T\xE1ticas: desconto progressivo por quantidade (sem pedido m\xEDnimo \u2014 ela monta o pedido que quiser), upsell no checkout, frete gr\xE1tis acima de valor X.
 Impacto: dobrar o AOV com mesmo ROAS = dobrar o lucro sem aumentar o custo de aquisi\xE7\xE3o.
 
 CAC NATURAL (Shackelford):
@@ -29291,13 +29291,13 @@ Objetivo: Convers\xE3o / Venda no site (feminnita.com.br)
 N\xCDVEL 4 \u2014 COM PRODUTO (p\xFAblico morno/quente)
 Estado: conhece a Feminnita mas ainda n\xE3o comprou
 Abordagem: prova social + oferta com urg\xEAncia + margem demonstrada
-Copy: "Kit de 12 pe\xE7as \u2014 R$38/pe\xE7a \u2192 revende a R$70 \u2192 R$384 de lucro por kit"
+Copy: "Sem pedido m\xEDnimo: compre as pe\xE7as que quiser a R$38 e revenda a R$70 \u2014 voc\xEA monta seu pedido"
 Objetivo: Convers\xE3o / Compra no site (feminnita.com.br)
 
 N\xCDVEL 5 \u2014 MAIS CONSCIENTE (retargeting \u2014 p\xFAblico quente)
 Estado: j\xE1 comprou, precisa de motivo para recomprar
-Abordagem: novidade, exclusividade, desconto progressivo, kit novo
-Copy: "Chegou a nova cole\xE7\xE3o. Revendedoras que compraram o kit de inverno est\xE3o pedindo o dobro"
+Abordagem: novidade, exclusividade, desconto progressivo por quantidade, cole\xE7\xE3o nova
+Copy: "Chegou a nova cole\xE7\xE3o. As revendedoras que pegaram os modelos de inverno j\xE1 est\xE3o repondo o dobro"
 Objetivo: Convers\xE3o / Reativa\xE7\xE3o
 
 REGRA: nunca use copy de n\xEDvel 4 para p\xFAblico de n\xEDvel 1. An\xFAncio de pre\xE7o para quem n\xE3o sabe que quer comprar n\xE3o converte \u2014 e desperdi\xE7a verba.
@@ -29342,7 +29342,7 @@ Cad\xEAncia: Di\xE1ria (5 min) verificar gasto + frequ\xEAncia + CPM | Semanal (
 "The more you tell, the more you sell."
 
 1. TESTE UMA VARI\xC1VEL POR VEZ \u2014 nunca trocar headline + imagem + CTA ao mesmo tempo. Sequ\xEAncia: headline primeiro \u2192 visual \u2192 CTA.
-2. COPY COM INFORMA\xC7\xC3O CONCRETA VENDE MAIS \u2014 "Kit de 12 pe\xE7as a R$38/pe\xE7a \u2014 margem de 84% na revenda" > "Kit de 12 pe\xE7as". Dado espec\xEDfico > promessa vaga.
+2. COPY COM INFORMA\xC7\xC3O CONCRETA VENDE MAIS \u2014 "Pijama a R$38/pe\xE7a \u2014 84% de margem na revenda, sem pedido m\xEDnimo" > "pijama barato". Dado espec\xEDfico > promessa vaga.
 3. HEADLINE \xC9 80% DO AN\xDANCIO \u2014 se n\xE3o para o scroll, nada mais importa. Testar pelo menos 3 headlines diferentes por oferta.
 4. DADOS > INTUI\xC7\xC3O \u2014 72h com volume m\xEDnimo (500+ impress\xF5es) antes de julgar. Registrar todos os testes \u2014 o hist\xF3rico \xE9 o maior ativo do gestor.
 
@@ -29372,7 +29372,7 @@ REGRA DE DESTINO: a Feminnita VENDE SOMENTE PELO SITE (feminnita.com.br). NUNCA 
 FUNIS POR TEMPERATURA:
 FRIO \u2192 criativo educa\xE7\xE3o + problema (n\xEDvel 1\u20132) \u2192 destino: site (conte\xFAdo/categoria) ou perfil Instagram \u2192 KPI: CPC/CPL \u2264 R$15
 MORNO \u2192 prova social + oferta + margem (n\xEDvel 3\u20134) \u2192 destino: site (p\xE1gina da oferta/categoria) \u2192 KPI: CAC \u2264 R$80
-QUENTE \u2192 novidade + kit novo + desconto progressivo (n\xEDvel 5) \u2192 destino: site (checkout) \u2192 KPI: ticket \u2265 R$600
+QUENTE \u2192 novidade + cole\xE7\xE3o nova + desconto progressivo por quantidade (n\xEDvel 5) \u2192 destino: site (checkout) \u2192 KPI: ticket \u2265 R$600
 
 \u2501\u2501\u2501 CRIATIVO MODULAR (Ezra Firestone) \u2501\u2501\u2501
 "Creative is the variable. Everything else is just infrastructure."
