@@ -4515,6 +4515,16 @@ Conte como a Feminnita chegou no produto: a dor (pijamas do mercado ruins) \u219
 \u2501\u2501\u2501 11. AOV / P\xD3S-COMPRA (upsell adaptado e-commerce) \u2501\u2501\u2501
 O que importa n\xE3o \xE9 a convers\xE3o do extra, \xE9 quanto ele soma ao TICKET M\xC9DIO (um order-bump de R$80 a 20% bate um de R$30 a 35%). AOV maior = pode escalar mais an\xFAncio mantendo lucro.
 Tipos que funcionam em produto f\xEDsico: MAIS DO MESMO (2\xAA/3\xAA pe\xE7a com desconto \u2014 o melhor pra moda), ACELERADOR (kit completo), NOVO PROBLEMA (comprou pijama \u2192 meia/robe combinando), PROXIMIDADE (clube/assinatura). Tom de FELICIDADE, nunca press\xE3o: "parab\xE9ns pela escolha \u2014 como j\xE1 \xE9 cliente, libero a 2\xAA pe\xE7a pela metade". O extra n\xE3o pode baixar a percep\xE7\xE3o do produto principal.
+
+\u2501\u2501\u2501 12. O AN\xDANCIO QUE VENDE (Derick, M\xF3d. 6 \u2014 adaptado Meta/B2C) \u2501\u2501\u2501
+F\xF3rmula do gancho do an\xFAncio: GANCHO = \xC2NGULO + BENEF\xCDCIO.
+- BENEF\xCDCIO sai da ESCADA DE DESEJOS: necessidade (biol\xF3gica) \u2192 desejo de massa (gen\xE9rico, "dormir melhor") \u2192 DESEJO SECUND\xC1RIO (concreto, de uma fatia: "parar de acordar suada no meio da noite", "voltar a se sentir bem de pijama na frente do espelho"). ERRO cl\xE1ssico = mirar s\xF3 o desejo de massa gen\xE9rico; o secund\xE1rio concreto converte mais numa fatia.
+- \xC2NGULO = o ponto de vista que introduz a mensagem (pode misturar 2): novidade/descoberta, hist\xF3ria pessoal, contr\xE1rio ao senso comum, medo, depoimento, afirma\xE7\xE3o de superioridade, "the one thing" (um \xFAnico diferencial entrega tudo), lista ("3 motivos\u2026"), curiosidade/prova social, pergunta paradoxal.
+- O benef\xEDcio pode ser expl\xEDcito ("use e durma fresca a noite toda") ou impl\xEDcito ("o pijama que essa m\xE3e de 3 n\xE3o tira nem pra receber visita").
+PRODU\xC7\xC3O: BODY (corpo) FIXO + troca s\xF3 os ~5s do gancho \u2192 1 corpo validado vira 10-15 an\xFAncios. Quando achar um vencedor, multiplique-o (ver doutrina de ARTE), n\xE3o fique ca\xE7ando pe\xE7a nova.
+DISTRIBUI\xC7\xC3O: rode p\xFAblico amplo; o Meta entrega cada criativo pra uma FATIA. 1-2 criativos carregam a maior parte das vendas. Cada criativo deve mirar UMA fatia/desejo diferente. Meta de volume: an\xFAncio satura \u2192 precisa de pe\xE7as novas toda semana.
+SATURA\xC7\xC3O: o que satura r\xE1pido \xE9 CRIATIVO \xD7 FATIA (n\xE3o a oferta). Quando cansar numa fatia, N\xC3O insista no mesmo benef\xEDcio pra ela \u2014 troca de fatia/benef\xEDcio.
+CONGRU\xCANCIA: o an\xFAncio tem que prometer o que a P\xC1GINA DO PRODUTO entrega (clica e n\xE3o compra = an\xFAncio incongruente).
 `;
   }
 });
