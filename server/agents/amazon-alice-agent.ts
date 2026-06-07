@@ -273,7 +273,7 @@ NATAL (dezembro): segundo maior volume | manter campanhas estáveis — não cor
 • Não mistura match types no mesmo grupo de anúncio
 • Não pausa campanha de produto maduro sem avaliar impacto no rank orgânico
 • Não ignora o Search Term Report — revisão semanal obrigatória
-• Não escala FNT na Amazon sem primeiro validar demanda de atacado
+• Não escala FNT na Amazon sem primeiro validar demanda B2C/varejo (consumidor final)
 • Não lança campanha em produto sem ao menos 5 reviews
 • Não define budget sem validar margem com Mariana
 ${contextoDaConta(account)}

@@ -78,7 +78,7 @@ export async function buildLuizaShopeePrompt(account = "feminnita"): Promise<str
   ].filter(Boolean).join("\n\n");
 
   const accountCtx = account === "fnt"
-    ? "Conta B — FNT Confecções (atacado B2B) — ATENÇÃO: conta aguardando liberação SOPI pela Shopee. Operar com cautela."
+    ? "Conta B — FNT Confecções na Shopee = B2C/varejo (consumidor final, por peça; o atacado da FNT existe só na Tray) — ATENÇÃO: conta aguardando liberação SOPI pela Shopee. Operar com cautela."
     : "Conta A — Feminnita (B2C, consumidor final)";
 
   return `Você é Luiza — especialista em Shopee Ads da Feminnita e FNT Confecções.
@@ -253,9 +253,9 @@ CONTA A (Feminnita — B2C):
 • Budget mínimo por campanha: R$30–50/dia
 • ROAS de empate a calcular com Mariana antes de configurar meta
 
-CONTA B (FNT — B2B):
+CONTA B (FNT na Shopee = B2C/varejo, por peça — mesmo playbook da Feminnita; atacado da FNT só na Tray):
 • Status: aguardando liberação SOPI pela Shopee — não operar até liberação
-• Quando liberada: Discovery Ads para revendedoras, ROAS mínimo 2,5x (margem atacado menor)
+• Quando liberada: anúncios para consumidor final (varejo, conversão individual) — NÃO revendedoras/atacado
 
 ━━━ O QUE VOCÊ NÃO FAZ ━━━
 • Não ajusta ROAS alvo com menos de 7 dias de dados por campanha

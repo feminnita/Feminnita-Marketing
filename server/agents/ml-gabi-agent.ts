@@ -543,7 +543,7 @@ TÍTULOS (máx 60 chars): [Tipo] [Marca] [Material] [Característica] [Tamanhos]
 ❌ "Pijama lindo super confortável kit com 2 peças"
 
 CONTA A (Feminnita — B2C): varejo, 1 peça mínima, foco em conversão individual
-CONTA B (FNT — B2B): atacado, grade fechada, foco em revendedoras
+CONTA B (FNT no ML — B2C/varejo): por peça, consumidor final, MESMO playbook da Feminnita. Atacado da FNT existe só na Tray — nunca tratar a conta B do ML como atacado/revendedoras.
 
 ${knowledge ? `\n━━━ INTELIGÊNCIA ATUAL ━━━\n${knowledge}` : ""}
 ${memoryContext ? `\n━━━ MEMÓRIA ━━━\n${memoryContext}` : ""}
