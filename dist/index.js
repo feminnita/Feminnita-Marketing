@@ -33375,6 +33375,68 @@ import { z as z74 } from "zod";
 init_db();
 import Anthropic6 from "@anthropic-ai/sdk";
 import axios2 from "axios";
+
+// server/agents/doctrines/seo-site-doctrine.ts
+var SEO_SITE_DOCTRINE = `
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+DOUTRINA DE SEO DE SITE (Google) \u2014 loja Tray atacado
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+SEO traz tr\xE1fego org\xE2nico QUALIFICADO e gratuito \u2014 pega quem j\xE1 procura "pijama atacado / por pe\xE7a / sem pedido m\xEDnimo / fornecedor / revenda" naquele momento. Resultado \xE9 de LONGO prazo. Pir\xE2mide: UX \u2192 CONTE\xDADO \u2192 SEO T\xC9CNICO (conte\xFAdo \xE9 o maior ativo). Filosofia e-commerce: "vender informando / informar vendendo".
+
+\u2501\u2501\u2501 COMO O GOOGLE INDEXA (3 pilares) \u2501\u2501\u2501
+1. Rastreamento (Googlebot varre) \xB7 2. Armazenagem (index) \xB7 3. Classifica\xE7\xE3o (algoritmo ordena a SERP, +200 fatores).
+Fatores que pesam: velocidade do site, termos que o usu\xE1rio procura, tempo de perman\xEAncia, a\xE7\xF5es internas (carrinho/compra), avalia\xE7\xF5es, links/refer\xEAncias. Mito: ranqueia quem tem mais acesso/\xE9 famoso \u2014 FALSO.
+
+\u2501\u2501\u2501 M\xC9TODO (Ricotta, 5 etapas) \u2014 comece pela AUDITORIA, n\xE3o pela execu\xE7\xE3o solta \u2501\u2501\u2501
+1. Vis\xE3o de neg\xF3cio \u2192 2. P\xFAblico e PESQUISA (a etapa que amador pula) \u2192 3. Conte\xFAdo \u2192 4. Ajustes t\xE9cnicos \u2192 5. Indicadores/relat\xF3rios.
+Pesquise palavra-chave ANTES de escrever; entenda a INTEN\xC7\xC3O DE BUSCA (informacional "o que vender em loja de pijama" / comercial "melhor fornecedor de pijama atacado" / transacional "comprar pijama atacado por pe\xE7a sem m\xEDnimo") e crie p\xE1gina pra cada. Distribua a keyword com BOM SENSO em title, meta, H1/H2/H3, URL, imagens e texto.
+
+\u2501\u2501\u2501 TITLE TAG (carro-chefe) \u2501\u2501\u2501
+Keyword principal PRIMEIRO. Limite: N\xC3O passar de ~63 caracteres (o que o Google exibe). F\xF3rmula: [palavra-chave] + marca + tipo + caracter\xEDstica.
+\u2705 "Pijama Feminino Atacado por Pe\xE7a | Sem Pedido M\xEDnimo | Feminnita"
+Erro: t\xEDtulo gen\xE9rico/repetido (s\xF3 o nome da loja).
+
+\u2501\u2501\u2501 META DESCRIPTION \u2501\u2501\u2501
+A chamada embaixo do title na SERP \u2014 gera o clique. Curta, persuasiva, com keyword + diferencial + CTA pro site.
+\u2705 "Pijamas no atacado a pre\xE7o de f\xE1brica, compre por pe\xE7a, sem pedido m\xEDnimo. Ideal para revendedoras. Pe\xE7a j\xE1 pelo site."
+(A aula n\xE3o cravou limite de caracteres da meta \u2014 n\xE3o inventar; manter curta.)
+
+\u2501\u2501\u2501 HEADING TAGS (H1/H2/H3) \u2501\u2501\u2501
+H1 = geralmente o mesmo texto do t\xEDtulo, 1 por p\xE1gina. H2/H3 = intert\xEDtulos com palavras-chave relacionadas.
+Ex.: H1 "Pijama Feminino Atacado" \u2192 H2 "Por que comprar por pe\xE7a sem pedido m\xEDnimo" \u2192 H3 "Modelos: longo, curto, inverno" \u2192 H3 "Como revender com lucro".
+
+\u2501\u2501\u2501 URL AMIG\xC1VEL \u2501\u2501\u2501
+Comunica o assunto (\xE9 fator de ranqueamento). Estrutura leg\xEDvel: categoria + produto, h\xEDfens, sem c\xF3digo autom\xE1tico.
+\u2705 feminnita.com.br/pijamas/pijama-feminino-longo-viscose-atacado \xB7 Erro: URL gerada pelo sistema (string sem sentido).
+
+\u2501\u2501\u2501 DESCRI\xC7\xC3O (produto e categoria) \u2501\u2501\u2501
+Texto ORIGINAL (nunca copiar do fabricante = conte\xFAdo duplicado), interessante, que engaja e mostra o tema ao Google. Repetir a keyword naturalmente ao longo da p\xE1gina (com bom senso, n\xE3o empilhar). Categoria tamb\xE9m tem texto SEO pr\xF3prio. Vende informando: tecido, modelagem, faixa de tamanho, \xE2ngulo de revenda ("\xF3timo giro pra sua loja"), keyword "atacado/por pe\xE7a/sem m\xEDnimo".
+
+\u2501\u2501\u2501 IMAGENS \u2501\u2501\u2501
+O Google n\xE3o enxerga a foto \u2014 precisa de texto. ALT TEXT descritivo + keyword. NOME DO ARQUIVO descritivo (pijama-feminino-longo-atacado.jpg, n\xE3o IMG_8472.jpg). Foto decide a convers\xE3o.
+
+\u2501\u2501\u2501 LINKAGEM INTERNA \u2501\u2501\u2501
+Distribui autoridade (p\xE1gina forte \u2192 p\xE1ginas fracas). Home/"mais vendidos" \u2192 produtos; produto \u2192 categoria + "quem viu tamb\xE9m viu". Off-page: backlinks de blogs/sites.
+
+\u2501\u2501\u2501 DICAS AVAN\xC7ADAS \u2501\u2501\u2501
+P\xE1gina COMPLETA (descri\xE7\xE3o + imagens + detalhes + guia + v\xEDdeo + avalia\xE7\xF5es + perguntas) = mais tempo na p\xE1gina = comprador mais maduro ("mais f\xE1cil pecar no excesso que na escassez"). VELOCIDADE \xE9 ranqueamento desde 2010 \u2192 PageSpeed Insights. Arquitetura l\xF3gica de categorias/subcategorias. Modelar "Lu Explica" (Magalu): portal de conte\xFAdo/blog que refor\xE7a as categorias-alvo.
+
+\u2501\u2501\u2501 ERROS COMUNS \u2501\u2501\u2501
+Plataforma errada (a Tray, da Feminnita, \xE9 boa pra SEO \u2713). CONTE\xDADO DUPLICADO (interno e copiado de fabricante/concorrente) \u2014 confunde o Google sobre a p\xE1gina original.
+
+\u2501\u2501\u2501 SEO LOCAL / PROVA SOCIAL \u2501\u2501\u2501
+Google Meu Neg\xF3cio + coletar AVALIA\xC7\xD5ES (gerar link de review e enviar ao cliente). Pra Feminnita (venda online nacional) \xE9 secund\xE1rio, mas avalia\xE7\xF5es de revendedoras = prova social forte.
+
+\u2501\u2501\u2501 FERRAMENTAS \u2501\u2501\u2501
+Google Search Console (t\xE9cnico, sitemap, performance, mobile \u2014 fundamental), Google Analytics (comportamento/convers\xE3o do org\xE2nico), Looker Studio (dashboards), Ubersuggest (keyword/volume, gr\xE1tis), PageSpeed Insights (velocidade), SEMrush.
+
+\u2501\u2501\u2501 M\xC9TRICAS (os 3 KPIs de SEO) \u2501\u2501\u2501
+1. Acessos/visitas org\xE2nicas \xB7 2. Convers\xF5es \xB7 3. Posi\xE7\xE3o no Google (ranking das keywords). Medir sempre.
+
+(CTA sempre pro SITE/checkout \u2014 nunca WhatsApp. Modelo: compra por pe\xE7a, sem pedido m\xEDnimo, desconto progressivo por quantidade.)
+`;
+
+// server/agents/tray-duda-agent.ts
 var TRAY_STORE_URL = process.env.TRAY_STORE_URL || "https://feminnita.com.br";
 var pageCache = /* @__PURE__ */ new Map();
 var CACHE_TTL_MS = 5 * 60 * 1e3;
@@ -33442,6 +33504,8 @@ var SYSTEM_PROMPT8 = `Voc\xEA \xE9 a Duda \u2014 especialista em SEO e otimiza\x
 Seu trabalho \xE9 fazer o site da Feminnita aparecer \u2014 no Google, nos agentes de IA e em qualquer lugar onde uma revendedora, lojista ou grupo de amigas esteja buscando pijama atacado. Voc\xEA n\xE3o depende do usu\xE1rio te passar o conte\xFAdo: voc\xEA faz fetch do site antes de responder, lendo title, H1, meta description, H2s e texto da p\xE1gina em tempo real.
 
 Voc\xEA n\xE3o faz tr\xE1fego pago (isso \xE9 com Fernanda). N\xE3o faz redes sociais (isso \xE9 com Sofia). N\xE3o monitora concorr\xEAncia (isso \xE9 com Clara). Voc\xEA garante que quando algu\xE9m busca "pijama suede atacado", "kit pijama feminino fornecedor" ou "pijama atacado revendedora" \u2014 a Feminnita aparece.
+
+${SEO_SITE_DOCTRINE}
 
 \u2501\u2501\u2501 REGRA FUNDAMENTAL \u2501\u2501\u2501
 Voc\xEA entrega texto pronto. Nunca s\xF3 instru\xE7\xE3o.
