@@ -715,13 +715,13 @@ Objetivo: Conversão / Venda no site (feminnita.com.br)
 NÍVEL 4 — COM PRODUTO (público morno/quente)
 Estado: conhece a Feminnita mas ainda não comprou
 Abordagem: prova social + oferta com urgência + margem demonstrada
-Copy: "Kit de 12 peças — R$38/peça → revende a R$70 → R$384 de lucro por kit"
+Copy: "Sem pedido mínimo: compre as peças que quiser a R$38 e revenda a R$70 — você monta seu pedido"
 Objetivo: Conversão / Compra no site (feminnita.com.br)
 
 NÍVEL 5 — MAIS CONSCIENTE (retargeting — público quente)
 Estado: já comprou, precisa de motivo para recomprar
-Abordagem: novidade, exclusividade, desconto progressivo, kit novo
-Copy: "Chegou a nova coleção. Revendedoras que compraram o kit de inverno estão pedindo o dobro"
+Abordagem: novidade, exclusividade, desconto progressivo por quantidade, coleção nova
+Copy: "Chegou a nova coleção. As revendedoras que pegaram os modelos de inverno já estão repondo o dobro"
 Objetivo: Conversão / Reativação
 
 REGRA: nunca use copy de nível 4 para público de nível 1. Anúncio de preço para quem não sabe que quer comprar não converte — e desperdiça verba.
@@ -766,7 +766,7 @@ Cadência: Diária (5 min) verificar gasto + frequência + CPM | Semanal (30 min
 "The more you tell, the more you sell."
 
 1. TESTE UMA VARIÁVEL POR VEZ — nunca trocar headline + imagem + CTA ao mesmo tempo. Sequência: headline primeiro → visual → CTA.
-2. COPY COM INFORMAÇÃO CONCRETA VENDE MAIS — "Kit de 12 peças a R$38/peça — margem de 84% na revenda" > "Kit de 12 peças". Dado específico > promessa vaga.
+2. COPY COM INFORMAÇÃO CONCRETA VENDE MAIS — "Pijama a R$38/peça — 84% de margem na revenda, sem pedido mínimo" > "pijama barato". Dado específico > promessa vaga.
 3. HEADLINE É 80% DO ANÚNCIO — se não para o scroll, nada mais importa. Testar pelo menos 3 headlines diferentes por oferta.
 4. DADOS > INTUIÇÃO — 72h com volume mínimo (500+ impressões) antes de julgar. Registrar todos os testes — o histórico é o maior ativo do gestor.
 
@@ -796,7 +796,7 @@ REGRA DE DESTINO: a Feminnita VENDE SOMENTE PELO SITE (feminnita.com.br). NUNCA 
 FUNIS POR TEMPERATURA:
 FRIO → criativo educação + problema (nível 1–2) → destino: site (conteúdo/categoria) ou perfil Instagram → KPI: CPC/CPL ≤ R$15
 MORNO → prova social + oferta + margem (nível 3–4) → destino: site (página da oferta/categoria) → KPI: CAC ≤ R$80
-QUENTE → novidade + kit novo + desconto progressivo (nível 5) → destino: site (checkout) → KPI: ticket ≥ R$600
+QUENTE → novidade + coleção nova + desconto progressivo por quantidade (nível 5) → destino: site (checkout) → KPI: ticket ≥ R$600
 
 ━━━ CRIATIVO MODULAR (Ezra Firestone) ━━━
 "Creative is the variable. Everything else is just infrastructure."

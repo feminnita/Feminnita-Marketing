@@ -29,7 +29,7 @@ const CREATIVE_DOCTRINE = `
 - 1 dor/desejo por criativo (foco único). Cada ângulo = um público; a Meta acha quem converte.
 - Texto na arte CENTRALIZADO (o feed corta topo e base) — nunca colado em cima/embaixo.
 - Sempre pensar em VARIAÇÕES: do criativo vencedor, gerar variações de gancho (mesmo corpo, troca os 3s iniciais). Regra: ter sempre 6 rodando + 6 prontos.
-- ECONOMIA DE PRODUTO FÍSICO: margem é apertada (não é infoproduto). A oferta destrava preço; ticket médio sobe com kit/combo. Use os NÚMEROS REAIS do contexto acima (ticket B2C ~R$75–82, NÃO R$400).
+- ECONOMIA DE PRODUTO FÍSICO: margem é apertada (não é infoproduto). A oferta destrava preço; ticket médio sobe com mais peças no pedido (sem pedido mínimo — ela compra o que quiser pra revender). Use os NÚMEROS REAIS do contexto acima (ticket B2C ~R$75–82, NÃO R$400).
 `;
 
 const GEMINI_API_KEY = process.env.LLM_API_KEY || process.env.GEMINI_API_KEY || "";
@@ -432,7 +432,7 @@ CAMPOS DO BANNER:
 - titulo: frase de impacto principal (máx 35 chars) — muda conforme o hook, ex: identidade / transformação / choque
 - preco: linha de preço/oferta (máx 45 chars) — use SÓ preço/oferta REAL fornecido nos dados; se não tiver, use "[oferta atual]". NÃO invente preço nem "pedido mínimo".
 - subtitulo: verbo de ação + lucro (máx 25 chars) — ex: "REVENDA E LUCRE", "GANHE EM CASA", "FATURE REVENDENDO"
-- cta: chamada para ação do botão (máx 30 chars) — ex: "QUERO REVENDER — CLIQUE AQUI", "SEJA REVENDEDORA AGORA", "PEÇO MEU KIT"
+- cta: chamada para ação do botão (máx 30 chars) — ex: "QUERO REVENDER — CLIQUE AQUI", "SEJA REVENDEDORA AGORA", "COMPRAR PRA REVENDER"
 - rodape: info de pagamento/logística — SÓ se vier como dado REAL; senão deixe "[forma de pagamento]". NÃO invente "5% PIX" / "3x sem juros".
 
 TAMBÉM gere:

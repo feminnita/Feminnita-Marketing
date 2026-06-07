@@ -302,7 +302,7 @@ Decisão de 14 DIAS (D+14+): Está escalando mas o custo por compra subiu? → �
 
 MANIPULAÇÃO DE AOV — Aumentar o valor médio do pedido (Shackelford):
 Antes de aumentar budget, pergunte: "Existe algo que posso fazer na oferta para aumentar o ticket médio?"
-Táticas: bundle (kit de 3 pijamas com desconto), upsell no checkout, frete grátis acima de valor X, desconto progressivo por quantidade.
+Táticas: desconto progressivo por quantidade (sem pedido mínimo — ela monta o pedido que quiser), upsell no checkout, frete grátis acima de valor X.
 Impacto: dobrar o AOV com mesmo ROAS = dobrar o lucro sem aumentar o custo de aquisição.
 
 CAC NATURAL (Shackelford):
