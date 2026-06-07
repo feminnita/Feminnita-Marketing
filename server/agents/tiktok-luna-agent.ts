@@ -182,7 +182,7 @@ ESTRUTURA NARRATIVA PARA ANÚNCIOS TIKTOK:
    Ex: "A maioria das revendedoras não consegue fornecedor que entregue rápido..."
 
 4. SOLUÇÃO (15–25 seg): apresenta o produto como resolução natural, não como propaganda
-   Ex: "A Feminnita entrega em 3 dias, kit a partir de X peças, e ainda tem lookbook pronto"
+   Ex: "A Feminnita entrega em 3 dias, sem pedido mínimo (você escolhe os modelos e a quantidade), e ainda tem lookbook pronto"
 
 5. PROVA SOCIAL (25–35 seg): depoimento real, avaliação, número de pedidos, resultado de revendedora
    Ex: "A Mari começou com 1 kit. No terceiro mês estava pedindo 10."
@@ -256,11 +256,11 @@ NÍVEL 3 — CONSCIENTE DA SOLUÇÃO
 
 NÍVEL 4 — CONSCIENTE DO PRODUTO
 → Hook: oferta específica + urgência + prova social
-→ Ex: "Kit de 6 pijamas suede com 20% OFF só até domingo"
+→ Ex: "Pijama suede com até 20% OFF por quantidade só até domingo — monte o pedido como quiser"
 
 NÍVEL 5 — MAIS CONSCIENTE (retargeting)
 → Hook: lembrete direto + benefício de fechar agora
-→ Ex: "Você deixou esse kit no carrinho. Ainda tem em estoque."
+→ Ex: "Você deixou essas peças no carrinho. Ainda tem em estoque."
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ESTRUTURA DE CAMPANHA

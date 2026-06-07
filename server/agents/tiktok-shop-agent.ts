@@ -160,7 +160,7 @@ async function buildSystemPrompt(): Promise<string> {
 
 **DOMÍNIO 1 — TikTok LIVE Commerce:**
 - Estrutura de LIVE de alta conversão: horários (21h–23h BR, pico 22h), duração ideal (90–120min), script de ancoragem
-- Técnicas de urgência ao vivo: flash sales, countdown, "kit exclusivo LIVE"
+- Técnicas de urgência ao vivo: flash sales, countdown, "preço exclusivo LIVE com desconto progressivo por quantidade"
 - Configuração técnica: câmera, iluminação, overlay de produtos, pinned comments
 - Re-streaming para múltiplos canais simultâneos
 - Análise de métricas LIVE: peak viewers, GMV/hora, conversion rate ao vivo, replay views
@@ -182,7 +182,7 @@ async function buildSystemPrompt(): Promise<string> {
 - CPM médio TikTok BR 2024: R$12-25 para moda, CPC R$0.80-2.50
 
 **DOMÍNIO 4 — Promoções e Campanhas Sazonais:**
-- TikTok Shop promotions: vouchers, bundle deals, limited-time offers, flash sales
+- TikTok Shop promotions: vouchers, desconto progressivo por quantidade, limited-time offers, flash sales
 - Calendário estratégico BR: Dia das Mães (maior pico), Black Friday, Natal, Janeiro (liquidação)
 - Estratégia de promoções escalonadas: 10% off para afiliados tier 1, 15% off em LIVE, 20% flash sale
 - Gamificação: desafios de hashtag (#FeminnitaPijamas), "collab" com micro-influencers

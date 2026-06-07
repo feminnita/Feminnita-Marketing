@@ -41,10 +41,10 @@ Cada peça de conteúdo deve demonstrar ao menos UM dos 4 pilares:
 
 🏆 STATUS — Demonstre que você controla recursos escassos que o público quer.
 → Para Feminnita: mostrar revendedoras com ganhos reais, número de revendedoras ativas, produtos esgotando, fábrica própria, exclusividade. Quem tem o que as pessoas querem tem status.
-→ Exemplos: "Mais de 2.000 revendedoras em todo o Brasil", "Kit esgotou em 3 dias", "Lucro de R$800 em um final de semana".
+→ Exemplos: "Mais de 2.000 revendedoras em todo o Brasil", "Estampa esgotou em 3 dias", "Lucro de R$800 em um final de semana".
 
 ⚡ POWER — Demonstre que você pode entregar algo valioso para quem seguir suas instruções.
-→ Para Feminnita: mostrar COMO a revendedora ganha dinheiro, passo a passo. "Compre 10 kits por R$400, venda por R$800 — veja como". Mostre o caminho, não apenas o destino.
+→ Para Feminnita: mostrar COMO a revendedora ganha dinheiro, passo a passo. "Compre as peças que quiser, sem pedido mínimo, e revenda com o dobro de margem — veja como". Mostre o caminho, não apenas o destino.
 → Poder é: "Se você fizer X, eu consigo te dar Y."
 
 ✅ CREDIBILIDADE — Prova de terceiros. Não é o que você fala sobre si — é o que outros falam sobre você.
@@ -101,7 +101,7 @@ MISSÃO DE MARCA (branding em escala):
 LIVE COMMERCE — O FUTURO QUE JÁ CHEGOU:
 • Na Ásia, grande parte da receita de mídia digital já vem de Live Commerce.
 • No Brasil, está crescendo mas exige adaptação cultural — uma live no Brasil é completamente diferente da Ásia ou EUA.
-• Para Feminnita: lives com demonstração de pijamas, kits e kit de revendedora são uma oportunidade ainda pouco explorada.
+• Para Feminnita: lives com demonstração de pijamas e das estampas que mais giram são uma oportunidade ainda pouco explorada.
 
 SÍNTESE ESTRATÉGICA:
 → Vender no TikTok Shop = vender entretenimento + produto. Criador que gosta da marca + produto que resolve um problema = venda quase certa.
@@ -126,7 +126,7 @@ FOTOS (mínimo 5, ideal 8):
 3. Produto vestido — lateral/costas
 4. Detalhe do tecido/costura (zoom)
 5. Detalhe do estampado/bordado
-6. Kit completo em embalagem
+6. Várias peças/estampas juntas em embalagem
 7. Estilo de vida (pessoa usando em ambiente doméstico)
 8. Infográfico: material, tamanhos, cuidados de lavagem
 
@@ -173,7 +173,7 @@ TIPOS DE PROMOÇÃO TIKTOK SHOP:
 1. Flash Sale: desconto por tempo limitado (2–6h) — gera urgência real
 2. Voucher loja: cupom de desconto para primeira compra
 3. Frete grátis: acima de valor mínimo (R$100+)
-4. Bundle Deal: compre 2 ganhe X% de desconto
+4. Desconto progressivo por quantidade: quanto mais peças no carrinho, maior o % de desconto (sem pacote fechado)
 5. Follower Exclusive: desconto para quem segue a loja
 
 CALENDÁRIO DE PROMOÇÕES:
@@ -184,7 +184,7 @@ CALENDÁRIO DE PROMOÇÕES:
 ESTRATÉGIA DE PREÇO:
 - Margem mínima: 40% sobre custo
 - Preço regular → Preço flash sale (20–30% off)
-- Kit exclusivo TikTok Shop (combinação não vendida em outros canais)
+- Estampa/modelo exclusivo TikTok Shop (não vendido em outros canais)
 
 ═══════════════════════════════════════════════════════
 MÉTRICAS DO SELLER CENTER

@@ -32,7 +32,7 @@ TIER FRAMEWORK — Status-based + progressivo; primeira comissão é o momento d
 
 ━━━ CONTEXTO DA EMPRESA ━━━
 - Plataforma: Tray Commerce (módulo nativo de afiliadas)
-- Sem pedido mínimo — modelo atacado, venda em kit
+- Sem pedido mínimo — venda de pijamas por peça; a cliente compra os modelos e a quantidade que quiser, com desconto progressivo por quantidade
 - Cookie de rastreamento: 30 dias
 - Pagamento automático: integração Iugu / PagSeguro
 
@@ -297,7 +297,7 @@ Posso te mandar pra dar uma olhada?"
 
 STORIES PARA AFILIADA (pronto para usar):
 Slide 1: "Se você quer renda extra vendendo o que as pessoas AMAM usar"
-Slide 2: "Pijama suede da Feminnita — o produto que mais gira no inverno. Kit a partir de R$199 | Entrega em todo o Brasil" [foto do produto]
+Slide 2: "Pijama suede da Feminnita — o produto que mais gira no inverno. Sem pedido mínimo, desconto progressivo por quantidade | Entrega em todo o Brasil" [foto do produto]
 Slide 3: "Link na bio ou me chama no DM [link rastreado]"
 
 E-MAIL DE BOAS-VINDAS:

@@ -38,7 +38,7 @@ Produto físico (Feminnita): o mecanismo = o DIFERENCIAL real e específico (sue
 Mine a dor/desejo REAL, não o superficial. Não "quero um pijama bonito" — é "quero me sentir bem comigo de novo / dormir confortável / um presente que agrada". Público frio começa pela dor/desejo, NUNCA pelo produto.
 
 ━━━ OFERTA (Hormozi — empilhar valor) ━━━
-Não venda o pijama — venda a transformação/sensação. Empilhe valor (kit/combo, brinde, frete) pra subir o ticket e a percepção. Oferta clara: o que ganha, quanto, por quanto tempo.
+Não venda o pijama — venda a transformação/sensação. Empilhe valor (mais peças no pedido com desconto progressivo por quantidade, brinde, frete) pra subir o ticket e a percepção. Oferta clara: o que ganha, quanto, por quanto tempo.
 
 ━━━ APLICAÇÃO NA FEMINNITA (regras desta conta) ━━━
 - Produto SUEDE, fabricação própria. NUNCA dizer algodão/viscose/viscolaicra.

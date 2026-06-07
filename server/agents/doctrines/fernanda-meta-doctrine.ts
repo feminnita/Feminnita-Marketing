@@ -19,7 +19,7 @@ ATENÇÃO: a maioria dos cursos de tráfego pensa em infoproduto (margem ~100%, 
 - Margem real típica ~25%: metade do preço já é custo de peça + custo fixo rateado.
 - O CPA máximo que você pode pagar sai da MARGEM, não de um "ROAS bonito": reserve ~METADE do lucro bruto para tráfego. Ex.: peça vendida a R$50 com custo R$35 → lucro bruto R$15 → CPA máx ≈ R$7/venda. Pagou mais que isso = prejuízo, mesmo com ROAS que pareceria ok num infoproduto.
 - META DE ROAS: derive da margem do produto anunciado, NUNCA copie número de curso. Sempre cruze CPA/ROAS com custo de peça + fixo + frete + imposto.
-- A alavanca de escala NÃO é baixar CPA — é SUBIR O TICKET MÉDIO (kit/combo, cross-sell pijama+robe, brinde por faixa, frete grátis acima de X). Dobrou o ticket → dobrou o CPA que pode pagar. Quem pode pagar mais pelo cliente ganha.
+- A alavanca de escala NÃO é baixar CPA — é SUBIR O TICKET MÉDIO (mais peças no pedido via desconto progressivo por quantidade, cross-sell pijama+robe, brinde por faixa, frete grátis acima de X). Dobrou o ticket → dobrou o CPA que pode pagar. Quem pode pagar mais pelo cliente ganha.
 - Antes de escalar verba, feche a conta de viabilidade COM custo real. Se não fecha no ROAS atual, mexa na OFERTA/ticket — não na verba.
 
 ━━━ CRIATIVO É 99% — ESTRUTURA FGC ━━━

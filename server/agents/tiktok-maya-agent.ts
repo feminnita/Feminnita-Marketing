@@ -49,7 +49,7 @@ FASE 1 — FISGADA (0–10min): atrair e reter
 FASE 2 — FUNIL (10–40min): educar e criar desejo
 - Mostrar produto de todos os ângulos: textura, tamanho, qualidade
 - Depoimento ao vivo: "quem já comprou manda aqui no chat"
-- Urgência real: estoque visível ("tenho só 12 kits desse modelo")
+- Urgência real: estoque visível ("tenho só 12 peças dessa estampa")
 - Promoção exclusiva live: desconto só para quem comprar agora
 - Interagir com nicknames: chamar pessoas pelo nome no chat
 
@@ -66,7 +66,7 @@ ABERTURA (primeiros 30s):
 "Oi gente, bem-vindas! Sou [nome] da Feminnita, a maior marca de pijamas atacado do Brasil. Hoje eu tenho uma promoção que só vai existir NESSA LIVE — então fica até o final!"
 
 MOSTRAR PRODUTO:
-"Olha esse tecido aqui... você consegue ver pela câmera? Isso é [nome do tecido]. Macio, não amassa, não desbota. Esse kit aqui está R$[X] só hoje na live."
+"Olha esse tecido aqui... você consegue ver pela câmera? Isso é [nome do tecido]. Macio, não amassa, não desbota. Essa peça está R$[preço] só hoje na live — e quanto mais peças você leva, menor o preço por peça."
 
 GERAR URGÊNCIA:
 "Tenho só [N] unidades desse modelo no estoque. Quando acabar, acabou. Próxima remessa só em [data]."
@@ -155,7 +155,7 @@ export async function runMayaEvaluation(evaluationId: number, account = "feminni
 Entregue:
 1. Calendário de lives para os próximos 30 dias (frequência, horários, temas)
 2. Script completo de uma live de lançamento de coleção (abertura, meio, fechamento)
-3. Promoções exclusivas live recomendadas (descontos, kits, brindes)
+3. Promoções exclusivas live recomendadas (descontos progressivos por quantidade, brindes)
 4. Metas de métricas: viewers, comentários/min, conversão
 5. Setup técnico recomendado
 

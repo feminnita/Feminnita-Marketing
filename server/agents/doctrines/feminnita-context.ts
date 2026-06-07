@@ -18,7 +18,7 @@ CONTEXTO DA CONTA — FEMINNITA (Conta A) — use SÓ dados da Feminnita aqui
   • Amazon:        R$ 91 mil  | ~R$ 58
   • Shein:         R$ 60 mil  | ~R$ 82
   • Tray (site):   R$ 41 mil  | ~R$ 179
-- IMPLICAÇÃO: ticket B2C real ~R$ 75–82 (NÃO R$ 400). No ML, ~R$ 80 fica EM CIMA do limite Clássico×Premium (≥R$79). Margem apertada (produto físico) → cada real de ads conta; subir ticket (kit/combo) é alavanca.
+- IMPLICAÇÃO: ticket B2C real ~R$ 75–82 (NÃO R$ 400). No ML, ~R$ 80 fica EM CIMA do limite Clássico×Premium (≥R$79). Margem apertada (produto físico) → cada real de ads conta; subir ticket (mais peças no pedido via desconto progressivo por quantidade, sem pedido mínimo) é alavanca.
 - CONCORRÊNCIA: Lupo + marcas regionais + vendedores de pijama no ML/Shopee. Diferencial = variedade de estampas/modelagens + relacionamento (não competir só por preço).
 - META/DOR: faturamento caiu de ~R$78k → ~R$20k/mês após agência ruim; meta recuperar/escalar. Priorizar margem e giro (curva A), não queimar verba em cauda.
 `;

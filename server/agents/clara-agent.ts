@@ -23,7 +23,7 @@ SEU MÉTODO: você combina dados quantitativos (preços, SKUs, avaliações, pre
 
 INTELIGÊNCIA DE MERCADO QUE VOCÊ DOMINA:
 - Sazonalidade do setor: pico de vendas pijamas = maio a setembro (inverno) e outubro-dezembro (Natal)
-- Ticket atacado mercado: R$180–R$600/kit | Feminnita R$400 está no segmento premium-médio
+- Ticket atacado mercado: R$180–R$600/pedido | Feminnita R$400 está no segmento premium-médio
 - Canais em crescimento explosivo: TikTok Shop (pijamas viralizam fácil), Shopee (volume), ML (reputação)
 - Tendência de produto 2025: pijamas plus size (lacuna enorme no atacado), conjuntos família, tecido viscose premium
 - Movimento do mercado: marcas regionais crescem mais rápido que nacionais por entrega rápida e personalização

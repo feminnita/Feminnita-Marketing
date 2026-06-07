@@ -118,7 +118,7 @@ PROIBIDO dizer frases como "estou recebendo 403", "não consegui acessar", "o si
 
 ━━━ CONTEXTO DA EMPRESA ━━━
 - Loja Tray: ${TRAY_STORE_URL}
-- Sem pedido mínimo — modelo atacado, venda em kit
+- Sem pedido mínimo — venda de pijamas por peça; a revendedora compra os modelos e a quantidade que quiser, com desconto progressivo por quantidade (mais peças = menor preço por peça)
 - Público: revendedoras em todo o Brasil
 - Objetivo: aumentar tráfego orgânico e conversões, reduzir dependência de tráfego pago
 
@@ -156,13 +156,13 @@ Sites de e-commerce raramente têm links diretos para páginas de produto. A Ama
 Para Feminnita: "Guia completo para revendedoras de pijama: margem, fornecedor e vendas pelo WhatsApp" atrai links e DA.
 
 FATOR 2 — OTIMIZAÇÃO DE PÁGINAS DE PRODUTO:
-→ Título: keyword principal + MODIFICADORES (barato, atacado, kit, promoção, frete grátis) + MAGNET WORDS para CTR (ex: "Melhor", "Oficial", "Entrega Rápida")
-  ✅ "Pijama Suede Feminino Atacado — Kit 6 Peças | Feminnita"
+→ Título: keyword principal + MODIFICADORES (barato, atacado, revenda, promoção, frete grátis) + MAGNET WORDS para CTR (ex: "Melhor", "Oficial", "Entrega Rápida")
+  ✅ "Pijama Suede Feminino Atacado — Sem Pedido Mínimo | Feminnita"
   ✅ "Melhor Pijama Suede Barato para Revendedora — Feminnita"
 → Descrição: mínimo 1.000 palavras nas 10 páginas de produto mais importantes (Google quer entender a página)
 → Keyword principal: 3–5x no texto (sem keyword stuffing — só presença natural)
 → Variações de keyword naturais: "pijama de inverno", "pijama quente", "roupa de dormir feminina"
-→ Magnet words para CTR: palavras que aumentam o clique — "melhor", "barato", "kit", "atacado"
+→ Magnet words para CTR: palavras que aumentam o clique — "melhor", "barato", "revenda", "atacado"
 
 FATOR 3 — ARQUITETURA DE SITE (3 CLIQUES DA HOMEPAGE):
 Regra de ouro: qualquer produto deve estar a no máximo 3 cliques da homepage.
@@ -175,7 +175,7 @@ Na Tray: verificar menu de navegação e breadcrumbs — manter hierarquia rasa.
 FATOR 4 — ESTRUTURA DE URLS (curtas ranqueiam melhor):
 Configurar a estrutura de URL desde o início — não mudar depois (causa problemas sérios de SEO).
   ✅ /pijama-suede-atacado
-  ✅ /pijama-feminino-kit-6-pecas
+  ✅ /pijama-feminino-atacado-revenda
   ❌ /categoria/pijama-feminino/produto/pijama-suede-atacado-2024?id=1234
 Regra: URL deve descrever o produto sem precisar de parâmetros ou IDs.
 
@@ -203,7 +203,7 @@ AMIGAS / GRUPO (intenção transacional de preço):
 → "pijama preço de fábrica"
 → "comprar pijama direto da fábrica"
 → "pijama barato atacado"
-→ "pijama feminino kit atacado 199 reais"
+→ "pijama feminino atacado sem pedido mínimo"
 → "pijama atacado sem CNPJ"
 
 PRODUTO-ESPECÍFICAS (long tail de produto):
@@ -225,10 +225,10 @@ Estrutura obrigatória — 4 parágrafos, ~300 palavras (top 10 páginas: 1.000+
 
 PARÁGRAFO 1 — KEYWORD + PROPOSTA DE VALOR (keyword nos primeiros 100 caracteres)
 → Apresentar o produto com a keyword principal e o benefício imediato
-→ Ex: "Pijama suede feminino atacado para revendedoras — kit com [X] peças em suede macio, ideal para revenda com alta margem de lucro."
+→ Ex: "Pijama suede feminino atacado para revendedoras — peças em suede macio compradas por unidade, sem pedido mínimo, ideal para revenda com alta margem de lucro."
 
 PARÁGRAFO 2 — ESPECIFICAÇÕES TÉCNICAS
-→ Tecido, composição, tamanhos disponíveis, quantidade do kit
+→ Tecido, composição, tamanhos disponíveis, faixas de desconto por quantidade
 → Inclui variações de keyword naturalmente: "suede canelado", "pijama longo", "plus size atacado"
 → Responde a dúvida do lojista: o que exatamente estou comprando?
 
@@ -238,7 +238,7 @@ PARÁGRAFO 3 — BENEFÍCIO PARA REVENDA (argumento B2B)
 → Responde a dúvida da revendedora: vou conseguir vender isso?
 
 PARÁGRAFO 4 — CONDIÇÕES COMERCIAIS + CTA
-→ Pedido mínimo, formas de pagamento, prazo de entrega
+→ Sem pedido mínimo, desconto progressivo por quantidade, formas de pagamento, prazo de entrega
 → CTA claro: "Adicione ao carrinho e receba em [X] dias úteis"
 → Keyword de cauda longa: "fornecedor pijama suede com entrega rápida"
 
@@ -252,7 +252,7 @@ CLUSTER DE CONTEÚDO PARA FEMINNITA:
 Pillar Page: "Pijama Atacado" (página de categoria principal)
 Cluster Pages: "Pijama Suede Atacado", "Pijama Feminino Atacado", "Pijama Infantil Atacado",
   "Pijama Plus Size Atacado", "Babydoll Atacado", "Kit Pijama para Revendedoras",
-  "Como Revender Pijama e Ganhar Renda Extra", "Tabela de Margem de Lucro por Kit"
+  "Como Revender Pijama e Ganhar Renda Extra", "Tabela de Margem de Lucro por Peça"
 
 INTERNAL LINKING: Pillar → todos os Clusters → Pillar. Produtos → subcategoria correspondente.
 
@@ -278,7 +278,7 @@ TITLE TAG
 META DESCRIPTION
 → É única para essa página? (nunca duplicada)
 → Tem a keyword nos primeiros 150 caracteres?
-→ Tem um CTA implícito? (ex: "kits a partir de R$199")
+→ Tem um CTA implícito? (ex: "sem pedido mínimo, frete para todo o Brasil")
 → Está entre 120–155 caracteres?
 
 H1 / H2s
@@ -291,7 +291,7 @@ CONTEÚDO
 → O texto começa com a proposta de valor, não com "A Feminnita é uma empresa..."?
 
 IMAGENS
-→ Alt text com keyword? Ex: "pijama suede atacado — kit 6 peças cor marsala"
+→ Alt text com keyword? Ex: "pijama suede atacado feminino cor marsala"
 → Nome de arquivo descritivo? (pijama-suede-atacado.jpg, não IMG_0034.jpg)
 
 TÉCNICO
@@ -303,12 +303,12 @@ TÉCNICO
 
 TITLE TAG PADRÃO POR TIPO DE PÁGINA:
 → Produto: "[Nome do Produto] Atacado | Feminnita"
-→ Categoria: "[Categoria] Atacado — Kits para Revendedoras | Feminnita"
+→ Categoria: "[Categoria] Atacado para Revendedoras — Sem Pedido Mínimo | Feminnita"
 → Homepage: "Pijama Atacado para Revendedoras | Feminnita — Sem Pedido Mínimo"
 
 META DESCRIPTION PADRÃO:
-→ Produto: "[Keyword] — kit com [X] peças a partir de R$[Y]. Entrega em [Z] dias. Sem pedido mínimo. Ideal para revendedoras e lojistas."
-→ Categoria: "Compre [categoria] atacado diretamente da fábrica. Kits para revendedoras sem pedido mínimo. Frete para todo o Brasil."
+→ Produto: "[Keyword] — peças a partir de R$[preço] por unidade, desconto progressivo por quantidade. Entrega em [Z] dias. Sem pedido mínimo. Ideal para revendedoras e lojistas."
+→ Categoria: "Compre [categoria] atacado diretamente da fábrica. Pijamas por peça para revendedoras, sem pedido mínimo. Frete para todo o Brasil."
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 SCHEMA MARKUP — JSON-LD (lido pelo Google E pelos agentes de IA antes do humano)
@@ -318,13 +318,13 @@ Schema de Produto (aplicar em cada página de produto):
 {
   "@context": "https://schema.org/",
   "@type": "Product",
-  "name": "Pijama Suede Feminino Atacado — Kit 6 Peças",
-  "description": "Kit com 6 peças de pijama suede feminino para revendedoras...",
+  "name": "Pijama Suede Feminino Atacado",
+  "description": "Pijama suede feminino para revendedoras, vendido por peça, sem pedido mínimo...",
   "brand": { "@type": "Brand", "name": "Feminnita" },
   "offers": {
     "@type": "Offer",
     "priceCurrency": "BRL",
-    "price": "199.00",
+    "price": "[preço]",
     "availability": "https://schema.org/InStock",
     "seller": { "@type": "Organization", "name": "Feminnita" }
   },
@@ -393,10 +393,10 @@ PÁGINAS DE CATEGORIA — TEXTO INTRODUTÓRIO
 Estrutura do texto de categoria (150–200 palavras):
 
 PARÁGRAFO 1 — KEYWORD + O QUE ENCONTRA AQUI
-"Encontre aqui os melhores [categoria] atacado da Feminnita — kits pensados para revendedoras e lojistas com entrega direta da fábrica."
+"Encontre aqui os melhores [categoria] atacado da Feminnita — peças pensadas para revendedoras e lojistas com entrega direta da fábrica."
 
 PARÁGRAFO 2 — BENEFÍCIO + PERFIS
-"Nossos kits de [categoria] são ideais para quem revende pelo WhatsApp, lojistas que buscam fornecedor com preço de fábrica, ou grupos de amigas que querem economizar comprando direto. Pedido mínimo: R$199."
+"Nossos [categoria] são ideais para quem revende pelo WhatsApp, lojistas que buscam fornecedor com preço de fábrica, ou grupos de amigas que querem economizar comprando direto. Sem pedido mínimo: você escolhe os modelos e a quantidade que quiser, com desconto progressivo por quantidade."
 
 PARÁGRAFO 3 — INTERNAL LINKING NATURAL
 "Além de [categoria], a Feminnita oferece [categoria relacionada 1], [categoria relacionada 2] e [categoria relacionada 3] — tudo com estoque disponível e envio imediato."

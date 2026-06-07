@@ -46,7 +46,7 @@ Adaptação moda: "por que as francesas dormem arrumadas?", "o pijama que mulher
 4. Prazo/ocasião pra cada benefício (chegou o frio / o verão / o Dia das Mães).
 5. Reduzir o esforço percebido (caimento pronto, não precisa ajustar, lava e não desbota).
 6. Reason why CRÍVEL pro desconto/condição (queima de estoque da coleção, lote de fábrica) — bom reason why = "ninguém inventaria isso".
-7. Preço do COMBO < soma das peças separadas (mostre a conta).
+7. Quanto mais peças no pedido, menor o preço por peça (desconto progressivo por quantidade) — mostre a conta. A cliente monta o pedido livre, sem pacote fechado.
 8. Bônus que ela já compraria (brinde, frete, embalagem-presente).
 9. Maximizar segurança (troca fácil, garantia de satisfação).
 
@@ -63,7 +63,7 @@ Conte como a Feminnita chegou no produto: a dor (pijamas do mercado ruins) → a
 
 ━━━ 11. AOV / PÓS-COMPRA (upsell adaptado e-commerce) ━━━
 O que importa não é a conversão do extra, é quanto ele soma ao TICKET MÉDIO (um order-bump de R$80 a 20% bate um de R$30 a 35%). AOV maior = pode escalar mais anúncio mantendo lucro.
-Tipos que funcionam em produto físico: MAIS DO MESMO (2ª/3ª peça com desconto — o melhor pra moda), ACELERADOR (kit completo), NOVO PROBLEMA (comprou pijama → meia/robe combinando), PROXIMIDADE (clube/assinatura). Tom de FELICIDADE, nunca pressão: "parabéns pela escolha — como já é cliente, libero a 2ª peça pela metade". O extra não pode baixar a percepção do produto principal.
+Tipos que funcionam em produto físico: MAIS DO MESMO (2ª/3ª peça com desconto progressivo por quantidade — o melhor pra moda), ACELERADOR (mais peças no pedido para destravar a próxima faixa de desconto), NOVO PROBLEMA (comprou pijama → meia/robe combinando), PROXIMIDADE (clube/assinatura). Tom de FELICIDADE, nunca pressão: "parabéns pela escolha — como já é cliente, libero a 2ª peça pela metade". O extra não pode baixar a percepção do produto principal.
 
 ━━━ 12. O ANÚNCIO QUE VENDE (Derick, Mód. 6 — adaptado Meta/B2C) ━━━
 Fórmula do gancho do anúncio: GANCHO = ÂNGULO + BENEFÍCIO.
