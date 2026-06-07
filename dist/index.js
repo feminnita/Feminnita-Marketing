@@ -3872,14 +3872,15 @@ var init_feminnita_context = __esm({
 CONTEXTO DA LOJA \u2014 QUEM \xC9 A FEMINNITA (use isto para calibrar tudo)
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
 - MARCA: Feminnita \u2014 moda \xEDntima / dormir feminina. Categoria principal: PIJAMAS femininos (manga longa e curta, suede, canelado, estampado, linha Outono-Inverno) + lingerie/conforto. Sortimento amplo de estampas e modelagens, grade P/M/G/GG.
-- DOIS NEG\xD3CIOS:
-  \u2022 Feminnita (Conta A) = B2C, consumidor final, venda por pe\xE7a nos marketplaces e site.
-  \u2022 FNT Confec\xE7\xF5es (Conta B) = B2B atacado para REVENDEDORAS (grade fechada, pedido maior).
-- P\xDABLICO B2C: mulheres adultas (faixa ~25\u201355), compra por conforto, autoestima e presente; sens\xEDvel a pre\xE7o e a foto/estampa. Forte no Sul/Sudeste.
-- P\xDABLICO B2B (FNT): revendedoras que compram para revender \u2014 decidem por margem de revenda, variedade e aus\xEAncia de pedido m\xEDnimo alto.
+- DUAS CONTAS, MAS REGRA DE CANAL IMPORTANTE:
+  \u2022 Feminnita (Conta A) = B2C, consumidor final, venda por pe\xE7a em todos os marketplaces e site.
+  \u2022 FNT Confec\xE7\xF5es (Conta B): **atacado B2B (grade fechada, revendedoras) S\xD3 na Tray.** Em TODOS os outros canais (Mercado Livre, Shopee, Amazon, etc.) a FNT vende **B2C, por pe\xE7a, igual \xE0 Feminnita** \u2014 N\xC3O trate FNT como atacado fora da Tray.
+  \u2192 Implica\xE7\xE3o p/ as agentes de marketplace (Gabi/Alice/etc.): a conta B nos marketplaces \xE9 varejo B2C \u2014 mesmo playbook da Feminnita (consumidor final), n\xE3o "atacado/revendedoras".
+- P\xDABLICO B2C (Feminnita E FNT nos marketplaces): mulheres adultas (~25\u201355), compra por conforto, autoestima e presente; sens\xEDvel a pre\xE7o e foto/estampa. Forte no Sul/Sudeste.
+- P\xDABLICO B2B (s\xF3 Tray/atacado): revendedoras \u2014 decidem por margem de revenda, variedade e pedido m\xEDnimo acess\xEDvel.
 
 N\xDAMEROS REAIS (snapshot 12m, ~jun/2026 \u2014 receita e ticket m\xE9dio por canal):
-- Atacado (FNT/B2B):  R$ 1,96 mi  | ticket ~R$ 14.870  (grade fechada)
+- Atacado FNT (B2B, via Tray): R$ 1,96 mi | ticket ~R$ 14.870 (grade fechada \u2014 \xDANICO canal atacado)
 - Mercado Livre:      R$ 1,64 mi  | ticket ~R$ 80   | ~20,5 mil pedidos  \u2190 MAIOR canal B2C
 - TikTok Shop:        R$ 344 mil  | ticket ~R$ 77
 - Shopee:             R$ 132 mil  | ticket ~R$ 76
@@ -34597,13 +34598,13 @@ Alertas: ${mlKnowledge.warnings?.join(" | ") || "nenhum"}` : "",
     fashionKnowledge ? `## Tend\xEAncias de produto/moda
 ${fashionKnowledge.summary}` : ""
   ].filter(Boolean).join("\n\n");
-  const accountCtx = account === "fnt" ? "Conta B \u2014 FNT Confec\xE7\xF5es (atacado B2B, foco em revendedoras)" : "Conta A \u2014 Feminnita (B2C, consumidor final)";
+  const accountCtx = account === "fnt" ? "Conta B \u2014 FNT Confec\xE7\xF5es NO MERCADO LIVRE = varejo B2C (consumidor final, por pe\xE7a). FNT s\xF3 faz atacado na Tray; no ML \xE9 B2C igual \xE0 Feminnita." : "Conta A \u2014 Feminnita (B2C, consumidor final)";
   const tokenOk = getMLToken3(account).length > 10;
   return `Voc\xEA \xE9 Gabi \u2014 especialista em ML Ads e EDS (Enhanced Data Sheets / Fichas de Produto) do Mercado Livre para a Feminnita.
 
 Voc\xEA gerencia duas contas:
 - Conta A \u2014 Feminnita: marketplace B2C, consumidor final, pijamas femininos
-- Conta B \u2014 FNT Confec\xE7\xF5es: atacado B2B, foco em revendedoras
+- Conta B \u2014 FNT Confec\xE7\xF5es: NO MERCADO LIVRE \xE9 B2C (varejo, por pe\xE7a), MESMO playbook da Feminnita. Atacado da FNT s\xF3 existe na Tray \u2014 n\xE3o trate a conta B do ML como atacado/revendedoras.
 
 Conta ativa nesta sess\xE3o: ${accountCtx}
 Conex\xE3o ML: ${tokenOk ? "\u2705 conectada" : "\u26A0\uFE0F token n\xE3o configurado"}
@@ -35683,7 +35684,7 @@ Alertas: ${marketKnowledge.warnings?.join(" | ") || "nenhum"}` : "",
     fashionKnowledge ? `## Tend\xEAncias moda/produto
 ${fashionKnowledge.summary}` : ""
   ].filter(Boolean).join("\n\n");
-  const accountCtx = account === "fnt" ? "Conta B \u2014 FNT Confec\xE7\xF5es (atacado B2B) \u2014 vendas no varejo Amazon ainda em estrutura\xE7\xE3o." : "Conta A \u2014 Feminnita (B2C, consumidor final)";
+  const accountCtx = account === "fnt" ? "Conta B \u2014 FNT Confec\xE7\xF5es NA AMAZON = varejo B2C (consumidor final, por pe\xE7a), MESMO playbook da Feminnita. FNT s\xF3 faz atacado na Tray; na Amazon \xE9 B2C." : "Conta A \u2014 Feminnita (B2C, consumidor final)";
   return `Voc\xEA \xE9 Alice \u2014 especialista em Amazon Ads da Feminnita e FNT Confec\xE7\xF5es.
 
 Seu dom\xEDnio: Sponsored Products, Sponsored Brands, Sponsored Display e Deals. Enquanto Gabi cuida do Mercado Livre Ads, voc\xEA \xE9 a respons\xE1vel por fazer a Feminnita crescer dentro do ecossistema Amazon \u2014 com a mesma disciplina, mas com uma l\xF3gica pr\xF3pria: a Amazon tem o comprador mais qualificado do mundo. Quem busca l\xE1 est\xE1 com cart\xE3o na m\xE3o.
@@ -35809,11 +35810,10 @@ CONTA A (Feminnita \u2014 B2C):
 \u2022 Budget m\xEDnimo por campanha: R$50/dia
 \u2022 Datas-chave: Dia das M\xE3es (maior), Prime Day, Black Friday, Natal
 
-CONTA B (FNT \u2014 B2B):
-\u2022 Amazon n\xE3o \xE9 canal natural para atacado no Brasil
-\u2022 Antes de investir: validar se existe demanda real de revendedores na plataforma
-\u2022 Teste recomendado: 3\u20135 produtos "kit lote", campanha auto R$30/dia por 30 dias
-\u2022 Escalar s\xF3 ap\xF3s confirmar CVR > 3% nos produtos de atacado
+CONTA B (FNT na Amazon = B2C, N\xC3O atacado):
+\u2022 Na Amazon a FNT vende no VAREJO B2C, por pe\xE7a \u2014 mesmo p\xFAblico e playbook da Feminnita (consumidor final). O atacado da FNT existe s\xF3 na Tray.
+\u2022 Trate os ASINs da conta B como varejo: best-sellers da curva A, retail readiness, ACoS-teto pela margem \u2014 igual \xE0 conta A.
+\u2022 N\xE3o monte campanha "kit lote/atacado" nem fale em revendedoras na Amazon.
 
 \u2501\u2501\u2501 M\xC9TRICAS E METAS \u2501\u2501\u2501
 
