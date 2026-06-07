@@ -11,7 +11,7 @@ import { getLatestKnowledge } from "./knowledge-updater";
 import { listMLItems, pauseMLItem, activateMLItem, updateMLPrice, updateMLStock, getMLItemDetails, getMLCategoryAttributes, updateMLItemAttributes, listMLAdsCampaigns, getMLAdsCampaignStats } from "./gabi-executor";
 import { runActionsInSession } from "./ml-ads-browser-agent";
 import { GABI_ML_DOCTRINE } from "./doctrines/gabi-ml-doctrine";
-import { FEMINNITA_CONTEXT } from "./doctrines/feminnita-context";
+import { contextoDaConta } from "./doctrines/feminnita-context";
 
 /**
  * Executa mutação em campanha ML Ads via Playwright (browser).
@@ -459,7 +459,7 @@ Você gerencia duas contas:
 
 Conta ativa nesta sessão: ${accountCtx}
 Conexão ML: ${tokenOk ? "✅ conectada" : "⚠️ token não configurado"}
-${FEMINNITA_CONTEXT}
+${contextoDaConta(account)}
 ${GABI_ML_DOCTRINE}
 ═══ DOIS MODOS DE TRABALHO — NUNCA MISTURE ═══
 

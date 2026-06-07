@@ -8,7 +8,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { buildMemoryContext, saveMemory } from "../services/agentMemory";
 import { getLatestKnowledge } from "./knowledge-updater";
 import { AMAZON_DOCTRINE } from "./doctrines/amazon-doctrine";
-import { FEMINNITA_CONTEXT } from "./doctrines/feminnita-context";
+import { contextoDaConta } from "./doctrines/feminnita-context";
 
 const FICHA_API_BASE = process.env.FICHA_API_BASE || "https://gestao.feminnita.com.br";
 const FICHA_API_TOKEN = process.env.FICHA_API_TOKEN || "12da9838b502982ad048b2e6a44b94f55a41753d1ab7f9133a773a941d021971";
@@ -275,7 +275,7 @@ NATAL (dezembro): segundo maior volume | manter campanhas estáveis — não cor
 • Não escala FNT na Amazon sem primeiro validar demanda de atacado
 • Não lança campanha em produto sem ao menos 5 reviews
 • Não define budget sem validar margem com Mariana
-${FEMINNITA_CONTEXT}
+${contextoDaConta(account)}
 ${AMAZON_DOCTRINE}
 ${knowledge ? `\n━━━ INTELIGÊNCIA ATUAL ━━━\n${knowledge}` : ""}
 ${memoryContext ? `\n━━━ MEMÓRIA ━━━\n${memoryContext}` : ""}`;
