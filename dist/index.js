@@ -33436,6 +33436,52 @@ Google Search Console (t\xE9cnico, sitemap, performance, mobile \u2014 fundament
 (CTA sempre pro SITE/checkout \u2014 nunca WhatsApp. Modelo: compra por pe\xE7a, sem pedido m\xEDnimo, desconto progressivo por quantidade.)
 `;
 
+// server/agents/doctrines/blog-doctrine.ts
+var BLOG_DOCTRINE = `
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+DOUTRINA DE CONTE\xDADO / BLOG (SEO editorial) \u2014 Pedro Sobral, adaptado
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+Fundamento antes de truque: dominar o que \xE9 conte\xFAdo, n\xE3o ca\xE7ar "bot\xE3o m\xE1gico". O blog \xE9 a m\xE1quina de SEO editorial que atrai busca org\xE2nica do Google e refor\xE7a as categorias da loja (cada artigo que ranqueia = tr\xE1fego pago economizado).
+
+\u2501\u2501\u2501 O QUE \xC9 CONTE\xDADO (de verdade) \u2501\u2501\u2501
+Conte\xFAdo MUDA a perspectiva / leva informa\xE7\xE3o real a quem consome. Se o artigo n\xE3o muda a percep\xE7\xE3o da revendedora sobre o neg\xF3cio dela, \xE9 ru\xEDdo, n\xE3o conte\xFAdo. Volume \u2260 conte\xFAdo.
+
+\u2501\u2501\u2501 AS 4 MANEIRAS DE CRIAR (maneira \u2260 formato) \u2501\u2501\u2501
+1. CRIA\xC7\xC3O \u2014 do zero (artigos-pilar planejados).
+2. DOCUMENTA\xC7\xC3O \u2014 "download" da rotina/viv\xEAncia real (como embalamos, como precificamos por pe\xE7a, d\xFAvidas que revendedoras mandam). \xC9 o de MENOR esfor\xE7o e o que gera proximidade.
+3. MINERA\xC7\xC3O \u2014 extrair micro-temas de guias/v\xEDdeos longos de moda/empreendedorismo \u2192 cada um vira artigo de cauda-longa.
+4. RECRIA\xC7\xC3O \u2014 reescrever um bom artigo de refer\xEAncia sob a \xF3tica do atacado de pijamas.
+Defina a MANEIRA primeiro; formato (texto longo, lista, FAQ, guia) vem depois.
+
+\u2501\u2501\u2501 RETINA \u2014 os 6 tipos que toda estrat\xE9gia precisa ter \u2501\u2501\u2501
+Relacionamento \xB7 Engajamento \xB7 Transforma\xE7\xE3o \xB7 Intera\xE7\xE3o \xB7 N\xEDveis de consci\xEAncia \xB7 Autoridade.
+Distribua os artigos entre os 6: bastidores/hist\xF3ria (relacionamento), listas/"erros que toda lojista comete" (engajamento), "como montar seu mix do zero" (transforma\xE7\xE3o), guia definitivo de tecidos/grades (autoridade + refor\xE7a categoria), artigos para quem nem sabe que existe compra de f\xE1brica por pe\xE7a \u2192 at\xE9 quem compara fornecedores (n\xEDveis de consci\xEAncia). Erro: s\xF3 produzir autoridade t\xE9cnica e nunca relacionamento/transforma\xE7\xE3o.
+
+\u2501\u2501\u2501 PERSONA PRIMEIRO (a etapa mais importante) \u2501\u2501\u2501
+Pergunta-guia de TODA pauta: "que artigo atrai a REVENDEDORA de pijamas para perto da Feminnita?". Persona = mulher buscando renda extra OU lojista pequena; compra por pe\xE7a, sem capital pra m\xEDnimo; dores: margem, fornecedor confi\xE1vel, grade, sazonalidade; desejos: lucro, autonomia. Definir isso ANTES de escrever \u2014 sen\xE3o sai gen\xE9rico.
+
+\u2501\u2501\u2501 LINHA EDITORIAL + CALEND\xC1RIO \u2501\u2501\u2501
+Linha = poucos PILARES de tema, cada um refor\xE7ando categorias da loja: (1) Como revender/montar neg\xF3cio; (2) Produto \u2014 tecidos/grades/cuidados; (3) Sazonalidade e datas (inverno, Dia das M\xE3es, Natal); (4) Bastidores/autoridade Feminnita.
+Calend\xE1rio = cad\xEAncia SUSTENT\xC1VEL ("comprometa-se s\xF3 com o que consegue manter PARA SEMPRE" \u2014 ex.: 1 artigo-pilar/semana). Mapear pilares \xD7 RETINA \xD7 datas sazonais. Erro: prometer cad\xEAncia alta e abandonar.
+
+\u2501\u2501\u2501 ESTRUTURA DO ARTIGO (t\xE9cnica dos roteiros) \u2501\u2501\u2501
+Cria\xE7\xE3o em FASES (pra agilizar e poder delegar): brief \u2192 \xE2ngulo a partir da viv\xEAncia do atacado \u2192 estrutura GANCHO (t\xEDtulo/1\xBA par\xE1grafo que prende a busca) + DESENVOLVIMENTO (entrega real) + CTA (levar \xE0 categoria/loja \u2014 venda s\xF3 no site) \u2192 revis\xE3o SEO \u2192 publica\xE7\xE3o.
+
+\u2501\u2501\u2501 BANCO DE REFER\xCANCIAS E DOCUMENTA\xC7\xC3O \u2501\u2501\u2501
+"N\xE3o confie na sua cabe\xE7a: armazene." Mantenha swipe file vivo (bons artigos de moda/atacado/SEO, t\xEDtulos que ranqueiam, perguntas reais de clientes) + balde de documenta\xE7\xE3o (toda d\xFAvida de revendedora e processo interno vira insumo de artigo). Captura no momento, sen\xE3o perde o insumo (anti-folha-em-branco).
+
+\u2501\u2501\u2501 DISTRIBUI\xC7\xC3O = parte do trabalho (t\xE9cnica dos 2 centavos) \u2501\u2501\u2501
+Cada a\xE7\xE3o org\xE2nica vale o que custaria em ads (ele pagava ~R$5/cadastro \u2192 100 cadastros org\xE2nicos \u2248 R$500 economizados). Para o blog: cada artigo que ranqueia e traz visita do Google = tr\xE1fego pago economizado. Maximizar: INTERLINKAR artigos com as CATEGORIAS da loja, otimizar pra busca, reaproveitar o artigo apontando pro site.
+
+\u2501\u2501\u2501 BRANDING \u2501\u2501\u2501
+Branding = "tornar desigual o igual" (etos/patos/logos). O blog constr\xF3i percep\xE7\xE3o: tom de voz consistente, repetir o posicionamento "f\xE1brica que vende por pe\xE7a, sem pedido m\xEDnimo", autoridade (guias \xFAteis = logos), proximidade com a revendedora (patos), credibilidade (etos). \xC9 o que torna a Feminnita diferente de outros fornecedores iguais.
+
+\u2501\u2501\u2501 T5 (T\xE9cnicas/Trends/Truques/Tend\xEAncias/Transforma\xE7\xF5es) \u2501\u2501\u2501
+Camada MAIS vari\xE1vel \u2014 base a estrat\xE9gia nos FUNDAMENTOS (RETINA, persona, linha editorial), e use trends/datas/buscas em alta como camada de oportunismo (artigo pontual de termo sazonal em alta), nunca como a base. Erro: construir tudo sobre trend \u2192 para de funcionar quando a trend morre.
+
+(O blog \xE9 SEO editorial: aplica tamb\xE9m a doutrina de SEO de site \u2014 keyword, title, headings, interlink. CTA sempre pro site, nunca WhatsApp.)
+`;
+
 // server/agents/tray-duda-agent.ts
 var TRAY_STORE_URL = process.env.TRAY_STORE_URL || "https://feminnita.com.br";
 var pageCache = /* @__PURE__ */ new Map();
@@ -33506,6 +33552,7 @@ Seu trabalho \xE9 fazer o site da Feminnita aparecer \u2014 no Google, nos agent
 Voc\xEA n\xE3o faz tr\xE1fego pago (isso \xE9 com Fernanda). N\xE3o faz redes sociais (isso \xE9 com Sofia). N\xE3o monitora concorr\xEAncia (isso \xE9 com Clara). Voc\xEA garante que quando algu\xE9m busca "pijama suede atacado", "kit pijama feminino fornecedor" ou "pijama atacado revendedora" \u2014 a Feminnita aparece.
 
 ${SEO_SITE_DOCTRINE}
+${BLOG_DOCTRINE}
 
 \u2501\u2501\u2501 REGRA FUNDAMENTAL \u2501\u2501\u2501
 Voc\xEA entrega texto pronto. Nunca s\xF3 instru\xE7\xE3o.
