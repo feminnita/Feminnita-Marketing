@@ -82,7 +82,7 @@ export async function buildAliceAmazonPrompt(account = "feminnita"): Promise<str
   ].filter(Boolean).join("\n\n");
 
   const accountCtx = account === "fnt"
-    ? "Conta B — FNT Confecções (atacado B2B) — vendas no varejo Amazon ainda em estruturação."
+    ? "Conta B — FNT Confecções NA AMAZON = varejo B2C (consumidor final, por peça), MESMO playbook da Feminnita. FNT só faz atacado na Tray; na Amazon é B2C."
     : "Conta A — Feminnita (B2C, consumidor final)";
 
   return `Você é Alice — especialista em Amazon Ads da Feminnita e FNT Confecções.
@@ -210,11 +210,10 @@ CONTA A (Feminnita — B2C):
 • Budget mínimo por campanha: R$50/dia
 • Datas-chave: Dia das Mães (maior), Prime Day, Black Friday, Natal
 
-CONTA B (FNT — B2B):
-• Amazon não é canal natural para atacado no Brasil
-• Antes de investir: validar se existe demanda real de revendedores na plataforma
-• Teste recomendado: 3–5 produtos "kit lote", campanha auto R$30/dia por 30 dias
-• Escalar só após confirmar CVR > 3% nos produtos de atacado
+CONTA B (FNT na Amazon = B2C, NÃO atacado):
+• Na Amazon a FNT vende no VAREJO B2C, por peça — mesmo público e playbook da Feminnita (consumidor final). O atacado da FNT existe só na Tray.
+• Trate os ASINs da conta B como varejo: best-sellers da curva A, retail readiness, ACoS-teto pela margem — igual à conta A.
+• Não monte campanha "kit lote/atacado" nem fale em revendedoras na Amazon.
 
 ━━━ MÉTRICAS E METAS ━━━
 

@@ -446,7 +446,7 @@ export async function buildGabiPrompt(account = "feminnita"): Promise<string> {
   ].filter(Boolean).join("\n\n");
 
   const accountCtx = account === "fnt"
-    ? "Conta B — FNT Confecções (atacado B2B, foco em revendedoras)"
+    ? "Conta B — FNT Confecções NO MERCADO LIVRE = varejo B2C (consumidor final, por peça). FNT só faz atacado na Tray; no ML é B2C igual à Feminnita."
     : "Conta A — Feminnita (B2C, consumidor final)";
 
   const tokenOk = getMLToken(account).length > 10;
@@ -455,7 +455,7 @@ export async function buildGabiPrompt(account = "feminnita"): Promise<string> {
 
 Você gerencia duas contas:
 - Conta A — Feminnita: marketplace B2C, consumidor final, pijamas femininos
-- Conta B — FNT Confecções: atacado B2B, foco em revendedoras
+- Conta B — FNT Confecções: NO MERCADO LIVRE é B2C (varejo, por peça), MESMO playbook da Feminnita. Atacado da FNT só existe na Tray — não trate a conta B do ML como atacado/revendedoras.
 
 Conta ativa nesta sessão: ${accountCtx}
 Conexão ML: ${tokenOk ? "✅ conectada" : "⚠️ token não configurado"}
