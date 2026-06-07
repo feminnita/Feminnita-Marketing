@@ -4519,6 +4519,76 @@ Tipos que funcionam em produto f\xEDsico: MAIS DO MESMO (2\xAA/3\xAA pe\xE7a com
   }
 });
 
+// server/agents/doctrines/arte-criativo-doctrine.ts
+var ARTE_CRIATIVO_DOCTRINE;
+var init_arte_criativo_doctrine = __esm({
+  "server/agents/doctrines/arte-criativo-doctrine.ts"() {
+    "use strict";
+    ARTE_CRIATIVO_DOCTRINE = `
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+DOUTRINA DE ARTE / CRIATIVO (Meta Ads \u2014 adaptado B2C f\xEDsico)
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+Filosofia: "nosso jogo n\xE3o \xE9 ser criativo, \xE9 vender." MODELAR o que j\xE1 escala > criar do zero (criar do zero queima verba).
+Um criativo/hook j\xE1 validado tem MUITO mais chance que um in\xE9dito. O bom criativo nasce na ESPIONAGEM, n\xE3o na inspira\xE7\xE3o.
+
+\u2501\u2501\u2501 1. ESPIONAGEM \u2014 onde achar e como saber que ESCALA \u2501\u2501\u2501
+Fonte n\xBA1: Biblioteca de An\xFAncios do Meta (Facebook Ad Library). Tamb\xE9m Reels/TikTok p/ formato.
+Sinais de que um anunciante est\xE1 ESCALANDO (n\xE3o s\xF3 testando):
+- Tem MUITOS an\xFAncios ativos (\u224880-100+) e MUITAS varia\xE7\xF5es do mesmo corpo com hooks diferentes.
+- Teste do hor\xE1rio: salve a biblioteca e reabra logo ap\xF3s a meia-noite e \xE0s ~8h. Se saltou (ex.: 24 \u2192 550), est\xE1 escalando. 2-3 ads ou um dia s\xF3 = teste, ignore.
+- Palavra de busca = [palavra de mercado] + [palavra de nicho] + [gancho da oferta].
+- Mantenha uma pasta "Spy" e acompanhe quais ads morrem e quais ganham tra\xE7\xE3o; baixe o ad pra inspecionar.
+Moda/Feminnita: espionar marcas de pijama/moda \xEDntima/loungewear que rodam muito an\xFAncio; separar os que persistem.
+
+\u2501\u2501\u2501 2. AS 4 ETAPAS DE MODELAGEM \u2501\u2501\u2501
+1. Spy das pe\xE7as escaladas do SEU nicho \u2192 transcrever o ad vencedor e analisar o TIPO de edi\xE7\xE3o.
+2. Separar HOOK do CORPO num doc \u2014 e anotar a IMAGEM/V\xCDDEO que aparece no hook (o hook VISUAL pode ser o real respons\xE1vel pelo resultado).
+3. Mapear a pr\xF3pria oferta: mecanismo/benef\xEDcio real do produto (suede, modelagem, conforto, fabrica\xE7\xE3o pr\xF3pria) \u2014 o equivalente f\xEDsico ao "mecanismo/especialista" do infoproduto.
+4. Adaptar trocando s\xF3 o necess\xE1rio pro seu produto e plugar hooks j\xE1 validados.
+REGRA DE OURO: ao variar um ad que converte, a COPY \xE9 o que MENOS se mexe ("copy validada \xE9 ouro"). Inove em FORMATO, ATOR/MODELO, EDI\xC7\xC3O e HOOK VISUAL \u2014 n\xE3o na copy.
+
+\u2501\u2501\u2501 3. ANATOMIA DO CRIATIVO \u2501\u2501\u2501
+AIDA: Aten\xE7\xE3o \u2192 Interesse \u2192 Desejo \u2192 A\xE7\xE3o. Estrutura = HOOK + CORPO (em blocos): segmenta\xE7\xE3o do p\xFAblico \u2192 dor \u2192 promessa \u2192 prova social \u2192 spoiler do diferencial \u2192 CTA.
+- Segmenta\xE7\xE3o no in\xEDcio chama o p\xFAblico certo: "Voc\xEA que dorme com calor\u2026", "Se voc\xEA vive de pijama em casa\u2026", "Cansou de pijama que desbota e perde a forma?".
+- Benef\xEDcios DIMENSIONAIS (n\xE3o s\xF3 o resultado, mas o que os outros v\xE3o notar): "as amigas v\xE3o perguntar onde comprou", "o conforto que voc\xEA n\xE3o vai querer tirar". Forte p/ moda feminina.
+- Promessa clara e espec\xEDfica \xE9 obrigat\xF3ria.
+Dois tipos de criativo (mixar \u224880/20): PREVISIBILIDADE (modelado no validado, assertivo, escala menor) + ESCALA (disruptivo, baixa assertividade, escala explosiva).
+
+\u2501\u2501\u2501 4. HOOK \u2014 a parte mais importante (e mais cara) \u2501\u2501\u2501
+Hook = 1\xAA frase + 1\xAA imagem nos 3 primeiros segundos. Perdeu a pessoa aqui = perdeu o funil. \xC9 o que SATURA primeiro \u2192 \xE9 o que mais se troca.
+F\xF3rmula: HOOK = \xC2NGULO + BENEF\xCDCIO. No spy, ache o \xE2ngulo mais usado, o benef\xEDcio mais usado e o formato mais usado, e combine.
+HOOK VISUAL vale tanto quanto a copy: movimento, contraste, algo inesperado/curioso nos 1\xBAs segundos segura o scroll (ex.: v\xEDdeo curioso de 2-3s na frente). Em moda: caimento em movimento, antes/depois de "pijama comum \xD7 suede", a pessoa n\xE3o querendo tirar o pijama.
+4 formas de gerar hook SEM ser copywriter:
+1. Hook viral do org\xE2nico: no TikTok/Reels, buscar palavra do nicho, filtrar por curtidas, pegar a copy do v\xEDdeo mais viral e virar an\xFAncio.
+2. Estrutura invis\xEDvel (Amanda): perguntar POR QUE o hook funcionou e replicar a PSICOLOGIA, n\xE3o as palavras.
+3. Swipe file de hooks validados (banco alimentado diariamente no spy).
+4. ChatGPT como copy s\xEAnior: treinar com material de resposta direta, mandar os ads mais escalados e pedir varia\xE7\xF5es (lateralizar \xE2ngulos/benef\xEDcios).
+FRASE DE ATERRISSAGEM (p\xF3s-gancho): logo ap\xF3s o hook, uma frase chocante/curiosa que abre um loop ("t\xE3o boa que poderia ser outro hook") pra n\xE3o perder a pessoa no segundo 10.
+
+\u2501\u2501\u2501 5. CONGRU\xCANCIA (inegoci\xE1vel) \u2501\u2501\u2501
+Avatar + hist\xF3ria + contexto t\xEAm que bater. N\xE3o usar modelo incompat\xEDvel com a fala, nem cen\xE1rio que contradiz a hist\xF3ria. Incongru\xEAncia gera den\xFAncia e quebra confian\xE7a. Ao trocar o avatar/modelo, troque tamb\xE9m o contexto.
+
+\u2501\u2501\u2501 6. EDI\xC7\xC3O, RITMO, FORMATO \u2501\u2501\u2501
+- Edi\xE7\xE3o varia por nicho \u2014 estude o padr\xE3o de quem escala no SEU nicho; n\xE3o importe edi\xE7\xE3o de nicho diferente.
+- Cuidado com bloqueio do Meta: edi\xE7\xE3o agressiva demais (cortes/legendas/takes em excesso) pode derrubar a entrega. Se bloquear, simplifique (mais "pessoa falando", menos firula).
+- Pessoas na tela convertem mais que produto sozinho/estoque.
+- Ritmo: corte enrola\xE7\xE3o e transi\xE7\xF5es fracas, v\xE1 direto \xE0 informa\xE7\xE3o, quebre com "disparos de dopamina" (frases curiosas). Criativo bom pode ter 30s.
+- Formatos validados (transferem bem p/ f\xEDsico): UGC (cliente real falando, caseiro: casa/quarto/espelho), depoimento, caixinha de pergunta, "programa de TV/not\xEDcia". Escolha formato/avatar J\xC1 validado no nicho e encaixe sua copy. Se ningu\xE9m escala num formato no seu nicho, n\xE3o force.
+- V\xCDDEO REAL, nunca stock "bonitinho": pessoa usando/mostrando o pijama, rotina, espelho, antes de dormir.
+
+\u2501\u2501\u2501 7. MULTIPLICAR O VENCEDOR (80% da energia) \u2501\u2501\u2501
+Validou um criativo? Gaste 80% do esfor\xE7o VARIANDO ele (vira 40-60 pe\xE7as), n\xE3o ca\xE7ando pe\xE7a nova:
+1. V\xE1rios modelos/atores gravando a MESMA copy. 2. Edi\xE7\xF5es diferentes, mesma copy. 3. V\xEDdeo curioso de 2-3s na frente. 4. Empilhar hooks (3-4-5 hooks no mesmo corpo); avan\xE7ado = colar o hook de maior hook rate na frente do criativo que mais vende. 5. Mesma copy em formatos diferentes (UGC, depoimento, not\xEDcia). 6. Trocar o hook visual.
+
+\u2501\u2501\u2501 8. CTA \u2501\u2501\u2501
+CTA com valor material converte mais (ningu\xE9m gosta de perder dinheiro): brinde, cupom, frete gr\xE1tis, 2\xAA pe\xE7a. Depois do 1\xBA CTA, bullets de desejo/curiosidade como "\xFAltimo tiro" pra quem n\xE3o clicou.
+
+\u2501\u2501\u2501 M\xC9TRICA-CHAVE \u2501\u2501\u2501
+HOOK RATE = % que para nos 3 primeiros segundos. \xC9 o KPI do criativo: hook rate alto \u2192 empilhar/escalar esse hook; hook rate baixo \u2192 trocar o hook (n\xE3o o produto). Respeite a convers\xE3o (CPA), n\xE3o s\xF3 a vaidade de views.
+`;
+  }
+});
+
 // server/agents/creative-agent.ts
 var creative_agent_exports = {};
 __export(creative_agent_exports, {
@@ -4958,6 +5028,7 @@ var init_creative_agent = __esm({
     init_feminnita_context();
     init_copy_arte_doctrine();
     init_copy_deep_doctrine();
+    init_arte_criativo_doctrine();
     CREATIVE_DOCTRINE = `
 \u2501\u2501\u2501 DOUTRINA CRIATIVA (regras de ouro \u2014 seguir ao gerar copy e arte) \u2501\u2501\u2501
 - ESTRUTURA FGC: Formato \xB7 Gancho \xB7 Corpo. O criativo \xE9 99% do resultado.
@@ -4976,6 +5047,7 @@ var init_creative_agent = __esm({
 
 ${COPY_ARTE_DOCTRINE}
 ${COPY_DEEP_DOCTRINE}
+${ARTE_CRIATIVO_DOCTRINE}
 
 \u2501\u2501\u2501 METODOLOGIA DARA DENNY (20.000+ ads testados) \u2501\u2501\u2501
 
