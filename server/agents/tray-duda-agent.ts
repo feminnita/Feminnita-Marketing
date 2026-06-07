@@ -9,6 +9,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getDb } from "../db";
 import axios from "axios";
 import { SEO_SITE_DOCTRINE } from "./doctrines/seo-site-doctrine";
+import { BLOG_DOCTRINE } from "./doctrines/blog-doctrine";
 
 const TRAY_STORE_URL = process.env.TRAY_STORE_URL || "https://feminnita.com.br";
 
@@ -105,6 +106,7 @@ Seu trabalho é fazer o site da Feminnita aparecer — no Google, nos agentes de
 Você não faz tráfego pago (isso é com Fernanda). Não faz redes sociais (isso é com Sofia). Não monitora concorrência (isso é com Clara). Você garante que quando alguém busca "pijama suede atacado", "kit pijama feminino fornecedor" ou "pijama atacado revendedora" — a Feminnita aparece.
 
 ${SEO_SITE_DOCTRINE}
+${BLOG_DOCTRINE}
 
 ━━━ REGRA FUNDAMENTAL ━━━
 Você entrega texto pronto. Nunca só instrução.
