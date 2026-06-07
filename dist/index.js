@@ -4519,10 +4519,10 @@ O banner tem 5 campos de texto. Cada variante deve ser DIFERENTE das outras \u20
 
 CAMPOS DO BANNER:
 - titulo: frase de impacto principal (m\xE1x 35 chars) \u2014 muda conforme o hook, ex: identidade / transforma\xE7\xE3o / choque
-- preco: linha de pre\xE7o/oferta (m\xE1x 45 chars) \u2014 pode variar o enquadramento: "sem pedido m\xEDnimo", "comece hoje sem m\xEDnimo", "escolha seu kit agora"
+- preco: linha de pre\xE7o/oferta (m\xE1x 45 chars) \u2014 use S\xD3 pre\xE7o/oferta REAL fornecido nos dados; se n\xE3o tiver, use "[oferta atual]". N\xC3O invente pre\xE7o nem "pedido m\xEDnimo".
 - subtitulo: verbo de a\xE7\xE3o + lucro (m\xE1x 25 chars) \u2014 ex: "REVENDA E LUCRE", "GANHE EM CASA", "FATURE REVENDENDO"
 - cta: chamada para a\xE7\xE3o do bot\xE3o (m\xE1x 30 chars) \u2014 ex: "QUERO REVENDER \u2014 CLIQUE AQUI", "SEJA REVENDEDORA AGORA", "PE\xC7O MEU KIT"
-- rodape: info log\xEDstica FIXA \u2014 sempre: "5% NO PIX \xB7 3X SEM JUROS \xB7 ENVIO IMEDIATO"
+- rodape: info de pagamento/log\xEDstica \u2014 S\xD3 se vier como dado REAL; sen\xE3o deixe "[forma de pagamento]". N\xC3O invente "5% PIX" / "3x sem juros".
 
 TAMB\xC9M gere:
 - headline: texto principal do an\xFAncio no Meta (m\xE1x 40 chars)
@@ -4534,19 +4534,19 @@ Retorne APENAS JSON v\xE1lido:
   "preco": "...",
   "subtitulo": "...",
   "cta": "...",
-  "rodape": "5% NO PIX \xB7 3X SEM JUROS \xB7 ENVIO IMEDIATO",
+  "rodape": "[forma de pagamento real, se houver \u2014 sen\xE3o deixe assim]",
   "headline": "...",
   "body": "..."
 }`;
   const defaults = {
-    headline: "Revenda Feminnita \u2014 Lucro Garantido",
-    body: "Pijamas suede exclusivos para revendedoras. Sem pedido m\xEDnimo. Envio imediato!",
+    headline: "Pijamas Feminnita em Suede",
+    body: "Pijamas em suede, fabrica\xE7\xE3o pr\xF3pria. [oferta atual]",
     canvaCopy: {
-      titulo: "PIJAMAS DE FABRICA\xC7\xC3O PR\xD3PRIA",
-      preco: "COMECE A VENDER HOJE \u2014 SEM PEDIDO M\xCDNIMO",
-      subtitulo: "REVENDA E LUCRE",
-      cta: "QUERO REVENDER \u2014 CLIQUE AQUI",
-      rodape: "5% NO PIX \xB7 3X SEM JUROS \xB7 ENVIO IMEDIATO"
+      titulo: "PIJAMAS EM SUEDE",
+      preco: "[oferta atual]",
+      subtitulo: "FABRICA\xC7\xC3O PR\xD3PRIA",
+      cta: "VER AGORA",
+      rodape: "[forma de pagamento]"
     }
   };
   try {
@@ -4567,7 +4567,7 @@ Retorne APENAS JSON v\xE1lido:
         preco: parsed.preco || defaults.canvaCopy.preco,
         subtitulo: parsed.subtitulo || defaults.canvaCopy.subtitulo,
         cta: parsed.cta || defaults.canvaCopy.cta,
-        rodape: "5% NO PIX \xB7 3X SEM JUROS \xB7 ENVIO IMEDIATO"
+        rodape: parsed.rodape || defaults.canvaCopy.rodape
       }
     };
   } catch {
@@ -4876,24 +4876,20 @@ P\xFAblico frio: come\xE7a com dor/desejo. Nunca com o produto.
 "R$2.147 em 23 dias" > "ganhe muito dinheiro"
 Substitua todo adjetivo gen\xE9rico por n\xFAmero ou detalhe concreto.
 
-\u2501\u2501\u2501 FEMINNITA \u2014 CONTEXTO \u2501\u2501\u2501
-- Produto: pijamas suede premium, fabrica\xE7\xE3o pr\xF3pria Nova Friburgo RJ
-- Sem pedido m\xEDnimo | Ticket m\xE9dio R$400 | Margem revendedora: 40\u201360%
-- Pagamento: 5% PIX | 3x sem juros | Envio imediato para todo o Brasil
-- P\xFAblico: revendedoras aut\xF4nomas (m\xE3es em casa), lojistas MEI, grupos de compra
-- Meta urgente: R$100K/m\xEAs | Saiu de R$78K para R$20K ap\xF3s ag\xEAncia ruim
-- Diferencial: fabrica\xE7\xE3o pr\xF3pria (n\xE3o \xE9 revendedor), suede premium, envio imediato
-- NUNCA mencione algod\xE3o \u2014 tecido \xE9 SUEDE
+\u2501\u2501\u2501 FEMINNITA \u2014 FATOS FIXOS (s\xF3 o que \xE9 VERDADE) \u2501\u2501\u2501
+- Produto: pijamas / moda \xEDntima feminina em SUEDE, fabrica\xE7\xE3o pr\xF3pria (Nova Friburgo RJ).
+- Diferencial: fabrica\xE7\xE3o pr\xF3pria + suede premium.
+- NUNCA mencione algod\xE3o, viscose ou viscolaicra \u2014 o tecido \xE9 SUEDE.
 
-ESTRUTURA DO AN\xDANCIO QUE CONVERTE (refer\xEAncia obrigat\xF3ria):
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-PIJAMAS DE FABRICA\xC7\xC3O PR\xD3PRIA
-COMECE A VENDER HOJE \u2014 SEM PEDIDO M\xCDNIMO
-REVENDA E LUCRE
-QUERO REVENDER \u2014 CLIQUE AQUI
-5% NO PIX \xB7 3X SEM JUROS \xB7 ENVIO IMEDIATO
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-Essa estrutura \xC9 O M\xCDNIMO. Cada variante precisa ir AL\xC9M disso com o \xE2ngulo espec\xEDfico.`;
+\u26D4 REGRA INEGOCI\xC1VEL \u2014 N\xC3O INVENTE N\xDAMEROS DE OFERTA:
+N\xE3o escreva pre\xE7o, "a partir de R$X", desconto/%, forma de pagamento (PIX/parcelas) nem "pedido m\xEDnimo / sem pedido m\xEDnimo" A MENOS QUE o valor REAL seja fornecido nesta tarefa (nos dados/contexto). Se n\xE3o tiver o dado atual, use placeholder entre colchetes \u2014 ex.: "[pre\xE7o atual]", "[oferta atual]", "[forma de pagamento]". JAMAIS chute nem repita valores antigos da sua mem\xF3ria (proibido "R$199", "R$39,90", "R$400", "5% PIX", "3x sem juros" se n\xE3o vierem como dado real agora). Os n\xFAmeros reais v\xEAm do contexto/dados acima, n\xE3o da sua cabe\xE7a.
+
+ESTRUTURA DO AN\xDANCIO (esqueleto \u2014 preencha com o \xE2ngulo + dados REAIS):
+- Linha 1: produto/benef\xEDcio (SUEDE, fabrica\xE7\xE3o pr\xF3pria).
+- Linha 2: o gancho/\xE2ngulo da variante.
+- CTA claro.
+- Linha de oferta/pagamento: S\xD3 se houver dado real; sen\xE3o, placeholder.
+Cada variante vai al\xE9m do esqueleto com o \xE2ngulo espec\xEDfico.`;
     HOOK_BRIEF_INSTRUCTIONS = {
       demografico: `VARIANTE: DEMOGR\xC1FICO (Identidade)
 Sua miss\xE3o: escrever um brief onde a Beatriz vai chamar a revendedora pela identidade espec\xEDfica.
