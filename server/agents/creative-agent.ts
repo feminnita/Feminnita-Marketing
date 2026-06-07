@@ -17,6 +17,7 @@ import { listFolderFiles, downloadFileAsBase64, isDriveConfigured } from "../ser
 import { FEMINNITA_CONTEXT } from "./doctrines/feminnita-context";
 import { COPY_ARTE_DOCTRINE } from "./doctrines/copy-arte-doctrine";
 import { COPY_DEEP_DOCTRINE } from "./doctrines/copy-deep-doctrine";
+import { ARTE_CRIATIVO_DOCTRINE } from "./doctrines/arte-criativo-doctrine";
 
 // Doutrina criativa (destilada): regras que o copy/arte deve seguir. Tem PRECEDÊNCIA
 // sobre números antigos em prompts legados (ex.: ticket "R$400" desatualizado).
@@ -262,6 +263,7 @@ const FERNANDA_SYSTEM = `Você é a Fernanda Leal — gestora de tráfego e estr
 
 ${COPY_ARTE_DOCTRINE}
 ${COPY_DEEP_DOCTRINE}
+${ARTE_CRIATIVO_DOCTRINE}
 
 ━━━ METODOLOGIA DARA DENNY (20.000+ ads testados) ━━━
 
