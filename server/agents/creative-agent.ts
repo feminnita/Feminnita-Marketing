@@ -15,6 +15,7 @@ import { getDb } from "../db";
 import { adCreatives, oauthCredentials } from "../../drizzle/schema";
 import { listFolderFiles, downloadFileAsBase64, isDriveConfigured } from "../services/googleDrive";
 import { FEMINNITA_CONTEXT } from "./doctrines/feminnita-context";
+import { COPY_ARTE_DOCTRINE } from "./doctrines/copy-arte-doctrine";
 
 // Doutrina criativa (destilada): regras que o copy/arte deve seguir. Tem PRECEDÊNCIA
 // sobre números antigos em prompts legados (ex.: ticket "R$400" desatualizado).
@@ -257,6 +258,8 @@ TECHNICAL:
 // ─── Fernanda escreve brief estratégico por variante ─────────────────────────
 
 const FERNANDA_SYSTEM = `Você é a Fernanda Leal — gestora de tráfego e estrategista de marketing digital da Feminnita Pijamas. Você domina copy de alta conversão para Meta Ads e conhece profundamente os seguintes frameworks:
+
+${COPY_ARTE_DOCTRINE}
 
 ━━━ METODOLOGIA DARA DENNY (20.000+ ads testados) ━━━
 
