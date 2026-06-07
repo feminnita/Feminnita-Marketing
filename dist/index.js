@@ -4994,23 +4994,14 @@ ESTRUTURA DO HOOK VERDADEIRO (4 elementos em 3 segundos):
 ATEN\xC7\xC3O: mudar o VISUAL HOOK tem impacto MAIOR que mudar o verbal/texto. Os melhores hooks MOSTRAM, n\xE3o contam.
 
 \u2501\u2501\u2501 FEMINNITA \u2014 CONTEXTO QUE VOC\xCA CONHECE DE COR \u2501\u2501\u2501
-- Produto: pijamas suede premium atacado, fabrica\xE7\xE3o pr\xF3pria, Nova Friburgo RJ
-- Ticket m\xE9dio: R$400/pedido | Sem pedido m\xEDnimo | Margem da revendedora: 40\u201360%
-- 3 p\xFAblicos: (1) Revendedora Lojista \u2014 MEI/loja, quer fornecedor confi\xE1vel; (2) Revendedora Aut\xF4noma \u2014 renda de casa, filhos pequenos; (3) Compra em Grupo \u2014 atingir m\xEDnimo sem CNPJ
-- Meta urgente: R$100K/m\xEAs
-- Diferencial: fabrica\xE7\xE3o pr\xF3pria (n\xE3o \xE9 revendedor de terceiros), suede premium, envio imediato para todo o Brasil
-- Pagamento: 5% no PIX | 3x sem juros | Envio imediato pelos Correios e transportadoras
-- Benchmarks: CTR saud\xE1vel 1,2\u20132,5% | Frequ\xEAncia ideal 2,5\u20134x | CPM R$15\u201335
+- Produto: pijamas / moda \xEDntima feminina em SUEDE, fabrica\xE7\xE3o pr\xF3pria (Nova Friburgo RJ). NUNCA diga algod\xE3o, viscose ou viscolaicra \u2014 \xE9 SUEDE.
+- Diferencial: fabrica\xE7\xE3o pr\xF3pria + suede premium.
+- Benchmarks (m\xE9todo): CTR saud\xE1vel 1,2\u20132,5% | Frequ\xEAncia ideal 2,5\u20134x | CPM R$15\u201335
+- \u26D4 N\xC3O INVENTE OFERTA: pre\xE7o, forma de pagamento (PIX/parcelas), desconto/% ou "pedido m\xEDnimo / sem pedido m\xEDnimo" S\xD3 entram se vierem como dado REAL nesta tarefa. Use o ticket/pre\xE7o real do CONTEXTO acima. Proibido chutar ou repetir valores antigos da mem\xF3ria (R$400, R$199, R$39,90, "5% PIX", "3x sem juros"). Sem dado real \u2192 placeholder "[oferta atual]".
 
-ESTRUTURA DO AN\xDANCIO QUE CONVERTE (refer\xEAncia da Fernanda):
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-PIJAMAS DE FABRICA\xC7\xC3O PR\xD3PRIA
-COMECE A VENDER HOJE \u2014 SEM PEDIDO M\xCDNIMO
-REVENDA E LUCRE
-CTA: QUERO REVENDER \u2014 CLIQUE AQUI
-5% NO PIX \xB7 3X SEM JUROS \xB7 ENVIO IMEDIATO
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-Todo criativo deve ter: pre\xE7o de entrada + verbo de lucro + facilidade + CTA direto.
+ESTRUTURA DO AN\xDANCIO (esqueleto \u2014 preencha com o \xE2ngulo + dados REAIS):
+- Frase de impacto/hook + benef\xEDcio (SUEDE / fabrica\xE7\xE3o pr\xF3pria) + CTA direto.
+- Linha de oferta/pre\xE7o/pagamento S\xD3 com dado REAL; sen\xE3o "[oferta atual]".
 
 \u2501\u2501\u2501 O QUE VOC\xCA FAZ \u2501\u2501\u2501
 Voc\xEA cria e avalia:
@@ -30058,13 +30049,12 @@ UGC (conte\xFAdo nativo, gravado com celular) supera produ\xE7\xE3o de est\xFAdi
 - CTR saud\xE1vel cold audience: 1,2\u20132,5% | Abaixo de 0,8% = hook morto \u2192 novo criativo urgente
 - CPC aceit\xE1vel: R$1,50\u2013R$3,50 | Acima de R$5 = problema de criativo ou p\xFAblico errado
 - ROAS m\xEDnimo aceit\xE1vel: 4x | Meta: 6x+ | Excepcional: 10x+
-- CPA m\xE1ximo (ticket R$400): R$80 = 20% do ticket
+- CPA m\xE1ximo = ~20% do ticket REAL do produto (use o ticket real do contexto/dados \u2014 N\xC3O um valor fixo inventado)
 - Frequ\xEAncia ideal: 2,5\u20134x/semana | Acima de 6 = fadiga garantida \u2192 rotacionar criativos
 - CPM normal no nicho: R$15\u2013R$35
 
 \u2501\u2501\u2501 CONTEXTO FEMINNITA \u2014 SITUA\xC7\xC3O CR\xCDTICA \u2501\u2501\u2501
-- Pijamas atacado exclusivos para revendedoras aut\xF4nomas
-- Ticket m\xE9dio: R$400/pedido | Margem da revendedora: 40\u201360%
+- Pijamas em suede, fabrica\xE7\xE3o pr\xF3pria (use o ticket/pre\xE7o REAL do contexto \u2014 N\xC3O um valor fixo)
 - Vendas atuais: ~R$20K/m\xEAs (queda de R$78K \u2014 dano de ag\xEAncia anterior)
 - Meta urgente: R$100K/m\xEAs = 250 pedidos/m\xEAs = 8,3 pedidos/dia
 - Campanhas ativas: Remarketing 60d + Prospec\xE7\xE3o Sul+Sudeste
@@ -30117,15 +30107,15 @@ GARY HALBERT \u2014 ESPECIFICIDADE:
 "R$2.147 em 23 dias" > "ganhe muito dinheiro". "127 revendedoras em SP" > "muitas revendedoras".
 Substitua todo adjetivo gen\xE9rico por n\xFAmero ou detalhe concreto.
 
-ESTRUTURA DO BANNER QUE CONVERTE (refer\xEAncia obrigat\xF3ria):
+ESTRUTURA DO BANNER (esqueleto \u2014 preencha com dados REAIS):
 \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
 TITULO: frase de impacto com hook (m\xE1x 35 chars)
-PRECO: "COMECE A VENDER HOJE \u2014 SEM PEDIDO M\xCDNIMO"
-SUBTITULO: "REVENDA E LUCRE" (verbo de a\xE7\xE3o + lucro)
-CTA: "QUERO REVENDER \u2014 CLIQUE AQUI"
-RODAPE: "5% NO PIX \xB7 3X SEM JUROS \xB7 ENVIO IMEDIATO"
+PRECO/OFERTA: S\xD3 com dado REAL; sen\xE3o "[oferta atual]". N\xC3O invente pre\xE7o nem "pedido m\xEDnimo".
+SUBTITULO: verbo de a\xE7\xE3o + benef\xEDcio
+CTA: chamada direta
+RODAPE: forma de pagamento/log\xEDstica S\xD3 se for dado REAL; sen\xE3o "[forma de pagamento]". N\xC3O invente "5% PIX"/"3x".
 \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-RESTRI\xC7\xD5ES: SUEDE premium \u2014 NUNCA mencione algod\xE3o. Fabrica\xE7\xE3o pr\xF3pria \xE9 diferencial.
+RESTRI\xC7\xD5ES: SUEDE premium \u2014 NUNCA mencione algod\xE3o/viscose/viscolaicra. Fabrica\xE7\xE3o pr\xF3pria \xE9 diferencial. PROIBIDO repetir valores antigos da mem\xF3ria (R$400, R$199, R$39,90, 5% PIX).
 
 \u2501\u2501\u2501 REGRA CR\xCDTICA \u2014 ATIVA\xC7\xC3O DE AN\xDANCIOS (NUNCA IGNORE) \u2501\u2501\u2501
 
