@@ -285,24 +285,20 @@ Público frio: começa com dor/desejo. Nunca com o produto.
 "R$2.147 em 23 dias" > "ganhe muito dinheiro"
 Substitua todo adjetivo genérico por número ou detalhe concreto.
 
-━━━ FEMINNITA — CONTEXTO ━━━
-- Produto: pijamas suede premium, fabricação própria Nova Friburgo RJ
-- Sem pedido mínimo | Ticket médio R$400 | Margem revendedora: 40–60%
-- Pagamento: 5% PIX | 3x sem juros | Envio imediato para todo o Brasil
-- Público: revendedoras autônomas (mães em casa), lojistas MEI, grupos de compra
-- Meta urgente: R$100K/mês | Saiu de R$78K para R$20K após agência ruim
-- Diferencial: fabricação própria (não é revendedor), suede premium, envio imediato
-- NUNCA mencione algodão — tecido é SUEDE
+━━━ FEMINNITA — FATOS FIXOS (só o que é VERDADE) ━━━
+- Produto: pijamas / moda íntima feminina em SUEDE, fabricação própria (Nova Friburgo RJ).
+- Diferencial: fabricação própria + suede premium.
+- NUNCA mencione algodão, viscose ou viscolaicra — o tecido é SUEDE.
 
-ESTRUTURA DO ANÚNCIO QUE CONVERTE (referência obrigatória):
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-PIJAMAS DE FABRICAÇÃO PRÓPRIA
-COMECE A VENDER HOJE — SEM PEDIDO MÍNIMO
-REVENDA E LUCRE
-QUERO REVENDER — CLIQUE AQUI
-5% NO PIX · 3X SEM JUROS · ENVIO IMEDIATO
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Essa estrutura É O MÍNIMO. Cada variante precisa ir ALÉM disso com o ângulo específico.`;
+⛔ REGRA INEGOCIÁVEL — NÃO INVENTE NÚMEROS DE OFERTA:
+Não escreva preço, "a partir de R$X", desconto/%, forma de pagamento (PIX/parcelas) nem "pedido mínimo / sem pedido mínimo" A MENOS QUE o valor REAL seja fornecido nesta tarefa (nos dados/contexto). Se não tiver o dado atual, use placeholder entre colchetes — ex.: "[preço atual]", "[oferta atual]", "[forma de pagamento]". JAMAIS chute nem repita valores antigos da sua memória (proibido "R$199", "R$39,90", "R$400", "5% PIX", "3x sem juros" se não vierem como dado real agora). Os números reais vêm do contexto/dados acima, não da sua cabeça.
+
+ESTRUTURA DO ANÚNCIO (esqueleto — preencha com o ângulo + dados REAIS):
+- Linha 1: produto/benefício (SUEDE, fabricação própria).
+- Linha 2: o gancho/ângulo da variante.
+- CTA claro.
+- Linha de oferta/pagamento: SÓ se houver dado real; senão, placeholder.
+Cada variante vai além do esqueleto com o ângulo específico.`;
 
 const HOOK_BRIEF_INSTRUCTIONS: Record<string, string> = {
   demografico: `VARIANTE: DEMOGRÁFICO (Identidade)
@@ -427,10 +423,10 @@ O banner tem 5 campos de texto. Cada variante deve ser DIFERENTE das outras — 
 
 CAMPOS DO BANNER:
 - titulo: frase de impacto principal (máx 35 chars) — muda conforme o hook, ex: identidade / transformação / choque
-- preco: linha de preço/oferta (máx 45 chars) — pode variar o enquadramento: "sem pedido mínimo", "comece hoje sem mínimo", "escolha seu kit agora"
+- preco: linha de preço/oferta (máx 45 chars) — use SÓ preço/oferta REAL fornecido nos dados; se não tiver, use "[oferta atual]". NÃO invente preço nem "pedido mínimo".
 - subtitulo: verbo de ação + lucro (máx 25 chars) — ex: "REVENDA E LUCRE", "GANHE EM CASA", "FATURE REVENDENDO"
 - cta: chamada para ação do botão (máx 30 chars) — ex: "QUERO REVENDER — CLIQUE AQUI", "SEJA REVENDEDORA AGORA", "PEÇO MEU KIT"
-- rodape: info logística FIXA — sempre: "5% NO PIX · 3X SEM JUROS · ENVIO IMEDIATO"
+- rodape: info de pagamento/logística — SÓ se vier como dado REAL; senão deixe "[forma de pagamento]". NÃO invente "5% PIX" / "3x sem juros".
 
 TAMBÉM gere:
 - headline: texto principal do anúncio no Meta (máx 40 chars)
@@ -442,20 +438,20 @@ Retorne APENAS JSON válido:
   "preco": "...",
   "subtitulo": "...",
   "cta": "...",
-  "rodape": "5% NO PIX · 3X SEM JUROS · ENVIO IMEDIATO",
+  "rodape": "[forma de pagamento real, se houver — senão deixe assim]",
   "headline": "...",
   "body": "..."
 }`;
 
   const defaults: AdCopyResult = {
-    headline: "Revenda Feminnita — Lucro Garantido",
-    body: "Pijamas suede exclusivos para revendedoras. Sem pedido mínimo. Envio imediato!",
+    headline: "Pijamas Feminnita em Suede",
+    body: "Pijamas em suede, fabricação própria. [oferta atual]",
     canvaCopy: {
-      titulo: "PIJAMAS DE FABRICAÇÃO PRÓPRIA",
-      preco: "COMECE A VENDER HOJE — SEM PEDIDO MÍNIMO",
-      subtitulo: "REVENDA E LUCRE",
-      cta: "QUERO REVENDER — CLIQUE AQUI",
-      rodape: "5% NO PIX · 3X SEM JUROS · ENVIO IMEDIATO",
+      titulo: "PIJAMAS EM SUEDE",
+      preco: "[oferta atual]",
+      subtitulo: "FABRICAÇÃO PRÓPRIA",
+      cta: "VER AGORA",
+      rodape: "[forma de pagamento]",
     },
   };
 
@@ -477,7 +473,7 @@ Retorne APENAS JSON válido:
         preco: parsed.preco || defaults.canvaCopy.preco,
         subtitulo: parsed.subtitulo || defaults.canvaCopy.subtitulo,
         cta: parsed.cta || defaults.canvaCopy.cta,
-        rodape: "5% NO PIX · 3X SEM JUROS · ENVIO IMEDIATO",
+        rodape: parsed.rodape || defaults.canvaCopy.rodape,
       },
     };
   } catch {
