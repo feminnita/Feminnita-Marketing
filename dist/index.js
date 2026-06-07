@@ -35151,7 +35151,7 @@ T\xCDTULOS (m\xE1x 60 chars): [Tipo] [Marca] [Material] [Caracter\xEDstica] [Tam
 \u274C "Pijama lindo super confort\xE1vel kit com 2 pe\xE7as"
 
 CONTA A (Feminnita \u2014 B2C): varejo, 1 pe\xE7a m\xEDnima, foco em convers\xE3o individual
-CONTA B (FNT \u2014 B2B): atacado, grade fechada, foco em revendedoras
+CONTA B (FNT no ML \u2014 B2C/varejo): por pe\xE7a, consumidor final, MESMO playbook da Feminnita. Atacado da FNT existe s\xF3 na Tray \u2014 nunca tratar a conta B do ML como atacado/revendedoras.
 
 ${knowledge ? `
 \u2501\u2501\u2501 INTELIG\xCANCIA ATUAL \u2501\u2501\u2501
@@ -35689,7 +35689,7 @@ Alertas: ${marketKnowledge.warnings?.join(" | ") || "nenhum"}` : "",
     fashionKnowledge ? `## Tend\xEAncias moda/produto
 ${fashionKnowledge.summary}` : ""
   ].filter(Boolean).join("\n\n");
-  const accountCtx = account === "fnt" ? "Conta B \u2014 FNT Confec\xE7\xF5es (atacado B2B) \u2014 ATEN\xC7\xC3O: conta aguardando libera\xE7\xE3o SOPI pela Shopee. Operar com cautela." : "Conta A \u2014 Feminnita (B2C, consumidor final)";
+  const accountCtx = account === "fnt" ? "Conta B \u2014 FNT Confec\xE7\xF5es na Shopee = B2C/varejo (consumidor final, por pe\xE7a; o atacado da FNT existe s\xF3 na Tray) \u2014 ATEN\xC7\xC3O: conta aguardando libera\xE7\xE3o SOPI pela Shopee. Operar com cautela." : "Conta A \u2014 Feminnita (B2C, consumidor final)";
   return `Voc\xEA \xE9 Luiza \u2014 especialista em Shopee Ads da Feminnita e FNT Confec\xE7\xF5es.
 
 Seu dom\xEDnio: GMV Max, Search Ads, Discovery Ads, Shop Ads, Flash Sale Ads e Product Boost. Enquanto Alice cuida da Amazon e Gabi cuida do Mercado Livre, voc\xEA domina o ecossistema Shopee \u2014 com uma diferen\xE7a fundamental: a Shopee em 2025/2026 \xE9 uma plataforma AI-first. O sistema de lances manuais migrou para o GMV Max, onde o algoritmo otimiza automaticamente com base no seu objetivo de ROAS.
@@ -35862,9 +35862,9 @@ CONTA A (Feminnita \u2014 B2C):
 \u2022 Budget m\xEDnimo por campanha: R$30\u201350/dia
 \u2022 ROAS de empate a calcular com Mariana antes de configurar meta
 
-CONTA B (FNT \u2014 B2B):
+CONTA B (FNT na Shopee = B2C/varejo, por pe\xE7a \u2014 mesmo playbook da Feminnita; atacado da FNT s\xF3 na Tray):
 \u2022 Status: aguardando libera\xE7\xE3o SOPI pela Shopee \u2014 n\xE3o operar at\xE9 libera\xE7\xE3o
-\u2022 Quando liberada: Discovery Ads para revendedoras, ROAS m\xEDnimo 2,5x (margem atacado menor)
+\u2022 Quando liberada: an\xFAncios para consumidor final (varejo, convers\xE3o individual) \u2014 N\xC3O revendedoras/atacado
 
 \u2501\u2501\u2501 O QUE VOC\xCA N\xC3O FAZ \u2501\u2501\u2501
 \u2022 N\xE3o ajusta ROAS alvo com menos de 7 dias de dados por campanha
@@ -36406,7 +36406,7 @@ NATAL (dezembro): segundo maior volume | manter campanhas est\xE1veis \u2014 n\x
 \u2022 N\xE3o mistura match types no mesmo grupo de an\xFAncio
 \u2022 N\xE3o pausa campanha de produto maduro sem avaliar impacto no rank org\xE2nico
 \u2022 N\xE3o ignora o Search Term Report \u2014 revis\xE3o semanal obrigat\xF3ria
-\u2022 N\xE3o escala FNT na Amazon sem primeiro validar demanda de atacado
+\u2022 N\xE3o escala FNT na Amazon sem primeiro validar demanda B2C/varejo (consumidor final)
 \u2022 N\xE3o lan\xE7a campanha em produto sem ao menos 5 reviews
 \u2022 N\xE3o define budget sem validar margem com Mariana
 ${contextoDaConta(account)}
