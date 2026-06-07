@@ -710,13 +710,13 @@ NÍVEL 3 — COM SOLUÇÃO (público morno)
 Estado: sabe que pode revender roupas, mas não conhece a Feminnita
 Abordagem: posicionar a Feminnita como a melhor fornecedora
 Copy: "Pijama suede tem o maior giro no atacado — e poucas revendedoras sabem disso"
-Objetivo: Conversão / Lead para WhatsApp
+Objetivo: Conversão / Venda no site (feminnita.com.br)
 
 NÍVEL 4 — COM PRODUTO (público morno/quente)
 Estado: conhece a Feminnita mas ainda não comprou
 Abordagem: prova social + oferta com urgência + margem demonstrada
 Copy: "Kit de 12 peças — R$38/peça → revende a R$70 → R$384 de lucro por kit"
-Objetivo: Conversão / Mensagem WhatsApp
+Objetivo: Conversão / Compra no site (feminnita.com.br)
 
 NÍVEL 5 — MAIS CONSCIENTE (retargeting — público quente)
 Estado: já comprou, precisa de motivo para recomprar
@@ -742,7 +742,7 @@ BLOCO 2 — ANA OLIVEIRA (Análise e Otimização)
 AN — ANÁLISE: o que os dados estão dizendo? Comparar com benchmarks. Identificar: problema no criativo? audiência? oferta? página?
 A — Anúncio com problema → trocar criativo
 U — Audiência com problema → revisar segmentação ou lookalike
-D — Destino com problema (WhatsApp/DM não converte) → alertar Mariana
+D — Destino com problema (página do site não converte) → alertar Mariana
 I — Investimento mal distribuído → realocar budget
 Ê — Escalar o que funciona antes de testar o novo
 
@@ -791,10 +791,12 @@ Público: quem engajou mas não converteu (últimos 7–14 dias)
 Criativo: diferente do de aquisição — foco em prova social + urgência (nível 4 de Schwartz)
 Frequência máxima: 5x por semana por pessoa (acima disso = irritante)
 
+REGRA DE DESTINO: a Feminnita VENDE SOMENTE PELO SITE (feminnita.com.br). NUNCA direcionar venda ou atendimento para WhatsApp/DM — todo tráfego de conversão vai para o site (página de categoria/produto/checkout). O cliente não "entra em contato" para comprar; ele compra direto no site.
+
 FUNIS POR TEMPERATURA:
-FRIO → criativo educação + problema (nível 1–2) → destino: perfil Instagram ou WhatsApp → KPI: CPL ≤ R$15
-MORNO → prova social + oferta + margem (nível 3–4) → destino: WhatsApp com script Mariana → KPI: CAC ≤ R$80
-QUENTE → novidade + kit novo + desconto progressivo (nível 5) → destino: WhatsApp direto → KPI: ticket ≥ R$600
+FRIO → criativo educação + problema (nível 1–2) → destino: site (conteúdo/categoria) ou perfil Instagram → KPI: CPC/CPL ≤ R$15
+MORNO → prova social + oferta + margem (nível 3–4) → destino: site (página da oferta/categoria) → KPI: CAC ≤ R$80
+QUENTE → novidade + kit novo + desconto progressivo (nível 5) → destino: site (checkout) → KPI: ticket ≥ R$600
 
 ━━━ CRIATIVO MODULAR (Ezra Firestone) ━━━
 "Creative is the variable. Everything else is just infrastructure."

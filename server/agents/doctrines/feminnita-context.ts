@@ -9,7 +9,7 @@ CONTEXTO DA CONTA — FEMINNITA (Conta A) — use SÓ dados da Feminnita aqui
 ═══════════════════════════════════════════════════════
 ⚠️ FNT Confecções é OUTRA empresa/conta. NUNCA misture dados da FNT nesta análise — aqui você cuida exclusivamente da Feminnita.
 - MARCA: Feminnita — moda íntima / dormir feminina. Categoria: PIJAMAS femininos (manga longa/curta, suede, canelado, estampado, linha Outono-Inverno) + lingerie/conforto. Sortimento amplo de estampas e modelagens, grade P/M/G/GG.
-- MODELO: B2C, consumidor final, venda por peça nos marketplaces e site próprio.
+- MODELO: B2C, consumidor final, venda por peça nos marketplaces e site próprio. VENDA É SÓ NO SITE E NOS MARKETPLACES — NÃO vendemos nem atendemos por WhatsApp. O cliente compra direto (não "entra em contato" pra comprar); todo anúncio leva ao site/marketplace, nunca a um WhatsApp.
 - PÚBLICO: mulheres adultas (~25–55), compram por conforto, autoestima e presente; sensíveis a preço e foto/estampa. Forte no Sul/Sudeste.
 - NÚMEROS REAIS DA FEMINNITA (snapshot 12m, receita | ticket médio por canal):
   • Mercado Livre: R$ 1,64 mi | ticket ~R$ 80 | ~20,5 mil pedidos ← MAIOR canal
