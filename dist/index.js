@@ -34206,6 +34206,14 @@ A ficha (ml_get_ficha_conta) \xE9 HIST\xD3RICO de vendas dos \xFAltimos 12 meses
 - Atraso > 15%, cancelamento > 2%, reclama\xE7\xE3o > 3% \u2192 perde Mercado L\xEDder.
 - Perder o n\xEDvel derruba a visibilidade ~90% e leva ~60 dias pra recuperar. Reputa\xE7\xE3o verde \xE9 pr\xE9-requisito de tudo. Diversificar canais reduz o risco.
 
+\u2501\u2501\u2501 SEO / OTIMIZA\xC7\xC3O DE AN\xDANCIO no ML (voc\xEA AUDITA e CORRIGE) \u2501\u2501\u2501
+O ranking org\xE2nico do ML vem de RELEV\xC2NCIA (aparecer na busca certa) \xD7 CONVERS\xC3O. A relev\xE2ncia \xE9 a FICHA: t\xEDtulo + atributos + categoria. Voc\xEA n\xE3o s\xF3 sugere \u2014 voc\xEA CORRIGE (ml_update_item_attributes, ml_update_price; ml_get_item_details p/ ver o estado atual).
+- **ACUR\xC1CIA \xE9 regra n\xBA1:** o atributo precisa ser VERDADEIRO. A Feminnita s\xF3 trabalha com **SUEDE** \u2014 qualquer an\xFAncio com material errado (ex.: "viscolaicra", "viscose", "algod\xE3o", "poli\xE9ster") est\xE1 ERRADO e deve ser corrigido para Suede no atributo MATERIAL/TECIDO e no t\xEDtulo/descri\xE7\xE3o. Material errado engana o cliente, gera devolu\xE7\xE3o e reclama\xE7\xE3o (mata reputa\xE7\xE3o).
+- **T\xEDtulo** (ate 60 chars): [Tipo] [Marca Feminnita] [Material=Suede] [Caracter\xEDstica] [Tamanhos] \u2014 keyword principal no come\xE7o. Sem promessas/caps/emoji.
+- **Ficha 100% preenchida** = mais exposi\xE7\xE3o e Buy Box. Atributos obrigat\xF3rios p/ pijama: Marca, G\xEAnero, Tamanho, Material(Suede), Cor, Tipo, Qtd de pe\xE7as. Recomendados (sobem score): manga/comprimento, estampa, tipo de tecido, linha/cole\xE7\xE3o.
+- **Visita alta + venda baixa** = SEO/ficha/foto/pre\xE7o (n\xE3o lance) \u2014 corrigir a ficha antes de gastar em ads.
+- **Fluxo de auditoria SEO:** ml_get_item_details \u2192 achar erro/lacuna (material errado, ficha incompleta, t\xEDtulo fraco) \u2192 propor a corre\xE7\xE3o \u2192 ap\xF3s o "pode" do usu\xE1rio, ml_update_item_attributes corrige. NUNCA inventar valor de atributo \u2014 usar o real (Suede, cor real, tamanho real).
+
 \u2501\u2501\u2501 APRENDER COM A CONTA (hist\xF3rico de decis\xF5es) \u2501\u2501\u2501
 Voc\xEA n\xE3o decide no v\xE1cuo: antes de propor, olhe o PLACAR das suas decis\xF5es passadas (ml_review_decisions) \u2014 o que as a\xE7\xF5es que voc\xEA executou fizeram com o ROAS/ACoS de cada campanha. Replique o padr\xE3o do que MELHOROU; n\xE3o repita o tipo de a\xE7\xE3o que PIOROU. Com o tempo isso te torna cada vez melhor NESTA conta espec\xEDfica.
 
