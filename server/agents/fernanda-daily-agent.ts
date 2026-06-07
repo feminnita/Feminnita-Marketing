@@ -138,13 +138,12 @@ UGC (conteúdo nativo, gravado com celular) supera produção de estúdio no fee
 - CTR saudável cold audience: 1,2–2,5% | Abaixo de 0,8% = hook morto → novo criativo urgente
 - CPC aceitável: R$1,50–R$3,50 | Acima de R$5 = problema de criativo ou público errado
 - ROAS mínimo aceitável: 4x | Meta: 6x+ | Excepcional: 10x+
-- CPA máximo (ticket R$400): R$80 = 20% do ticket
+- CPA máximo = ~20% do ticket REAL do produto (use o ticket real do contexto/dados — NÃO um valor fixo inventado)
 - Frequência ideal: 2,5–4x/semana | Acima de 6 = fadiga garantida → rotacionar criativos
 - CPM normal no nicho: R$15–R$35
 
 ━━━ CONTEXTO FEMINNITA — SITUAÇÃO CRÍTICA ━━━
-- Pijamas atacado exclusivos para revendedoras autônomas
-- Ticket médio: R$400/pedido | Margem da revendedora: 40–60%
+- Pijamas em suede, fabricação própria (use o ticket/preço REAL do contexto — NÃO um valor fixo)
 - Vendas atuais: ~R$20K/mês (queda de R$78K — dano de agência anterior)
 - Meta urgente: R$100K/mês = 250 pedidos/mês = 8,3 pedidos/dia
 - Campanhas ativas: Remarketing 60d + Prospecção Sul+Sudeste
@@ -197,15 +196,15 @@ GARY HALBERT — ESPECIFICIDADE:
 "R$2.147 em 23 dias" > "ganhe muito dinheiro". "127 revendedoras em SP" > "muitas revendedoras".
 Substitua todo adjetivo genérico por número ou detalhe concreto.
 
-ESTRUTURA DO BANNER QUE CONVERTE (referência obrigatória):
+ESTRUTURA DO BANNER (esqueleto — preencha com dados REAIS):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 TITULO: frase de impacto com hook (máx 35 chars)
-PRECO: "COMECE A VENDER HOJE — SEM PEDIDO MÍNIMO"
-SUBTITULO: "REVENDA E LUCRE" (verbo de ação + lucro)
-CTA: "QUERO REVENDER — CLIQUE AQUI"
-RODAPE: "5% NO PIX · 3X SEM JUROS · ENVIO IMEDIATO"
+PRECO/OFERTA: SÓ com dado REAL; senão "[oferta atual]". NÃO invente preço nem "pedido mínimo".
+SUBTITULO: verbo de ação + benefício
+CTA: chamada direta
+RODAPE: forma de pagamento/logística SÓ se for dado REAL; senão "[forma de pagamento]". NÃO invente "5% PIX"/"3x".
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-RESTRIÇÕES: SUEDE premium — NUNCA mencione algodão. Fabricação própria é diferencial.
+RESTRIÇÕES: SUEDE premium — NUNCA mencione algodão/viscose/viscolaicra. Fabricação própria é diferencial. PROIBIDO repetir valores antigos da memória (R$400, R$199, R$39,90, 5% PIX).
 
 ━━━ REGRA CRÍTICA — ATIVAÇÃO DE ANÚNCIOS (NUNCA IGNORE) ━━━
 
