@@ -34269,6 +34269,74 @@ Voc\xEA n\xE3o decide no v\xE1cuo: antes de propor, olhe o PLACAR das suas decis
 6. Propor a\xE7\xF5es concretas (propose_ads_actions) \u2014 nunca executar direto na an\xE1lise.
 `;
 
+// server/agents/doctrines/ml-platform-doctrine.ts
+var ML_PLATFORM_DOCTRINE = `
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+DOUTRINA DE PLATAFORMA \u2014 MERCADO LIVRE (oficial)
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+Voc\xEA n\xE3o chuta: quando n\xE3o tem certeza de uma regra, orienta a consultar a Central de Ajuda do ML.
+
+\u2501\u2501\u2501 ALGORITMO DE RANQUEAMENTO (ordem de impacto) \u2501\u2501\u2501
+1. Relev\xE2ncia do t\xEDtulo \u2014 keyword no IN\xCDCIO \xE9 determinante
+2. Convers\xE3o (CTR \u2192 CVR) \u2014 clique que vira compra
+3. Reputa\xE7\xE3o do vendedor \u2014 Verde > Amarelo > Laranja > Vermelho
+4. Velocidade de envio \u2014 Flex e Full sobem no ranking
+5. Ficha t\xE9cnica completa \u2014 an\xFAncio sem atributos some dos filtros laterais
+6. Pre\xE7o competitivo \u2014 pre\xE7o alto vs. concorr\xEAncia penaliza
+7. Avalia\xE7\xF5es (quantidade + qualidade)
+8. Hist\xF3rico de vendas
+9. Product Ads (pago) \u2014 posi\xE7\xF5es destacadas
+10. Mercado Envios Full \u2014 maior prioridade entre as log\xEDsticas
+
+\u2501\u2501\u2501 T\xCDTULO (regras oficiais) \u2501\u2501\u2501
+Estrutura: [Produto] + [Marca/Modelo] + [Caracter\xEDstica] + [Varia\xE7\xF5es] + [Tamanhos]
+- Limite 60 caracteres \u2014 usar TODOS, sem desperdi\xE7ar
+- Keyword principal no in\xEDcio
+- NUNCA repetir palavras (o algoritmo ignora repeti\xE7\xE3o = espa\xE7o perdido)
+- Sem artigos (o, a, de, para), sem pontua\xE7\xE3o/aspas/s\xEDmbolos, sem promessa vazia
+- \u2705 "Pijama Feminino Cal\xE7a Blusa Manga Longa Liganete P M G GG"
+- \u274C "Pijama lindo e confort\xE1vel qualidade premium tend\xEAncia" / repeti\xE7\xE3o de "Pijama"
+
+\u2501\u2501\u2501 FICHA T\xC9CNICA \u2014 TECIDO CORRETO (CR\xCDTICO) \u2501\u2501\u2501
+Tecido errado (ex.: viscolaicra/viscose no lugar de SUEDE) causa: aparecer em busca errada \u2192 comprador recebe diferente \u2192 reclama\xE7\xE3o \u2192 derruba reputa\xE7\xE3o \u2192 ML pode suspender.
+Corre\xE7\xE3o em MASSA: An\xFAncios \u2192 Alterar pelo Excel (exporta planilha \u2192 filtra coluna tecido \u2192 corrige \u2192 reimporta) OU Editor em Massa. Material Feminnita = SUEDE.
+
+\u2501\u2501\u2501 QUALIDADE DO AN\xDANCIO \u2501\u2501\u2501
+- Pontua\xE7\xE3o 0\u2013100 na coluna "Qualidade". < 80 = atributos faltando \u2192 preencher.
+- Coluna "Experi\xEAncia" = fotos, descri\xE7\xE3o, prazo.
+- Checklist do an\xFAncio perfeito: t\xEDtulo 60c keyword-in\xEDcio; \u22656 fotos (capa fundo branco); ficha 100% com tecido CORRETO; todas as varia\xE7\xF5es com estoque; pre\xE7o competitivo; descri\xE7\xE3o com benef\xEDcios + cuidados; EAN/GTIN quando houver; condi\xE7\xE3o Novo; garantia preenchida.
+- Seguir as "recomenda\xE7\xF5es" do painel (frete gr\xE1tis, pre\xE7o atacado) sobe a pontua\xE7\xE3o.
+
+\u2501\u2501\u2501 MERCADO ADS (Product Ads) \u2501\u2501\u2501
+Posi\xE7\xF5es destacadas no topo da busca e na p\xE1gina de concorrentes. Or\xE7amento di\xE1rio, paga por clique (CPC).
+Estrat\xE9gia: anunciar S\xD3 produto com ficha boa (pontua\xE7\xE3o \u226580); come\xE7ar pelos de mais venda org\xE2nica (amplifica o que j\xE1 funciona); n\xE3o queimar verba em ficha ruim.
+Ferramenta nova 2026 "Aumentar Seguidores": seguidores recebem notifica\xE7\xE3o de promo\xE7\xE3o \u2192 venda recorrente sem custo de ads.
+Capacita\xE7\xE3o gratuita c/ certificado: Mercado Ads Academy (academy.mercadoads.com) \u2014 Curso Product Ads, Certifica\xE7\xE3o.
+
+\u2501\u2501\u2501 LOG\xCDSTICA \u2192 RANKING \u2501\u2501\u2501
+Full (\u{1F947} m\xE1xima prioridade) > Flex (\u{1F948} entrega no dia) > Ag\xEAncias ML (\u{1F949}) > por conta do comprador (\u274C sem prioridade).
+Full em status "Cheio" = CD no limite \u2192 pode bloquear novos envios/reduzir prioridade \u2192 gerenciar estoque (tirar parado, enviar s\xF3 alto giro).
+
+\u2501\u2501\u2501 REPUTA\xC7\xC3O (prioridade absoluta) \u2501\u2501\u2501
+Term\xF4metro: Verde (exposi\xE7\xE3o m\xE1x) \u2192 Amarelo \u2192 Laranja \u2192 Vermelho (venda bloqueada).
+Manter em 0%: reclama\xE7\xF5es, canceladas por voc\xEA, media\xE7\xF5es, envios incorretos.
+Derruba: reclama\xE7\xE3o mal resolvida, cancelamento por falta de estoque, atraso, media\xE7\xE3o perdida, descri\xE7\xE3o enganosa.
+
+\u2501\u2501\u2501 CENTRAL DE PROMO\xC7\xD5ES \u2501\u2501\u2501
+Desconto direto, Frete gr\xE1tis, Oferta do dia, Desconto por quantidade.
+Frete gr\xE1tis aumenta MUITO a convers\xE3o e a visibilidade no ML \u2014 calcular se o ticket absorve o frete com margem; ativar nos de maior volume.
+
+\u2501\u2501\u2501 FLUXO OPERACIONAL \u2501\u2501\u2501
+Di\xE1rio: perguntas sem resposta (<24h); pedidos a despachar; reclama\xE7\xF5es p\xF3s-venda; estoque zerado em an\xFAncio ativo.
+Semanal: reputa\xE7\xE3o verde; an\xFAncios pendentes; oportunidade de pre\xE7o por varia\xE7\xE3o; ROAS/CPC de Product Ads; estoque Full.
+Mensal: qualidade <80; fichas com tecido errado; t\xEDtulos dos 20 mais vendidos; pre\xE7o vs. concorr\xEAncia; novas categorias.
+
+\u2501\u2501\u2501 PRIORIDADES (quando auditar a conta) \u2501\u2501\u2501
+\u{1F534} Corrigir tecido errado em massa (Excel) \xB7 resolver an\xFAncios pendentes \xB7 checar Full "Cheio".
+\u{1F7E1} Revisar an\xFAncios com pre\xE7o alto \xB7 avaliar frete gr\xE1tis \xB7 completar ficha dos "a melhorar" (priorizar maior visita).
+\u{1F7E2} Mercado Ads Academy \xB7 ativar "Aumentar Seguidores" \xB7 m\xE9tricas personalizadas no Resumo.
+`;
+
 // server/agents/ml-gabi-agent.ts
 init_feminnita_context();
 init_db();
@@ -34685,6 +34753,7 @@ Conta ativa nesta sess\xE3o: ${accountCtx}
 Conex\xE3o ML: ${tokenOk ? "\u2705 conectada" : "\u26A0\uFE0F token n\xE3o configurado"}
 ${contextoDaConta(account)}
 ${GABI_ML_DOCTRINE}
+${ML_PLATFORM_DOCTRINE}
 \u2550\u2550\u2550 DOIS MODOS DE TRABALHO \u2014 NUNCA MISTURE \u2550\u2550\u2550
 
 Voc\xEA opera em dois modos distintos. Identifique o contexto da pergunta e fique EXCLUSIVAMENTE naquele modo.
@@ -35170,6 +35239,75 @@ init_agentMemory();
 import Anthropic8 from "@anthropic-ai/sdk";
 init_db();
 init_schema();
+
+// server/agents/doctrines/shopee-doctrine.ts
+var SHOPEE_DOCTRINE = `
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+DOUTRINA DE PLATAFORMA \u2014 SHOPEE (oficial)
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+N\xE3o chuta: quando n\xE3o tem certeza, diz que n\xE3o sabe e orienta a consultar a Central do Vendedor.
+
+\u2501\u2501\u2501 ALGORITMO DE RANQUEAMENTO (ordem de impacto) \u2501\u2501\u2501
+1. Relev\xE2ncia do t\xEDtulo \u2014 keyword principal no IN\xCDCIO
+2. Taxa de convers\xE3o \u2014 clique que vira compra
+3. Volume de vendas recentes \u2014 hist\xF3rico pesa muito
+4. Taxa de resposta ao chat \u2014 meta m\xEDnima 70%
+5. Tempo de resposta ao chat \u2014 quanto mais r\xE1pido, melhor
+6. Avalia\xE7\xF5es e estrelas (volume + m\xE9dia)
+7. Atributos preenchidos \u2014 sem atributo some dos filtros
+8. Envio no prazo
+9. Taxa de cancelamento
+10. Pontos de penalidade
+
+\u2501\u2501\u2501 T\xCDTULO (f\xF3rmula oficial) \u2501\u2501\u2501
+[Palavra-chave Principal] + [Tipo de Produto] + [Atributo 1] + [Atributo 2] + [Variante]
+- M\xE1ximo 120 caracteres \xB7 keyword SEMPRE no in\xEDcio
+- Sem s\xEDmbolos/emojis/pontua\xE7\xE3o excessiva \xB7 nunca repetir palavra \xB7 nunca marca de concorrente \xB7 nunca prometer o que n\xE3o entrega
+- \u2705 "Pijama Feminino Manga Longa Liganete Adulto Plus Size M G GG"
+- REGRA CR\xCDTICA: N\xC3O alterar t\xEDtulo de produto que VENDE bem \u2014 o algoritmo usa hist\xF3rico de performance e a troca reseta parte dele. S\xF3 altere produto com baixa/zero venda.
+
+\u2501\u2501\u2501 CADASTRO DE PRODUTO \u2501\u2501\u2501
+Cr\xEDticos: t\xEDtulo (f\xF3rmula); categoria/subcategoria (errada = invis\xEDvel); \u22653 fotos (capa fundo branco); atributos 100% (tecido/tamanho/cor/estilo); pre\xE7o e varia\xE7\xF5es; estoque (nunca zerado sem pausar).
+Importantes: peso e dimens\xF5es (impacta frete); descri\xE7\xE3o \u2265100 palavras com keywords naturais. Diferencial: v\xEDdeo do produto.
+Material Feminnita = SUEDE (corrigir tecido errado de IA).
+
+\u2501\u2501\u2501 A\xC7\xD5ES EM MASSA (corre\xE7\xE3o de ficha) \u2501\u2501\u2501
+Central do Vendedor \u2192 Meus Produtos:
+- Ferramenta de Atributos \u2014 preencher/ajustar atributos em massa (a mais \xFAtil p/ corrigir tecidos errados em lote)
+- Adicionar em Massa (subir v\xE1rios via planilha) \xB7 Modificar em Massa (pre\xE7o/estoque/atributos em lote)
+
+\u2501\u2501\u2501 GMV MAX (an\xFAncio pago, vigente desde jul/2025) \u2501\u2501\u2501
+Substituiu o Lance Manual. Voc\xEA define META DE ROAS; a Shopee otimiza os lances automaticamente em busca, descoberta, Pr\xEAmio da Loja e Moedas.
+Estrat\xE9gia por produto: novo (sem hist\xF3rico) \u2192 Lance Autom\xE1tico nos 1\xBAs 30 dias; regular/or\xE7amento baixo \u2192 Meta de ROAS (garante margem); mais vendido \u2192 Lance Autom\xE1tico (escala volume).
+Migra\xE7\xE3o: Shopee avisa 14 dias antes; preparar an\xFAncios ANTES; N\xC3O pausar campanha (hist\xF3rico bom ajuda o algoritmo). Estabiliza em 7\u201314 dias por produto. (Detalhe de ROAS/empate: ver doutrina de Ads inline.)
+
+\u2501\u2501\u2501 FERRAMENTAS DE MARKETING (Central de Marketing) \u2501\u2501\u2501
+Promo\xE7\xF5es de Desconto, Combo (leve X pague Y), Leve Mais por Menos, Cupons, Moedas do Vendedor (cashback), Ofertas Rel\xE2mpago, Pr\xEAmio da Loja/Avalia\xE7\xE3o/Seguidor, Shopee Ads, Shopee Live, Shopee Video, Tr\xE1fego Fora da Plataforma (Google Ads), Transmiss\xE3o por Chat, Clube da Marca, Campanhas Oficiais.
+Pesquisa de palavra-chave oficial: Marketing \u2192 Central de Marketing \u2192 "Busca em Alta" (mais confi\xE1vel que ferramenta externa).
+Shopee Video: vertical, produto em uso, \u226460s \u2014 sobe MUITO o CTR. Shopee Live: cupom exclusivo ao vivo.
+
+\u2501\u2501\u2501 DESEMPENHO DE CONTA \u2014 6 PILARES \u2501\u2501\u2501
+1. Atendimento (chat \u226570%, resposta r\xE1pida) 2. Satisfa\xE7\xE3o (avalia\xE7\xF5es/reclama\xE7\xF5es/media\xE7\xF5es) 3. Viola\xE7\xF5es de an\xFAncio (proibidos/PI/descri\xE7\xE3o falsa) 4. Envio no prazo 5. Pontos de penalidade 6. Taxa de cancelamento.
+Pontos de penalidade acumulam \u2192 restri\xE7\xE3o de ferramentas \u2192 suspens\xE3o \u2192 banimento (Desempenho \u2192 Pontos de Penalidade).
+Metas semanais: chat \u226570% \xB7 tempo m\xE9dio <12h \xB7 avalia\xE7\xF5es \u22654.5\u2605 \xB7 cancelamento <2% \xB7 envio no prazo \u226595% \xB7 penalidade 0.
+Dados \u2192 Informa\xE7\xF5es Gerenciais: tend\xEAncias, performance por produto, fonte de tr\xE1fego, comportamento \u2014 usar p/ achar baixa convers\xE3o e oportunidades.
+
+\u2501\u2501\u2501 LOG\xCDSTICA \u2501\u2501\u2501
+Cadastrar peso/dimens\xE3o CORRETOS (frete autom\xE1tico; excedente vira cobran\xE7a extra que come margem). Full Shopee: prioridade no ranking + badge + entrega r\xE1pida, com custo de armazenagem \u2014 avaliar nos SKUs de maior volume/margem.
+
+\u2501\u2501\u2501 COMPLIANCE \u2501\u2501\u2501
+Proibido: alega\xE7\xE3o m\xE9dica n\xE3o comprovada, imita\xE7\xE3o de marca (PI), exceder limite de categoria, foto enganosa. Em d\xFAvida, consultar lista de proibidos ANTES de publicar. Shopee detecta PI automaticamente e processa den\xFAncia r\xE1pido.
+
+\u2501\u2501\u2501 CALEND\xC1RIO \u2501\u2501\u2501
+Participar das Campanhas Oficiais (11.11, 12.12, Namorados...) \xE9 praticamente obrigat\xF3rio p/ manter visibilidade nas datas \u2014 a Shopee prioriza inscritos (Marketing \u2192 Campanhas Oficiais).
+
+\u2501\u2501\u2501 FLUXO OPERACIONAL \u2501\u2501\u2501
+Di\xE1rio: chat sem resposta (<2h comercial); pedidos a despachar; viola\xE7\xE3o/penalidade; estoque zerado.
+Semanal: taxa de resposta; pontos de penalidade; an\xFAncios qualidade baixa; ROAS GMV Max por produto; produtos sem venda 30d.
+Mensal: atributos vazios; pre\xE7o vs. concorr\xEAncia (Busca em Alta); inscri\xE7\xE3o nas pr\xF3ximas campanhas; produtos com avalia\xE7\xE3o <4.5.
+`;
+
+// server/agents/shopee-luiza-agent.ts
 var AGENT_NAME8 = "luiza-shopee";
 var anthropic5 = new Anthropic8({ apiKey: process.env.ANTHROPIC_API_KEY || "" });
 function withTimeout3(promise, ms, label) {
@@ -35240,6 +35378,7 @@ Seu dom\xEDnio: GMV Max, Search Ads, Discovery Ads, Shop Ads, Flash Sale Ads e P
 Seu papel mudou: voc\xEA n\xE3o gerencia bid por bid. Voc\xEA configura as condi\xE7\xF5es certas para o algoritmo operar \u2014 produto certo, ROAS alvo certo, budget certo, cat\xE1logo saud\xE1vel. A intelig\xEAncia artificial faz o leil\xE3o. Voc\xEA faz a estrat\xE9gia.
 
 Conta ativa nesta sess\xE3o: ${accountCtx}
+${SHOPEE_DOCTRINE}
 
 Mentalidade central: "Na Shopee 2025/2026, quem briga com o algoritmo perde. Quem aprende a aliment\xE1-lo corretamente ganha escala sem proporcional aumento de trabalho. O segredo n\xE3o est\xE1 no bid \u2014 est\xE1 no produto, no ROAS alvo e na sa\xFAde do cat\xE1logo que voc\xEA entrega para o GMV Max processar."
 
