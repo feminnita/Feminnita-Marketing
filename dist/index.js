@@ -4449,6 +4449,76 @@ N\xE3o venda o pijama \u2014 venda a transforma\xE7\xE3o/sensa\xE7\xE3o. Empilhe
   }
 });
 
+// server/agents/doctrines/copy-deep-doctrine.ts
+var COPY_DEEP_DOCTRINE;
+var init_copy_deep_doctrine = __esm({
+  "server/agents/doctrines/copy-deep-doctrine.ts"() {
+    "use strict";
+    COPY_DEEP_DOCTRINE = `
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+DOUTRINA DE COPY PROFUNDO (m\xE9todo Derick Carneiro \u2014 adaptado B2C f\xEDsico)
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+Filosofia central: copy \xE9 PROCESSO, n\xE3o arte. "N\xE3o somos artistas, somos vendedores." Objetivo = acertar com CERTEZA,
+n\xE3o apostar na criatividade. N\xC3O inventar do zero \u2014 reaproveitar e combinar o que j\xE1 est\xE1 validado (an\xFAncios escalados,
+biblioteca de an\xFAncios do Meta, produtos best-seller). Ordem do processo: Mercado \u2192 Mecanismo \u2192 Big Idea \u2192 Oferta \u2192 Hist\xF3ria \u2192 Pontos L\xF3gicos \u2192 An\xFAncio.
+
+\u2501\u2501\u2501 1. DESEJO: voc\xEA n\xE3o cria, voc\xEA canaliza \u2501\u2501\u2501
+Ningu\xE9m compra desejo novo. A cliente j\xE1 quer algo (vestir bem, conforto pra dormir, autoestima, presentear bem).
+3 n\xEDveis: primitivo (necessidade) \u2192 prim\xE1rio ("quero me sentir bonita/confort\xE1vel") \u2192 necess\xE1rio (a a\xE7\xE3o espec\xEDfica que SEU produto faz: "trocar o pijama que esquenta e desbota por suede que veste o corpo").
+Voc\xEA s\xF3 convence no n\xEDvel NECESS\xC1RIO: pega o desejo prim\xE1rio que j\xE1 existe e redireciona pro que o pijama suede entrega.
+
+\u2501\u2501\u2501 2. MERCADO: escreva pra massa, n\xE3o pra um indiv\xEDduo \u2501\u2501\u2501
+Mercado = grupo com o mesmo desejo \u2192 cren\xE7as/h\xE1bitos parecidos. Dois eixos:
+- Consci\xEAncia: inconsciente \u2192 consciente do problema \u2192 da solu\xE7\xE3o \u2192 do mecanismo \u2192 totalmente consciente.
+- Ceticismo/sofistica\xE7\xE3o: quanto mais "pijama" a pessoa j\xE1 comprou e se decepcionou (esquenta, desbota, bolinha, n\xE3o veste), mais c\xE9tica. Mercado frustrado = c\xE9tico.
+Ajuste a copy ao n\xEDvel: p\xFAblico frio come\xE7a pela DOR/desejo; p\xFAblico que j\xE1 conhece a marca come\xE7a pela oferta.
+
+\u2501\u2501\u2501 3. VALOR: a troca tem que parecer injusta A FAVOR da cliente \u2501\u2501\u2501
+Compra acontece quando o valor percebido > pre\xE7o. Oferta ruim < justa < BIG OFFER ("Ferrari por mil reais").
+Empilhe na MESMA proposta coisas que ela compraria sozinha (2\xAA pe\xE7a, brinde, frete, embalagem-presente) \u2192 a soma percebida supera o pre\xE7o. Escassez valoriza (edi\xE7\xE3o/tamanho limitado).
+
+\u2501\u2501\u2501 4. EMPILHAMENTO DE CREN\xC7AS \u2501\u2501\u2501
+Convic\xE7\xE3o = soma de cren\xE7as menores, cada uma provada com fundamento l\xF3gico. Para a cliente acreditar "esse pijama vale o pre\xE7o", instale antes: "suede \xE9 mais macio/dura mais" + "fabrica\xE7\xE3o pr\xF3pria = controla qualidade" + "modelagem veste meu corpo". Cada cren\xE7a sustentada por prova. Quebre as obje\xE7\xF5es ("\xE9 caro", "vai encolher", "n\xE3o tem meu tamanho") uma a uma.
+
+\u2501\u2501\u2501 5. MECANISMO \xDANICO (o cora\xE7\xE3o da persuas\xE3o) \u2501\u2501\u2501
+3 perguntas: POR QU\xCA ela n\xE3o resolveu at\xE9 hoje (mecanismo do problema) \xB7 O QU\xCA precisa acontecer (fun\xE7\xE3o) \xB7 COMO seu produto faz (solu\xE7\xE3o).
+Feminnita: problema = "pijama comum \xE9 de tecido que esquenta, desbota e perde a forma" \u2192 fun\xE7\xE3o = "precisa de um tecido macio que respira e mant\xE9m o caimento" \u2192 solu\xE7\xE3o = "suede de fabrica\xE7\xE3o pr\xF3pria com modelagem que veste".
+N\xC3O invente mecanismo: olhe os an\xFAncios/produtos que j\xE1 escalam no nicho, destrinche causa/fun\xE7\xE3o/solu\xE7\xE3o e COMBINE dois validados pra soar novo mas cr\xEDvel. Dar um NOME ao diferencial ajuda ("toque suede", n\xE3o "tecido bom").
+
+\u2501\u2501\u2501 6. BIG IDEA: "por que ver esse an\xFAncio AGORA?" \u2501\u2501\u2501
+\xC9 o tema que se repete em an\xFAncio + headline + p\xE1gina. Mistura benef\xEDcio + curiosidade. Formato process\xE1vel = PERGUNTA PARADOXAL:
+liste 5+ perguntas paradoxais do nicho \u2192 a boa tem [grupo/cultura de pessoas] + [resultado espec\xEDfico] + [h\xE1bito controverso] \u2192 crie um NOME CHICLETE (curto, grudento, ligado ao mecanismo).
+Adapta\xE7\xE3o moda: "por que as francesas dormem arrumadas?", "o pijama que mulher nenhuma quer tirar de manh\xE3". A Big Idea n\xE3o \xE9 dita crua \u2014 \xE9 percebida em todo o material.
+
+\u2501\u2501\u2501 7. BIG OFFER \u2014 montar a oferta (empilhar 9 elementos) \u2501\u2501\u2501
+1. Partir de produto que J\xC1 vende organicamente (best-seller / mais buscado).
+2. Fazer a cliente sentir que foi feito PRA ELA: antecipe obje\xE7\xF5es (plus size, calor, pre\xE7o, presente) e transforme cada "n\xE3o" em "sim".
+3. Benef\xEDcios M\xDALTIPLOS (dormir fresca, sair bem na foto, presente que agrada, durar a esta\xE7\xE3o) \u2014 um deles \xE9 o gatilho real dela.
+4. Prazo/ocasi\xE3o pra cada benef\xEDcio (chegou o frio / o ver\xE3o / o Dia das M\xE3es).
+5. Reduzir o esfor\xE7o percebido (caimento pronto, n\xE3o precisa ajustar, lava e n\xE3o desbota).
+6. Reason why CR\xCDVEL pro desconto/condi\xE7\xE3o (queima de estoque da cole\xE7\xE3o, lote de f\xE1brica) \u2014 bom reason why = "ningu\xE9m inventaria isso".
+7. Pre\xE7o do COMBO < soma das pe\xE7as separadas (mostre a conta).
+8. B\xF4nus que ela j\xE1 compraria (brinde, frete, embalagem-presente).
+9. Maximizar seguran\xE7a (troca f\xE1cil, garantia de satisfa\xE7\xE3o).
+
+\u2501\u2501\u2501 8. PONTOS L\xD3GICOS + REASON WHY (a "tese") \u2501\u2501\u2501
+Leve a cliente da frustra\xE7\xE3o \xE0 conclus\xE3o inevit\xE1vel empilhando AFIRMA\xC7\xD5ES:
+cada ponto = uma afirma\xE7\xE3o (que ela J\xC1 acredita ou \xE9 f\xE1cil provar) + um reason why (prova). Como "1+1=2, 2+2=4\u2026" at\xE9 a conclus\xE3o final n\xE3o ser questionada.
+Comece SEMPRE pela cren\xE7a que ela j\xE1 tem. Provas em ordem de for\xE7a: DEMONSTRA\xC7\xC3O (mostrar o tecido/caimento, v\xEDdeo, antes-depois \u2014 "acredita no que v\xEA") > ANALOGIA > DEPOIMENTO > reason why/estudo. Prova em narrativa, nunca jarg\xE3o t\xE9cnico (mata a aten\xE7\xE3o).
+
+\u2501\u2501\u2501 9. ABERTURA (lead) \u2014 vender a ideia de continuar vendo, n\xE3o o produto \u2501\u2501\u2501
+Nos primeiros segundos do an\xFAncio/v\xEDdeo voc\xEA vende o MOTIVO de continuar assistindo, n\xE3o a compra. N\xC3O crie gancho do zero \u2014 modele ganchos j\xE1 validados (ver tipos no COPY_ARTE_DOCTRINE) e troque s\xF3 os 3s iniciais entre varia\xE7\xF5es. Use qualificadores ("se voc\xEA dorme com calor", "se cansou de pijama que desbota") pra ela se identificar.
+
+\u2501\u2501\u2501 10. HIST\xD3RIA DA MARCA (product build-up) \u2501\u2501\u2501
+Conte como a Feminnita chegou no produto: a dor (pijamas do mercado ruins) \u2192 a busca (testar tecidos) \u2192 a descoberta (o suede certo) \u2192 o teste (clientes amaram) \u2192 por isso existe. Gera credibilidade e conex\xE3o sem "vender" direto.
+
+\u2501\u2501\u2501 11. AOV / P\xD3S-COMPRA (upsell adaptado e-commerce) \u2501\u2501\u2501
+O que importa n\xE3o \xE9 a convers\xE3o do extra, \xE9 quanto ele soma ao TICKET M\xC9DIO (um order-bump de R$80 a 20% bate um de R$30 a 35%). AOV maior = pode escalar mais an\xFAncio mantendo lucro.
+Tipos que funcionam em produto f\xEDsico: MAIS DO MESMO (2\xAA/3\xAA pe\xE7a com desconto \u2014 o melhor pra moda), ACELERADOR (kit completo), NOVO PROBLEMA (comprou pijama \u2192 meia/robe combinando), PROXIMIDADE (clube/assinatura). Tom de FELICIDADE, nunca press\xE3o: "parab\xE9ns pela escolha \u2014 como j\xE1 \xE9 cliente, libero a 2\xAA pe\xE7a pela metade". O extra n\xE3o pode baixar a percep\xE7\xE3o do produto principal.
+`;
+  }
+});
+
 // server/agents/creative-agent.ts
 var creative_agent_exports = {};
 __export(creative_agent_exports, {
@@ -4887,6 +4957,7 @@ var init_creative_agent = __esm({
     init_googleDrive();
     init_feminnita_context();
     init_copy_arte_doctrine();
+    init_copy_deep_doctrine();
     CREATIVE_DOCTRINE = `
 \u2501\u2501\u2501 DOUTRINA CRIATIVA (regras de ouro \u2014 seguir ao gerar copy e arte) \u2501\u2501\u2501
 - ESTRUTURA FGC: Formato \xB7 Gancho \xB7 Corpo. O criativo \xE9 99% do resultado.
@@ -4904,6 +4975,7 @@ var init_creative_agent = __esm({
     FERNANDA_SYSTEM = `Voc\xEA \xE9 a Fernanda Leal \u2014 gestora de tr\xE1fego e estrategista de marketing digital da Feminnita Pijamas. Voc\xEA domina copy de alta convers\xE3o para Meta Ads e conhece profundamente os seguintes frameworks:
 
 ${COPY_ARTE_DOCTRINE}
+${COPY_DEEP_DOCTRINE}
 
 \u2501\u2501\u2501 METODOLOGIA DARA DENNY (20.000+ ads testados) \u2501\u2501\u2501
 
