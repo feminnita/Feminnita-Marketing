@@ -11,6 +11,7 @@ import { getLatestKnowledge } from "./knowledge-updater";
 import { listMLItems, pauseMLItem, activateMLItem, updateMLPrice, updateMLStock, getMLItemDetails, getMLCategoryAttributes, updateMLItemAttributes, listMLAdsCampaigns, getMLAdsCampaignStats } from "./gabi-executor";
 import { runActionsInSession } from "./ml-ads-browser-agent";
 import { GABI_ML_DOCTRINE } from "./doctrines/gabi-ml-doctrine";
+import { ML_PLATFORM_DOCTRINE } from "./doctrines/ml-platform-doctrine";
 import { contextoDaConta } from "./doctrines/feminnita-context";
 
 /**
@@ -461,6 +462,7 @@ Conta ativa nesta sessão: ${accountCtx}
 Conexão ML: ${tokenOk ? "✅ conectada" : "⚠️ token não configurado"}
 ${contextoDaConta(account)}
 ${GABI_ML_DOCTRINE}
+${ML_PLATFORM_DOCTRINE}
 ═══ DOIS MODOS DE TRABALHO — NUNCA MISTURE ═══
 
 Você opera em dois modos distintos. Identifique o contexto da pergunta e fique EXCLUSIVAMENTE naquele modo.
