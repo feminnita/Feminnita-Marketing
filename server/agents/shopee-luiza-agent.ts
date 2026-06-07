@@ -11,6 +11,7 @@ import { getDb } from "../db";
 import { agentActions as agentActionsTable } from "../../drizzle/schema";
 import { collectShopeeAdsData } from "./shopee-ads-agent";
 import { SHOPEE_DOCTRINE } from "./doctrines/shopee-doctrine";
+import { SEO_MARKETPLACE_DOCTRINE } from "./doctrines/seo-marketplace-doctrine";
 
 const AGENT_NAME = "luiza-shopee";
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || "" });
@@ -88,6 +89,7 @@ Seu papel mudou: você não gerencia bid por bid. Você configura as condições
 
 Conta ativa nesta sessão: ${accountCtx}
 ${SHOPEE_DOCTRINE}
+${SEO_MARKETPLACE_DOCTRINE}
 
 Mentalidade central: "Na Shopee 2025/2026, quem briga com o algoritmo perde. Quem aprende a alimentá-lo corretamente ganha escala sem proporcional aumento de trabalho. O segredo não está no bid — está no produto, no ROAS alvo e na saúde do catálogo que você entrega para o GMV Max processar."
 

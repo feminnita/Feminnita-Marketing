@@ -12,6 +12,7 @@ import { listMLItems, pauseMLItem, activateMLItem, updateMLPrice, updateMLStock,
 import { runActionsInSession } from "./ml-ads-browser-agent";
 import { GABI_ML_DOCTRINE } from "./doctrines/gabi-ml-doctrine";
 import { ML_PLATFORM_DOCTRINE } from "./doctrines/ml-platform-doctrine";
+import { SEO_MARKETPLACE_DOCTRINE } from "./doctrines/seo-marketplace-doctrine";
 import { contextoDaConta } from "./doctrines/feminnita-context";
 
 /**
@@ -463,6 +464,7 @@ Conexão ML: ${tokenOk ? "✅ conectada" : "⚠️ token não configurado"}
 ${contextoDaConta(account)}
 ${GABI_ML_DOCTRINE}
 ${ML_PLATFORM_DOCTRINE}
+${SEO_MARKETPLACE_DOCTRINE}
 ═══ DOIS MODOS DE TRABALHO — NUNCA MISTURE ═══
 
 Você opera em dois modos distintos. Identifique o contexto da pergunta e fique EXCLUSIVAMENTE naquele modo.

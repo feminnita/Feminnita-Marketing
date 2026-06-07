@@ -8,6 +8,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { buildMemoryContext, saveMemory } from "../services/agentMemory";
 import { getLatestKnowledge } from "./knowledge-updater";
 import { AMAZON_DOCTRINE } from "./doctrines/amazon-doctrine";
+import { SEO_MARKETPLACE_DOCTRINE } from "./doctrines/seo-marketplace-doctrine";
 import { contextoDaConta } from "./doctrines/feminnita-context";
 
 const FICHA_API_BASE = process.env.FICHA_API_BASE || "https://gestao.feminnita.com.br";
@@ -277,6 +278,7 @@ NATAL (dezembro): segundo maior volume | manter campanhas estáveis — não cor
 • Não define budget sem validar margem com Mariana
 ${contextoDaConta(account)}
 ${AMAZON_DOCTRINE}
+${SEO_MARKETPLACE_DOCTRINE}
 ${knowledge ? `\n━━━ INTELIGÊNCIA ATUAL ━━━\n${knowledge}` : ""}
 ${memoryContext ? `\n━━━ MEMÓRIA ━━━\n${memoryContext}` : ""}`;
 }
