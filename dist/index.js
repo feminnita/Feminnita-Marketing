@@ -34491,6 +34491,56 @@ Mensal: qualidade <80; fichas com tecido errado; t\xEDtulos dos 20 mais vendidos
 \u{1F7E2} Mercado Ads Academy \xB7 ativar "Aumentar Seguidores" \xB7 m\xE9tricas personalizadas no Resumo.
 `;
 
+// server/agents/doctrines/seo-marketplace-doctrine.ts
+var SEO_MARKETPLACE_DOCTRINE = `
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+DOUTRINA DE SEO DE PRODUTO (marketplace \u2014 m\xE9todo de enriquecimento)
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+Princ\xEDpio n\xBA1: QUEM ALIMENTA O BUSCADOR, RANQUEIA. Cadastro pobre = invis\xEDvel. Entre dois an\xFAncios, o buscador
+prioriza o que FORNECE mais informa\xE7\xE3o correta. Otimizar NUNCA \xE9 inventar \u2014 precis\xE3o dos dados acima de tudo.
+
+\u2501\u2501\u2501 1. T\xCDTULO: espec\xEDfico, n\xE3o gen\xE9rico \u2501\u2501\u2501
+T\xEDtulo gen\xE9rico joga voc\xEA num mar de iguais. Seja espec\xEDfico no USO/aplica\xE7\xE3o + principais specs.
+- \u274C "Pijama Feminino" \u2192 \u2705 "Pijama Feminino Manga Longa Inverno Suede Bot\xE3o Conjunto Cal\xE7a e Blusa".
+- Case o t\xEDtulo com a INTEN\xC7\xC3O REAL de busca: pesquise o termo no pr\xF3prio marketplace e veja como os campe\xF5es nomeiam.
+- Inclua: tipo + modelagem + esta\xE7\xE3o/uso + tecido + varia\xE7\xE3o/tamanho. (Respeite o limite de caracteres da plataforma \u2014 ver doutrina de plataforma.)
+- A palavra-chave principal = o nome do produto; ela vai no t\xEDtulo, na descri\xE7\xE3o curta e na descri\xE7\xE3o longa.
+
+\u2501\u2501\u2501 2. PESQUISA DE PALAVRA-CHAVE + ESPIONAGEM DE CONCORRENTE \u2501\u2501\u2501
+Antes de cadastrar, descubra o que J\xC1 vence:
+1. Busque a palavra-chave do produto na busca do marketplace (e no Google Shopping, que agrega v\xE1rios) \u2192 veja os an\xFAncios campe\xF5es.
+2. Extraia dos vencedores: como montam o T\xCDTULO, quais ATRIBUTOS preenchem, faixa de PRE\xC7O, o que destacam.
+3. (Ferramentas dispon\xEDveis no stack p/ pesquisa de concorrente: Firecrawl \u2014 busca + scrape/extract.)
+Regra dura: ao reaproveitar dados, NUNCA mencionar marca/loja do concorrente no seu cadastro, e NUNCA copiar pre\xE7o de outra loja.
+
+\u2501\u2501\u2501 3. AUDITORIA DE CADASTRO (o que checar em cada produto) \u2501\u2501\u2501
+Sem descri\xE7\xE3o = n\xE3o otimizado. Audite item a item (em lote, processando um por vez, filtrando por status pra n\xE3o corromper cadastro em andamento):
+- T\xEDtulo claro com as principais specs preenchido?
+- Descri\xE7\xE3o preenchida e estruturada?
+- Descri\xE7\xE3o curta (a que aparece na listagem) otimizada pra palavra-chave?
+- M\xEDnimo 3 imagens?
+- Atributos/ficha t\xE9cnica completos (tecido CORRETO = suede; tamanho, cor, estilo)?
+- Categoria certa?
+
+\u2501\u2501\u2501 4. SEPARAR OS CAMPOS \u2014 sem duplicar \u2501\u2501\u2501
+Cada campo tem um papel; n\xE3o repita conte\xFAdo entre eles:
+- T\xCDTULO: marca (se houver) + specs principais, otimizado pra venda (~50-150 chars, dentro do limite da plataforma).
+- DESCRI\xC7\xC3O (geral): informa\xE7\xF5es + specs, ESTRUTURADA com subt\xEDtulos (H2/H3 onde a plataforma permitir), par\xE1grafos CURTOS, negrito nos pontos-chave. Nada de "bloc\xE3o" de texto. Sem emoji. Sem repetir as imagens no corpo.
+- BENEF\xCDCIOS (features): as vantagens/benef\xEDcios (n\xE3o specs t\xE9cnicas).
+- ESPECIFICA\xC7\xD5ES (specs): os dados t\xE9cnicos (tecido, composi\xE7\xE3o, medidas) \u2014 campo separado dos benef\xEDcios.
+
+\u2501\u2501\u2501 5. ATRIBUTOS ESTRUTURADOS (alimentam filtro, busca e frete) \u2501\u2501\u2501
+Preencher dimens\xF5es (em cm), peso, c\xF3digo de barras/EAN, categoria/departamento. Produto sem atributo some dos filtros laterais e calcula frete errado. Quanto mais atributo correto, mais a busca te encontra.
+
+\u2501\u2501\u2501 6. IMAGENS \u2501\u2501\u2501
+M\xEDnimo 3, em ordem proposital e m\xFAltiplos \xE2ngulos: FRONTAL (capa, fundo branco), uso/corpo, e DETALHE (do tecido/acabamento). Para moda: foto que mostra o caimento e a textura do suede. (Espionar imagem de concorrente serve de REFER\xCANCIA de enquadramento \u2014 publique sempre a foto REAL do seu produto.)
+
+\u2501\u2501\u2501 7. HIGIENE (erros que derrubam) \u2501\u2501\u2501
+N\xE3o inventar/alterar specs (48 continua 48; suede continua suede). N\xE3o vazar marca de concorrente. N\xE3o copiar pre\xE7o de terceiros. Sem emoji na descri\xE7\xE3o. Sem conte\xFAdo duplicado entre campos. N\xE3o trocar URL de imagem que j\xE1 funciona.
+
+(SEO de SITE/Google \u2014 homepage, categorias, schema JSON-LD, blog/GEO \u2014 \xE9 trilha SEPARADA, da loja Tray, fora do escopo destes agentes de marketplace.)
+`;
+
 // server/agents/ml-gabi-agent.ts
 init_feminnita_context();
 init_db();
@@ -34908,6 +34958,7 @@ Conex\xE3o ML: ${tokenOk ? "\u2705 conectada" : "\u26A0\uFE0F token n\xE3o confi
 ${contextoDaConta(account)}
 ${GABI_ML_DOCTRINE}
 ${ML_PLATFORM_DOCTRINE}
+${SEO_MARKETPLACE_DOCTRINE}
 \u2550\u2550\u2550 DOIS MODOS DE TRABALHO \u2014 NUNCA MISTURE \u2550\u2550\u2550
 
 Voc\xEA opera em dois modos distintos. Identifique o contexto da pergunta e fique EXCLUSIVAMENTE naquele modo.
@@ -35533,6 +35584,7 @@ Seu papel mudou: voc\xEA n\xE3o gerencia bid por bid. Voc\xEA configura as condi
 
 Conta ativa nesta sess\xE3o: ${accountCtx}
 ${SHOPEE_DOCTRINE}
+${SEO_MARKETPLACE_DOCTRINE}
 
 Mentalidade central: "Na Shopee 2025/2026, quem briga com o algoritmo perde. Quem aprende a aliment\xE1-lo corretamente ganha escala sem proporcional aumento de trabalho. O segredo n\xE3o est\xE1 no bid \u2014 est\xE1 no produto, no ROAS alvo e na sa\xFAde do cat\xE1logo que voc\xEA entrega para o GMV Max processar."
 
@@ -36245,6 +36297,7 @@ NATAL (dezembro): segundo maior volume | manter campanhas est\xE1veis \u2014 n\x
 \u2022 N\xE3o define budget sem validar margem com Mariana
 ${contextoDaConta(account)}
 ${AMAZON_DOCTRINE}
+${SEO_MARKETPLACE_DOCTRINE}
 ${knowledge ? `
 \u2501\u2501\u2501 INTELIG\xCANCIA ATUAL \u2501\u2501\u2501
 ${knowledge}` : ""}
