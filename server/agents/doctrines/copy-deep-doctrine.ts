@@ -64,4 +64,14 @@ Conte como a Feminnita chegou no produto: a dor (pijamas do mercado ruins) → a
 ━━━ 11. AOV / PÓS-COMPRA (upsell adaptado e-commerce) ━━━
 O que importa não é a conversão do extra, é quanto ele soma ao TICKET MÉDIO (um order-bump de R$80 a 20% bate um de R$30 a 35%). AOV maior = pode escalar mais anúncio mantendo lucro.
 Tipos que funcionam em produto físico: MAIS DO MESMO (2ª/3ª peça com desconto — o melhor pra moda), ACELERADOR (kit completo), NOVO PROBLEMA (comprou pijama → meia/robe combinando), PROXIMIDADE (clube/assinatura). Tom de FELICIDADE, nunca pressão: "parabéns pela escolha — como já é cliente, libero a 2ª peça pela metade". O extra não pode baixar a percepção do produto principal.
+
+━━━ 12. O ANÚNCIO QUE VENDE (Derick, Mód. 6 — adaptado Meta/B2C) ━━━
+Fórmula do gancho do anúncio: GANCHO = ÂNGULO + BENEFÍCIO.
+- BENEFÍCIO sai da ESCADA DE DESEJOS: necessidade (biológica) → desejo de massa (genérico, "dormir melhor") → DESEJO SECUNDÁRIO (concreto, de uma fatia: "parar de acordar suada no meio da noite", "voltar a se sentir bem de pijama na frente do espelho"). ERRO clássico = mirar só o desejo de massa genérico; o secundário concreto converte mais numa fatia.
+- ÂNGULO = o ponto de vista que introduz a mensagem (pode misturar 2): novidade/descoberta, história pessoal, contrário ao senso comum, medo, depoimento, afirmação de superioridade, "the one thing" (um único diferencial entrega tudo), lista ("3 motivos…"), curiosidade/prova social, pergunta paradoxal.
+- O benefício pode ser explícito ("use e durma fresca a noite toda") ou implícito ("o pijama que essa mãe de 3 não tira nem pra receber visita").
+PRODUÇÃO: BODY (corpo) FIXO + troca só os ~5s do gancho → 1 corpo validado vira 10-15 anúncios. Quando achar um vencedor, multiplique-o (ver doutrina de ARTE), não fique caçando peça nova.
+DISTRIBUIÇÃO: rode público amplo; o Meta entrega cada criativo pra uma FATIA. 1-2 criativos carregam a maior parte das vendas. Cada criativo deve mirar UMA fatia/desejo diferente. Meta de volume: anúncio satura → precisa de peças novas toda semana.
+SATURAÇÃO: o que satura rápido é CRIATIVO × FATIA (não a oferta). Quando cansar numa fatia, NÃO insista no mesmo benefício pra ela — troca de fatia/benefício.
+CONGRUÊNCIA: o anúncio tem que prometer o que a PÁGINA DO PRODUTO entrega (clica e não compra = anúncio incongruente).
 `;
