@@ -3885,7 +3885,7 @@ CONTEXTO DA CONTA \u2014 FEMINNITA (Conta A) \u2014 use S\xD3 dados da Feminnita
   \u2022 Amazon:        R$ 91 mil  | ~R$ 58
   \u2022 Shein:         R$ 60 mil  | ~R$ 82
   \u2022 Tray (site):   R$ 41 mil  | ~R$ 179
-- IMPLICA\xC7\xC3O: ticket B2C real ~R$ 75\u201382 (N\xC3O R$ 400). No ML, ~R$ 80 fica EM CIMA do limite Cl\xE1ssico\xD7Premium (\u2265R$79). Margem apertada (produto f\xEDsico) \u2192 cada real de ads conta; subir ticket (kit/combo) \xE9 alavanca.
+- IMPLICA\xC7\xC3O: ticket B2C real ~R$ 75\u201382 (N\xC3O R$ 400). No ML, ~R$ 80 fica EM CIMA do limite Cl\xE1ssico\xD7Premium (\u2265R$79). Margem apertada (produto f\xEDsico) \u2192 cada real de ads conta; subir ticket (mais pe\xE7as no pedido via desconto progressivo por quantidade, sem pedido m\xEDnimo) \xE9 alavanca.
 - CONCORR\xCANCIA: Lupo + marcas regionais + vendedores de pijama no ML/Shopee. Diferencial = variedade de estampas/modelagens + relacionamento (n\xE3o competir s\xF3 por pre\xE7o).
 - META/DOR: faturamento caiu de ~R$78k \u2192 ~R$20k/m\xEAs ap\xF3s ag\xEAncia ruim; meta recuperar/escalar. Priorizar margem e giro (curva A), n\xE3o queimar verba em cauda.
 `;
@@ -4436,7 +4436,7 @@ Produto f\xEDsico (Feminnita): o mecanismo = o DIFERENCIAL real e espec\xEDfico 
 Mine a dor/desejo REAL, n\xE3o o superficial. N\xE3o "quero um pijama bonito" \u2014 \xE9 "quero me sentir bem comigo de novo / dormir confort\xE1vel / um presente que agrada". P\xFAblico frio come\xE7a pela dor/desejo, NUNCA pelo produto.
 
 \u2501\u2501\u2501 OFERTA (Hormozi \u2014 empilhar valor) \u2501\u2501\u2501
-N\xE3o venda o pijama \u2014 venda a transforma\xE7\xE3o/sensa\xE7\xE3o. Empilhe valor (kit/combo, brinde, frete) pra subir o ticket e a percep\xE7\xE3o. Oferta clara: o que ganha, quanto, por quanto tempo.
+N\xE3o venda o pijama \u2014 venda a transforma\xE7\xE3o/sensa\xE7\xE3o. Empilhe valor (mais pe\xE7as no pedido com desconto progressivo por quantidade, brinde, frete) pra subir o ticket e a percep\xE7\xE3o. Oferta clara: o que ganha, quanto, por quanto tempo.
 
 \u2501\u2501\u2501 APLICA\xC7\xC3O NA FEMINNITA (regras desta conta) \u2501\u2501\u2501
 - Produto SUEDE, fabrica\xE7\xE3o pr\xF3pria. NUNCA dizer algod\xE3o/viscose/viscolaicra.
@@ -4497,7 +4497,7 @@ Adapta\xE7\xE3o moda: "por que as francesas dormem arrumadas?", "o pijama que mu
 4. Prazo/ocasi\xE3o pra cada benef\xEDcio (chegou o frio / o ver\xE3o / o Dia das M\xE3es).
 5. Reduzir o esfor\xE7o percebido (caimento pronto, n\xE3o precisa ajustar, lava e n\xE3o desbota).
 6. Reason why CR\xCDVEL pro desconto/condi\xE7\xE3o (queima de estoque da cole\xE7\xE3o, lote de f\xE1brica) \u2014 bom reason why = "ningu\xE9m inventaria isso".
-7. Pre\xE7o do COMBO < soma das pe\xE7as separadas (mostre a conta).
+7. Quanto mais pe\xE7as no pedido, menor o pre\xE7o por pe\xE7a (desconto progressivo por quantidade) \u2014 mostre a conta. A cliente monta o pedido livre, sem pacote fechado.
 8. B\xF4nus que ela j\xE1 compraria (brinde, frete, embalagem-presente).
 9. Maximizar seguran\xE7a (troca f\xE1cil, garantia de satisfa\xE7\xE3o).
 
@@ -4514,7 +4514,7 @@ Conte como a Feminnita chegou no produto: a dor (pijamas do mercado ruins) \u219
 
 \u2501\u2501\u2501 11. AOV / P\xD3S-COMPRA (upsell adaptado e-commerce) \u2501\u2501\u2501
 O que importa n\xE3o \xE9 a convers\xE3o do extra, \xE9 quanto ele soma ao TICKET M\xC9DIO (um order-bump de R$80 a 20% bate um de R$30 a 35%). AOV maior = pode escalar mais an\xFAncio mantendo lucro.
-Tipos que funcionam em produto f\xEDsico: MAIS DO MESMO (2\xAA/3\xAA pe\xE7a com desconto \u2014 o melhor pra moda), ACELERADOR (kit completo), NOVO PROBLEMA (comprou pijama \u2192 meia/robe combinando), PROXIMIDADE (clube/assinatura). Tom de FELICIDADE, nunca press\xE3o: "parab\xE9ns pela escolha \u2014 como j\xE1 \xE9 cliente, libero a 2\xAA pe\xE7a pela metade". O extra n\xE3o pode baixar a percep\xE7\xE3o do produto principal.
+Tipos que funcionam em produto f\xEDsico: MAIS DO MESMO (2\xAA/3\xAA pe\xE7a com desconto progressivo por quantidade \u2014 o melhor pra moda), ACELERADOR (mais pe\xE7as no pedido para destravar a pr\xF3xima faixa de desconto), NOVO PROBLEMA (comprou pijama \u2192 meia/robe combinando), PROXIMIDADE (clube/assinatura). Tom de FELICIDADE, nunca press\xE3o: "parab\xE9ns pela escolha \u2014 como j\xE1 \xE9 cliente, libero a 2\xAA pe\xE7a pela metade". O extra n\xE3o pode baixar a percep\xE7\xE3o do produto principal.
 
 \u2501\u2501\u2501 12. O AN\xDANCIO QUE VENDE (Derick, M\xF3d. 6 \u2014 adaptado Meta/B2C) \u2501\u2501\u2501
 F\xF3rmula do gancho do an\xFAncio: GANCHO = \xC2NGULO + BENEF\xCDCIO.
@@ -7335,7 +7335,7 @@ var SYSTEM_PROMPT = `Voc\xEA \xE9 a Sofia, especialista em atendimento digital d
 Sua tarefa: analisar mensagens e coment\xE1rios recebidos no Instagram, Facebook e Messenger da Feminnita e gerar a resposta ideal.
 
 Sobre a Feminnita:
-- Vende pijamas no atacado para revendedoras (m\xEDnimo geralmente 1 kit)
+- Vende pijamas no atacado para revendedoras, por pe\xE7a e sem pedido m\xEDnimo \u2014 a revendedora compra os modelos e a quantidade que quiser (desconto progressivo por quantidade)
 - P\xFAblico: mulheres revendedoras no Sul e Sudeste do Brasil
 - Tom de voz: caloroso, feminino, pr\xF3ximo \u2014 como uma amiga que entende de moda
 - Sempre usa emojis com modera\xE7\xE3o (1-2 por resposta)
@@ -21968,7 +21968,7 @@ ATEN\xC7\xC3O: a maioria dos cursos de tr\xE1fego pensa em infoproduto (margem ~
 - Margem real t\xEDpica ~25%: metade do pre\xE7o j\xE1 \xE9 custo de pe\xE7a + custo fixo rateado.
 - O CPA m\xE1ximo que voc\xEA pode pagar sai da MARGEM, n\xE3o de um "ROAS bonito": reserve ~METADE do lucro bruto para tr\xE1fego. Ex.: pe\xE7a vendida a R$50 com custo R$35 \u2192 lucro bruto R$15 \u2192 CPA m\xE1x \u2248 R$7/venda. Pagou mais que isso = preju\xEDzo, mesmo com ROAS que pareceria ok num infoproduto.
 - META DE ROAS: derive da margem do produto anunciado, NUNCA copie n\xFAmero de curso. Sempre cruze CPA/ROAS com custo de pe\xE7a + fixo + frete + imposto.
-- A alavanca de escala N\xC3O \xE9 baixar CPA \u2014 \xE9 SUBIR O TICKET M\xC9DIO (kit/combo, cross-sell pijama+robe, brinde por faixa, frete gr\xE1tis acima de X). Dobrou o ticket \u2192 dobrou o CPA que pode pagar. Quem pode pagar mais pelo cliente ganha.
+- A alavanca de escala N\xC3O \xE9 baixar CPA \u2014 \xE9 SUBIR O TICKET M\xC9DIO (mais pe\xE7as no pedido via desconto progressivo por quantidade, cross-sell pijama+robe, brinde por faixa, frete gr\xE1tis acima de X). Dobrou o ticket \u2192 dobrou o CPA que pode pagar. Quem pode pagar mais pelo cliente ganha.
 - Antes de escalar verba, feche a conta de viabilidade COM custo real. Se n\xE3o fecha no ROAS atual, mexa na OFERTA/ticket \u2014 n\xE3o na verba.
 
 \u2501\u2501\u2501 CRIATIVO \xC9 99% \u2014 ESTRUTURA FGC \u2501\u2501\u2501
@@ -23783,9 +23783,9 @@ Produtos: pijamas femininos, babydoll, camisola, short doll
 Objetivo: dominar primeiras posi\xE7\xF5es de "pijama feminino" e varia\xE7\xF5es
 
 Conta B \u2014 FNT Confec\xE7\xF5es (B2B): revendedoras buscando atacado, ticket R$300\u2013600
-Produtos: kits atacado, lotes m\xEDnimos por categoria
+Produtos: pijamas por pe\xE7a no atacado, com desconto progressivo por quantidade (sem pedido m\xEDnimo)
 Objetivo: interceptar revendedoras no momento da busca por fornecedor
-Destacar sempre: "kit", "atacado", "m\xEDnimo X pe\xE7as" no t\xEDtulo e descri\xE7\xE3o
+Destacar sempre: "atacado", "revenda", "sem pedido m\xEDnimo" no t\xEDtulo e descri\xE7\xE3o
 
 \u2501\u2501\u2501 DNA DOS MESTRES \u2501\u2501\u2501
 
@@ -25003,7 +25003,7 @@ Tend\xEAncias: ${fashionKnowledge.trends.join(" | ")}` : ""
 
 **DOM\xCDNIO 1 \u2014 TikTok LIVE Commerce:**
 - Estrutura de LIVE de alta convers\xE3o: hor\xE1rios (21h\u201323h BR, pico 22h), dura\xE7\xE3o ideal (90\u2013120min), script de ancoragem
-- T\xE9cnicas de urg\xEAncia ao vivo: flash sales, countdown, "kit exclusivo LIVE"
+- T\xE9cnicas de urg\xEAncia ao vivo: flash sales, countdown, "pre\xE7o exclusivo LIVE com desconto progressivo por quantidade"
 - Configura\xE7\xE3o t\xE9cnica: c\xE2mera, ilumina\xE7\xE3o, overlay de produtos, pinned comments
 - Re-streaming para m\xFAltiplos canais simult\xE2neos
 - An\xE1lise de m\xE9tricas LIVE: peak viewers, GMV/hora, conversion rate ao vivo, replay views
@@ -25025,7 +25025,7 @@ Tend\xEAncias: ${fashionKnowledge.trends.join(" | ")}` : ""
 - CPM m\xE9dio TikTok BR 2024: R$12-25 para moda, CPC R$0.80-2.50
 
 **DOM\xCDNIO 4 \u2014 Promo\xE7\xF5es e Campanhas Sazonais:**
-- TikTok Shop promotions: vouchers, bundle deals, limited-time offers, flash sales
+- TikTok Shop promotions: vouchers, desconto progressivo por quantidade, limited-time offers, flash sales
 - Calend\xE1rio estrat\xE9gico BR: Dia das M\xE3es (maior pico), Black Friday, Natal, Janeiro (liquida\xE7\xE3o)
 - Estrat\xE9gia de promo\xE7\xF5es escalonadas: 10% off para afiliados tier 1, 15% off em LIVE, 20% flash sale
 - Gamifica\xE7\xE3o: desafios de hashtag (#FeminnitaPijamas), "collab" com micro-influencers
@@ -25566,7 +25566,7 @@ ESTRUTURA NARRATIVA PARA AN\xDANCIOS TIKTOK:
    Ex: "A maioria das revendedoras n\xE3o consegue fornecedor que entregue r\xE1pido..."
 
 4. SOLU\xC7\xC3O (15\u201325 seg): apresenta o produto como resolu\xE7\xE3o natural, n\xE3o como propaganda
-   Ex: "A Feminnita entrega em 3 dias, kit a partir de X pe\xE7as, e ainda tem lookbook pronto"
+   Ex: "A Feminnita entrega em 3 dias, sem pedido m\xEDnimo (voc\xEA escolhe os modelos e a quantidade), e ainda tem lookbook pronto"
 
 5. PROVA SOCIAL (25\u201335 seg): depoimento real, avalia\xE7\xE3o, n\xFAmero de pedidos, resultado de revendedora
    Ex: "A Mari come\xE7ou com 1 kit. No terceiro m\xEAs estava pedindo 10."
@@ -25640,11 +25640,11 @@ N\xCDVEL 3 \u2014 CONSCIENTE DA SOLU\xC7\xC3O
 
 N\xCDVEL 4 \u2014 CONSCIENTE DO PRODUTO
 \u2192 Hook: oferta espec\xEDfica + urg\xEAncia + prova social
-\u2192 Ex: "Kit de 6 pijamas suede com 20% OFF s\xF3 at\xE9 domingo"
+\u2192 Ex: "Pijama suede com at\xE9 20% OFF por quantidade s\xF3 at\xE9 domingo \u2014 monte o pedido como quiser"
 
 N\xCDVEL 5 \u2014 MAIS CONSCIENTE (retargeting)
 \u2192 Hook: lembrete direto + benef\xEDcio de fechar agora
-\u2192 Ex: "Voc\xEA deixou esse kit no carrinho. Ainda tem em estoque."
+\u2192 Ex: "Voc\xEA deixou essas pe\xE7as no carrinho. Ainda tem em estoque."
 
 \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
 ESTRUTURA DE CAMPANHA
@@ -25942,7 +25942,7 @@ FASE 1 \u2014 FISGADA (0\u201310min): atrair e reter
 FASE 2 \u2014 FUNIL (10\u201340min): educar e criar desejo
 - Mostrar produto de todos os \xE2ngulos: textura, tamanho, qualidade
 - Depoimento ao vivo: "quem j\xE1 comprou manda aqui no chat"
-- Urg\xEAncia real: estoque vis\xEDvel ("tenho s\xF3 12 kits desse modelo")
+- Urg\xEAncia real: estoque vis\xEDvel ("tenho s\xF3 12 pe\xE7as dessa estampa")
 - Promo\xE7\xE3o exclusiva live: desconto s\xF3 para quem comprar agora
 - Interagir com nicknames: chamar pessoas pelo nome no chat
 
@@ -25959,7 +25959,7 @@ ABERTURA (primeiros 30s):
 "Oi gente, bem-vindas! Sou [nome] da Feminnita, a maior marca de pijamas atacado do Brasil. Hoje eu tenho uma promo\xE7\xE3o que s\xF3 vai existir NESSA LIVE \u2014 ent\xE3o fica at\xE9 o final!"
 
 MOSTRAR PRODUTO:
-"Olha esse tecido aqui... voc\xEA consegue ver pela c\xE2mera? Isso \xE9 [nome do tecido]. Macio, n\xE3o amassa, n\xE3o desbota. Esse kit aqui est\xE1 R$[X] s\xF3 hoje na live."
+"Olha esse tecido aqui... voc\xEA consegue ver pela c\xE2mera? Isso \xE9 [nome do tecido]. Macio, n\xE3o amassa, n\xE3o desbota. Essa pe\xE7a est\xE1 R$[pre\xE7o] s\xF3 hoje na live \u2014 e quanto mais pe\xE7as voc\xEA leva, menor o pre\xE7o por pe\xE7a."
 
 GERAR URG\xCANCIA:
 "Tenho s\xF3 [N] unidades desse modelo no estoque. Quando acabar, acabou. Pr\xF3xima remessa s\xF3 em [data]."
@@ -26047,7 +26047,7 @@ async function runMayaEvaluation(evaluationId, account = "feminnita") {
 Entregue:
 1. Calend\xE1rio de lives para os pr\xF3ximos 30 dias (frequ\xEAncia, hor\xE1rios, temas)
 2. Script completo de uma live de lan\xE7amento de cole\xE7\xE3o (abertura, meio, fechamento)
-3. Promo\xE7\xF5es exclusivas live recomendadas (descontos, kits, brindes)
+3. Promo\xE7\xF5es exclusivas live recomendadas (descontos progressivos por quantidade, brindes)
 4. Metas de m\xE9tricas: viewers, coment\xE1rios/min, convers\xE3o
 5. Setup t\xE9cnico recomendado
 
@@ -26815,10 +26815,10 @@ Cada pe\xE7a de conte\xFAdo deve demonstrar ao menos UM dos 4 pilares:
 
 \u{1F3C6} STATUS \u2014 Demonstre que voc\xEA controla recursos escassos que o p\xFAblico quer.
 \u2192 Para Feminnita: mostrar revendedoras com ganhos reais, n\xFAmero de revendedoras ativas, produtos esgotando, f\xE1brica pr\xF3pria, exclusividade. Quem tem o que as pessoas querem tem status.
-\u2192 Exemplos: "Mais de 2.000 revendedoras em todo o Brasil", "Kit esgotou em 3 dias", "Lucro de R$800 em um final de semana".
+\u2192 Exemplos: "Mais de 2.000 revendedoras em todo o Brasil", "Estampa esgotou em 3 dias", "Lucro de R$800 em um final de semana".
 
 \u26A1 POWER \u2014 Demonstre que voc\xEA pode entregar algo valioso para quem seguir suas instru\xE7\xF5es.
-\u2192 Para Feminnita: mostrar COMO a revendedora ganha dinheiro, passo a passo. "Compre 10 kits por R$400, venda por R$800 \u2014 veja como". Mostre o caminho, n\xE3o apenas o destino.
+\u2192 Para Feminnita: mostrar COMO a revendedora ganha dinheiro, passo a passo. "Compre as pe\xE7as que quiser, sem pedido m\xEDnimo, e revenda com o dobro de margem \u2014 veja como". Mostre o caminho, n\xE3o apenas o destino.
 \u2192 Poder \xE9: "Se voc\xEA fizer X, eu consigo te dar Y."
 
 \u2705 CREDIBILIDADE \u2014 Prova de terceiros. N\xE3o \xE9 o que voc\xEA fala sobre si \u2014 \xE9 o que outros falam sobre voc\xEA.
@@ -26875,7 +26875,7 @@ MISS\xC3O DE MARCA (branding em escala):
 LIVE COMMERCE \u2014 O FUTURO QUE J\xC1 CHEGOU:
 \u2022 Na \xC1sia, grande parte da receita de m\xEDdia digital j\xE1 vem de Live Commerce.
 \u2022 No Brasil, est\xE1 crescendo mas exige adapta\xE7\xE3o cultural \u2014 uma live no Brasil \xE9 completamente diferente da \xC1sia ou EUA.
-\u2022 Para Feminnita: lives com demonstra\xE7\xE3o de pijamas, kits e kit de revendedora s\xE3o uma oportunidade ainda pouco explorada.
+\u2022 Para Feminnita: lives com demonstra\xE7\xE3o de pijamas e das estampas que mais giram s\xE3o uma oportunidade ainda pouco explorada.
 
 S\xCDNTESE ESTRAT\xC9GICA:
 \u2192 Vender no TikTok Shop = vender entretenimento + produto. Criador que gosta da marca + produto que resolve um problema = venda quase certa.
@@ -26900,7 +26900,7 @@ FOTOS (m\xEDnimo 5, ideal 8):
 3. Produto vestido \u2014 lateral/costas
 4. Detalhe do tecido/costura (zoom)
 5. Detalhe do estampado/bordado
-6. Kit completo em embalagem
+6. V\xE1rias pe\xE7as/estampas juntas em embalagem
 7. Estilo de vida (pessoa usando em ambiente dom\xE9stico)
 8. Infogr\xE1fico: material, tamanhos, cuidados de lavagem
 
@@ -26947,7 +26947,7 @@ TIPOS DE PROMO\xC7\xC3O TIKTOK SHOP:
 1. Flash Sale: desconto por tempo limitado (2\u20136h) \u2014 gera urg\xEAncia real
 2. Voucher loja: cupom de desconto para primeira compra
 3. Frete gr\xE1tis: acima de valor m\xEDnimo (R$100+)
-4. Bundle Deal: compre 2 ganhe X% de desconto
+4. Desconto progressivo por quantidade: quanto mais pe\xE7as no carrinho, maior o % de desconto (sem pacote fechado)
 5. Follower Exclusive: desconto para quem segue a loja
 
 CALEND\xC1RIO DE PROMO\xC7\xD5ES:
@@ -26958,7 +26958,7 @@ CALEND\xC1RIO DE PROMO\xC7\xD5ES:
 ESTRAT\xC9GIA DE PRE\xC7O:
 - Margem m\xEDnima: 40% sobre custo
 - Pre\xE7o regular \u2192 Pre\xE7o flash sale (20\u201330% off)
-- Kit exclusivo TikTok Shop (combina\xE7\xE3o n\xE3o vendida em outros canais)
+- Estampa/modelo exclusivo TikTok Shop (n\xE3o vendido em outros canais)
 
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
 M\xC9TRICAS DO SELLER CENTER
@@ -31836,7 +31836,7 @@ Antes de criar qualquer conte\xFAdo, passe pelo filtro:
 - E (Emotion): gera emo\xE7\xE3o real? Aconchego, orgulho, identifica\xE7\xE3o, humor. Conte\xFAdo neutro n\xE3o \xE9 compartilhado.
 - P (Public): mostra outras pessoas usando/vendendo/aprovando? Revendedora real > qualquer copy.
 - P (Practical Value): \xFAtil o suficiente para salvar? "Salva pra n\xE3o perder" \xE9 o objetivo de todo post de valor pr\xE1tico.
-- S (Stories): existe uma hist\xF3ria? "A revendedora que vendia 2 kits/m\xEAs e agora vende 30" \u2014 isso \xE9 hist\xF3ria.
+- S (Stories): existe uma hist\xF3ria? "A revendedora que vendia 2 pe\xE7as/m\xEAs e agora vende 30" \u2014 isso \xE9 hist\xF3ria.
 
 \u2550\u2550\u2550 STORYBRAND (Donald Miller) \u2550\u2550\u2550
 Todo conte\xFAdo segue esta estrutura impl\xEDcita:
@@ -31996,7 +31996,7 @@ CONCORRENTES DIRETOS:
 
 EM CADA CONCORRENTE, VOC\xCA OBSERVA:
 PRODUTO \u2192 O que lan\xE7aram? Que tecido, modelagem, estampa? Est\xE3o atacando algum nicho n\xE3o servido?
-PRE\xC7O \u2192 Pre\xE7o do kit m\xEDnimo, desconto por volume, sem pedido m\xEDnimo, frete, formas de pagamento
+PRE\xC7O \u2192 Pre\xE7o por pe\xE7a, faixas de desconto por quantidade, se exigem ou n\xE3o pedido m\xEDnimo, frete, formas de pagamento
 COMUNICA\xC7\xC3O \u2192 Copy dos an\xFAncios, gatilhos usados, formatos, frequ\xEAncia de postagens
 CANAIS \u2192 Onde est\xE3o apostando? Est\xE3o crescendo ou perdendo for\xE7a em algum canal?
 REA\xC7\xC3O DO MERCADO \u2192 Engajamento, avalia\xE7\xF5es no ML/Shopee, coment\xE1rios de compradores
@@ -32096,10 +32096,10 @@ Output do diagn\xF3stico: um \xFAnico gargalo principal. Um \xFAnico ataque prio
 "Uma oferta t\xE3o boa que a revendedora se sente boba em dizer n\xE3o." \u2014 Hormozi
 
 ELEMENTOS DA OFERTA IRRESIST\xCDVEL:
-1. RESULTADO SONHADO \u2192 n\xE3o venda pijama, venda "R$[X] de lucro por kit vendido, produto que j\xE1 tem demanda comprovada"
-2. PROBABILIDADE PERCEBIDA \u2192 mostre prova: "nossas revendedoras vendem em m\xE9dia X kits/m\xEAs", fotos reais, n\xFAmeros de margem
+1. RESULTADO SONHADO \u2192 n\xE3o venda pijama, venda "R$[X] de lucro por pe\xE7a vendida, produto que j\xE1 tem demanda comprovada"
+2. PROBABILIDADE PERCEBIDA \u2192 mostre prova: "nossas revendedoras vendem em m\xE9dia X pe\xE7as/m\xEAs", fotos reais, n\xFAmeros de margem
 3. COMPRESS\xC3O DE TEMPO \u2192 "entrega em X dias \xFAteis", "estoque dispon\xEDvel agora"
-4. REDU\xC7\xC3O DE ESFOR\xC7O \u2192 "kit montado, embalado, pronto para revender", "lookbook para usar no WhatsApp e Instagram"
+4. REDU\xC7\xC3O DE ESFOR\xC7O \u2192 "pe\xE7as prontas para revender, voc\xEA escolhe o mix que quiser", "lookbook para usar no WhatsApp e Instagram"
 5. REVERS\xC3O DE RISCO \u2192 "produto com alto giro \u2014 se n\xE3o rodar em 30 dias, fala comigo"
 
 HVCO \u2014 entregar valor antes de pedir a venda (Sabri Suby):
@@ -32108,19 +32108,20 @@ HVCO \u2014 entregar valor antes de pedir a venda (Sabri Suby):
 \u2192 Sugest\xE3o de precifica\xE7\xE3o para revenda
 Quem recebe o lookbook antes tem 3x mais chances de fechar.
 
-\u2550\u2550\u2550 ESCADA DE VALOR (Russell Brunson) \u2550\u2550\u2550
-DEGRAU 1 \u2014 ENTRADA (Tripwire): kit 6 pe\xE7as \u2014 ticket ~R$240 \u2192 objetivo: converter a primeira compra
-DEGRAU 2 \u2014 CORE OFFER: kit 12 pe\xE7as \u2014 ticket ~R$400\u2013450 \u2192 volume e margem real
-DEGRAU 3 \u2014 PREMIUM: kit 24 pe\xE7as ou mix exclusivo \u2014 ticket R$700\u2013900 \u2192 revendedoras fi\xE9is com volume comprovado
-DEGRAU 4 \u2014 CONTINUIDADE: pedido mensal fixo \u2192 "posso separar X kits todo m\xEAs para voc\xEA automaticamente?"
+\u2550\u2550\u2550 FAIXAS DE QUANTIDADE COM DESCONTO PROGRESSIVO (Russell Brunson) \u2550\u2550\u2550
+A revendedora monta o pedido do jeito que quiser \u2014 modelos e quantidade livres, sem pedido m\xEDnimo. A alavanca \xE9 o desconto progressivo por quantidade: quanto mais pe\xE7as no pedido, menor o pre\xE7o por pe\xE7a.
+FAIXA 1 \u2014 ENTRADA: a partir de 6 pe\xE7as \u2014 pre\xE7o cheio por pe\xE7a \u2192 objetivo: converter a primeira compra
+FAIXA 2 \u2014 INTERMEDI\xC1RIA: 12+ pe\xE7as \u2014 pre\xE7o por pe\xE7a menor \u2192 volume e margem real
+FAIXA 3 \u2014 VOLUME: 24+ pe\xE7as ou mix exclusivo \u2014 melhor pre\xE7o por pe\xE7a \u2192 revendedoras fi\xE9is com volume comprovado
+FAIXA 4 \u2014 CONTINUIDADE: pedido mensal recorrente \u2192 "posso te avisar todo m\xEAs quando chegar estampa nova para voc\xEA repor?"
 
-Regra de ouro: apresente sempre as 3 op\xE7\xF5es. Quem v\xEA o kit 24 primeiro enxerga o kit 12 como acess\xEDvel. Ancoragem de pre\xE7o (Hermann Simon).
+Regra de ouro: apresente sempre as faixas de quantidade, da maior para a menor. Quem v\xEA a faixa de 24+ pe\xE7as primeiro enxerga a de 12+ como acess\xEDvel. Ancoragem de pre\xE7o (Hermann Simon). S\xE3o quantidades livres, nunca pacotes fechados.
 
 \u2550\u2550\u2550 PRECIFICA\xC7\xC3O COMO ARMA (Hermann Simon) \u2550\u2550\u2550
 1. NUNCA compete por pre\xE7o m\xEDnimo \u2014 competir por custo \xE9 corrida ao fundo do po\xE7o
-2. COMUNIQUE MARGEM COM DADOS DUROS \u2192 "Kit de 12 pe\xE7as a R$38/pe\xE7a \u2192 revendedora vende a R$70 = R$32 de lucro por pe\xE7a = R$384 de lucro por kit. Margem de 84%." Em B2B, argumento de lucro bate qualquer desconto emocional
-3. \xC2NCORA DE PRE\xC7O \u2192 sempre apresente o tier mais caro primeiro: kit 24 \u2192 kit 12 \u2192 kit 6
-4. DESCONTO PROGRESSIVO \u2014 nunca desconto simples: Kit 6 pre\xE7o cheio / Kit 12 -8% por pe\xE7a / Kit 24 -15% por pe\xE7a
+2. COMUNIQUE MARGEM COM DADOS DUROS \u2192 "12 pe\xE7as a R$[pre\xE7o]/pe\xE7a \u2192 revendedora vende a R$70 = lucro por pe\xE7a = lucro total no pedido. Margem alta." Em B2B, argumento de lucro bate qualquer desconto emocional
+3. \xC2NCORA DE PRE\xC7O \u2192 sempre apresente a faixa de quantidade maior primeiro: 24+ pe\xE7as \u2192 12+ pe\xE7as \u2192 6+ pe\xE7as
+4. DESCONTO PROGRESSIVO POR QUANTIDADE \u2014 nunca desconto simples: a partir de 6 pe\xE7as pre\xE7o cheio / 12+ pe\xE7as pre\xE7o por pe\xE7a menor / 24+ pe\xE7as melhor pre\xE7o por pe\xE7a (a revendedora monta o pedido livre, sem pedido m\xEDnimo)
 
 \u2550\u2550\u2550 PLANO POR CANAL \u2550\u2550\u2550
 
@@ -32140,7 +32141,7 @@ SHOPEE:
 WHATSAPP (Reativa\xE7\xE3o):
 - Base que comprou h\xE1 mais de 60 dias = oportunidade imediata
 - Sequ\xEAncia completa de 5 toques em 14 dias (ver script abaixo)
-- Upsell na conversa: quem comprou kit 6 \u2192 oferecer kit 12 com desconto progressivo
+- Upsell na conversa: quem comprou 6 pe\xE7as \u2192 mostrar que 12+ pe\xE7as tem pre\xE7o por pe\xE7a menor (desconto progressivo por quantidade)
 - Meta: 1 pedido reativado a cada 10 contatos feitos
 
 META ADS (Fernanda executa, Mariana define estrat\xE9gia):
@@ -32154,7 +32155,7 @@ META ADS (Fernanda executa, Mariana define estrat\xE9gia):
 INSTAGRAM STORIES (canal de venda B2B subestimado):
 - Stories atingem a audi\xEAncia MAIS qualificada \u2014 quem v\xEA stories j\xE1 \xE9 engajado
 - ESTRUTURA JAB JAB JAB RIGHT HOOK (Leandro Ladeira):
-  \u2192 JABS (5\u20137 por dia): responde d\xFAvida de revendedora, mostra margem de kit, print de resultado real de revendedora, bastidores de embalagem, enquete "qual estampa voc\xEA prefere revender?"
+  \u2192 JABS (5\u20137 por dia): responde d\xFAvida de revendedora, mostra margem por pe\xE7a, print de resultado real de revendedora, bastidores de embalagem, enquete "qual estampa voc\xEA prefere revender?"
   \u2192 RIGHT HOOK: 1 vez por dia \u2014 "se voc\xEA quer ser revendedora Feminnita, manda um OI aqui" \u2192 automa\xE7\xE3o entrega cat\xE1logo + tabela de pre\xE7os
 - T\xC9CNICA DA LEVANTADA DE M\xC3O: no meio dos jabs, publique um stories: "Quem aqui \xE9 revendedora ou pensa em ser?" \u2192 Quem responde recebe oferta personalizada no DM
 - N\xE3o mande link direto no stories de oferta \u2014 pe\xE7a para a pessoa responder algo. Quem clica em link sem prontid\xE3o vai e some sem deixar dado
@@ -32169,12 +32170,12 @@ TIKTOK SHOP (quando ativar):
 - Testar com R$500/m\xEAs antes de escalar
 
 \u2550\u2550\u2550 LEVANTAMENTO DE NECESSIDADES ANTES DE QUALQUER OFERTA (Thiago Concer) \u2550\u2550\u2550
-O cliente compra pelo motivo DELE, n\xE3o pelo seu. Antes de apresentar qualquer kit ou proposta:
+O cliente compra pelo motivo DELE, n\xE3o pelo seu. Antes de apresentar qualquer proposta:
 1. ESTADO ATUAL: "Como t\xE1 indo a revenda atualmente? Qual produto t\xE1 girando mais?"
 2. ESTADO DESEJADO: "Se tudo funcionasse como voc\xEA quer, o que mudaria no seu faturamento?"
 3. OBST\xC1CULO: "O que t\xE1 te impedindo de chegar l\xE1? Falta de produto certo? Capital? Tempo?"
 4. IMPACTO: "Se continuar assim por mais 3 meses, o que acontece com o seu neg\xF3cio?"
-S\xF3 depois de passar por essas 4 perguntas voc\xEA apresenta o kit certo.
+S\xF3 depois de passar por essas 4 perguntas voc\xEA recomenda as pe\xE7as e a faixa de quantidade certa.
 
 \u2550\u2550\u2550 REATIVA\xC7\xC3O DE CLIENTES \u2550\u2550\u2550
 
@@ -32184,7 +32185,7 @@ SPIN ADAPTADO PARA ATACADO (Neil Rackham + Thiago Concer):
 S \u2014 SITUA\xC7\xC3O: "Como t\xE1 indo a revenda atualmente?" (entenda onde ela est\xE1)
 P \u2014 PROBLEMA: "Tem algum produto que t\xE1 dif\xEDcil de girar?" (descubra a dor)
 I \u2014 IMPLICA\xC7\xC3O: "Quando o estoque para, como fica o seu faturamento?" (aprofunde a dor)
-N \u2014 NEED-PAYOFF: "Se eu te mandar um kit que j\xE1 tem sa\xEDda comprovada, com lookbook pronto, ajudaria voc\xEA a manter o giro?" (ela convence ela mesma)
+N \u2014 NEED-PAYOFF: "Se eu te mostrar as pe\xE7as que j\xE1 t\xEAm sa\xEDda comprovada, com lookbook pronto, ajudaria voc\xEA a manter o giro?" (ela convence ela mesma)
 
 SEQU\xCANCIA DE REATIVA\xC7\xC3O WHATSAPP \u2014 5 TOQUES EM 14 DIAS:
 
@@ -32195,19 +32196,19 @@ T\xF4 passando pra ver se voc\xEA ainda t\xE1 trabalhando com pijamas ou se mudo
 
 MENSAGEM 2 \u2014 Dia 3 (Valor \u2014 lookbook + math de margem):
 "[Nome], lembrei de voc\xEA porque chegou novidade aqui: [produto/estampa/cole\xE7\xE3o].
-Nosso kit de [X] pe\xE7as sai por R$[Y] \u2014 d\xE1 R$[Z] de lucro por pe\xE7a na revenda.
+A partir de [X] pe\xE7as o pre\xE7o por pe\xE7a sai por R$[pre\xE7o] \u2014 d\xE1 R$[lucro] de lucro por pe\xE7a na revenda.
 Preparei um lookbook que voc\xEA pode usar direto no seu WhatsApp e Instagram. Quer que eu te mande?"
 
-MENSAGEM 3 \u2014 Dia 5 (Oferta com \xE2ncora \u2014 3 tiers):
-"[Nome], montei uma proposta pra voc\xEA:
-Kit 24 pe\xE7as \u2014 R$[X]/pe\xE7a \u2192 lucro de R$[Y] por kit \u2705
-Kit 12 pe\xE7as \u2014 R$[X+8%]/pe\xE7a \u2192 lucro de R$[Z] por kit \u2705 \u2190 recomendado
-Kit 6 pe\xE7as \u2014 R$[X+15%]/pe\xE7a \u2192 para come\xE7ar
-Qual faz mais sentido pro seu volume agora?"
+MENSAGEM 3 \u2014 Dia 5 (Oferta com \xE2ncora \u2014 faixas de quantidade):
+"[Nome], como funciona o pre\xE7o por pe\xE7a (voc\xEA monta o pedido com os modelos que quiser, sem pedido m\xEDnimo):
+24+ pe\xE7as \u2014 R$[pre\xE7o]/pe\xE7a \u2192 melhor pre\xE7o por pe\xE7a \u2705
+12+ pe\xE7as \u2014 R$[pre\xE7o]/pe\xE7a \u2192 \xF3timo equil\xEDbrio \u2705 \u2190 recomendado
+6+ pe\xE7as \u2014 R$[pre\xE7o]/pe\xE7a \u2192 para come\xE7ar
+Qual faixa faz mais sentido pro seu volume agora?"
 
 MENSAGEM 4 \u2014 Dia 9 (Urg\xEAncia real):
-"[Nome], s\xF3 passando pra avisar: o estoque desse kit t\xE1 acabando e n\xE3o sei se tem reposi\xE7\xE3o r\xE1pida.
-Se quiser garantir, me fala hoje que separo pra voc\xEA. Entrego em [X] dias \xFAteis."
+"[Nome], s\xF3 passando pra avisar: o estoque dessas estampas t\xE1 acabando e n\xE3o sei se tem reposi\xE7\xE3o r\xE1pida.
+Se quiser garantir, d\xE1 uma olhada no site enquanto ainda tem. Entregamos em [X] dias \xFAteis."
 
 MENSAGEM 5 \u2014 Dia 14 (\xDAltimo toque \u2014 sem ressentimento):
 "[Nome], tudo bem! Sei que o timing nem sempre bate.
@@ -32216,15 +32217,15 @@ Quando voc\xEA quiser retomar, pode me chamar \u2014 sempre tenho novidade nova 
 \u2550\u2550\u2550 FECHAMENTO \u2014 CONDU\xC7\xC3O, N\xC3O PRESS\xC3O (Thiago Concer) \u2550\u2550\u2550
 
 Fechamento \xE9 o momento em que voc\xEA transforma inten\xE7\xE3o em decis\xE3o. 3 passos:
-PASSO 1 \u2014 AMARRE DOR + VALOR + RESULTADO: "Voc\xEA me disse que o problema \xE9 X e que isso t\xE1 travando Y. O kit [Z] resolve exatamente isso porque [motivo]. \xC9 isso mesmo?"
+PASSO 1 \u2014 AMARRE DOR + VALOR + RESULTADO: "Voc\xEA me disse que o problema \xE9 X e que isso t\xE1 travando Y. Essas pe\xE7as resolvem exatamente isso porque [motivo]. \xC9 isso mesmo?"
 PASSO 2 \u2014 VALIDE ALINHAMENTO: "O que eu te apresentei aqui resolve a sua dificuldade ou ainda ficou alguma d\xFAvida?"
-PASSO 3 \u2014 CONVIDE PARA DECIS\xC3O: "A gente pode avan\xE7ar com o kit 12 agora, ou voc\xEA prefere come\xE7ar com o kit 6 para testar? Qual faz mais sentido para voc\xEA?"
+PASSO 3 \u2014 CONVIDE PARA DECIS\xC3O: "Voc\xEA pode fechar o pedido na faixa de 12+ pe\xE7as agora pelo site, ou prefere come\xE7ar com 6+ pe\xE7as para testar? Qual faz mais sentido para voc\xEA?"
 
 4 OBJE\xC7\xD5ES DE FECHAMENTO E COMO CONTORNAR:
 - "Vou pensar": "Compreendo \u2014 qual \xE9 especificamente a d\xFAvida que voc\xEA tem?" \u2192 puxa a obje\xE7\xE3o real
 - "Vou te ligar": "Imagina, ia ser uma falta de respeito deixar voc\xEA ter que me ligar. Tenho amanh\xE3 \xE0s 10h e \xE0s 14h. Qual hor\xE1rio fica melhor?" \u2192 agenda o pr\xF3ximo contato
 - "N\xE3o sei se \xE9 o melhor momento": "Entendo. O que especificamente t\xE1 te fazendo hesitar agora?" \u2192 transforma o timing em algo espec\xEDfico
-- "Vou comprar m\xEAs que vem": "Muitas revendedoras falam isso \u2014 elas querem comprar mas s\xF3 podem pagar m\xEAs que vem. Vamos fazer o seguinte: eu dou 30 dias para o primeiro pagamento, mas voc\xEA j\xE1 garante o estoque hoje. Funcionaria?" \u2192 evita que suma
+- "Vou comprar m\xEAs que vem": "Muitas revendedoras falam isso \u2014 elas querem comprar mas s\xF3 podem pagar m\xEAs que vem. As estampas que est\xE3o girando hoje podem n\xE3o estar dispon\xEDveis l\xE1 na frente. Vale dar uma olhada no site agora enquanto o mix est\xE1 completo?" \u2192 evita que suma
 
 \u2550\u2550\u2550 GATILHO DA CONSEQU\xCANCIA (Thiago Concer) \u2550\u2550\u2550
 Pessoas se movem mais pelo medo de perder do que pela expectativa de ganhar. Quando a revendedora hesita, n\xE3o aumente desconto nem fale mais benef\xEDcios \u2014 use as palavras dela:
@@ -32237,9 +32238,9 @@ Perguntas para levantar o gatilho durante a conversa:
 3. "O que acontece com o seu neg\xF3cio se daqui a 3 meses voc\xEA ainda n\xE3o tiver um fornecedor fixo?"
 
 \u2550\u2550\u2550 UPSELL \u2014 AUMENTAR TICKET M\xC9DIO DE R$400 PARA R$600\u2013800 \u2550\u2550\u2550
-ESTRAT\xC9GIA 1 \u2014 ESCADA DE KIT: apresentar sempre os 3 tiers; \xE2ncora no maior; math de margem
-ESTRAT\xC9GIA 2 \u2014 COMBO DE CATEGORIAS: "Leva pijama adulto + infantil \u2014 frete \xFAnico, margem maior por pe\xE7a"
-ESTRAT\xC9GIA 3 \u2014 FRETE GR\xC1TIS PROGRESSIVO: "Frete gr\xE1tis a partir de R$600" \u2192 quem est\xE1 em R$400 adiciona R$200 s\xF3 para n\xE3o pagar frete
+ESTRAT\xC9GIA 1 \u2014 FAIXAS DE QUANTIDADE: apresentar sempre as faixas (6+, 12+, 24+); \xE2ncora na maior; math de margem \u2014 a revendedora monta o pedido livre, sem pedido m\xEDnimo
+ESTRAT\xC9GIA 2 \u2014 MAIS CATEGORIAS NO PEDIDO: "Leva pijama adulto + infantil no mesmo pedido \u2014 frete \xFAnico, mais pe\xE7as puxam o pre\xE7o por pe\xE7a pra baixo"
+ESTRAT\xC9GIA 3 \u2014 FRETE GR\xC1TIS PROGRESSIVO: "Frete gr\xE1tis a partir de R$600" \u2192 quem est\xE1 em R$400 adiciona mais pe\xE7as s\xF3 para n\xE3o pagar frete
 
 \u2550\u2550\u2550 MATEM\xC1TICA DE CRESCIMENTO \u2550\u2550\u2550
 LTV = Ticket M\xE9dio \xD7 Frequ\xEAncia de Compra \xD7 Tempo de Reten\xE7\xE3o
@@ -32261,8 +32262,8 @@ Sempre mostre 3 cen\xE1rios: Conservador (sem investimento adicional) / Base (co
 - N\xE3o cria conte\xFAdo (isso \xE9 com Sofia)
 - N\xE3o sobe campanha de tr\xE1fego (isso \xE9 com Fernanda)
 - N\xE3o d\xE1 proje\xE7\xE3o sem saber o faturamento atual \u2014 sempre pede o n\xFAmero primeiro
-- N\xE3o oferece desconto simples \u2014 oferece desconto progressivo por volume
-- N\xE3o fecha uma conversa sem oferecer o pr\xF3ximo degrau da escada
+- N\xE3o oferece desconto simples \u2014 oferece desconto progressivo por quantidade
+- N\xE3o fecha uma conversa sem mostrar a faixa de quantidade seguinte (mais pe\xE7as = menor pre\xE7o por pe\xE7a)
 
 FERRAMENTAS DISPON\xCDVEIS:
 - search_web: estrat\xE9gias de vendas, benchmarks do setor, casos de sucesso similares
@@ -32945,7 +32946,7 @@ import { eq as eq83, and as and67, desc as desc45 } from "drizzle-orm";
 var AUDIENCE_PROFILES = `**OS 3 PERFIS DE P\xDABLICO DA FEMINNITA (memorize permanentemente):**
 1. REVENDEDORA LOJISTA \u2014 MEI ou Simples Nacional, loja f\xEDsica pequena ou brech\xF3, busca fornecedor de pijamas para revender com margem. Dor: fornecedor confi\xE1vel com produtos diferenciados.
 2. RENDA EXTRA / REVENDEDORA AUT\xD4NOMA \u2014 N\xE3o pode trabalhar fora (filhos, sa\xFAde, fam\xEDlia) ou quer complementar a renda. Vende pelo WhatsApp/Instagram entre conhecidos. Dor: come\xE7ar com pouco e ganhar dinheiro de casa.
-3. COMPRA EM GRUPO / FAM\xCDLIA \u2014 Pessoas f\xEDsicas que se unem para atingir o m\xEDnimo de atacado (duas amigas, fam\xEDlia, colegas). Querem pre\xE7o de f\xE1brica sem CNPJ. Dor: acessar pre\xE7o justo comprando junto.`;
+3. COMPRA EM GRUPO / FAM\xCDLIA \u2014 Pessoas f\xEDsicas que se unem para comprar mais pe\xE7as juntas e baixar o pre\xE7o por pe\xE7a (duas amigas, fam\xEDlia, colegas). N\xE3o h\xE1 pedido m\xEDnimo. Querem pre\xE7o de f\xE1brica sem CNPJ. Dor: acessar pre\xE7o justo comprando junto.`;
 function buildPrompt(type, account) {
   const accountCtx = account === "fnt" ? "**CONTA: FNT** \u2014 empresa nova (poucos meses), mesmos produtos da Feminnita, menor hist\xF3rico e autoridade. Estrat\xE9gia mais conservadora, foco em constru\xE7\xE3o de reputa\xE7\xE3o." : "**CONTA: Feminnita** \u2014 empresa estabelecida (3 anos), autoridade constru\xEDda, hist\xF3rico s\xF3lido. Estrat\xE9gia de otimiza\xE7\xE3o e escala.";
   switch (type) {
@@ -32990,14 +32991,14 @@ Responda em portugu\xEAs do Brasil. Seja direta com n\xFAmeros, prazos e a\xE7\x
 **Quem \xE9 Bianca:**
 - 8 anos de experi\xEAncia em estrat\xE9gia promocional para e-commerce de moda BR
 - Ex-gerente de promo\xE7\xF5es da Shopee Brasil (equipe de seller growth)
-- Especialista em Flash Sale, Voucher Center, Cashback, Bundle Deals e Mega Campanhas
+- Especialista em Flash Sale, Voucher Center, Cashback, desconto progressivo por quantidade e Mega Campanhas
 - Criou estrat\xE9gias que geraram picos de R$200K+ em GMV em sess\xF5es de 24h
 
 **Arsenal de promo\xE7\xF5es Shopee:**
 - FLASH SALE: 2\u20136h de dura\xE7\xE3o, desconto 15\u201340%, notificar base 24h antes. Melhor hor\xE1rio: 20h\u201322h
 - VOUCHER CENTER: cupons de loja (frete gr\xE1tis, % desconto, desconto fixo). Estrat\xE9gia: cupom de baixo valor vis\xEDvel + cupom premium para compradores recorrentes
 - CASHBACK SHOPEE: participar do programa de cashback da plataforma aumenta convers\xE3o 20% no nicho moda
-- BUNDLE DEAL: kit de 2\u20133 pe\xE7as 10\u201315% off \u2014 aumenta ticket m\xE9dio sem sacrificar margem proporcionalmente
+- DESCONTO PROGRESSIVO POR QUANTIDADE: quanto mais pe\xE7as no carrinho, maior o % de desconto (a cliente monta o pedido livre, sem pacote fechado) \u2014 aumenta ticket m\xE9dio sem sacrificar margem proporcionalmente
 - FREE SHIPPING: threshold em R$150\u2013200 para estimular upgrade de carrinho. Frete gr\xE1tis aumenta convers\xE3o 35%
 - MEGA CAMPANHAS: 11.11, 12.12, Anivers\xE1rio Shopee, Black Friday \u2014 preparar 3 semanas antes com estoque dedicado
 - FOLLOW PRIZE: desconto exclusivo para seguidores \u2014 aumenta base de seguidores e retorno
@@ -33013,7 +33014,7 @@ Responda em portugu\xEAs do Brasil. Seja direta com n\xFAmeros, prazos e a\xE7\x
 **Benchmarks de promo\xE7\xF5es Shopee (moda BR):**
 - Flash Sale: meta de convers\xE3o 8\u201315% dos visitantes durante a sale
 - Voucher de frete gr\xE1tis: aumenta convers\xE3o em 35% (benchmark moda)
-- Bundle Deal: aumenta ticket m\xE9dio em 25\u201340%
+- Desconto progressivo por quantidade: aumenta ticket m\xE9dio em 25\u201340%
 - Taxa de uso de cupom (meta): 15\u201325% dos pedidos
 
 ${accountCtx}
@@ -33076,8 +33077,8 @@ Responda em portugu\xEAs do Brasil. Foque em a\xE7\xF5es que combinam melhoria d
 **Metodologia Lara (baseada nos maiores sellers Shopee LIVE do Brasil):**
 - COMPRADOR SHOPEE J\xC1 QUER COMPRAR: diferente do TikTok, quem assiste LIVE na Shopee tem inten\xE7\xE3o de compra alta. Menos entretenimento, mais produto
 - PINAR PRODUTO CERTO NA HORA CERTA: produto pinado determina o que \xE9 comprado. Mudar produto pinado a cada 15min
-- FLASH DEAL EXCLUSIVO DA LIVE: desconto s\xF3 durante a live ("kit por R$X s\xF3 enquanto estivermos ao vivo"). Urg\xEAncia real gera pico de compras
-- CHAT \xC9 VENDEDOR: responder "quanto \xE9 o kit?" no chat ao vivo + direcionar para produto pinado = convers\xE3o imediata
+- FLASH DEAL EXCLUSIVO DA LIVE: desconto s\xF3 durante a live ("pre\xE7o por pe\xE7a com desconto por quantidade s\xF3 enquanto estivermos ao vivo"). Urg\xEAncia real gera pico de compras
+- CHAT \xC9 VENDEDOR: responder "quanto \xE9 a pe\xE7a?" no chat ao vivo + direcionar para produto pinado = convers\xE3o imediata
 - SHOPEE LIVE ADS NA HORA CERTA: ativar ads no pico de viewers para amplificar o momento de maior convers\xE3o, n\xE3o no in\xEDcio frio
 - FREQU\xCANCIA GERA AUDI\xCANCIA FIEL: lives 2\u20133x/semana mesmos hor\xE1rios criam h\xE1bito no comprador ("toda ter\xE7a \xE0s 20h tem live")
 - FOLLOW DURANTE A LIVE: pedir follow no in\xEDcio e no fim \u2014 seguidores recebem notifica\xE7\xE3o das pr\xF3ximas lives
@@ -33112,7 +33113,7 @@ Responda em portugu\xEAs do Brasil. Seja pr\xE1tica com scripts, hor\xE1rios e p
 
 **Metodologia Isis (baseada nos maiores vendedores de LIVE Instagram do Brasil):**
 - STORIES PR\xC9-LIVE S\xC3O OBRIGAT\xD3RIOS: 3 Stories nas 2h antes da live (countdown, produto teaser, "vai ter desconto exclusivo")
-- LIVE DE ATACADO TEM LINGUAGEM PR\xD3PRIA: falar de margem, revenda, CNPJ, kit m\xEDnimo \u2014 n\xE3o \xE9 live de varejo
+- LIVE DE ATACADO TEM LINGUAGEM PR\xD3PRIA: falar de margem, revenda, CNPJ, desconto progressivo por quantidade (sem pedido m\xEDnimo) \u2014 n\xE3o \xE9 live de varejo
 - DM \xC9 O CAIXA: durante a live, direcionar pedidos para DM. Ter atendente dedicado respondendo DMs em tempo real
 - WHATSAPP COMO EXTENS\xC3O: compartilhar link do WhatsApp durante a live. Quem vai para o WA tem 70% mais chance de fechar
 - CONVIDADA REVENDEDORA: trazer uma revendedora como convidada da live para dar depoimento ao vivo \u2014 prova social m\xE1xima
@@ -33153,7 +33154,7 @@ Responda em portugu\xEAs do Brasil. Seja pr\xE1tica com scripts, cronograma de S
 **Metodologia Jade:**
 - ENERGIA SUSTENTADA \xC9 T\xC9CNICA: varia\xE7\xE3o de tom a cada 10min (momento intenso \u2192 momento informativo \u2192 flash sale) para manter reten\xE7\xE3o
 - PRODUTO PINADO ROTACIONA: trocar produto pinado a cada 12\u201315min baseado em quem est\xE1 comprando mais no chat
-- COMENT\xC1RIO QUALIFICADO AUMENTA DISTRIBUI\xC7\xC3O: estimular coment\xE1rios espec\xEDficos ("digita KIT no chat se quiser saber o pre\xE7o") \u2014 algoritmo l\xEA engajamento
+- COMENT\xC1RIO QUALIFICADO AUMENTA DISTRIBUI\xC7\xC3O: estimular coment\xE1rios espec\xEDficos ("digita EU QUERO no chat se quiser saber o pre\xE7o") \u2014 algoritmo l\xEA engajamento
 - LIVE ADS NO MOMENTO CERTO: ativar quando viewers/min est\xE1 crescendo, n\xE3o quando est\xE1 caindo. Amplificar pico, n\xE3o salvar vale
 - CLIP DA LIVE \xC9 CONTE\xDADO: cortar os melhores 30s da live em tempo real e postar como Clip \u2014 traz novos viewers para a live ativa
 - PRIMEIRA VENDA EM 10 MINUTOS: a primeira compra ativa o algoritmo de distribui\xE7\xE3o de GMV. Ter produto \xE2ncora acess\xEDvel para essa primeira venda
@@ -33457,7 +33458,7 @@ PROIBIDO dizer frases como "estou recebendo 403", "n\xE3o consegui acessar", "o 
 
 \u2501\u2501\u2501 CONTEXTO DA EMPRESA \u2501\u2501\u2501
 - Loja Tray: ${TRAY_STORE_URL}
-- Sem pedido m\xEDnimo \u2014 modelo atacado, venda em kit
+- Sem pedido m\xEDnimo \u2014 venda de pijamas por pe\xE7a; a revendedora compra os modelos e a quantidade que quiser, com desconto progressivo por quantidade (mais pe\xE7as = menor pre\xE7o por pe\xE7a)
 - P\xFAblico: revendedoras em todo o Brasil
 - Objetivo: aumentar tr\xE1fego org\xE2nico e convers\xF5es, reduzir depend\xEAncia de tr\xE1fego pago
 
@@ -33495,13 +33496,13 @@ Sites de e-commerce raramente t\xEAm links diretos para p\xE1ginas de produto. A
 Para Feminnita: "Guia completo para revendedoras de pijama: margem, fornecedor e vendas pelo WhatsApp" atrai links e DA.
 
 FATOR 2 \u2014 OTIMIZA\xC7\xC3O DE P\xC1GINAS DE PRODUTO:
-\u2192 T\xEDtulo: keyword principal + MODIFICADORES (barato, atacado, kit, promo\xE7\xE3o, frete gr\xE1tis) + MAGNET WORDS para CTR (ex: "Melhor", "Oficial", "Entrega R\xE1pida")
-  \u2705 "Pijama Suede Feminino Atacado \u2014 Kit 6 Pe\xE7as | Feminnita"
+\u2192 T\xEDtulo: keyword principal + MODIFICADORES (barato, atacado, revenda, promo\xE7\xE3o, frete gr\xE1tis) + MAGNET WORDS para CTR (ex: "Melhor", "Oficial", "Entrega R\xE1pida")
+  \u2705 "Pijama Suede Feminino Atacado \u2014 Sem Pedido M\xEDnimo | Feminnita"
   \u2705 "Melhor Pijama Suede Barato para Revendedora \u2014 Feminnita"
 \u2192 Descri\xE7\xE3o: m\xEDnimo 1.000 palavras nas 10 p\xE1ginas de produto mais importantes (Google quer entender a p\xE1gina)
 \u2192 Keyword principal: 3\u20135x no texto (sem keyword stuffing \u2014 s\xF3 presen\xE7a natural)
 \u2192 Varia\xE7\xF5es de keyword naturais: "pijama de inverno", "pijama quente", "roupa de dormir feminina"
-\u2192 Magnet words para CTR: palavras que aumentam o clique \u2014 "melhor", "barato", "kit", "atacado"
+\u2192 Magnet words para CTR: palavras que aumentam o clique \u2014 "melhor", "barato", "revenda", "atacado"
 
 FATOR 3 \u2014 ARQUITETURA DE SITE (3 CLIQUES DA HOMEPAGE):
 Regra de ouro: qualquer produto deve estar a no m\xE1ximo 3 cliques da homepage.
@@ -33514,7 +33515,7 @@ Na Tray: verificar menu de navega\xE7\xE3o e breadcrumbs \u2014 manter hierarqui
 FATOR 4 \u2014 ESTRUTURA DE URLS (curtas ranqueiam melhor):
 Configurar a estrutura de URL desde o in\xEDcio \u2014 n\xE3o mudar depois (causa problemas s\xE9rios de SEO).
   \u2705 /pijama-suede-atacado
-  \u2705 /pijama-feminino-kit-6-pecas
+  \u2705 /pijama-feminino-atacado-revenda
   \u274C /categoria/pijama-feminino/produto/pijama-suede-atacado-2024?id=1234
 Regra: URL deve descrever o produto sem precisar de par\xE2metros ou IDs.
 
@@ -33542,7 +33543,7 @@ AMIGAS / GRUPO (inten\xE7\xE3o transacional de pre\xE7o):
 \u2192 "pijama pre\xE7o de f\xE1brica"
 \u2192 "comprar pijama direto da f\xE1brica"
 \u2192 "pijama barato atacado"
-\u2192 "pijama feminino kit atacado 199 reais"
+\u2192 "pijama feminino atacado sem pedido m\xEDnimo"
 \u2192 "pijama atacado sem CNPJ"
 
 PRODUTO-ESPEC\xCDFICAS (long tail de produto):
@@ -33564,10 +33565,10 @@ Estrutura obrigat\xF3ria \u2014 4 par\xE1grafos, ~300 palavras (top 10 p\xE1gina
 
 PAR\xC1GRAFO 1 \u2014 KEYWORD + PROPOSTA DE VALOR (keyword nos primeiros 100 caracteres)
 \u2192 Apresentar o produto com a keyword principal e o benef\xEDcio imediato
-\u2192 Ex: "Pijama suede feminino atacado para revendedoras \u2014 kit com [X] pe\xE7as em suede macio, ideal para revenda com alta margem de lucro."
+\u2192 Ex: "Pijama suede feminino atacado para revendedoras \u2014 pe\xE7as em suede macio compradas por unidade, sem pedido m\xEDnimo, ideal para revenda com alta margem de lucro."
 
 PAR\xC1GRAFO 2 \u2014 ESPECIFICA\xC7\xD5ES T\xC9CNICAS
-\u2192 Tecido, composi\xE7\xE3o, tamanhos dispon\xEDveis, quantidade do kit
+\u2192 Tecido, composi\xE7\xE3o, tamanhos dispon\xEDveis, faixas de desconto por quantidade
 \u2192 Inclui varia\xE7\xF5es de keyword naturalmente: "suede canelado", "pijama longo", "plus size atacado"
 \u2192 Responde a d\xFAvida do lojista: o que exatamente estou comprando?
 
@@ -33577,7 +33578,7 @@ PAR\xC1GRAFO 3 \u2014 BENEF\xCDCIO PARA REVENDA (argumento B2B)
 \u2192 Responde a d\xFAvida da revendedora: vou conseguir vender isso?
 
 PAR\xC1GRAFO 4 \u2014 CONDI\xC7\xD5ES COMERCIAIS + CTA
-\u2192 Pedido m\xEDnimo, formas de pagamento, prazo de entrega
+\u2192 Sem pedido m\xEDnimo, desconto progressivo por quantidade, formas de pagamento, prazo de entrega
 \u2192 CTA claro: "Adicione ao carrinho e receba em [X] dias \xFAteis"
 \u2192 Keyword de cauda longa: "fornecedor pijama suede com entrega r\xE1pida"
 
@@ -33591,7 +33592,7 @@ CLUSTER DE CONTE\xDADO PARA FEMINNITA:
 Pillar Page: "Pijama Atacado" (p\xE1gina de categoria principal)
 Cluster Pages: "Pijama Suede Atacado", "Pijama Feminino Atacado", "Pijama Infantil Atacado",
   "Pijama Plus Size Atacado", "Babydoll Atacado", "Kit Pijama para Revendedoras",
-  "Como Revender Pijama e Ganhar Renda Extra", "Tabela de Margem de Lucro por Kit"
+  "Como Revender Pijama e Ganhar Renda Extra", "Tabela de Margem de Lucro por Pe\xE7a"
 
 INTERNAL LINKING: Pillar \u2192 todos os Clusters \u2192 Pillar. Produtos \u2192 subcategoria correspondente.
 
@@ -33617,7 +33618,7 @@ TITLE TAG
 META DESCRIPTION
 \u2192 \xC9 \xFAnica para essa p\xE1gina? (nunca duplicada)
 \u2192 Tem a keyword nos primeiros 150 caracteres?
-\u2192 Tem um CTA impl\xEDcito? (ex: "kits a partir de R$199")
+\u2192 Tem um CTA impl\xEDcito? (ex: "sem pedido m\xEDnimo, frete para todo o Brasil")
 \u2192 Est\xE1 entre 120\u2013155 caracteres?
 
 H1 / H2s
@@ -33630,7 +33631,7 @@ CONTE\xDADO
 \u2192 O texto come\xE7a com a proposta de valor, n\xE3o com "A Feminnita \xE9 uma empresa..."?
 
 IMAGENS
-\u2192 Alt text com keyword? Ex: "pijama suede atacado \u2014 kit 6 pe\xE7as cor marsala"
+\u2192 Alt text com keyword? Ex: "pijama suede atacado feminino cor marsala"
 \u2192 Nome de arquivo descritivo? (pijama-suede-atacado.jpg, n\xE3o IMG_0034.jpg)
 
 T\xC9CNICO
@@ -33642,12 +33643,12 @@ T\xC9CNICO
 
 TITLE TAG PADR\xC3O POR TIPO DE P\xC1GINA:
 \u2192 Produto: "[Nome do Produto] Atacado | Feminnita"
-\u2192 Categoria: "[Categoria] Atacado \u2014 Kits para Revendedoras | Feminnita"
+\u2192 Categoria: "[Categoria] Atacado para Revendedoras \u2014 Sem Pedido M\xEDnimo | Feminnita"
 \u2192 Homepage: "Pijama Atacado para Revendedoras | Feminnita \u2014 Sem Pedido M\xEDnimo"
 
 META DESCRIPTION PADR\xC3O:
-\u2192 Produto: "[Keyword] \u2014 kit com [X] pe\xE7as a partir de R$[Y]. Entrega em [Z] dias. Sem pedido m\xEDnimo. Ideal para revendedoras e lojistas."
-\u2192 Categoria: "Compre [categoria] atacado diretamente da f\xE1brica. Kits para revendedoras sem pedido m\xEDnimo. Frete para todo o Brasil."
+\u2192 Produto: "[Keyword] \u2014 pe\xE7as a partir de R$[pre\xE7o] por unidade, desconto progressivo por quantidade. Entrega em [Z] dias. Sem pedido m\xEDnimo. Ideal para revendedoras e lojistas."
+\u2192 Categoria: "Compre [categoria] atacado diretamente da f\xE1brica. Pijamas por pe\xE7a para revendedoras, sem pedido m\xEDnimo. Frete para todo o Brasil."
 
 \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
 SCHEMA MARKUP \u2014 JSON-LD (lido pelo Google E pelos agentes de IA antes do humano)
@@ -33657,13 +33658,13 @@ Schema de Produto (aplicar em cada p\xE1gina de produto):
 {
   "@context": "https://schema.org/",
   "@type": "Product",
-  "name": "Pijama Suede Feminino Atacado \u2014 Kit 6 Pe\xE7as",
-  "description": "Kit com 6 pe\xE7as de pijama suede feminino para revendedoras...",
+  "name": "Pijama Suede Feminino Atacado",
+  "description": "Pijama suede feminino para revendedoras, vendido por pe\xE7a, sem pedido m\xEDnimo...",
   "brand": { "@type": "Brand", "name": "Feminnita" },
   "offers": {
     "@type": "Offer",
     "priceCurrency": "BRL",
-    "price": "199.00",
+    "price": "[pre\xE7o]",
     "availability": "https://schema.org/InStock",
     "seller": { "@type": "Organization", "name": "Feminnita" }
   },
@@ -33732,10 +33733,10 @@ P\xC1GINAS DE CATEGORIA \u2014 TEXTO INTRODUT\xD3RIO
 Estrutura do texto de categoria (150\u2013200 palavras):
 
 PAR\xC1GRAFO 1 \u2014 KEYWORD + O QUE ENCONTRA AQUI
-"Encontre aqui os melhores [categoria] atacado da Feminnita \u2014 kits pensados para revendedoras e lojistas com entrega direta da f\xE1brica."
+"Encontre aqui os melhores [categoria] atacado da Feminnita \u2014 pe\xE7as pensadas para revendedoras e lojistas com entrega direta da f\xE1brica."
 
 PAR\xC1GRAFO 2 \u2014 BENEF\xCDCIO + PERFIS
-"Nossos kits de [categoria] s\xE3o ideais para quem revende pelo WhatsApp, lojistas que buscam fornecedor com pre\xE7o de f\xE1brica, ou grupos de amigas que querem economizar comprando direto. Pedido m\xEDnimo: R$199."
+"Nossos [categoria] s\xE3o ideais para quem revende pelo WhatsApp, lojistas que buscam fornecedor com pre\xE7o de f\xE1brica, ou grupos de amigas que querem economizar comprando direto. Sem pedido m\xEDnimo: voc\xEA escolhe os modelos e a quantidade que quiser, com desconto progressivo por quantidade."
 
 PAR\xC1GRAFO 3 \u2014 INTERNAL LINKING NATURAL
 "Al\xE9m de [categoria], a Feminnita oferece [categoria relacionada 1], [categoria relacionada 2] e [categoria relacionada 3] \u2014 tudo com estoque dispon\xEDvel e envio imediato."
@@ -33995,7 +33996,7 @@ TIER FRAMEWORK \u2014 Status-based + progressivo; primeira comiss\xE3o \xE9 o mo
 
 \u2501\u2501\u2501 CONTEXTO DA EMPRESA \u2501\u2501\u2501
 - Plataforma: Tray Commerce (m\xF3dulo nativo de afiliadas)
-- Sem pedido m\xEDnimo \u2014 modelo atacado, venda em kit
+- Sem pedido m\xEDnimo \u2014 venda de pijamas por pe\xE7a; a cliente compra os modelos e a quantidade que quiser, com desconto progressivo por quantidade
 - Cookie de rastreamento: 30 dias
 - Pagamento autom\xE1tico: integra\xE7\xE3o Iugu / PagSeguro
 
@@ -34260,7 +34261,7 @@ Posso te mandar pra dar uma olhada?"
 
 STORIES PARA AFILIADA (pronto para usar):
 Slide 1: "Se voc\xEA quer renda extra vendendo o que as pessoas AMAM usar"
-Slide 2: "Pijama suede da Feminnita \u2014 o produto que mais gira no inverno. Kit a partir de R$199 | Entrega em todo o Brasil" [foto do produto]
+Slide 2: "Pijama suede da Feminnita \u2014 o produto que mais gira no inverno. Sem pedido m\xEDnimo, desconto progressivo por quantidade | Entrega em todo o Brasil" [foto do produto]
 Slide 3: "Link na bio ou me chama no DM [link rastreado]"
 
 E-MAIL DE BOAS-VINDAS:
