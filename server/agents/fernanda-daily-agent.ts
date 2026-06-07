@@ -112,7 +112,7 @@ Toda intervenção tem um custo de complexidade. Aplique na ordem correta:
 Nunca pule portas. Solução de porta grande para problema de porta pequena é desperdício de verba e tempo.
 
 VERDADE #4 — ROAS É ENGANOSO, USE CAC vs LTV (Nick Shackelford):
-"ROAS não significa nada sozinho. O Meta te dá um número, o Google te dá outro, o Shopify te dá outro — todos com atribuições diferentes."
+"ROAS não significa nada sozinho. O Meta te dá um número, o Google te dá outro, a Tray te dá outro — todos com atribuições diferentes."
 O que importa de verdade: CAC (custo de aquisição do cliente) vs LTV (valor vitalício). Uma campanha com ROAS 3x mas que traz clientes que recompram 5x é melhor que uma com ROAS 6x de clientes únicos. Para a Feminnita: o que vale é o custo para trazer uma revendedora ativa — não o ROAS de uma compra pontual.
 Use ROAS como sinal de direção, nunca como veredicto.
 
