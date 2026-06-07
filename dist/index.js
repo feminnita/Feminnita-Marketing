@@ -3863,36 +3863,50 @@ var init_tts = __esm({
 });
 
 // server/agents/doctrines/feminnita-context.ts
-var FEMINNITA_CONTEXT;
+function contextoDaConta(account) {
+  return account === "fnt" ? FNT_CONTEXT : FEMINNITA_CONTEXT;
+}
+var FEMINNITA_CONTEXT, FNT_CONTEXT;
 var init_feminnita_context = __esm({
   "server/agents/doctrines/feminnita-context.ts"() {
     "use strict";
     FEMINNITA_CONTEXT = `
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-CONTEXTO DA LOJA \u2014 QUEM \xC9 A FEMINNITA (use isto para calibrar tudo)
+CONTEXTO DA CONTA \u2014 FEMINNITA (Conta A) \u2014 use S\xD3 dados da Feminnita aqui
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-- MARCA: Feminnita \u2014 moda \xEDntima / dormir feminina. Categoria principal: PIJAMAS femininos (manga longa e curta, suede, canelado, estampado, linha Outono-Inverno) + lingerie/conforto. Sortimento amplo de estampas e modelagens, grade P/M/G/GG.
-- DUAS CONTAS, MAS REGRA DE CANAL IMPORTANTE:
-  \u2022 Feminnita (Conta A) = B2C, consumidor final, venda por pe\xE7a em todos os marketplaces e site.
-  \u2022 FNT Confec\xE7\xF5es (Conta B): **atacado B2B (grade fechada, revendedoras) S\xD3 na Tray.** Em TODOS os outros canais (Mercado Livre, Shopee, Amazon, etc.) a FNT vende **B2C, por pe\xE7a, igual \xE0 Feminnita** \u2014 N\xC3O trate FNT como atacado fora da Tray.
-  \u2192 Implica\xE7\xE3o p/ as agentes de marketplace (Gabi/Alice/etc.): a conta B nos marketplaces \xE9 varejo B2C \u2014 mesmo playbook da Feminnita (consumidor final), n\xE3o "atacado/revendedoras".
-- P\xDABLICO B2C (Feminnita E FNT nos marketplaces): mulheres adultas (~25\u201355), compra por conforto, autoestima e presente; sens\xEDvel a pre\xE7o e foto/estampa. Forte no Sul/Sudeste.
-- P\xDABLICO B2B (s\xF3 Tray/atacado): revendedoras \u2014 decidem por margem de revenda, variedade e pedido m\xEDnimo acess\xEDvel.
-
-N\xDAMEROS REAIS (snapshot 12m, ~jun/2026 \u2014 receita e ticket m\xE9dio por canal):
-- Atacado FNT (B2B, via Tray): R$ 1,96 mi | ticket ~R$ 14.870 (grade fechada \u2014 \xDANICO canal atacado)
-- Mercado Livre:      R$ 1,64 mi  | ticket ~R$ 80   | ~20,5 mil pedidos  \u2190 MAIOR canal B2C
-- TikTok Shop:        R$ 344 mil  | ticket ~R$ 77
-- Shopee:             R$ 132 mil  | ticket ~R$ 76
-- Amazon:             R$ 91 mil   | ticket ~R$ 58
-- Shein:              R$ 60 mil   | ticket ~R$ 82
-- Tray (loja pr\xF3pria):R$ 41 mil   | ticket ~R$ 179
-IMPLICA\xC7\xC3O PR\xC1TICA: o ticket B2C real \xE9 ~R$ 75\u201382 (N\xC3O \xE9 R$ 400). Isso define a r\xE9gua: no ML, ticket ~R$ 80 fica EM CIMA do limite Cl\xE1ssico\xD7Premium (\u2265R$79). Margem \xE9 apertada (produto f\xEDsico) \u2192 cada real de ads conta; subir ticket (kit/combo) \xE9 alavanca real.
-
-CONCORR\xCANCIA: Lupo (refer\xEAncia nacional) + marcas regionais + vendedores de pijama atacado no ML/Shopee. Diferencial defens\xE1vel da Feminnita = variedade de estampas/modelagens + atender varejo E atacado + relacionamento com revendedoras (n\xE3o competir s\xF3 por pre\xE7o).
-
-METAS / DOR: faturamento caiu de ~R$78k \u2192 ~R$20k/m\xEAs ap\xF3s uma ag\xEAncia ruim; meta \xE9 recuperar/escalar. Por isso: priorizar o que tem margem e giro (curva A), n\xE3o queimar verba em cauda.
-(Confirme com o Chris se algum diferencial/posicionamento mudou \u2014 este bloco \xE9 a base, a ficha traz o n\xFAmero vivo.)
+\u26A0\uFE0F FNT Confec\xE7\xF5es \xE9 OUTRA empresa/conta. NUNCA misture dados da FNT nesta an\xE1lise \u2014 aqui voc\xEA cuida exclusivamente da Feminnita.
+- MARCA: Feminnita \u2014 moda \xEDntima / dormir feminina. Categoria: PIJAMAS femininos (manga longa/curta, suede, canelado, estampado, linha Outono-Inverno) + lingerie/conforto. Sortimento amplo de estampas e modelagens, grade P/M/G/GG.
+- MODELO: B2C, consumidor final, venda por pe\xE7a nos marketplaces e site pr\xF3prio.
+- P\xDABLICO: mulheres adultas (~25\u201355), compram por conforto, autoestima e presente; sens\xEDveis a pre\xE7o e foto/estampa. Forte no Sul/Sudeste.
+- N\xDAMEROS REAIS DA FEMINNITA (snapshot 12m, receita | ticket m\xE9dio por canal):
+  \u2022 Mercado Livre: R$ 1,64 mi | ticket ~R$ 80 | ~20,5 mil pedidos \u2190 MAIOR canal
+  \u2022 TikTok Shop:   R$ 344 mil | ~R$ 77
+  \u2022 Shopee:        R$ 132 mil | ~R$ 76
+  \u2022 Amazon:        R$ 91 mil  | ~R$ 58
+  \u2022 Shein:         R$ 60 mil  | ~R$ 82
+  \u2022 Tray (site):   R$ 41 mil  | ~R$ 179
+- IMPLICA\xC7\xC3O: ticket B2C real ~R$ 75\u201382 (N\xC3O R$ 400). No ML, ~R$ 80 fica EM CIMA do limite Cl\xE1ssico\xD7Premium (\u2265R$79). Margem apertada (produto f\xEDsico) \u2192 cada real de ads conta; subir ticket (kit/combo) \xE9 alavanca.
+- CONCORR\xCANCIA: Lupo + marcas regionais + vendedores de pijama no ML/Shopee. Diferencial = variedade de estampas/modelagens + relacionamento (n\xE3o competir s\xF3 por pre\xE7o).
+- META/DOR: faturamento caiu de ~R$78k \u2192 ~R$20k/m\xEAs ap\xF3s ag\xEAncia ruim; meta recuperar/escalar. Priorizar margem e giro (curva A), n\xE3o queimar verba em cauda.
+`;
+    FNT_CONTEXT = `
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+CONTEXTO DA CONTA \u2014 FNT CONFEC\xC7\xD5ES (Conta B) \u2014 use S\xD3 dados da FNT aqui
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+\u26A0\uFE0F Feminnita \xE9 OUTRA empresa/conta. NUNCA misture dados da Feminnita nesta an\xE1lise (nem use a curva A / campe\xF5es da Feminnita aqui). Trabalhe APENAS com o que a pr\xF3pria FNT vendeu.
+- MARCA: FNT Confec\xE7\xF5es \u2014 moda \xEDntima/dormir feminina (pijamas, camisolas, baby doll, short doll). Fabrica\xE7\xE3o pr\xF3pria.
+- MODELO POR CANAL:
+  \u2022 **Atacado B2B \u2014 S\xD3 na Tray** (grade fechada, revendedoras, ticket alto). \xC9 onde a FNT fatura de verdade.
+  \u2022 **Marketplaces (Mercado Livre, Shopee, Amazon, TikTok, Shein) = VAREJO B2C, por pe\xE7a** \u2014 mesma l\xF3gica de consumidor final. Contas NOVAS, volume ainda baixo.
+- N\xDAMEROS REAIS DA FNT (snapshot 12m, receita por canal):
+  \u2022 Atacado (Tray, B2B): R$ 1,96 mi  \u2190 neg\xF3cio principal da FNT (atacado)
+  \u2022 Shopee (B):  R$ 16,6 mil | ~R$ 53
+  \u2022 TikTok (B):  R$ 5,6 mil
+  \u2022 Shein (B):   R$ 5,4 mil
+  \u2022 Mercado Livre (B): R$ 980 | conta NOVA, pouqu\xEDssimo volume
+  \u2022 Amazon (B):  R$ 383 | conta NOVA
+- IMPLICA\xC7\xC3O (marketplaces): s\xE3o contas NOVAS, em constru\xE7\xE3o. O jogo \xE9 CONSTRUIR velocidade de venda e reputa\xE7\xE3o, n\xE3o otimizar curva A madura. Concentrar a verba limitada nos modelos que a PR\xD3PRIA FNT j\xE1 est\xE1 vendendo (os que aparecem subindo na ficha dela), n\xE3o pulverizar. ACoS-teto = a margem do pr\xF3prio produto.
+- P\xDABLICO (varejo): mulheres adultas, consumidor final, conforto/pre\xE7o/estampa.
 `;
   }
 });
@@ -34157,6 +34171,9 @@ Voc\xEA raciocina como quem trabalha no Mercado Livre a vida inteira. Antes de o
 - Em Ads, CVR esperado 2\u20133%.
 - VISITA ALTA + VENDA BAIXA = problema de SEO/ficha/pre\xE7o/foto, N\xC3O de lance. N\xE3o jogue verba num an\xFAncio que converte mal \u2014 conserte a convers\xE3o primeiro.
 
+\u2501\u2501\u2501 REGRA CR\xCDTICA: HIST\xD3RICO \u2260 DISPONIBILIDADE \u2501\u2501\u2501
+A ficha (ml_get_ficha_conta) \xE9 HIST\xD3RICO de vendas dos \xFAltimos 12 meses \u2014 ela N\xC3O sabe o que foi descontinuado ou est\xE1 sem estoque AGORA. Um produto pode ser curva A (vendeu muito) e n\xE3o existir mais. NUNCA recomende anunciar um produto sem antes confirmar que ele est\xE1 ATIVO e COM ESTOQUE: cruze a curva A com ml_list_items (an\xFAncios ativos ao vivo). Produto descontinuado/sem estoque sai da lista de ads, mesmo sendo curva A hist\xF3rica. Se n\xE3o conseguir confirmar o estoque, AVISE que a lista \xE9 hist\xF3rica e pe\xE7a pra confirmar disponibilidade.
+
 \u2501\u2501\u2501 CURVA ABC \u2192 A\xC7\xC3O \u2501\u2501\u2501
 - A (campe\xF5es de receita 12m): proteger estoque, Full, Ads em rentabilidade, nunca deixar romper.
 - B (medianos): otimizar ficha/pre\xE7o, testar Ads em crescimento, candidatos a virar A.
@@ -34608,7 +34625,7 @@ Voc\xEA gerencia duas contas:
 
 Conta ativa nesta sess\xE3o: ${accountCtx}
 Conex\xE3o ML: ${tokenOk ? "\u2705 conectada" : "\u26A0\uFE0F token n\xE3o configurado"}
-${FEMINNITA_CONTEXT}
+${contextoDaConta(account)}
 ${GABI_ML_DOCTRINE}
 \u2550\u2550\u2550 DOIS MODOS DE TRABALHO \u2014 NUNCA MISTURE \u2550\u2550\u2550
 
@@ -35875,7 +35892,7 @@ NATAL (dezembro): segundo maior volume | manter campanhas est\xE1veis \u2014 n\x
 \u2022 N\xE3o escala FNT na Amazon sem primeiro validar demanda de atacado
 \u2022 N\xE3o lan\xE7a campanha em produto sem ao menos 5 reviews
 \u2022 N\xE3o define budget sem validar margem com Mariana
-${FEMINNITA_CONTEXT}
+${contextoDaConta(account)}
 ${AMAZON_DOCTRINE}
 ${knowledge ? `
 \u2501\u2501\u2501 INTELIG\xCANCIA ATUAL \u2501\u2501\u2501
