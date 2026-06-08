@@ -70,6 +70,9 @@ Regras "PROIBIDO" (valem para copy **e** para texto ditado na arte):
 - "Renda garantida", "dinheiro fácil", "lucro garantido", "sem sair de casa"
   como **promessa financeira**.
 - Depoimento, caso ou número não comprovável sobre uma pessoa.
+- Número específico não comprovável como prova social agregada
+  (ex.: "2.000 revendedoras ativas") — usar só se for dado real; senão,
+  redação genérica ("milhares") ou nenhuma.
 - "Golpe", "scam", "furada" como gancho.
 - Mandar escrever na arte (título/preço/CTA/rodapé) qualquer número de renda ou
   promessa financeira.
@@ -95,9 +98,10 @@ Edições cirúrgicas (mantendo o estilo e a força de copy, trocando só o âng
   passa a ser explicitamente condicionado pela doutrina de conformidade; manter
   "NUNCA mencione preço específico" e somar "NUNCA prometa renda/ganho".
 
-Nenhuma refatoração fora desse escopo. A prova social "2.000 revendedoras"
-(`beatriz-agent.ts:304`) só permanece se for número real; caso contrário, vira
-genérico ("milhares") ou é removida — confirmar com Chris.
+Nenhuma refatoração fora desse escopo. **Decidido (Chris, 08/06):** o número
+"2.000 revendedoras" (`beatriz-agent.ts:304`) **não é comprovável** → trocar por
+redação genérica sem número ("milhares de revendedoras" / "uma comunidade de
+revendedoras em todo o Brasil"). Sem número específico não comprovável.
 
 ### Camada 3 — Trava automática (arquivo novo)
 
