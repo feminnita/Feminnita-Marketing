@@ -9,6 +9,14 @@ describe("checkCopyCompliance — BLOQUEIA claims proibidos", () => {
     ["golpe como gancho", "Achei que era golpe quando vi a margem"],
     ["renda garantida", "Renda extra garantida revendendo pijama"],
     ["ganhe dinheiro", "Ganhe dinheiro fácil trabalhando de casa"],
+    ["ganhe de casa", "Ganhe de casa revendendo pijama"],
+    ["lucre revendendo", "Lucre revendendo nossas estampas"],
+    ["renda extra", "Tenha sua renda extra revendendo"],
+    ["renda paralela", "Monte sua renda paralela com a gente"],
+    ["sem sair de casa", "Trabalhe sem sair de casa"],
+    ["independencia financeira", "Conquiste sua independência financeira"],
+    ["anti-emprego POV", "POV: você odeia depender de chefe"],
+    ["depender do salario", "Cansou de depender do salário do marido?"],
   ];
 
   it.each(proibidos)("bloqueia: %s", (_label, texto) => {
@@ -24,6 +32,9 @@ describe("checkCopyCompliance — PASSA copy de produto/oferta", () => {
     "Preço de fábrica direto pra você, sem pedido mínimo",
     "Estampa exclusiva que sua cliente não acha em outro lugar",
     "Compre no atacado sem CNPJ — preço de fábrica pra revenda",
+    "Venda mais com estampas exclusivas da fábrica",
+    "Tenha a coleção completa pra sua revenda",
+    "Pronta entrega pra você revender sem complicação",
   ];
 
   it.each(seguros)("passa: %s", (texto) => {

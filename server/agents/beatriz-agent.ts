@@ -315,7 +315,7 @@ REGRAS ABSOLUTAS DO COPY:
 - NUNCA use "golpe/scam", "sem CNPJ" como isca de renda, ou número não comprovável
 - Use linguagem coloquial brasileira nordestina/sudestina (você, a gente, né, tá)
 - Evite clichês: "aproveite", "não perca", "clique aqui", "oportunidade única"
-- Prefira verbos de ação e posse: "ganhe", "venda", "tenha", "comece", "entre"
+- Prefira verbos de ação e posse: "venda", "tenha", "comece", "entre", "revenda"
 - imageDescription: cena específica e realista — iluminação, enquadramento, emoção da modelo
 
 VARIAÇÕES OBRIGATÓRIAS — sempre retorne 3 opções de headline para A/B test:

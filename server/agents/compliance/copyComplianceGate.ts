@@ -40,6 +40,26 @@ const RULES: { rule: string; re: RegExp }[] = [
     rule: "Gancho 'golpe/scam/furada/cilada'",
     re: /\b(golpe|scam|furada|cilada)\b/,
   },
+  {
+    rule: "Promessa de ganho/lucro de casa ou revendendo (sem numero)",
+    re: /(ganh\w*|lucr\w*|fatur\w*)[^.\n]{0,20}(de casa|em casa|trabalhando de casa|revend\w*)/,
+  },
+  {
+    rule: "Renda extra/paralela como isca",
+    re: /\brenda\s+(extra|paralel\w*)|renda\s+de\s+casa/,
+  },
+  {
+    rule: "'Sem sair de casa' como promessa",
+    re: /sem\s+sair\s+de\s+casa/,
+  },
+  {
+    rule: "Promessa de independencia financeira",
+    re: /independencia\s+financeira/,
+  },
+  {
+    rule: "Apelo anti-emprego (depender de chefe/salario/marido)",
+    re: /odeia\s+depender|depender\s+(do|de|da|de um|de uma)\s+\w*\s*(chefe|patrao|salario|marido|emprego|chefia)|largar\s+(o\s+)?(chefe|emprego|patrao)/,
+  },
 ];
 
 export function checkCopyCompliance(text: string): ComplianceResult {
