@@ -506,7 +506,11 @@ async function proposeActions(analysis: DailyAnalysisResult, today: string): Pro
           });
           console.log(`[FernandaDaily] Copy gerado: "${copy.headline}"`);
         } catch (err: any) {
-          console.error("[FernandaDaily] Falhou ao gerar copy, usando texto simples:", err.message);
+          console.error("[FernandaDaily] Falhou ao gerar copy — bloqueando por seguranca (gate nao verificou):", err.message);
+          complianceBlocked = true;
+          complianceViolations = [
+            `Falha ao gerar/verificar a copy (${err.message}) — bloqueado por seguranca; a conformidade nao pode ser confirmada`,
+          ];
         }
       }
 
