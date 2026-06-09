@@ -28,7 +28,7 @@ describe("checkCopyCompliance — BLOQUEIA claims proibidos", () => {
 
 describe("checkCopyCompliance — PASSA copy de produto/oferta", () => {
   const seguros = [
-    "Pijama suede premium, fabricação própria e pronta entrega",
+    "Pijama camurça premium, fabricação própria e pronta entrega",
     "Preço de fábrica direto pra você, sem pedido mínimo",
     "Estampa exclusiva que sua cliente não acha em outro lugar",
     "Compre no atacado sem CNPJ — preço de fábrica pra revenda",

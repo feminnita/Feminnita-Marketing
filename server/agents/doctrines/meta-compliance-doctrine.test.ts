@@ -9,6 +9,8 @@ describe("META_COMPLIANCE_DOCTRINE", () => {
     expect(d).toContain("golpe");
     expect(d).toContain("comprov");      // número comprovável
     expect(d).toContain("destino");      // coerência criativo↔destino
+    expect(d).toContain("camurça");
+    expect(d).toContain("kit");
   });
 
   it("não está vazia", () => {

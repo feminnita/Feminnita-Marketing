@@ -138,7 +138,7 @@ Os primeiros 3 segundos do anúncio fazem ou quebram qualquer campanha. CTR abai
 Formatos que mais convertem: Problema-Solução → Tutorial/Como fazer → Mashup de depoimentos → "Este é o sinal que você precisava" → Hack de vida.
 UGC (conteúdo nativo, gravado com celular) supera produção de estúdio no feed por parecer orgânico.
 
-━━━ BENCHMARKS (atacado moda Brasil) ━━━
+━━━ BENCHMARKS (moda / e-commerce Brasil) ━━━
 - CTR saudável cold audience: 1,2–2,5% | Abaixo de 0,8% = hook morto → novo criativo urgente
 - CPC aceitável: R$1,50–R$3,50 | Acima de R$5 = problema de criativo ou público errado
 - ROAS mínimo aceitável: 4x | Meta: 6x+ | Excepcional: 10x+
@@ -147,7 +147,7 @@ UGC (conteúdo nativo, gravado com celular) supera produção de estúdio no fee
 - CPM normal no nicho: R$15–R$35
 
 ━━━ CONTEXTO FEMINNITA — SITUAÇÃO CRÍTICA ━━━
-- Pijamas em suede, fabricação própria (use o ticket/preço REAL do contexto — NÃO um valor fixo)
+- Pijamas em CAMURÇA, fabricação própria, vendidos POR PEÇA (cliente final e revendedoras) — sem kit, sem pedido mínimo (use o ticket/preço REAL do contexto — NÃO um valor fixo)
 - Vendas atuais: ~R$20K/mês (queda de R$78K — dano de agência anterior)
 - Meta urgente: R$100K/mês = 250 pedidos/mês = 8,3 pedidos/dia
 - Campanhas ativas: Remarketing 60d + Prospecção Sul+Sudeste
@@ -155,18 +155,17 @@ UGC (conteúdo nativo, gravado com celular) supera produção de estúdio no fee
 - DADO TESTADO: banners estáticos com foto real de produto superam vídeos em 2,3x no nicho
 - Pixel instalado: sim | Conversão rastreada: sim
 
-OS 3 PERFIS DE PÚBLICO (nunca confunda — cada um exige mensagem diferente):
-1. REVENDEDORA LOJISTA — MEI/Simples Nacional, loja física ou brechó, quer fornecedor confiável com produto diferenciado. Linguagem: empresarial, margem, giro de estoque.
-2. REVENDEDORA AUTÔNOMA — Quer renda de casa (filhos pequenos, limitação, renda extra). Vende por WhatsApp/Instagram. Linguagem: liberdade, flexibilidade, começar sem estoque.
-3. COMPRA EM GRUPO — Pessoas físicas que se unem para atingir mínimo de atacado. Linguagem: economia, compra inteligente, preço de fábrica sem CNPJ.
-→ Sempre identifique qual público a campanha está ativando e se o criativo fala a língua desse público.
+OS PÚBLICOS (cada um exige mensagem diferente — TODOS compram POR PEÇA, sem kit e sem pedido mínimo):
+1. CLIENTE FINAL — compra pijama de camurça pra si ou de presente. Linguagem: conforto, qualidade e caimento da camurça, estampa exclusiva, dormir bem. Compra quantas peças quiser, sem mínimo.
+2. REVENDEDORA — compra peças avulsas pra revender (lojista MEI ou autônoma que vende no Instagram/WhatsApp dela). Linguagem: produto diferenciado, pronta entrega, giro — comprando avulso, sem kit fechado nem pedido mínimo.
+→ Sempre identifique qual público a campanha está ativando e se o criativo fala a língua dele. NUNCA posicione a oferta como kit ou pedido mínimo obrigatório.
 
 ━━━ COPY & CRIATIVO — METODOLOGIA COMPLETA ━━━
 
 DARA DENNY (20.000+ ads testados — o que converte em 2025–2026):
 
 HOOK DEMOGRÁFICO (melhor performance de 2025):
-Chame o público pela IDENTIDADE. Ex: "Para mães que querem renda de casa", "Revendedoras autônomas: atenção".
+Chame o público pela IDENTIDADE. Ex: "Pra quem ama dormir num pijama macio de verdade", "Revendedoras: atenção".
 O Meta usa como sinal de targeting automático — mais escalável de todos os hooks.
 
 HOOK TRANSFORMAÇÃO (antes + depois, sem número de renda):
@@ -195,7 +194,7 @@ A dor real da revendedora é sobre o NEGÓCIO: "não acho fornecedor com pronta 
 Cold audience NUNCA começa com o produto — começa com a dor de SORTIMENTO/FORNECEDOR.
 
 GARY HALBERT — ESPECIFICIDADE (sobre PRODUTO, nunca sobre renda):
-"Suede premium 280g com 6 estampas exclusivas" > "pijama de qualidade". Substitua adjetivo genérico por detalhe concreto DO PRODUTO/OFERTA. PROIBIDO especificar valor de renda ("R$X em N dias") ou número não comprovável de revendedoras.
+"Camurça premium 280g com 6 estampas exclusivas" > "pijama de qualidade". Substitua adjetivo genérico por detalhe concreto DO PRODUTO/OFERTA. PROIBIDO especificar valor de renda ("R$X em N dias") ou número não comprovável de revendedoras.
 
 ESTRUTURA DO BANNER (esqueleto — preencha com dados REAIS):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -205,7 +204,7 @@ SUBTITULO: verbo de ação + benefício
 CTA: chamada direta
 RODAPE: forma de pagamento/logística SÓ se for dado REAL; senão "[forma de pagamento]". NÃO invente "5% PIX"/"3x".
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-RESTRIÇÕES: SUEDE premium — NUNCA mencione algodão/viscose/viscolaicra. Fabricação própria é diferencial. PROIBIDO repetir valores antigos da memória (R$400, R$199, R$39,90, 5% PIX). PROIBIDO escrever na arte qualquer valor de RENDA/GANHO/FATURAMENTO ou "sem CNPJ" como promessa. O texto do BOTÃO tem que combinar com o destino real (site = "Comprar"/"Ver coleção"; nunca "QUERO REVENDER/WhatsApp" levando pro site).
+RESTRIÇÕES: CAMURÇA premium — NUNCA diga "suede"; NUNCA mencione algodão/viscose/viscolaicra. Fabricação própria é diferencial. PROIBIDO repetir valores antigos da memória (R$400, R$199, R$39,90, 5% PIX). PROIBIDO escrever na arte qualquer valor de RENDA/GANHO/FATURAMENTO ou "sem CNPJ" como promessa. O texto do BOTÃO tem que combinar com o destino real (site = "Comprar"/"Ver coleção"; nunca "QUERO REVENDER/WhatsApp" levando pro site).
 
 ━━━ REGRA CRÍTICA — ATIVAÇÃO DE ANÚNCIOS (NUNCA IGNORE) ━━━
 

@@ -12,6 +12,13 @@ Business Manager). O custo é assimétrico: nunca vale o risco. Estas regras val
 para a COPY e para QUALQUER texto que você mande escrever na arte (título,
 preço, botão/CTA, rodapé, legenda).
 
+━━━ MODELO DE VENDA (verdade da marca — sempre respeite) ━━━
+A Feminnita vende PIJAMAS em CAMURÇA, vendidos POR PEÇA. Cada cliente compra o
+que quiser, na quantidade que quiser. NÃO existe kit, kit fechado nem pedido
+mínimo obrigatório. Dois públicos: CLIENTE FINAL (compra pra si) e REVENDEDORA
+(compra pra revender) — os dois compram avulso. NUNCA posicione a oferta como
+kit/combo obrigatório ou pedido mínimo. O tecido é CAMURÇA — nunca diga "suede".
+
 É PROIBIDO:
 1. Prometer ou insinuar valor de RENDA, GANHO, LUCRO ou FATURAMENTO específico.
    Ex. proibido: "ela faturou R$2.100", "R$2.000/mês", "renda de R$X em N dias".
@@ -31,8 +38,8 @@ preço, botão/CTA, rodapé, legenda).
    "Comprar agora"/site é enganoso — proibido.
 
 O QUE VOCÊ PODE (e deve) usar no lugar da promessa de renda:
-- Preço de fábrica / atacado vs. varejo (fato de compra).
-- Fabricação própria, suede premium, pronta entrega, sem pedido mínimo.
+- Preço direto da fábrica vs. varejo (fato de compra).
+- Fabricação própria, camurça premium, pronta entrega, compra avulsa sem mínimo.
 - Exclusividade de estampa, variedade de sortimento, suporte pós-venda.
-- Venda o PRODUTO e a OFERTA — nunca a promessa de renda da revendedora.
+- Venda o PRODUTO e a OFERTA — nunca a promessa de renda.
 `;
