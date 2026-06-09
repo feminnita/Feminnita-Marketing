@@ -16,6 +16,8 @@ import { agentActions } from "../../drizzle/schema";
 import { getLatestKnowledge } from "./knowledge-updater";
 import { executeMetaAction } from "./fernanda-executor";
 import { generateAdCopy } from "./beatriz-agent";
+import { META_COMPLIANCE_DOCTRINE } from "./doctrines/meta-compliance-doctrine";
+import { checkCopyCompliance, checkCreativeCoherence } from "./compliance/copyComplianceGate";
 
 const AD_ACCOUNT_ID = process.env.META_AD_ACCOUNT_ID || "act_231648936319132";
 const GRAPH_BASE = "https://graph.facebook.com/v20.0";
@@ -84,7 +86,9 @@ async function fetchCampaignInsights(): Promise<MetaCampaignInsight[]> {
 
 // ─── Análise LLM diária ───────────────────────────────────────────────────────
 
-const SYSTEM_PROMPT_DAILY = `Você é a Fernanda Leal — gestora de tráfego pago sênior com 13 anos de experiência em performance marketing. Certificada pelo Facebook Blueprint (nível avançado), Google Ads e pela Digital Marketer (Customer Value Optimization). Gerenciou mais de R$15 milhões em verba publicitária para marcas de moda, atacado e e-commerce no Brasil. Ex-head de mídia paga da Amaro e consultora de performance para marcas de atacado têxtil em São Paulo.
+const SYSTEM_PROMPT_DAILY = `${META_COMPLIANCE_DOCTRINE}
+
+Você é a Fernanda Leal — gestora de tráfego pago sênior com 13 anos de experiência em performance marketing. Certificada pelo Facebook Blueprint (nível avançado), Google Ads e pela Digital Marketer (Customer Value Optimization). Gerenciou mais de R$15 milhões em verba publicitária para marcas de moda, atacado e e-commerce no Brasil. Ex-head de mídia paga da Amaro e consultora de performance para marcas de atacado têxtil em São Paulo.
 
 ━━━ MENTALIDADE FUNDAMENTAL (Pedro Sobral + Nick Shackelford + Savannah Sanchez) ━━━
 
@@ -165,16 +169,14 @@ HOOK DEMOGRÁFICO (melhor performance de 2025):
 Chame o público pela IDENTIDADE. Ex: "Para mães que querem renda de casa", "Revendedoras autônomas: atenção".
 O Meta usa como sinal de targeting automático — mais escalável de todos os hooks.
 
-HOOK TRANSFORMAÇÃO (antes + depois + tempo específico):
-"Em 30 dias revendendo de casa ela faturou R$2.100" — velocidade = atenção, transformação = confiança.
+HOOK TRANSFORMAÇÃO (antes + depois, sem número de renda):
+"Antes eu comprava revenda cara e parcelada; agora compro direto da fábrica" — transformação da FONTE de compra, nunca promessa de quanto a pessoa ganha.
 
-HOOK DAVID E GOLIAS / IMPACTO (formato #1 de 2026):
-Chame um inimigo ou quebre uma crença. "Achei que era golpe quando vi a margem de 50%".
-Cria choque + curiosidade irresistível. Maior potencial viral.
+HOOK QUEBRA DE CRENÇA (formato de alto impacto):
+Quebre uma crença sobre o PRODUTO/ACESSO, sem usar "golpe/scam". "Achei que fábrica não vendia pra revenda — até conhecer a Feminnita."
 
-HOOK INVESTIMENTO: Mine tentativas frustradas antes da Feminnita. "Testei 8 fornecedores antes de encontrar um que pagasse minhas contas."
-HOOK DO SCAM: "golpe" e "scam" são gatilhos viscerais de alto poder de parada.
-POV + ÓDIO: "POV: você odeia depender de chefe" — 10-15% dos top performers de 2025 usaram POV.
+HOOK INVESTIMENTO: Mine tentativas frustradas de FORNECEDOR. "Testei 8 fornecedores até achar um com pronta entrega e estampa exclusiva."
+POV (sem anti-emprego, sem renda): "POV: você achou a fábrica que vende a peça que sua cliente vive pedindo."
 HOOK MÚLTIPLO: empilhe 2-3 hooks nos 3 primeiros segundos.
 
 QUATRO ELEMENTOS DO HOOK VERDADEIRO:
@@ -183,18 +185,17 @@ QUATRO ELEMENTOS DO HOOK VERDADEIRO:
 3. VISUAL HOOK — o que aparece primeiro (mudá-lo tem maior impacto que mudar o verbal)
 4. VIBE — iluminação, fonte, cor, atmosfera
 
-ALEX HORMOZI — EMPILHE O VALOR:
+ALEX HORMOZI — EMPILHE O VALOR (da OFERTA, nunca da renda):
 Equação: Resultado × Probabilidade ÷ Tempo × Esforço.
-"R$2.000/mês de casa, sem estoque, sem CNPJ, em 48h" — não venda o pijama, venda a transformação da revendedora.
+"Estampa exclusiva, pronta entrega, sem pedido mínimo, direto da fábrica" — empilhe valor da OFERTA e do PRODUTO. PROIBIDO empilhar promessa de renda/ganho.
 
 JOANNA WIEBE — VOZ DA CLIENTE:
-A dor real não é "quero mais renda" — é "não aguento mais depender do salário do meu marido".
+A dor real da revendedora é sobre o NEGÓCIO: "não acho fornecedor com pronta entrega e estampa que a cliente goste". Fale dessa dor — sem prometer renda nem atacar emprego/marido.
 5 níveis de consciência: Inconsciente → Consciente do problema → Consciente da solução → Consciente do produto → Pronta para comprar.
-Cold audience NUNCA começa com o produto — começa com dor ou desejo.
+Cold audience NUNCA começa com o produto — começa com a dor de SORTIMENTO/FORNECEDOR.
 
-GARY HALBERT — ESPECIFICIDADE:
-"R$2.147 em 23 dias" > "ganhe muito dinheiro". "127 revendedoras em SP" > "muitas revendedoras".
-Substitua todo adjetivo genérico por número ou detalhe concreto.
+GARY HALBERT — ESPECIFICIDADE (sobre PRODUTO, nunca sobre renda):
+"Suede premium 280g com 6 estampas exclusivas" > "pijama de qualidade". Substitua adjetivo genérico por detalhe concreto DO PRODUTO/OFERTA. PROIBIDO especificar valor de renda ("R$X em N dias") ou número não comprovável de revendedoras.
 
 ESTRUTURA DO BANNER (esqueleto — preencha com dados REAIS):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -204,7 +205,7 @@ SUBTITULO: verbo de ação + benefício
 CTA: chamada direta
 RODAPE: forma de pagamento/logística SÓ se for dado REAL; senão "[forma de pagamento]". NÃO invente "5% PIX"/"3x".
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-RESTRIÇÕES: SUEDE premium — NUNCA mencione algodão/viscose/viscolaicra. Fabricação própria é diferencial. PROIBIDO repetir valores antigos da memória (R$400, R$199, R$39,90, 5% PIX).
+RESTRIÇÕES: SUEDE premium — NUNCA mencione algodão/viscose/viscolaicra. Fabricação própria é diferencial. PROIBIDO repetir valores antigos da memória (R$400, R$199, R$39,90, 5% PIX). PROIBIDO escrever na arte qualquer valor de RENDA/GANHO/FATURAMENTO ou "sem CNPJ" como promessa. O texto do BOTÃO tem que combinar com o destino real (site = "Comprar"/"Ver coleção"; nunca "QUERO REVENDER/WhatsApp" levando pro site).
 
 ━━━ REGRA CRÍTICA — ATIVAÇÃO DE ANÚNCIOS (NUNCA IGNORE) ━━━
 
@@ -454,13 +455,44 @@ async function proposeActions(analysis: DailyAnalysisResult, today: string): Pro
       const actionType = inferActionType(rec);
       let description = rec;
 
+      // controla se a ação deve ser bloqueada por conformidade
+      let complianceBlocked = false;
+      let complianceViolations: string[] = [];
+
       // Se é para criar novo anúncio, gera o copy criativo
       if (actionType === "meta_create_full_ad") {
+        const linkUrl = "https://www.feminnita.com.br";
+        const baseContext = `Contexto da campanha Feminnita Pijamas:\n${rec}\n\nROAS atual: ${analysis.roas}x | Gasto: R$${analysis.spend.toFixed(2)}`;
+
+        const gerarEChecar = async (ctx: string) => {
+          const copy = await generateAdCopy(ctx);
+          const briefText = [rec, copy.headline, copy.body, copy.imageDescription]
+            .filter(Boolean)
+            .join("\n");
+          const violations = [
+            ...checkCopyCompliance(briefText).violations,
+            ...checkCreativeCoherence({ briefText, callToAction: "SHOP_NOW", linkUrl }),
+          ];
+          return { copy, violations };
+        };
+
         try {
           console.log(`[FernandaDaily] Gerando copy para: "${rec.slice(0, 60)}"`);
-          const copy = await generateAdCopy(
-            `Contexto da campanha Feminnita Pijamas:\n${rec}\n\nROAS atual: ${analysis.roas}x | Gasto: R$${analysis.spend.toFixed(2)}`
-          );
+          let { copy, violations } = await gerarEChecar(baseContext);
+
+          // 1 tentativa de regenerar devolvendo as violações pra Beatriz
+          if (violations.length > 0) {
+            console.warn(`[FernandaDaily] Copy violou conformidade, regenerando 1x:`, violations);
+            const retryCtx = `${baseContext}\n\n⛔ A copy anterior foi BLOQUEADA por conformidade Meta pelos motivos abaixo. Reescreva SEM nenhum deles, focando em produto/oferta (preço de fábrica, fabricação própria, pronta entrega, estampa exclusiva), nunca em promessa de renda:\n- ${violations.join("\n- ")}`;
+            ({ copy, violations } = await gerarEChecar(retryCtx));
+          }
+
+          if (violations.length > 0) {
+            complianceBlocked = true;
+            complianceViolations = violations;
+            console.error(`[FernandaDaily] Copy BLOQUEADA após retry — ação marcada como rejected:`, violations);
+          }
+
           description = JSON.stringify({
             recommendation: rec,
             copy: {
@@ -469,7 +501,8 @@ async function proposeActions(analysis: DailyAnalysisResult, today: string): Pro
               imageDescription: copy.imageDescription,
             },
             generatedBy: "fernanda",
-            linkUrl: "https://www.feminnita.com.br",
+            linkUrl,
+            ...(complianceBlocked ? { complianceBlocked: true, complianceViolations } : {}),
           });
           console.log(`[FernandaDaily] Copy gerado: "${copy.headline}"`);
         } catch (err: any) {
@@ -480,14 +513,17 @@ async function proposeActions(analysis: DailyAnalysisResult, today: string): Pro
       toInsert.push({
         agentName: "fernanda",
         date: today,
-        title,
+        title: complianceBlocked ? `[BLOQUEADO — conformidade] ${title}`.slice(0, 200) : title,
         description,
         actionType,
         priority: inferPriority(rec),
         estimatedImpact: analysis.roas > 0
           ? `ROAS atual: ${analysis.roas}x | Spend: R$${analysis.spend.toFixed(2)}`
           : undefined,
-        status: "pending",
+        status: complianceBlocked ? "rejected" : "pending",
+        userNote: complianceBlocked
+          ? `Bloqueado automaticamente por conformidade Meta:\n- ${complianceViolations.join("\n- ")}`
+          : undefined,
       });
     }
 
