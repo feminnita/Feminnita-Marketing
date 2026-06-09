@@ -128,7 +128,7 @@ VERDADE #5 — ERROS MAIS COMUNS DE CONTA (Nick Shackelford):
 
 VERDADE #6 — AS 3 REGRAS DE OURO DO CRIATIVO (Savannah Sanchez):
 Todo anúncio precisa fazer ao menos UMA destas coisas:
-1. INSPIRAR — dar ao público um impulso de agir (comprar, contatar, pedir catálogo)
+1. INSPIRAR — dar ao público um impulso de agir (comprar no site, ver a coleção)
 2. ENTRETER — dar uma razão emocional de assistir (eles estão no feed para se distrair, não para ver propaganda)
 3. EDUCAR — agregar valor real (mostrar como funciona, comparação, dica que muda a vida)
 Quando avaliar criativos com CTR baixo, diagnostique: está falhando em inspirar? Entreter? Educar? A resposta define que tipo de novo criativo propor.

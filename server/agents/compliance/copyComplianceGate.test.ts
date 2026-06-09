@@ -62,4 +62,31 @@ describe("checkCreativeCoherence — botão x destino", () => {
     });
     expect(v).toEqual([]);
   });
+
+  it("bloqueia 'peça seu catálogo no WhatsApp' com destino site", () => {
+    const v = checkCreativeCoherence({
+      briefText: "Peça seu catálogo no WhatsApp",
+      callToAction: "SHOP_NOW",
+      linkUrl: "https://www.feminnita.com.br",
+    });
+    expect(v.length).toBeGreaterThan(0);
+  });
+
+  it("bloqueia 'chama no direct / manda DM' com destino site", () => {
+    const v = checkCreativeCoherence({
+      briefText: "Chama no direct pra pedir o catálogo",
+      callToAction: "SHOP_NOW",
+      linkUrl: "https://www.feminnita.com.br",
+    });
+    expect(v.length).toBeGreaterThan(0);
+  });
+
+  it("passa CTA que leva ao site (comprar/ver coleção)", () => {
+    const v = checkCreativeCoherence({
+      briefText: "Compre agora no site — ver a coleção completa",
+      callToAction: "SHOP_NOW",
+      linkUrl: "https://www.feminnita.com.br",
+    });
+    expect(v).toEqual([]);
+  });
 });

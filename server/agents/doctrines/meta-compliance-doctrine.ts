@@ -18,6 +18,9 @@ que quiser, na quantidade que quiser. NÃO existe kit, kit fechado nem pedido
 mínimo obrigatório. Dois públicos: CLIENTE FINAL (compra pra si) e REVENDEDORA
 (compra pra revender) — os dois compram avulso. NUNCA posicione a oferta como
 kit/combo obrigatório ou pedido mínimo. O tecido é CAMURÇA — nunca diga "suede".
+A VENDA é SÓ pelo site/marketplaces — NUNCA pelo WhatsApp. Todo CTA direciona
+pro SITE ("Comprar" / "Ver coleção"). NUNCA peça pra "pedir catálogo", "chamar
+no WhatsApp" ou "mandar DM".
 
 É PROIBIDO:
 1. Prometer ou insinuar valor de RENDA, GANHO, LUCRO ou FATURAMENTO específico.

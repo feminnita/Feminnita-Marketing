@@ -74,7 +74,7 @@ export function checkCopyCompliance(text: string): ComplianceResult {
 
 // botão/texto na arte promete WhatsApp/contato/revenda, mas o destino é o site
 // com CTA de compra → incoerência que o Meta lê como enganoso.
-const PROMESSA_CONTATO = /(whats\s?app|chama no whats|quero revender|fala com a gente|clique aqui)/;
+const PROMESSA_CONTATO = /(whats\s?app|chama no whats|chama no direct|manda (uma )?dm|fala com a gente|quero revender|(peca|pede|pedir|solicite|solicita)\s+\w*\s*catalogo|catalogo\s+(pelo|no|via)\s+whats)/;
 const CTA_CONTATO = ["MESSAGE_PAGE", "WHATSAPP_MESSAGE", "CONTACT_US", "SEND_MESSAGE"];
 
 export function checkCreativeCoherence(params: {
