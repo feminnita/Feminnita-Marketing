@@ -183,7 +183,7 @@ ${profile.contentPillars.map((p, i) => `${i + 1}. ${p}`).join("\n")}
 
 SOBRE A FEMINNITA:
 - Pijamas atacado premium para revendedoras
-- Ticket médio: R$400 por pedido
+- Ticket B2C ~R$75-82 por peça; pedido de revenda AOV ~R$435
 - Estampas exclusivas, qualidade premium
 - Entrega para todo o Brasil
 - Foco Sul e Sudeste

@@ -36,7 +36,7 @@ VERDADE #1 — CONTEÚDO É O TARGETING:
 O conteúdo não é apenas divulgação — ele FILTRA e ATRAI o cliente exato. No TikTok Shop, cada vídeo linkado a um produto é uma decisão de targeting. Conteúdo que mostra revendedoras ganhando dinheiro atrai revendedoras. Conteúdo que mostra o pijama bonito atrai comprador final. Escolha o conteúdo com intenção.
 
 VERDADE #2 — FRAMEWORK SPCL: CONSTRUA INFLUÊNCIA, NÃO VISUALIZAÇÕES:
-Influência = probabilidade de alguém cumprir um pedido seu (comprar, pedir catálogo, se tornar revendedora).
+Influência = probabilidade de alguém cumprir um pedido seu (comprar no site, se tornar revendedora).
 Cada peça de conteúdo deve demonstrar ao menos UM dos 4 pilares:
 
 🏆 STATUS — Demonstre que você controla recursos escassos que o público quer.
@@ -44,7 +44,7 @@ Cada peça de conteúdo deve demonstrar ao menos UM dos 4 pilares:
 → Exemplos: "Mais de 2.000 revendedoras em todo o Brasil", "Estampa esgotou em 3 dias", "Lucro de R$800 em um final de semana".
 
 ⚡ POWER — Demonstre que você pode entregar algo valioso para quem seguir suas instruções.
-→ Para Feminnita: mostrar COMO a revendedora ganha dinheiro, passo a passo. "Compre as peças que quiser, sem pedido mínimo, e revenda com o dobro de margem — veja como". Mostre o caminho, não apenas o destino.
+→ Para Feminnita: mostrar COMO a revendedora ganha dinheiro, passo a passo. "Compre direto da fábrica a partir de R$199 e revenda — você define seu preço". Mostre o caminho, não apenas o destino.
 → Poder é: "Se você fizer X, eu consigo te dar Y."
 
 ✅ CREDIBILIDADE — Prova de terceiros. Não é o que você fala sobre si — é o que outros falam sobre você.
@@ -66,7 +66,7 @@ VERDADE #5 — NUNCA DEPENDA DE UMA ÚNICA FONTE:
 
 VERDADE #6 — 10.000 ITERAÇÕES, NÃO 10.000 HORAS (Alex Hormozi):
 "Não são 10.000 horas — são 10.000 iterações. O aprendizado vem do loop de feedback, não do tempo."
-Teste de litmus para conteúdo: se você assistir ao vídeo e não souber o que fazer em seguida, o conteúdo não tem valor. Todo post no TikTok Shop deve terminar com uma ação clara para a revendedora (pedir catálogo, entrar em contato, clicar no produto).
+Teste de litmus para conteúdo: se você assistir ao vídeo e não souber o que fazer em seguida, o conteúdo não tem valor. Todo post no TikTok Shop deve terminar com uma ação clara para a revendedora (clicar no produto, comprar no site).
 Para crescer no TikTok Shop: poste, analise o resultado, identifique qual detalhe fez diferença entre os 10% que performaram e os 90% que não performaram, repita o que funcionou. Volume sem análise é desperdício. Análise sem volume é lenta demais. A combinação dos dois é o crescimento.
 Método prático: compare os vídeos/fichas que mais converteram — o que eles têm em comum que os outros não têm? Aplique esse padrão. Evite repetir os erros identificados. Progrida por eliminação de falhas + replicação de acertos.
 

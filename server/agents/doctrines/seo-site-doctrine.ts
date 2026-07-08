@@ -1,8 +1,8 @@
 // Doutrina de SEO DE SITE (Google) — agente Duda (loja Tray da Feminnita, feminnita.com.br).
 // Fonte: "Módulo 27 - SEO para E-Commerce" + módulo SEO do Fábio Ricotta + "SEO Loja",
 // 21 aulas transcritas e destiladas (07/06/2026). Onde a aula não cravou número, NÃO inventamos.
-// Contexto: feminnita.com.br = ATACADO de pijamas (preço de fábrica, SEM pedido mínimo, compra por peça,
-// revendedoras/lojistas). Venda SÓ pelo site — nunca WhatsApp.
+// Contexto: feminnita.com.br = ATACADO de pijamas (preço de fábrica direto no site; revenda com pedido
+// mínimo R$199, CPF ou CNPJ; B2C compra por peça; revendedoras/lojistas). Venda SÓ pelo site — nunca WhatsApp.
 
 export const SEO_SITE_DOCTRINE = `
 ═══════════════════════════════════════════════════════
@@ -20,24 +20,24 @@ Pesquise palavra-chave ANTES de escrever; entenda a INTENÇÃO DE BUSCA (informa
 
 ━━━ TITLE TAG (carro-chefe) ━━━
 Keyword principal PRIMEIRO. Limite: NÃO passar de ~63 caracteres (o que o Google exibe). Fórmula: [palavra-chave] + marca + tipo + característica.
-✅ "Pijama Feminino Atacado por Peça | Sem Pedido Mínimo | Feminnita"
+✅ "Pijama Feminino Atacado por Peça | Preço de Fábrica | Feminnita"
 Erro: título genérico/repetido (só o nome da loja).
 
 ━━━ META DESCRIPTION ━━━
 A chamada embaixo do title na SERP — gera o clique. Curta, persuasiva, com keyword + diferencial + CTA pro site.
-✅ "Pijamas no atacado a preço de fábrica, compre por peça, sem pedido mínimo. Ideal para revendedoras. Peça já pelo site."
+✅ "Pijamas no atacado a preço de fábrica, revenda a partir de R$199, com CPF ou CNPJ. Ideal para revendedoras. Compre pelo site."
 (A aula não cravou limite de caracteres da meta — não inventar; manter curta.)
 
 ━━━ HEADING TAGS (H1/H2/H3) ━━━
 H1 = geralmente o mesmo texto do título, 1 por página. H2/H3 = intertítulos com palavras-chave relacionadas.
-Ex.: H1 "Pijama Feminino Atacado" → H2 "Por que comprar por peça sem pedido mínimo" → H3 "Modelos: longo, curto, inverno" → H3 "Como revender com lucro".
+Ex.: H1 "Pijama Feminino Atacado" → H2 "Por que comprar direto da fábrica pelo site" → H3 "Modelos: longo, curto, inverno" → H3 "Como revender com lucro".
 
 ━━━ URL AMIGÁVEL ━━━
 Comunica o assunto (é fator de ranqueamento). Estrutura legível: categoria + produto, hífens, sem código automático.
 ✅ feminnita.com.br/pijamas/pijama-feminino-longo-viscose-atacado · Erro: URL gerada pelo sistema (string sem sentido).
 
 ━━━ DESCRIÇÃO (produto e categoria) ━━━
-Texto ORIGINAL (nunca copiar do fabricante = conteúdo duplicado), interessante, que engaja e mostra o tema ao Google. Repetir a keyword naturalmente ao longo da página (com bom senso, não empilhar). Categoria também tem texto SEO próprio. Vende informando: tecido, modelagem, faixa de tamanho, ângulo de revenda ("ótimo giro pra sua loja"), keyword "atacado/por peça/sem mínimo".
+Texto ORIGINAL (nunca copiar do fabricante = conteúdo duplicado), interessante, que engaja e mostra o tema ao Google. Repetir a keyword naturalmente ao longo da página (com bom senso, não empilhar). Categoria também tem texto SEO próprio. Vende informando: tecido, modelagem, faixa de tamanho, ângulo de revenda ("ótimo giro pra sua loja"), keyword "atacado/por peça/preço de fábrica".
 
 ━━━ IMAGENS ━━━
 O Google não enxerga a foto — precisa de texto. ALT TEXT descritivo + keyword. NOME DO ARQUIVO descritivo (pijama-feminino-longo-atacado.jpg, não IMG_8472.jpg). Foto decide a conversão.
@@ -60,5 +60,5 @@ Google Search Console (técnico, sitemap, performance, mobile — fundamental), 
 ━━━ MÉTRICAS (os 3 KPIs de SEO) ━━━
 1. Acessos/visitas orgânicas · 2. Conversões · 3. Posição no Google (ranking das keywords). Medir sempre.
 
-(CTA sempre pro SITE/checkout — nunca WhatsApp. Modelo: compra por peça, sem pedido mínimo, desconto progressivo por quantidade.)
+(CTA sempre pro SITE/checkout — nunca WhatsApp. Modelo: B2C por peça; revenda mínimo R$199 com CPF ou CNPJ; desconto progressivo por quantidade.)
 `;

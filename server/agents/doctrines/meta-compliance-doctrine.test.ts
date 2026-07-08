@@ -9,8 +9,11 @@ describe("META_COMPLIANCE_DOCTRINE", () => {
     expect(d).toContain("golpe");
     expect(d).toContain("comprov");      // número comprovável
     expect(d).toContain("destino");      // coerência criativo↔destino
-    expect(d).toContain("camurça");
-    expect(d).toContain("kit");
+    expect(d).toContain("suede");        // material correto (nunca "camurça")
+    expect(d).toContain("camurça");      // a doutrina proíbe explicitamente o termo errado
+    expect(d).toContain("cpf ou cnpj");  // forma correta do claim
+    expect(d).toContain("r$199");        // pedido mínimo real da revenda
+    expect(d).toContain("catálogo");     // proíbe CTA de catálogo
   });
 
   it("não está vazia", () => {

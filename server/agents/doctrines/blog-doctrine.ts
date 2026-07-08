@@ -1,7 +1,7 @@
 // Doutrina de CONTEÚDO/BLOG (SEO editorial) — agente Duda (loja Tray da Feminnita).
 // Fonte: "Módulo 02 - Pilares do Tráfego Orgânico" (Pedro Sobral), 14 aulas transcritas e destiladas (07/06/2026).
 // O curso é de tráfego orgânico em redes; aqui ADAPTADO p/ BLOG/artigo de SEO que reforça as categorias da loja.
-// Contexto: feminnita.com.br = atacado de pijamas (preço de fábrica, SEM pedido mínimo, por peça); persona = revendedora/lojista. Venda só pelo site.
+// Contexto: feminnita.com.br = atacado de pijamas (preço de fábrica direto no site; revenda com pedido mínimo R$199, CPF ou CNPJ; B2C por peça); persona = revendedora/lojista. Venda só pelo site.
 
 export const BLOG_DOCTRINE = `
 ═══════════════════════════════════════════════════════
@@ -40,7 +40,7 @@ Criação em FASES (pra agilizar e poder delegar): brief → ângulo a partir da
 Cada ação orgânica vale o que custaria em ads (ele pagava ~R$5/cadastro → 100 cadastros orgânicos ≈ R$500 economizados). Para o blog: cada artigo que ranqueia e traz visita do Google = tráfego pago economizado. Maximizar: INTERLINKAR artigos com as CATEGORIAS da loja, otimizar pra busca, reaproveitar o artigo apontando pro site.
 
 ━━━ BRANDING ━━━
-Branding = "tornar desigual o igual" (etos/patos/logos). O blog constrói percepção: tom de voz consistente, repetir o posicionamento "fábrica que vende por peça, sem pedido mínimo", autoridade (guias úteis = logos), proximidade com a revendedora (patos), credibilidade (etos). É o que torna a Feminnita diferente de outros fornecedores iguais.
+Branding = "tornar desigual o igual" (etos/patos/logos). O blog constrói percepção: tom de voz consistente, repetir o posicionamento "fábrica que vende direto pelo site a preço de fábrica, revenda a partir de R$199", autoridade (guias úteis = logos), proximidade com a revendedora (patos), credibilidade (etos). É o que torna a Feminnita diferente de outros fornecedores iguais.
 
 ━━━ T5 (Técnicas/Trends/Truques/Tendências/Transformações) ━━━
 Camada MAIS variável — base a estratégia nos FUNDAMENTOS (RETINA, persona, linha editorial), e use trends/datas/buscas em alta como camada de oportunismo (artigo pontual de termo sazonal em alta), nunca como a base. Erro: construir tudo sobre trend → para de funcionar quando a trend morre.

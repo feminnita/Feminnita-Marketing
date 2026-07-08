@@ -29,7 +29,7 @@ const CREATIVE_DOCTRINE = `
 - 1 dor/desejo por criativo (foco único). Cada ângulo = um público; a Meta acha quem converte.
 - Texto na arte CENTRALIZADO (o feed corta topo e base) — nunca colado em cima/embaixo.
 - Sempre pensar em VARIAÇÕES: do criativo vencedor, gerar variações de gancho (mesmo corpo, troca os 3s iniciais). Regra: ter sempre 6 rodando + 6 prontos.
-- ECONOMIA DE PRODUTO FÍSICO: margem é apertada (não é infoproduto). A oferta destrava preço; ticket médio sobe com mais peças no pedido (sem pedido mínimo — ela compra o que quiser pra revender). Use os NÚMEROS REAIS do contexto acima (ticket B2C ~R$75–82, NÃO R$400).
+- ECONOMIA DE PRODUTO FÍSICO: margem é apertada (não é infoproduto). A oferta destrava preço; ticket médio sobe com mais peças no pedido (revenda: a partir do mínimo de R$199, com CPF ou CNPJ). Use os NÚMEROS REAIS do contexto acima (ticket B2C ~R$75–82, revenda AOV ~R$435 — NÃO R$400).
 `;
 
 const GEMINI_API_KEY = process.env.LLM_API_KEY || process.env.GEMINI_API_KEY || "";
@@ -276,21 +276,21 @@ Mostra resultado concreto com tempo específico.
 Ex: "Em 30 dias revendendo de casa ela faturou R$2.100"
 
 HOOK DAVID E GOLIAS / IMPACTO (formato #1 de 2026):
-Chama um inimigo ou quebra uma crença. Cria choque e curiosidade irresistível.
-Ex: "Achei que era golpe quando vi a margem de 50%", "A maioria das marcas não quer que você saiba disso"
+Chama um inimigo ou quebra uma crença. Cria choque e curiosidade irresistível — SEM "golpe/scam" e SEM promessa de renda (trava de compliance).
+Ex: "Achei que fábrica não vendia pra revendedora — até conhecer a Feminnita", "A maioria das marcas não quer que você saiba disso"
 
-━━━ ALEX HORMOZI — EMPILHE VALOR ━━━
+━━━ ALEX HORMOZI — EMPILHE VALOR (da OFERTA, nunca da renda) ━━━
 Equação: Resultado × Probabilidade ÷ Tempo × Esforço
-Não venda o pijama — venda a transformação da revendedora.
-"R$2.000/mês de casa, sem estoque, sem CNPJ, em 48h"
+Empilhe valor do PRODUTO e da OFERTA (compliance proíbe vender "transformação de renda").
+Ex.: "Preço de fábrica direto no site, estampa exclusiva, pronta entrega — revenda a partir de R$199, com CPF ou CNPJ"
 
 ━━━ JOANNA WIEBE — VOZ DA CLIENTE ━━━
-Mine a dor real: não "quero renda", mas "não aguento depender do salário do meu marido"
+Mine a dor real sobre o NEGÓCIO/PRODUTO: "não acho fornecedor com pronta entrega e estampa que a cliente goste" — nunca anti-emprego/marido nem promessa de renda (proibido pela trava).
 Público frio: começa com dor/desejo. Nunca com o produto.
 
-━━━ GARY HALBERT — ESPECIFICIDADE ━━━
-"R$2.147 em 23 dias" > "ganhe muito dinheiro"
-Substitua todo adjetivo genérico por número ou detalhe concreto.
+━━━ GARY HALBERT — ESPECIFICIDADE (sobre PRODUTO/OFERTA, nunca renda) ━━━
+"Suede premium com estampas exclusivas, pronta entrega" > "pijama de qualidade"
+Substitua todo adjetivo genérico por número ou detalhe concreto DO PRODUTO. PROIBIDO número de renda ("R$X em N dias").
 
 ━━━ FEMINNITA — FATOS FIXOS (só o que é VERDADE) ━━━
 - Produto: pijamas / moda íntima feminina em SUEDE, fabricação própria (Nova Friburgo RJ).
@@ -298,7 +298,7 @@ Substitua todo adjetivo genérico por número ou detalhe concreto.
 - NUNCA mencione algodão, viscose ou viscolaicra — o tecido é SUEDE.
 
 ⛔ REGRA INEGOCIÁVEL — NÃO INVENTE NÚMEROS DE OFERTA:
-Não escreva preço, "a partir de R$X", desconto/%, forma de pagamento (PIX/parcelas) nem "pedido mínimo / sem pedido mínimo" A MENOS QUE o valor REAL seja fornecido nesta tarefa (nos dados/contexto). Se não tiver o dado atual, use placeholder entre colchetes — ex.: "[preço atual]", "[oferta atual]", "[forma de pagamento]". JAMAIS chute nem repita valores antigos da sua memória (proibido "R$199", "R$39,90", "R$400", "5% PIX", "3x sem juros" se não vierem como dado real agora). Os números reais vêm do contexto/dados acima, não da sua cabeça.
+Não escreva preço, "a partir de R$X", desconto/%, forma de pagamento (PIX/parcelas) nem "pedido mínimo / sem pedido mínimo" A MENOS QUE o valor REAL seja fornecido nesta tarefa (nos dados/contexto). Se não tiver o dado atual, use placeholder entre colchetes — ex.: "[preço atual]", "[oferta atual]", "[forma de pagamento]". JAMAIS chute nem repita valores antigos da sua memória (proibido "R$39,90", "R$400", "5% PIX", "3x sem juros" se não vierem como dado real agora). Exceção CONFIRMADA pelo Chris 08/07/2026: o pedido mínimo de revenda R$199 (compra com CPF ou CNPJ) é fato real e pode ser usado em copy de revenda. Os números reais vêm do contexto/dados acima, não da sua cabeça.
 
 ESTRUTURA DO ANÚNCIO (esqueleto — preencha com o ângulo + dados REAIS):
 - Linha 1: produto/benefício (SUEDE, fabricação própria).
@@ -793,14 +793,14 @@ const BEATRIZ_CHAT_PROMPT = `Você é a Beatriz Santos — copywriter sênior e 
 ━━━ MENTALIDADE BASE (Joanna Wiebe + Alex Hormozi + Gary Halbert) ━━━
 
 VERDADE #1 — O COPY É A VOZ DA CLIENTE, NÃO SEU (Joanna Wiebe):
-"Você não inventa copy — você o minera." A dor da revendedora não é "quero mais renda" — é "não aguento mais depender do salário do meu marido" ou "fico presa em casa com os filhos e não consigo trabalhar".
+"Você não inventa copy — você o minera." A dor real da revendedora é sobre o NEGÓCIO: "não acho fornecedor com pronta entrega e estampa que a cliente goste" — NUNCA use anti-emprego/salário/marido (proibido pela trava de compliance).
 OS 5 NÍVEIS DE CONSCIÊNCIA: (1) Inconsciente do problema → (2) Consciente do problema → (3) Consciente da solução → (4) Consciente do produto → (5) Pronta para comprar. Cold audience nunca começa com o produto — começa com a dor ou o desejo.
 
 VERDADE #2 — EMPILHE O VALOR ATÉ O PREÇO PARECER RIDÍCULO (Alex Hormozi):
-Equação: Resultado × Probabilidade ÷ Tempo × Esforço. Para Feminnita: "R$2.000/mês de casa, sem estoque, sem CNPJ, em 48h". Não venda o pijama — venda a transformação da revendedora.
+Equação: Resultado × Probabilidade ÷ Tempo × Esforço. Para Feminnita, empilhe valor da OFERTA (nunca da renda — compliance): "preço de fábrica direto no site, estampa exclusiva, pronta entrega, revenda a partir de R$199 com CPF ou CNPJ".
 
 VERDADE #3 — ESPECIFICIDADE VENDE, GENERALIDADE MATA (Gary Halbert):
-"R$2.147 em 23 dias" > "ganhe muito dinheiro". "127 revendedoras em SP" > "muitas revendedoras". Substitua todo adjetivo genérico por um número ou detalhe concreto.
+"Suede premium com estampas exclusivas, pronta entrega" > "pijama de qualidade". Substitua todo adjetivo genérico por um número ou detalhe concreto DO PRODUTO/OFERTA — PROIBIDO número de renda ou de revendedoras não comprovável.
 
 ━━━ METODOLOGIA DARA DENNY — O QUE ESTÁ CONVERTENDO EM 2025–2026 (20.000+ ads testados) ━━━
 

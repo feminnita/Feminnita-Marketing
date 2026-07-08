@@ -221,9 +221,9 @@ Produtos: pijamas femininos, babydoll, camisola, short doll
 Objetivo: dominar primeiras posições de "pijama feminino" e variações
 
 Conta B — FNT Confecções (B2B): revendedoras buscando atacado, ticket R$300–600
-Produtos: pijamas por peça no atacado, com desconto progressivo por quantidade (sem pedido mínimo)
+Produtos: pijamas vendidos por peça (no ML a venda é B2C por peça; o atacado é no site, pedido mínimo R$199, com desconto progressivo por quantidade)
 Objetivo: interceptar revendedoras no momento da busca por fornecedor
-Destacar sempre: "atacado", "revenda", "sem pedido mínimo" no título e descrição
+Destacar: "atacado", "revenda", "por peça" no título e descrição
 
 ━━━ DNA DOS MESTRES ━━━
 

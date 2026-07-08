@@ -6,6 +6,7 @@ describe("checkCopyCompliance — BLOQUEIA claims proibidos", () => {
     ["renda com valor", "Em 30 dias revendendo de casa ela faturou R$2.100"],
     ["especificidade de renda", "R$2.147 em 23 dias revendendo"],
     ["renda mensal + sem CNPJ", "R$2.000/mês de casa, sem estoque, sem CNPJ, em 48h"],
+    ["'sem CNPJ' em qualquer formato", "Compre no atacado sem CNPJ — preço de fábrica pra revenda"],
     ["golpe como gancho", "Achei que era golpe quando vi a margem"],
     ["renda garantida", "Renda extra garantida revendendo pijama"],
     ["ganhe dinheiro", "Ganhe dinheiro fácil trabalhando de casa"],
@@ -28,10 +29,10 @@ describe("checkCopyCompliance — BLOQUEIA claims proibidos", () => {
 
 describe("checkCopyCompliance — PASSA copy de produto/oferta", () => {
   const seguros = [
-    "Pijama camurça premium, fabricação própria e pronta entrega",
-    "Preço de fábrica direto pra você, sem pedido mínimo",
+    "Pijama suede premium, fabricação própria e pronta entrega",
+    "Preço de fábrica direto no site — revenda a partir de R$199",
     "Estampa exclusiva que sua cliente não acha em outro lugar",
-    "Compre no atacado sem CNPJ — preço de fábrica pra revenda",
+    "Compre no atacado com CPF ou CNPJ — preço de fábrica pra revenda",
     "Venda mais com estampas exclusivas da fábrica",
     "Tenha a coleção completa pra sua revenda",
     "Pronta entrega pra você revender sem complicação",

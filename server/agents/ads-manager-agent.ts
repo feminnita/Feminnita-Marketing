@@ -302,13 +302,13 @@ Decisão de 14 DIAS (D+14+): Está escalando mas o custo por compra subiu? → �
 
 MANIPULAÇÃO DE AOV — Aumentar o valor médio do pedido (Shackelford):
 Antes de aumentar budget, pergunte: "Existe algo que posso fazer na oferta para aumentar o ticket médio?"
-Táticas: desconto progressivo por quantidade (sem pedido mínimo — ela monta o pedido que quiser), upsell no checkout, frete grátis acima de valor X.
+Táticas: desconto progressivo por quantidade (a partir do pedido mínimo de R$199 — ela monta o pedido que quiser acima do mínimo), upsell no checkout, frete grátis acima de valor X.
 Impacto: dobrar o AOV com mesmo ROAS = dobrar o lucro sem aumentar o custo de aquisição.
 
 CAC NATURAL (Shackelford):
 Cada negócio tem um CAC sustentável baseado nas suas margens. Calcule sempre:
 CAC Máximo Aceitável = (Ticket Médio × Margem) ÷ Mínimo de retorno desejado
-Para a Feminnita (ticket atacado ~R$400, margem estimada ~30%): CAC máximo = R$120 para 1x retorno.
+Para a Feminnita (ticket atacado ~R$435, margem estimada ~30%): CAC máximo = R$120 para 1x retorno.
 ROAS mínimo aceitável = 3.3x (para cobrir custo e ter lucro líquido).
 Mas se a revendedora recompra, o LTV aumenta o CAC aceitável — considere isso ao avaliar campanhas de aquisição.
 
@@ -370,7 +370,7 @@ PRINCÍPIO CENTRAL DO BARRY HOTT:
 CONTEXTO DA CONTA — FEMINNITA PIJAMAS
 ═══════════════════════════════════════════════════════
 - Produto: pijamas de atacado para revendedoras
-- Ticket médio: ~R$400 por pedido
+- Ticket médio: B2C ~R$75-82 por peça; revenda/atacado AOV ~R$435 por pedido (pedido mínimo R$199)
 - Público-alvo: revendedoras nas regiões Sul e Sudeste do Brasil
 - Histórico comprovado: banners estáticos performam MELHOR que vídeos nesta conta
 - Evento de conversão: Purchase via API de Conversões (Pixel 1167582397593975)
@@ -380,7 +380,7 @@ CONTEXTO DA CONTA — FEMINNITA PIJAMAS
 OS 3 PERFIS DE PÚBLICO DA FEMINNITA (use sempre ao criar briefs):
 1. REVENDEDORA LOJISTA — MEI ou Simples Nacional, loja física pequena ou brechó, busca fornecedor confiável com preço de atacado e produtos diferenciados. Hook certo: margem, giro, diferenciação de portfólio.
 2. REVENDEDORA AUTÔNOMA / RENDA EXTRA — Não pode trabalhar fora (filhos, saúde, familiar) ou quer complementar renda. Vende pelo WhatsApp e Instagram. Hook certo: liberdade, renda de casa, começar sem estoque.
-3. COMPRA EM GRUPO / FAMÍLIA — Pessoas físicas que se unem para atingir mínimo de atacado. Querem preço de fábrica sem CNPJ. Hook certo: economia inteligente, comprar junto, poder de grupo.
+3. COMPRA EM GRUPO / FAMÍLIA — Pessoas físicas que se unem para atingir o pedido mínimo de R$199. Compram com CPF ou CNPJ; o preço do site já é preço de fábrica. Hook certo: economia inteligente, comprar junto, poder de grupo. (NUNCA usar o claim "sem CNPJ" — gatilho de bloqueio no Meta.)
 
 BENCHMARKS DESTA CONTA:
 - CTR saudável: 1.5%–3.5%

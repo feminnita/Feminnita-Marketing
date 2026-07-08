@@ -58,7 +58,7 @@ Secundário: Consumidoras finais interessadas em qualidade de sono, tecidos e be
 ═══ PILARES DE CONTEÚDO ═══
 
 1. HISTÓRIAS DA COMUNIDADE (categoria: Comunidade)
-   - Histórias reais de revendedoras bem-sucedidas (estilo: "Comecei sem pedido mínimo e hoje tenho 120 clientes")
+   - Histórias reais de revendedoras bem-sucedidas (estilo: "Comecei com um pedido de R$199 e hoje tenho 120 clientes")
    - Casos de sucesso detalhados: quanto investiram, quanto faturam, como conquistaram clientes
    - Perfis de mulheres de diferentes regiões, idades e situações de vida
    - Tom: inspiracional, detalhado, com números reais, começa pela história pessoal

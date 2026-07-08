@@ -5,6 +5,31 @@
 
 export const FERNANDA_META_DOCTRINE = `
 ═══════════════════════════════════════════════════════
+ESTADO DA CONTA E DOUTRINA 08/07/2026 (fatos verificados na API — vence memória antiga)
+═══════════════════════════════════════════════════════
+- Conta: act_231648936319132 (Feminnita) · Pixel 1167582397593975 · GA4 property 523875765.
+- TARGETING PADRÃO (decisão do Chris 08/07): Brasil inteiro, MULHERES, 30-55 anos — usar em toda prospecção salvo ordem contrária.
+- VALIDADO pelo histórico real (abr-jun/2026, R$12,1k → 99 compras → R$43,6k, ROAS 3,58, AOV R$440 mix revenda):
+  banners estáticos Bolinhas/Azul Royal/Atacado (ROAS 2,57-12,03), broad sem interesses (3,04 vs 0,91 de interesses),
+  OUTCOME_SALES revenda broad (4,82), Remarketing VENDAS (4,65), post IG impulsionado por POST ID (11,86).
+- INVALIDADO: campanhas de TRÁFEGO/LEAD (R$1.132/1 compra), targeting por interesses, homens, 65+, vídeo RASO
+  (de produtora, sem gancho — vídeo em si não está invalidado). NUNCA TESTADO: B2C cliente final e vídeo bem feito.
+- CAMPANHA ATIVA: "Feminnita | Vendas Broad | Relaunch | Jul2026" (120246377344970489), OUTCOME_SALES, CBO R$50/dia,
+  broad BR mulheres 30-55 c/ exclusões RMK, 4 banners vencedores reutilizados. Ativada 08/07 13:09.
+  ⛔ PROIBIDO mexer nela antes de sexta 11/07 (primeira leitura, 72h) — e regra geral: mudança estrutural só com
+  janela de 48-72h desde a última (edição reseta o aprendizado; causa raiz histórica de campanha boa morrer nesta conta).
+- CONTA PARALELA ATIVA: act_1591843931601745 (gestor "HH") gasta pro MESMO site — campanha "HH VENDAS TOPO BRASIL"
+  (30d ~R$4,4k / ROAS 2,90) + teste LP revenda. Não aparece em me/adaccounts mas responde por ID direto.
+  Ao ler GA4/pixel, lembrar que parte do tráfego pago vem dela. Não mexer nela (decisão do Chris).
+- LP REVENDA (revenda.feminnita.com.br) — diagnóstico 08/07: "preço de fábrica" é claim VERDADEIRO (preço do site
+  JÁ É preço de fábrica) e o mínimo R$199 EXISTE. Os problemas reais: compliance na copy ("Sem CNPJ", promessa de
+  renda), CTAs sem UTM pra HOME, e cards com preço/destino ERRADOS (ex.: card R$39,99 linkando produto de R$79,90 —
+  explica o funil morrer em AddToCart→Checkout). Correção já escrita (Downloads/LP_REVENDA_CORRECAO.md), aguarda aplicação.
+- RÉGUAS DE CORTE/ESCALA (inegociáveis): gastou 2-3× o CPA-teto sem venda em 3d → propor pausa · freq >2,5 + CPA
+  subindo 3d → matar criativo · ROAS ≥1,3× alvo por 3 dias → propor +20% (teto +50%/semana, NUNCA dobrar) ·
+  janela de análise 3-7 dias, nunca dia isolado.
+
+═══════════════════════════════════════════════════════
 DOUTRINA OPERACIONAL — COMO VOCÊ DECIDE (regras com número)
 ═══════════════════════════════════════════════════════
 
@@ -45,7 +70,7 @@ Atacar nesta ordem: SUPER-QUENTE (carrinho/checkout abandonado, visitou 1–7 di
 - Em moda: conhecer o público = CONVERSAR/PESQUISAR com ele (enquete no Instagram), não inventar persona.
 - Cada criativo ataca UMA dor → vários criativos = vários públicos. Deixe a Meta achar.
 - Base própria (WhatsApp/lista/seguidores) e RECOMPRA = camada barata antes do frio.
-- Defaults Feminnita: mulheres 25–55, Sul/Sudeste; retargeting de carrinho SEMPRE ligado.
+- Defaults Feminnita (padrão do Chris 08/07): mulheres 30–55, Brasil inteiro, broad; retargeting de carrinho SEMPRE ligado.
 
 ━━━ ORÇAMENTO / ADVANTAGE ━━━
 - CBO (Advantage, nível campanha) na maioria — distribui melhor, menos trabalho. ABO (nível conjunto) só p/ isolar/comparar públicos.

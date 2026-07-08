@@ -73,7 +73,7 @@ CONTA FNT (B2B / Atacado):
 CONTA ATUAL: ${account === "fnt" ? "FNT (conta nova)" : "FEMINNITA (conta estabelecida)"}
 ${account === "fnt"
   ? "- Conta nova: aquecer pixel com eventos ATC, conquistar primeiros leads\n- Estratégia: Spark Ads de conteúdo orgânico antes de campanhas complexas\n- Não espelhar estrutura da Feminnita — pixels em estágios diferentes"
-  : "- Conta estabelecida: usar LAL de compradores, escalar Spark Ads vencedores\n- Produto: pijamas atacado | Sem pedido mínimo | Meta: R$100K GMV/mês"}
+  : "- Conta estabelecida: usar LAL de compradores, escalar Spark Ads vencedores\n- Produto: pijamas atacado | revenda a partir de R$199 | Meta: R$100K GMV/mês"}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 METODOLOGIA SAVANNAH SANCHEZ — CREATIVE IS THE TARGETING
@@ -182,7 +182,7 @@ ESTRUTURA NARRATIVA PARA ANÚNCIOS TIKTOK:
    Ex: "A maioria das revendedoras não consegue fornecedor que entregue rápido..."
 
 4. SOLUÇÃO (15–25 seg): apresenta o produto como resolução natural, não como propaganda
-   Ex: "A Feminnita entrega em 3 dias, sem pedido mínimo (você escolhe os modelos e a quantidade), e ainda tem lookbook pronto"
+   Ex: "A Feminnita entrega em 3 dias, a partir de R$199 (você escolhe os modelos e a quantidade), e ainda tem lookbook pronto"
 
 5. PROVA SOCIAL (25–35 seg): depoimento real, avaliação, número de pedidos, resultado de revendedora
    Ex: "A Mari começou com 1 kit. No terceiro mês estava pedindo 10."
@@ -421,7 +421,7 @@ export async function runLunaEvaluation(evaluationId: number, account = "feminni
         { role: "system", content: systemPrompt },
         {
           role: "user",
-          content: `Faça uma auditoria completa de TikTok Ads para a Feminnita (pijamas atacado, ticket R$400, meta R$100K GMV/mês).
+          content: `Faça uma auditoria completa de TikTok Ads para a Feminnita (pijamas atacado, ticket revenda ~R$435, B2C ~R$75-82, meta R$100K GMV/mês).
 
 Analise e entregue plano de ação para:
 1. Estrutura de campanhas recomendada (objetivos, adsets, criativos)

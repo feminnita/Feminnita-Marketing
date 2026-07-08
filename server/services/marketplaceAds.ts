@@ -74,7 +74,7 @@ async function fetchMetaAdsMetrics(days = 7): Promise<PlatformStatus> {
       (a: any) => a.action_type === "purchase" || a.action_type === "offsite_conversion.fb_pixel_purchase"
     );
     const conversions = purchaseAction ? parseFloat(purchaseAction.value || "0") : 0;
-    const revenue = conversions * 400; // ticket médio R$400
+    const revenue = conversions * 80; // ticket médio real marketplace ~R$80 (verificado 08/07/2026)
     const roas = spend > 0 && revenue > 0 ? revenue / spend : 0;
     const cpa = conversions > 0 ? spend / conversions : 0;
 

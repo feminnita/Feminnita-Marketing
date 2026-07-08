@@ -14,7 +14,7 @@ export type SpecialistType = "shopee_eds" | "shopee_promo" | "ml_eds" | "shopee_
 const AUDIENCE_PROFILES = `**OS 3 PERFIS DE PÚBLICO DA FEMINNITA (memorize permanentemente):**
 1. REVENDEDORA LOJISTA — MEI ou Simples Nacional, loja física pequena ou brechó, busca fornecedor de pijamas para revender com margem. Dor: fornecedor confiável com produtos diferenciados.
 2. RENDA EXTRA / REVENDEDORA AUTÔNOMA — Não pode trabalhar fora (filhos, saúde, família) ou quer complementar a renda. Vende pelo WhatsApp/Instagram entre conhecidos. Dor: começar com pouco e ganhar dinheiro de casa.
-3. COMPRA EM GRUPO / FAMÍLIA — Pessoas físicas que se unem para comprar mais peças juntas e baixar o preço por peça (duas amigas, família, colegas). Não há pedido mínimo. Querem preço de fábrica sem CNPJ. Dor: acessar preço justo comprando junto.`;
+3. COMPRA EM GRUPO / FAMÍLIA — Pessoas físicas que se unem para comprar mais peças juntas e baixar o preço por peça (duas amigas, família, colegas). Pedido mínimo R$199; compram com CPF ou CNPJ; o preço do site já é preço de fábrica. Dor: acessar preço justo comprando junto.`;
 
 function buildPrompt(type: SpecialistType, account: string): string {
   const accountCtx = account === "fnt"
@@ -162,7 +162,7 @@ Responda em português do Brasil. Foque em ações que combinam melhoria de repu
 - Viewers ao vivo para escalar ads: 200+ simultâneos
 - GMV médio live 90min (moda): R$5.000–12.000
 - Conversão viewers→compra: 8–15% (maior que TikTok por intenção)
-- Ticket médio por compra em live: R$80–180 (varejo), R$400+ (atacado)
+- Ticket médio por compra em live: R$80–180 (varejo), R$435+ (atacado)
 - Taxa de follow durante live: meta 5% dos viewers
 
 ${accountCtx}
@@ -189,7 +189,7 @@ Responda em português do Brasil. Seja prática com scripts, horários e pautas 
 
 **Metodologia Isis (baseada nos maiores vendedores de LIVE Instagram do Brasil):**
 - STORIES PRÉ-LIVE SÃO OBRIGATÓRIOS: 3 Stories nas 2h antes da live (countdown, produto teaser, "vai ter desconto exclusivo")
-- LIVE DE ATACADO TEM LINGUAGEM PRÓPRIA: falar de margem, revenda, CNPJ, desconto progressivo por quantidade (sem pedido mínimo) — não é live de varejo
+- LIVE DE ATACADO TEM LINGUAGEM PRÓPRIA: falar de margem, revenda, CNPJ, desconto progressivo por quantidade (mínimo R$199) — não é live de varejo
 - DM É O CAIXA: durante a live, direcionar pedidos para DM. Ter atendente dedicado respondendo DMs em tempo real
 - WHATSAPP COMO EXTENSÃO: compartilhar link do WhatsApp durante a live. Quem vai para o WA tem 70% mais chance de fechar
 - CONVIDADA REVENDEDORA: trazer uma revendedora como convidada da live para dar depoimento ao vivo — prova social máxima
@@ -199,7 +199,7 @@ Responda em português do Brasil. Seja prática com scripts, horários e pautas 
 **Benchmarks Instagram LIVE (moda/atacado BR):**
 - Viewers ao vivo meta: 50–200 (atacado tem audiência menor mas qualificada)
 - Taxa de conversão viewer→pedido DM: 15–25% (atacado converte mais que varejo)
-- Ticket médio por pedido em live atacado: R$400+
+- Ticket médio por pedido em live atacado: R$435+ (AOV real da linha revenda; pedido mínimo R$199)
 - Crescimento de seguidores por LIVE: 2–5% da audiência segue depois
 - Frequência ideal: 1–2 lives/semana para manter audiência sem saturar
 
@@ -278,7 +278,7 @@ export async function runSpecialistEvaluation(evaluationId: number, type: Specia
 Considere:
 - O estágio atual da empresa (${account === "fnt" ? "FNT — conta nova" : "Feminnita — 3 anos de mercado"})
 - Os 3 perfis de público (revendedora lojista, autônoma, compra em grupo)
-- O produto (pijamas de atacado, ticket médio R$400 por pedido)
+- O produto (pijamas de suede; revenda AOV ~R$435 por pedido, mínimo R$199; B2C ~R$75-82)
 - Prioridade: aumentar GMV de R$20K para R$100K/mês
 
 Entregue:

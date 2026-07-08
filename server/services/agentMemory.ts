@@ -148,7 +148,7 @@ export async function buildMemoryContext(agentName: string): Promise<string> {
       lines.push(goals[0].content);
     }
   } else {
-    lines.push("- Feminnita Pijamas Atacado | Ticket médio: R$400");
+    lines.push("- Feminnita Pijamas Atacado | Ticket médio: ~R$435 (revenda) / ~R$75-82 (B2C)");
     lines.push("- Meta mensal: R$100.000 (atual: ~R$20.000 — era R$78.000 antes da agência)");
     lines.push("- Ad spend: R$1.500/mês (R$50/dia) | ROAS mínimo: 4x | CPA máximo: R$80");
     lines.push("- Campanhas ativas: Remarketing + Revenda Sul+Sudeste | R$25/dia cada");
@@ -216,7 +216,7 @@ function buildStaticBusinessContext(): string {
   return `=== MEMÓRIA DO AGENTE ===
 
 CONTEXTO DO NEGÓCIO:
-- Feminnita Pijamas Atacado | Ticket médio: R$400
+- Feminnita Pijamas Atacado | Ticket médio: ~R$435 (revenda) / ~R$75-82 (B2C)
 - Meta mensal: R$100.000 (atual: ~R$20.000 — era R$78.000 antes da agência)
 - Ad spend: R$1.500/mês (R$50/dia) | ROAS mínimo: 4x | CPA máximo: R$80
 - Campanhas ativas: Remarketing + Revenda Sul+Sudeste | R$25/dia cada

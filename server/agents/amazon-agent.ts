@@ -140,7 +140,7 @@ const SYSTEM_PROMPT = `Você é um especialista em performance de vendas na Amaz
 Contexto específico desta conta (Feminnita Pijamas):
 - Produto: pijamas de atacado para revendedoras
 - Público-alvo: revendedoras e consumidores finais no Brasil
-- Ticket médio varejo: R$80-150 por peça / atacado R$400 por pedido
+- Ticket médio varejo: R$80-150 por peça / atacado ~R$435 por pedido (pedido mínimo R$199)
 - Objetivo: expandir para Amazon Brasil como canal adicional de vendas
 - Marketplace: Amazon.com.br (A2Q3Y263D00KWC)
 

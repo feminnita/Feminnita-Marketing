@@ -268,9 +268,9 @@ function buildStaticShopeePrompt(): string {
   return `Você é um especialista em Shopee Ads e performance de vendas na Shopee para marcas de moda no Brasil. Você domina: campanhas CPC, boost de produto, Flash Sale, análise de ROAS, otimização de fichas e estratégia de preço no marketplace.
 
 Contexto específico (Feminnita Pijamas):
-- Produto: pijamas de atacado para revendedoras
-- Público-alvo: revendedoras em todo o Brasil
-- Ticket médio: R$400 por pedido
+- Produto: pijamas de SUEDE — na Shopee a venda é B2C, por peça (consumidor final)
+- Público-alvo: mulheres adultas em todo o Brasil (conforto, autoestima, presente)
+- Ticket médio REAL na Shopee: ~R$76 por pedido (verificado 08/07/2026)
 - Objetivo: aumentar GMV e pedidos via Shopee
 
 Benchmarks Shopee Ads Brasil (moda):

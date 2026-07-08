@@ -352,7 +352,7 @@ async function executeSpecialistTool(
 
 const FEMINNITA_CONTEXT = `
 CONTEXTO FEMINNITA:
-- Pijamas atacado para revendedoras | Ticket médio pedido: R$400
+- Pijamas atacado para revendedoras | Ticket médio pedido: ~R$435
 - Vendas atuais: ~R$20.000/mês (eram R$78.000 antes — caiu por culpa de agência ruim)
 - Meta URGENTE: R$100.000/mês o mais rápido possível
 - Para R$100K = 250 pedidos/mês = ~8 pedidos/dia (atual: ~50/mês)
@@ -697,7 +697,7 @@ Você não sugere fazer tudo ao mesmo tempo. Você prioriza. Sempre.
 
 ═══ SITUAÇÃO ATUAL DA EMPRESA ═══
 - Meta: R$100K/mês
-- Ticket médio atual: ~R$400 por pedido de atacado
+- Ticket médio atual: ~R$435 por pedido de atacado
 - Ticket desejado: R$600–800
 - Canais ativos: Mercado Livre, Shopee, Instagram, Meta Ads, WhatsApp
 - Canais a ativar: Amazon, TikTok Shop
@@ -736,7 +736,7 @@ HVCO — entregar valor antes de pedir a venda (Sabri Suby):
 Quem recebe o lookbook antes tem 3x mais chances de fechar.
 
 ═══ FAIXAS DE QUANTIDADE COM DESCONTO PROGRESSIVO (Russell Brunson) ═══
-A revendedora monta o pedido do jeito que quiser — modelos e quantidade livres, sem pedido mínimo. A alavanca é o desconto progressivo por quantidade: quanto mais peças no pedido, menor o preço por peça.
+A revendedora monta o pedido do jeito que quiser — modelos e quantidades livres a partir do pedido mínimo de R$199 (compra com CPF ou CNPJ). A alavanca é o desconto progressivo por quantidade: quanto mais peças no pedido, menor o preço por peça.
 FAIXA 1 — ENTRADA: a partir de 6 peças — preço cheio por peça → objetivo: converter a primeira compra
 FAIXA 2 — INTERMEDIÁRIA: 12+ peças — preço por peça menor → volume e margem real
 FAIXA 3 — VOLUME: 24+ peças ou mix exclusivo — melhor preço por peça → revendedoras fiéis com volume comprovado
@@ -748,7 +748,7 @@ Regra de ouro: apresente sempre as faixas de quantidade, da maior para a menor. 
 1. NUNCA compete por preço mínimo — competir por custo é corrida ao fundo do poço
 2. COMUNIQUE MARGEM COM DADOS DUROS → "12 peças a R$[preço]/peça → revendedora vende a R$70 = lucro por peça = lucro total no pedido. Margem alta." Em B2B, argumento de lucro bate qualquer desconto emocional
 3. ÂNCORA DE PREÇO → sempre apresente a faixa de quantidade maior primeiro: 24+ peças → 12+ peças → 6+ peças
-4. DESCONTO PROGRESSIVO POR QUANTIDADE — nunca desconto simples: a partir de 6 peças preço cheio / 12+ peças preço por peça menor / 24+ peças melhor preço por peça (a revendedora monta o pedido livre, sem pedido mínimo)
+4. DESCONTO PROGRESSIVO POR QUANTIDADE — nunca desconto simples: a partir de 6 peças preço cheio / 12+ peças preço por peça menor / 24+ peças melhor preço por peça (a revendedora monta o pedido que quiser a partir do mínimo de R$199, com CPF ou CNPJ)
 
 ═══ PLANO POR CANAL ═══
 
@@ -827,7 +827,7 @@ A partir de [X] peças o preço por peça sai por R$[preço] — dá R$[lucro] d
 Preparei um lookbook que você pode usar direto no seu WhatsApp e Instagram. Quer que eu te mande?"
 
 MENSAGEM 3 — Dia 5 (Oferta com âncora — faixas de quantidade):
-"[Nome], como funciona o preço por peça (você monta o pedido com os modelos que quiser, sem pedido mínimo):
+"[Nome], como funciona o preço por peça (você monta o pedido com os modelos que quiser, a partir do pedido mínimo de R$199 — compra com CPF ou CNPJ):
 24+ peças — R$[preço]/peça → melhor preço por peça ✅
 12+ peças — R$[preço]/peça → ótimo equilíbrio ✅ ← recomendado
 6+ peças — R$[preço]/peça → para começar
@@ -864,10 +864,10 @@ Perguntas para levantar o gatilho durante a conversa:
 2. "O que isso tá custando para você hoje — em dinheiro ou em clientes perdidos?"
 3. "O que acontece com o seu negócio se daqui a 3 meses você ainda não tiver um fornecedor fixo?"
 
-═══ UPSELL — AUMENTAR TICKET MÉDIO DE R$400 PARA R$600–800 ═══
-ESTRATÉGIA 1 — FAIXAS DE QUANTIDADE: apresentar sempre as faixas (6+, 12+, 24+); âncora na maior; math de margem — a revendedora monta o pedido livre, sem pedido mínimo
+═══ UPSELL — AUMENTAR TICKET MÉDIO DE R$435 PARA R$600–800 ═══
+ESTRATÉGIA 1 — FAIXAS DE QUANTIDADE: apresentar sempre as faixas (6+, 12+, 24+); âncora na maior; math de margem — a revendedora monta o pedido que quiser a partir do mínimo de R$199
 ESTRATÉGIA 2 — MAIS CATEGORIAS NO PEDIDO: "Leva pijama adulto + infantil no mesmo pedido — frete único, mais peças puxam o preço por peça pra baixo"
-ESTRATÉGIA 3 — FRETE GRÁTIS PROGRESSIVO: "Frete grátis a partir de R$600" → quem está em R$400 adiciona mais peças só para não pagar frete
+ESTRATÉGIA 3 — FRETE GRÁTIS PROGRESSIVO: "Frete grátis a partir de R$600" → quem está em R$435 adiciona mais peças só para não pagar frete
 
 ═══ MATEMÁTICA DE CRESCIMENTO ═══
 LTV = Ticket Médio × Frequência de Compra × Tempo de Retenção

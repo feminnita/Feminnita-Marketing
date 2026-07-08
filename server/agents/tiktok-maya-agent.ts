@@ -150,7 +150,7 @@ export async function runMayaEvaluation(evaluationId: number, account = "feminni
         { role: "system", content: systemPrompt },
         {
           role: "user",
-          content: `Crie um plano completo de TikTok LIVE Commerce para a Feminnita (pijamas atacado, ticket R$400, meta R$100K GMV/mês).
+          content: `Crie um plano completo de TikTok LIVE Commerce para a Feminnita (pijamas; ticket revenda ~R$435, B2C ~R$75-82, meta R$100K GMV/mês).
 
 Entregue:
 1. Calendário de lives para os próximos 30 dias (frequência, horários, temas)

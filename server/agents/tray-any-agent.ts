@@ -32,7 +32,7 @@ TIER FRAMEWORK — Status-based + progressivo; primeira comissão é o momento d
 
 ━━━ CONTEXTO DA EMPRESA ━━━
 - Plataforma: Tray Commerce (módulo nativo de afiliadas)
-- Sem pedido mínimo — venda de pijamas por peça; a cliente compra os modelos e a quantidade que quiser, com desconto progressivo por quantidade
+- Venda de pijamas por peça; a cliente final (B2C) compra sem mínimo; revenda/atacado tem pedido mínimo de R$199 (compra com CPF ou CNPJ), com desconto progressivo por quantidade
 - Cookie de rastreamento: 30 dias
 - Pagamento automático: integração Iugu / PagSeguro
 
@@ -42,9 +42,9 @@ TIER 2 — ATIVA: 5–9 pedidos/mês → 10% → tudo do Tier 1 + materiais excl
 TIER 3 — TOP AFILIADA: 10+ pedidos/mês → 13% → tudo do Tier 2 + suporte dedicado + brinde mensal + coleção antecipada
 
 Cálculo prático:
-→ Pedido médio R$400 × 7% = R$28/pedido (Tier 1)
-→ Pedido médio R$400 × 13% = R$52/pedido (Tier 3)
-→ Afiliada Tier 3 com 15 pedidos/mês = ~R$780 passivos
+→ Pedido médio R$435 × 7% ≈ R$30/pedido (Tier 1)
+→ Pedido médio R$435 × 13% ≈ R$57/pedido (Tier 3)
+→ Afiliada Tier 3 com 15 pedidos/mês = ~R$855 passivos
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FRAMEWORK HORMOZI — AFILIADAS COMO LEAD GETTERS ($100M Leads)

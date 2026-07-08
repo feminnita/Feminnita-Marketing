@@ -9,8 +9,8 @@ CONTEXTO DA CONTA — FEMINNITA (Conta A) — use SÓ dados da Feminnita aqui
 ═══════════════════════════════════════════════════════
 ⚠️ FNT Confecções é OUTRA empresa/conta. NUNCA misture dados da FNT nesta análise — aqui você cuida exclusivamente da Feminnita.
 - MARCA: Feminnita — moda íntima / dormir feminina. Categoria: PIJAMAS femininos (manga longa/curta, suede, canelado, estampado, linha Outono-Inverno) + lingerie/conforto. Sortimento amplo de estampas e modelagens, grade P/M/G/GG.
-- MODELO: B2C, consumidor final, venda por peça nos marketplaces e site próprio. VENDA É SÓ NO SITE E NOS MARKETPLACES — NÃO vendemos nem atendemos por WhatsApp. O cliente compra direto (não "entra em contato" pra comprar); todo anúncio leva ao site/marketplace, nunca a um WhatsApp.
-- PÚBLICO: mulheres adultas (~25–55), compram por conforto, autoestima e presente; sensíveis a preço e foto/estampa. Forte no Sul/Sudeste.
+- MODELO (corrigido pelo Chris 08/07/2026): dois públicos, condições diferentes, ambos comprando SÓ pelo site/marketplaces — B2C compra POR PEÇA sem mínimo; REVENDA/atacado tem pedido mínimo R$199 e compra com CPF ou CNPJ (nunca escrever "Sem CNPJ"). O preço do site JÁ É o preço de fábrica (mesma tabela). NÃO existe catálogo e NÃO vendemos por WhatsApp — WhatsApp é só canal de dúvida; todo anúncio leva ao site/marketplace.
+- PÚBLICO: mulheres adultas, compram por conforto, autoestima e presente; sensíveis a preço e foto/estampa. Targeting padrão de ads (Chris 08/07): Brasil inteiro, mulheres, 30–55.
 - NÚMEROS REAIS DA FEMINNITA (snapshot 12m, receita | ticket médio por canal):
   • Mercado Livre: R$ 1,64 mi | ticket ~R$ 80 | ~20,5 mil pedidos ← MAIOR canal
   • TikTok Shop:   R$ 344 mil | ~R$ 77
@@ -18,7 +18,7 @@ CONTEXTO DA CONTA — FEMINNITA (Conta A) — use SÓ dados da Feminnita aqui
   • Amazon:        R$ 91 mil  | ~R$ 58
   • Shein:         R$ 60 mil  | ~R$ 82
   • Tray (site):   R$ 41 mil  | ~R$ 179
-- IMPLICAÇÃO: ticket B2C real ~R$ 75–82 (NÃO R$ 400). No ML, ~R$ 80 fica EM CIMA do limite Clássico×Premium (≥R$79). Margem apertada (produto físico) → cada real de ads conta; subir ticket (mais peças no pedido via desconto progressivo por quantidade, sem pedido mínimo) é alavanca.
+- IMPLICAÇÃO: ticket B2C real ~R$ 75–82 (NÃO R$ 400); AOV da linha revenda/atacado ~R$ 435. No ML, ~R$ 80 fica EM CIMA do limite Clássico×Premium (≥R$79). Margem apertada (produto físico) → cada real de ads conta; subir ticket (mais peças no pedido via desconto progressivo por quantidade) é alavanca.
 - CONCORRÊNCIA: Lupo + marcas regionais + vendedores de pijama no ML/Shopee. Diferencial = variedade de estampas/modelagens + relacionamento (não competir só por preço).
 - META/DOR: faturamento caiu de ~R$78k → ~R$20k/mês após agência ruim; meta recuperar/escalar. Priorizar margem e giro (curva A), não queimar verba em cauda.
 `;

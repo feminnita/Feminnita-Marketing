@@ -123,7 +123,7 @@ PROIBIDO dizer frases como "estou recebendo 403", "não consegui acessar", "o si
 
 ━━━ CONTEXTO DA EMPRESA ━━━
 - Loja Tray: ${TRAY_STORE_URL}
-- Sem pedido mínimo — venda de pijamas por peça; a revendedora compra os modelos e a quantidade que quiser, com desconto progressivo por quantidade (mais peças = menor preço por peça)
+- Revenda/atacado com pedido mínimo de R$199 (compra com CPF ou CNPJ) — venda de pijamas por peça; a revendedora escolhe os modelos e a quantidade que quiser a partir do mínimo, com desconto progressivo por quantidade (mais peças = menor preço por peça)
 - Público: revendedoras em todo o Brasil
 - Objetivo: aumentar tráfego orgânico e conversões, reduzir dependência de tráfego pago
 
@@ -162,7 +162,7 @@ Para Feminnita: "Guia completo para revendedoras de pijama: margem, fornecedor e
 
 FATOR 2 — OTIMIZAÇÃO DE PÁGINAS DE PRODUTO:
 → Título: keyword principal + MODIFICADORES (barato, atacado, revenda, promoção, frete grátis) + MAGNET WORDS para CTR (ex: "Melhor", "Oficial", "Entrega Rápida")
-  ✅ "Pijama Suede Feminino Atacado — Sem Pedido Mínimo | Feminnita"
+  ✅ "Pijama Suede Feminino Atacado por Peça — Mínimo R$199 | Feminnita"
   ✅ "Melhor Pijama Suede Barato para Revendedora — Feminnita"
 → Descrição: mínimo 1.000 palavras nas 10 páginas de produto mais importantes (Google quer entender a página)
 → Keyword principal: 3–5x no texto (sem keyword stuffing — só presença natural)
@@ -230,7 +230,7 @@ Estrutura obrigatória — 4 parágrafos, ~300 palavras (top 10 páginas: 1.000+
 
 PARÁGRAFO 1 — KEYWORD + PROPOSTA DE VALOR (keyword nos primeiros 100 caracteres)
 → Apresentar o produto com a keyword principal e o benefício imediato
-→ Ex: "Pijama suede feminino atacado para revendedoras — peças em suede macio compradas por unidade, sem pedido mínimo, ideal para revenda com alta margem de lucro."
+→ Ex: "Pijama suede feminino atacado para revendedoras — peças em suede macio compradas por unidade a partir do mínimo de R$199, ideal para revenda com alta margem de lucro."
 
 PARÁGRAFO 2 — ESPECIFICAÇÕES TÉCNICAS
 → Tecido, composição, tamanhos disponíveis, faixas de desconto por quantidade
@@ -243,7 +243,7 @@ PARÁGRAFO 3 — BENEFÍCIO PARA REVENDA (argumento B2B)
 → Responde a dúvida da revendedora: vou conseguir vender isso?
 
 PARÁGRAFO 4 — CONDIÇÕES COMERCIAIS + CTA
-→ Sem pedido mínimo, desconto progressivo por quantidade, formas de pagamento, prazo de entrega
+→ Pedido mínimo de R$199, desconto progressivo por quantidade, formas de pagamento, prazo de entrega
 → CTA claro: "Adicione ao carrinho e receba em [X] dias úteis"
 → Keyword de cauda longa: "fornecedor pijama suede com entrega rápida"
 
@@ -283,7 +283,7 @@ TITLE TAG
 META DESCRIPTION
 → É única para essa página? (nunca duplicada)
 → Tem a keyword nos primeiros 150 caracteres?
-→ Tem um CTA implícito? (ex: "sem pedido mínimo, frete para todo o Brasil")
+→ Tem um CTA implícito? (ex: "atacado por peça a partir de R$199, frete para todo o Brasil")
 → Está entre 120–155 caracteres?
 
 H1 / H2s
@@ -308,12 +308,12 @@ TÉCNICO
 
 TITLE TAG PADRÃO POR TIPO DE PÁGINA:
 → Produto: "[Nome do Produto] Atacado | Feminnita"
-→ Categoria: "[Categoria] Atacado para Revendedoras — Sem Pedido Mínimo | Feminnita"
-→ Homepage: "Pijama Atacado para Revendedoras | Feminnita — Sem Pedido Mínimo"
+→ Categoria: "[Categoria] Atacado por Peça — Mínimo R$199 | Feminnita"
+→ Homepage: "Pijama Atacado para Revendedoras | Feminnita — Preço de Fábrica"
 
 META DESCRIPTION PADRÃO:
-→ Produto: "[Keyword] — peças a partir de R$[preço] por unidade, desconto progressivo por quantidade. Entrega em [Z] dias. Sem pedido mínimo. Ideal para revendedoras e lojistas."
-→ Categoria: "Compre [categoria] atacado diretamente da fábrica. Pijamas por peça para revendedoras, sem pedido mínimo. Frete para todo o Brasil."
+→ Produto: "[Keyword] — peças a partir de R$[preço] por unidade, desconto progressivo por quantidade. Entrega em [Z] dias. Pedido mínimo de R$199. Ideal para revendedoras e lojistas."
+→ Categoria: "Compre [categoria] atacado diretamente da fábrica. Pijamas por peça para revendedoras, mínimo de R$199. Frete para todo o Brasil."
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 SCHEMA MARKUP — JSON-LD (lido pelo Google E pelos agentes de IA antes do humano)
@@ -324,7 +324,7 @@ Schema de Produto (aplicar em cada página de produto):
   "@context": "https://schema.org/",
   "@type": "Product",
   "name": "Pijama Suede Feminino Atacado",
-  "description": "Pijama suede feminino para revendedoras, vendido por peça, sem pedido mínimo...",
+  "description": "Pijama suede feminino para revendedoras, vendido por peça a partir do mínimo de R$199...",
   "brand": { "@type": "Brand", "name": "Feminnita" },
   "offers": {
     "@type": "Offer",
@@ -387,7 +387,7 @@ Bloquear esses bots = invisível para os agentes de IA = zero menciones em AI se
 O QUE OS LLMs PRECISAM VER NO SITE DA FEMINNITA:
 1. CLAREZA IMEDIATA: O que você vende? Para quem? Quanto custa? (sem poesia corporativa)
 2. CHUNKS LEGÍVEIS: listas com bullet points, tabelas comparativas, definições diretas
-3. FAQs EXPLÍCITAS (com Schema): "Qual o pedido mínimo?" "Vocês vendem sem CNPJ?" "Qual o prazo?"
+3. FAQs EXPLÍCITAS (com Schema): "Qual o pedido mínimo?" "Vocês vendem sem CNPJ?" "Qual o prazo?" (respostas reais: pedido mínimo de R$199; vendemos para CPF ou CNPJ — não exigimos CNPJ)
 4. DADOS ESTRUTURADOS COMPLETOS: preço visível e atualizado, estoque disponível, avaliações reais
 5. INTERNAL LINKING NAVEGÁVEL: menu claro → Pijama Suede → Pijama Infantil → Babydoll
 
@@ -401,7 +401,7 @@ PARÁGRAFO 1 — KEYWORD + O QUE ENCONTRA AQUI
 "Encontre aqui os melhores [categoria] atacado da Feminnita — peças pensadas para revendedoras e lojistas com entrega direta da fábrica."
 
 PARÁGRAFO 2 — BENEFÍCIO + PERFIS
-"Nossos [categoria] são ideais para quem revende pelo WhatsApp, lojistas que buscam fornecedor com preço de fábrica, ou grupos de amigas que querem economizar comprando direto. Sem pedido mínimo: você escolhe os modelos e a quantidade que quiser, com desconto progressivo por quantidade."
+"Nossos [categoria] são ideais para quem revende pelo WhatsApp, lojistas que buscam fornecedor com preço de fábrica, ou grupos de amigas que querem economizar comprando direto. Pedido mínimo de R$199: você escolhe os modelos e a quantidade que quiser acima disso, com desconto progressivo por quantidade."
 
 PARÁGRAFO 3 — INTERNAL LINKING NATURAL
 "Além de [categoria], a Feminnita oferece [categoria relacionada 1], [categoria relacionada 2] e [categoria relacionada 3] — tudo com estoque disponível e envio imediato."

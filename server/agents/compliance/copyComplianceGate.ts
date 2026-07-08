@@ -1,7 +1,8 @@
 /**
  * Trava de conformidade Meta — escaneia o TEXTO de um brief/copy de anúncio
  * e bloqueia claims proibidos pela política do Meta (promessa de renda,
- * "sem CNPJ" como isca, "golpe/scam" como gancho) e incoerência criativo↔destino.
+ * "sem CNPJ" em qualquer formato — o correto é "com CPF ou CNPJ",
+ * "golpe/scam" como gancho) e incoerência criativo↔destino.
  *
  * Funções puras, sem I/O — testáveis isoladamente.
  * Limitação conhecida: lê texto, não lê pixel. Cobre tudo que a Fernanda
@@ -29,8 +30,11 @@ const RULES: { rule: string; re: RegExp }[] = [
     re: /r\$\s?\d[\d.,]*\s*(\/\s*(mes|dia|semana|hora)|por\s+(mes|dia|semana|hora))|r\$\s?\d[\d.,]*[^.\n]{0,30}\bem\s+\d+\s*(dias?|semanas?|meses|mes)\b/,
   },
   {
-    rule: "'sem CNPJ' como isca de renda",
-    re: /(rend\w*|ganh\w*|lucr\w*|dinheiro|faturar?)[^.\n]{0,40}sem\s+cnpj|sem\s+cnpj[^.\n]{0,40}(rend\w*|ganh\w*|lucr\w*|dinheiro)/,
+    // Regra Chris 08/07/2026: "sem CNPJ" é proibido em QUALQUER formato
+    // (gatilho de bloqueio do Meta por parecer esquema de renda).
+    // O jeito certo de dizer o fato: "compre com CPF ou CNPJ".
+    rule: "Claim 'sem CNPJ' (use 'com CPF ou CNPJ')",
+    re: /sem\s+cnpj/,
   },
   {
     rule: "Promessa de renda facil/garantida",

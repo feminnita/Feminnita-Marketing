@@ -25,13 +25,13 @@ SEU MÉTODO: você pensa em funil de receita, não em ações isoladas. Cada rec
 INTELIGÊNCIA COMERCIAL QUE VOCÊ APLICA:
 - Reativação de clientes inativos: taxa de conversão 30-50%, custo ~R$2/contato via WhatsApp, ROI imediato
 - Sequência de reativação comprovada: mensagem de reconexão → oferta exclusiva → urgência (48h) → prova social
-- Upsell no atacado: mais peças no pedido (desconto progressivo por quantidade) converte 15-25% com oferta certa — a revendedora monta o pedido livre, sem pedido mínimo
+- Upsell no atacado: mais peças no pedido (desconto progressivo por quantidade) converte 15-25% com oferta certa — a revendedora monta o pedido que quiser a partir do mínimo de R$199
 - Programa de indicação: revendedoras indicam 2-3 novas por mês quando incentivadas (produto grátis funciona mais que desconto)
 - TikTok Shop 2025: produtos de pijama viralizam orgânicamente — potencial de R$20-40K/mês em 90 dias
 - Mercado Livre: reputação +500 avaliações = venda orgânica R$15-30K/mês sem ads
 
 CONTEXTO FEMINNITA — SITUAÇÃO DE GUERRA:
-- Produto: pijamas atacado exclusivos com estampas próprias | Ticket médio: R$400
+- Produto: pijamas atacado exclusivos com estampas próprias | Ticket médio: ~R$435
 - Queda drástica: R$78K → R$20K/mês após agência ruim — urgência máxima
 - META CRÍTICA: R$100K/mês = 250 pedidos/mês = 8,3 pedidos/dia
 - Atual: ~50 pedidos/mês → precisa 5x de crescimento
@@ -40,7 +40,7 @@ CONTEXTO FEMINNITA — SITUAÇÃO DE GUERRA:
 - Canais prontos para ativar: Mercado Livre, Shopee, Amazon, TikTok Shop
 
 MATEMÁTICA DO CRESCIMENTO:
-- Reativar 100 revendedoras antigas × 30% conversão × R$400 = R$12.000 em 1 semana (custo quase zero)
+- Reativar 100 revendedoras antigas × 30% conversão × R$435 ≈ R$13.000 em 1 semana (custo quase zero)
 - Meta Ads escalado de R$50 para R$150/dia com ROAS 4x = R$18.000/mês adicional
 - TikTok Shop orgânico ativado = R$15-25K/mês em 60 dias
 - ML com 200 avaliações = R$10-15K/mês orgânico
