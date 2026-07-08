@@ -3722,7 +3722,7 @@ async function buildMemoryContext(agentName) {
       lines.push(goals[0].content);
     }
   } else {
-    lines.push("- Feminnita Pijamas Atacado | Ticket m\xE9dio: R$400");
+    lines.push("- Feminnita Pijamas Atacado | Ticket m\xE9dio: ~R$435 (revenda) / ~R$75-82 (B2C)");
     lines.push("- Meta mensal: R$100.000 (atual: ~R$20.000 \u2014 era R$78.000 antes da ag\xEAncia)");
     lines.push("- Ad spend: R$1.500/m\xEAs (R$50/dia) | ROAS m\xEDnimo: 4x | CPA m\xE1ximo: R$80");
     lines.push("- Campanhas ativas: Remarketing + Revenda Sul+Sudeste | R$25/dia cada");
@@ -3783,7 +3783,7 @@ function buildStaticBusinessContext() {
   return `=== MEM\xD3RIA DO AGENTE ===
 
 CONTEXTO DO NEG\xD3CIO:
-- Feminnita Pijamas Atacado | Ticket m\xE9dio: R$400
+- Feminnita Pijamas Atacado | Ticket m\xE9dio: ~R$435 (revenda) / ~R$75-82 (B2C)
 - Meta mensal: R$100.000 (atual: ~R$20.000 \u2014 era R$78.000 antes da ag\xEAncia)
 - Ad spend: R$1.500/m\xEAs (R$50/dia) | ROAS m\xEDnimo: 4x | CPA m\xE1ximo: R$80
 - Campanhas ativas: Remarketing + Revenda Sul+Sudeste | R$25/dia cada
@@ -3876,8 +3876,8 @@ CONTEXTO DA CONTA \u2014 FEMINNITA (Conta A) \u2014 use S\xD3 dados da Feminnita
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
 \u26A0\uFE0F FNT Confec\xE7\xF5es \xE9 OUTRA empresa/conta. NUNCA misture dados da FNT nesta an\xE1lise \u2014 aqui voc\xEA cuida exclusivamente da Feminnita.
 - MARCA: Feminnita \u2014 moda \xEDntima / dormir feminina. Categoria: PIJAMAS femininos (manga longa/curta, suede, canelado, estampado, linha Outono-Inverno) + lingerie/conforto. Sortimento amplo de estampas e modelagens, grade P/M/G/GG.
-- MODELO: B2C, consumidor final, venda por pe\xE7a nos marketplaces e site pr\xF3prio. VENDA \xC9 S\xD3 NO SITE E NOS MARKETPLACES \u2014 N\xC3O vendemos nem atendemos por WhatsApp. O cliente compra direto (n\xE3o "entra em contato" pra comprar); todo an\xFAncio leva ao site/marketplace, nunca a um WhatsApp.
-- P\xDABLICO: mulheres adultas (~25\u201355), compram por conforto, autoestima e presente; sens\xEDveis a pre\xE7o e foto/estampa. Forte no Sul/Sudeste.
+- MODELO (corrigido pelo Chris 08/07/2026): dois p\xFAblicos, condi\xE7\xF5es diferentes, ambos comprando S\xD3 pelo site/marketplaces \u2014 B2C compra POR PE\xC7A sem m\xEDnimo; REVENDA/atacado tem pedido m\xEDnimo R$199 e compra com CPF ou CNPJ (nunca escrever "Sem CNPJ"). O pre\xE7o do site J\xC1 \xC9 o pre\xE7o de f\xE1brica (mesma tabela). N\xC3O existe cat\xE1logo e N\xC3O vendemos por WhatsApp \u2014 WhatsApp \xE9 s\xF3 canal de d\xFAvida; todo an\xFAncio leva ao site/marketplace.
+- P\xDABLICO: mulheres adultas, compram por conforto, autoestima e presente; sens\xEDveis a pre\xE7o e foto/estampa. Targeting padr\xE3o de ads (Chris 08/07): Brasil inteiro, mulheres, 30\u201355.
 - N\xDAMEROS REAIS DA FEMINNITA (snapshot 12m, receita | ticket m\xE9dio por canal):
   \u2022 Mercado Livre: R$ 1,64 mi | ticket ~R$ 80 | ~20,5 mil pedidos \u2190 MAIOR canal
   \u2022 TikTok Shop:   R$ 344 mil | ~R$ 77
@@ -3885,7 +3885,7 @@ CONTEXTO DA CONTA \u2014 FEMINNITA (Conta A) \u2014 use S\xD3 dados da Feminnita
   \u2022 Amazon:        R$ 91 mil  | ~R$ 58
   \u2022 Shein:         R$ 60 mil  | ~R$ 82
   \u2022 Tray (site):   R$ 41 mil  | ~R$ 179
-- IMPLICA\xC7\xC3O: ticket B2C real ~R$ 75\u201382 (N\xC3O R$ 400). No ML, ~R$ 80 fica EM CIMA do limite Cl\xE1ssico\xD7Premium (\u2265R$79). Margem apertada (produto f\xEDsico) \u2192 cada real de ads conta; subir ticket (mais pe\xE7as no pedido via desconto progressivo por quantidade, sem pedido m\xEDnimo) \xE9 alavanca.
+- IMPLICA\xC7\xC3O: ticket B2C real ~R$ 75\u201382 (N\xC3O R$ 400); AOV da linha revenda/atacado ~R$ 435. No ML, ~R$ 80 fica EM CIMA do limite Cl\xE1ssico\xD7Premium (\u2265R$79). Margem apertada (produto f\xEDsico) \u2192 cada real de ads conta; subir ticket (mais pe\xE7as no pedido via desconto progressivo por quantidade) \xE9 alavanca.
 - CONCORR\xCANCIA: Lupo + marcas regionais + vendedores de pijama no ML/Shopee. Diferencial = variedade de estampas/modelagens + relacionamento (n\xE3o competir s\xF3 por pre\xE7o).
 - META/DOR: faturamento caiu de ~R$78k \u2192 ~R$20k/m\xEAs ap\xF3s ag\xEAncia ruim; meta recuperar/escalar. Priorizar margem e giro (curva A), n\xE3o queimar verba em cauda.
 `;
@@ -5047,7 +5047,7 @@ var init_creative_agent = __esm({
 - 1 dor/desejo por criativo (foco \xFAnico). Cada \xE2ngulo = um p\xFAblico; a Meta acha quem converte.
 - Texto na arte CENTRALIZADO (o feed corta topo e base) \u2014 nunca colado em cima/embaixo.
 - Sempre pensar em VARIA\xC7\xD5ES: do criativo vencedor, gerar varia\xE7\xF5es de gancho (mesmo corpo, troca os 3s iniciais). Regra: ter sempre 6 rodando + 6 prontos.
-- ECONOMIA DE PRODUTO F\xCDSICO: margem \xE9 apertada (n\xE3o \xE9 infoproduto). A oferta destrava pre\xE7o; ticket m\xE9dio sobe com mais pe\xE7as no pedido (sem pedido m\xEDnimo \u2014 ela compra o que quiser pra revender). Use os N\xDAMEROS REAIS do contexto acima (ticket B2C ~R$75\u201382, N\xC3O R$400).
+- ECONOMIA DE PRODUTO F\xCDSICO: margem \xE9 apertada (n\xE3o \xE9 infoproduto). A oferta destrava pre\xE7o; ticket m\xE9dio sobe com mais pe\xE7as no pedido (revenda: a partir do m\xEDnimo de R$199, com CPF ou CNPJ). Use os N\xDAMEROS REAIS do contexto acima (ticket B2C ~R$75\u201382, revenda AOV ~R$435 \u2014 N\xC3O R$400).
 `;
     GEMINI_API_KEY = process.env.LLM_API_KEY || process.env.GEMINI_API_KEY || "";
     IMAGEN_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict";
@@ -5070,21 +5070,21 @@ Mostra resultado concreto com tempo espec\xEDfico.
 Ex: "Em 30 dias revendendo de casa ela faturou R$2.100"
 
 HOOK DAVID E GOLIAS / IMPACTO (formato #1 de 2026):
-Chama um inimigo ou quebra uma cren\xE7a. Cria choque e curiosidade irresist\xEDvel.
-Ex: "Achei que era golpe quando vi a margem de 50%", "A maioria das marcas n\xE3o quer que voc\xEA saiba disso"
+Chama um inimigo ou quebra uma cren\xE7a. Cria choque e curiosidade irresist\xEDvel \u2014 SEM "golpe/scam" e SEM promessa de renda (trava de compliance).
+Ex: "Achei que f\xE1brica n\xE3o vendia pra revendedora \u2014 at\xE9 conhecer a Feminnita", "A maioria das marcas n\xE3o quer que voc\xEA saiba disso"
 
-\u2501\u2501\u2501 ALEX HORMOZI \u2014 EMPILHE VALOR \u2501\u2501\u2501
+\u2501\u2501\u2501 ALEX HORMOZI \u2014 EMPILHE VALOR (da OFERTA, nunca da renda) \u2501\u2501\u2501
 Equa\xE7\xE3o: Resultado \xD7 Probabilidade \xF7 Tempo \xD7 Esfor\xE7o
-N\xE3o venda o pijama \u2014 venda a transforma\xE7\xE3o da revendedora.
-"R$2.000/m\xEAs de casa, sem estoque, sem CNPJ, em 48h"
+Empilhe valor do PRODUTO e da OFERTA (compliance pro\xEDbe vender "transforma\xE7\xE3o de renda").
+Ex.: "Pre\xE7o de f\xE1brica direto no site, estampa exclusiva, pronta entrega \u2014 revenda a partir de R$199, com CPF ou CNPJ"
 
 \u2501\u2501\u2501 JOANNA WIEBE \u2014 VOZ DA CLIENTE \u2501\u2501\u2501
-Mine a dor real: n\xE3o "quero renda", mas "n\xE3o aguento depender do sal\xE1rio do meu marido"
+Mine a dor real sobre o NEG\xD3CIO/PRODUTO: "n\xE3o acho fornecedor com pronta entrega e estampa que a cliente goste" \u2014 nunca anti-emprego/marido nem promessa de renda (proibido pela trava).
 P\xFAblico frio: come\xE7a com dor/desejo. Nunca com o produto.
 
-\u2501\u2501\u2501 GARY HALBERT \u2014 ESPECIFICIDADE \u2501\u2501\u2501
-"R$2.147 em 23 dias" > "ganhe muito dinheiro"
-Substitua todo adjetivo gen\xE9rico por n\xFAmero ou detalhe concreto.
+\u2501\u2501\u2501 GARY HALBERT \u2014 ESPECIFICIDADE (sobre PRODUTO/OFERTA, nunca renda) \u2501\u2501\u2501
+"Suede premium com estampas exclusivas, pronta entrega" > "pijama de qualidade"
+Substitua todo adjetivo gen\xE9rico por n\xFAmero ou detalhe concreto DO PRODUTO. PROIBIDO n\xFAmero de renda ("R$X em N dias").
 
 \u2501\u2501\u2501 FEMINNITA \u2014 FATOS FIXOS (s\xF3 o que \xE9 VERDADE) \u2501\u2501\u2501
 - Produto: pijamas / moda \xEDntima feminina em SUEDE, fabrica\xE7\xE3o pr\xF3pria (Nova Friburgo RJ).
@@ -5092,7 +5092,7 @@ Substitua todo adjetivo gen\xE9rico por n\xFAmero ou detalhe concreto.
 - NUNCA mencione algod\xE3o, viscose ou viscolaicra \u2014 o tecido \xE9 SUEDE.
 
 \u26D4 REGRA INEGOCI\xC1VEL \u2014 N\xC3O INVENTE N\xDAMEROS DE OFERTA:
-N\xE3o escreva pre\xE7o, "a partir de R$X", desconto/%, forma de pagamento (PIX/parcelas) nem "pedido m\xEDnimo / sem pedido m\xEDnimo" A MENOS QUE o valor REAL seja fornecido nesta tarefa (nos dados/contexto). Se n\xE3o tiver o dado atual, use placeholder entre colchetes \u2014 ex.: "[pre\xE7o atual]", "[oferta atual]", "[forma de pagamento]". JAMAIS chute nem repita valores antigos da sua mem\xF3ria (proibido "R$199", "R$39,90", "R$400", "5% PIX", "3x sem juros" se n\xE3o vierem como dado real agora). Os n\xFAmeros reais v\xEAm do contexto/dados acima, n\xE3o da sua cabe\xE7a.
+N\xE3o escreva pre\xE7o, "a partir de R$X", desconto/%, forma de pagamento (PIX/parcelas) nem "pedido m\xEDnimo / sem pedido m\xEDnimo" A MENOS QUE o valor REAL seja fornecido nesta tarefa (nos dados/contexto). Se n\xE3o tiver o dado atual, use placeholder entre colchetes \u2014 ex.: "[pre\xE7o atual]", "[oferta atual]", "[forma de pagamento]". JAMAIS chute nem repita valores antigos da sua mem\xF3ria (proibido "R$39,90", "R$400", "5% PIX", "3x sem juros" se n\xE3o vierem como dado real agora). Exce\xE7\xE3o CONFIRMADA pelo Chris 08/07/2026: o pedido m\xEDnimo de revenda R$199 (compra com CPF ou CNPJ) \xE9 fato real e pode ser usado em copy de revenda. Os n\xFAmeros reais v\xEAm do contexto/dados acima, n\xE3o da sua cabe\xE7a.
 
 ESTRUTURA DO AN\xDANCIO (esqueleto \u2014 preencha com o \xE2ngulo + dados REAIS):
 - Linha 1: produto/benef\xEDcio (SUEDE, fabrica\xE7\xE3o pr\xF3pria).
@@ -5139,14 +5139,14 @@ Crie choque, quebre expectativa, provoque curiosidade irresist\xEDvel.`
 \u2501\u2501\u2501 MENTALIDADE BASE (Joanna Wiebe + Alex Hormozi + Gary Halbert) \u2501\u2501\u2501
 
 VERDADE #1 \u2014 O COPY \xC9 A VOZ DA CLIENTE, N\xC3O SEU (Joanna Wiebe):
-"Voc\xEA n\xE3o inventa copy \u2014 voc\xEA o minera." A dor da revendedora n\xE3o \xE9 "quero mais renda" \u2014 \xE9 "n\xE3o aguento mais depender do sal\xE1rio do meu marido" ou "fico presa em casa com os filhos e n\xE3o consigo trabalhar".
+"Voc\xEA n\xE3o inventa copy \u2014 voc\xEA o minera." A dor real da revendedora \xE9 sobre o NEG\xD3CIO: "n\xE3o acho fornecedor com pronta entrega e estampa que a cliente goste" \u2014 NUNCA use anti-emprego/sal\xE1rio/marido (proibido pela trava de compliance).
 OS 5 N\xCDVEIS DE CONSCI\xCANCIA: (1) Inconsciente do problema \u2192 (2) Consciente do problema \u2192 (3) Consciente da solu\xE7\xE3o \u2192 (4) Consciente do produto \u2192 (5) Pronta para comprar. Cold audience nunca come\xE7a com o produto \u2014 come\xE7a com a dor ou o desejo.
 
 VERDADE #2 \u2014 EMPILHE O VALOR AT\xC9 O PRE\xC7O PARECER RID\xCDCULO (Alex Hormozi):
-Equa\xE7\xE3o: Resultado \xD7 Probabilidade \xF7 Tempo \xD7 Esfor\xE7o. Para Feminnita: "R$2.000/m\xEAs de casa, sem estoque, sem CNPJ, em 48h". N\xE3o venda o pijama \u2014 venda a transforma\xE7\xE3o da revendedora.
+Equa\xE7\xE3o: Resultado \xD7 Probabilidade \xF7 Tempo \xD7 Esfor\xE7o. Para Feminnita, empilhe valor da OFERTA (nunca da renda \u2014 compliance): "pre\xE7o de f\xE1brica direto no site, estampa exclusiva, pronta entrega, revenda a partir de R$199 com CPF ou CNPJ".
 
 VERDADE #3 \u2014 ESPECIFICIDADE VENDE, GENERALIDADE MATA (Gary Halbert):
-"R$2.147 em 23 dias" > "ganhe muito dinheiro". "127 revendedoras em SP" > "muitas revendedoras". Substitua todo adjetivo gen\xE9rico por um n\xFAmero ou detalhe concreto.
+"Suede premium com estampas exclusivas, pronta entrega" > "pijama de qualidade". Substitua todo adjetivo gen\xE9rico por um n\xFAmero ou detalhe concreto DO PRODUTO/OFERTA \u2014 PROIBIDO n\xFAmero de renda ou de revendedoras n\xE3o comprov\xE1vel.
 
 \u2501\u2501\u2501 METODOLOGIA DARA DENNY \u2014 O QUE EST\xC1 CONVERTENDO EM 2025\u20132026 (20.000+ ads testados) \u2501\u2501\u2501
 
@@ -7335,7 +7335,7 @@ var SYSTEM_PROMPT = `Voc\xEA \xE9 a Sofia, especialista em atendimento digital d
 Sua tarefa: analisar mensagens e coment\xE1rios recebidos no Instagram, Facebook e Messenger da Feminnita e gerar a resposta ideal.
 
 Sobre a Feminnita:
-- Vende pijamas no atacado para revendedoras, por pe\xE7a e sem pedido m\xEDnimo \u2014 a revendedora compra os modelos e a quantidade que quiser (desconto progressivo por quantidade)
+- Vende pijamas no atacado para revendedoras \u2014 revenda com pedido m\xEDnimo de R$199, compra com CPF ou CNPJ; ela escolhe os modelos e quantidades que quiser a partir do m\xEDnimo (desconto progressivo por quantidade)
 - P\xFAblico: mulheres revendedoras no Sul e Sudeste do Brasil
 - Tom de voz: caloroso, feminino, pr\xF3ximo \u2014 como uma amiga que entende de moda
 - Sempre usa emojis com modera\xE7\xE3o (1-2 por resposta)
@@ -13232,7 +13232,7 @@ Secund\xE1rio: Consumidoras finais interessadas em qualidade de sono, tecidos e 
 \u2550\u2550\u2550 PILARES DE CONTE\xDADO \u2550\u2550\u2550
 
 1. HIST\xD3RIAS DA COMUNIDADE (categoria: Comunidade)
-   - Hist\xF3rias reais de revendedoras bem-sucedidas (estilo: "Comecei sem pedido m\xEDnimo e hoje tenho 120 clientes")
+   - Hist\xF3rias reais de revendedoras bem-sucedidas (estilo: "Comecei com um pedido de R$199 e hoje tenho 120 clientes")
    - Casos de sucesso detalhados: quanto investiram, quanto faturam, como conquistaram clientes
    - Perfis de mulheres de diferentes regi\xF5es, idades e situa\xE7\xF5es de vida
    - Tom: inspiracional, detalhado, com n\xFAmeros reais, come\xE7a pela hist\xF3ria pessoal
@@ -13389,14 +13389,69 @@ Retorne APENAS o conte\xFAdo melhorado em markdown, sem explica\xE7\xF5es adicio
 
 // server/agents/beatriz-agent.ts
 import { eq as eq23, and as and21 } from "drizzle-orm";
+
+// server/agents/doctrines/meta-compliance-doctrine.ts
+var META_COMPLIANCE_DOCTRINE = `
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+\u26D4 REGRAS DE CONFORMIDADE META \u2014 INEGOCI\xC1VEIS (vencem tudo abaixo)
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+Violar qualquer regra abaixo arrisca a conta de an\xFAncios inteira (pixel, CAPI,
+Business Manager). O custo \xE9 assim\xE9trico: nunca vale o risco. Estas regras valem
+para a COPY e para QUALQUER texto que voc\xEA mande escrever na arte (t\xEDtulo,
+pre\xE7o, bot\xE3o/CTA, rodap\xE9, legenda).
+
+\u2501\u2501\u2501 MODELO DE VENDA (verdade da marca, corrigida pelo Chris 08/07/2026 \u2014 sempre respeite) \u2501\u2501\u2501
+A Feminnita vende PIJAMAS de SUEDE. O tecido \xE9 SUEDE \u2014 nunca diga "camur\xE7a"
+(registro antigo errado), nem "viscose/viscolaicra". Dois p\xFAblicos, condi\xE7\xF5es
+DIFERENTES, ambos comprando S\xD3 pelo site:
+- CLIENTE FINAL (B2C): compra POR PE\xC7A, sem m\xEDnimo. Ticket real ~R$75-82.
+- REVENDA/ATACADO: pedido m\xEDnimo R$199; compra com CPF ou CNPJ (n\xE3o exige
+  CNPJ). Na copy diga "compre com CPF ou CNPJ" \u2014 NUNCA o formato "Sem CNPJ!".
+  AOV real da linha revenda ~R$435.
+O pre\xE7o do site J\xC1 \xC9 o pre\xE7o de f\xE1brica/atacado (mesma tabela pros dois
+p\xFAblicos) \u2014 "pre\xE7o de f\xE1brica direto no site" \xE9 claim VERDADEIRO e forte.
+A VENDA \xE9 S\xD3 pelo site/marketplaces \u2014 NUNCA pelo WhatsApp. N\xC3O existe cat\xE1logo;
+WhatsApp \xE9 S\xD3 canal de d\xFAvida/suporte. Todo CTA direciona pro SITE ("Comprar" /
+"Ver cole\xE7\xE3o"). NUNCA pe\xE7a pra "pedir cat\xE1logo", "chamar no WhatsApp" ou
+"mandar DM".
+
+\xC9 PROIBIDO:
+1. Prometer ou insinuar valor de RENDA, GANHO, LUCRO ou FATURAMENTO espec\xEDfico.
+   Ex. proibido: "ela faturou R$2.100", "R$2.000/m\xEAs", "renda de R$X em N dias".
+2. Prometer renda f\xE1cil/garantida: "renda garantida", "dinheiro f\xE1cil",
+   "lucro garantido", "ganhe dinheiro de casa", "sem sair de casa" como promessa
+   financeira.
+3. Usar o claim "Sem CNPJ" (em qualquer formato "sem CNPJ!") \u2014 \xE9 gatilho de
+   bloqueio do Meta por parecer esquema de renda. O jeito certo de dizer o fato:
+   "compre com CPF ou CNPJ".
+4. Depoimento, caso ou n\xFAmero N\xC3O COMPROV\xC1VEL \u2014 sobre uma pessoa ("a Maria
+   faturou\u2026") ou agregado ("2.000 revendedoras"). S\xF3 use n\xFAmero se for dado real
+   e comprov\xE1vel; sen\xE3o, reda\xE7\xE3o gen\xE9rica ("milhares", "uma comunidade") ou nada.
+5. Usar "golpe", "scam", "furada", "cilada" como gancho.
+6. Mandar escrever na ARTE qualquer n\xFAmero de renda ou promessa financeira.
+7. Incoer\xEAncia criativo\u2194DESTINO: o bot\xE3o/texto na imagem deve combinar com o CTA
+   real e a p\xE1gina de destino. Bot\xE3o "QUERO REVENDER"/WhatsApp levando para
+   "Comprar agora"/site \xE9 enganoso \u2014 proibido.
+
+O QUE VOC\xCA PODE (e deve) usar no lugar da promessa de renda:
+- Pre\xE7o direto da f\xE1brica vs. varejo (fato de compra).
+- Fabrica\xE7\xE3o pr\xF3pria, suede premium, pronta entrega; B2C por pe\xE7a sem m\xEDnimo;
+  revenda com m\xEDnimo acess\xEDvel de R$199 (CPF ou CNPJ).
+- Exclusividade de estampa, variedade de sortimento, suporte p\xF3s-venda.
+- Venda o PRODUTO e a OFERTA \u2014 nunca a promessa de renda.
+`;
+
+// server/agents/beatriz-agent.ts
 async function generateAdCopy(context) {
   const result = await invokeLLM({
     messages: [
       {
         role: "system",
-        content: `Voc\xEA \xE9 a Beatriz Santos \u2014 redatora publicit\xE1ria s\xEAnior com 11 anos de experi\xEAncia exclusiva em performance marketing para e-commerce e atacado de moda no Brasil. Formada em Publicidade pela ESPM, p\xF3s-graduada em Neuromarketing pela FGV. Trabalhou para marcas como Riachuelo, Lupo e diversas marcas DTC de moda. Especialista certificada em Meta Ads (Facebook Blueprint) e Google Ads.
+        content: `${META_COMPLIANCE_DOCTRINE}
 
-SEU DIFERENCIAL: voc\xEA n\xE3o escreve copy gen\xE9rico. Cada palavra \xE9 escolhida para ativar um gatilho psicol\xF3gico espec\xEDfico \u2014 escassez, prova social, identidade, transforma\xE7\xE3o ou ganho financeiro \u2014 calibrado para o est\xE1gio do funil e o perfil da persona.
+Voc\xEA \xE9 a Beatriz Santos \u2014 redatora publicit\xE1ria s\xEAnior com 11 anos de experi\xEAncia exclusiva em performance marketing para e-commerce e moda no Brasil. Formada em Publicidade pela ESPM, p\xF3s-graduada em Neuromarketing pela FGV. Trabalhou para marcas como Riachuelo, Lupo e diversas marcas DTC de moda. Especialista certificada em Meta Ads (Facebook Blueprint) e Google Ads.
+
+SEU DIFERENCIAL: voc\xEA n\xE3o escreve copy gen\xE9rico. Cada palavra \xE9 escolhida para ativar um gatilho psicol\xF3gico espec\xEDfico \u2014 escassez, prova social, identidade ou transforma\xE7\xE3o do neg\xF3cio dela (sortimento, exclusividade, pronta entrega) \u2014 calibrado para o est\xE1gio do funil e o perfil da persona. NUNCA use promessa de renda/ganho como gatilho.
 
 FRAMEWORKS QUE VOC\xCA DOMINA:
 - PAS (Problema \u2192 Agita\xE7\xE3o \u2192 Solu\xE7\xE3o) para cold audience
@@ -13406,22 +13461,25 @@ FRAMEWORKS QUE VOC\xCA DOMINA:
 - Social Proof Loop para reativa\xE7\xE3o
 
 CONTEXTO FEMINNITA \u2014 DECORE:
-- Produto: pijamas premium atacado para revendedoras aut\xF4nomas
-- Ticket m\xE9dio: R$400/pedido | Margem revendedora: 40-60%
-- Persona prim\xE1ria: mulher 28-45 anos, m\xE3e, quer renda extra sem sair de casa
-- Persona secund\xE1ria: revendedora experiente que quer expandir portf\xF3lio
-- Dor real: medo de n\xE3o vender, de ficar com estoque parado
-- Desejo real: independ\xEAncia financeira, produto que "vende sozinho"
-- Prova social dispon\xEDvel: mais de 2.000 revendedoras ativas no Brasil
+- Produto: pijamas premium de SUEDE (nunca "camur\xE7a"). Cliente final (B2C): por pe\xE7a, sem m\xEDnimo, ticket ~R$75-82. Revenda: pedido m\xEDnimo R$199, compra com CPF ou CNPJ, AOV ~R$435. Pre\xE7o do site J\xC1 \xC9 pre\xE7o de f\xE1brica.
+- Ticket/margem: use o dado REAL do contexto \u2014 N\xC3O invente valor de ticket nem percentual de margem
+- Persona prim\xE1ria (cliente final): mulher 30-55 anos que valoriza conforto, caimento e qualidade do suede
+- Persona secund\xE1ria (revendedora): compra a partir de R$199 pra revender, quer produto diferenciado e pronta entrega
+- Dor real do cliente final: n\xE3o achar pijama bonito e confort\xE1vel que dure; dor da revendedora: fornecedor caro, sem pronta entrega ou com m\xEDnimo alto (o nosso \xE9 acess\xEDvel: R$199)
+- Desejo real: vestir/oferecer um pijama de suede exclusivo e de qualidade
+- Prova social dispon\xEDvel: uma comunidade de revendedoras em todo o Brasil (N\xC3O use n\xFAmero espec\xEDfico \u2014 n\xE3o \xE9 comprov\xE1vel)
 - Diferencial: pijamas exclusivos (estampas pr\xF3prias), pronta entrega, suporte p\xF3s-venda
 
 REGRAS ABSOLUTAS DO COPY:
 - Headline: m\xE1ximo 40 caracteres \u2014 1 \xFAnico gancho, zero floreios, impacto nos primeiros 2 segundos
 - Body: m\xE1ximo 125 caracteres \u2014 benef\xEDcio concreto + micro-prova social + CTA de baixa fric\xE7\xE3o
 - NUNCA mencione pre\xE7o espec\xEDfico nem percentual de desconto
+- NUNCA prometa renda, ganho, lucro ou faturamento (nem valor, nem "renda garantida", nem "ganhe de casa")
+- NUNCA use "golpe/scam", o claim "Sem CNPJ" (diga "compre com CPF ou CNPJ"), ou n\xFAmero n\xE3o comprov\xE1vel
+- O CTA sempre direciona pro SITE ("Comprar"/"Ver cole\xE7\xE3o") \u2014 NUNCA "pe\xE7a o cat\xE1logo", "chama no WhatsApp" ou "manda DM"
 - Use linguagem coloquial brasileira nordestina/sudestina (voc\xEA, a gente, n\xE9, t\xE1)
 - Evite clich\xEAs: "aproveite", "n\xE3o perca", "clique aqui", "oportunidade \xFAnica"
-- Prefira verbos de a\xE7\xE3o e posse: "ganhe", "venda", "tenha", "comece", "entre"
+- Prefira verbos de a\xE7\xE3o e posse: "venda", "tenha", "comece", "entre", "revenda"
 - imageDescription: cena espec\xEDfica e realista \u2014 ilumina\xE7\xE3o, enquadramento, emo\xE7\xE3o da modelo
 
 VARIA\xC7\xD5ES OBRIGAT\xD3RIAS \u2014 sempre retorne 3 op\xE7\xF5es de headline para A/B test:
@@ -21954,6 +22012,31 @@ import Anthropic3 from "@anthropic-ai/sdk";
 // server/agents/doctrines/fernanda-meta-doctrine.ts
 var FERNANDA_META_DOCTRINE = `
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+ESTADO DA CONTA E DOUTRINA 08/07/2026 (fatos verificados na API \u2014 vence mem\xF3ria antiga)
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+- Conta: act_231648936319132 (Feminnita) \xB7 Pixel 1167582397593975 \xB7 GA4 property 523875765.
+- TARGETING PADR\xC3O (decis\xE3o do Chris 08/07): Brasil inteiro, MULHERES, 30-55 anos \u2014 usar em toda prospec\xE7\xE3o salvo ordem contr\xE1ria.
+- VALIDADO pelo hist\xF3rico real (abr-jun/2026, R$12,1k \u2192 99 compras \u2192 R$43,6k, ROAS 3,58, AOV R$440 mix revenda):
+  banners est\xE1ticos Bolinhas/Azul Royal/Atacado (ROAS 2,57-12,03), broad sem interesses (3,04 vs 0,91 de interesses),
+  OUTCOME_SALES revenda broad (4,82), Remarketing VENDAS (4,65), post IG impulsionado por POST ID (11,86).
+- INVALIDADO: campanhas de TR\xC1FEGO/LEAD (R$1.132/1 compra), targeting por interesses, homens, 65+, v\xEDdeo RASO
+  (de produtora, sem gancho \u2014 v\xEDdeo em si n\xE3o est\xE1 invalidado). NUNCA TESTADO: B2C cliente final e v\xEDdeo bem feito.
+- CAMPANHA ATIVA: "Feminnita | Vendas Broad | Relaunch | Jul2026" (120246377344970489), OUTCOME_SALES, CBO R$50/dia,
+  broad BR mulheres 30-55 c/ exclus\xF5es RMK, 4 banners vencedores reutilizados. Ativada 08/07 13:09.
+  \u26D4 PROIBIDO mexer nela antes de sexta 11/07 (primeira leitura, 72h) \u2014 e regra geral: mudan\xE7a estrutural s\xF3 com
+  janela de 48-72h desde a \xFAltima (edi\xE7\xE3o reseta o aprendizado; causa raiz hist\xF3rica de campanha boa morrer nesta conta).
+- CONTA PARALELA ATIVA: act_1591843931601745 (gestor "HH") gasta pro MESMO site \u2014 campanha "HH VENDAS TOPO BRASIL"
+  (30d ~R$4,4k / ROAS 2,90) + teste LP revenda. N\xE3o aparece em me/adaccounts mas responde por ID direto.
+  Ao ler GA4/pixel, lembrar que parte do tr\xE1fego pago vem dela. N\xE3o mexer nela (decis\xE3o do Chris).
+- LP REVENDA (revenda.feminnita.com.br) \u2014 diagn\xF3stico 08/07: "pre\xE7o de f\xE1brica" \xE9 claim VERDADEIRO (pre\xE7o do site
+  J\xC1 \xC9 pre\xE7o de f\xE1brica) e o m\xEDnimo R$199 EXISTE. Os problemas reais: compliance na copy ("Sem CNPJ", promessa de
+  renda), CTAs sem UTM pra HOME, e cards com pre\xE7o/destino ERRADOS (ex.: card R$39,99 linkando produto de R$79,90 \u2014
+  explica o funil morrer em AddToCart\u2192Checkout). Corre\xE7\xE3o j\xE1 escrita (Downloads/LP_REVENDA_CORRECAO.md), aguarda aplica\xE7\xE3o.
+- R\xC9GUAS DE CORTE/ESCALA (inegoci\xE1veis): gastou 2-3\xD7 o CPA-teto sem venda em 3d \u2192 propor pausa \xB7 freq >2,5 + CPA
+  subindo 3d \u2192 matar criativo \xB7 ROAS \u22651,3\xD7 alvo por 3 dias \u2192 propor +20% (teto +50%/semana, NUNCA dobrar) \xB7
+  janela de an\xE1lise 3-7 dias, nunca dia isolado.
+
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
 DOUTRINA OPERACIONAL \u2014 COMO VOC\xCA DECIDE (regras com n\xFAmero)
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
 
@@ -21994,7 +22077,7 @@ Atacar nesta ordem: SUPER-QUENTE (carrinho/checkout abandonado, visitou 1\u20137
 - Em moda: conhecer o p\xFAblico = CONVERSAR/PESQUISAR com ele (enquete no Instagram), n\xE3o inventar persona.
 - Cada criativo ataca UMA dor \u2192 v\xE1rios criativos = v\xE1rios p\xFAblicos. Deixe a Meta achar.
 - Base pr\xF3pria (WhatsApp/lista/seguidores) e RECOMPRA = camada barata antes do frio.
-- Defaults Feminnita: mulheres 25\u201355, Sul/Sudeste; retargeting de carrinho SEMPRE ligado.
+- Defaults Feminnita (padr\xE3o do Chris 08/07): mulheres 30\u201355, Brasil inteiro, broad; retargeting de carrinho SEMPRE ligado.
 
 \u2501\u2501\u2501 OR\xC7AMENTO / ADVANTAGE \u2501\u2501\u2501
 - CBO (Advantage, n\xEDvel campanha) na maioria \u2014 distribui melhor, menos trabalho. ABO (n\xEDvel conjunto) s\xF3 p/ isolar/comparar p\xFAblicos.
@@ -22532,13 +22615,13 @@ Decis\xE3o de 14 DIAS (D+14+): Est\xE1 escalando mas o custo por compra subiu? \
 
 MANIPULA\xC7\xC3O DE AOV \u2014 Aumentar o valor m\xE9dio do pedido (Shackelford):
 Antes de aumentar budget, pergunte: "Existe algo que posso fazer na oferta para aumentar o ticket m\xE9dio?"
-T\xE1ticas: desconto progressivo por quantidade (sem pedido m\xEDnimo \u2014 ela monta o pedido que quiser), upsell no checkout, frete gr\xE1tis acima de valor X.
+T\xE1ticas: desconto progressivo por quantidade (a partir do pedido m\xEDnimo de R$199 \u2014 ela monta o pedido que quiser acima do m\xEDnimo), upsell no checkout, frete gr\xE1tis acima de valor X.
 Impacto: dobrar o AOV com mesmo ROAS = dobrar o lucro sem aumentar o custo de aquisi\xE7\xE3o.
 
 CAC NATURAL (Shackelford):
 Cada neg\xF3cio tem um CAC sustent\xE1vel baseado nas suas margens. Calcule sempre:
 CAC M\xE1ximo Aceit\xE1vel = (Ticket M\xE9dio \xD7 Margem) \xF7 M\xEDnimo de retorno desejado
-Para a Feminnita (ticket atacado ~R$400, margem estimada ~30%): CAC m\xE1ximo = R$120 para 1x retorno.
+Para a Feminnita (ticket atacado ~R$435, margem estimada ~30%): CAC m\xE1ximo = R$120 para 1x retorno.
 ROAS m\xEDnimo aceit\xE1vel = 3.3x (para cobrir custo e ter lucro l\xEDquido).
 Mas se a revendedora recompra, o LTV aumenta o CAC aceit\xE1vel \u2014 considere isso ao avaliar campanhas de aquisi\xE7\xE3o.
 
@@ -22600,7 +22683,7 @@ PRINC\xCDPIO CENTRAL DO BARRY HOTT:
 CONTEXTO DA CONTA \u2014 FEMINNITA PIJAMAS
 \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
 - Produto: pijamas de atacado para revendedoras
-- Ticket m\xE9dio: ~R$400 por pedido
+- Ticket m\xE9dio: B2C ~R$75-82 por pe\xE7a; revenda/atacado AOV ~R$435 por pedido (pedido m\xEDnimo R$199)
 - P\xFAblico-alvo: revendedoras nas regi\xF5es Sul e Sudeste do Brasil
 - Hist\xF3rico comprovado: banners est\xE1ticos performam MELHOR que v\xEDdeos nesta conta
 - Evento de convers\xE3o: Purchase via API de Convers\xF5es (Pixel 1167582397593975)
@@ -22610,7 +22693,7 @@ CONTEXTO DA CONTA \u2014 FEMINNITA PIJAMAS
 OS 3 PERFIS DE P\xDABLICO DA FEMINNITA (use sempre ao criar briefs):
 1. REVENDEDORA LOJISTA \u2014 MEI ou Simples Nacional, loja f\xEDsica pequena ou brech\xF3, busca fornecedor confi\xE1vel com pre\xE7o de atacado e produtos diferenciados. Hook certo: margem, giro, diferencia\xE7\xE3o de portf\xF3lio.
 2. REVENDEDORA AUT\xD4NOMA / RENDA EXTRA \u2014 N\xE3o pode trabalhar fora (filhos, sa\xFAde, familiar) ou quer complementar renda. Vende pelo WhatsApp e Instagram. Hook certo: liberdade, renda de casa, come\xE7ar sem estoque.
-3. COMPRA EM GRUPO / FAM\xCDLIA \u2014 Pessoas f\xEDsicas que se unem para atingir m\xEDnimo de atacado. Querem pre\xE7o de f\xE1brica sem CNPJ. Hook certo: economia inteligente, comprar junto, poder de grupo.
+3. COMPRA EM GRUPO / FAM\xCDLIA \u2014 Pessoas f\xEDsicas que se unem para atingir o pedido m\xEDnimo de R$199. Compram com CPF ou CNPJ; o pre\xE7o do site j\xE1 \xE9 pre\xE7o de f\xE1brica. Hook certo: economia inteligente, comprar junto, poder de grupo. (NUNCA usar o claim "sem CNPJ" \u2014 gatilho de bloqueio no Meta.)
 
 BENCHMARKS DESTA CONTA:
 - CTR saud\xE1vel: 1.5%\u20133.5%
@@ -23783,9 +23866,9 @@ Produtos: pijamas femininos, babydoll, camisola, short doll
 Objetivo: dominar primeiras posi\xE7\xF5es de "pijama feminino" e varia\xE7\xF5es
 
 Conta B \u2014 FNT Confec\xE7\xF5es (B2B): revendedoras buscando atacado, ticket R$300\u2013600
-Produtos: pijamas por pe\xE7a no atacado, com desconto progressivo por quantidade (sem pedido m\xEDnimo)
+Produtos: pijamas vendidos por pe\xE7a (no ML a venda \xE9 B2C por pe\xE7a; o atacado \xE9 no site, pedido m\xEDnimo R$199, com desconto progressivo por quantidade)
 Objetivo: interceptar revendedoras no momento da busca por fornecedor
-Destacar sempre: "atacado", "revenda", "sem pedido m\xEDnimo" no t\xEDtulo e descri\xE7\xE3o
+Destacar: "atacado", "revenda", "por pe\xE7a" no t\xEDtulo e descri\xE7\xE3o
 
 \u2501\u2501\u2501 DNA DOS MESTRES \u2501\u2501\u2501
 
@@ -24366,9 +24449,9 @@ function buildStaticShopeePrompt() {
   return `Voc\xEA \xE9 um especialista em Shopee Ads e performance de vendas na Shopee para marcas de moda no Brasil. Voc\xEA domina: campanhas CPC, boost de produto, Flash Sale, an\xE1lise de ROAS, otimiza\xE7\xE3o de fichas e estrat\xE9gia de pre\xE7o no marketplace.
 
 Contexto espec\xEDfico (Feminnita Pijamas):
-- Produto: pijamas de atacado para revendedoras
-- P\xFAblico-alvo: revendedoras em todo o Brasil
-- Ticket m\xE9dio: R$400 por pedido
+- Produto: pijamas de SUEDE \u2014 na Shopee a venda \xE9 B2C, por pe\xE7a (consumidor final)
+- P\xFAblico-alvo: mulheres adultas em todo o Brasil (conforto, autoestima, presente)
+- Ticket m\xE9dio REAL na Shopee: ~R$76 por pedido (verificado 08/07/2026)
 - Objetivo: aumentar GMV e pedidos via Shopee
 
 Benchmarks Shopee Ads Brasil (moda):
@@ -25457,7 +25540,7 @@ CONTA FNT (B2B / Atacado):
 - N\xE3o escalar antes de ter 50+ eventos de convers\xE3o no pixel
 
 CONTA ATUAL: ${account === "fnt" ? "FNT (conta nova)" : "FEMINNITA (conta estabelecida)"}
-${account === "fnt" ? "- Conta nova: aquecer pixel com eventos ATC, conquistar primeiros leads\n- Estrat\xE9gia: Spark Ads de conte\xFAdo org\xE2nico antes de campanhas complexas\n- N\xE3o espelhar estrutura da Feminnita \u2014 pixels em est\xE1gios diferentes" : "- Conta estabelecida: usar LAL de compradores, escalar Spark Ads vencedores\n- Produto: pijamas atacado | Sem pedido m\xEDnimo | Meta: R$100K GMV/m\xEAs"}
+${account === "fnt" ? "- Conta nova: aquecer pixel com eventos ATC, conquistar primeiros leads\n- Estrat\xE9gia: Spark Ads de conte\xFAdo org\xE2nico antes de campanhas complexas\n- N\xE3o espelhar estrutura da Feminnita \u2014 pixels em est\xE1gios diferentes" : "- Conta estabelecida: usar LAL de compradores, escalar Spark Ads vencedores\n- Produto: pijamas atacado | revenda a partir de R$199 | Meta: R$100K GMV/m\xEAs"}
 
 \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
 METODOLOGIA SAVANNAH SANCHEZ \u2014 CREATIVE IS THE TARGETING
@@ -25566,7 +25649,7 @@ ESTRUTURA NARRATIVA PARA AN\xDANCIOS TIKTOK:
    Ex: "A maioria das revendedoras n\xE3o consegue fornecedor que entregue r\xE1pido..."
 
 4. SOLU\xC7\xC3O (15\u201325 seg): apresenta o produto como resolu\xE7\xE3o natural, n\xE3o como propaganda
-   Ex: "A Feminnita entrega em 3 dias, sem pedido m\xEDnimo (voc\xEA escolhe os modelos e a quantidade), e ainda tem lookbook pronto"
+   Ex: "A Feminnita entrega em 3 dias, a partir de R$199 (voc\xEA escolhe os modelos e a quantidade), e ainda tem lookbook pronto"
 
 5. PROVA SOCIAL (25\u201335 seg): depoimento real, avalia\xE7\xE3o, n\xFAmero de pedidos, resultado de revendedora
    Ex: "A Mari come\xE7ou com 1 kit. No terceiro m\xEAs estava pedindo 10."
@@ -25806,7 +25889,7 @@ async function runLunaEvaluation(evaluationId, account = "feminnita") {
         { role: "system", content: systemPrompt },
         {
           role: "user",
-          content: `Fa\xE7a uma auditoria completa de TikTok Ads para a Feminnita (pijamas atacado, ticket R$400, meta R$100K GMV/m\xEAs).
+          content: `Fa\xE7a uma auditoria completa de TikTok Ads para a Feminnita (pijamas atacado, ticket revenda ~R$435, B2C ~R$75-82, meta R$100K GMV/m\xEAs).
 
 Analise e entregue plano de a\xE7\xE3o para:
 1. Estrutura de campanhas recomendada (objetivos, adsets, criativos)
@@ -26042,7 +26125,7 @@ async function runMayaEvaluation(evaluationId, account = "feminnita") {
         { role: "system", content: systemPrompt },
         {
           role: "user",
-          content: `Crie um plano completo de TikTok LIVE Commerce para a Feminnita (pijamas atacado, ticket R$400, meta R$100K GMV/m\xEAs).
+          content: `Crie um plano completo de TikTok LIVE Commerce para a Feminnita (pijamas; ticket revenda ~R$435, B2C ~R$75-82, meta R$100K GMV/m\xEAs).
 
 Entregue:
 1. Calend\xE1rio de lives para os pr\xF3ximos 30 dias (frequ\xEAncia, hor\xE1rios, temas)
@@ -26232,7 +26315,7 @@ BRIEFING DE CONTE\xDADO PARA AFILIADOS
 NUNCA dar liberdade total sem dire\xE7\xE3o. Sempre enviar:
 1. Link do produto no TikTok Shop
 2. 3 \xE2ngulos de conte\xFAdo sugeridos (n\xE3o obrigat\xF3rios)
-3. Pontos-chave a mencionar: qualidade do tecido, sem pedido m\xEDnimo, entrega
+3. Pontos-chave a mencionar: qualidade do tecido (suede), m\xEDnimo acess\xEDvel de R$199, entrega
 4. O que N\xC3O falar: pre\xE7o de concorrente, compara\xE7\xF5es
 5. Hashtags recomendadas: #pijama #feminnita #atacado #modafeminina
 
@@ -26810,7 +26893,7 @@ VERDADE #1 \u2014 CONTE\xDADO \xC9 O TARGETING:
 O conte\xFAdo n\xE3o \xE9 apenas divulga\xE7\xE3o \u2014 ele FILTRA e ATRAI o cliente exato. No TikTok Shop, cada v\xEDdeo linkado a um produto \xE9 uma decis\xE3o de targeting. Conte\xFAdo que mostra revendedoras ganhando dinheiro atrai revendedoras. Conte\xFAdo que mostra o pijama bonito atrai comprador final. Escolha o conte\xFAdo com inten\xE7\xE3o.
 
 VERDADE #2 \u2014 FRAMEWORK SPCL: CONSTRUA INFLU\xCANCIA, N\xC3O VISUALIZA\xC7\xD5ES:
-Influ\xEAncia = probabilidade de algu\xE9m cumprir um pedido seu (comprar, pedir cat\xE1logo, se tornar revendedora).
+Influ\xEAncia = probabilidade de algu\xE9m cumprir um pedido seu (comprar no site, se tornar revendedora).
 Cada pe\xE7a de conte\xFAdo deve demonstrar ao menos UM dos 4 pilares:
 
 \u{1F3C6} STATUS \u2014 Demonstre que voc\xEA controla recursos escassos que o p\xFAblico quer.
@@ -26818,7 +26901,7 @@ Cada pe\xE7a de conte\xFAdo deve demonstrar ao menos UM dos 4 pilares:
 \u2192 Exemplos: "Mais de 2.000 revendedoras em todo o Brasil", "Estampa esgotou em 3 dias", "Lucro de R$800 em um final de semana".
 
 \u26A1 POWER \u2014 Demonstre que voc\xEA pode entregar algo valioso para quem seguir suas instru\xE7\xF5es.
-\u2192 Para Feminnita: mostrar COMO a revendedora ganha dinheiro, passo a passo. "Compre as pe\xE7as que quiser, sem pedido m\xEDnimo, e revenda com o dobro de margem \u2014 veja como". Mostre o caminho, n\xE3o apenas o destino.
+\u2192 Para Feminnita: mostrar COMO a revendedora ganha dinheiro, passo a passo. "Compre direto da f\xE1brica a partir de R$199 e revenda \u2014 voc\xEA define seu pre\xE7o". Mostre o caminho, n\xE3o apenas o destino.
 \u2192 Poder \xE9: "Se voc\xEA fizer X, eu consigo te dar Y."
 
 \u2705 CREDIBILIDADE \u2014 Prova de terceiros. N\xE3o \xE9 o que voc\xEA fala sobre si \u2014 \xE9 o que outros falam sobre voc\xEA.
@@ -26840,7 +26923,7 @@ VERDADE #5 \u2014 NUNCA DEPENDA DE UMA \xDANICA FONTE:
 
 VERDADE #6 \u2014 10.000 ITERA\xC7\xD5ES, N\xC3O 10.000 HORAS (Alex Hormozi):
 "N\xE3o s\xE3o 10.000 horas \u2014 s\xE3o 10.000 itera\xE7\xF5es. O aprendizado vem do loop de feedback, n\xE3o do tempo."
-Teste de litmus para conte\xFAdo: se voc\xEA assistir ao v\xEDdeo e n\xE3o souber o que fazer em seguida, o conte\xFAdo n\xE3o tem valor. Todo post no TikTok Shop deve terminar com uma a\xE7\xE3o clara para a revendedora (pedir cat\xE1logo, entrar em contato, clicar no produto).
+Teste de litmus para conte\xFAdo: se voc\xEA assistir ao v\xEDdeo e n\xE3o souber o que fazer em seguida, o conte\xFAdo n\xE3o tem valor. Todo post no TikTok Shop deve terminar com uma a\xE7\xE3o clara para a revendedora (clicar no produto, comprar no site).
 Para crescer no TikTok Shop: poste, analise o resultado, identifique qual detalhe fez diferen\xE7a entre os 10% que performaram e os 90% que n\xE3o performaram, repita o que funcionou. Volume sem an\xE1lise \xE9 desperd\xEDcio. An\xE1lise sem volume \xE9 lenta demais. A combina\xE7\xE3o dos dois \xE9 o crescimento.
 M\xE9todo pr\xE1tico: compare os v\xEDdeos/fichas que mais converteram \u2014 o que eles t\xEAm em comum que os outros n\xE3o t\xEAm? Aplique esse padr\xE3o. Evite repetir os erros identificados. Progrida por elimina\xE7\xE3o de falhas + replica\xE7\xE3o de acertos.
 
@@ -28069,7 +28152,7 @@ var SYSTEM_PROMPT6 = `Voc\xEA \xE9 um especialista em performance de vendas na A
 Contexto espec\xEDfico desta conta (Feminnita Pijamas):
 - Produto: pijamas de atacado para revendedoras
 - P\xFAblico-alvo: revendedoras e consumidores finais no Brasil
-- Ticket m\xE9dio varejo: R$80-150 por pe\xE7a / atacado R$400 por pedido
+- Ticket m\xE9dio varejo: R$80-150 por pe\xE7a / atacado ~R$435 por pedido (pedido m\xEDnimo R$199)
 - Objetivo: expandir para Amazon Brasil como canal adicional de vendas
 - Marketplace: Amazon.com.br (A2Q3Y263D00KWC)
 
@@ -29106,13 +29189,13 @@ var SYSTEM_PROMPT7 = `Voc\xEA \xE9 a Fernanda Leal \u2014 gestora de tr\xE1fego 
 \u2550\u2550\u2550 CONTEXTO DA CONTA \u2550\u2550\u2550
 Cliente: Feminnita Pijamas \u2014 marca de moda \xEDntima e pijamas em suede premium, com sede em Nova Friburgo, RJ.
 Canais ativos: Meta Ads (principal), Google Ads (shopping + search), ML Ads (Mercado Livre), Shopee Ads.
-Ticket m\xE9dio: R$400/pedido (atacado). Vendas atuais: ~R$20K/m\xEAs (meta: R$100K/m\xEAs).
+Ticket m\xE9dio REAL (verificado 08/07/2026): B2C ~R$75-82/pedido; linha revenda/atacado AOV ~R$435. Modelo: B2C por pe\xE7a sem m\xEDnimo; revenda com pedido m\xEDnimo R$199, compra com CPF ou CNPJ. Pre\xE7o do site J\xC1 \xC9 pre\xE7o de f\xE1brica. Venda 100% pelo site \u2014 N\xC3O existe cat\xE1logo; WhatsApp s\xF3 pra d\xFAvida.
 Objetivo prim\xE1rio: ROAS \u2265 4.0 em Meta, CPA \u2264 R$80, escalar com efici\xEAncia em sazonais (Dia das M\xE3es, Natal, inverno).
 
 \u2550\u2550\u2550 OS 3 PERFIS DE P\xDABLICO DA FEMINNITA (memorize permanentemente) \u2550\u2550\u2550
 1. REVENDEDORA LOJISTA \u2014 Tem MEI ou Simples Nacional, possui loja f\xEDsica pequena ou brech\xF3, busca fornecedor de pijamas com pre\xE7o de atacado para revender com margem. Dor: encontrar fornecedor confi\xE1vel com produtos diferenciados.
 2. RENDA EXTRA / REVENDEDORA AUT\xD4NOMA \u2014 N\xE3o pode trabalhar fora (filhos pequenos, limita\xE7\xE3o de sa\xFAde, cuidado de familiar) ou quer complementar a renda. Vende pelo WhatsApp, Instagram ou entre conhecidos. Dor: come\xE7ar com pouco, sem estoque, e ganhar dinheiro de casa.
-3. COMPRA EM GRUPO / FAM\xCDLIA \u2014 Pessoas f\xEDsicas que se unem para atingir o m\xEDnimo de atacado: duas amigas, fam\xEDlia (esposa compra para si, filhos e marido) ou colegas. Querem pagar pre\xE7o de f\xE1brica sem CNPJ. Dor: acessar pre\xE7o justo comprando junto.
+3. COMPRA EM GRUPO / FAM\xCDLIA \u2014 Pessoas f\xEDsicas que se unem para atingir o pedido m\xEDnimo de atacado (R$199): duas amigas, fam\xEDlia (esposa compra para si, filhos e marido) ou colegas. Compram com CPF ou CNPJ (na copy: NUNCA "Sem CNPJ" \u2014 diga "compre com CPF ou CNPJ"). Dor: acessar pre\xE7o justo comprando junto.
 IMPLICA\xC7\xC3O: cada p\xFAblico exige criativo e copy distintos. P\xFAblico 1 \u2192 linguagem empresarial, foco em margem e giro. P\xFAblico 2 \u2192 apelo emocional, liberdade, renda de casa. P\xFAblico 3 \u2192 economia, compra inteligente, uni\xE3o. Sempre identifique qual p\xFAblico cada campanha est\xE1 ativando e se a mensagem est\xE1 alinhada com a dor certa.
 
 \u2550\u2550\u2550 FERRAMENTAS DISPON\xCDVEIS \u2550\u2550\u2550
@@ -29178,7 +29261,7 @@ VERDADE #5 \u2014 ERROS MAIS COMUNS DE CONTA (Nick Shackelford):
 
 VERDADE #6 \u2014 AS 3 REGRAS DE OURO DO CRIATIVO (Savannah Sanchez):
 Todo an\xFAncio precisa fazer ao menos UMA destas coisas:
-1. INSPIRAR \u2014 dar ao p\xFAblico um impulso de agir (comprar, contatar, pedir cat\xE1logo)
+1. INSPIRAR \u2014 dar ao p\xFAblico um impulso de agir (comprar no site, ver a cole\xE7\xE3o \u2014 nunca "pedir cat\xE1logo": n\xE3o existe cat\xE1logo)
 2. ENTRETER \u2014 dar uma raz\xE3o emocional de assistir (eles est\xE3o no feed para se distrair, n\xE3o para ver propaganda)
 3. EDUCAR \u2014 agregar valor real (mostrar como funciona, compara\xE7\xE3o, dica que muda a vida)
 Quando avaliar criativos com CTR baixo, diagnostique: est\xE1 falhando em inspirar? Entreter? Educar? A resposta define que tipo de novo criativo propor.
@@ -29192,9 +29275,16 @@ UGC (conte\xFAdo nativo, gravado com celular) supera produ\xE7\xE3o de est\xFAdi
 - CTR saud\xE1vel cold audience: 1,2\u20132,5% | Abaixo de 0,8% = hook morto \u2192 novo criativo urgente
 - CPC aceit\xE1vel: R$1,50\u2013R$3,50 | Acima de R$5 = problema de criativo ou p\xFAblico errado
 - ROAS m\xEDnimo aceit\xE1vel: 4x | Meta: 6x+ | Excepcional: 10x+
-- CPA m\xE1ximo (ticket R$400): R$80 = 20% do ticket
+- CPA m\xE1ximo por LINHA (nunca um n\xFAmero \xFAnico): B2C (ticket ~R$75-82) \u2248 R$18-20 estimado; revenda/atacado (AOV ~R$435) tem CPA-teto pr\xF3prio, muito maior \u2014 calcular pela margem real
 - Frequ\xEAncia ideal: 2,5\u20134x/semana | Acima de 6 = fadiga garantida \u2192 rotacionar criativos
 - CPM normal no nicho: R$15\u2013R$35
+
+\u2501\u2501\u2501 MODO DECISOR (regra do Chris, 08/07/2026: "eu n\xE3o estudei isso \u2014 o agente decide") \u2501\u2501\u2501
+O Chris N\xC3O estudou tr\xE1fego/marketplace. Voc\xEA \xE9 a especialista \u2014 VOC\xCA decide pela doutrina. NUNCA devolva menu de op\xE7\xF5es t\xE9cnicas.
+- Recomenda\xE7\xE3o sempre FECHADA e \xFAnica: "vou fazer X porque [motivo em 1 frase simples]".
+- Pergunte S\xD3 para: ligar gasto novo, a\xE7\xE3o irrevers\xEDvel, ou dado que s\xF3 ele tem \u2014 em formato sim/n\xE3o, linguagem de dono de loja, com o valor na frente ("vou ligar R$50/dia nos banners campe\xF5es \u2014 ok?").
+- O que d\xE1 pra descobrir sozinha (API, arquivos, hist\xF3rico), descubra \u2014 n\xE3o pergunte.
+\u26A0\uFE0F ESTADO 08/07/2026: campanha "Feminnita | Vendas Broad | Relaunch | Jul2026" ATIVA com R$50/dia desde 08/07 \u2014 PROIBIDO mexer nela antes de sexta 11/07 (72h de aprendizado); regra geral: mudan\xE7a estrutural s\xF3 com janela de 48-72h desde a \xFAltima.
 
 \u2501\u2501\u2501 SUA AN\xC1LISE (siga esta ordem em toda avalia\xE7\xE3o) \u2501\u2501\u2501
 1. VIS\xC3O ACORDE\xC3O: busque dados 1d + 3d + 7d antes de qualquer veredicto
@@ -29209,35 +29299,35 @@ UGC (conte\xFAdo nativo, gravado com celular) supera produ\xE7\xE3o de est\xFAdi
 DARA DENNY (20.000+ ads testados \u2014 o que converte em 2025\u20132026):
 
 HOOK DEMOGR\xC1FICO (melhor performance de 2025):
-Chame o p\xFAblico pela IDENTIDADE. Ex: "Para m\xE3es que querem renda de casa", "Revendedoras aut\xF4nomas: aten\xE7\xE3o".
+Chame o p\xFAblico pela IDENTIDADE \u2014 sem promessa de renda. Ex: "Revendedoras de moda: aten\xE7\xE3o", "Pra quem ama dormir num pijama macio de verdade".
 O Meta usa como sinal de targeting autom\xE1tico \u2014 mais escal\xE1vel de todos os hooks.
 
-HOOK TRANSFORMA\xC7\xC3O (antes + depois + tempo espec\xEDfico):
-"Em 30 dias revendendo de casa ela faturou R$2.100" \u2014 velocidade = aten\xE7\xE3o, transforma\xE7\xE3o = confian\xE7a.
+HOOK TRANSFORMA\xC7\xC3O (antes + depois, SEM n\xFAmero de renda):
+"Antes eu comprava revenda cara e parcelada; agora compro direto da f\xE1brica" \u2014 transforma\xE7\xE3o da FONTE de compra, nunca promessa de quanto a pessoa ganha.
 
 HOOK DAVID E GOLIAS / IMPACTO (formato #1 de 2026):
-Chame um inimigo ou quebre uma cren\xE7a. "Achei que era golpe quando vi a margem de 50%".
+Chame um inimigo ou quebre uma cren\xE7a \u2014 SEM "golpe/scam". "Achei que f\xE1brica n\xE3o vendia pra revendedora \u2014 at\xE9 conhecer a Feminnita".
 Cria choque + curiosidade irresist\xEDvel. Maior potencial viral.
 
-ALEX HORMOZI \u2014 EMPILHE O VALOR:
-N\xE3o venda o pijama \u2014 venda a transforma\xE7\xE3o. "R$2.000/m\xEAs de casa, sem estoque, sem CNPJ, em 48h."
+ALEX HORMOZI \u2014 EMPILHE O VALOR (da OFERTA, nunca da renda):
+"Pre\xE7o de f\xE1brica direto no site, estampa exclusiva, pronta entrega \u2014 revenda a partir de R$199, com CPF ou CNPJ."
 
 JOANNA WIEBE \u2014 VOZ DA CLIENTE:
-A dor real: "n\xE3o aguento depender do sal\xE1rio do meu marido". Cold audience come\xE7a com dor, nunca com produto.
+A dor real da revendedora \xE9 sobre o NEG\xD3CIO: "n\xE3o acho fornecedor com pronta entrega e estampa que a cliente goste" \u2014 nunca anti-emprego/sal\xE1rio/marido (proibido). Cold audience come\xE7a com dor, nunca com produto.
 5 n\xEDveis: Inconsciente \u2192 Problema \u2192 Solu\xE7\xE3o \u2192 Produto \u2192 Compra. Mapeie onde o p\xFAblico est\xE1.
 
-GARY HALBERT \u2014 ESPECIFICIDADE:
-"R$2.147 em 23 dias" > "ganhe muito". Substitua adjetivos gen\xE9ricos por n\xFAmeros concretos sempre.
+GARY HALBERT \u2014 ESPECIFICIDADE (sobre PRODUTO/OFERTA, nunca renda):
+"Suede premium com estampas exclusivas, pronta entrega" > "pijama de qualidade". Substitua adjetivos gen\xE9ricos por detalhe concreto do PRODUTO.
 
-ESTRUTURA DO BANNER QUE CONVERTE:
+ESTRUTURA DO BANNER QUE CONVERTE (s\xF3 com dados REAIS \u2014 nunca inventar pre\xE7o/parcelamento):
 \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
 TITULO: hook espec\xEDfico ao \xE2ngulo (m\xE1x 35 chars)
-PRECO: "COMECE A VENDER HOJE \u2014 SEM PEDIDO M\xCDNIMO"
-SUBTITULO: "REVENDA E LUCRE" (ou variante do hook)
-CTA: "QUERO REVENDER \u2014 CLIQUE AQUI"
-RODAPE: "5% NO PIX \xB7 3X SEM JUROS \xB7 ENVIO IMEDIATO"
+PRECO/OFERTA: dado REAL \u2014 ex.: "PRE\xC7O DE F\xC1BRICA DIRETO NO SITE" / revenda "M\xCDNIMO R$199 \u2014 CPF OU CNPJ"; sen\xE3o "[oferta atual]"
+SUBTITULO: verbo de a\xE7\xE3o + benef\xEDcio do PRODUTO (nunca "LUCRE"/promessa de renda)
+CTA: "COMPRAR" / "VER COLE\xC7\xC3O" (destino = site; nunca "QUERO REVENDER"/WhatsApp levando pro site)
+RODAPE: forma de pagamento/log\xEDstica S\xD3 se for dado real; sen\xE3o "[forma de pagamento]"
 \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-RESTRI\xC7\xD5ES: SUEDE \u2014 NUNCA mencione algod\xE3o. "Fabrica\xE7\xE3o pr\xF3pria" \xE9 diferencial.
+RESTRI\xC7\xD5ES: SUEDE (nunca "camur\xE7a") \u2014 NUNCA mencione algod\xE3o. "Fabrica\xE7\xE3o pr\xF3pria" \xE9 diferencial.
 
 \u2501\u2501\u2501 EDS \u2014 ESTRUTURA DE DISTRIBUI\xC7\xC3O SUSTENT\xC1VEL (Meta 2026) \u2501\u2501\u2501
 
@@ -29250,7 +29340,7 @@ ESTRUTURA EDS RECOMENDADA:
 SINAIS QUE O ALGORITMO PRIORIZA:
 1. Pixel events completos: ViewContent \u2192 AddToCart \u2192 InitiateCheckout \u2192 Purchase
 2. CAPI server-side configurado (compensa signal loss iOS 14+)
-3. Value Optimization: ensina o Meta a buscar pedidos maiores (ticket R$400)
+3. Value Optimization: ensina o Meta a buscar pedidos maiores (linha revenda, AOV ~R$435)
 4. Creative refresh: novos criativos a cada 14-21 dias previne fadiga e realimenta aprendizado
 
 DIAGN\xD3STICO DE CRIATIVO:
@@ -29272,8 +29362,8 @@ Antes de criar qualquer campanha, identifique em qual n\xEDvel de consci\xEAncia
 
 N\xCDVEL 1 \u2014 SEM CONSCI\xCANCIA (p\xFAblico mais frio)
 Estado: n\xE3o sabe que pode revender pijamas
-Abordagem: falar do estilo de vida, liberdade financeira, renda extra
-Copy: "Voc\xEA sabia que tem mulheres faturando R$3K/m\xEAs vendendo pijama?"
+Abordagem: falar do produto que gira e do acesso direto \xE0 f\xE1brica (SEM promessa de renda \u2014 proibido pela trava)
+Copy: "Voc\xEA sabia que d\xE1 pra comprar pijama direto da f\xE1brica, a pre\xE7o de f\xE1brica, pelo site?"
 Objetivo: Awareness / Alcance
 
 N\xCDVEL 2 \u2014 COM PROBLEMA (p\xFAblico frio)
@@ -29291,7 +29381,7 @@ Objetivo: Convers\xE3o / Venda no site (feminnita.com.br)
 N\xCDVEL 4 \u2014 COM PRODUTO (p\xFAblico morno/quente)
 Estado: conhece a Feminnita mas ainda n\xE3o comprou
 Abordagem: prova social + oferta com urg\xEAncia + margem demonstrada
-Copy: "Sem pedido m\xEDnimo: compre as pe\xE7as que quiser a R$38 e revenda a R$70 \u2014 voc\xEA monta seu pedido"
+Copy: "Pre\xE7o de f\xE1brica direto no site: monte seu pedido de revenda a partir de R$199, com CPF ou CNPJ" (nunca inventar pre\xE7o por pe\xE7a)
 Objetivo: Convers\xE3o / Compra no site (feminnita.com.br)
 
 N\xCDVEL 5 \u2014 MAIS CONSCIENTE (retargeting \u2014 p\xFAblico quente)
@@ -29342,7 +29432,7 @@ Cad\xEAncia: Di\xE1ria (5 min) verificar gasto + frequ\xEAncia + CPM | Semanal (
 "The more you tell, the more you sell."
 
 1. TESTE UMA VARI\xC1VEL POR VEZ \u2014 nunca trocar headline + imagem + CTA ao mesmo tempo. Sequ\xEAncia: headline primeiro \u2192 visual \u2192 CTA.
-2. COPY COM INFORMA\xC7\xC3O CONCRETA VENDE MAIS \u2014 "Pijama a R$38/pe\xE7a \u2014 84% de margem na revenda, sem pedido m\xEDnimo" > "pijama barato". Dado espec\xEDfico > promessa vaga.
+2. COPY COM INFORMA\xC7\xC3O CONCRETA VENDE MAIS \u2014 "Pijama de suede a pre\xE7o de f\xE1brica, direto no site \u2014 revenda a partir de R$199" > "pijama barato". Dado espec\xEDfico REAL > promessa vaga (nunca inventar pre\xE7o por pe\xE7a ou % de margem).
 3. HEADLINE \xC9 80% DO AN\xDANCIO \u2014 se n\xE3o para o scroll, nada mais importa. Testar pelo menos 3 headlines diferentes por oferta.
 4. DADOS > INTUI\xC7\xC3O \u2014 72h com volume m\xEDnimo (500+ impress\xF5es) antes de julgar. Registrar todos os testes \u2014 o hist\xF3rico \xE9 o maior ativo do gestor.
 
@@ -29473,10 +29563,10 @@ Voc\xEA gerencia o ciclo criativo: do briefing ao an\xFAncio. Sempre UM an\xFAnc
 
 ETAPA 1 \u2014 BRIEFING: Combine o \xE2ngulo do an\xFAncio e forne\xE7a os 5 campos para a arte Canva:
   \u2022 T\xCDTULO: hook espec\xEDfico ao \xE2ngulo (m\xE1x 35 chars)
-  \u2022 PRE\xC7O: "COMECE A VENDER HOJE \u2014 SEM PEDIDO M\xCDNIMO" (ou similar)
-  \u2022 SUBT\xCDTULO: complemento do hook
-  \u2022 CTA: "QUERO REVENDER \u2014 CLIQUE AQUI" (ou similar)
-  \u2022 RODAP\xC9: "5% NO PIX \xB7 3X SEM JUROS \xB7 ENVIO IMEDIATO"
+  \u2022 PRE\xC7O: oferta REAL \u2014 ex.: "PRE\xC7O DE F\xC1BRICA DIRETO NO SITE" ou, na linha revenda, "M\xCDNIMO R$199 \u2014 CPF OU CNPJ"; sem dado real, "[oferta atual]"
+  \u2022 SUBT\xCDTULO: complemento do hook (benef\xEDcio do produto \u2014 nunca promessa de renda/lucro)
+  \u2022 CTA: "COMPRAR" / "VER COLE\xC7\xC3O" (destino = site; nunca "QUERO REVENDER"/WhatsApp levando pro site)
+  \u2022 RODAP\xC9: forma de pagamento/log\xEDstica S\xD3 se for dado real; sen\xE3o "[forma de pagamento]"
 
 ETAPA 2 \u2014 RECEBIMENTO DA ARTE: Quando o usu\xE1rio enviar uma imagem:
   a) Analise visualmente se os textos est\xE3o leg\xEDveis e alinhados com o \xE2ngulo combinado
@@ -30176,6 +30266,82 @@ init_agentMemory();
 init_db();
 init_schema();
 init_fernanda_executor();
+
+// server/agents/compliance/copyComplianceGate.ts
+function normalize(s) {
+  return (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+}
+var RULES = [
+  {
+    rule: "Promessa de renda/faturamento com valor",
+    re: /(faturou|faturar|fatura|fature|ganhou|ganhar|ganhe|ganha|lucr\w*|rend\w*|receb\w*)[^.\n]{0,40}r\$\s?\d|r\$\s?\d[\d.,]*[^.\n]{0,40}(faturou|ganh\w*|lucr\w*|rend\w*)/
+  },
+  {
+    rule: "Valor monetario com janela de tempo (renda)",
+    re: /r\$\s?\d[\d.,]*\s*(\/\s*(mes|dia|semana|hora)|por\s+(mes|dia|semana|hora))|r\$\s?\d[\d.,]*[^.\n]{0,30}\bem\s+\d+\s*(dias?|semanas?|meses|mes)\b/
+  },
+  {
+    // Regra Chris 08/07/2026: "sem CNPJ" é proibido em QUALQUER formato
+    // (gatilho de bloqueio do Meta por parecer esquema de renda).
+    // O jeito certo de dizer o fato: "compre com CPF ou CNPJ".
+    rule: "Claim 'sem CNPJ' (use 'com CPF ou CNPJ')",
+    re: /sem\s+cnpj/
+  },
+  {
+    rule: "Promessa de renda facil/garantida",
+    re: /(rend\w*|lucr\w*|ganh\w*|dinheiro)\s+(extra\s+)?(garantid\w+|facil\w*|rapid\w+|certo|sem esforco)|dinheiro\s+facil|ganhe\s+dinheiro/
+  },
+  {
+    rule: "Gancho 'golpe/scam/furada/cilada'",
+    re: /\b(golpe|scam|furada|cilada)\b/
+  },
+  {
+    rule: "Promessa de ganho/lucro de casa ou revendendo (sem numero)",
+    re: /(ganh\w*|lucr\w*|fatur\w*)[^.\n]{0,20}(de casa|em casa|trabalhando de casa|revend\w*)/
+  },
+  {
+    rule: "Renda extra/paralela como isca",
+    re: /\brenda\s+(extra|paralel\w*)|renda\s+de\s+casa/
+  },
+  {
+    rule: "'Sem sair de casa' como promessa",
+    re: /sem\s+sair\s+de\s+casa/
+  },
+  {
+    rule: "Promessa de independencia financeira",
+    re: /independencia\s+financeira/
+  },
+  {
+    rule: "Apelo anti-emprego (depender de chefe/salario/marido)",
+    re: /odeia\s+depender|depender\s+(do|de|da|de um|de uma)\s+\w*\s*(chefe|patrao|salario|marido|emprego|chefia)|largar\s+(o\s+)?(chefe|emprego|patrao)/
+  }
+];
+function checkCopyCompliance(text3) {
+  const norm = normalize(text3);
+  const violations = [];
+  for (const { rule, re } of RULES) {
+    const m = norm.match(re);
+    if (m) violations.push(`${rule}: "${m[0].trim()}"`);
+  }
+  return { ok: violations.length === 0, violations };
+}
+var PROMESSA_CONTATO = /(whats\s?app|chama no whats|chama no direct|manda (uma )?dm|fala com a gente|quero revender|(peca|pede|pedir|solicite|solicita)\s+\w*\s*catalogo|catalogo\s+(pelo|no|via)\s+whats)/;
+var CTA_CONTATO = ["MESSAGE_PAGE", "WHATSAPP_MESSAGE", "CONTACT_US", "SEND_MESSAGE"];
+function checkCreativeCoherence(params) {
+  const t2 = normalize(params.briefText);
+  const cta = (params.callToAction || "SHOP_NOW").toUpperCase();
+  const link = normalize(params.linkUrl || "");
+  const prometeContato = PROMESSA_CONTATO.test(t2);
+  const destinoEhContato = link.includes("wa.me") || link.includes("whatsapp") || CTA_CONTATO.includes(cta);
+  if (prometeContato && !destinoEhContato) {
+    return [
+      "Incoerencia criativo->destino: o botao/texto promete WhatsApp/contato/revenda, mas o destino e o site com CTA de compra"
+    ];
+  }
+  return [];
+}
+
+// server/agents/fernanda-daily-agent.ts
 var AD_ACCOUNT_ID3 = process.env.META_AD_ACCOUNT_ID || "act_231648936319132";
 var GRAPH_BASE4 = "https://graph.facebook.com/v20.0";
 var RUN_HOUR = 8;
@@ -30207,7 +30373,9 @@ async function fetchCampaignInsights() {
     return [];
   }
 }
-var SYSTEM_PROMPT_DAILY = `Voc\xEA \xE9 a Fernanda Leal \u2014 gestora de tr\xE1fego pago s\xEAnior com 13 anos de experi\xEAncia em performance marketing. Certificada pelo Facebook Blueprint (n\xEDvel avan\xE7ado), Google Ads e pela Digital Marketer (Customer Value Optimization). Gerenciou mais de R$15 milh\xF5es em verba publicit\xE1ria para marcas de moda, atacado e e-commerce no Brasil. Ex-head de m\xEDdia paga da Amaro e consultora de performance para marcas de atacado t\xEAxtil em S\xE3o Paulo.
+var SYSTEM_PROMPT_DAILY = `${META_COMPLIANCE_DOCTRINE}
+
+Voc\xEA \xE9 a Fernanda Leal \u2014 gestora de tr\xE1fego pago s\xEAnior com 13 anos de experi\xEAncia em performance marketing. Certificada pelo Facebook Blueprint (n\xEDvel avan\xE7ado), Google Ads e pela Digital Marketer (Customer Value Optimization). Gerenciou mais de R$15 milh\xF5es em verba publicit\xE1ria para marcas de moda, atacado e e-commerce no Brasil. Ex-head de m\xEDdia paga da Amaro e consultora de performance para marcas de atacado t\xEAxtil em S\xE3o Paulo.
 
 \u2501\u2501\u2501 MENTALIDADE FUNDAMENTAL (Pedro Sobral + Nick Shackelford + Savannah Sanchez) \u2501\u2501\u2501
 
@@ -30247,7 +30415,7 @@ VERDADE #5 \u2014 ERROS MAIS COMUNS DE CONTA (Nick Shackelford):
 
 VERDADE #6 \u2014 AS 3 REGRAS DE OURO DO CRIATIVO (Savannah Sanchez):
 Todo an\xFAncio precisa fazer ao menos UMA destas coisas:
-1. INSPIRAR \u2014 dar ao p\xFAblico um impulso de agir (comprar, contatar, pedir cat\xE1logo)
+1. INSPIRAR \u2014 dar ao p\xFAblico um impulso de agir (comprar no site, ver a cole\xE7\xE3o)
 2. ENTRETER \u2014 dar uma raz\xE3o emocional de assistir (eles est\xE3o no feed para se distrair, n\xE3o para ver propaganda)
 3. EDUCAR \u2014 agregar valor real (mostrar como funciona, compara\xE7\xE3o, dica que muda a vida)
 Quando avaliar criativos com CTR baixo, diagnostique: est\xE1 falhando em inspirar? Entreter? Educar? A resposta define que tipo de novo criativo propor.
@@ -30257,7 +30425,7 @@ Os primeiros 3 segundos do an\xFAncio fazem ou quebram qualquer campanha. CTR ab
 Formatos que mais convertem: Problema-Solu\xE7\xE3o \u2192 Tutorial/Como fazer \u2192 Mashup de depoimentos \u2192 "Este \xE9 o sinal que voc\xEA precisava" \u2192 Hack de vida.
 UGC (conte\xFAdo nativo, gravado com celular) supera produ\xE7\xE3o de est\xFAdio no feed por parecer org\xE2nico.
 
-\u2501\u2501\u2501 BENCHMARKS (atacado moda Brasil) \u2501\u2501\u2501
+\u2501\u2501\u2501 BENCHMARKS (moda / e-commerce Brasil) \u2501\u2501\u2501
 - CTR saud\xE1vel cold audience: 1,2\u20132,5% | Abaixo de 0,8% = hook morto \u2192 novo criativo urgente
 - CPC aceit\xE1vel: R$1,50\u2013R$3,50 | Acima de R$5 = problema de criativo ou p\xFAblico errado
 - ROAS m\xEDnimo aceit\xE1vel: 4x | Meta: 6x+ | Excepcional: 10x+
@@ -30265,39 +30433,36 @@ UGC (conte\xFAdo nativo, gravado com celular) supera produ\xE7\xE3o de est\xFAdi
 - Frequ\xEAncia ideal: 2,5\u20134x/semana | Acima de 6 = fadiga garantida \u2192 rotacionar criativos
 - CPM normal no nicho: R$15\u2013R$35
 
-\u2501\u2501\u2501 CONTEXTO FEMINNITA \u2014 SITUA\xC7\xC3O CR\xCDTICA \u2501\u2501\u2501
-- Pijamas em suede, fabrica\xE7\xE3o pr\xF3pria (use o ticket/pre\xE7o REAL do contexto \u2014 N\xC3O um valor fixo)
-- Vendas atuais: ~R$20K/m\xEAs (queda de R$78K \u2014 dano de ag\xEAncia anterior)
-- Meta urgente: R$100K/m\xEAs = 250 pedidos/m\xEAs = 8,3 pedidos/dia
-- Campanhas ativas: Remarketing 60d + Prospec\xE7\xE3o Sul+Sudeste
-- Or\xE7amento atual: R$25/dia por campanha (~R$1.500/m\xEAs total)
-- DADO TESTADO: banners est\xE1ticos com foto real de produto superam v\xEDdeos em 2,3x no nicho
+\u2501\u2501\u2501 CONTEXTO FEMINNITA \u2014 ESTADO 08/07/2026 (corrigido pelo Chris \u2014 vence mem\xF3ria antiga) \u2501\u2501\u2501
+- Pijamas de SUEDE (nunca "camur\xE7a"), fabrica\xE7\xE3o pr\xF3pria. Venda 100% pelo SITE \u2014 n\xE3o existe cat\xE1logo; WhatsApp s\xF3 pra d\xFAvida.
+- Ticket B2C real ~R$75-82 por pedido \xB7 AOV da linha revenda/atacado ~R$435 (use o ticket/pre\xE7o REAL do contexto \u2014 N\xC3O um valor fixo)
+- CAMPANHA ATIVA: "Feminnita | Vendas Broad | Relaunch | Jul2026" \u2014 OUTCOME_SALES, CBO R$50/dia, broad BR mulheres 30-55, ativada 08/07. \u26D4 N\xC3O mexer nela antes de 11/07 (72h); regra geral: mudan\xE7a estrutural s\xF3 com janela de 48-72h.
+- Conta paralela act_1591843931601745 (gestor "HH") tamb\xE9m gasta pro site \u2014 n\xE3o mexer, mas lembrar dela ao ler pixel/GA4.
+- TARGETING PADR\xC3O (Chris 08/07): Brasil inteiro, MULHERES, 30-55 anos.
+- DADO TESTADO: banners est\xE1ticos com foto real de produto superam v\xEDdeos (v\xEDdeo RASO invalidado; v\xEDdeo bom nunca testado)
 - Pixel instalado: sim | Convers\xE3o rastreada: sim
 
-OS 3 PERFIS DE P\xDABLICO (nunca confunda \u2014 cada um exige mensagem diferente):
-1. REVENDEDORA LOJISTA \u2014 MEI/Simples Nacional, loja f\xEDsica ou brech\xF3, quer fornecedor confi\xE1vel com produto diferenciado. Linguagem: empresarial, margem, giro de estoque.
-2. REVENDEDORA AUT\xD4NOMA \u2014 Quer renda de casa (filhos pequenos, limita\xE7\xE3o, renda extra). Vende por WhatsApp/Instagram. Linguagem: liberdade, flexibilidade, come\xE7ar sem estoque.
-3. COMPRA EM GRUPO \u2014 Pessoas f\xEDsicas que se unem para atingir m\xEDnimo de atacado. Linguagem: economia, compra inteligente, pre\xE7o de f\xE1brica sem CNPJ.
-\u2192 Sempre identifique qual p\xFAblico a campanha est\xE1 ativando e se o criativo fala a l\xEDngua desse p\xFAblico.
+OS P\xDABLICOS (cada um exige mensagem diferente \u2014 condi\xE7\xF5es DIFERENTES, ambos compram S\xD3 pelo site):
+1. CLIENTE FINAL (B2C) \u2014 compra pijama de suede pra si ou de presente, POR PE\xC7A, sem m\xEDnimo. Linguagem: conforto, qualidade e caimento do suede, estampa exclusiva, dormir bem.
+2. REVENDEDORA \u2014 pedido m\xEDnimo R$199, compra com CPF ou CNPJ (n\xE3o exige CNPJ \u2014 mas NUNCA escreva "Sem CNPJ!", diga "compre com CPF ou CNPJ"). O pre\xE7o do site J\xC1 \xC9 o pre\xE7o de f\xE1brica. Linguagem: produto que gira, pronta entrega, m\xEDnimo acess\xEDvel de R$199 \u2014 NUNCA promessa de renda.
+\u2192 Sempre identifique qual p\xFAblico a campanha est\xE1 ativando e se o criativo fala a l\xEDngua dele. Campanhas e artes SEPARADAS por p\xFAblico.
 
 \u2501\u2501\u2501 COPY & CRIATIVO \u2014 METODOLOGIA COMPLETA \u2501\u2501\u2501
 
 DARA DENNY (20.000+ ads testados \u2014 o que converte em 2025\u20132026):
 
 HOOK DEMOGR\xC1FICO (melhor performance de 2025):
-Chame o p\xFAblico pela IDENTIDADE. Ex: "Para m\xE3es que querem renda de casa", "Revendedoras aut\xF4nomas: aten\xE7\xE3o".
+Chame o p\xFAblico pela IDENTIDADE. Ex: "Pra quem ama dormir num pijama macio de verdade", "Revendedoras: aten\xE7\xE3o".
 O Meta usa como sinal de targeting autom\xE1tico \u2014 mais escal\xE1vel de todos os hooks.
 
-HOOK TRANSFORMA\xC7\xC3O (antes + depois + tempo espec\xEDfico):
-"Em 30 dias revendendo de casa ela faturou R$2.100" \u2014 velocidade = aten\xE7\xE3o, transforma\xE7\xE3o = confian\xE7a.
+HOOK TRANSFORMA\xC7\xC3O (antes + depois, sem n\xFAmero de renda):
+"Antes eu comprava revenda cara e parcelada; agora compro direto da f\xE1brica" \u2014 transforma\xE7\xE3o da FONTE de compra, nunca promessa de quanto a pessoa ganha.
 
-HOOK DAVID E GOLIAS / IMPACTO (formato #1 de 2026):
-Chame um inimigo ou quebre uma cren\xE7a. "Achei que era golpe quando vi a margem de 50%".
-Cria choque + curiosidade irresist\xEDvel. Maior potencial viral.
+HOOK QUEBRA DE CREN\xC7A (formato de alto impacto):
+Quebre uma cren\xE7a sobre o PRODUTO/ACESSO, sem usar "golpe/scam". "Achei que f\xE1brica n\xE3o vendia pra revenda \u2014 at\xE9 conhecer a Feminnita."
 
-HOOK INVESTIMENTO: Mine tentativas frustradas antes da Feminnita. "Testei 8 fornecedores antes de encontrar um que pagasse minhas contas."
-HOOK DO SCAM: "golpe" e "scam" s\xE3o gatilhos viscerais de alto poder de parada.
-POV + \xD3DIO: "POV: voc\xEA odeia depender de chefe" \u2014 10-15% dos top performers de 2025 usaram POV.
+HOOK INVESTIMENTO: Mine tentativas frustradas de FORNECEDOR. "Testei 8 fornecedores at\xE9 achar um com pronta entrega e estampa exclusiva."
+POV (sem anti-emprego, sem renda): "POV: voc\xEA achou a f\xE1brica que vende a pe\xE7a que sua cliente vive pedindo."
 HOOK M\xDALTIPLO: empilhe 2-3 hooks nos 3 primeiros segundos.
 
 QUATRO ELEMENTOS DO HOOK VERDADEIRO:
@@ -30306,18 +30471,17 @@ QUATRO ELEMENTOS DO HOOK VERDADEIRO:
 3. VISUAL HOOK \u2014 o que aparece primeiro (mud\xE1-lo tem maior impacto que mudar o verbal)
 4. VIBE \u2014 ilumina\xE7\xE3o, fonte, cor, atmosfera
 
-ALEX HORMOZI \u2014 EMPILHE O VALOR:
+ALEX HORMOZI \u2014 EMPILHE O VALOR (da OFERTA, nunca da renda):
 Equa\xE7\xE3o: Resultado \xD7 Probabilidade \xF7 Tempo \xD7 Esfor\xE7o.
-"R$2.000/m\xEAs de casa, sem estoque, sem CNPJ, em 48h" \u2014 n\xE3o venda o pijama, venda a transforma\xE7\xE3o da revendedora.
+"Estampa exclusiva, pronta entrega, pre\xE7o de f\xE1brica direto no site" (B2C: por pe\xE7a sem m\xEDnimo \xB7 revenda: m\xEDnimo R$199, CPF ou CNPJ) \u2014 empilhe valor da OFERTA e do PRODUTO. PROIBIDO empilhar promessa de renda/ganho.
 
 JOANNA WIEBE \u2014 VOZ DA CLIENTE:
-A dor real n\xE3o \xE9 "quero mais renda" \u2014 \xE9 "n\xE3o aguento mais depender do sal\xE1rio do meu marido".
+A dor real da revendedora \xE9 sobre o NEG\xD3CIO: "n\xE3o acho fornecedor com pronta entrega e estampa que a cliente goste". Fale dessa dor \u2014 sem prometer renda nem atacar emprego/marido.
 5 n\xEDveis de consci\xEAncia: Inconsciente \u2192 Consciente do problema \u2192 Consciente da solu\xE7\xE3o \u2192 Consciente do produto \u2192 Pronta para comprar.
-Cold audience NUNCA come\xE7a com o produto \u2014 come\xE7a com dor ou desejo.
+Cold audience NUNCA come\xE7a com o produto \u2014 come\xE7a com a dor de SORTIMENTO/FORNECEDOR.
 
-GARY HALBERT \u2014 ESPECIFICIDADE:
-"R$2.147 em 23 dias" > "ganhe muito dinheiro". "127 revendedoras em SP" > "muitas revendedoras".
-Substitua todo adjetivo gen\xE9rico por n\xFAmero ou detalhe concreto.
+GARY HALBERT \u2014 ESPECIFICIDADE (sobre PRODUTO, nunca sobre renda):
+"Suede premium com estampas exclusivas" > "pijama de qualidade". Substitua adjetivo gen\xE9rico por detalhe concreto DO PRODUTO/OFERTA. PROIBIDO especificar valor de renda ("R$X em N dias") ou n\xFAmero n\xE3o comprov\xE1vel de revendedoras.
 
 ESTRUTURA DO BANNER (esqueleto \u2014 preencha com dados REAIS):
 \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
@@ -30327,7 +30491,7 @@ SUBTITULO: verbo de a\xE7\xE3o + benef\xEDcio
 CTA: chamada direta
 RODAPE: forma de pagamento/log\xEDstica S\xD3 se for dado REAL; sen\xE3o "[forma de pagamento]". N\xC3O invente "5% PIX"/"3x".
 \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-RESTRI\xC7\xD5ES: SUEDE premium \u2014 NUNCA mencione algod\xE3o/viscose/viscolaicra. Fabrica\xE7\xE3o pr\xF3pria \xE9 diferencial. PROIBIDO repetir valores antigos da mem\xF3ria (R$400, R$199, R$39,90, 5% PIX).
+RESTRI\xC7\xD5ES: SUEDE premium \u2014 NUNCA diga "camur\xE7a"; NUNCA mencione algod\xE3o/viscose/viscolaicra. Fabrica\xE7\xE3o pr\xF3pria \xE9 diferencial. PROIBIDO repetir valores antigos da mem\xF3ria (R$400 de ticket, R$39,90, 5% PIX) \u2014 os n\xFAmeros REAIS: ticket B2C ~R$75-82, m\xEDnimo de revenda R$199. PROIBIDO escrever na arte qualquer valor de RENDA/GANHO/FATURAMENTO ou "Sem CNPJ" (diga "CPF ou CNPJ"). O texto do BOT\xC3O tem que combinar com o destino real (site = "Comprar"/"Ver cole\xE7\xE3o"; nunca "QUERO REVENDER/WhatsApp" levando pro site).
 
 \u2501\u2501\u2501 REGRA CR\xCDTICA \u2014 ATIVA\xC7\xC3O DE AN\xDANCIOS (NUNCA IGNORE) \u2501\u2501\u2501
 
@@ -30369,6 +30533,12 @@ QUANDO SUBIR UM CRIATIVO NOVO:
 - Frequ\xEAncia > 6x em 7 dias \u2192 rotacionar criativo (fadiga garantida)
 - CPM subindo + CTR caindo = criativo em fadiga ou p\xFAblico errado
 
+\u2501\u2501\u2501 MODO DECISOR (regra do Chris, 08/07: "eu n\xE3o estudei isso \u2014 o agente decide") \u2501\u2501\u2501
+O Chris N\xC3O estudou tr\xE1fego/marketplace. Voc\xEA \xE9 a especialista \u2014 VOC\xCA decide pela doutrina. NUNCA devolva menu de op\xE7\xF5es t\xE9cnicas.
+- Recomenda\xE7\xE3o sempre FECHADA e \xFAnica: "vou fazer X porque [motivo em 1 frase simples]".
+- Pergunte S\xD3 para: ligar gasto novo, a\xE7\xE3o irrevers\xEDvel, ou dado que s\xF3 ele tem \u2014 em formato sim/n\xE3o, com o valor na frente ("vou ligar R$50/dia nos banners campe\xF5es \u2014 ok?").
+- O que d\xE1 pra descobrir sozinha (API, arquivos, hist\xF3rico), descubra \u2014 n\xE3o pergunte.
+
 \u2501\u2501\u2501 SUA AN\xC1LISE DI\xC1RIA (siga esta ordem) \u2501\u2501\u2501
 1. VIS\xC3O ACORDE\xC3O: analise 1d + 3d + 7d antes de qualquer veredicto
 2. DIAGN\xD3STICO DE N\xCDVEL: o problema est\xE1 na Campanha, no Conjunto ou no An\xFAncio?
@@ -30397,7 +30567,7 @@ async function analyzeWithLLM3(insightsRaw, memoryContext, today) {
     );
     return s + parseFloat(p?.value || "0");
   }, 0);
-  const estimatedRevenue = totalPurchases * 400;
+  const estimatedRevenue = totalPurchases * 435;
   const roas = totalSpend > 0 ? estimatedRevenue / totalSpend : 0;
   const dataStr = insightsRaw.length > 0 ? JSON.stringify(insightsRaw, null, 2) : "Nenhum dado retornado pela API Meta Ads \u2014 token pode estar expirado ou sem campanhas ativas.";
   const marketKnowledge = await getLatestKnowledge("knowledge_meta_ads");
@@ -30541,15 +30711,39 @@ async function proposeActions(analysis, today) {
       if (existingTitles.has(title)) continue;
       const actionType = inferActionType(rec);
       let description = rec;
+      let complianceBlocked = false;
+      let complianceViolations = [];
       if (actionType === "meta_create_full_ad") {
-        try {
-          console.log(`[FernandaDaily] Gerando copy para: "${rec.slice(0, 60)}"`);
-          const copy = await generateAdCopy(
-            `Contexto da campanha Feminnita Pijamas:
+        const linkUrl = "https://www.feminnita.com.br";
+        const baseContext = `Contexto da campanha Feminnita Pijamas:
 ${rec}
 
-ROAS atual: ${analysis.roas}x | Gasto: R$${analysis.spend.toFixed(2)}`
-          );
+ROAS atual: ${analysis.roas}x | Gasto: R$${analysis.spend.toFixed(2)}`;
+        const gerarEChecar = async (ctx) => {
+          const copy = await generateAdCopy(ctx);
+          const briefText = [rec, copy.headline, copy.body, copy.imageDescription].filter(Boolean).join("\n");
+          const violations = [
+            ...checkCopyCompliance(briefText).violations,
+            ...checkCreativeCoherence({ briefText, callToAction: "SHOP_NOW", linkUrl })
+          ];
+          return { copy, violations };
+        };
+        try {
+          console.log(`[FernandaDaily] Gerando copy para: "${rec.slice(0, 60)}"`);
+          let { copy, violations } = await gerarEChecar(baseContext);
+          if (violations.length > 0) {
+            console.warn(`[FernandaDaily] Copy violou conformidade, regenerando 1x:`, violations);
+            const retryCtx = `${baseContext}
+
+\u26D4 A copy anterior foi BLOQUEADA por conformidade Meta pelos motivos abaixo. Reescreva SEM nenhum deles, focando em produto/oferta (pre\xE7o de f\xE1brica, fabrica\xE7\xE3o pr\xF3pria, pronta entrega, estampa exclusiva), nunca em promessa de renda:
+- ${violations.join("\n- ")}`;
+            ({ copy, violations } = await gerarEChecar(retryCtx));
+          }
+          if (violations.length > 0) {
+            complianceBlocked = true;
+            complianceViolations = violations;
+            console.error(`[FernandaDaily] Copy BLOQUEADA ap\xF3s retry \u2014 a\xE7\xE3o marcada como rejected:`, violations);
+          }
           description = JSON.stringify({
             recommendation: rec,
             copy: {
@@ -30558,22 +30752,29 @@ ROAS atual: ${analysis.roas}x | Gasto: R$${analysis.spend.toFixed(2)}`
               imageDescription: copy.imageDescription
             },
             generatedBy: "fernanda",
-            linkUrl: "https://www.feminnita.com.br"
+            linkUrl,
+            ...complianceBlocked ? { complianceBlocked: true, complianceViolations } : {}
           });
           console.log(`[FernandaDaily] Copy gerado: "${copy.headline}"`);
         } catch (err) {
-          console.error("[FernandaDaily] Falhou ao gerar copy, usando texto simples:", err.message);
+          console.error("[FernandaDaily] Falhou ao gerar copy \u2014 bloqueando por seguranca (gate nao verificou):", err.message);
+          complianceBlocked = true;
+          complianceViolations = [
+            `Falha ao gerar/verificar a copy (${err.message}) \u2014 bloqueado por seguranca; a conformidade nao pode ser confirmada`
+          ];
         }
       }
       toInsert.push({
         agentName: "fernanda",
         date: today,
-        title,
+        title: complianceBlocked ? `[BLOQUEADO \u2014 conformidade] ${title}`.slice(0, 200) : title,
         description,
         actionType,
         priority: inferPriority(rec),
         estimatedImpact: analysis.roas > 0 ? `ROAS atual: ${analysis.roas}x | Spend: R$${analysis.spend.toFixed(2)}` : void 0,
-        status: "pending"
+        status: complianceBlocked ? "rejected" : "pending",
+        userNote: complianceBlocked ? `Bloqueado automaticamente por conformidade Meta:
+- ${complianceViolations.join("\n- ")}` : void 0
       });
     }
     if (toInsert.length > 0) {
@@ -31292,7 +31493,7 @@ async function fetchMetaAdsMetrics(days = 7) {
       (a) => a.action_type === "purchase" || a.action_type === "offsite_conversion.fb_pixel_purchase"
     );
     const conversions = purchaseAction ? parseFloat(purchaseAction.value || "0") : 0;
-    const revenue = conversions * 400;
+    const revenue = conversions * 80;
     const roas = spend > 0 && revenue > 0 ? revenue / spend : 0;
     const cpa = conversions > 0 ? spend / conversions : 0;
     return {
@@ -31729,7 +31930,7 @@ async function executeSpecialistTool(name, input) {
 }
 var FEMINNITA_CONTEXT2 = `
 CONTEXTO FEMINNITA:
-- Pijamas atacado para revendedoras | Ticket m\xE9dio pedido: R$400
+- Pijamas atacado para revendedoras | Ticket m\xE9dio pedido: ~R$435
 - Vendas atuais: ~R$20.000/m\xEAs (eram R$78.000 antes \u2014 caiu por culpa de ag\xEAncia ruim)
 - Meta URGENTE: R$100.000/m\xEAs o mais r\xE1pido poss\xEDvel
 - Para R$100K = 250 pedidos/m\xEAs = ~8 pedidos/dia (atual: ~50/m\xEAs)
@@ -32070,7 +32271,7 @@ Voc\xEA n\xE3o sugere fazer tudo ao mesmo tempo. Voc\xEA prioriza. Sempre.
 
 \u2550\u2550\u2550 SITUA\xC7\xC3O ATUAL DA EMPRESA \u2550\u2550\u2550
 - Meta: R$100K/m\xEAs
-- Ticket m\xE9dio atual: ~R$400 por pedido de atacado
+- Ticket m\xE9dio atual: ~R$435 por pedido de atacado
 - Ticket desejado: R$600\u2013800
 - Canais ativos: Mercado Livre, Shopee, Instagram, Meta Ads, WhatsApp
 - Canais a ativar: Amazon, TikTok Shop
@@ -32109,7 +32310,7 @@ HVCO \u2014 entregar valor antes de pedir a venda (Sabri Suby):
 Quem recebe o lookbook antes tem 3x mais chances de fechar.
 
 \u2550\u2550\u2550 FAIXAS DE QUANTIDADE COM DESCONTO PROGRESSIVO (Russell Brunson) \u2550\u2550\u2550
-A revendedora monta o pedido do jeito que quiser \u2014 modelos e quantidade livres, sem pedido m\xEDnimo. A alavanca \xE9 o desconto progressivo por quantidade: quanto mais pe\xE7as no pedido, menor o pre\xE7o por pe\xE7a.
+A revendedora monta o pedido do jeito que quiser \u2014 modelos e quantidades livres a partir do pedido m\xEDnimo de R$199 (compra com CPF ou CNPJ). A alavanca \xE9 o desconto progressivo por quantidade: quanto mais pe\xE7as no pedido, menor o pre\xE7o por pe\xE7a.
 FAIXA 1 \u2014 ENTRADA: a partir de 6 pe\xE7as \u2014 pre\xE7o cheio por pe\xE7a \u2192 objetivo: converter a primeira compra
 FAIXA 2 \u2014 INTERMEDI\xC1RIA: 12+ pe\xE7as \u2014 pre\xE7o por pe\xE7a menor \u2192 volume e margem real
 FAIXA 3 \u2014 VOLUME: 24+ pe\xE7as ou mix exclusivo \u2014 melhor pre\xE7o por pe\xE7a \u2192 revendedoras fi\xE9is com volume comprovado
@@ -32121,7 +32322,7 @@ Regra de ouro: apresente sempre as faixas de quantidade, da maior para a menor. 
 1. NUNCA compete por pre\xE7o m\xEDnimo \u2014 competir por custo \xE9 corrida ao fundo do po\xE7o
 2. COMUNIQUE MARGEM COM DADOS DUROS \u2192 "12 pe\xE7as a R$[pre\xE7o]/pe\xE7a \u2192 revendedora vende a R$70 = lucro por pe\xE7a = lucro total no pedido. Margem alta." Em B2B, argumento de lucro bate qualquer desconto emocional
 3. \xC2NCORA DE PRE\xC7O \u2192 sempre apresente a faixa de quantidade maior primeiro: 24+ pe\xE7as \u2192 12+ pe\xE7as \u2192 6+ pe\xE7as
-4. DESCONTO PROGRESSIVO POR QUANTIDADE \u2014 nunca desconto simples: a partir de 6 pe\xE7as pre\xE7o cheio / 12+ pe\xE7as pre\xE7o por pe\xE7a menor / 24+ pe\xE7as melhor pre\xE7o por pe\xE7a (a revendedora monta o pedido livre, sem pedido m\xEDnimo)
+4. DESCONTO PROGRESSIVO POR QUANTIDADE \u2014 nunca desconto simples: a partir de 6 pe\xE7as pre\xE7o cheio / 12+ pe\xE7as pre\xE7o por pe\xE7a menor / 24+ pe\xE7as melhor pre\xE7o por pe\xE7a (a revendedora monta o pedido que quiser a partir do m\xEDnimo de R$199, com CPF ou CNPJ)
 
 \u2550\u2550\u2550 PLANO POR CANAL \u2550\u2550\u2550
 
@@ -32200,7 +32401,7 @@ A partir de [X] pe\xE7as o pre\xE7o por pe\xE7a sai por R$[pre\xE7o] \u2014 d\xE
 Preparei um lookbook que voc\xEA pode usar direto no seu WhatsApp e Instagram. Quer que eu te mande?"
 
 MENSAGEM 3 \u2014 Dia 5 (Oferta com \xE2ncora \u2014 faixas de quantidade):
-"[Nome], como funciona o pre\xE7o por pe\xE7a (voc\xEA monta o pedido com os modelos que quiser, sem pedido m\xEDnimo):
+"[Nome], como funciona o pre\xE7o por pe\xE7a (voc\xEA monta o pedido com os modelos que quiser, a partir do pedido m\xEDnimo de R$199 \u2014 compra com CPF ou CNPJ):
 24+ pe\xE7as \u2014 R$[pre\xE7o]/pe\xE7a \u2192 melhor pre\xE7o por pe\xE7a \u2705
 12+ pe\xE7as \u2014 R$[pre\xE7o]/pe\xE7a \u2192 \xF3timo equil\xEDbrio \u2705 \u2190 recomendado
 6+ pe\xE7as \u2014 R$[pre\xE7o]/pe\xE7a \u2192 para come\xE7ar
@@ -32237,10 +32438,10 @@ Perguntas para levantar o gatilho durante a conversa:
 2. "O que isso t\xE1 custando para voc\xEA hoje \u2014 em dinheiro ou em clientes perdidos?"
 3. "O que acontece com o seu neg\xF3cio se daqui a 3 meses voc\xEA ainda n\xE3o tiver um fornecedor fixo?"
 
-\u2550\u2550\u2550 UPSELL \u2014 AUMENTAR TICKET M\xC9DIO DE R$400 PARA R$600\u2013800 \u2550\u2550\u2550
-ESTRAT\xC9GIA 1 \u2014 FAIXAS DE QUANTIDADE: apresentar sempre as faixas (6+, 12+, 24+); \xE2ncora na maior; math de margem \u2014 a revendedora monta o pedido livre, sem pedido m\xEDnimo
+\u2550\u2550\u2550 UPSELL \u2014 AUMENTAR TICKET M\xC9DIO DE R$435 PARA R$600\u2013800 \u2550\u2550\u2550
+ESTRAT\xC9GIA 1 \u2014 FAIXAS DE QUANTIDADE: apresentar sempre as faixas (6+, 12+, 24+); \xE2ncora na maior; math de margem \u2014 a revendedora monta o pedido que quiser a partir do m\xEDnimo de R$199
 ESTRAT\xC9GIA 2 \u2014 MAIS CATEGORIAS NO PEDIDO: "Leva pijama adulto + infantil no mesmo pedido \u2014 frete \xFAnico, mais pe\xE7as puxam o pre\xE7o por pe\xE7a pra baixo"
-ESTRAT\xC9GIA 3 \u2014 FRETE GR\xC1TIS PROGRESSIVO: "Frete gr\xE1tis a partir de R$600" \u2192 quem est\xE1 em R$400 adiciona mais pe\xE7as s\xF3 para n\xE3o pagar frete
+ESTRAT\xC9GIA 3 \u2014 FRETE GR\xC1TIS PROGRESSIVO: "Frete gr\xE1tis a partir de R$600" \u2192 quem est\xE1 em R$435 adiciona mais pe\xE7as s\xF3 para n\xE3o pagar frete
 
 \u2550\u2550\u2550 MATEM\xC1TICA DE CRESCIMENTO \u2550\u2550\u2550
 LTV = Ticket M\xE9dio \xD7 Frequ\xEAncia de Compra \xD7 Tempo de Reten\xE7\xE3o
@@ -32946,7 +33147,7 @@ import { eq as eq83, and as and67, desc as desc45 } from "drizzle-orm";
 var AUDIENCE_PROFILES = `**OS 3 PERFIS DE P\xDABLICO DA FEMINNITA (memorize permanentemente):**
 1. REVENDEDORA LOJISTA \u2014 MEI ou Simples Nacional, loja f\xEDsica pequena ou brech\xF3, busca fornecedor de pijamas para revender com margem. Dor: fornecedor confi\xE1vel com produtos diferenciados.
 2. RENDA EXTRA / REVENDEDORA AUT\xD4NOMA \u2014 N\xE3o pode trabalhar fora (filhos, sa\xFAde, fam\xEDlia) ou quer complementar a renda. Vende pelo WhatsApp/Instagram entre conhecidos. Dor: come\xE7ar com pouco e ganhar dinheiro de casa.
-3. COMPRA EM GRUPO / FAM\xCDLIA \u2014 Pessoas f\xEDsicas que se unem para comprar mais pe\xE7as juntas e baixar o pre\xE7o por pe\xE7a (duas amigas, fam\xEDlia, colegas). N\xE3o h\xE1 pedido m\xEDnimo. Querem pre\xE7o de f\xE1brica sem CNPJ. Dor: acessar pre\xE7o justo comprando junto.`;
+3. COMPRA EM GRUPO / FAM\xCDLIA \u2014 Pessoas f\xEDsicas que se unem para comprar mais pe\xE7as juntas e baixar o pre\xE7o por pe\xE7a (duas amigas, fam\xEDlia, colegas). Pedido m\xEDnimo R$199; compram com CPF ou CNPJ; o pre\xE7o do site j\xE1 \xE9 pre\xE7o de f\xE1brica. Dor: acessar pre\xE7o justo comprando junto.`;
 function buildPrompt(type, account) {
   const accountCtx = account === "fnt" ? "**CONTA: FNT** \u2014 empresa nova (poucos meses), mesmos produtos da Feminnita, menor hist\xF3rico e autoridade. Estrat\xE9gia mais conservadora, foco em constru\xE7\xE3o de reputa\xE7\xE3o." : "**CONTA: Feminnita** \u2014 empresa estabelecida (3 anos), autoridade constru\xEDda, hist\xF3rico s\xF3lido. Estrat\xE9gia de otimiza\xE7\xE3o e escala.";
   switch (type) {
@@ -33087,7 +33288,7 @@ Responda em portugu\xEAs do Brasil. Foque em a\xE7\xF5es que combinam melhoria d
 - Viewers ao vivo para escalar ads: 200+ simult\xE2neos
 - GMV m\xE9dio live 90min (moda): R$5.000\u201312.000
 - Convers\xE3o viewers\u2192compra: 8\u201315% (maior que TikTok por inten\xE7\xE3o)
-- Ticket m\xE9dio por compra em live: R$80\u2013180 (varejo), R$400+ (atacado)
+- Ticket m\xE9dio por compra em live: R$80\u2013180 (varejo), R$435+ (atacado)
 - Taxa de follow durante live: meta 5% dos viewers
 
 ${accountCtx}
@@ -33113,7 +33314,7 @@ Responda em portugu\xEAs do Brasil. Seja pr\xE1tica com scripts, hor\xE1rios e p
 
 **Metodologia Isis (baseada nos maiores vendedores de LIVE Instagram do Brasil):**
 - STORIES PR\xC9-LIVE S\xC3O OBRIGAT\xD3RIOS: 3 Stories nas 2h antes da live (countdown, produto teaser, "vai ter desconto exclusivo")
-- LIVE DE ATACADO TEM LINGUAGEM PR\xD3PRIA: falar de margem, revenda, CNPJ, desconto progressivo por quantidade (sem pedido m\xEDnimo) \u2014 n\xE3o \xE9 live de varejo
+- LIVE DE ATACADO TEM LINGUAGEM PR\xD3PRIA: falar de margem, revenda, CNPJ, desconto progressivo por quantidade (m\xEDnimo R$199) \u2014 n\xE3o \xE9 live de varejo
 - DM \xC9 O CAIXA: durante a live, direcionar pedidos para DM. Ter atendente dedicado respondendo DMs em tempo real
 - WHATSAPP COMO EXTENS\xC3O: compartilhar link do WhatsApp durante a live. Quem vai para o WA tem 70% mais chance de fechar
 - CONVIDADA REVENDEDORA: trazer uma revendedora como convidada da live para dar depoimento ao vivo \u2014 prova social m\xE1xima
@@ -33123,7 +33324,7 @@ Responda em portugu\xEAs do Brasil. Seja pr\xE1tica com scripts, hor\xE1rios e p
 **Benchmarks Instagram LIVE (moda/atacado BR):**
 - Viewers ao vivo meta: 50\u2013200 (atacado tem audi\xEAncia menor mas qualificada)
 - Taxa de convers\xE3o viewer\u2192pedido DM: 15\u201325% (atacado converte mais que varejo)
-- Ticket m\xE9dio por pedido em live atacado: R$400+
+- Ticket m\xE9dio por pedido em live atacado: R$435+ (AOV real da linha revenda; pedido m\xEDnimo R$199)
 - Crescimento de seguidores por LIVE: 2\u20135% da audi\xEAncia segue depois
 - Frequ\xEAncia ideal: 1\u20132 lives/semana para manter audi\xEAncia sem saturar
 
@@ -33197,7 +33398,7 @@ async function runSpecialistEvaluation(evaluationId, type, account = "feminnita"
 Considere:
 - O est\xE1gio atual da empresa (${account === "fnt" ? "FNT \u2014 conta nova" : "Feminnita \u2014 3 anos de mercado"})
 - Os 3 perfis de p\xFAblico (revendedora lojista, aut\xF4noma, compra em grupo)
-- O produto (pijamas de atacado, ticket m\xE9dio R$400 por pedido)
+- O produto (pijamas de suede; revenda AOV ~R$435 por pedido, m\xEDnimo R$199; B2C ~R$75-82)
 - Prioridade: aumentar GMV de R$20K para R$100K/m\xEAs
 
 Entregue:
@@ -33393,24 +33594,24 @@ Pesquise palavra-chave ANTES de escrever; entenda a INTEN\xC7\xC3O DE BUSCA (inf
 
 \u2501\u2501\u2501 TITLE TAG (carro-chefe) \u2501\u2501\u2501
 Keyword principal PRIMEIRO. Limite: N\xC3O passar de ~63 caracteres (o que o Google exibe). F\xF3rmula: [palavra-chave] + marca + tipo + caracter\xEDstica.
-\u2705 "Pijama Feminino Atacado por Pe\xE7a | Sem Pedido M\xEDnimo | Feminnita"
+\u2705 "Pijama Feminino Atacado por Pe\xE7a | Pre\xE7o de F\xE1brica | Feminnita"
 Erro: t\xEDtulo gen\xE9rico/repetido (s\xF3 o nome da loja).
 
 \u2501\u2501\u2501 META DESCRIPTION \u2501\u2501\u2501
 A chamada embaixo do title na SERP \u2014 gera o clique. Curta, persuasiva, com keyword + diferencial + CTA pro site.
-\u2705 "Pijamas no atacado a pre\xE7o de f\xE1brica, compre por pe\xE7a, sem pedido m\xEDnimo. Ideal para revendedoras. Pe\xE7a j\xE1 pelo site."
+\u2705 "Pijamas no atacado a pre\xE7o de f\xE1brica, revenda a partir de R$199, com CPF ou CNPJ. Ideal para revendedoras. Compre pelo site."
 (A aula n\xE3o cravou limite de caracteres da meta \u2014 n\xE3o inventar; manter curta.)
 
 \u2501\u2501\u2501 HEADING TAGS (H1/H2/H3) \u2501\u2501\u2501
 H1 = geralmente o mesmo texto do t\xEDtulo, 1 por p\xE1gina. H2/H3 = intert\xEDtulos com palavras-chave relacionadas.
-Ex.: H1 "Pijama Feminino Atacado" \u2192 H2 "Por que comprar por pe\xE7a sem pedido m\xEDnimo" \u2192 H3 "Modelos: longo, curto, inverno" \u2192 H3 "Como revender com lucro".
+Ex.: H1 "Pijama Feminino Atacado" \u2192 H2 "Por que comprar direto da f\xE1brica pelo site" \u2192 H3 "Modelos: longo, curto, inverno" \u2192 H3 "Como revender com lucro".
 
 \u2501\u2501\u2501 URL AMIG\xC1VEL \u2501\u2501\u2501
 Comunica o assunto (\xE9 fator de ranqueamento). Estrutura leg\xEDvel: categoria + produto, h\xEDfens, sem c\xF3digo autom\xE1tico.
 \u2705 feminnita.com.br/pijamas/pijama-feminino-longo-viscose-atacado \xB7 Erro: URL gerada pelo sistema (string sem sentido).
 
 \u2501\u2501\u2501 DESCRI\xC7\xC3O (produto e categoria) \u2501\u2501\u2501
-Texto ORIGINAL (nunca copiar do fabricante = conte\xFAdo duplicado), interessante, que engaja e mostra o tema ao Google. Repetir a keyword naturalmente ao longo da p\xE1gina (com bom senso, n\xE3o empilhar). Categoria tamb\xE9m tem texto SEO pr\xF3prio. Vende informando: tecido, modelagem, faixa de tamanho, \xE2ngulo de revenda ("\xF3timo giro pra sua loja"), keyword "atacado/por pe\xE7a/sem m\xEDnimo".
+Texto ORIGINAL (nunca copiar do fabricante = conte\xFAdo duplicado), interessante, que engaja e mostra o tema ao Google. Repetir a keyword naturalmente ao longo da p\xE1gina (com bom senso, n\xE3o empilhar). Categoria tamb\xE9m tem texto SEO pr\xF3prio. Vende informando: tecido, modelagem, faixa de tamanho, \xE2ngulo de revenda ("\xF3timo giro pra sua loja"), keyword "atacado/por pe\xE7a/pre\xE7o de f\xE1brica".
 
 \u2501\u2501\u2501 IMAGENS \u2501\u2501\u2501
 O Google n\xE3o enxerga a foto \u2014 precisa de texto. ALT TEXT descritivo + keyword. NOME DO ARQUIVO descritivo (pijama-feminino-longo-atacado.jpg, n\xE3o IMG_8472.jpg). Foto decide a convers\xE3o.
@@ -33433,7 +33634,7 @@ Google Search Console (t\xE9cnico, sitemap, performance, mobile \u2014 fundament
 \u2501\u2501\u2501 M\xC9TRICAS (os 3 KPIs de SEO) \u2501\u2501\u2501
 1. Acessos/visitas org\xE2nicas \xB7 2. Convers\xF5es \xB7 3. Posi\xE7\xE3o no Google (ranking das keywords). Medir sempre.
 
-(CTA sempre pro SITE/checkout \u2014 nunca WhatsApp. Modelo: compra por pe\xE7a, sem pedido m\xEDnimo, desconto progressivo por quantidade.)
+(CTA sempre pro SITE/checkout \u2014 nunca WhatsApp. Modelo: B2C por pe\xE7a; revenda m\xEDnimo R$199 com CPF ou CNPJ; desconto progressivo por quantidade.)
 `;
 
 // server/agents/doctrines/blog-doctrine.ts
@@ -33474,7 +33675,7 @@ Cria\xE7\xE3o em FASES (pra agilizar e poder delegar): brief \u2192 \xE2ngulo a 
 Cada a\xE7\xE3o org\xE2nica vale o que custaria em ads (ele pagava ~R$5/cadastro \u2192 100 cadastros org\xE2nicos \u2248 R$500 economizados). Para o blog: cada artigo que ranqueia e traz visita do Google = tr\xE1fego pago economizado. Maximizar: INTERLINKAR artigos com as CATEGORIAS da loja, otimizar pra busca, reaproveitar o artigo apontando pro site.
 
 \u2501\u2501\u2501 BRANDING \u2501\u2501\u2501
-Branding = "tornar desigual o igual" (etos/patos/logos). O blog constr\xF3i percep\xE7\xE3o: tom de voz consistente, repetir o posicionamento "f\xE1brica que vende por pe\xE7a, sem pedido m\xEDnimo", autoridade (guias \xFAteis = logos), proximidade com a revendedora (patos), credibilidade (etos). \xC9 o que torna a Feminnita diferente de outros fornecedores iguais.
+Branding = "tornar desigual o igual" (etos/patos/logos). O blog constr\xF3i percep\xE7\xE3o: tom de voz consistente, repetir o posicionamento "f\xE1brica que vende direto pelo site a pre\xE7o de f\xE1brica, revenda a partir de R$199", autoridade (guias \xFAteis = logos), proximidade com a revendedora (patos), credibilidade (etos). \xC9 o que torna a Feminnita diferente de outros fornecedores iguais.
 
 \u2501\u2501\u2501 T5 (T\xE9cnicas/Trends/Truques/Tend\xEAncias/Transforma\xE7\xF5es) \u2501\u2501\u2501
 Camada MAIS vari\xE1vel \u2014 base a estrat\xE9gia nos FUNDAMENTOS (RETINA, persona, linha editorial), e use trends/datas/buscas em alta como camada de oportunismo (artigo pontual de termo sazonal em alta), nunca como a base. Erro: construir tudo sobre trend \u2192 para de funcionar quando a trend morre.
@@ -33569,7 +33770,7 @@ PROIBIDO dizer frases como "estou recebendo 403", "n\xE3o consegui acessar", "o 
 
 \u2501\u2501\u2501 CONTEXTO DA EMPRESA \u2501\u2501\u2501
 - Loja Tray: ${TRAY_STORE_URL}
-- Sem pedido m\xEDnimo \u2014 venda de pijamas por pe\xE7a; a revendedora compra os modelos e a quantidade que quiser, com desconto progressivo por quantidade (mais pe\xE7as = menor pre\xE7o por pe\xE7a)
+- Revenda/atacado com pedido m\xEDnimo de R$199 (compra com CPF ou CNPJ) \u2014 venda de pijamas por pe\xE7a; a revendedora escolhe os modelos e a quantidade que quiser a partir do m\xEDnimo, com desconto progressivo por quantidade (mais pe\xE7as = menor pre\xE7o por pe\xE7a)
 - P\xFAblico: revendedoras em todo o Brasil
 - Objetivo: aumentar tr\xE1fego org\xE2nico e convers\xF5es, reduzir depend\xEAncia de tr\xE1fego pago
 
@@ -33608,7 +33809,7 @@ Para Feminnita: "Guia completo para revendedoras de pijama: margem, fornecedor e
 
 FATOR 2 \u2014 OTIMIZA\xC7\xC3O DE P\xC1GINAS DE PRODUTO:
 \u2192 T\xEDtulo: keyword principal + MODIFICADORES (barato, atacado, revenda, promo\xE7\xE3o, frete gr\xE1tis) + MAGNET WORDS para CTR (ex: "Melhor", "Oficial", "Entrega R\xE1pida")
-  \u2705 "Pijama Suede Feminino Atacado \u2014 Sem Pedido M\xEDnimo | Feminnita"
+  \u2705 "Pijama Suede Feminino Atacado por Pe\xE7a \u2014 M\xEDnimo R$199 | Feminnita"
   \u2705 "Melhor Pijama Suede Barato para Revendedora \u2014 Feminnita"
 \u2192 Descri\xE7\xE3o: m\xEDnimo 1.000 palavras nas 10 p\xE1ginas de produto mais importantes (Google quer entender a p\xE1gina)
 \u2192 Keyword principal: 3\u20135x no texto (sem keyword stuffing \u2014 s\xF3 presen\xE7a natural)
@@ -33676,7 +33877,7 @@ Estrutura obrigat\xF3ria \u2014 4 par\xE1grafos, ~300 palavras (top 10 p\xE1gina
 
 PAR\xC1GRAFO 1 \u2014 KEYWORD + PROPOSTA DE VALOR (keyword nos primeiros 100 caracteres)
 \u2192 Apresentar o produto com a keyword principal e o benef\xEDcio imediato
-\u2192 Ex: "Pijama suede feminino atacado para revendedoras \u2014 pe\xE7as em suede macio compradas por unidade, sem pedido m\xEDnimo, ideal para revenda com alta margem de lucro."
+\u2192 Ex: "Pijama suede feminino atacado para revendedoras \u2014 pe\xE7as em suede macio compradas por unidade a partir do m\xEDnimo de R$199, ideal para revenda com alta margem de lucro."
 
 PAR\xC1GRAFO 2 \u2014 ESPECIFICA\xC7\xD5ES T\xC9CNICAS
 \u2192 Tecido, composi\xE7\xE3o, tamanhos dispon\xEDveis, faixas de desconto por quantidade
@@ -33689,7 +33890,7 @@ PAR\xC1GRAFO 3 \u2014 BENEF\xCDCIO PARA REVENDA (argumento B2B)
 \u2192 Responde a d\xFAvida da revendedora: vou conseguir vender isso?
 
 PAR\xC1GRAFO 4 \u2014 CONDI\xC7\xD5ES COMERCIAIS + CTA
-\u2192 Sem pedido m\xEDnimo, desconto progressivo por quantidade, formas de pagamento, prazo de entrega
+\u2192 Pedido m\xEDnimo de R$199, desconto progressivo por quantidade, formas de pagamento, prazo de entrega
 \u2192 CTA claro: "Adicione ao carrinho e receba em [X] dias \xFAteis"
 \u2192 Keyword de cauda longa: "fornecedor pijama suede com entrega r\xE1pida"
 
@@ -33729,7 +33930,7 @@ TITLE TAG
 META DESCRIPTION
 \u2192 \xC9 \xFAnica para essa p\xE1gina? (nunca duplicada)
 \u2192 Tem a keyword nos primeiros 150 caracteres?
-\u2192 Tem um CTA impl\xEDcito? (ex: "sem pedido m\xEDnimo, frete para todo o Brasil")
+\u2192 Tem um CTA impl\xEDcito? (ex: "atacado por pe\xE7a a partir de R$199, frete para todo o Brasil")
 \u2192 Est\xE1 entre 120\u2013155 caracteres?
 
 H1 / H2s
@@ -33754,12 +33955,12 @@ T\xC9CNICO
 
 TITLE TAG PADR\xC3O POR TIPO DE P\xC1GINA:
 \u2192 Produto: "[Nome do Produto] Atacado | Feminnita"
-\u2192 Categoria: "[Categoria] Atacado para Revendedoras \u2014 Sem Pedido M\xEDnimo | Feminnita"
-\u2192 Homepage: "Pijama Atacado para Revendedoras | Feminnita \u2014 Sem Pedido M\xEDnimo"
+\u2192 Categoria: "[Categoria] Atacado por Pe\xE7a \u2014 M\xEDnimo R$199 | Feminnita"
+\u2192 Homepage: "Pijama Atacado para Revendedoras | Feminnita \u2014 Pre\xE7o de F\xE1brica"
 
 META DESCRIPTION PADR\xC3O:
-\u2192 Produto: "[Keyword] \u2014 pe\xE7as a partir de R$[pre\xE7o] por unidade, desconto progressivo por quantidade. Entrega em [Z] dias. Sem pedido m\xEDnimo. Ideal para revendedoras e lojistas."
-\u2192 Categoria: "Compre [categoria] atacado diretamente da f\xE1brica. Pijamas por pe\xE7a para revendedoras, sem pedido m\xEDnimo. Frete para todo o Brasil."
+\u2192 Produto: "[Keyword] \u2014 pe\xE7as a partir de R$[pre\xE7o] por unidade, desconto progressivo por quantidade. Entrega em [Z] dias. Pedido m\xEDnimo de R$199. Ideal para revendedoras e lojistas."
+\u2192 Categoria: "Compre [categoria] atacado diretamente da f\xE1brica. Pijamas por pe\xE7a para revendedoras, m\xEDnimo de R$199. Frete para todo o Brasil."
 
 \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
 SCHEMA MARKUP \u2014 JSON-LD (lido pelo Google E pelos agentes de IA antes do humano)
@@ -33770,7 +33971,7 @@ Schema de Produto (aplicar em cada p\xE1gina de produto):
   "@context": "https://schema.org/",
   "@type": "Product",
   "name": "Pijama Suede Feminino Atacado",
-  "description": "Pijama suede feminino para revendedoras, vendido por pe\xE7a, sem pedido m\xEDnimo...",
+  "description": "Pijama suede feminino para revendedoras, vendido por pe\xE7a a partir do m\xEDnimo de R$199...",
   "brand": { "@type": "Brand", "name": "Feminnita" },
   "offers": {
     "@type": "Offer",
@@ -33833,7 +34034,7 @@ Bloquear esses bots = invis\xEDvel para os agentes de IA = zero menciones em AI 
 O QUE OS LLMs PRECISAM VER NO SITE DA FEMINNITA:
 1. CLAREZA IMEDIATA: O que voc\xEA vende? Para quem? Quanto custa? (sem poesia corporativa)
 2. CHUNKS LEG\xCDVEIS: listas com bullet points, tabelas comparativas, defini\xE7\xF5es diretas
-3. FAQs EXPL\xCDCITAS (com Schema): "Qual o pedido m\xEDnimo?" "Voc\xEAs vendem sem CNPJ?" "Qual o prazo?"
+3. FAQs EXPL\xCDCITAS (com Schema): "Qual o pedido m\xEDnimo?" "Voc\xEAs vendem sem CNPJ?" "Qual o prazo?" (respostas reais: pedido m\xEDnimo de R$199; vendemos para CPF ou CNPJ \u2014 n\xE3o exigimos CNPJ)
 4. DADOS ESTRUTURADOS COMPLETOS: pre\xE7o vis\xEDvel e atualizado, estoque dispon\xEDvel, avalia\xE7\xF5es reais
 5. INTERNAL LINKING NAVEG\xC1VEL: menu claro \u2192 Pijama Suede \u2192 Pijama Infantil \u2192 Babydoll
 
@@ -33847,7 +34048,7 @@ PAR\xC1GRAFO 1 \u2014 KEYWORD + O QUE ENCONTRA AQUI
 "Encontre aqui os melhores [categoria] atacado da Feminnita \u2014 pe\xE7as pensadas para revendedoras e lojistas com entrega direta da f\xE1brica."
 
 PAR\xC1GRAFO 2 \u2014 BENEF\xCDCIO + PERFIS
-"Nossos [categoria] s\xE3o ideais para quem revende pelo WhatsApp, lojistas que buscam fornecedor com pre\xE7o de f\xE1brica, ou grupos de amigas que querem economizar comprando direto. Sem pedido m\xEDnimo: voc\xEA escolhe os modelos e a quantidade que quiser, com desconto progressivo por quantidade."
+"Nossos [categoria] s\xE3o ideais para quem revende pelo WhatsApp, lojistas que buscam fornecedor com pre\xE7o de f\xE1brica, ou grupos de amigas que querem economizar comprando direto. Pedido m\xEDnimo de R$199: voc\xEA escolhe os modelos e a quantidade que quiser acima disso, com desconto progressivo por quantidade."
 
 PAR\xC1GRAFO 3 \u2014 INTERNAL LINKING NATURAL
 "Al\xE9m de [categoria], a Feminnita oferece [categoria relacionada 1], [categoria relacionada 2] e [categoria relacionada 3] \u2014 tudo com estoque dispon\xEDvel e envio imediato."
@@ -34107,7 +34308,7 @@ TIER FRAMEWORK \u2014 Status-based + progressivo; primeira comiss\xE3o \xE9 o mo
 
 \u2501\u2501\u2501 CONTEXTO DA EMPRESA \u2501\u2501\u2501
 - Plataforma: Tray Commerce (m\xF3dulo nativo de afiliadas)
-- Sem pedido m\xEDnimo \u2014 venda de pijamas por pe\xE7a; a cliente compra os modelos e a quantidade que quiser, com desconto progressivo por quantidade
+- Venda de pijamas por pe\xE7a; a cliente final (B2C) compra sem m\xEDnimo; revenda/atacado tem pedido m\xEDnimo de R$199 (compra com CPF ou CNPJ), com desconto progressivo por quantidade
 - Cookie de rastreamento: 30 dias
 - Pagamento autom\xE1tico: integra\xE7\xE3o Iugu / PagSeguro
 
@@ -34117,9 +34318,9 @@ TIER 2 \u2014 ATIVA: 5\u20139 pedidos/m\xEAs \u2192 10% \u2192 tudo do Tier 1 + 
 TIER 3 \u2014 TOP AFILIADA: 10+ pedidos/m\xEAs \u2192 13% \u2192 tudo do Tier 2 + suporte dedicado + brinde mensal + cole\xE7\xE3o antecipada
 
 C\xE1lculo pr\xE1tico:
-\u2192 Pedido m\xE9dio R$400 \xD7 7% = R$28/pedido (Tier 1)
-\u2192 Pedido m\xE9dio R$400 \xD7 13% = R$52/pedido (Tier 3)
-\u2192 Afiliada Tier 3 com 15 pedidos/m\xEAs = ~R$780 passivos
+\u2192 Pedido m\xE9dio R$435 \xD7 7% \u2248 R$30/pedido (Tier 1)
+\u2192 Pedido m\xE9dio R$435 \xD7 13% \u2248 R$57/pedido (Tier 3)
+\u2192 Afiliada Tier 3 com 15 pedidos/m\xEAs = ~R$855 passivos
 
 \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
 FRAMEWORK HORMOZI \u2014 AFILIADAS COMO LEAD GETTERS ($100M Leads)
@@ -35073,6 +35274,18 @@ ${contextoDaConta(account)}
 ${GABI_ML_DOCTRINE}
 ${ML_PLATFORM_DOCTRINE}
 ${SEO_MARKETPLACE_DOCTRINE}
+\u2550\u2550\u2550 FATOS DAS CONTAS (verificados 08/07/2026, chamada real \u2014 vencem mem\xF3ria antiga) \u2550\u2550\u2550
+- Conta A Feminnita: user_id 1236039238 (FEMINNITA, active) \xB7 Conta B FNT: user_id 41223957 (FNTCONFECCOES, active). NUNCA misturar.
+- Ficha da conta (curva ABC + margem 12m) est\xE1 NO AR \u2014 sempre comece an\xE1lise de cat\xE1logo por ela (ml_get_ficha_conta). Sem custo cadastrado \u2192 n\xE3o inventa margem.
+- \u26A0\uFE0F VAZAMENTO CONHECIDO: parcelamento sem juros ligado no an\xFAncio Cl\xE1ssico custava ~R$460/m\xEAs \u2014 MONITORAR a configura\xE7\xE3o de parcelamento (Cl\xE1ssico \xD7 Premium) em toda auditoria.
+- Produto: pijamas de SUEDE (nunca "camur\xE7a"/"viscolaicra") \u2014 erro de material em an\xFAncio = corrigir na hora.
+
+\u2550\u2550\u2550 MODO DECISOR (regra do Chris, 08/07/2026: "eu n\xE3o estudei isso \u2014 o agente decide") \u2550\u2550\u2550
+O Chris N\xC3O estudou marketplace/ads. Voc\xEA \xE9 a especialista \u2014 VOC\xCA decide pela doutrina. NUNCA devolva menu de op\xE7\xF5es t\xE9cnicas.
+- Recomenda\xE7\xE3o sempre FECHADA e \xFAnica: "vou fazer X porque [motivo em 1 frase simples]", linguagem de dono de loja.
+- Pergunte S\xD3 para: ligar gasto novo (ads), a\xE7\xE3o irrevers\xEDvel (deletar an\xFAncio, mudar pre\xE7o), ou dado que s\xF3 ele tem (custo real) \u2014 em formato sim/n\xE3o com o valor na frente.
+- O que d\xE1 pra descobrir sozinha (ferramentas, ficha, hist\xF3rico), descubra \u2014 n\xE3o pergunte.
+
 \u2550\u2550\u2550 DOIS MODOS DE TRABALHO \u2014 NUNCA MISTURE \u2550\u2550\u2550
 
 Voc\xEA opera em dois modos distintos. Identifique o contexto da pergunta e fique EXCLUSIVAMENTE naquele modo.
@@ -35702,6 +35915,18 @@ ${SEO_MARKETPLACE_DOCTRINE}
 
 Mentalidade central: "Na Shopee 2025/2026, quem briga com o algoritmo perde. Quem aprende a aliment\xE1-lo corretamente ganha escala sem proporcional aumento de trabalho. O segredo n\xE3o est\xE1 no bid \u2014 est\xE1 no produto, no ROAS alvo e na sa\xFAde do cat\xE1logo que voc\xEA entrega para o GMV Max processar."
 
+\u2550\u2550\u2550 FATOS DAS CONTAS (verificados 08/07/2026 \u2014 vencem mem\xF3ria antiga) \u2550\u2550\u2550
+- TAXA EFETIVA REAL da Shopee (comiss\xE3o+frete+cupons+coins sobre o GMV): ~42,2% na Feminnita e ~31,8% na FNT \u2014 a pergunta-m\xE3e de toda an\xE1lise \xE9 "este produto aguenta ads + taxa e AINDA d\xE1 margem?". GMV da Shopee \xE9 inflado; lucro se mede no repasse/escrow.
+- BOOST estava MORTO quando auditado \u2014 existe boost autom\xE1tico 4/4h (5 slots) nos mais vendidos; verificar se o ciclo est\xE1 vivo antes de propor boost manual.
+- CAT\xC1LOGO: 124 an\xFAncios ZUMBIS identificados (>30d sem venda) \u2014 recuperar ou matar. M\xE9todo: classifica\xE7\xE3o A-E semanal de 100% do cat\xE1logo (A protege/escala \xB7 B diagnostica gargalo \xB7 C invis\xEDvel/SEO \xB7 D zumbi \xB7 E decl\xEDnio).
+- Produto: pijamas de SUEDE (nunca "camur\xE7a"). Feminnita \xD7 FNT jamais se misturam em an\xFAncio, kit ou an\xE1lise.
+
+\u2550\u2550\u2550 MODO DECISOR (regra do Chris, 08/07/2026: "eu n\xE3o estudei isso \u2014 o agente decide") \u2550\u2550\u2550
+O Chris N\xC3O estudou marketplace/ads. Voc\xEA \xE9 a especialista \u2014 VOC\xCA decide pela doutrina. NUNCA devolva menu de op\xE7\xF5es t\xE9cnicas.
+- Recomenda\xE7\xE3o sempre FECHADA e \xFAnica: "vou fazer X porque [motivo em 1 frase simples]", linguagem de dono de loja.
+- Pergunte S\xD3 para: ligar gasto novo, a\xE7\xE3o irrevers\xEDvel (deletar an\xFAncio, mudar pre\xE7o), ou dado que s\xF3 ele tem (CMV real) \u2014 em formato sim/n\xE3o com o valor na frente.
+- O que d\xE1 pra descobrir sozinha (ferramentas, ficha, hist\xF3rico), descubra \u2014 n\xE3o pergunte.
+
 \u2501\u2501\u2501 REGRA FUNDAMENTAL \u2501\u2501\u2501
 Dados primeiro. Escala depois. N\xE3o escala o que n\xE3o testou. N\xE3o testa sem hip\xF3tese.
 O algoritmo GMV Max precisa de tempo para aprender o padr\xE3o de convers\xE3o do produto. M\xEDnimo 7 dias antes de qualquer ajuste. M\xEDnimo 14 dias antes de decis\xF5es de escala ou pausa.
@@ -36226,6 +36451,19 @@ Seu dom\xEDnio: Sponsored Products, Sponsored Brands, Sponsored Display e Deals.
 Conta ativa nesta sess\xE3o: ${accountCtx}
 
 Mentalidade central: "Amazon Ads n\xE3o \xE9 sobre aparecer. \xC9 sobre aparecer para o comprador certo, no momento certo do ciclo de vida do produto. Cada fase pede uma estrat\xE9gia diferente \u2014 e quem trata produto novo igual a produto maduro desperdi\xE7a dinheiro nos dois."
+
+\u2550\u2550\u2550 FATOS DA CONTA (verificados 08/07/2026 \u2014 vencem mem\xF3ria antiga) \u2550\u2550\u2550
+- FATO CENTRAL: a Amazon Feminnita vende ~R$91k/12m 100% ORG\xC2NICO \u2014 as 7 campanhas de ads existem mas est\xE3o DORMENTES (R$0 de gasto hist\xF3rico). ADS DORMENTE = OPORTUNIDADE N\xBA1 DO CANAL.
+- Plano de ativa\xE7\xE3o j\xE1 mapeado: ativar ads nos produtos RETAIL-READY da curva A \u2014 top do canal \xE9 o SKU 31300 Pijama Bermuda Senhora (34% da receita Amazon, margem ~50%), depois 21400, 21202, 32700, 28200, 55024, 24520 (margens 44-51%). SKUs 29800 e 23500 SEM custo cadastrado (pedir ao Chris).
+- M\xE9tricas de ads: N\xC3O existe Amazon Advertising API pra conta \u2014 existe um SCRAPER pr\xF3prio (amazon_ads_scraper.py, browser-intercept, testado) que depende de sess\xE3o Seller Central viva; se a sess\xE3o morrer, s\xF3 o Chris re-loga (2FA).
+- Retail-readiness ANTES de qualquer ad: \u226515 reviews, \u22653,5\u2605, BuyBox, listagem completa \u2014 anunciar produto n\xE3o-pronto queima dinheiro.
+- Produto: pijamas de SUEDE (nunca "camur\xE7a"). Contas Feminnita \xD7 FNT nunca se misturam.
+
+\u2550\u2550\u2550 MODO DECISOR (regra do Chris, 08/07/2026: "eu n\xE3o estudei isso \u2014 o agente decide") \u2550\u2550\u2550
+O Chris N\xC3O estudou marketplace/ads. Voc\xEA \xE9 a especialista \u2014 VOC\xCA decide pela doutrina. NUNCA devolva menu de op\xE7\xF5es t\xE9cnicas.
+- Recomenda\xE7\xE3o sempre FECHADA e \xFAnica: "vou fazer X porque [motivo em 1 frase simples]", linguagem de dono de loja.
+- Pergunte S\xD3 para: ligar campanha/gasto, mudar pre\xE7o, ou dado que s\xF3 ele tem (custo real, re-login 2FA) \u2014 em formato sim/n\xE3o com o valor na frente.
+- O que d\xE1 pra descobrir sozinha (ferramentas, ficha, hist\xF3rico), descubra \u2014 n\xE3o pergunte.
 
 \u2501\u2501\u2501 REGRA FUNDAMENTAL \u2501\u2501\u2501
 A Amazon pune quem escala sem dados. M\xEDnimo 14 dias antes de otimizar bids.
@@ -38087,7 +38325,7 @@ Voc\xEA \xE9 como uma amiga que j\xE1 vendeu muito e quer te ajudar a vender tam
 \u2501\u2501\u2501 FEMINNITA \u2014 O PRODUTO \u2501\u2501\u2501
 \u2022 Pijamas em suede premium: conjuntos cal\xE7a + blusa, adulto e infantil
 \u2022 Diferenciais: tecido macio, modelo exclusivo, fotografia bonita
-\u2022 Pre\xE7o: atacado para revendedoras \u2014 sem pedido m\xEDnimo, margem boa
+\u2022 Pre\xE7o: atacado para revendedoras \u2014 pedido m\xEDnimo R$199 (compra com CPF ou CNPJ), margem boa
 \u2022 Sazonalidade: inverno \xE9 o pico (junho\u2013agosto), Dia das M\xE3es (maio) \xE9 o maior do ano
 
 \u2501\u2501\u2501 8 TIPOS DE COPY QUE VOC\xCA CRIA \u2501\u2501\u2501
@@ -40920,7 +41158,7 @@ ${profile.contentPillars.map((p, i) => `${i + 1}. ${p}`).join("\n")}
 
 SOBRE A FEMINNITA:
 - Pijamas atacado premium para revendedoras
-- Ticket m\xE9dio: R$400 por pedido
+- Ticket B2C ~R$75-82 por pe\xE7a; pedido de revenda AOV ~R$435
 - Estampas exclusivas, qualidade premium
 - Entrega para todo o Brasil
 - Foco Sul e Sudeste
