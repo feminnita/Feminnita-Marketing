@@ -4599,6 +4599,52 @@ HOOK RATE = % que para nos 3 primeiros segundos. \xC9 o KPI do criativo: hook ra
   }
 });
 
+// server/agents/doctrines/light-copy-ladeira-doctrine.ts
+var LIGHT_COPY_LADEIRA_DOCTRINE;
+var init_light_copy_ladeira_doctrine = __esm({
+  "server/agents/doctrines/light-copy-ladeira-doctrine.ts"() {
+    "use strict";
+    LIGHT_COPY_LADEIRA_DOCTRINE = `
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+DOUTRINA DE LIGHT COPY (m\xE9todo Leandro Ladeira \u2014 acabamento da frase)
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+Escopo: N\xC3O define estrat\xE9gia (isso \xE9 COPY_DEEP/COPY_ARTE). Aqui \xE9 o POLIMENTO \u2014 como escrever a
+linha pra ela grudar. Usar como camada final sobre a copy j\xE1 estruturada. Parcim\xF4nia: 1-2 recursos por
+pe\xE7a, nunca poluir o texto nem o SEO.
+
+\u2501\u2501\u2501 1. RITMO: "dois pra l\xE1, um pra c\xE1" \u2501\u2501\u2501
+Nunca escreva em ladainha reta. Alterne \u2014 tens\xE3o/al\xEDvio, dor/desejo, s\xE9rio/leve, frase longa/frase curta.
+O contraste cria movimento e prende. Ex.: "O dia inteiro apertada num jeans. \xC0 noite, voc\xEA merece leveza."
+
+\u2501\u2501\u2501 2. ELEMENTOS LITER\xC1RIOS (o punch da linha) \u2501\u2501\u2501
+- TR\xCDADE (3 itens t\xEAm ritmo natural): "macio, quentinho e n\xE3o co\xE7a."
+- ANT\xCDTESE (opostos na mesma frase): "leve no corpo, quente na alma."
+- AN\xC1FORA (repetir o in\xEDcio): "Pra dormir. Pra receber. Pra se sentir bem."
+- HIP\xC9RBOLE CONTROLADA (exagero que n\xE3o vira mentira): "o pijama mais confort\xE1vel do seu inverno."
+- AFORISMO DE FECHO (frase curta que vira bord\xE3o): "Dormir bem come\xE7a no que voc\xEA veste."
+- JOGO DE PALAVRAS / gancho leve (duplo sentido sem for\xE7ar): usar no t\xEDtulo/legenda quando couber.
+- PERSONIFICA\xC7\xC3O / MET\xC1FORA sensorial: "o abra\xE7o que voc\xEA veste."
+Regra: o recurso serve \xE0 clareza e \xE0 emo\xE7\xE3o \u2014 se atrapalhar o entendimento, corta.
+
+\u2501\u2501\u2501 3. F\xD3RMULA DE FECHAMENTO \u2501\u2501\u2501
+Fechar a pe\xE7a com a sequ\xEAncia: LISTA (benef\xEDcios em 3) \u2192 FIGURA (uma imagem/met\xE1fora) \u2192 AFORISMO (bord\xE3o curto) \u2192 CTA.
+Ex.: "Macio, quentinho, n\xE3o desbota. \xC9 o abra\xE7o que te espera todo fim de dia. Dormir bem come\xE7a no que voc\xEA veste. Garanta o seu no link."
+
+\u2501\u2501\u2501 4. CTA SEM PALAVRA DE DOR \u2501\u2501\u2501
+O CTA nunca usa verbo que lembra gasto/perda.
+USE: "Garanta o seu", "Leve pra sua casa", "Escolha a sua cor", "D\xE1 esse presente", "Corre pro link", "Entra pro time".
+EVITE: "compre", "gaste", "pague", "invista R$", "adquira".
+
+\u2501\u2501\u2501 5. ONDE APLICAR NA FEMINNITA \u2501\u2501\u2501
+- Headline/gancho do an\xFAncio: 1 recurso liter\xE1rio no m\xE1ximo (n\xE3o competir com a curiosidade do gancho).
+- Legenda/copy do post: ritmo "dois pra l\xE1 um pra c\xE1" + fecho (lista\u2192figura\u2192aforismo\u2192CTA).
+- Narra\xE7\xE3o do v\xEDdeo: aforismo curto no fecho gruda melhor que explica\xE7\xE3o longa.
+- Fatos (material suede, medidas, pre\xE7o) v\xEAm do dado REAL \u2014 o recurso liter\xE1rio decora o fato, nunca inventa.
+- FEMINNITA (emocional/premium) usa mais met\xE1fora/afei\xE7\xE3o; FNT (pr\xE1tico/pre\xE7o) usa mais tr\xEDade seca e ant\xEDtese objetiva.
+`;
+  }
+});
+
 // server/agents/creative-agent.ts
 var creative_agent_exports = {};
 __export(creative_agent_exports, {
@@ -5039,6 +5085,7 @@ var init_creative_agent = __esm({
     init_copy_arte_doctrine();
     init_copy_deep_doctrine();
     init_arte_criativo_doctrine();
+    init_light_copy_ladeira_doctrine();
     CREATIVE_DOCTRINE = `
 \u2501\u2501\u2501 DOUTRINA CRIATIVA (regras de ouro \u2014 seguir ao gerar copy e arte) \u2501\u2501\u2501
 - ESTRUTURA FGC: Formato \xB7 Gancho \xB7 Corpo. O criativo \xE9 99% do resultado.
@@ -5058,6 +5105,7 @@ var init_creative_agent = __esm({
 ${COPY_ARTE_DOCTRINE}
 ${COPY_DEEP_DOCTRINE}
 ${ARTE_CRIATIVO_DOCTRINE}
+${LIGHT_COPY_LADEIRA_DOCTRINE}
 
 \u2501\u2501\u2501 METODOLOGIA DARA DENNY (20.000+ ads testados) \u2501\u2501\u2501
 
@@ -8451,7 +8499,7 @@ var systemRouter = router({
 // server/routers.ts
 init_sdk();
 init_db();
-import { z as z88 } from "zod";
+import { z as z89 } from "zod";
 import { scrypt as scrypt2, randomBytes as randomBytes5, timingSafeEqual as timingSafeEqual3 } from "crypto";
 import { promisify as promisify3 } from "util";
 
@@ -37256,17 +37304,103 @@ var hailuoImageRouter = router({
   })
 });
 
+// server/routers/avatar.ts
+init_llm();
+import { z as z83 } from "zod";
+var AVATAR_SYSTEM_PROMPT = `You are a prompt engineer that writes REALISTIC AVATAR image prompts for the Higgsfield Soul (Soul 2.0) / Hailuo, from a persona briefing.
+
+Output the prompt in ENGLISH (the model responds better in English). Follow this framework EXACTLY.
+
+The model tends to deliver a plastic "stock-photo" face (over-lit, commercial smile) when the prompt is vague. Realism comes from stacking three things: a specific facial description, anti-plastic locks (no makeup, real texture, signs of age) and amateur-capture language (smartphone, iPhone footage).
+
+MANDATORY STRUCTURE \u2014 3 blocks, written as THREE flowing paragraphs (no bullets, no headers), in this order:
+
+BLOCK 1 \u2014 THE PERSON (identity + face realism):
+- Opening framing: "A straight-on medium close-up captures a [age]-year-old [nationality] [man/woman]".
+- Skin, hair, eyes: concrete colors and texture.
+- Face structure: build + forehead, jawline, nose, cheekbones, eyebrows.
+- Glasses/beard if any.
+- REALISM LOCKS (never skip): "realistic skin texture", natural signs of age ("subtle expression lines", "crow's feet", "natural signs of age"), and ALWAYS "no makeup, no cosmetic enhancements".
+- Expression tied to the tone/script and the trait it conveys (e.g. trustworthy, down-to-earth presence).
+- Archetype anchor: "He/She resembles [a relatable archetype]", and reinforce an ordinary, anonymous person: "an ordinary, anonymous middle-class person, not resembling anyone famous".
+
+BLOCK 2 \u2014 POSE, WARDROBE and GAZE:
+- Seat/setting and specific wardrobe piece + color.
+- HANDS LOW AND NEUTRAL (anti-bug lock): "Both of their hands are naturally lowered and resting out of frame, with a relaxed, neutral posture. They are not waving, gesturing, pointing, or raising either hand."
+- GAZE DIRECTION depends on the format:
+  - talking-head: "looks directly into the camera, talking straight to the viewer."
+  - podcast: "looks slightly to the side, at the person they are talking to, not at the camera." (respects the 180\xB0 axis)
+
+BLOCK 3 \u2014 SCENERY, LIGHT, COMPOSITION and MOOD:
+- Background elements slightly out of focus.
+- Soft, side, natural light that gently and evenly lights the face.
+- Composition + iPhone footage (the most important realism lock): "The composition is centered, captured at eye level with a smartphone front camera, giving a sharp, casual, real iPhone-footage look."
+- Mood in 3-4 words.
+
+TOP LINE: start every prompt with this exact line on its own, then a blank line, then the three paragraphs:
+IMPORTANT: THIS IS IPHONE FOOTAGE!! KEEP THE SAME LIGHTING AND QUALITY.
+
+DO NOT INCLUDE:
+- No HEX color block.
+- No "flawless/perfect skin", no "professional studio lighting", no ad-style smile \u2014 those kill realism.
+
+If asked for several avatars, make purposeful variations: change skin, age, hair, scenery and wardrobe between them, keeping the same archetype and the same realism locks.
+
+OUTPUT FORMAT: return ONLY the prompt(s), nothing else \u2014 no explanations, no numbering, no markdown. When more than one prompt is requested, separate each full prompt with a line containing exactly:
+===AVATAR===`;
+var avatarRouter = router({
+  generatePrompt: protectedProcedure.input(z83.object({
+    idade: z83.number().min(1).max(120),
+    genero: z83.string().min(1),
+    nacionalidade: z83.string().min(1),
+    papel: z83.string().min(1),
+    cenario: z83.string().min(1),
+    figurino: z83.string().min(1),
+    tom: z83.string().min(1),
+    formato: z83.enum(["talking-head", "podcast"]),
+    variacoes: z83.number().min(1).max(6).default(1)
+  })).mutation(async ({ input }) => {
+    const briefing = [
+      `Age: ${input.idade}`,
+      `Gender: ${input.genero}`,
+      `Nationality: ${input.nacionalidade}`,
+      `Role / archetype: ${input.papel}`,
+      `Scenery: ${input.cenario}`,
+      `Wardrobe: ${input.figurino}`,
+      `Tone / emotion: ${input.tom}`,
+      `Format: ${input.formato}`,
+      `Number of avatar prompts to generate: ${input.variacoes}`
+    ].join("\n");
+    const userMessage = input.variacoes > 1 ? `Generate ${input.variacoes} purposefully varied avatar prompts for this briefing (separate each with the ===AVATAR=== line):
+
+${briefing}` : `Generate one avatar prompt for this briefing:
+
+${briefing}`;
+    const result = await invokeLLM({
+      messages: [
+        { role: "system", content: AVATAR_SYSTEM_PROMPT },
+        { role: "user", content: userMessage }
+      ],
+      maxTokens: 4096
+    });
+    const text3 = result.choices[0]?.message?.content;
+    const raw = typeof text3 === "string" ? text3 : "";
+    const prompts = raw.split("===AVATAR===").map((p) => p.trim()).filter(Boolean);
+    return { prompts: prompts.length > 0 ? prompts : [raw.trim()] };
+  })
+});
+
 // server/routers/runpod-video.ts
 init_db();
 init_schema();
-import { z as z84 } from "zod";
+import { z as z85 } from "zod";
 import { TRPCError as TRPCError16 } from "@trpc/server";
 import { eq as eq90, desc as desc49, and as and72, gte as gte5, count } from "drizzle-orm";
 
 // server/routers/video-credits.ts
 init_db();
 init_schema();
-import { z as z83 } from "zod";
+import { z as z84 } from "zod";
 import { TRPCError as TRPCError15 } from "@trpc/server";
 import { eq as eq89, sql as sql5 } from "drizzle-orm";
 var CREDIT_COSTS = {
@@ -37351,7 +37485,7 @@ var videoCreditsRouter = router({
     return { balance: plan.videoCreditsBalance ?? 0, costs: CREDIT_COSTS };
   }),
   getPackages: protectedProcedure.query(() => CREDIT_PACKAGES),
-  createOrder: protectedProcedure.input(z83.object({ packageId: z83.enum(["starter", "pro", "ultra"]) })).mutation(async ({ input, ctx }) => {
+  createOrder: protectedProcedure.input(z84.object({ packageId: z84.enum(["starter", "pro", "ultra"]) })).mutation(async ({ input, ctx }) => {
     const pkg = CREDIT_PACKAGES.find((p) => p.id === input.packageId);
     if (!pkg) throw new TRPCError15({ code: "BAD_REQUEST", message: "Pacote inv\xE1lido" });
     const db = await getDb();
@@ -37386,12 +37520,12 @@ var videoCreditsRouter = router({
   }),
   // Webhook Asaas — chamado pelo servidor Express diretamente (ver nota abaixo)
   // URL configurada no Asaas: POST /api/video-credits/webhook
-  handleAsaasWebhook: publicProcedure.input(z83.object({
-    event: z83.string(),
-    payment: z83.object({
-      id: z83.string(),
-      status: z83.string(),
-      externalReference: z83.string().optional().nullable()
+  handleAsaasWebhook: publicProcedure.input(z84.object({
+    event: z84.string(),
+    payment: z84.object({
+      id: z84.string(),
+      status: z84.string(),
+      externalReference: z84.string().optional().nullable()
     })
   })).mutation(async ({ input }) => {
     if (input.event !== "PAYMENT_CONFIRMED" && input.event !== "PAYMENT_RECEIVED") {
@@ -37414,9 +37548,9 @@ var videoCreditsRouter = router({
     console.log(`[VideoCredits] +${order.credits} cr\xE9ditos \u2192 userId ${userId} (order #${orderId})`);
     return { ok: true };
   }),
-  adminAddCredits: protectedProcedure.input(z83.object({
-    userId: z83.number().int(),
-    credits: z83.number().int().min(1).max(1e4)
+  adminAddCredits: protectedProcedure.input(z84.object({
+    userId: z84.number().int(),
+    credits: z84.number().int().min(1).max(1e4)
   })).mutation(async ({ input, ctx }) => {
     if (ctx.user.role !== "admin") throw new TRPCError15({ code: "FORBIDDEN" });
     const db = await getDb();
@@ -37596,11 +37730,11 @@ async function getMonthCount(userId, mode, db) {
 }
 var runpodVideoRouter = router({
   // Modo Livre: foto + prompt → MiniMax Hailuo I2V
-  generate: protectedProcedure.input(z84.object({
-    imageBase64: z84.string().min(100),
-    imageMimeType: z84.string().default("image/jpeg"),
-    prompt: z84.string().min(5).max(2e3),
-    durationSeconds: z84.number().int().min(5).max(15).default(6)
+  generate: protectedProcedure.input(z85.object({
+    imageBase64: z85.string().min(100),
+    imageMimeType: z85.string().default("image/jpeg"),
+    prompt: z85.string().min(5).max(2e3),
+    durationSeconds: z85.number().int().min(5).max(15).default(6)
   })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (db) await debitCredits(ctx.user.id, "livre", db);
@@ -37618,7 +37752,7 @@ var runpodVideoRouter = router({
     }
     return { jobId: taskId };
   }),
-  status: protectedProcedure.input(z84.object({ jobId: z84.string() })).query(async ({ input }) => {
+  status: protectedProcedure.input(z85.object({ jobId: z85.string() })).query(async ({ input }) => {
     const result = await sfGetStatus(input.jobId);
     const db = await getDb();
     if (db && result.status === "COMPLETED") {
@@ -37628,7 +37762,7 @@ var runpodVideoRouter = router({
     }
     return { status: result.status, videoUrl: result.videoUrl, error: result.error };
   }),
-  history: protectedProcedure.input(z84.object({ limit: z84.number().min(1).max(50).default(20) })).query(async ({ input, ctx }) => {
+  history: protectedProcedure.input(z85.object({ limit: z85.number().min(1).max(50).default(20) })).query(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) return { jobs: [] };
     const jobs = await db.select({
@@ -37662,10 +37796,10 @@ var runpodVideoRouter = router({
       runningup: { used: ruUsed, limit: plan.runningUpMonthlyLimit, extra: plan.runningUpExtraCredits }
     };
   }),
-  adminAddCredits: protectedProcedure.input(z84.object({
-    userId: z84.number().int(),
-    mode: z84.enum(["livre", "runningup"]),
-    credits: z84.number().int().min(1).max(1e3)
+  adminAddCredits: protectedProcedure.input(z85.object({
+    userId: z85.number().int(),
+    mode: z85.enum(["livre", "runningup"]),
+    credits: z85.number().int().min(1).max(1e3)
   })).mutation(async ({ input, ctx }) => {
     if (ctx.user.role !== "admin") throw new TRPCError16({ code: "FORBIDDEN" });
     const db = await getDb();
@@ -37676,13 +37810,13 @@ var runpodVideoRouter = router({
     return { ok: true };
   }),
   // Running Up: foto + vídeo referência → RunningHub WanVideo Animate + ViTPose
-  runningUpGenerate: protectedProcedure.input(z84.object({
-    imageBase64: z84.string().min(100),
-    videoBase64: z84.string().min(100),
-    imageName: z84.string().default("produto.jpg"),
-    videoName: z84.string().default("referencia.mp4"),
-    imageMimeType: z84.string().default("image/jpeg"),
-    videoMimeType: z84.string().default("video/mp4")
+  runningUpGenerate: protectedProcedure.input(z85.object({
+    imageBase64: z85.string().min(100),
+    videoBase64: z85.string().min(100),
+    imageName: z85.string().default("produto.jpg"),
+    videoName: z85.string().default("referencia.mp4"),
+    imageMimeType: z85.string().default("image/jpeg"),
+    videoMimeType: z85.string().default("video/mp4")
   })).mutation(async ({ input, ctx }) => {
     const db = await getDb();
     if (db) await debitCredits(ctx.user.id, "runningup", db);
@@ -37703,7 +37837,7 @@ var runpodVideoRouter = router({
     }
     return { taskId };
   }),
-  runningUpStatus: protectedProcedure.input(z84.object({ taskId: z84.string() })).query(async ({ input }) => {
+  runningUpStatus: protectedProcedure.input(z85.object({ taskId: z85.string() })).query(async ({ input }) => {
     const result = await rhGetStatus(input.taskId);
     return {
       status: result.status,
@@ -37712,7 +37846,7 @@ var runpodVideoRouter = router({
     };
   }),
   // Geração de voz Fernanda via ElevenLabs
-  generateVoice: protectedProcedure.input(z84.object({ text: z84.string().min(5).max(1e3) })).mutation(async ({ input }) => {
+  generateVoice: protectedProcedure.input(z85.object({ text: z85.string().min(5).max(1e3) })).mutation(async ({ input }) => {
     const voiceId = process.env.ELEVENLABS_VOICE_ID_FERNANDA || "RGymW84CSmfVugnA5tvA";
     const apiKey = process.env.ELEVENLABS_API_KEY;
     if (!apiKey) throw new Error("ELEVENLABS_API_KEY n\xE3o configurado");
@@ -37734,7 +37868,7 @@ var runpodVideoRouter = router({
 // server/routers/modo-fala.ts
 init_db();
 init_schema();
-import { z as z85 } from "zod";
+import { z as z86 } from "zod";
 import { TRPCError as TRPCError17 } from "@trpc/server";
 import { eq as eq91, desc as desc50 } from "drizzle-orm";
 import Anthropic11 from "@anthropic-ai/sdk";
@@ -37996,7 +38130,7 @@ var modoFalaRouter = router({
   getVoices: protectedProcedure.query(
     () => PRESET_VOICES.map((v) => ({ id: v.id, name: v.name, description: v.description }))
   ),
-  previewVoice: protectedProcedure.input(z85.object({ voiceId: z85.string() })).mutation(async ({ input }) => {
+  previewVoice: protectedProcedure.input(z86.object({ voiceId: z86.string() })).mutation(async ({ input }) => {
     const voice = PRESET_VOICES.find((v) => v.id === input.voiceId) ?? PRESET_VOICES[0];
     const sampleText = "Ol\xE1! Confira essa novidade incr\xEDvel da nossa cole\xE7\xE3o. Voc\xEA vai se apaixonar!";
     const audioBase64 = await elevenLabsAudio(sampleText, voice.voiceId());
@@ -38006,12 +38140,12 @@ var modoFalaRouter = router({
     didConfigured: !!process.env.SILICONFLOW_API_KEY,
     elConfigured: !!process.env.ELEVENLABS_API_KEY
   })),
-  generate: protectedProcedure.input(z85.object({
-    imageBase64: z85.string().min(100),
-    imageMimeType: z85.string().default("image/jpeg"),
-    text: z85.string().min(5).max(2e3),
-    voiceId: z85.string().default("fernanda"),
-    withSubtitles: z85.boolean().default(true)
+  generate: protectedProcedure.input(z86.object({
+    imageBase64: z86.string().min(100),
+    imageMimeType: z86.string().default("image/jpeg"),
+    text: z86.string().min(5).max(2e3),
+    voiceId: z86.string().default("fernanda"),
+    withSubtitles: z86.boolean().default(true)
   })).mutation(async ({ input, ctx }) => {
     const voice = PRESET_VOICES.find((v) => v.id === input.voiceId) ?? PRESET_VOICES[0];
     const dbConn = await getDb();
@@ -38043,7 +38177,7 @@ var modoFalaRouter = router({
     }
     return { talkId: requestId };
   }),
-  status: protectedProcedure.input(z85.object({ talkId: z85.string() })).query(async ({ input }) => {
+  status: protectedProcedure.input(z86.object({ talkId: z86.string() })).query(async ({ input }) => {
     const result = await sfGetStatus2(input.talkId);
     if (result.status === "COMPLETED" && result.videoUrl) {
       const audioPath = path10.join(UPLOADS_DIR, `fala-audio-${input.talkId}.mp3`);
@@ -38070,7 +38204,7 @@ var modoFalaRouter = router({
     if (result.status === "FAILED") return { status: "FAILED", error: "Gera\xE7\xE3o falhou." };
     return { status: "IN_PROGRESS" };
   }),
-  history: protectedProcedure.input(z85.object({ limit: z85.number().min(1).max(50).default(20) })).query(async ({ input, ctx }) => {
+  history: protectedProcedure.input(z86.object({ limit: z86.number().min(1).max(50).default(20) })).query(async ({ input, ctx }) => {
     const db = await getDb();
     if (!db) return { jobs: [] };
     const jobs = await db.select({
@@ -38084,7 +38218,7 @@ var modoFalaRouter = router({
 });
 
 // server/routers/ga4.ts
-import { z as z86 } from "zod";
+import { z as z87 } from "zod";
 init_ga4();
 init_db();
 init_schema();
@@ -38110,7 +38244,7 @@ var ga4Router = router({
     const info = rows[0].accountInfo ? JSON.parse(rows[0].accountInfo) : {};
     return { connected: Boolean(rows[0].isActive), propertyId: info.propertyId ?? null };
   }),
-  setPropertyId: protectedProcedure.input(z86.object({ propertyId: z86.string().min(1) })).mutation(async ({ ctx, input }) => {
+  setPropertyId: protectedProcedure.input(z87.object({ propertyId: z87.string().min(1) })).mutation(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new Error("DB indispon\xEDvel");
     const rows = await db.select({ id: oauthTokens.id, accountInfo: oauthTokens.accountInfo }).from(oauthTokens).where(and74(eq93(oauthTokens.userId, ctx.user.id), eq93(oauthTokens.plataforma, "google_analytics"))).limit(1);
@@ -38126,7 +38260,7 @@ var ga4Router = router({
     await db.update(oauthTokens).set({ isActive: false }).where(and74(eq93(oauthTokens.userId, ctx.user.id), eq93(oauthTokens.plataforma, "google_analytics")));
     return { success: true };
   }),
-  overview: protectedProcedure.input(z86.object({ days: z86.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
+  overview: protectedProcedure.input(z87.object({ days: z87.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
     const propertyId = await getPropertyId(ctx.user.id);
     if (!propertyId) throw new Error("Property ID n\xE3o configurado");
     const token = await getValidGA4Token(ctx.user.id);
@@ -38150,7 +38284,7 @@ var ga4Router = router({
       avgSessionDuration: parseFloat(parseFloat(vals[4]?.value ?? "0").toFixed(0))
     };
   }),
-  trafficSources: protectedProcedure.input(z86.object({ days: z86.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
+  trafficSources: protectedProcedure.input(z87.object({ days: z87.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
     const propertyId = await getPropertyId(ctx.user.id);
     if (!propertyId) throw new Error("Property ID n\xE3o configurado");
     const token = await getValidGA4Token(ctx.user.id);
@@ -38168,7 +38302,7 @@ var ga4Router = router({
       users: parseInt(r.metricValues?.[1]?.value ?? "0")
     }));
   }),
-  topPages: protectedProcedure.input(z86.object({ days: z86.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
+  topPages: protectedProcedure.input(z87.object({ days: z87.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
     const propertyId = await getPropertyId(ctx.user.id);
     if (!propertyId) throw new Error("Property ID n\xE3o configurado");
     const token = await getValidGA4Token(ctx.user.id);
@@ -38194,7 +38328,7 @@ var ga4Router = router({
     const activeUsers = await getGA4Realtime(token, propertyId);
     return { activeUsers };
   }),
-  conversions: protectedProcedure.input(z86.object({ days: z86.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
+  conversions: protectedProcedure.input(z87.object({ days: z87.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
     const propertyId = await getPropertyId(ctx.user.id);
     if (!propertyId) throw new Error("Property ID n\xE3o configurado");
     const token = await getValidGA4Token(ctx.user.id);
@@ -38219,7 +38353,7 @@ var ga4Router = router({
       users: parseInt(r.metricValues?.[3]?.value ?? "0")
     }));
   }),
-  utmCampaigns: protectedProcedure.input(z86.object({ days: z86.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
+  utmCampaigns: protectedProcedure.input(z87.object({ days: z87.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
     const propertyId = await getPropertyId(ctx.user.id);
     if (!propertyId) throw new Error("Property ID n\xE3o configurado");
     const token = await getValidGA4Token(ctx.user.id);
@@ -38254,7 +38388,7 @@ var ga4Router = router({
       conversions: parseInt(r.metricValues?.[5]?.value ?? "0")
     }));
   }),
-  devices: protectedProcedure.input(z86.object({ days: z86.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
+  devices: protectedProcedure.input(z87.object({ days: z87.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
     const propertyId = await getPropertyId(ctx.user.id);
     if (!propertyId) throw new Error("Property ID n\xE3o configurado");
     const token = await getValidGA4Token(ctx.user.id);
@@ -38280,7 +38414,7 @@ var ga4Router = router({
       conversions: parseInt(r.metricValues?.[4]?.value ?? "0")
     }));
   }),
-  geo: protectedProcedure.input(z86.object({ days: z86.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
+  geo: protectedProcedure.input(z87.object({ days: z87.number().min(1).max(90).default(30) })).query(async ({ ctx, input }) => {
     const propertyId = await getPropertyId(ctx.user.id);
     if (!propertyId) throw new Error("Property ID n\xE3o configurado");
     const token = await getValidGA4Token(ctx.user.id);
@@ -38307,7 +38441,7 @@ var ga4Router = router({
 });
 
 // server/routers/portal.ts
-import { z as z87 } from "zod";
+import { z as z88 } from "zod";
 import { scrypt, randomBytes as randomBytes4, timingSafeEqual as timingSafeEqual2 } from "crypto";
 import { promisify as promisify2 } from "util";
 init_sdk();
@@ -38442,7 +38576,7 @@ var PROFILE_TYPES = ["revendedora", "influencer"];
 var STATUSES = ["pending", "approved", "blocked"];
 var portalRouter = router({
   me: publicProcedure.query((opts) => opts.ctx.portalUser ?? null),
-  login: publicProcedure.input(z87.object({ email: z87.string().email(), password: z87.string() })).mutation(async ({ input, ctx }) => {
+  login: publicProcedure.input(z88.object({ email: z88.string().email(), password: z88.string() })).mutation(async ({ input, ctx }) => {
     const user = await getPortalUserByEmail(input.email);
     if (!user || !user.passwordHash) throw new Error("Email ou senha inv\xE1lidos");
     const valid = await verifyPassword2(input.password, user.passwordHash);
@@ -38460,13 +38594,13 @@ var portalRouter = router({
     ctx.res.clearCookie(PORTAL_COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
     return { success: true };
   }),
-  solicitarAcesso: publicProcedure.input(z87.object({
-    name: z87.string().min(2, "Nome obrigat\xF3rio"),
-    email: z87.string().email("Email inv\xE1lido"),
-    password: z87.string().min(6, "Senha m\xEDnima de 6 caracteres"),
-    profileType: z87.enum(PROFILE_TYPES),
-    instagramHandle: z87.string().optional(),
-    phone: z87.string().optional()
+  solicitarAcesso: publicProcedure.input(z88.object({
+    name: z88.string().min(2, "Nome obrigat\xF3rio"),
+    email: z88.string().email("Email inv\xE1lido"),
+    password: z88.string().min(6, "Senha m\xEDnima de 6 caracteres"),
+    profileType: z88.enum(PROFILE_TYPES),
+    instagramHandle: z88.string().optional(),
+    phone: z88.string().optional()
   })).mutation(async ({ input }) => {
     const existing = await getPortalUserByEmail(input.email);
     if (existing) throw new Error("Este email j\xE1 est\xE1 cadastrado");
@@ -38485,10 +38619,10 @@ var portalRouter = router({
   materiais: portalProtectedProcedure.query(async ({ ctx }) => {
     return listPortalMaterials(ctx.portalUser.profileType);
   }),
-  chatCopy: portalProtectedProcedure.input(z87.object({
-    messages: z87.array(z87.object({
-      role: z87.enum(["user", "assistant"]),
-      content: z87.string()
+  chatCopy: portalProtectedProcedure.input(z88.object({
+    messages: z88.array(z88.object({
+      role: z88.enum(["user", "assistant"]),
+      content: z88.string()
     })).min(1).max(50)
   })).mutation(async ({ ctx, input }) => {
     const reply = await chatWithAna(input.messages, ctx.portalUser.name ?? void 0);
@@ -38502,9 +38636,9 @@ var portalRouter = router({
         return safe;
       });
     }),
-    updateStatus: protectedProcedure.input(z87.object({
-      id: z87.number(),
-      status: z87.enum(STATUSES)
+    updateStatus: protectedProcedure.input(z88.object({
+      id: z88.number(),
+      status: z88.enum(STATUSES)
     })).mutation(async ({ input, ctx }) => {
       await updatePortalUserStatus(input.id, input.status, ctx.user.id);
       return { success: true };
@@ -38512,34 +38646,34 @@ var portalRouter = router({
     listMaterials: protectedProcedure.query(async () => {
       return listAllPortalMaterials();
     }),
-    createMaterial: protectedProcedure.input(z87.object({
-      title: z87.string().min(1),
-      description: z87.string().optional(),
-      category: z87.enum(CATEGORIES),
-      subcategory: z87.string().optional(),
-      url: z87.string().url("URL inv\xE1lida"),
-      filename: z87.string().optional(),
-      availableTo: z87.enum(AVAILABLE_TO)
+    createMaterial: protectedProcedure.input(z88.object({
+      title: z88.string().min(1),
+      description: z88.string().optional(),
+      category: z88.enum(CATEGORIES),
+      subcategory: z88.string().optional(),
+      url: z88.string().url("URL inv\xE1lida"),
+      filename: z88.string().optional(),
+      availableTo: z88.enum(AVAILABLE_TO)
     })).mutation(async ({ input, ctx }) => {
       await createPortalMaterial({ ...input, uploadedBy: ctx.user.id });
       return { success: true };
     }),
-    updateMaterial: protectedProcedure.input(z87.object({
-      id: z87.number(),
-      title: z87.string().min(1).optional(),
-      description: z87.string().optional(),
-      category: z87.enum(CATEGORIES).optional(),
-      subcategory: z87.string().optional(),
-      url: z87.string().url().optional(),
-      filename: z87.string().optional(),
-      availableTo: z87.enum(AVAILABLE_TO).optional(),
-      isActive: z87.boolean().optional()
+    updateMaterial: protectedProcedure.input(z88.object({
+      id: z88.number(),
+      title: z88.string().min(1).optional(),
+      description: z88.string().optional(),
+      category: z88.enum(CATEGORIES).optional(),
+      subcategory: z88.string().optional(),
+      url: z88.string().url().optional(),
+      filename: z88.string().optional(),
+      availableTo: z88.enum(AVAILABLE_TO).optional(),
+      isActive: z88.boolean().optional()
     })).mutation(async ({ input }) => {
       const { id, ...data } = input;
       await updatePortalMaterial(id, data);
       return { success: true };
     }),
-    deleteMaterial: protectedProcedure.input(z87.object({ id: z87.number() })).mutation(async ({ input }) => {
+    deleteMaterial: protectedProcedure.input(z88.object({ id: z88.number() })).mutation(async ({ input }) => {
       await deactivatePortalMaterial(input.id);
       return { success: true };
     })
@@ -38566,10 +38700,10 @@ var appRouter = router({
   system: systemRouter,
   auth: router({
     me: publicProcedure.query((opts) => opts.ctx.user),
-    register: publicProcedure.input(z88.object({
-      email: z88.string().email(),
-      password: z88.string().min(6),
-      name: z88.string().optional()
+    register: publicProcedure.input(z89.object({
+      email: z89.string().email(),
+      password: z89.string().min(6),
+      name: z89.string().optional()
     })).mutation(async ({ input, ctx }) => {
       const existing = await getUserByEmail(input.email);
       if (existing) throw new Error("Email j\xE1 cadastrado");
@@ -38580,9 +38714,9 @@ var appRouter = router({
       ctx.res.cookie(COOKIE_NAME, token, { ...cookieOptions, maxAge: ONE_YEAR_MS });
       return { success: true, user };
     }),
-    login: publicProcedure.input(z88.object({
-      email: z88.string().email(),
-      password: z88.string()
+    login: publicProcedure.input(z89.object({
+      email: z89.string().email(),
+      password: z89.string()
     })).mutation(async ({ input, ctx }) => {
       const user = await getUserByEmail(input.email);
       if (!user || !user.passwordHash) throw new Error("Email ou senha inv\xE1lidos");
@@ -38598,7 +38732,7 @@ var appRouter = router({
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true };
     }),
-    updateProfile: protectedProcedure.input(z88.object({ name: z88.string().min(1).max(100) })).mutation(async ({ ctx, input }) => {
+    updateProfile: protectedProcedure.input(z89.object({ name: z89.string().min(1).max(100) })).mutation(async ({ ctx, input }) => {
       const dbConn = await getDb();
       if (!dbConn) throw new Error("DB indispon\xEDvel");
       const { users: users2 } = await Promise.resolve().then(() => (init_schema(), schema_exports));
@@ -38708,16 +38842,16 @@ var appRouter = router({
         return [];
       }
     }),
-    create: protectedProcedure.input(z88.object({
-      name: z88.string().min(1),
-      bio: z88.string().optional(),
-      personality: z88.string().optional(),
-      avatar: z88.string().optional(),
-      instagramHandle: z88.string().optional(),
-      tiktokHandle: z88.string().optional(),
-      contentStyle: z88.string().optional(),
-      targetAudience: z88.string().optional(),
-      keywords: z88.string().optional()
+    create: protectedProcedure.input(z89.object({
+      name: z89.string().min(1),
+      bio: z89.string().optional(),
+      personality: z89.string().optional(),
+      avatar: z89.string().optional(),
+      instagramHandle: z89.string().optional(),
+      tiktokHandle: z89.string().optional(),
+      contentStyle: z89.string().optional(),
+      targetAudience: z89.string().optional(),
+      keywords: z89.string().optional()
     })).mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
@@ -38735,15 +38869,15 @@ var appRouter = router({
       const created = await db.select().from(influencers).where(eq113(influencers.id, result[0].insertId)).limit(1);
       return created[0];
     }),
-    update: protectedProcedure.input(z88.object({
-      id: z88.number(),
-      name: z88.string().min(1).optional(),
-      bio: z88.string().optional(),
-      personality: z88.string().optional(),
-      avatar: z88.string().optional(),
-      instagramHandle: z88.string().optional(),
-      tiktokHandle: z88.string().optional(),
-      isActive: z88.boolean().optional()
+    update: protectedProcedure.input(z89.object({
+      id: z89.number(),
+      name: z89.string().min(1).optional(),
+      bio: z89.string().optional(),
+      personality: z89.string().optional(),
+      avatar: z89.string().optional(),
+      instagramHandle: z89.string().optional(),
+      tiktokHandle: z89.string().optional(),
+      isActive: z89.boolean().optional()
     })).mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
@@ -38804,10 +38938,10 @@ var appRouter = router({
       }
       return { created, message: `${created} influencers criadas` };
     }),
-    getPosts: protectedProcedure.input(z88.object({
-      influencerId: z88.number(),
-      status: z88.enum(["draft", "scheduled", "published", "failed"]).optional(),
-      limit: z88.number().default(20)
+    getPosts: protectedProcedure.input(z89.object({
+      influencerId: z89.number(),
+      status: z89.enum(["draft", "scheduled", "published", "failed"]).optional(),
+      limit: z89.number().default(20)
     })).query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
@@ -38820,7 +38954,7 @@ var appRouter = router({
       }
       return db.select().from(influencerPosts).where(and90(...conditions)).orderBy(desc56(influencerPosts.createdAt)).limit(input.limit);
     }),
-    deletePost: protectedProcedure.input(z88.object({ postId: z88.number() })).mutation(async ({ input, ctx }) => {
+    deletePost: protectedProcedure.input(z89.object({ postId: z89.number() })).mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       const { eq: eq113, and: and90 } = await import("drizzle-orm");
@@ -38831,7 +38965,7 @@ var appRouter = router({
       await db.delete(influencerPosts).where(eq113(influencerPosts.id, input.postId));
       return { success: true };
     }),
-    getAllPosts: protectedProcedure.input(z88.object({ limit: z88.number().default(200) })).query(async ({ input, ctx }) => {
+    getAllPosts: protectedProcedure.input(z89.object({ limit: z89.number().default(200) })).query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) return [];
       const { eq: eq113, desc: desc56, inArray: inArray10 } = await import("drizzle-orm");
@@ -38849,6 +38983,7 @@ var appRouter = router({
   agentTasks: agentTasksRouter,
   chatUpload: chatUploadRouter,
   hailuoImage: hailuoImageRouter,
+  avatar: avatarRouter,
   runpodVideo: runpodVideoRouter,
   modoFala: modoFalaRouter,
   videoCredits: videoCreditsRouter,
@@ -38862,7 +38997,7 @@ var appRouter = router({
     })
   }),
   dm: router({
-    history: protectedProcedure.input(z88.object({ withUserId: z88.number() })).query(async ({ ctx, input }) => {
+    history: protectedProcedure.input(z89.object({ withUserId: z89.number() })).query(async ({ ctx, input }) => {
       try {
         const dbConn = await getDb();
         if (!dbConn) return [];
