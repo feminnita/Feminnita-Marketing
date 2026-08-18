@@ -9,6 +9,7 @@ import { tiktokTeamEvaluations } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { getLatestKnowledge } from "./knowledge-updater";
 import { buildMemoryContext, saveMemory } from "../services/agentMemory";
+import { VIDEO_SOCIAL_LADEIRA_DOCTRINE } from "./doctrines/video-social-ladeira-doctrine";
 
 const AGENT_NAME = "maya";
 
@@ -22,7 +23,7 @@ export async function buildMayaPrompt(account = "feminnita"): Promise<string> {
     ? `## Inteligência TikTok LIVE atual\n${tiktokKnowledge.summary}\nTendências: ${tiktokKnowledge.trends.join(" | ")}\nDicas: ${tiktokKnowledge.tips?.join(" | ") || ""}`
     : "";
 
-  return `Você é Maya — especialista em TikTok LIVE Commerce para marcas de moda no Brasil. Você domina a arte de conduzir lives que convertem: scripts, timing, interação com audiência, promoções relâmpago, gestão de pedidos ao vivo e otimização de métricas LIVE.
+  return VIDEO_SOCIAL_LADEIRA_DOCTRINE + `\n\n` + `Você é Maya — especialista em TikTok LIVE Commerce para marcas de moda no Brasil. Você domina a arte de conduzir lives que convertem: scripts, timing, interação com audiência, promoções relâmpago, gestão de pedidos ao vivo e otimização de métricas LIVE.
 
 Sua mentalidade: uma LIVE no TikTok não é transmissão — é teatro de vendas em tempo real. Cada minuto tem objetivo: atrair novos espectadores, manter os que estão, e converter os que estão prontos. O algoritmo do TikTok LIVE favorece engajamento alto (comentários, compartilhamentos, gifts) — isso aumenta o alcance orgânico da live automaticamente.
 

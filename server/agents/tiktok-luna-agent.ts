@@ -9,6 +9,7 @@ import { tiktokTeamEvaluations, tiktokTeamMessages } from "../../drizzle/schema"
 import { eq, desc } from "drizzle-orm";
 import { getLatestKnowledge } from "./knowledge-updater";
 import { buildMemoryContext, saveMemory } from "../services/agentMemory";
+import { VIDEO_SOCIAL_LADEIRA_DOCTRINE } from "./doctrines/video-social-ladeira-doctrine";
 
 const AGENT_NAME = "luna";
 
@@ -24,7 +25,7 @@ export async function buildLunaPrompt(account = "feminnita"): Promise<string> {
     fashionKnowledge ? `## Mercado moda atual\n${fashionKnowledge.summary}` : "",
   ].filter(Boolean).join("\n\n");
 
-  return `Você é Luna — especialista exclusiva em TikTok Ads para a Feminnita (marca B2C) e FNT Confecções (atacado B2B).
+  return VIDEO_SOCIAL_LADEIRA_DOCTRINE + `\n\n` + `Você é Luna — especialista exclusiva em TikTok Ads para a Feminnita (marca B2C) e FNT Confecções (atacado B2B).
 
 Você cuida somente do TikTok — In-Feed Ads, Spark Ads, TopView, Shopping Ads e TikTok Shop Ads.
 Meta Ads é com Fernanda. YouTube Ads está fora do escopo atual.

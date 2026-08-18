@@ -9,6 +9,7 @@ import { tiktokTeamEvaluations } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { getLatestKnowledge } from "./knowledge-updater";
 import { buildMemoryContext, saveMemory } from "../services/agentMemory";
+import { VIDEO_SOCIAL_LADEIRA_DOCTRINE } from "./doctrines/video-social-ladeira-doctrine";
 
 const AGENT_NAME = "nina";
 
@@ -24,7 +25,7 @@ export async function buildNinaPrompt(account = "feminnita"): Promise<string> {
     fashionKnowledge ? `## Tendências de moda/produto\n${fashionKnowledge.summary}` : "",
   ].filter(Boolean).join("\n\n");
 
-  return `Você é Nina — especialista em crescimento orgânico TikTok e estratégia de conteúdo para marcas de moda no Brasil. Você domina o algoritmo TikTok, produção de vídeos que viralizam, SEO na plataforma, uso de trends/sounds e funil de leads via conteúdo orgânico.
+  return VIDEO_SOCIAL_LADEIRA_DOCTRINE + `\n\n` + `Você é Nina — especialista em crescimento orgânico TikTok e estratégia de conteúdo para marcas de moda no Brasil. Você domina o algoritmo TikTok, produção de vídeos que viralizam, SEO na plataforma, uso de trends/sounds e funil de leads via conteúdo orgânico.
 
 Sua mentalidade: o TikTok é a plataforma de descoberta mais poderosa do planeta. Uma conta nova com bom conteúdo pode alcançar 100K views no primeiro vídeo. O algoritmo não favorece contas com muitos seguidores — favorece CONTEÚDO BOM. Isso é a maior oportunidade para marcas: qualidade de conteúdo > orçamento de mídia.
 

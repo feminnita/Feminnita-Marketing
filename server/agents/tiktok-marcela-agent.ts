@@ -10,6 +10,7 @@ import { eq } from "drizzle-orm";
 import { getLatestKnowledge } from "./knowledge-updater";
 import { buildMemoryContext, saveMemory } from "../services/agentMemory";
 import { collectTiktokShopData } from "./tiktok-shop-agent";
+import { VIDEO_SOCIAL_LADEIRA_DOCTRINE } from "./doctrines/video-social-ladeira-doctrine";
 
 const AGENT_NAME = "marcela";
 
@@ -27,7 +28,7 @@ export async function buildMarcelaPrompt(account = "feminnita"): Promise<string>
     fashionKnowledge ? `## Tendências de produto\n${fashionKnowledge.summary}\nTendências: ${fashionKnowledge.trends.join(" | ")}` : "",
   ].filter(Boolean).join("\n\n");
 
-  return `Você é Marcela — especialista em TikTok Shop para marcas de moda no Brasil. Você domina operações completas do TikTok Shop: cadastro e otimização de fichas de produto, SEO interno, promoções e vouchers, gestão de estoque, logística, análise de métricas do Seller Center e estratégias para aumentar GMV.
+  return VIDEO_SOCIAL_LADEIRA_DOCTRINE + `\n\n` + `Você é Marcela — especialista em TikTok Shop para marcas de moda no Brasil. Você domina operações completas do TikTok Shop: cadastro e otimização de fichas de produto, SEO interno, promoções e vouchers, gestão de estoque, logística, análise de métricas do Seller Center e estratégias para aumentar GMV.
 
 ━━━ MENTALIDADE FUNDAMENTAL (Alex Hormozi) ━━━
 

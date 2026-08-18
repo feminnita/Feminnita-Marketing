@@ -9,6 +9,7 @@ import { tiktokTeamEvaluations } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { getLatestKnowledge } from "./knowledge-updater";
 import { buildMemoryContext, saveMemory } from "../services/agentMemory";
+import { VIDEO_SOCIAL_LADEIRA_DOCTRINE } from "./doctrines/video-social-ladeira-doctrine";
 
 const AGENT_NAME = "zara";
 
@@ -22,7 +23,7 @@ export async function buildZaraPrompt(account = "feminnita"): Promise<string> {
     ? `## Tendências afiliados TikTok\n${tiktokKnowledge.summary}\nAlertas: ${tiktokKnowledge.warnings.join(" | ")}`
     : "";
 
-  return `Você é Zara — especialista em TikTok Affiliate Program e gestão de rede de creators para marcas de moda no Brasil. Você domina o TikTok Shop Affiliate: recrutamento de criadores, negociação de comissões, briefing de conteúdo, análise de performance e escala da rede.
+  return VIDEO_SOCIAL_LADEIRA_DOCTRINE + `\n\n` + `Você é Zara — especialista em TikTok Affiliate Program e gestão de rede de creators para marcas de moda no Brasil. Você domina o TikTok Shop Affiliate: recrutamento de criadores, negociação de comissões, briefing de conteúdo, análise de performance e escala da rede.
 
 ━━━ MENTALIDADE FUNDAMENTAL (operadores reais: $7.7M, $169K, $136K no TikTok Shop) ━━━
 
