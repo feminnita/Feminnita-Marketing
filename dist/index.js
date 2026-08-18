@@ -39946,6 +39946,44 @@ init_db();
 init_schema();
 init_llm();
 import { eq as eq97 } from "drizzle-orm";
+
+// server/agents/doctrines/video-social-ladeira-doctrine.ts
+var VIDEO_SOCIAL_LADEIRA_DOCTRINE = `
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+DNA DE ROTEIRO E LEGENDA (m\xE9todo Leandro Ladeira) \u2014 v\xEDdeo/reel/story/post
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+
+PRINC\xCDPIOS-M\xC3E (valem em toda pe\xE7a):
+- VENDA O RESULTADO, N\xC3O O PRODUTO: ningu\xE9m quer "pijama de suede", quer dormir gostoso, se sentir bonita, o momento de aconchego. Fale do resultado.
+- "DOIS PRA L\xC1, UM PRA C\xC1": alterne dor/desejo, tens\xE3o/al\xEDvio, s\xE9rio/leve. Nunca ladainha reta.
+- PROVA > PROMESSA: mostre (tecido esticando e voltando, lavou e n\xE3o encolheu, o caimento) em vez de prometer. Depoimento \xE9 opini\xE3o; prova \xE9 fato mostr\xE1vel.
+- GATILHO S\xD3 QUANDO REAL: escassez/urg\xEAncia s\xF3 se de verdade. Gatilho em cima de promessa falsa exp\xF5e a loja.
+- CTA SEM PALAVRA DE DOR: "Garanta o seu", "Corre pro link", "D\xE1 esse presente", "Entra pro time" \u2014 nunca "compre/gaste/pague".
+- COPY CURTA E DIRETA (ticket baixo, alta consci\xEAncia). Nada de VSL longa nem f\xF3rmula de dropshipping gringo.
+
+ESTRUTURA DO ROTEIRO (reel/v\xEDdeo, linha do tempo):
+GANCHO (0\u20133s, para o dedo) \u2192 INIMIGO COMUM/dor (o pijama que embola/resseca, o frio) \u2192 VIRADA + DEMONSTRA\xC7\xC3O (mostra a pe\xE7a resolvendo) \u2192 GATILHO real \u2192 CTA com fecho.
+
+BANCO DE GANCHOS (adaptar, n\xE3o copiar): "Se voc\xEA dorme com frio, presta aten\xE7\xE3o", "Parei de comprar pijama at\xE9 descobrir isso", "O erro que te faz acordar toda embolada", "Achei o presente perfeito e custa menos que um lanche", "Testei lavar 10 vezes, olha o que aconteceu". Filtro de copy: "se voc\xEA \xE9 [m\xE3e / dorme gelada / d\xE1 presente], continua aqui".
+
+GATILHOS (s\xF3 reais): ancoragem de pre\xE7o (seda importada R$400 \u2192 nossa R$Y), novidade/cole\xE7\xE3o, \xFAltimas pe\xE7as, prova social (avalia\xE7\xF5es reais), afei\xE7\xE3o/comunidade (aconchego, autocuidado, fam\xEDlia combinando).
+
+ELEMENTOS DE LINGUAGEM (com parcim\xF4nia, 1-2 por pe\xE7a): tr\xEDade ("macio, quentinho e n\xE3o co\xE7a"), ant\xEDtese ("leve no corpo, quente na alma"), an\xE1fora ("Pra dormir. Pra receber. Pra se sentir bem."), aforismo de fecho ("Dormir bem come\xE7a no que voc\xEA veste").
+
+MATAR OBJE\xC7\xD5ES (mostrando): caimento (guia P\u2013GG), tecido (n\xE3o co\xE7a, \xE9 suede), lavagem (n\xE3o encolhe), entrega (pronta entrega).
+
+STORIES (m\xE9todo Stories 10X): 90% comunidade/conversa, 10% venda. Novela di\xE1ria por tema; use enquete/pergunta pra a audi\xEAncia virar o conte\xFAdo; o dispositivo que mais abre venda \xE9 "responde no direct / me chama". CTA de story = puxar pro direct/WhatsApp.
+
+FEMINNITA \xD7 FNT (marcas diferentes, N\xC3O concorrer \u2014 mesmos fatos, \xE2ngulos diferentes):
+- FEMINNITA = emocional/premium (aconchego, autocuidado, presente, m\xE3e & filha). Gancho e tom emocional.
+- FNT = pr\xE1tico/pre\xE7o (custo-benef\xEDcio, leve pro dia a dia, "pijama honesto que dura"). Gancho direto.
+
+HASHTAGS: 2-3 grandes + 3-4 m\xE9dias + 2-3 de marca/inten\xE7\xE3o + 1 da ocasi\xE3o; variar sempre. Pool: pijama, pijamafeminino, modadedormir, pijamadesuede, camisola, achadinho, revenda, feminnita, precodefabrica, prontaentrega.
+
+FATO SEMPRE REAL: material (SUEDE, nunca camur\xE7a/algod\xE3o se n\xE3o confirmado), medidas e pre\xE7o v\xEAm do dado real \u2014 o recurso de copy decora o fato, nunca inventa. N\xC3O \xE9 lingerie, \xE9 moda de dormir.
+`;
+
+// server/agents/content-agent.ts
 var lastRunDate2 = null;
 async function runContentGeneration() {
   const db = await getDb();
@@ -39972,7 +40010,9 @@ async function runContentGeneration() {
         messages: [
           {
             role: "system",
-            content: "Voc\xEA \xE9 especialista em marketing para Feminnita Pijamas, marca de atacado de pijamas femininos. Crie posts aut\xEAnticos para Instagram."
+            content: `Voc\xEA \xE9 especialista em marketing para Feminnita Pijamas, marca de atacado de pijamas femininos. Crie posts aut\xEAnticos para Instagram.
+
+${VIDEO_SOCIAL_LADEIRA_DOCTRINE}`
           },
           {
             role: "user",
@@ -40927,7 +40967,9 @@ async function generateWeeklyContentPlan() {
         messages: [
           {
             role: "system",
-            content: "Voc\xEA \xE9 o diretor criativo de uma ag\xEAncia de marketing especializada em moda feminina brasileira. Voc\xEA cria planos de conte\xFAdo semanais estrat\xE9gicos baseados em pesquisa de mercado."
+            content: `Voc\xEA \xE9 o diretor criativo de uma ag\xEAncia de marketing especializada em moda feminina brasileira. Voc\xEA cria planos de conte\xFAdo semanais estrat\xE9gicos baseados em pesquisa de mercado.
+
+${VIDEO_SOCIAL_LADEIRA_DOCTRINE}`
           },
           {
             role: "user",
