@@ -40,7 +40,7 @@ import {
   BookOpen, Newspaper, CheckCircle, Brain, MessageCircle,
   Bell, Image, Briefcase, TrendingUp, ChevronDown, ChevronRight,
   Settings, Megaphone, BarChart2, Bot, ShoppingBag, Music, Video, ClipboardCheck, Globe, Pencil,
-  Sparkles, FolderOpen,
+  Sparkles, FolderOpen, UserRound,
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -278,6 +278,11 @@ function DashboardLayoutContent({ children, setSidebarWidth }: {
                 <SidebarMenuSubItem>
                   <SidebarMenuSubButton onClick={() => setLocation("/gerar-video")}>
                     <Video className="h-3 w-3" /> Gerar Vídeo IA
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton onClick={() => setLocation("/avatar-realista")}>
+                    <UserRound className="h-3 w-3" /> Avatar Realista
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>

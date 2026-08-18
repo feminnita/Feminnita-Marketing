@@ -105,6 +105,7 @@ import { sheinIsabelaRouter } from "./routers/shein-isabela";
 import { agentTasksRouter } from "./routers/agent-tasks";
 import { chatUploadRouter } from "./routers/chat-upload";
 import { hailuoImageRouter } from "./routers/hailuo-image";
+import { avatarRouter } from "./routers/avatar";
 import { runpodVideoRouter } from "./routers/runpod-video";
 import { modoFalaRouter } from "./routers/modo-fala";
 import { videoCreditsRouter } from "./routers/video-credits";
@@ -452,6 +453,7 @@ export const appRouter = router({
   agentTasks: agentTasksRouter,
   chatUpload: chatUploadRouter,
   hailuoImage: hailuoImageRouter,
+  avatar: avatarRouter,
   runpodVideo: runpodVideoRouter,
   modoFala: modoFalaRouter,
   videoCredits: videoCreditsRouter,
