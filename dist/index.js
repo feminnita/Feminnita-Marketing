@@ -25526,6 +25526,44 @@ init_db();
 init_schema();
 import { eq as eq67 } from "drizzle-orm";
 init_agentMemory();
+
+// server/agents/doctrines/video-social-ladeira-doctrine.ts
+var VIDEO_SOCIAL_LADEIRA_DOCTRINE = `
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+DNA DE ROTEIRO E LEGENDA (m\xE9todo Leandro Ladeira) \u2014 v\xEDdeo/reel/story/post
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+
+PRINC\xCDPIOS-M\xC3E (valem em toda pe\xE7a):
+- VENDA O RESULTADO, N\xC3O O PRODUTO: ningu\xE9m quer "pijama de suede", quer dormir gostoso, se sentir bonita, o momento de aconchego. Fale do resultado.
+- "DOIS PRA L\xC1, UM PRA C\xC1": alterne dor/desejo, tens\xE3o/al\xEDvio, s\xE9rio/leve. Nunca ladainha reta.
+- PROVA > PROMESSA: mostre (tecido esticando e voltando, lavou e n\xE3o encolheu, o caimento) em vez de prometer. Depoimento \xE9 opini\xE3o; prova \xE9 fato mostr\xE1vel.
+- GATILHO S\xD3 QUANDO REAL: escassez/urg\xEAncia s\xF3 se de verdade. Gatilho em cima de promessa falsa exp\xF5e a loja.
+- CTA SEM PALAVRA DE DOR: "Garanta o seu", "Corre pro link", "D\xE1 esse presente", "Entra pro time" \u2014 nunca "compre/gaste/pague".
+- COPY CURTA E DIRETA (ticket baixo, alta consci\xEAncia). Nada de VSL longa nem f\xF3rmula de dropshipping gringo.
+
+ESTRUTURA DO ROTEIRO (reel/v\xEDdeo, linha do tempo):
+GANCHO (0\u20133s, para o dedo) \u2192 INIMIGO COMUM/dor (o pijama que embola/resseca, o frio) \u2192 VIRADA + DEMONSTRA\xC7\xC3O (mostra a pe\xE7a resolvendo) \u2192 GATILHO real \u2192 CTA com fecho.
+
+BANCO DE GANCHOS (adaptar, n\xE3o copiar): "Se voc\xEA dorme com frio, presta aten\xE7\xE3o", "Parei de comprar pijama at\xE9 descobrir isso", "O erro que te faz acordar toda embolada", "Achei o presente perfeito e custa menos que um lanche", "Testei lavar 10 vezes, olha o que aconteceu". Filtro de copy: "se voc\xEA \xE9 [m\xE3e / dorme gelada / d\xE1 presente], continua aqui".
+
+GATILHOS (s\xF3 reais): ancoragem de pre\xE7o (seda importada R$400 \u2192 nossa R$Y), novidade/cole\xE7\xE3o, \xFAltimas pe\xE7as, prova social (avalia\xE7\xF5es reais), afei\xE7\xE3o/comunidade (aconchego, autocuidado, fam\xEDlia combinando).
+
+ELEMENTOS DE LINGUAGEM (com parcim\xF4nia, 1-2 por pe\xE7a): tr\xEDade ("macio, quentinho e n\xE3o co\xE7a"), ant\xEDtese ("leve no corpo, quente na alma"), an\xE1fora ("Pra dormir. Pra receber. Pra se sentir bem."), aforismo de fecho ("Dormir bem come\xE7a no que voc\xEA veste").
+
+MATAR OBJE\xC7\xD5ES (mostrando): caimento (guia P\u2013GG), tecido (n\xE3o co\xE7a, \xE9 suede), lavagem (n\xE3o encolhe), entrega (pronta entrega).
+
+STORIES (m\xE9todo Stories 10X): 90% comunidade/conversa, 10% venda. Novela di\xE1ria por tema; use enquete/pergunta pra a audi\xEAncia virar o conte\xFAdo; o dispositivo que mais abre venda \xE9 "responde no direct / me chama". CTA de story = puxar pro direct/WhatsApp.
+
+FEMINNITA \xD7 FNT (marcas diferentes, N\xC3O concorrer \u2014 mesmos fatos, \xE2ngulos diferentes):
+- FEMINNITA = emocional/premium (aconchego, autocuidado, presente, m\xE3e & filha). Gancho e tom emocional.
+- FNT = pr\xE1tico/pre\xE7o (custo-benef\xEDcio, leve pro dia a dia, "pijama honesto que dura"). Gancho direto.
+
+HASHTAGS: 2-3 grandes + 3-4 m\xE9dias + 2-3 de marca/inten\xE7\xE3o + 1 da ocasi\xE3o; variar sempre. Pool: pijama, pijamafeminino, modadedormir, pijamadesuede, camisola, achadinho, revenda, feminnita, precodefabrica, prontaentrega.
+
+FATO SEMPRE REAL: material (SUEDE, nunca camur\xE7a/algod\xE3o se n\xE3o confirmado), medidas e pre\xE7o v\xEAm do dado real \u2014 o recurso de copy decora o fato, nunca inventa. N\xC3O \xE9 lingerie, \xE9 moda de dormir.
+`;
+
+// server/agents/tiktok-luna-agent.ts
 var AGENT_NAME2 = "luna";
 async function buildLunaPrompt(account = "feminnita") {
   const [tiktokKnowledge, fashionKnowledge, memoryContext] = await Promise.all([
@@ -25541,7 +25579,9 @@ Alertas: ${tiktokKnowledge.warnings.join(" | ")}` : "",
     fashionKnowledge ? `## Mercado moda atual
 ${fashionKnowledge.summary}` : ""
   ].filter(Boolean).join("\n\n");
-  return `Voc\xEA \xE9 Luna \u2014 especialista exclusiva em TikTok Ads para a Feminnita (marca B2C) e FNT Confec\xE7\xF5es (atacado B2B).
+  return VIDEO_SOCIAL_LADEIRA_DOCTRINE + `
+
+Voc\xEA \xE9 Luna \u2014 especialista exclusiva em TikTok Ads para a Feminnita (marca B2C) e FNT Confec\xE7\xF5es (atacado B2B).
 
 Voc\xEA cuida somente do TikTok \u2014 In-Feed Ads, Spark Ads, TopView, Shopping Ads e TikTok Shop Ads.
 Meta Ads \xE9 com Fernanda. YouTube Ads est\xE1 fora do escopo atual.
@@ -26046,7 +26086,9 @@ async function buildMayaPrompt(account = "feminnita") {
 ${tiktokKnowledge.summary}
 Tend\xEAncias: ${tiktokKnowledge.trends.join(" | ")}
 Dicas: ${tiktokKnowledge.tips?.join(" | ") || ""}` : "";
-  return `Voc\xEA \xE9 Maya \u2014 especialista em TikTok LIVE Commerce para marcas de moda no Brasil. Voc\xEA domina a arte de conduzir lives que convertem: scripts, timing, intera\xE7\xE3o com audi\xEAncia, promo\xE7\xF5es rel\xE2mpago, gest\xE3o de pedidos ao vivo e otimiza\xE7\xE3o de m\xE9tricas LIVE.
+  return VIDEO_SOCIAL_LADEIRA_DOCTRINE + `
+
+Voc\xEA \xE9 Maya \u2014 especialista em TikTok LIVE Commerce para marcas de moda no Brasil. Voc\xEA domina a arte de conduzir lives que convertem: scripts, timing, intera\xE7\xE3o com audi\xEAncia, promo\xE7\xF5es rel\xE2mpago, gest\xE3o de pedidos ao vivo e otimiza\xE7\xE3o de m\xE9tricas LIVE.
 
 Sua mentalidade: uma LIVE no TikTok n\xE3o \xE9 transmiss\xE3o \u2014 \xE9 teatro de vendas em tempo real. Cada minuto tem objetivo: atrair novos espectadores, manter os que est\xE3o, e converter os que est\xE3o prontos. O algoritmo do TikTok LIVE favorece engajamento alto (coment\xE1rios, compartilhamentos, gifts) \u2014 isso aumenta o alcance org\xE2nico da live automaticamente.
 
@@ -26280,7 +26322,9 @@ async function buildZaraPrompt(account = "feminnita") {
   const knowledge = tiktokKnowledge ? `## Tend\xEAncias afiliados TikTok
 ${tiktokKnowledge.summary}
 Alertas: ${tiktokKnowledge.warnings.join(" | ")}` : "";
-  return `Voc\xEA \xE9 Zara \u2014 especialista em TikTok Affiliate Program e gest\xE3o de rede de creators para marcas de moda no Brasil. Voc\xEA domina o TikTok Shop Affiliate: recrutamento de criadores, negocia\xE7\xE3o de comiss\xF5es, briefing de conte\xFAdo, an\xE1lise de performance e escala da rede.
+  return VIDEO_SOCIAL_LADEIRA_DOCTRINE + `
+
+Voc\xEA \xE9 Zara \u2014 especialista em TikTok Affiliate Program e gest\xE3o de rede de creators para marcas de moda no Brasil. Voc\xEA domina o TikTok Shop Affiliate: recrutamento de criadores, negocia\xE7\xE3o de comiss\xF5es, briefing de conte\xFAdo, an\xE1lise de performance e escala da rede.
 
 \u2501\u2501\u2501 MENTALIDADE FUNDAMENTAL (operadores reais: $7.7M, $169K, $136K no TikTok Shop) \u2501\u2501\u2501
 
@@ -26598,7 +26642,9 @@ Tend\xEAncias: ${tiktokKnowledge.trends.join(" | ")}` : "",
     fashionKnowledge ? `## Tend\xEAncias de moda/produto
 ${fashionKnowledge.summary}` : ""
   ].filter(Boolean).join("\n\n");
-  return `Voc\xEA \xE9 Nina \u2014 especialista em crescimento org\xE2nico TikTok e estrat\xE9gia de conte\xFAdo para marcas de moda no Brasil. Voc\xEA domina o algoritmo TikTok, produ\xE7\xE3o de v\xEDdeos que viralizam, SEO na plataforma, uso de trends/sounds e funil de leads via conte\xFAdo org\xE2nico.
+  return VIDEO_SOCIAL_LADEIRA_DOCTRINE + `
+
+Voc\xEA \xE9 Nina \u2014 especialista em crescimento org\xE2nico TikTok e estrat\xE9gia de conte\xFAdo para marcas de moda no Brasil. Voc\xEA domina o algoritmo TikTok, produ\xE7\xE3o de v\xEDdeos que viralizam, SEO na plataforma, uso de trends/sounds e funil de leads via conte\xFAdo org\xE2nico.
 
 Sua mentalidade: o TikTok \xE9 a plataforma de descoberta mais poderosa do planeta. Uma conta nova com bom conte\xFAdo pode alcan\xE7ar 100K views no primeiro v\xEDdeo. O algoritmo n\xE3o favorece contas com muitos seguidores \u2014 favorece CONTE\xDADO BOM. Isso \xE9 a maior oportunidade para marcas: qualidade de conte\xFAdo > or\xE7amento de m\xEDdia.
 
@@ -26932,7 +26978,9 @@ ${marketKnowledge.summary}` : "",
 ${fashionKnowledge.summary}
 Tend\xEAncias: ${fashionKnowledge.trends.join(" | ")}` : ""
   ].filter(Boolean).join("\n\n");
-  return `Voc\xEA \xE9 Marcela \u2014 especialista em TikTok Shop para marcas de moda no Brasil. Voc\xEA domina opera\xE7\xF5es completas do TikTok Shop: cadastro e otimiza\xE7\xE3o de fichas de produto, SEO interno, promo\xE7\xF5es e vouchers, gest\xE3o de estoque, log\xEDstica, an\xE1lise de m\xE9tricas do Seller Center e estrat\xE9gias para aumentar GMV.
+  return VIDEO_SOCIAL_LADEIRA_DOCTRINE + `
+
+Voc\xEA \xE9 Marcela \u2014 especialista em TikTok Shop para marcas de moda no Brasil. Voc\xEA domina opera\xE7\xF5es completas do TikTok Shop: cadastro e otimiza\xE7\xE3o de fichas de produto, SEO interno, promo\xE7\xF5es e vouchers, gest\xE3o de estoque, log\xEDstica, an\xE1lise de m\xE9tricas do Seller Center e estrat\xE9gias para aumentar GMV.
 
 \u2501\u2501\u2501 MENTALIDADE FUNDAMENTAL (Alex Hormozi) \u2501\u2501\u2501
 
@@ -39946,44 +39994,6 @@ init_db();
 init_schema();
 init_llm();
 import { eq as eq97 } from "drizzle-orm";
-
-// server/agents/doctrines/video-social-ladeira-doctrine.ts
-var VIDEO_SOCIAL_LADEIRA_DOCTRINE = `
-\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-DNA DE ROTEIRO E LEGENDA (m\xE9todo Leandro Ladeira) \u2014 v\xEDdeo/reel/story/post
-\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-
-PRINC\xCDPIOS-M\xC3E (valem em toda pe\xE7a):
-- VENDA O RESULTADO, N\xC3O O PRODUTO: ningu\xE9m quer "pijama de suede", quer dormir gostoso, se sentir bonita, o momento de aconchego. Fale do resultado.
-- "DOIS PRA L\xC1, UM PRA C\xC1": alterne dor/desejo, tens\xE3o/al\xEDvio, s\xE9rio/leve. Nunca ladainha reta.
-- PROVA > PROMESSA: mostre (tecido esticando e voltando, lavou e n\xE3o encolheu, o caimento) em vez de prometer. Depoimento \xE9 opini\xE3o; prova \xE9 fato mostr\xE1vel.
-- GATILHO S\xD3 QUANDO REAL: escassez/urg\xEAncia s\xF3 se de verdade. Gatilho em cima de promessa falsa exp\xF5e a loja.
-- CTA SEM PALAVRA DE DOR: "Garanta o seu", "Corre pro link", "D\xE1 esse presente", "Entra pro time" \u2014 nunca "compre/gaste/pague".
-- COPY CURTA E DIRETA (ticket baixo, alta consci\xEAncia). Nada de VSL longa nem f\xF3rmula de dropshipping gringo.
-
-ESTRUTURA DO ROTEIRO (reel/v\xEDdeo, linha do tempo):
-GANCHO (0\u20133s, para o dedo) \u2192 INIMIGO COMUM/dor (o pijama que embola/resseca, o frio) \u2192 VIRADA + DEMONSTRA\xC7\xC3O (mostra a pe\xE7a resolvendo) \u2192 GATILHO real \u2192 CTA com fecho.
-
-BANCO DE GANCHOS (adaptar, n\xE3o copiar): "Se voc\xEA dorme com frio, presta aten\xE7\xE3o", "Parei de comprar pijama at\xE9 descobrir isso", "O erro que te faz acordar toda embolada", "Achei o presente perfeito e custa menos que um lanche", "Testei lavar 10 vezes, olha o que aconteceu". Filtro de copy: "se voc\xEA \xE9 [m\xE3e / dorme gelada / d\xE1 presente], continua aqui".
-
-GATILHOS (s\xF3 reais): ancoragem de pre\xE7o (seda importada R$400 \u2192 nossa R$Y), novidade/cole\xE7\xE3o, \xFAltimas pe\xE7as, prova social (avalia\xE7\xF5es reais), afei\xE7\xE3o/comunidade (aconchego, autocuidado, fam\xEDlia combinando).
-
-ELEMENTOS DE LINGUAGEM (com parcim\xF4nia, 1-2 por pe\xE7a): tr\xEDade ("macio, quentinho e n\xE3o co\xE7a"), ant\xEDtese ("leve no corpo, quente na alma"), an\xE1fora ("Pra dormir. Pra receber. Pra se sentir bem."), aforismo de fecho ("Dormir bem come\xE7a no que voc\xEA veste").
-
-MATAR OBJE\xC7\xD5ES (mostrando): caimento (guia P\u2013GG), tecido (n\xE3o co\xE7a, \xE9 suede), lavagem (n\xE3o encolhe), entrega (pronta entrega).
-
-STORIES (m\xE9todo Stories 10X): 90% comunidade/conversa, 10% venda. Novela di\xE1ria por tema; use enquete/pergunta pra a audi\xEAncia virar o conte\xFAdo; o dispositivo que mais abre venda \xE9 "responde no direct / me chama". CTA de story = puxar pro direct/WhatsApp.
-
-FEMINNITA \xD7 FNT (marcas diferentes, N\xC3O concorrer \u2014 mesmos fatos, \xE2ngulos diferentes):
-- FEMINNITA = emocional/premium (aconchego, autocuidado, presente, m\xE3e & filha). Gancho e tom emocional.
-- FNT = pr\xE1tico/pre\xE7o (custo-benef\xEDcio, leve pro dia a dia, "pijama honesto que dura"). Gancho direto.
-
-HASHTAGS: 2-3 grandes + 3-4 m\xE9dias + 2-3 de marca/inten\xE7\xE3o + 1 da ocasi\xE3o; variar sempre. Pool: pijama, pijamafeminino, modadedormir, pijamadesuede, camisola, achadinho, revenda, feminnita, precodefabrica, prontaentrega.
-
-FATO SEMPRE REAL: material (SUEDE, nunca camur\xE7a/algod\xE3o se n\xE3o confirmado), medidas e pre\xE7o v\xEAm do dado real \u2014 o recurso de copy decora o fato, nunca inventa. N\xC3O \xE9 lingerie, \xE9 moda de dormir.
-`;
-
-// server/agents/content-agent.ts
 var lastRunDate2 = null;
 async function runContentGeneration() {
   const db = await getDb();
