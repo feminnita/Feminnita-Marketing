@@ -2,6 +2,7 @@ import { getDb } from "../db";
 import { contentBriefs, influencers, marketingResearchReports, users } from "../../drizzle/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { invokeLLM } from "../_core/llm";
+import { VIDEO_SOCIAL_LADEIRA_DOCTRINE } from "./doctrines/video-social-ladeira-doctrine";
 
 const CHECK_INTERVAL_MS = 60 * 60 * 1000; // verifica a cada hora
 const RUN_DAY = 1;  // segunda-feira
@@ -89,7 +90,7 @@ async function generateWeeklyContentPlan(): Promise<void> {
           {
             role: "system",
             content:
-              "Você é o diretor criativo de uma agência de marketing especializada em moda feminina brasileira. Você cria planos de conteúdo semanais estratégicos baseados em pesquisa de mercado.",
+              `Você é o diretor criativo de uma agência de marketing especializada em moda feminina brasileira. Você cria planos de conteúdo semanais estratégicos baseados em pesquisa de mercado.\n\n${VIDEO_SOCIAL_LADEIRA_DOCTRINE}`,
           },
           {
             role: "user",

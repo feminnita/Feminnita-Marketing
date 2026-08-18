@@ -3,6 +3,7 @@ import { influencers, influencerPosts } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { invokeLLM } from "../_core/llm";
 import { notifyOwner } from "../_core/notification";
+import { VIDEO_SOCIAL_LADEIRA_DOCTRINE } from "./doctrines/video-social-ladeira-doctrine";
 
 let lastRunDate: string | null = null;
 
@@ -39,7 +40,7 @@ async function runContentGeneration() {
         messages: [
           {
             role: "system",
-            content: "Você é especialista em marketing para Feminnita Pijamas, marca de atacado de pijamas femininos. Crie posts autênticos para Instagram.",
+            content: `Você é especialista em marketing para Feminnita Pijamas, marca de atacado de pijamas femininos. Crie posts autênticos para Instagram.\n\n${VIDEO_SOCIAL_LADEIRA_DOCTRINE}`,
           },
           {
             role: "user",
