@@ -1,7 +1,8 @@
 import { getDb } from "../db";
-import { aiSettings, conversationHistory, knowledgeBase } from "../../drizzle/schema";
+import { aiSettings, conversationHistory } from "../../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 import { invokeLLM } from "../_core/llm";
+import { selecionarConhecimento } from "./busca-catalogo";
 
 // Processa uma mensagem recebida via WhatsApp e retorna a resposta IA
 export async function processWhatsAppMessage(
@@ -30,13 +31,22 @@ export async function processWhatsAppMessage(
     );
     if (shouldEscalate) return null; // Deixa para humano
 
-    // Buscar base de conhecimento relevante
-    const knowledge = await db.select().from(knowledgeBase)
-      .where(and(eq(knowledgeBase.userId, userId), eq(knowledgeBase.isActive, true)))
-      .limit(config.searchResultsLimit ?? 3);
+    // Buscar base de conhecimento relevante PARA ESTA PERGUNTA.
+    // Antes era `limit 3` sem ordenacao — as mesmas 3 linhas para toda mensagem.
+    // searchResultsLimit passa a valer so para os PRODUTOS: politica e
+    // informacao geral entram sempre, sem disputar vaga com o catalogo.
+    const knowledge = await selecionarConhecimento(
+      db,
+      userId,
+      message,
+      config.searchResultsLimit ?? 4,
+    );
 
+    // O link vai junto quando existe: e o que faz ela MANDAR o produto em vez
+    // de so descrever. Sem ele o modelo nao tem como citar endereco nenhum.
     const knowledgeContext = knowledge.map((k: any) =>
-      `[${k.contentType}] ${k.title}: ${k.description ?? ""}`
+      `[${k.contentType}] ${k.title}: ${k.description ?? ""}` +
+      (k.url ? `\nLink: ${k.url}` : "")
     ).join("\n");
 
     // Buscar histórico recente da conversa
