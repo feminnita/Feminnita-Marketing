@@ -4,6 +4,9 @@ import { getDb } from "../db";
 import { conversationHistory, escalationQueue } from "../../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 
+// TODA chamada com phoneNumberId e WhatsApp Cloud API: host graph.FACEBOOK.com.
+// graph.instagram.com aqui fazia todo envio falhar em silencio.
+
 /**
  * Router para integração com WhatsApp Business API
  * Processa webhooks, envia mensagens e gerencia conversas
@@ -136,7 +139,7 @@ export const whatsappAIIntegrationRouter = router({
         }
 
         const response = await fetch(
-          `https://graph.instagram.com/v18.0/${phoneNumberId}/messages`,
+          `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`,
           {
             method: "POST",
             headers: {
@@ -290,7 +293,7 @@ export const whatsappAIIntegrationRouter = router({
 
       // Verificar status da conexão
       const response = await fetch(
-        `https://graph.instagram.com/v18.0/${phoneNumberId}`,
+        `https://graph.facebook.com/v18.0/${phoneNumberId}`,
         {
           headers: {
             Authorization: `Bearer ${process.env.META_ACCESS_TOKEN}`,
@@ -400,7 +403,7 @@ async function sendWhatsAppMessage(
     }
 
     const response = await fetch(
-      `https://graph.instagram.com/v18.0/${phoneNumberId}/messages`,
+      `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`,
       {
         method: "POST",
         headers: {

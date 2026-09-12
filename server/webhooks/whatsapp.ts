@@ -236,7 +236,11 @@ async function sendWhatsAppMessage(
 ): Promise<boolean> {
   try {
     const response = await fetch(
-      `https://graph.instagram.com/v18.0/${phoneNumberId}/messages`,
+      // graph.FACEBOOK.com. O corpo manda messaging_product: "whatsapp" — isso
+      // so existe no WhatsApp Cloud API, que atende nesse host. Apontado para o
+      // Instagram, o envio falhava sempre: a Lia lia a mensagem da cliente e
+      // nao respondia.
+      `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`,
       {
         method: "POST",
         headers: {

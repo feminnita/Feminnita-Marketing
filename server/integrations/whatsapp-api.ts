@@ -3,7 +3,11 @@
  * Documentação: https://developers.facebook.com/docs/whatsapp/cloud-api
  */
 
-const WHATSAPP_API_URL = "https://graph.instagram.com/v18.0";
+// graph.FACEBOOK.com, nao graph.instagram.com. O WhatsApp Cloud API so atende
+// nesse host — o proprio comentario acima ja aponta para a doc dele. Com o host
+// do Instagram, TODA chamada do WhatsApp falha: a Lia recebe a mensagem da
+// cliente e nao consegue responder.
+const WHATSAPP_API_URL = "https://graph.facebook.com/v18.0";
 
 export class WhatsAppAPIError extends Error {
   constructor(
