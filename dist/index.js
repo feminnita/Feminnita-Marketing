@@ -42158,17 +42158,26 @@ async function processAccount(acc) {
   } catch {
     doneSlots = [];
   }
-  const items = await q(
-    `SELECT m.item_id, m.sku, p.raspa
-       FROM shopee_flash_map m
+  let items = await q(
+    `SELECT c.item_id, m.sku, p.raspa
+       FROM shopee_flash_campeoes c
+       JOIN shopee_flash_map m ON m.item_id = c.item_id AND m.conta = c.conta
        JOIN shopee_precos p ON p.sku = m.sku
-      WHERE m.conta = ? AND p.raspa IS NOT NULL
-      ORDER BY m.item_id`,
+      WHERE c.conta = ? AND p.raspa IS NOT NULL
+      ORDER BY c.rnk ASC`,
     [acc]
   );
+  if (!items.length) {
+    items = await q(
+      `SELECT m.item_id, m.sku, p.raspa
+         FROM shopee_flash_map m JOIN shopee_precos p ON p.sku = m.sku
+        WHERE m.conta = ? AND p.raspa IS NOT NULL ORDER BY m.item_id`,
+      [acc]
+    );
+  }
   out.total_itens_mapeados = items.length;
   if (!items.length) {
-    out.motivo = "sem itens no shopee_flash_map";
+    out.motivo = "sem itens (campe\xF5es nem mapa)";
     return out;
   }
   const slot = await getNextSlot(acc, doneSlots);
@@ -42178,10 +42187,8 @@ async function processAccount(acc) {
   }
   out.timeslot_id = String(slot.timeslot_id);
   out.data_slot = new Date(Number(slot.start_time) * 1e3).toISOString();
-  const window2 = [];
-  for (let i = 0; i < Math.min(MAX_PRODUCTS, items.length); i++) {
-    window2.push(items[(rotOffset + i) % items.length]);
-  }
+  const window2 = items.slice(0, MAX_PRODUCTS);
+  void rotOffset;
   const payloadItems = [];
   for (const it of window2) {
     const raspa = Number(it.raspa);

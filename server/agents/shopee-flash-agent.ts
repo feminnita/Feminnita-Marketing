@@ -137,17 +137,28 @@ async function processAccount(acc: Account): Promise<any> {
   let doneSlots: string[] = [];
   try { doneSlots = st.length && st[0].done_slots ? JSON.parse(st[0].done_slots) : []; } catch { doneSlots = []; }
 
-  // preço SEMPRE da tabela nova (shopee_precos.raspa) via item_id do map
-  const items = await q<any>(
-    `SELECT m.item_id, m.sku, p.raspa
-       FROM shopee_flash_map m
+  // CAMPEÕES primeiro (top vendas 30d, ranqueados em shopee_flash_campeoes).
+  // Preço SEMPRE da tabela nova (shopee_precos.raspa) via item_id do map.
+  let items = await q<any>(
+    `SELECT c.item_id, m.sku, p.raspa
+       FROM shopee_flash_campeoes c
+       JOIN shopee_flash_map m ON m.item_id = c.item_id AND m.conta = c.conta
        JOIN shopee_precos p ON p.sku = m.sku
-      WHERE m.conta = ? AND p.raspa IS NOT NULL
-      ORDER BY m.item_id`,
+      WHERE c.conta = ? AND p.raspa IS NOT NULL
+      ORDER BY c.rnk ASC`,
     [acc],
   );
+  // fallback: sem campeões cadastrados -> usa o mapa inteiro (ordem por item_id)
+  if (!items.length) {
+    items = await q<any>(
+      `SELECT m.item_id, m.sku, p.raspa
+         FROM shopee_flash_map m JOIN shopee_precos p ON p.sku = m.sku
+        WHERE m.conta = ? AND p.raspa IS NOT NULL ORDER BY m.item_id`,
+      [acc],
+    );
+  }
   out.total_itens_mapeados = items.length;
-  if (!items.length) { out.motivo = "sem itens no shopee_flash_map"; return out; }
+  if (!items.length) { out.motivo = "sem itens (campeões nem mapa)"; return out; }
 
   // slot
   const slot = await getNextSlot(acc, doneSlots);
@@ -155,11 +166,9 @@ async function processAccount(acc: Account): Promise<any> {
   out.timeslot_id = String(slot.timeslot_id);
   out.data_slot = new Date(Number(slot.start_time) * 1000).toISOString();
 
-  // janela rotativa de 20
-  const window: any[] = [];
-  for (let i = 0; i < Math.min(MAX_PRODUCTS, items.length); i++) {
-    window.push(items[(rotOffset + i) % items.length]);
-  }
+  // top-20 campeões (já ranqueados) — mesmos 20 em cada slot, sem puxar a cauda
+  const window: any[] = items.slice(0, MAX_PRODUCTS);
+  void rotOffset;
 
   // monta payload por item (get_model_list -> trava desconto + estoque)
   const payloadItems: any[] = [];
