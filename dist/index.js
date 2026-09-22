@@ -42069,6 +42069,7 @@ var TOKEN_FILE = {
 var ACCOUNTS = ["feminnita", "fnt"];
 var MAX_PRODUCTS = 20;
 var PROMO_STOCK_CAP = 100;
+var SLOT_HORIZON_DAYS = 30;
 var FIRST_RUN_DELAY_MS = 45e3;
 var INTERVAL_MS3 = 60 * 60 * 1e3;
 var _pool2 = null;
@@ -42095,44 +42096,31 @@ async function q(sql6, params = []) {
 function creds(acc) {
   const t2 = JSON.parse(fs14.readFileSync(TOKEN_FILE[acc], "utf8"));
   const partner_key = t2.partner_key || (acc === "fnt" ? process.env.SHOPEE_FNT_PARTNER_KEY : process.env.SHOPEE_PARTNER_KEY) || process.env.SHOPEE_PARTNER_KEY || "";
-  return {
-    partner_id: Number(t2.partner_id),
-    partner_key: String(partner_key),
-    shop_id: Number(t2.shop_id),
-    access_token: String(t2.access_token)
-  };
+  return { partner_id: Number(t2.partner_id), partner_key: String(partner_key), shop_id: Number(t2.shop_id), access_token: String(t2.access_token) };
 }
 async function shopee(acc, path16, opts = {}) {
   const c = creds(acc);
   const ts = Math.floor(Date.now() / 1e3);
   const baseStr = `${c.partner_id}${path16}${ts}${c.access_token}${c.shop_id}`;
   const sign = crypto15.createHmac("sha256", c.partner_key).update(baseStr).digest("hex");
-  const qs = new URLSearchParams({
-    partner_id: String(c.partner_id),
-    timestamp: String(ts),
-    access_token: c.access_token,
-    shop_id: String(c.shop_id),
-    sign
-  });
+  const qs = new URLSearchParams({ partner_id: String(c.partner_id), timestamp: String(ts), access_token: c.access_token, shop_id: String(c.shop_id), sign });
   for (const [k, v] of Object.entries(opts.query || {})) qs.set(k, String(v));
-  const url = `${BASE3}${path16}?${qs.toString()}`;
-  const res = await fetch(url, {
+  const res = await fetch(`${BASE3}${path16}?${qs.toString()}`, {
     method: opts.method || "GET",
     headers: { "Content-Type": "application/json" },
     body: opts.body ? JSON.stringify(opts.body) : void 0
   });
   return res.json();
 }
-async function getNextSlot(acc, doneSlots) {
+async function getAllSlots(acc, doneSlots) {
   const now = Math.floor(Date.now() / 1e3);
   const r = await shopee(acc, "/api/v2/shop_flash_sale/get_time_slot_id", {
-    query: { start_time: now + 600, end_time: now + 7 * 24 * 3600 }
+    query: { start_time: now + 600, end_time: now + SLOT_HORIZON_DAYS * 24 * 3600 }
   });
   let slots = [];
   if (Array.isArray(r?.response)) slots = r.response;
   else if (Array.isArray(r?.response?.time_slot)) slots = r.response.time_slot;
-  slots = slots.filter((s) => !doneSlots.includes(String(s.timeslot_id)) && Number(s.start_time) > now).sort((a, b) => Number(a.start_time) - Number(b.start_time));
-  return slots[0] || null;
+  return slots.filter((s) => !doneSlots.includes(String(s.timeslot_id)) && Number(s.start_time) > now).sort((a, b) => Number(a.start_time) - Number(b.start_time));
 }
 async function getModels(acc, itemId) {
   const r = await shopee(acc, "/api/v2/product/get_model_list", { query: { item_id: itemId } });
@@ -42148,15 +42136,42 @@ function listedPrice(model) {
 function availStock(model) {
   return Number(model?.stock_info_v2?.summary_info?.total_available_stock ?? 0);
 }
+async function buildChampionPayload(acc, items, out) {
+  const payload = [];
+  for (const it of items.slice(0, MAX_PRODUCTS)) {
+    const raspa = Number(it.raspa);
+    let models = [];
+    try {
+      models = await getModels(acc, Number(it.item_id));
+    } catch {
+      continue;
+    }
+    const okModels = [];
+    for (const m of models) {
+      const price = listedPrice(m);
+      const stock = availStock(m);
+      if (stock > 0 && raspa < price) okModels.push({ model_id: Number(m.model_id), input_promo_price: raspa, stock: Math.min(stock, PROMO_STOCK_CAP) });
+    }
+    if (okModels.length) {
+      payload.push({ item_id: Number(it.item_id), purchase_limit: 0, models: okModels });
+      if (out.sample.length < 4) out.sample.push({ sku: it.sku, raspa, variacoes: okModels.length });
+    }
+  }
+  return payload;
+}
 async function processAccount(acc) {
-  const out = { conta: acc, ok: false, skipped: [], sample: [] };
-  const st = await q("SELECT rot_offset, done_slots FROM shopee_flash_state WHERE conta=?", [acc]);
-  let rotOffset = st.length ? Number(st[0].rot_offset) || 0 : 0;
+  const out = { conta: acc, ok: false, slots: [], sample: [] };
+  const st = await q("SELECT done_slots FROM shopee_flash_state WHERE conta=?", [acc]);
   let doneSlots = [];
   try {
     doneSlots = st.length && st[0].done_slots ? JSON.parse(st[0].done_slots) : [];
   } catch {
     doneSlots = [];
+  }
+  const slots = await getAllSlots(acc, doneSlots);
+  if (!slots.length) {
+    out.motivo = "nenhum slot novo dispon\xEDvel";
+    return out;
   }
   let items = await q(
     `SELECT c.item_id, m.sku, p.raspa
@@ -42169,123 +42184,54 @@ async function processAccount(acc) {
   );
   if (!items.length) {
     items = await q(
-      `SELECT m.item_id, m.sku, p.raspa
-         FROM shopee_flash_map m JOIN shopee_precos p ON p.sku = m.sku
+      `SELECT m.item_id, m.sku, p.raspa FROM shopee_flash_map m JOIN shopee_precos p ON p.sku = m.sku
         WHERE m.conta = ? AND p.raspa IS NOT NULL ORDER BY m.item_id`,
       [acc]
     );
   }
-  out.total_itens_mapeados = items.length;
   if (!items.length) {
-    out.motivo = "sem itens (campe\xF5es nem mapa)";
+    out.motivo = "sem campe\xF5es nem mapa";
     return out;
   }
-  const slot = await getNextSlot(acc, doneSlots);
-  if (!slot) {
-    out.motivo = "nenhum time slot dispon\xEDvel n\xE3o usado";
+  const payload = await buildChampionPayload(acc, items, out);
+  out.produtos = payload.length;
+  out.variacoes = payload.reduce((a, x) => a + x.models.length, 0);
+  if (!payload.length) {
+    out.motivo = "nenhum produto eleg\xEDvel (estoque/desconto)";
     return out;
   }
-  out.timeslot_id = String(slot.timeslot_id);
-  out.data_slot = new Date(Number(slot.start_time) * 1e3).toISOString();
-  const window2 = items.slice(0, MAX_PRODUCTS);
-  void rotOffset;
-  const payloadItems = [];
-  for (const it of window2) {
-    const raspa = Number(it.raspa);
-    let models = [];
-    try {
-      models = await getModels(acc, Number(it.item_id));
-    } catch (e) {
-      out.skipped.push({ item_id: it.item_id, sku: it.sku, motivo: "erro get_model_list: " + e.message });
+  for (const slot of slots) {
+    const created = await shopee(acc, "/api/v2/shop_flash_sale/create_shop_flash_sale", { method: "POST", body: { timeslot_id: Number(slot.timeslot_id) } });
+    const flashId = created?.response?.flash_sale_id;
+    if (!flashId) {
+      out.slots.push({ timeslot_id: String(slot.timeslot_id), erro: "create:" + (created?.error || "") + " " + (created?.message || "") });
       continue;
     }
-    if (!models.length) {
-      out.skipped.push({ item_id: it.item_id, sku: it.sku, motivo: "sem models" });
-      continue;
+    let addErr = "";
+    for (let i = 0; i < payload.length; i += 5) {
+      const r = await shopee(acc, "/api/v2/shop_flash_sale/add_shop_flash_sale_items", { method: "POST", body: { flash_sale_id: Number(flashId), items: payload.slice(i, i + 5) } });
+      if (r?.error) addErr += `[${r.error}]`;
     }
-    const okModels = [];
-    for (const m of models) {
-      const price = listedPrice(m);
-      const stock = availStock(m);
-      if (stock <= 0) {
-        out.skipped.push({ item_id: it.item_id, sku: it.sku, model_id: m.model_id, motivo: "estoque 0" });
-        continue;
-      }
-      if (!(raspa < price)) {
-        out.skipped.push({ item_id: it.item_id, sku: it.sku, model_id: m.model_id, raspa, preco_listado: price, motivo: "raspa>=pre\xE7o listado (n\xE3o \xE9 desconto)" });
-        continue;
-      }
-      okModels.push({ model_id: Number(m.model_id), input_promo_price: raspa, stock: Math.min(stock, PROMO_STOCK_CAP) });
-    }
-    if (okModels.length) {
-      payloadItems.push({ item_id: Number(it.item_id), purchase_limit: 0, models: okModels });
-      if (out.sample.length < 4) out.sample.push({ item_id: it.item_id, sku: it.sku, raspa_aplicada: raspa, models: okModels.length });
-    }
+    doneSlots.push(String(slot.timeslot_id));
+    const dataSlot = new Date(Number(slot.start_time) * 1e3).toISOString().slice(0, 16).replace("T", " ");
+    out.slots.push({ timeslot_id: String(slot.timeslot_id), data_slot: dataSlot, flash_sale_id: String(flashId), produtos: payload.length, variacoes: out.variacoes, addErr });
+    await q(
+      `INSERT INTO shopee_flash_log (conta, timeslot_id, flash_sale_id, data_slot, produtos, variacoes, detalhe, criado_em)
+         VALUES (?,?,?,?,?,?,?,NOW())`,
+      [acc, String(slot.timeslot_id), String(flashId), dataSlot, payload.length, out.variacoes, "auto"]
+    );
   }
-  out.produtos_elegiveis = payloadItems.length;
-  out.variacoes = payloadItems.reduce((a, x) => a + x.models.length, 0);
-  if (!payloadItems.length) {
-    out.motivo = "nenhum produto eleg\xEDvel ap\xF3s travas (estoque/desconto)";
-    return out;
-  }
-  const created = await shopee(acc, "/api/v2/shop_flash_sale/create_shop_flash_sale", {
-    method: "POST",
-    body: { timeslot_id: Number(slot.timeslot_id) }
-  });
-  const flashId = created?.response?.flash_sale_id;
-  if (!flashId) {
-    out.motivo = "create_shop_flash_sale falhou";
-    out.create_resp = created;
-    return out;
-  }
-  out.flash_sale_id = String(flashId);
-  const added = await shopee(acc, "/api/v2/shop_flash_sale/add_shop_flash_sale_items", {
-    method: "POST",
-    body: { flash_sale_id: Number(flashId), items: payloadItems }
-  });
-  out.add_error = added?.error || "";
-  out.add_failed = added?.response?.failed_items || added?.response?.fail_items || [];
-  const verify = await shopee(acc, "/api/v2/shop_flash_sale/get_shop_flash_sale_items", {
-    query: { flash_sale_id: Number(flashId), offset: 0, limit: 50 }
-  });
-  const vModels = verify?.response?.models || verify?.response?.item_info || [];
-  out.verificado_variacoes = Array.isArray(vModels) ? vModels.length : 0;
-  out.verify_sample = (Array.isArray(vModels) ? vModels.slice(0, 4) : []).map((m) => ({
-    item_id: m.item_id,
-    model_id: m.model_id,
-    input_promotion_price: m.input_promotion_price ?? m.promotion_price,
-    campaign_stock: m.campaign_stock,
-    status: m.status
-  }));
-  out.status = created?.response?.status ?? 1;
-  const newOffset = (rotOffset + MAX_PRODUCTS) % items.length;
-  const newDone = Array.from(/* @__PURE__ */ new Set([...doneSlots, String(slot.timeslot_id)])).slice(-60);
   await q(
-    `INSERT INTO shopee_flash_state (conta, rot_offset, done_slots, last_run)
-       VALUES (?,?,?,NOW())
-     ON DUPLICATE KEY UPDATE rot_offset=VALUES(rot_offset), done_slots=VALUES(done_slots), last_run=NOW()`,
-    [acc, newOffset, JSON.stringify(newDone)]
+    `INSERT INTO shopee_flash_state (conta, rot_offset, done_slots, last_run) VALUES (?,?,?,NOW())
+       ON DUPLICATE KEY UPDATE done_slots=VALUES(done_slots), last_run=NOW()`,
+    [acc, 0, JSON.stringify(Array.from(new Set(doneSlots)).slice(-60))]
   );
-  await q(
-    `INSERT INTO shopee_flash_log (conta, timeslot_id, flash_sale_id, data_slot, produtos, variacoes, detalhe, criado_em)
-       VALUES (?,?,?,?,?,?,?,NOW())`,
-    [
-      acc,
-      String(slot.timeslot_id),
-      String(flashId),
-      new Date(Number(slot.start_time) * 1e3).toISOString().slice(0, 16).replace("T", " "),
-      out.produtos_elegiveis,
-      out.variacoes,
-      "auto"
-    ]
-  );
-  out.ok = true;
+  out.ok = out.slots.some((s) => s.flash_sale_id);
   return out;
 }
 async function syncFlashMapRaspa() {
   const r = await pool().query(
-    `UPDATE shopee_flash_map m JOIN shopee_precos p ON p.sku=m.sku
-        SET m.raspa=p.raspa
+    `UPDATE shopee_flash_map m JOIN shopee_precos p ON p.sku=m.sku SET m.raspa=p.raspa
       WHERE m.raspa IS NULL OR ABS(m.raspa-p.raspa)>=0.01`
   );
   return r?.[0]?.affectedRows ?? 0;
@@ -42301,14 +42247,14 @@ async function runScheduled() {
         continue;
       }
       const r = await processAccount(acc);
-      console.log(`[ShopeeFlash] ${acc}:`, r.ok ? `flash ${r.flash_sale_id} (${r.produtos_elegiveis}p/${r.variacoes}v)` : `sem a\xE7\xE3o (${r.motivo})`);
+      console.log(`[ShopeeFlash] ${acc}:`, r.ok ? `agendou ${r.slots.length} slot(s), ${r.produtos} campe\xF5es` : `sem a\xE7\xE3o (${r.motivo})`);
     } catch (e) {
       console.error(`[ShopeeFlash] ${acc} erro:`, e.message);
     }
   }
 }
 function startShopeeFlash() {
-  console.log("[ShopeeFlash] Agendador iniciado (1\xAA rodada em 45s, depois de hora em hora)");
+  console.log("[ShopeeFlash] Agendador iniciado (1\xAA rodada em 45s, depois de hora em hora; agenda todos os slots novos)");
   const first = setTimeout(() => {
     runScheduled().catch((e) => console.error("[ShopeeFlash] boot run:", e.message));
   }, FIRST_RUN_DELAY_MS);
