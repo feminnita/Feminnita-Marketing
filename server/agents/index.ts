@@ -12,6 +12,7 @@ import { runAllInfluencerAgents } from "./influencer-agent";
 import { startFernandaDailyAgent } from "./fernanda-daily-agent";
 import { startMLActionsExecutor } from "./ml-actions-executor";
 import { startShopeeActionsExecutor } from "./shopee-actions-executor";
+import { startShopeeFlash } from "./shopee-flash-agent";
 import { startTrayActionsExecutor } from "./tray-actions-executor";
 import { apiScrapeMLMetrics } from "./ml-ads-api";
 
@@ -86,6 +87,7 @@ export function startAllAgents(): () => void {
     { name: "FernandaDaily", start: startFernandaDailyAgent },
     { name: "MLActionsExecutor", start: startMLActionsExecutor },
     { name: "ShopeeActionsExecutor", start: startShopeeActionsExecutor },
+    { name: "ShopeeFlash", start: startShopeeFlash },
     { name: "TrayActionsExecutor",   start: startTrayActionsExecutor },
     { name: "MLMetricsCollector", start: startMLMetricsCollector },
   ];
