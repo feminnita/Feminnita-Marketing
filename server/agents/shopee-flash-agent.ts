@@ -114,11 +114,14 @@ async function getModels(acc: Account, itemId: number): Promise<any[]> {
   const models = r?.response?.model;
   return Array.isArray(models) ? models : [];
 }
-function currentPrice(model: any): number {
+function listedPrice(model: any): number {
+  // Preço NORMAL listado = original_price. NUNCA current_price: este é o preço
+  // JÁ com promoção ativa (flash/desconto anterior), o que quebrava a trava de
+  // desconto (raspa parecia >= preço quando na verdade é um desconto real).
   const pi = Array.isArray(model?.price_info) ? model.price_info[0] : model?.price_info;
-  const cur = Number(pi?.current_price ?? 0);
   const orig = Number(pi?.original_price ?? 0);
-  return cur > 0 ? cur : orig;
+  const cur = Number(pi?.current_price ?? 0);
+  return orig > 0 ? orig : cur;
 }
 function availStock(model: any): number {
   return Number(model?.stock_info_v2?.summary_info?.total_available_stock ?? 0);
@@ -169,7 +172,7 @@ async function processAccount(acc: Account): Promise<any> {
 
     const okModels: any[] = [];
     for (const m of models) {
-      const price = currentPrice(m);
+      const price = listedPrice(m);
       const stock = availStock(m);
       if (stock <= 0) { out.skipped.push({ item_id: it.item_id, sku: it.sku, model_id: m.model_id, motivo: "estoque 0" }); continue; }
       if (!(raspa < price)) { out.skipped.push({ item_id: it.item_id, sku: it.sku, model_id: m.model_id, raspa, preco_listado: price, motivo: "raspa>=preço listado (não é desconto)" }); continue; }

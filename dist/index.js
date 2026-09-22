@@ -42139,11 +42139,11 @@ async function getModels(acc, itemId) {
   const models = r?.response?.model;
   return Array.isArray(models) ? models : [];
 }
-function currentPrice(model) {
+function listedPrice(model) {
   const pi = Array.isArray(model?.price_info) ? model.price_info[0] : model?.price_info;
-  const cur = Number(pi?.current_price ?? 0);
   const orig = Number(pi?.original_price ?? 0);
-  return cur > 0 ? cur : orig;
+  const cur = Number(pi?.current_price ?? 0);
+  return orig > 0 ? orig : cur;
 }
 function availStock(model) {
   return Number(model?.stock_info_v2?.summary_info?.total_available_stock ?? 0);
@@ -42198,7 +42198,7 @@ async function processAccount(acc) {
     }
     const okModels = [];
     for (const m of models) {
-      const price = currentPrice(m);
+      const price = listedPrice(m);
       const stock = availStock(m);
       if (stock <= 0) {
         out.skipped.push({ item_id: it.item_id, sku: it.sku, model_id: m.model_id, motivo: "estoque 0" });
