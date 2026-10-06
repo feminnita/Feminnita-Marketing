@@ -11,9 +11,14 @@
  * não estão em done_slots (não 1 por vez) — mantém sempre o máximo de dias agendados.
  * Token: /opt/gestao/tokens_shopee_{a,b}.json (autoridade = gestão; NUNCA renova aqui).
  * Kill-switch: shopee_flash_config.enabled=0.
+ *
+ * 06/out/2026 (Chris): relâmpago SÓ nos 10 mais vendidos de cada loja (TOP_ITENS), no preço que ele salva
+ * na Tabela Shopee do Gestão (@relampago). corrigirAgendadas() mantém as upcoming nesse padrão a cada rodada.
+ * NUNCA altera o preço do anúncio.
  */
 import crypto from "crypto";
 import fs from "fs";
+import { execSync } from "child_process";
 import mysql from "mysql2/promise";
 
 type Account = "feminnita" | "fnt";
@@ -102,23 +107,86 @@ function availStock(model: any): number {
   return Number(model?.stock_info_v2?.summary_info?.total_available_stock ?? 0);
 }
 
-// ── Payload dos campeões (get_model_list -> trava desconto + estoque) ───────────
-async function buildChampionPayload(acc: Account, items: any[], out: any): Promise<any[]> {
-  const payload: any[] = [];
-  for (const it of items.slice(0, MAX_PRODUCTS)) {
-    const raspa = Number(it.raspa);
-    let models: any[] = [];
-    try { models = await getModels(acc, Number(it.item_id)); } catch { continue; }
-    const okModels: any[] = [];
-    for (const m of models) {
-      const price = listedPrice(m);
-      const stock = availStock(m);
-      if (stock > 0 && raspa < price) okModels.push({ model_id: Number(m.model_id), input_promo_price: raspa, stock: Math.min(stock, PROMO_STOCK_CAP) });
+// ── 06/10/2026 (Chris): relâmpago SÓ nos 10 mais vendidos de cada loja, no preço que ELE salvou
+// na Tabela de Preços Shopee do Gestão (preco_anuncio canal=shopee coluna "@relampago").
+// Nunca mexe no preço do anúncio. Itens ativos conferidos na API em 06/10 (23500 fica fora: sem preço/custo).
+const TOP_ITENS: Record<Account, Record<string, string>> = {
+  feminnita: { "46500071872": "31300", "23537699914": "08237", "23793271622": "24520", "29592476673": "31400", "54166288100": "59000",
+               "48901941579": "32750", "56709322762": "50650", "23397568574": "25500", "43922563750": "50200" },
+  fnt:       { "23794531530": "31300", "56966288307": "59000", "22199153568": "31400", "23399123508": "32700", "22394641990": "40500",
+               "23794621829": "31500", "51813197105": "51650", "58208447463": "30850", "53161935419": "50250" },
+};
+const OVERRIDE: Record<Account, Record<string, number>> = { feminnita: {}, fnt: { "51650": 59.99 } };  // Chris 06/10
+function precosRelampago(acc: Account): Record<string, number> {
+  const out: Record<string, number> = {};
+  try {
+    const sql = `SELECT trim(p.sku) sku, a.valor FROM preco_anuncio a JOIN produto_catalogo p ON p.id=a.produto_id WHERE a.canal='shopee' AND a.coluna='@relampago' AND p.excluido=0`;
+    const rows = JSON.parse(execSync(`sqlite3 -json /opt/gestao/gestao.db "${sql}"`, { encoding: "utf8" }) || "[]");
+    for (const r of rows) if (Number(r.valor) > 0) out[String(r.sku)] = Number(r.valor);
+  } catch {}
+  Object.assign(out, OVERRIDE[acc]);
+  return out;
+}
+const upd = (acc: Account, fid: number, items: any[]) =>
+  shopee(acc, "/api/v2/shop_flash_sale/update_shop_flash_sale_items", { method: "POST", body: { flash_sale_id: fid, items } });
+
+async function modelosElegiveis(acc: Account, itemId: number, preco: number): Promise<any[]> {
+  const ms: any[] = [];
+  for (const m of await getModels(acc, itemId)) {
+    const stk = availStock(m); const orig = listedPrice(m);
+    if (stk > 0 && preco < orig) ms.push({ model_id: Number(m.model_id), input_promo_price: preco, stock: Math.min(stk, PROMO_STOCK_CAP) });
+  }
+  return ms;
+}
+
+// ── Corrige relâmpagos já agendadas: tira quem não é top 10, acerta o preço dos top 10, adiciona top 10 faltante ──
+export async function corrigirAgendadas(acc: Account): Promise<any> {
+  const res: any = { conta: acc, flash: 0, tirados: 0, preco_ajustado: 0, adicionados: 0, ja_certos: 0, falhas: [] as any[] };
+  const precos = precosRelampago(acc); const top = TOP_ITENS[acc];
+  const lista: any[] = [];
+  for (let off = 0; ; off += 100) {
+    const r = await shopee(acc, "/api/v2/shop_flash_sale/get_shop_flash_sale_list", { query: { type: 1, offset: off, limit: 100 } });
+    const l = r?.response?.flash_sale_list || []; lista.push(...l); if (l.length < 100) break;
+  }
+  for (const f of lista) {
+    res.flash++; const fid = Number(f.flash_sale_id);
+    const d = await shopee(acc, "/api/v2/shop_flash_sale/get_shop_flash_sale_items", { query: { flash_sale_id: fid, offset: 0, limit: 100 } });
+    const porItem: Record<string, any[]> = {};
+    for (const mo of d?.response?.models || []) (porItem[String(mo.item_id)] ||= []).push(mo);
+    for (const [iid, mods] of Object.entries(porItem)) {
+      const ativos = mods.filter((m) => Number(m.status) === 1);
+      const sku = top[iid]; const preco = sku ? precos[sku] : undefined;
+      if (!sku || !preco) {
+        if (ativos.length) { const r = await upd(acc, fid, [{ item_id: Number(iid), models: ativos.map((m) => ({ model_id: Number(m.model_id), status: 0 })) }]); res.tirados++;
+          if (r?.error || (r?.response?.failed_items || []).length) res.falhas.push({ fid, iid, op: "tirar", e: r?.error || r?.response?.failed_items?.[0] }); }
+        continue;
+      }
+      if (ativos.length && ativos.every((m) => Math.abs(Number(m.input_promotion_price) - preco) < 0.005)) { res.ja_certos++; continue; }
+      if (ativos.length) await upd(acc, fid, [{ item_id: Number(iid), models: ativos.map((m) => ({ model_id: Number(m.model_id), status: 0 })) }]);
+      const alvo = ativos.length ? ativos : mods;
+      const r = await upd(acc, fid, [{ item_id: Number(iid), purchase_limit: 0, models: alvo.map((m) => ({ model_id: Number(m.model_id), status: 1, input_promo_price: preco, stock: Math.max(1, Number(m.campaign_stock) || 1) })) }]);
+      res.preco_ajustado++;
+      if (r?.error || (r?.response?.failed_items || []).length) res.falhas.push({ fid, iid, op: "preco", e: r?.error || r?.response?.failed_items?.[0] });
     }
-    if (okModels.length) {
-      payload.push({ item_id: Number(it.item_id), purchase_limit: 0, models: okModels });
-      if (out.sample.length < 4) out.sample.push({ sku: it.sku, raspa, variacoes: okModels.length });
+    for (const [iid, sku] of Object.entries(top)) {
+      if (porItem[iid] || !precos[sku]) continue;
+      const ms = await modelosElegiveis(acc, Number(iid), precos[sku]); if (!ms.length) continue;
+      const r = await shopee(acc, "/api/v2/shop_flash_sale/add_shop_flash_sale_items", { method: "POST", body: { flash_sale_id: fid, items: [{ item_id: Number(iid), purchase_limit: 0, models: ms }] } });
+      res.adicionados++;
+      if (r?.error || (r?.response?.failed_items || []).length) res.falhas.push({ fid, iid, op: "adicionar", e: r?.error || r?.response?.failed_items?.[0] });
     }
+  }
+  return res;
+}
+
+// ── Payload das novas relâmpagos: só top 10, preço do Gestão ──
+async function buildChampionPayload(acc: Account, _items: any[], out: any): Promise<any[]> {
+  const payload: any[] = []; const precos = precosRelampago(acc);
+  for (const [iid, sku] of Object.entries(TOP_ITENS[acc])) {
+    const preco = precos[sku]; if (!preco) continue;
+    let ms: any[] = [];
+    try { ms = await modelosElegiveis(acc, Number(iid), preco); } catch { continue; }
+    if (ms.length) { payload.push({ item_id: Number(iid), purchase_limit: 0, models: ms }); if (out.sample.length < 4) out.sample.push({ sku, preco, variacoes: ms.length }); }
   }
   return payload;
 }
@@ -133,25 +201,11 @@ async function processAccount(acc: Account): Promise<any> {
   const slots = await getAllSlots(acc, doneSlots);
   if (!slots.length) { out.motivo = "nenhum slot novo disponível"; return out; }
 
-  // campeões (fallback: mapa inteiro)
-  let items = await q<any>(
-    `SELECT c.item_id, m.sku, p.raspa
-       FROM shopee_flash_campeoes c
-       JOIN shopee_flash_map m ON m.item_id = c.item_id AND m.conta = c.conta
-       JOIN shopee_precos p ON p.sku = m.sku
-      WHERE c.conta = ? AND p.raspa IS NOT NULL
-      ORDER BY c.rnk ASC`, [acc]);
-  if (!items.length) {
-    items = await q<any>(
-      `SELECT m.item_id, m.sku, p.raspa FROM shopee_flash_map m JOIN shopee_precos p ON p.sku = m.sku
-        WHERE m.conta = ? AND p.raspa IS NOT NULL ORDER BY m.item_id`, [acc]);
-  }
-  if (!items.length) { out.motivo = "sem campeões nem mapa"; return out; }
-
+  const items: any[] = [];  // 06/10: seleção fixa TOP_ITENS (10 mais vendidos por loja)
   const payload = await buildChampionPayload(acc, items, out);
   out.produtos = payload.length;
   out.variacoes = payload.reduce((a, x) => a + x.models.length, 0);
-  if (!payload.length) { out.motivo = "nenhum produto elegível (estoque/desconto)"; return out; }
+  if (!payload.length) { out.motivo = "nenhum top 10 com preço/estoque"; return out; }
 
   for (const slot of slots) {
     const created = await shopee(acc, "/api/v2/shop_flash_sale/create_shop_flash_sale", { method: "POST", body: { timeslot_id: Number(slot.timeslot_id) } });
@@ -206,6 +260,8 @@ async function runScheduled(): Promise<void> {
     try {
       const c = await q<any>("SELECT enabled FROM shopee_flash_config WHERE conta=?", [acc]);
       if (!c.length || Number(c[0].enabled) !== 1) { console.log(`[ShopeeFlash] ${acc} desabilitado, pulando`); continue; }
+      const cor = await corrigirAgendadas(acc);
+      console.log(`[ShopeeFlash] ${acc} correcao:`, JSON.stringify(cor).slice(0, 400));
       const r = await processAccount(acc);
       console.log(`[ShopeeFlash] ${acc}:`, r.ok ? `agendou ${r.slots.length} slot(s), ${r.produtos} campeões` : `sem ação (${r.motivo})`);
     } catch (e: any) { console.error(`[ShopeeFlash] ${acc} erro:`, e.message); }
