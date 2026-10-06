@@ -109,12 +109,14 @@ function availStock(model: any): number {
 
 // ── 06/10/2026 (Chris): relâmpago SÓ nos 10 mais vendidos de cada loja, no preço que ELE salvou
 // na Tabela de Preços Shopee do Gestão (preco_anuncio canal=shopee coluna "@relampago").
-// Nunca mexe no preço do anúncio. Itens ativos conferidos na API em 06/10 (23500 fica fora: sem preço/custo).
+// Nunca mexe no preço do anúncio. Itens ativos conferidos na API em 06/10. 23500 usa o preço do 23300 (mesmo produto).
 const TOP_ITENS: Record<Account, Record<string, string>> = {
   feminnita: { "46500071872": "31300", "23537699914": "08237", "23793271622": "24520", "29592476673": "31400", "54166288100": "59000",
-               "48901941579": "32750", "56709322762": "50650", "23397568574": "25500", "43922563750": "50200" },
+               "48901941579": "32750", "56709322762": "50650", "23397568574": "25500", "43922563750": "50200",
+               "22397317564": "23300" },  // 23500 = mesmo produto do 23300 (Chris 06/10) — preço do 23300
   fnt:       { "23794531530": "31300", "56966288307": "59000", "22199153568": "31400", "23399123508": "32700", "22394641990": "40500",
-               "23794621829": "31500", "51813197105": "51650", "58208447463": "30850", "53161935419": "50250" },
+               "23794621829": "31500", "51813197105": "51650", "58208447463": "30850", "53161935419": "50250",
+               "58200042333": "23300" },  // 23500 = 23300
 };
 const OVERRIDE: Record<Account, Record<string, number>> = { feminnita: {}, fnt: { "51650": 59.99 } };  // Chris 06/10
 function precosRelampago(acc: Account): Record<string, number> {
