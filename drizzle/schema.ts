@@ -1776,3 +1776,25 @@ export const imageJobs = mysqlTable("image_jobs", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 export type ImageJob = typeof imageJobs.$inferSelect;
+
+// WhatsApp oficial (Cloud API) da Lia. Uma linha por conta (userId 1 = loja).
+// As credenciais entram pela tela "WhatsApp Oficial" e nunca passam pelo chat.
+export const waOficialConfig = mysqlTable("wa_oficial_config", {
+  userId: int("userId").primaryKey(),
+  phoneNumberId: varchar("phone_number_id", { length: 64 }),
+  accessToken: text("access_token"),
+  appSecret: varchar("app_secret", { length: 128 }),
+  verifyToken: varchar("verify_token", { length: 128 }),
+  wabaId: varchar("waba_id", { length: 64 }),
+  ativo: boolean("ativo").notNull().default(false),
+  lastInboundAt: datetime("last_inbound_at"),
+});
+
+// Pausa da Lia POR CONVERSA (as outras clientes seguem com ela): quando ela passa
+// o caso para a equipe, ou quando a equipe responde pelo celular.
+export const waPausas = mysqlTable("wa_pausas", {
+  telefone: varchar("telefone", { length: 20 }).primaryKey(),
+  pausadoAte: datetime("pausado_ate").notNull(),
+  motivo: varchar("motivo", { length: 30 }).notNull(),
+  atualizadoEm: timestamp("atualizado_em").defaultNow().onUpdateNow().notNull(),
+});
