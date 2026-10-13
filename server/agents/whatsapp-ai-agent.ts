@@ -1,16 +1,21 @@
 import { getDb } from "../db";
 import { aiSettings, conversationHistory } from "../../drizzle/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { invokeLLM } from "../_core/llm";
 import { selecionarConhecimento } from "./busca-catalogo";
+import { buscarProdutosSite } from "./lia-site";
+import { interpretarRespostaLia, MENSAGEM_PASSA_HUMANO } from "./lia-saida";
 
-// Processa uma mensagem recebida via WhatsApp e retorna a resposta IA
-export async function processWhatsAppMessage(
+export type RespostaLia = { texto: string; humano: boolean; resumo: string };
+
+// Atende uma mensagem recebida no WhatsApp. Devolve o texto para a cliente e se
+// o caso deve ir para uma pessoa (com resumo). null = IA desligada ou erro.
+export async function atenderMensagem(
   userId: number,
   phoneNumber: string,
   contactName: string,
   message: string
-): Promise<string | null> {
+): Promise<RespostaLia | null> {
   const db = await getDb();
   if (!db) return null;
 
@@ -24,12 +29,14 @@ export async function processWhatsAppMessage(
 
     const config = settings[0];
 
-    // Checar se deve escalar por palavras-chave
+    // Palavra-chave de escalonamento: vai direto para uma pessoa, sem chamar o modelo.
     const escalationKeywords = config.escalationKeywords ?? [];
     const shouldEscalate = escalationKeywords.some((kw: any) =>
       message.toLowerCase().includes(kw.toLowerCase())
     );
-    if (shouldEscalate) return null; // Deixa para humano
+    if (shouldEscalate) {
+      return { texto: MENSAGEM_PASSA_HUMANO, humano: true, resumo: "Pediu atendente: " + message.slice(0, 120) };
+    }
 
     // Buscar base de conhecimento relevante PARA ESTA PERGUNTA.
     // Antes era `limit 3` sem ordenacao — as mesmas 3 linhas para toda mensagem.
@@ -49,10 +56,14 @@ export async function processWhatsAppMessage(
       (k.url ? `\nLink: ${k.url}` : "")
     ).join("\n");
 
-    // Buscar histórico recente da conversa
-    const history = await db.select().from(conversationHistory)
+    // Produtos ao vivo do site (preco, promocao vigente, cores, tamanhos, link).
+    const produtosSite = message.trim().length >= 3 ? await buscarProdutosSite(message) : "";
+
+    // Histórico recente: as 5 ULTIMAS trocas, em ordem cronologica.
+    const history = (await db.select().from(conversationHistory)
       .where(and(eq(conversationHistory.userId, userId), eq(conversationHistory.whatsappPhoneNumber, phoneNumber)))
-      .limit(5);
+      .orderBy(desc(conversationHistory.createdAt))
+      .limit(5)).reverse();
 
     const historyContext = history.map((h: any) =>
       `Cliente: ${h.userMessage}\nAtendente: ${h.aiResponse}`
@@ -64,14 +75,19 @@ export async function processWhatsAppMessage(
 
     const result = await invokeLLM({
       messages: [
-        { role: "system", content: systemPrompt + (knowledgeContext ? `\n\nInformações disponíveis:\n${knowledgeContext}` : "") },
+        {
+          role: "system",
+          content: systemPrompt
+            + (knowledgeContext ? `\n\nInformações disponíveis:\n${knowledgeContext}` : "")
+            + (produtosSite ? `\n\nPRODUTOS DO SITE (dados ao vivo, use só estes preços e links):\n${produtosSite}` : ""),
+        },
         ...(historyContext ? [{ role: "user" as const, content: `Histórico:\n${historyContext}` }, { role: "assistant" as const, content: "Entendido." }] : []),
         { role: "user", content: message },
       ],
     });
 
     const rawContent = result.choices?.[0]?.message?.content ?? "";
-    const response = typeof rawContent === "string" ? rawContent : "";
+    const resposta = interpretarRespostaLia(typeof rawContent === "string" ? rawContent : "");
 
     // Salvar conversa no histórico
     await db.insert(conversationHistory).values({
@@ -79,15 +95,27 @@ export async function processWhatsAppMessage(
       whatsappPhoneNumber: phoneNumber,
       whatsappContactName: contactName,
       userMessage: message,
-      aiResponse: response,
+      aiResponse: resposta.texto,
       confidence: "0.85",
-      escalated: false,
+      escalated: resposta.humano,
       status: "open",
     });
 
-    return response;
+    return resposta;
   } catch (err) {
     console.error("[WhatsAppAI] Erro ao processar mensagem:", err);
     return null;
   }
+}
+
+// Compatibilidade com o WhatsApp via QR (Baileys): devolve so o texto, e nada
+// quando o caso e para uma pessoa (o comportamento de antes).
+export async function processWhatsAppMessage(
+  userId: number,
+  phoneNumber: string,
+  contactName: string,
+  message: string
+): Promise<string | null> {
+  const r = await atenderMensagem(userId, phoneNumber, contactName, message);
+  return r && !r.humano ? r.texto : null;
 }
