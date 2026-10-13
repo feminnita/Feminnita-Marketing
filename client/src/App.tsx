@@ -67,6 +67,7 @@ const AgentActionsPage        = lazy(() => import("@/pages/AgentActionsPage"));
 const AgentDetailPage         = lazy(() => import("@/pages/AgentDetailPage"));
 const WhatsAppDisparosPage    = lazy(() => import("@/pages/WhatsAppDisparosPage"));
 const WhatsAppFunnelPage      = lazy(() => import("@/pages/WhatsAppFunnelPage"));
+const WhatsAppOficialPage     = lazy(() => import("@/pages/WhatsAppOficialPage"));
 const ShopeeAdsManagerPage    = lazy(() => import("@/pages/ShopeeAdsManagerPage"));
 const TiktokShopPage          = lazy(() => import("@/pages/TiktokShopPage"));
 const TiktokTeamPage          = lazy(() => import("@/pages/TiktokTeamPage"));
@@ -218,6 +219,8 @@ export default function App() {
         return <WhatsAppNotificationsPage />;
       case "/whatsapp-disparos":
         return <WhatsAppDisparosPage />;
+      case "/whatsapp-oficial":
+        return <WhatsAppOficialPage />;
       case "/whatsapp-funnel":
         return <WhatsAppFunnelPage />;
 
